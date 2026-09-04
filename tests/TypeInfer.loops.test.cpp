@@ -728,7 +728,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
             function unreachablecodepath(a: number?): number
                 repeat
                     return 10
-                until a ~= nil
+                until a != nil
 
                 -- unreachable
             end
@@ -1062,7 +1062,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_fragmented_keys")
         local function getTableLength(tbl)
             local length = 1
             local value = rawget(tbl, length)
-            while value ~= nil do
+            while value != nil do
                 length += 1
                 value = rawget(tbl, length)
             end
@@ -1344,7 +1344,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1480")
         local part = {} :: Part
 
         local currentParent: Instance? = part.Parent
-        while currentParent ~= nil do
+        while currentParent != nil do
             currentParent = currentParent.Parent
         end
     )"));

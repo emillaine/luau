@@ -1076,8 +1076,8 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_verifies_types_do_intersect")
         local index = 0
 
         local function f(fiber: Fiber)
-            local a = fiber ~= fiberStack[index]
-            local b = fiberStack[index] ~= fiber
+            local a = fiber != fiberStack[index]
+            local b = fiberStack[index] != fiber
         end
 
         return f
@@ -1095,7 +1095,7 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_operands_are_not_subtypes_of_each_other_
     )");
 
     // This doesn't produce any errors but for the wrong reasons.
-    // This unit test serves as a reminder to not try and unify the operands on `==`/`~=`.
+    // This unit test serves as a reminder to not try and unify the operands on `==`/`!=`.
     LUAU_REQUIRE_NO_ERRORS(result);
 }
 
@@ -1306,8 +1306,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "equality_operations_succeed_if_any_union_bra
 
         local v1 = x == y
         local v2 = y == x
-        local v3 = x ~= y
-        local v4 = y ~= x
+        local v3 = x != y
+        local v4 = y != x
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1488,7 +1488,7 @@ local function foo(arg: {name: string}?)
 
     table.insert(arr, {
         name = name or "",
-        flag = name ~= nil and name ~= "",
+        flag = name != nil and name != "",
     })
 end
     )");
@@ -1501,10 +1501,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_is_array_simplified")
     CheckResult result = check(R"(
      --!strict
      return function(value: any) : boolean
-        if typeof(value) ~= "number" then
+        if typeof(value) != "number" then
            return false
         end
-        if value % 1 ~= 0 or value < 1 then
+        if value % 1 != 0 or value < 1 then
            return false
         end
         return true
@@ -1519,7 +1519,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_is_array")
     CheckResult result = check(R"(
 --!strict
 return function(value: any): boolean
-    if typeof(value) ~= "table" then
+    if typeof(value) != "table" then
         return false
     end
     if next(value) == nil then
@@ -1536,10 +1536,10 @@ return function(value: any): boolean
     local count = 0
     local sum = 0
     for key in pairs(value) do
-        if typeof(key) ~= "number" then
+        if typeof(key) != "number" then
             return false
         end
-        if key % 1 ~= 0 or key < 1 then
+        if key % 1 != 0 or key < 1 then
             return false
         end
         count += 1
@@ -1560,7 +1560,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.String.slice")
 --!strict
 local function slice(str: string, startIndexStr: string | number, lastIndexStr: (string | number)?): string
 	local strLen, invalidBytePosition = utf8.len(str)
-	assert(strLen ~= nil, ("string `%s` has an invalid byte at position %s"):format(str, tostring(invalidBytePosition)))
+	assert(strLen != nil, ("string `%s` has an invalid byte at position %s"):format(str, tostring(invalidBytePosition)))
     local startIndex = tonumber(startIndexStr)
 
 
@@ -1656,7 +1656,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compare_singleton_string_to_string")
         local function test(a: string, b: string)
             if a == "Pet" and b == "Pet" then
                 return true
-            elseif a ~= b then
+            elseif a != b then
                 return a < b
             else
                 return false

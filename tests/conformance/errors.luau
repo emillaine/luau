@@ -268,7 +268,7 @@ end
 
 --[[
 local i=1
-while stack[i] ~= l1 do
+while stack[i] != l1 do
   assert(stack[i] == l)
   i = i+1
 end

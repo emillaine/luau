@@ -49,7 +49,7 @@ end
  
 local function check (t, na, nh)
   local a, h = T.querytab(t)
-  if a ~= na or h ~= nh then
+  if a != na or h != nh then
     print(na, nh, a, h)
     assert(nil)
   end
@@ -184,7 +184,7 @@ local function find (name)
   while 1 do
     n,v = next(_G, n)
     if not n then return nofind end
-    assert(v ~= nil)
+    assert(v != nil)
     if n == name then return v end
   end
 end
@@ -232,7 +232,7 @@ print('+')
 
 a = {}
 for i=0,10000 do
-  if i % 10 ~= 0 then
+  if i % 10 != 0 then
     a['x'..i] = i
   end
 end
@@ -254,7 +254,7 @@ do   -- clear global table
                     coroutine = 1, table = 1, math = 1}
   for n,v in pairs(_G) do a[n]=v end
   for n,v in pairs(a) do
-    if not preserve[n] and type(v) ~= "function" and
+    if not preserve[n] and type(v) != "function" and
        not string.find(n, "^[%u_]") then
      _G[n] = nil
     end
@@ -885,7 +885,7 @@ do
   local t1 = { a = 1 }
   local t2 = { b = 2 }
   assert(not (t1 == t2))
-  assert(t1 ~= t2)
+  assert(t1 != t2)
 end
 
 do
@@ -898,7 +898,7 @@ end
 do
   local function incnext(t, key)
     local k, v = next(t, key)
-    if k ~= nil then t[k] = v + 1 end
+    if k != nil then t[k] = v + 1 end
     return k, v
   end
   local t = { a = 1 }

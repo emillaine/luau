@@ -16,7 +16,7 @@ status, result = pcall(function()
     testtable.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":11: Error") ~= nil)
+assert(string.find(result, ":11: Error") != nil)
 
 --
 local testtable2 = {}
@@ -26,7 +26,7 @@ setmetatable(testtable2, {
             error("Error")
         end)
         assert(status == false)
-        assert(string.find(result, ":26: Error") ~= nil)
+        assert(string.find(result, ":26: Error") != nil)
         return nil
     end
 })
@@ -37,7 +37,7 @@ status, result = pcall(function()
     testtable2.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":37: attempt to call a nil value") ~= nil)
+assert(string.find(result, ":37: attempt to call a nil value") != nil)
 
 --
 local testtable3 = {}
@@ -54,7 +54,7 @@ status, result = pcall(function()
     testtable3.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":54: attempt to call a nil value") ~= nil)
+assert(string.find(result, ":54: attempt to call a nil value") != nil)
 
 --
 local testtable4 = {}
@@ -73,6 +73,6 @@ status, result = pcall(function()
     testtable4.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":73: attempt to call a nil value") ~= nil)
+assert(string.find(result, ":73: attempt to call a nil value") != nil)
 
 return('OK')

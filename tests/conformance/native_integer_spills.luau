@@ -113,7 +113,7 @@ FUNC_LIST[1] = function(loc_0, loc_1)
 			buffer.writeu8(mem, bit32_add(loc_9, 1), buffer.readu8(mem, bit32_add(loc_10, 2)))
 			buffer.writeu8(mem, loc_9, buffer.readu8(mem, bit32_add(loc_10, 3)))
 			loc_8 = bit32_add(loc_8, 4)
-			if loc_8 ~= 64 then
+			if loc_8 != 64 then
 				continue
 			end
 			break

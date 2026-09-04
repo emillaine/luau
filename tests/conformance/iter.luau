@@ -276,7 +276,7 @@ do
 
   -- 3 successful iterations yield twice each; the 4th call returns nil without yielding
   local yields = {}
-  while coroutine.status(co) ~= "dead" do
+  while coroutine.status(co) != "dead" do
     local ok, val = coroutine.resume(co)
     assert(ok)
     table.insert(yields, val)
@@ -415,7 +415,7 @@ do
   end)
 
   local count = 0
-  while coroutine.status(co) ~= "dead" do
+  while coroutine.status(co) != "dead" do
     local ok, val = coroutine.resume(co)
     assert(ok)
     count += 1
@@ -540,7 +540,7 @@ do
   end)
 
   local yields = {}
-  while coroutine.status(co) ~= "dead" do
+  while coroutine.status(co) != "dead" do
     local ok, val = coroutine.resume(co)
     assert(ok)
     table.insert(yields, val)
@@ -581,7 +581,7 @@ do
   local function iter() coroutine.yield() return nil end
   local function recurse() for _ in iter do end recurse() end
   local co = coroutine.create(function() pcall(recurse) end)
-  while coroutine.status(co) ~= "dead" do coroutine.resume(co) end
+  while coroutine.status(co) != "dead" do coroutine.resume(co) end
 end
 
 assert(is_native_if_supported())

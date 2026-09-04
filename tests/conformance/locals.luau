@@ -7,7 +7,7 @@ do
   do local i = 100; assert(i==100) end
   do local i = 1000; assert(i==1000) end
   assert(i == 10)
-  if i ~= 10 then
+  if i != 10 then
     local i = 20
   else
     local i = 30
@@ -24,7 +24,7 @@ x = 1
 
 a = nil
 loadstring('local a = {}')()
-assert(type(a) ~= 'table')
+assert(type(a) != 'table')
 
 function f (a)
   local _1, _2, _3, _4, _5

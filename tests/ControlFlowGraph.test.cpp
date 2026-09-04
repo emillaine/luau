@@ -493,7 +493,7 @@ TEST_CASE_FIXTURE(CFGFixture, "type_guard_inequality_flips_sense")
 {
     auto cfg = build(R"(
         local x = nil
-        if type(x) ~= "string" then
+        if type(x) != "string" then
             local y = x
         end
     )");

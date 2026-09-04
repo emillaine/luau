@@ -211,11 +211,11 @@ assert(table.concat(a, ",", 4) == "")
 -- string.split
 do
   local function eq(a, b)
-    if #a ~= #b then
+    if #a != #b then
       return false
     end
     for i=1,#a do
-      if a[i] ~= b[i] then
+      if a[i] != b[i] then
         return false
       end
     end

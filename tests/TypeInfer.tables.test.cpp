@@ -3051,7 +3051,7 @@ TEST_CASE_FIXTURE(Fixture, "should_not_unblock_table_type_twice")
 
     check(R"(
         local timer = peek(timerQueue)
-        while timer ~= nil do
+        while timer != nil do
             if timer.startTime <= currentTime then
                 timer.isQueued = true
             end
@@ -4153,7 +4153,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "top_table_type_is_isomorphic_to_empty_sealed
             for index = 1, select("#", ...) do
                 local rest = select(index, ...)
 
-                if rest ~= nil and typeof(rest) == "table" then
+                if rest != nil and typeof(rest) == "table" then
                     for key, value in pairs(rest) do
                     end
                 end
@@ -4173,7 +4173,7 @@ function indexOf<T>(array: Array<T>, searchElement: any, fromIndex: number?): nu
 end
 
 return function<T>(array: Array<T>, searchElement: any, fromIndex: number?): boolean
-	return -1 ~= indexOf(array, searchElement, fromIndex)
+	return -1 != indexOf(array, searchElement, fromIndex)
 end
 
     )");
@@ -5145,7 +5145,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_results_compare_to_nil")
                 print("foo")
             end
 
-            if tbl[3] ~= nil then
+            if tbl[3] != nil then
                 print("bar")
             end
         end
@@ -5163,7 +5163,7 @@ do end
 Module 'l1':
 local _ = {n0=nil,}
 if if nil then _ then
-if nil and (_)._ ~= (_)._ then
+if nil and (_)._ != (_)._ then
 do end
 while _ do
 _ = _
@@ -6186,7 +6186,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1888_and_or_subscriptable")
         function CacheManager:has(cacheName: string, id: string): boolean
             local cache = _caches[cacheName]
             local entry = cache and cache[id]
-            return entry ~= nil
+            return entry != nil
         end
     )"));
 }
@@ -6650,12 +6650,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_174304_allow_getmetatable_error_and_tabl
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         local function instanceof(tbl: any, class: any): boolean
-            if typeof(tbl) ~= "table" then
+            if typeof(tbl) != "table" then
                 return false
             end
 
             local ok, hasNew = pcall(function()
-                return class.new ~= nil and tbl.new == class.new
+                return class.new != nil and tbl.new == class.new
             end)
             if ok and hasNew then
                 return true
@@ -6986,7 +6986,7 @@ type B = {
 }
 
 local x : B = (nil :: any)
-local found = x.parsed.foo["any"] ~= nil -- errors
+local found = x.parsed.foo["any"] != nil -- errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -7009,7 +7009,7 @@ type B = {
 
 local x : B = (nil :: any)
 
-if x.parsed.foo["any"] ~= nil then
+if x.parsed.foo["any"] != nil then
 end
 
 )");

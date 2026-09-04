@@ -78,7 +78,7 @@ std::string Lexeme::toString() const
         return "'>='";
 
     case NotEqual:
-        return "'~='";
+        return "'!='";
 
     case Dot2:
         return "'..'";
@@ -837,7 +837,7 @@ Lexeme Lexer::readNext()
             return Lexeme(Location(start, 1), '>');
     }
 
-    case '~':
+    case '!':
     {
         consume();
 
@@ -847,7 +847,14 @@ Lexeme Lexer::readNext()
             return Lexeme(Location(start, 2), Lexeme::NotEqual);
         }
         else
-            return Lexeme(Location(start, 1), '~');
+            return Lexeme(Location(start, 1), '!');
+    }
+
+    case '~':
+    {
+        consume();
+
+        return Lexeme(Location(start, 1), '~');
     }
 
     case '"':

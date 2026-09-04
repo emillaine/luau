@@ -19,7 +19,7 @@ assert(-0xFFFFFFFFFFFFFFFFi == 1i)
 
 -- Built-in equality operator
 assert(76i==76i)
-assert(76i~=32i)
+assert(76i!=32i)
 assert(rawequal(76i, 76i))
 assert(not rawequal(76i, 32i))
 assert(not rawequal(76i, 76))

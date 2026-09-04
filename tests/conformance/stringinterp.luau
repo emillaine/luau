@@ -2,8 +2,8 @@ local function assertEq(left, right)
 	assert(typeof(left) == "string", "left is a " .. typeof(left))
 	assert(typeof(right) == "string", "right is a " .. typeof(right))
 
-	if left ~= right then
-		error(string.format("%q ~= %q", left, right))
+	if left != right then
+		error(string.format("%q != %q", left, right))
 	end
 end
 

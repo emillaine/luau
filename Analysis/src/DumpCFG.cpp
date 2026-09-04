@@ -176,7 +176,7 @@ static std::string dumpInstruction(const Instruction* inst, NotNull<const Contro
                 if (flow.type)
                 {
                     const char* guard = flow.isTypeof ? "typeof" : "type";
-                    const char* cmp = flow.sense ? "==" : "~=";
+                    const char* cmp = flow.sense ? "==" : "!=";
                     rhs = std::string(guard) + "(" + dumpDef(flow.toRefine) + ") " + cmp + " \"" + *flow.type + "\"";
                 }
                 else

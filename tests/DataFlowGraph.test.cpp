@@ -653,7 +653,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "insert_trivial_phi_nodes_inside_of_phi_
         local t = {}
 
         local function f(k: string)
-            if t[k] ~= nil then
+            if t[k] != nil then
                 return
             end
 
@@ -662,7 +662,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "insert_trivial_phi_nodes_inside_of_phi_
     )");
 
     DefId t1 = graph->getDef(query<AstStatLocal>(module)->vars.data[0]); // local t = {}
-    DefId t2 = getDef<AstExprLocal, 1>();                                // t[k] ~= nil
+    DefId t2 = getDef<AstExprLocal, 1>();                                // t[k] != nil
     DefId t3 = getDef<AstExprLocal, 3>();                                // t[k] = 5
 
     CHECK(t1 != t2);

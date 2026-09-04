@@ -103,7 +103,7 @@ function f(x)
         end
     if x == 1 then do break end
     elseif x == 2 then return
-    else if x ~= 3 then error() end
+    else if x != 3 then error() end
     end
     first = nil
   end
@@ -140,7 +140,7 @@ local i = 1
 repeat
   local x = i
   a[i] = function () i = x+1; return x end
-until i > 10 or a[i]() ~= x
+until i > 10 or a[i]() != x
 assert(i == 11 and a[1]() == 1 and a[3]() == 3 and i == 4)
 
 print'+'
@@ -149,7 +149,7 @@ print'+'
 -- test for correctly closing upvalues in tail calls of vararg functions
 local function t ()
   local function c(a,b) assert(a=="test" and b=="OK") end
-  local function v(f, ...) c("test", f() ~= 1 and "FAILED" or "OK") end
+  local function v(f, ...) c("test", f() != 1 and "FAILED" or "OK") end
   local x = 1
   return v(function() return x end)
 end
@@ -259,7 +259,7 @@ function filter (p, g)
     while 1 do
       local n = g()
       if n == nil then return end
-      if n%p ~= 0 then coroutine.yield(n) end
+      if n%p != 0 then coroutine.yield(n) end
     end
   end)
 end

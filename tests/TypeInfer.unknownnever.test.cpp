@@ -329,7 +329,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_unify_operands_if_one_of_the_operand_is_never_i
 {
     CheckResult result = check(R"(
         local function ord(x: nil, y)
-            return x ~= nil and x > y
+            return x != nil and x > y
         end
     )");
 
@@ -345,7 +345,7 @@ TEST_CASE_FIXTURE(Fixture, "math_operators_and_never")
 {
     CheckResult result = check(R"(
         local function mul(x: nil, y)
-            return x ~= nil and x * y -- infers boolean | never, which is normalized into boolean
+            return x != nil and x * y -- infers boolean | never, which is normalized into boolean
         end
     )");
 
@@ -355,7 +355,7 @@ TEST_CASE_FIXTURE(Fixture, "math_operators_and_never")
         CHECK(get<ExplicitFunctionAnnotationRecommended>(result.errors[0]));
 
         // CLI-114134 Egraph-based simplification.
-        // CLI-116549 x ~= nil : false when x : nil
+        // CLI-116549 x != nil : false when x : nil
         CHECK("<T>(nil, T) -> false | mul<nil & ~nil, T>" == toString(requireType("mul")));
     }
     else
@@ -369,7 +369,7 @@ TEST_CASE_FIXTURE(Fixture, "compare_never")
 {
     CheckResult result = check(R"(
         local function cmp(x: nil, y: number)
-            return x ~= nil and x > y and x < y -- infers boolean | never, which is normalized into boolean
+            return x != nil and x > y and x < y -- infers boolean | never, which is normalized into boolean
         end
     )");
 

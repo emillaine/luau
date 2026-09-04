@@ -2555,7 +2555,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "regex_benchmark_string_format_minimization")
         (nil :: any)(function(n)
             if tonumber(n) then
                 n = tonumber(n)
-            elseif n ~= nil then
+            elseif n != nil then
                 string.format("invalid argument #4 to 'sub': number expected, got %s", typeof(n))
             end
         end);
@@ -2964,7 +2964,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_missing_follow_in_ast_stat_fun")
 {
     (void)check(R"(
         local _ = function<t0...>()
-        end ~= _
+        end != _
 
         while (_) do
             _,_,_,_,_,_,_,_,_,_._,_ = nil

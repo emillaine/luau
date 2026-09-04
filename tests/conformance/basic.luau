@@ -123,7 +123,7 @@ assert((function() local a = '1' a = a .. '2' .. '3' return a end)() == "123")
 assert(concat(pcall(function() return '1' .. nil .. '2' end)):match("^false,.*attempt to concatenate nil with string"))
 
 assert((function() local a = 1 a = a == 2 return a end)() == false)
-assert((function() local a = 1 a = a ~= 2 return a end)() == true)
+assert((function() local a = 1 a = a != 2 return a end)() == true)
 assert((function() local a = 1 a = a < 2 return a end)() == true)
 assert((function() local a = 1 a = a <= 2 return a end)() == true)
 assert((function() local a = 1 a = a > 2 return a end)() == false)
@@ -494,31 +494,31 @@ end)() == 42)
 
 -- comparison
 -- basic types
-assert((function() a = nil return concat(a == nil, a ~= nil) end)() == "true,false")
-assert((function() a = nil return concat(a == 1, a ~= 1) end)() == "false,true")
-assert((function() a = 1 return concat(a == 1, a ~= 1) end)() == "true,false")
-assert((function() a = 1 return concat(a == 2, a ~= 2) end)() == "false,true")
-assert((function() a = true return concat(a == true, a ~= true) end)() == "true,false")
-assert((function() a = true return concat(a == false, a ~= false) end)() == "false,true")
-assert((function() a = 'a' return concat(a == 'a', a ~= 'a') end)() == "true,false")
-assert((function() a = 'a' return concat(a == 'b', a ~= 'b') end)() == "false,true")
+assert((function() a = nil return concat(a == nil, a != nil) end)() == "true,false")
+assert((function() a = nil return concat(a == 1, a != 1) end)() == "false,true")
+assert((function() a = 1 return concat(a == 1, a != 1) end)() == "true,false")
+assert((function() a = 1 return concat(a == 2, a != 2) end)() == "false,true")
+assert((function() a = true return concat(a == true, a != true) end)() == "true,false")
+assert((function() a = true return concat(a == false, a != false) end)() == "false,true")
+assert((function() a = 'a' return concat(a == 'a', a != 'a') end)() == "true,false")
+assert((function() a = 'a' return concat(a == 'b', a != 'b') end)() == "false,true")
 
 -- tables, reference equality (no mt)
-assert((function() a = {} return concat(a == a, a ~= a) end)() == "true,false")
-assert((function() a = {} b = {} return concat(a == b, a ~= b) end)() == "false,true")
+assert((function() a = {} return concat(a == a, a != a) end)() == "true,false")
+assert((function() a = {} b = {} return concat(a == b, a != b) end)() == "false,true")
 
 -- tables, reference equality (mt without __eq)
-assert((function() a = {} setmetatable(a, {}) return concat(a == a, a ~= a) end)() == "true,false")
-assert((function() a = {} b = {} mt = {} setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a ~= b) end)() == "false,true")
+assert((function() a = {} setmetatable(a, {}) return concat(a == a, a != a) end)() == "true,false")
+assert((function() a = {} b = {} mt = {} setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "false,true")
 
 -- tables, __eq with same mt/different mt but same function/different function
-assert((function() a = {} b = {} mt = { __eq = function(l, r) return #l == #r end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a ~= b) end)() == "true,false")
-assert((function() a = {} b = {} function eq(l, r) return #l == #r end setmetatable(a, {__eq = eq}) setmetatable(b, {__eq = eq}) return concat(a == b, a ~= b) end)() == "true,false")
-assert((function() a = {} b = {} setmetatable(a, {__eq = function(l, r) return #l == #r end}) setmetatable(b, {__eq = function(l, r) return #l == #r end}) return concat(a == b, a ~= b) end)() == "false,true")
+assert((function() a = {} b = {} mt = { __eq = function(l, r) return #l == #r end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "true,false")
+assert((function() a = {} b = {} function eq(l, r) return #l == #r end setmetatable(a, {__eq = eq}) setmetatable(b, {__eq = eq}) return concat(a == b, a != b) end)() == "true,false")
+assert((function() a = {} b = {} setmetatable(a, {__eq = function(l, r) return #l == #r end}) setmetatable(b, {__eq = function(l, r) return #l == #r end}) return concat(a == b, a != b) end)() == "false,true")
 
 -- userdata, reference equality (no mt or mt.__eq)
-assert((function() a = newproxy() return concat(a == newproxy(),a ~= newproxy()) end)() == "false,true")
-assert((function() a = newproxy(true) return concat(a == newproxy(true),a ~= newproxy(true)) end)() == "false,true")
+assert((function() a = newproxy() return concat(a == newproxy(),a != newproxy()) end)() == "false,true")
+assert((function() a = newproxy(true) return concat(a == newproxy(true),a != newproxy(true)) end)() == "false,true")
 
 -- rawequal
 assert(rawequal(true, 5) == false)

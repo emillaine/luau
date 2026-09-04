@@ -93,7 +93,7 @@ assert(math.pi - math.pi % 0.001 == 3.141)
 
 do
   local a = 3 % 0;
-  assert(a ~= a) -- Expect NaN
+  assert(a != a) -- Expect NaN
   assert(((2^53+1) % 2) == 0)
   assert((1234 % (2^53+1)) == 1234)
 end
@@ -157,7 +157,7 @@ do   -- testing NaN
   local NaN -- to avoid constant folding
   NaN = 10e500 - 10e400
 
-  assert(NaN ~= NaN)
+  assert(NaN != NaN)
   assert(not (NaN == NaN))
 
   assert(not (NaN < NaN))
@@ -192,7 +192,7 @@ end
 
 -- extra NaN tests, hidden in a function
 do
-  function neq(a) return a ~= a end
+  function neq(a) return a != a end
   function eq(a) return a == a end
   function lt(a) return a < a end
   function le(a) return a <= a end
@@ -299,9 +299,9 @@ assert(math.max(ma, mb, mc, md) == 2)
 local inf = math.huge * 2
 local nan = 0 / 0
 
-assert(math.min(nan, 2) ~= math.min(nan, 2))
+assert(math.min(nan, 2) != math.min(nan, 2))
 assert(math.min(1, nan) == 1)
-assert(math.max(nan, 2) ~= math.max(nan, 2))
+assert(math.max(nan, 2) != math.max(nan, 2))
 assert(math.max(1, nan) == 1)
 
 local function noinline(x, ...) local s, r = pcall(function(y) return y end, x) return r end
@@ -432,7 +432,7 @@ assert(math.pi * 2 == math.tau)
 assert(math.sqrt(2) == math.sqrt2)
 assert(math.exp(1) == math.e)
 assert(((1 + math.sqrt(5)) / 2) == math.phi)
-assert(math.nan ~= math.nan)
+assert(math.nan != math.nan)
 assert(math.isnan(math.nan))
 
 -- isnan, isinf, isfinite

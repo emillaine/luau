@@ -932,7 +932,7 @@ local function ExitSeat(player, character, seat, weld)
     repeat
         model = newParent
         newParent = model.Parent
-    until newParent.ClassName ~= "Model"
+    until newParent.ClassName != "Model"
     local part, _ = Raycast(seat.Position, dir, dist, {character, model})
 end
 )");

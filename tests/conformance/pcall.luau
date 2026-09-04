@@ -201,7 +201,7 @@ local function run_base_tests()
 		return 1
 	end)
 
-	while yieldwithsameresult() ~= 1 do end
+	while yieldwithsameresult() != 1 do end
 	
 	-- check result nil-fill
 	local status, res1, res2 = xpcall(function() end, error)

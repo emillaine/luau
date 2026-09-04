@@ -5,7 +5,7 @@ print('testing userdata')
 
 -- equality
 assert(int64(1) == int64(1))
-assert(int64(1) ~= int64(2))
+assert(int64(1) != int64(2))
 
 -- relational
 assert(not (int64(1) < int64(1)))

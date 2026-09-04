@@ -3594,7 +3594,7 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
     const Lexeme& curr = lexer.current();
 
     // early-out: need to check if this is a possible confusable quickly
-    if (curr.type != '&' && curr.type != '|' && curr.type != '!')
+    if (curr.type != '&' && curr.type != '|' && curr.type != '~')
         return {};
 
     // slow path: possible confusable
@@ -3613,11 +3613,11 @@ std::optional<AstExprBinary::Op> Parser::checkBinaryConfusables(const BinaryOpPr
         report(Location(start, next.location), "Unexpected '||'; did you mean 'or'?");
         return AstExprBinary::Or;
     }
-    else if (curr.type == '!' && next.type == '=' && curr.location.end == next.location.begin &&
+    else if (curr.type == '~' && next.type == '=' && curr.location.end == next.location.begin &&
              binaryPriority[AstExprBinary::CompareNe].left > limit)
     {
         nextLexeme();
-        report(Location(start, next.location), "Unexpected '!='; did you mean '~='?");
+        report(Location(start, next.location), "Unexpected '~='; did you mean '!='?");
         return AstExprBinary::CompareNe;
     }
 

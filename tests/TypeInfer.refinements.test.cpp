@@ -615,8 +615,8 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_another_lvalue")
     CHECK_EQ(toString(requireTypeAtPosition({3, 33})), "(number | string)?"); // a == b
     CHECK_EQ(toString(requireTypeAtPosition({3, 36})), "boolean?");           // a == b
 
-    CHECK_EQ(toString(requireTypeAtPosition({5, 33})), "(number | string)?"); // a ~= b
-    CHECK_EQ(toString(requireTypeAtPosition({5, 36})), "boolean?");           // a ~= b
+    CHECK_EQ(toString(requireTypeAtPosition({5, 33})), "(number | string)?"); // a != b
+    CHECK_EQ(toString(requireTypeAtPosition({5, 36})), "boolean?");           // a != b
 }
 
 TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_a_term")
@@ -634,7 +634,7 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_a_term")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ(toString(requireTypeAtPosition({3, 28})), "(number | string)?"); // a == 1;
-    CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "(number | string)?"); // a ~= 1
+    CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "(number | string)?"); // a != 1
 }
 
 TEST_CASE_FIXTURE(Fixture, "term_is_equal_to_an_lvalue")
@@ -654,12 +654,12 @@ TEST_CASE_FIXTURE(Fixture, "term_is_equal_to_an_lvalue")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CHECK_EQ(toString(requireTypeAtPosition({3, 28})), R"("hello")");                         // a == "hello"
-        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), R"(((string & ~"hello") | number)?)"); // a ~= "hello"
+        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), R"(((string & ~"hello") | number)?)"); // a != "hello"
     }
     else
     {
         CHECK_EQ(toString(requireTypeAtPosition({3, 28})), R"("hello")");            // a == "hello"
-        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), R"((number | string)?)"); // a ~= "hello"
+        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), R"((number | string)?)"); // a != "hello"
     }
 }
 
@@ -667,7 +667,7 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_not_nil")
 {
     CheckResult result = check(R"(
         local function f(a: (string | number)?)
-            if a ~= nil then
+            if a != nil then
                 local foo = a
             else
                 local foo = a
@@ -677,7 +677,7 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_not_nil")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ(toString(requireTypeAtPosition({3, 28})), "number | string"); // a ~= nil
+    CHECK_EQ(toString(requireTypeAtPosition({3, 28})), "number | string"); // a != nil
     if (!FFlag::DebugLuauForceOldSolver)
         CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "nil"); // a == nil :)
     else
@@ -720,7 +720,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_lvalue_is_not_synonymous_with_other_on_not_e
 {
     CheckResult result = check(R"(
         local function f(a: any, b: {x: number}?)
-            if a ~= b then
+            if a != b then
                 local foo, bar = a, b
             end
         end
@@ -728,8 +728,8 @@ TEST_CASE_FIXTURE(Fixture, "unknown_lvalue_is_not_synonymous_with_other_on_not_e
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ(toString(requireTypeAtPosition({3, 33})), "any");            // a ~= b
-    CHECK_EQ(toString(requireTypeAtPosition({3, 36})), "{ x: number }?"); // a ~= b
+    CHECK_EQ(toString(requireTypeAtPosition({3, 33})), "any");            // a != b
+    CHECK_EQ(toString(requireTypeAtPosition({3, 36})), "{ x: number }?"); // a != b
 }
 
 TEST_CASE_FIXTURE(Fixture, "string_not_equal_to_string_or_nil")
@@ -739,7 +739,7 @@ TEST_CASE_FIXTURE(Fixture, "string_not_equal_to_string_or_nil")
 
         local a: string = t[1]
         local b: string? = nil
-        if a ~= b then
+        if a != b then
             local foo, bar = a, b
         else
             local foo, bar = a, b
@@ -748,8 +748,8 @@ TEST_CASE_FIXTURE(Fixture, "string_not_equal_to_string_or_nil")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ(toString(requireTypeAtPosition({6, 29})), "string");  // a ~= b
-    CHECK_EQ(toString(requireTypeAtPosition({6, 32})), "string?"); // a ~= b
+    CHECK_EQ(toString(requireTypeAtPosition({6, 29})), "string");  // a != b
+    CHECK_EQ(toString(requireTypeAtPosition({6, 32})), "string?"); // a != b
 
     CHECK_EQ(toString(requireTypeAtPosition({8, 29})), "string");  // a == b
     CHECK_EQ(toString(requireTypeAtPosition({8, 32})), "string?"); // a == b
@@ -804,7 +804,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonoptional_type_can_narrow_to_nil_if_sense_
             local foo = v
         end
 
-        if not (type(v) ~= "nil") then
+        if not (type(v) != "nil") then
             local foo = v
         else
             local foo = v
@@ -816,23 +816,23 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonoptional_type_can_narrow_to_nil_if_sense_
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CHECK("nil & string" == toString(requireTypeAtPosition({4, 24})));  // type(v) == "nil"
-        CHECK("string & ~nil" == toString(requireTypeAtPosition({6, 24}))); // type(v) ~= "nil"
+        CHECK("string & ~nil" == toString(requireTypeAtPosition({6, 24}))); // type(v) != "nil"
     }
     else
     {
         CHECK_EQ("nil", toString(requireTypeAtPosition({4, 24})));    // type(v) == "nil"
-        CHECK_EQ("string", toString(requireTypeAtPosition({6, 24}))); // type(v) ~= "nil"
+        CHECK_EQ("string", toString(requireTypeAtPosition({6, 24}))); // type(v) != "nil"
     }
 
     CHECK_EQ("nil", toString(requireTypeAtPosition({10, 24})));    // equivalent to type(v) == "nil"
-    CHECK_EQ("string", toString(requireTypeAtPosition({12, 24}))); // equivalent to type(v) ~= "nil"
+    CHECK_EQ("string", toString(requireTypeAtPosition({12, 24}))); // equivalent to type(v) != "nil"
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_not_to_be_string")
 {
     CheckResult result = check(R"(
         local function f(x: string | number | boolean)
-            if type(x) ~= "string" then
+            if type(x) != "string" then
                 local foo = x
             else
                 local foo = x
@@ -842,7 +842,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_not_to_be_string")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("boolean | number", toString(requireTypeAtPosition({3, 28}))); // type(x) ~= "string"
+    CHECK_EQ("boolean | number", toString(requireTypeAtPosition({3, 28}))); // type(x) != "string"
     CHECK_EQ("string", toString(requireTypeAtPosition({5, 28})));           // type(x) == "string"
 }
 
@@ -861,7 +861,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_narrows_for_table")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("{ x: number } | { y: boolean }", toString(requireTypeAtPosition({3, 28}))); // type(x) == "table"
-    CHECK_EQ("string", toString(requireTypeAtPosition({5, 28})));                         // type(x) ~= "table"
+    CHECK_EQ("string", toString(requireTypeAtPosition({5, 28})));                         // type(x) != "table"
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_narrows_for_functions")
@@ -879,7 +879,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_narrows_for_functions")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("(number) -> string", toString(requireTypeAtPosition({3, 28}))); // type(x) == "function"
-    CHECK_EQ("string", toString(requireTypeAtPosition({5, 28})));             // type(x) ~= "function"
+    CHECK_EQ("string", toString(requireTypeAtPosition({5, 28})));             // type(x) != "function"
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_intersection_of_tables")
@@ -926,7 +926,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_narrowed_into_nothingness")
 {
     CheckResult result = check(R"(
         local function f(t: {x: number})
-            if type(t) ~= "table" then
+            if type(t) != "table" then
                 local foo = t
                 error(("Expected a table, got %s"):format(type(t)))
             end
@@ -1102,7 +1102,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_the_correct_types_opposite_of_when_a_
 {
     CheckResult result = check(R"(
         local function f(a: string | number | boolean)
-            if type(a) ~= "number" and type(a) ~= "string" then
+            if type(a) != "number" and type(a) != "string" then
                 local foo = a
             else
                 local foo = a
@@ -1215,7 +1215,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_the_correct_types_opposite_of_while_a
 {
     CheckResult result = check(R"(
         local function f(a: string | number | boolean)
-            while type(a) ~= "number" and type(a) ~= "string" do
+            while type(a) != "number" and type(a) != "string" do
                 local foo = a
             end
         end
@@ -1468,7 +1468,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_free_table_to_vec
 
     CHECK_EQ("never", toString(requireTypeAtPosition({7, 28}))); // typeof(vec) == "Instance"
 
-    CHECK_EQ("{+ X: T, Y: U, Z: V +}", toString(requireTypeAtPosition({9, 28}))); // type(vec) ~= "vector" and typeof(vec) ~= "Instance"
+    CHECK_EQ("{+ X: T, Y: U, Z: V +}", toString(requireTypeAtPosition({9, 28}))); // type(vec) != "vector" and typeof(vec) != "Instance"
 }
 
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_instance_or_vector3_to_vector")
@@ -1707,7 +1707,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "x_is_not_instance_or_else_not_pa
 {
     CheckResult result = check(R"(
         local function f(x: Part | Folder | string)
-            if typeof(x) ~= "Instance" or not x:IsA("Part") then
+            if typeof(x) != "Instance" or not x:IsA("Part") then
                 local foo = x
             else
                 local foo = x
@@ -1873,7 +1873,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzz_filtered_refined_types_are_followed")
     CheckResult result = check(R"(
 local _
 do
-local _ = _ ~= _ or _ or _
+local _ = _ != _ or _ or _
 end
     )");
 
@@ -1928,7 +1928,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_a_param_that_got_resolved
         type Id<T> = T
 
         local function f(x: Id<Id<Part | Folder> | Id<string>>)
-            if typeof(x) ~= "string" and x:IsA("Part") then
+            if typeof(x) != "string" and x:IsA("Part") then
                 local foo = x
             else
                 local foo = x
@@ -2121,7 +2121,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_with_colon_after_refining_not_
         }
 
         local function _f(handler: Observer<any>)
-            assert(handler.complete ~= nil)
+            assert(handler.complete != nil)
             handler:complete() -- incorrectly gives Value of type '((Observer<any>) -> ())?' could be nil
             handler.complete(handler) -- works fine, both forms should avoid the error
         end
@@ -2159,11 +2159,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "many_refinements_on_val")
 {
     CheckResult result = check(R"(
         local function is_nan(val: any): boolean
-            return type(val) == "number" and val ~= val
+            return type(val) == "number" and val != val
         end
 
         local function is_js_boolean(val: any): boolean
-            return not not val and val ~= 0 and val ~= "" and not is_nan(val)
+            return not not val and val != 0 and val != "" and not is_nan(val)
         end
     )");
 
@@ -2331,7 +2331,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ensure_t_after_return_references_all_reachab
         local t = {}
 
         local function f(k: string)
-            if t[k] ~= nil then
+            if t[k] != nil then
                 return
             end
 
@@ -2550,7 +2550,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonnil_refinement_on_generic")
 {
     CheckResult result = check(R"(
         local function printOptional<T>(item: T?, printer: (T) -> string): string
-            if item ~= nil then
+            if item != nil then
                 return printer(item)
             else
                 return ""
@@ -3233,10 +3233,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "indexing_into_error_gives_error")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         local function keyExtractor(item: any, index: number): string
-            if typeof(item) == "table" and item.key ~= nil then
+            if typeof(item) == "table" and item.key != nil then
                 return item.key
             end
-            if typeof(item) == "table" and item.id ~= nil then
+            if typeof(item) == "table" and item.id != nil then
                 return item.id
             end
             return tostring(index)

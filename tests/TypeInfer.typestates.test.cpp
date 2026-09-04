@@ -733,7 +733,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_refinement_in_loop")
         --!strict
         local function onEachString(t: { string | number })
             for _, v in t do
-                if type(v) ~= "string" then
+                if type(v) != "string" then
                     continue
                 end
                 print(v)

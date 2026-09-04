@@ -1,8 +1,8 @@
 local module = require("./export_class_both_exported")
 
 -- Both Animal and Cat should be accessible
-assert(module.Animal ~= nil, "expected Animal to be exported")
-assert(module.Cat ~= nil, "expected Cat to be exported")
+assert(module.Animal != nil, "expected Animal to be exported")
+assert(module.Cat != nil, "expected Cat to be exported")
 
 -- Create instances of both
 local a = module.Animal.new({species = "Canis lupus"})

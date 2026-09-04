@@ -38,7 +38,7 @@ do  -- test old bug (first name could not be an `upvalue')
 end
 
 function f (i)
-  if type(i) ~= 'number' then return i,'jojo'; end;
+  if type(i) != 'number' then return i,'jojo'; end;
   if i > 0 then return i, f(i-1); end;
 end
 
@@ -167,7 +167,7 @@ end;
 assert(f(2,1) == true and g(2,1) == 1 and h(2,1) == 1)
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
 assert(f(1,2,'a')
-~=          -- force SETLINE before nil
+!=          -- force SETLINE before nil
 nil, "")
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
 assert(f(1,2,nil,1,'x') == 'x' and g(1,2,nil,1,'x') == 1 and
@@ -192,7 +192,7 @@ function F(a)
   return a,2,3
 end
 
-a,b = F(1)~=nil; assert(a == true and b == nil);
+a,b = F(1)!=nil; assert(a == true and b == nil);
 a,b = F(nil)==nil; assert(a == true and b == nil)
 
 ----------------------------------------------------------------
@@ -210,7 +210,7 @@ end
 
 local arg = {" ( 1 < 2 ) ", " ( 1 >= 2 ) ", " F ( ) ", "  nil "; n=4}
 
-local op = {" and ", " or ", " == ", " ~= "; n=4}
+local op = {" and ", " or ", " == ", " != "; n=4}
 
 local neg = {" ", " not "; n=2}
 

@@ -145,10 +145,10 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 end
             end)
             function Result:isOk()
-                return self.okValue ~= nil
+                return self.okValue != nil
             end
             function Result:isErr()
-                return self.errValue ~= nil
+                return self.errValue != nil
             end
             function Result:contains(x)
                 return self.okValue == x

@@ -3221,7 +3221,7 @@ private:
                     "not X %s Y is equivalent to (not X) %s Y; consider using X %s Y, or add parentheses to silence",
                     op.c_str(),
                     op.c_str(),
-                    node->op == AstExprBinary::CompareEq ? "~=" : "=="
+                    node->op == AstExprBinary::CompareEq ? "!=" : "=="
                 );
             else
                 emitWarning(

@@ -293,9 +293,9 @@ expectpass("classes have referential equality", function()
     local b1 = Box.new({ item = "gold coin" })
     local b2 = Box.new({ item = "gold coin" })
     assert(b1 == b1)
-    assert(b1 ~= b2)
+    assert(b1 != b2)
     assert(Box == Box)
-    assert(Point ~= Box)
+    assert(Point != Box)
 end)
 
 expectfail("classes do not support <", "attempt to compare class < class", function()
@@ -310,7 +310,7 @@ expectpass("classes use __eq", function ()
     local p1 = Point.new({ x = 1, y = 2 })
     local p2 = Point.new({ x = 1, y = 2 })
     assert(p1 == p2)
-    assert(p1 ~= Point.zero())
+    assert(p1 != Point.zero())
 end)
 
 expectpass("classinstance __tostring", function ()
@@ -328,12 +328,12 @@ end)
 expectpass("classinstance without __tostring uses default format", function ()
     local b = Box.new({ item = "sword" })
     local s = tostring(b)
-    assert(string.match(s, "^object:") ~= nil, `expected default format, got: {s}`)
+    assert(string.match(s, "^object:") != nil, `expected default format, got: {s}`)
 end)
 
 expectpass("classobject tostring uses default format", function ()
     local s = tostring(Point)
-    assert(string.match(s, "^class:") ~= nil, `expected default format, got: {s}`)
+    assert(string.match(s, "^class:") != nil, `expected default format, got: {s}`)
 end)
 
 class BadToString
@@ -351,7 +351,7 @@ class Entry
     public ordering: number
 
     function __lt(self, other)
-        if self.tier ~= other.tier then
+        if self.tier != other.tier then
             if self.tier == "S" then
                 return true
             elseif other.tier == "S" then
@@ -760,7 +760,7 @@ expectpass("class inheritance isinstance parent is not child", function()
 end)
 
 expectpass("class inheritance static method accessible on child", function()
-    assert(Cat.live ~= nil)
+    assert(Cat.live != nil)
     assert(typeof(Cat.live) == "function")
     local c = Cat.new({ species = "Felis catus", breed = "Tabby" })
     assert(Cat.live(c) == "I am alive")
@@ -799,8 +799,8 @@ end)
 expectpass("class inheritance multi-level classof", function()
     local k = Kitten.new({ species = "Felis catus", breed = "Persian", name = "Whiskers" })
     assert(class.classof(k) == Kitten)
-    assert(class.classof(k) ~= Cat)
-    assert(class.classof(k) ~= Animal)
+    assert(class.classof(k) != Cat)
+    assert(class.classof(k) != Animal)
 end)
 
 open class Vehicle
@@ -931,8 +931,8 @@ expectpass("class inheritance __eq inherited", function()
     local d = EqParent.new({ val = 42 })
     assert(a == b)
     assert(b == a)
-    assert(a ~= c)
-    assert(c ~= a)
+    assert(a != c)
+    assert(c != a)
     assert(a == d)
     assert(b == a)
 end)

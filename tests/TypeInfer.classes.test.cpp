@@ -96,7 +96,7 @@ end
 local p1 = Point.new { x = 1, y = 2 }
 local p2 = Point.new { x = 1, y = 2 }
 local _ = p1 == p2
-local _ = p1 ~= Point.zero()
+local _ = p1 != Point.zero()
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -119,10 +119,10 @@ local p1 = Point.new { x = 1, y = 2 }
 local p2 = Box.new { x = 1 }
 local _ = p1 == p1
 -- This one too
-local _ = p1 ~= p2
+local _ = p1 != p2
 local _ = Box == Box
 -- This line should error...
-local _ = Point ~= Box
+local _ = Point != Box
 )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);

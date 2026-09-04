@@ -13,7 +13,7 @@ end
 -- equality
 assert(vector.create(1, 2, 3) == vector.create(1, 2, 3))
 assert(vector.create(0, 1, 2) == vector.create(-0, 1, 2))
-assert(vector.create(1, 2, 3) ~= vector.create(1, 2, 4))
+assert(vector.create(1, 2, 3) != vector.create(1, 2, 4))
 
 -- rawequal
 assert(rawequal(vector.create(1, 2, 3), vector.create(1, 2, 3)))
@@ -93,7 +93,7 @@ end
 
 -- test NaN comparison
 local nanv = vector.create(0/0, 0/0, 0/0)
-assert(nanv ~= nanv);
+assert(nanv != nanv);
 
 -- __index
 assert(vector.create(1, 2, 2).Magnitude == 3)

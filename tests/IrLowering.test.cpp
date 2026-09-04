@@ -817,7 +817,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BooleanCompare")
         "\n" + getCodegenAssembly(
                    R"(
 local function foo(a)
-    return { a == true, a == false, a ~= true, a ~= false }
+    return { a == true, a == false, a != true, a != false }
 end
 )"
                ),
@@ -864,7 +864,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberCompare")
         "\n" + getCodegenAssembly(
                    R"(
 local function foo(a)
-    return { a == 4.0, a ~= 3.0 }
+    return { a == 4.0, a != 3.0 }
 end
 )"
                ),
@@ -901,7 +901,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberCompare2")
         "\n" + getCodegenAssembly(
                    R"(
 local function foo(a, b, c)
-    return { a == b, a ~= c }
+    return { a == b, a != c }
 end
 )"
                ),
@@ -944,7 +944,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberCompare3")
         "\n" + getCodegenAssembly(
                    R"(
 local function foo(a: number, b: number, c: number)
-    return { a == b, a ~= c }
+    return { a == b, a != c }
 end
 )"
                ),
@@ -2011,7 +2011,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "EntryBlockChecksWithOptional1")
         "\n" + getCodegenAssembly(
                    R"(
 function eq(a: number?, b: number)
-  return if a ~= nil then a + b else b
+  return if a != nil then a + b else b
 end
 )"
                ),
@@ -2053,7 +2053,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "EntryBlockChecksWithOptional2")
         "\n" + getCodegenAssembly(
                    R"(
 function eq(a: number, b: number?)
-  return if b ~= nil then a + b else a
+  return if b != nil then a + b else a
 end
 )"
                ),
@@ -5078,7 +5078,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "ComparisonPropagationWall")
         "\n" + getCodegenAssembly(R"(
 local function foo(a, b)
     local x = type(b)
-    local y = (not a) ~= b
+    local y = (not a) != b
     local z = type(b)
     return x, y, z
 end
@@ -6549,11 +6549,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest2")
     CHECK(
         getCodegenAssembly(R"(
 local _
-while true ~= _ do
+while true != _ do
     _ = nil
 end
-_ = _,{},16711935 ~= _,{["" ~= _]=16711935,},_ ~= _
-while {} ~= _ do
+_ = _,{},16711935 != _,{["" != _]=16711935,},_ != _
+while {} != _ do
     _ = nil
 end
 )")
@@ -6839,7 +6839,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest18")
 _[_](_)
 local _ = 538976256,_()()
 do end
-_ = 28672,false,_ ~= _ - _ - _ / _ >= _ - _ - _ / _ - _ - _ - "" - _ - _ - _,not _ - "",not _ - _ - _,_
+_ = 28672,false,_ != _ - _ - _ / _ >= _ - _ - _ / _ - _ - _ - "" - _ - _ - _,not _ - "",not _ - _ - _,_
 )",
             false,
             1,

@@ -32,7 +32,7 @@ function verify(real, rtti, path)
 			end
 
 			for k, v in pairs(keys) do
-				if k ~= "_G" then
+				if k != "_G" then
 					verify(real[k], rtti[k], path .. '.' .. k)
 				end
 			end

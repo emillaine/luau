@@ -1382,7 +1382,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typechecking_in_type_guards")
 {
     CheckResult result = check(R"(
 local a = type(foo) == 'nil'
-local b = typeof(foo) ~= 'nil'
+local b = typeof(foo) != 'nil'
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2238,7 +2238,7 @@ elseif escape_c >= 48 and escape_c <= 57 then
 elseif escape_c == 69 then
 elseif escape_c == 81 then
 elseif escape_c == 78 then
-    if codes[i] ~= 125 or i == start_i then
+    if codes[i] != 125 or i == start_i then
     end
     table.insert(outln, code_point)
 elseif escape_c == 80 or escape_c == 112 then
@@ -2278,12 +2278,12 @@ TEST_CASE_FIXTURE(Fixture, "self_bound_due_to_compound_assign")
     CheckResult result = check(R"(
         --!strict
         function MT_UPDATE(CAMERA: Camera, Enum: any, totalOffsets: number, focusToCFrame: number, magnitude: number)
-            if CAMERA.CameraType ~= Enum.CameraType.Custom then
+            if CAMERA.CameraType != Enum.CameraType.Custom then
                 return
             end
 
             local goalCFrame = (CAMERA.CFrame) * totalOffsets
-            if goalCFrame ~= CAMERA.CFrame then
+            if goalCFrame != CAMERA.CFrame then
                 goalCFrame -= (focusToCFrame * magnitude) -- Offset the goalCFrame the raycast direction based on the cutoff distance.
             end
         end
@@ -2312,9 +2312,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "config_reader_example")
         local Config = ConfigReader.Defaults
 
         function ConfigReader:read(config_name: string)
-            if Config[config_name] ~= nil then
+            if Config[config_name] != nil then
                 return Config[config_name]
-            elseif Defaults[config_name] ~= nil then
+            elseif Defaults[config_name] != nil then
                 return Defaults[config_name]
             else
                 error(config_name .. " must be defined in Config")
@@ -2350,7 +2350,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "is_safe_integer_example")
     fileResolver.source["game/isInteger"] = R"(
         --!strict
         return function(value)
-            return type(value) == "number" and value ~= math.huge and value == math.floor(value)
+            return type(value) == "number" and value != math.huge and value == math.floor(value)
         end
     )";
 
@@ -2614,7 +2614,7 @@ TEST_CASE_FIXTURE(Fixture, "txnlog_checks_for_occurrence_before_self_binding_a_t
                 local a = x[v].p
             end
             a.b = x
-            if x.q ~= nil then
+            if x.q != nil then
                 f1(x) -- things go bad here
             end
         end

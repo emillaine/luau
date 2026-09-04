@@ -444,7 +444,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "avoid_cross_module_mutation_in_bidirectional
     fileResolver.source["Module/B"] = R"(
         local funs = require(script.Parent.ListFns)
         local accessories = funs.findWhere(getList(), function(accessory)
-            return accessory.AccessoryType ~= accessoryTypeEnum
+            return accessory.AccessoryType != accessoryTypeEnum
         end)
         return {}
     )";

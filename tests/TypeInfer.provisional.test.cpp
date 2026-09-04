@@ -117,7 +117,7 @@ return function<T, U>(t: Array<T>, callback: callbackFn<T> | callbackFnWithThisA
 	if thisArg == nil then
 		for i = 1, len do
 			local kValue = t[i]
-			if kValue ~= nil then
+			if kValue != nil then
 				if (callback :: callbackFn<T>)(kValue, i, t) then
 					res[i] = kValue
 				end
@@ -277,8 +277,8 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_equals_another_lvalue_with_no_overlap")
     CHECK_EQ(toString(requireTypeAtPosition({3, 33})), "string");   // a == b
     CHECK_EQ(toString(requireTypeAtPosition({3, 36})), "boolean?"); // a == b
 
-    CHECK_EQ(toString(requireTypeAtPosition({5, 33})), "string");   // a ~= b
-    CHECK_EQ(toString(requireTypeAtPosition({5, 36})), "boolean?"); // a ~= b
+    CHECK_EQ(toString(requireTypeAtPosition({5, 33})), "string");   // a != b
+    CHECK_EQ(toString(requireTypeAtPosition({5, 36})), "boolean?"); // a != b
 }
 
 // Also belongs in TypeInfer.refinements.test.cpp.
@@ -289,7 +289,7 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_from_x_not_equal_to_nil")
         type T = {x: string, y: number} | {x: nil, y: nil}
 
         local function f(t: T)
-            if t.x ~= nil then
+            if t.x != nil then
                 local foo = t
             else
                 local bar = t
@@ -1227,7 +1227,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bin_prov")
                 local item = self.head.item
                 if type(item) == "function" then
                     item()
-                elseif item.Destroy ~= nil then
+                elseif item.Destroy != nil then
                 end
                 self.head = self.head.next
             end

@@ -3405,7 +3405,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_string_singleton_equality")
     check(R"(
         type tagged = {tag:"cat", fieldx:number} | {tag:"dog", fieldy:number}
         local x: tagged = {tag="cat", fieldx=2}
-        if x.tag == "@1" or "@2" ~= x.tag then end
+        if x.tag == "@1" or "@2" != x.tag then end
     )");
 
     auto ac = autocomplete('1');

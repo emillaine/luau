@@ -824,7 +824,7 @@ assert(guard1({}) == 0)
 
 local function guard2(a)
   local c = 0
-  if type(a) ~= "number" then
+  if type(a) != "number" then
     c = 4
   end
   return c
@@ -846,7 +846,7 @@ assert(guard3({}) == 0)
 
 local function guard4(a)
   local c = 0
-  if typeof(a) ~= "number" then
+  if typeof(a) != "number" then
     c = 4
   end
   return c

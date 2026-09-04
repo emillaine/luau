@@ -192,7 +192,7 @@ t.__lt = function (a,b)
     if not b[k] then return false end
     b[k] = nil
   end
-  return next(b) ~= nil
+  return next(b) != nil
 end
 
 t.__le = nil
@@ -227,7 +227,7 @@ assert(s == Set{3,5,1})
 assert(not rawequal(s, Set{3,5,1}))
 assert(rawequal(s, s))
 assert(Set{1,3,5,1} == Set{3,5,1})
-assert(Set{1,3,5} ~= Set{3,5,1,6})
+assert(Set{1,3,5} != Set{3,5,1,6})
 t[Set{1,3,5}] = 1
 assert(t[Set{1,3,5}] == nil)   -- `__eq' is not valid for table accesses
 
@@ -262,7 +262,7 @@ t1 = {};  c = {}; setmetatable(c, t1)
 d = {}
 t1.__eq = function () return true end
 t1.__lt = function () return true end
-assert(c ~= d and not pcall(function () return c < d end))
+assert(c != d and not pcall(function () return c < d end))
 setmetatable(d, t1)
 assert(c == d and c < d and not(d <= c))
 t2 = {}
@@ -363,8 +363,8 @@ do
   setmetatable(t, { __eq = print })
   getmetatable(u).__eq = print
 
-  assert(t ~= t)
-  assert(u ~= u)
+  assert(t != t)
+  assert(u != u)
 end
 
 do

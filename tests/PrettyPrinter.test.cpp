@@ -21,7 +21,7 @@ TEST_CASE("test_1")
 {
     const std::string example = R"(
 local function isPortal(element)
-    if type(element)~='table'then
+    if type(element)!='table'then
         return false
     end
 

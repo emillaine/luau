@@ -798,7 +798,7 @@ end
 function f7(a)
     repeat
         return 10
-    until a ~= nil
+    until a != nil
 end
 
 return f1,f2,f3,f4,f5,f6,f7
@@ -2507,7 +2507,7 @@ TEST_CASE_FIXTURE(Fixture, "ComparisonPrecedence")
 local a, b = ...
 
 local _ = not a == b
-local _ = not a ~= b
+local _ = not a != b
 local _ = not a <= b
 local _ = a <= b == 0
 local _ = a <= b <= 0
@@ -2517,8 +2517,8 @@ local _ = not a == not b -- weird but ok
 -- silence tests for all of the above
 local _ = not (a == b)
 local _ = (not a) == b
-local _ = not (a ~= b)
-local _ = (not a) ~= b
+local _ = not (a != b)
+local _ = (not a) != b
 local _ = not (a <= b)
 local _ = (not a) <= b
 local _ = (a <= b) == 0
@@ -2526,8 +2526,8 @@ local _ = a <= (b == 0)
 )");
 
     REQUIRE(5 == result.warnings.size());
-    CHECK_EQ(result.warnings[0].text, "not X == Y is equivalent to (not X) == Y; consider using X ~= Y, or add parentheses to silence");
-    CHECK_EQ(result.warnings[1].text, "not X ~= Y is equivalent to (not X) ~= Y; consider using X == Y, or add parentheses to silence");
+    CHECK_EQ(result.warnings[0].text, "not X == Y is equivalent to (not X) == Y; consider using X != Y, or add parentheses to silence");
+    CHECK_EQ(result.warnings[1].text, "not X != Y is equivalent to (not X) != Y; consider using X == Y, or add parentheses to silence");
     CHECK_EQ(result.warnings[2].text, "not X <= Y is equivalent to (not X) <= Y; add parentheses to silence");
     CHECK_EQ(result.warnings[3].text, "X <= Y == Z is equivalent to (X <= Y) == Z; add parentheses to silence");
     CHECK_EQ(result.warnings[4].text, "X <= Y <= Z is equivalent to (X <= Y) <= Z; did you mean X <= Y and Y <= Z?");

@@ -1,9 +1,9 @@
 local module = require("./export_class_multi_level")
 
 -- All three classes should be exported
-assert(module.LivingThing ~= nil, "expected LivingThing to be exported")
-assert(module.Animal ~= nil, "expected Animal to be exported")
-assert(module.Cat ~= nil, "expected Cat to be exported")
+assert(module.LivingThing != nil, "expected LivingThing to be exported")
+assert(module.Animal != nil, "expected Animal to be exported")
+assert(module.Cat != nil, "expected Cat to be exported")
 
 -- Grandchild should inherit through both levels
 local c = module.Cat.new({alive = true, species = "Felis catus", name = "Whiskers"})

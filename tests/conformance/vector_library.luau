@@ -69,10 +69,10 @@ assert(select("#", vector.magnitude(vector.one)) == 1)
 -- 'abs'
 assert(vector.abs(-vector.one) == vector.one)
 assert(vector.abs(vector.create(math.huge, 0, 0)).x == math.abs(math.huge))
-assert(vector.abs(vector.create(0/0, 0, 0)).x ~= 0/0)
+assert(vector.abs(vector.create(0/0, 0, 0)).x != 0/0)
 assert(vector.abs(noinline(-vector.one)) == vector.one)
 assert(vector.abs(noinlinevector(math.huge, 0, 0)).x == math.abs(math.huge))
-assert(vector.abs(noinlinevector(0/0, 0, 0)).x ~= 0/0)
+assert(vector.abs(noinlinevector(0/0, 0, 0)).x != 0/0)
 assert(select("#", vector.abs(vector.one)) == 1)
 
 -- 'floor'
@@ -195,14 +195,14 @@ assert(vector.min(noinlinevector(-1, 2, 3), vector.create(3, 2, 1)) == vector.cr
 assert(vector.max(noinlinevector(1, 2, 3),vector.create(2, 3, 4),vector.create(3, 4, 5),vector.create(4, 5, 6)) == vector.create(4, 5, 6))
 assert(vector.min(noinlinevector(1, 2, 3),vector.create(2, 3, 4),vector.create(3, 4, 5),vector.create(4, 5, 6)) == vector.create(1, 2, 3))
 
-assert(vector.min(vector.create(0/0, 0, 0), vector.create(2, 0, 0)).x ~= 0/0)
+assert(vector.min(vector.create(0/0, 0, 0), vector.create(2, 0, 0)).x != 0/0)
 assert(vector.min(vector.create(1, 0, 0), vector.create(0/0, 0, 0)).x == 1)
-assert(vector.max(vector.create(0/0, 0, 0), vector.create(2, 0, 0)).x ~= 0/0)
+assert(vector.max(vector.create(0/0, 0, 0), vector.create(2, 0, 0)).x != 0/0)
 assert(vector.max(vector.create(1, 0, 0), vector.create(0/0, 0, 0)).x == 1)
 
-assert(vector.min(noinlinevector(0/0, 0, 0), vector.create(2, 0, 0)).x ~= 0/0)
+assert(vector.min(noinlinevector(0/0, 0, 0), vector.create(2, 0, 0)).x != 0/0)
 assert(vector.min(noinlinevector(1, 0, 0), vector.create(0/0, 0, 0)).x == 1)
-assert(vector.max(noinlinevector(0/0, 0, 0), vector.create(2, 0, 0)).x ~= 0/0)
+assert(vector.max(noinlinevector(0/0, 0, 0), vector.create(2, 0, 0)).x != 0/0)
 assert(vector.max(noinlinevector(1, 0, 0), vector.create(0/0, 0, 0)).x == 1)
 
 -- clamp

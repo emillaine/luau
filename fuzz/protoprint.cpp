@@ -706,7 +706,7 @@ struct ProtoToLuau
         else if (expr.op() == luau::ExprBinary::Concat)
             source += " .. ";
         else if (expr.op() == luau::ExprBinary::CompareNe)
-            source += " ~= ";
+            source += " != ";
         else if (expr.op() == luau::ExprBinary::CompareEq)
             source += " == ";
         else if (expr.op() == luau::ExprBinary::CompareLt)

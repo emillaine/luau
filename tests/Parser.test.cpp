@@ -4549,15 +4549,18 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_method_call_still_yields_an_AstExprIndexN
 TEST_CASE_FIXTURE(Fixture, "recover_confusables")
 {
     // Binary
-    matchParseError("local a = 4 != 10", "Unexpected '!='; did you mean '~='?");
+    matchParseError("local a = 4 ~= 10", "Unexpected '~='; did you mean '!='?");
     matchParseError("local a = true && false", "Unexpected '&&'; did you mean 'and'?");
     matchParseError("local a = false || true", "Unexpected '||'; did you mean 'or'?");
+
+    ParseResult result = tryParse("local a = 4 != 10");
+    CHECK(result.errors.empty());
 
     // Unary
     matchParseError("local a = !false", "Unexpected '!'; did you mean 'not'?");
 
     // Check that separate tokens are not considered as a single one
-    matchParseError("local a = 4 ! = 10", "Expected identifier when parsing expression, got '!'");
+    matchParseError("local a = 4 ~ = 10", "Expected identifier when parsing expression, got '~'");
     matchParseError("local a = true & & false", "Expected identifier when parsing expression, got '&'");
     matchParseError("local a = false | | true", "Expected identifier when parsing expression, got '|'");
 }
@@ -5449,7 +5452,7 @@ for i=1,10 do print(i) end
 @checked
 repeat
     line = io.read()
-until line ~= ""
+until line != ""
 )");
     checkFirstErrorForAttributes(
         pr5.errors,

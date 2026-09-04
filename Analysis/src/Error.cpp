@@ -82,7 +82,7 @@ static const std::unordered_map<std::string, const char*> kBinaryOps{
     {"concat", ".."},
     {"lt", "< or >="},
     {"le", "<= or >"},
-    {"eq", "== or ~="}
+    {"eq", "== or !="}
 };
 
 // this list of unary operator type functions is used for better stringification of type functions errors

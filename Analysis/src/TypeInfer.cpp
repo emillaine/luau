@@ -2654,7 +2654,7 @@ static std::optional<std::string> getIdentifierOfBaseVar(AstExpr* node)
 }
 
 /** Return true if comparison between the typeArguments a and b should be permitted with
- * the == or ~= operators.
+ * the == or != operators.
  *
  * Two typeArguments are considered eligible for equality testing if it is possible for
  * the test to ever succeed.  In other words, we test to see whether the two
@@ -6637,7 +6637,7 @@ void TypeChecker::resolve(const EqPredicate& eqP, RefinementMap& refis, const Sc
             // x : number | string   -> x : "hello"
             // x : number            -> x : never
             //
-            // "hello" ~= x where
+            // "hello" != x where
             // x : "hello" | "world" -> x : "world"
             // x : number | string   -> x : number | string
             // x : number            -> x : number

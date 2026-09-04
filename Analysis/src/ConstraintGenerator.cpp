@@ -3763,7 +3763,7 @@ std::tuple<TypeId, TypeId, RefinementId> ConstraintGenerator::checkBinary(
         else if (op == AstExprBinary::CompareNe)
             return {leftType, rightType, refinementArena.negation(proposition)};
         else
-            ice->ice("matchTypeGuard should only return a Some under `==` or `~=`!");
+            ice->ice("matchTypeGuard should only return a Some under `==` or `!=`!");
     }
     else if (op == AstExprBinary::CompareEq || op == AstExprBinary::CompareNe)
     {

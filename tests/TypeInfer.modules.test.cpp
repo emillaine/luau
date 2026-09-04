@@ -731,7 +731,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
                 return false
             end
 
-            if Cache.data[req_id] ~= nil then
+            if Cache.data[req_id] != nil then
                 return true
             end
 

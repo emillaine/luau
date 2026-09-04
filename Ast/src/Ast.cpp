@@ -473,7 +473,7 @@ std::string toString(AstExprBinary::Op op)
     case AstExprBinary::Concat:
         return "..";
     case AstExprBinary::CompareNe:
-        return "~=";
+        return "!=";
     case AstExprBinary::CompareEq:
         return "==";
     case AstExprBinary::CompareLt:

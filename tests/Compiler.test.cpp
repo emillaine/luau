@@ -1358,7 +1358,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a ~= b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a != b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFEQ R0 R1 L0
 LOADN R2 5
@@ -2014,7 +2014,7 @@ RETURN R0 2
 )");
 
     // equality comparisons
-    CHECK_EQ("\n" + compileFunction0("return nil == 1, nil ~= 1, nil == nil, nil ~= nil"), R"(
+    CHECK_EQ("\n" + compileFunction0("return nil == 1, nil != 1, nil == nil, nil != nil"), R"(
 LOADB R0 0
 LOADB R1 1
 LOADB R2 1
@@ -2022,7 +2022,7 @@ LOADB R3 0
 RETURN R0 4
 )");
 
-    CHECK_EQ("\n" + compileFunction0("return 2 == 1, 2 ~= 1, 1 == 1, 1 ~= 1"), R"(
+    CHECK_EQ("\n" + compileFunction0("return 2 == 1, 2 != 1, 1 == 1, 1 != 1"), R"(
 LOADB R0 0
 LOADB R1 1
 LOADB R2 1
@@ -2030,7 +2030,7 @@ LOADB R3 0
 RETURN R0 4
 )");
 
-    CHECK_EQ("\n" + compileFunction0("return true == false, true ~= false, true == true, true ~= true"), R"(
+    CHECK_EQ("\n" + compileFunction0("return true == false, true != false, true == true, true != true"), R"(
 LOADB R0 0
 LOADB R1 1
 LOADB R2 1
@@ -2038,7 +2038,7 @@ LOADB R3 0
 RETURN R0 4
 )");
 
-    CHECK_EQ("\n" + compileFunction0("return 'a' == 'b', 'a' ~= 'b', 'a' == 'a', 'a' ~= 'a'"), R"(
+    CHECK_EQ("\n" + compileFunction0("return 'a' == 'b', 'a' != 'b', 'a' == 'a', 'a' != 'a'"), R"(
 LOADB R0 0
 LOADB R1 1
 LOADB R2 1
@@ -5365,7 +5365,7 @@ L1: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 local obj = ...
-local b = nil ~= obj
+local b = nil != obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -10400,10 +10400,10 @@ local OffscreenLane: Lane = --[[                        ]] 0b1000000000000000000
 
 local function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes
     local everythingButOffscreen = bit32.band(root.pendingLanes, bit32.bnot(OffscreenLane))
-    if everythingButOffscreen ~= NoLanes then
+    if everythingButOffscreen != NoLanes then
         return everythingButOffscreen
     end
-    if bit32.band(everythingButOffscreen, OffscreenLane) ~= 0 then
+    if bit32.band(everythingButOffscreen, OffscreenLane) != 0 then
         return OffscreenLane
     end
     return NoLanes

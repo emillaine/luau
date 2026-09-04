@@ -750,7 +750,7 @@ do end
 do end
 _(...,_(_,_(_()),_()))
 (67108864)()()
-_(_ ~= _ // _,l0)(_(_({n0,})),_(_),_)
+_(_ != _ // _,l0)(_(_({n0,})),_(_),_)
 _(setmetatable(_,{[...]=_,}))
 
 )");
@@ -881,7 +881,7 @@ local Active = false
 
 local function Use(Mode)
 
-	if Mode ~= nil then
+	if Mode != nil then
 
 		if Mode == false and Active == false then
 			return

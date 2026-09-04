@@ -16,7 +16,7 @@
  * Table keys can be arbitrary values unless they contain NaN. Keys are hashed and compared using raw equality,
  * so even if the key is a userdata with an overridden __eq, it's not used during hash lookups.
  *
- * Each table has a "boundary", defined as the index k where t[k] ~= nil and t[k+1] == nil. The boundary can be
+ * Each table has a "boundary", defined as the index k where t[k] != nil and t[k+1] == nil. The boundary can be
  * computed using a binary search and can be adjusted when the table is modified; crucially, Luau enforces an
  * invariant where the boundary must be in the array part - this enforces a consistent iteration order through the
  * prefix of the table when using pairs(), and allows to implement algorithms that access elements in 1..#t range

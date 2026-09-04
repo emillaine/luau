@@ -478,7 +478,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         Promise.__index = Promise.prototype
 
         function Promise._new(traceback, callback, parent)
-            if parent ~= nil and not Promise.is(parent)then
+            if parent != nil and not Promise.is(parent)then
             end
 
             local self = {
