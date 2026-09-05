@@ -26,7 +26,7 @@ function x86_64_frame.analyzeFrame(body)
 			local base = x86.baseMnemonic(m)
 			if (base == "sub") and ops[1] and ops[1].rc == "sp" then
 				frameSize += math.abs(immVal(ops[2]))
-			elseif base == "mov" and ops[1] and ops[1].name == "rbp" and ops[2] and ops[2].rc == "sp" then
+			else if base == "mov" and ops[1] and ops[1].name == "rbp" and ops[2] and ops[2].rc == "sp" then
 				usesRbp = true
 			end
 		end

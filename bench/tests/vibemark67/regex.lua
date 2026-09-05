@@ -145,13 +145,13 @@ function parseCharClass(p)
             if esc == 100 then -- 'd'
                 ranges[#ranges+1] = {48, 57}
                 startCh = nil
-            elseif esc == 119 then -- 'w'
+            else if esc == 119 then -- 'w'
                 ranges[#ranges+1] = {48, 57}
                 ranges[#ranges+1] = {65, 90}
                 ranges[#ranges+1] = {97, 122}
                 ranges[#ranges+1] = {95, 95}
                 startCh = nil
-            elseif esc == 115 then -- 's'
+            else if esc == 115 then -- 's'
                 ranges[#ranges+1] = {9, 13}
                 ranges[#ranges+1] = {32, 32}
                 startCh = nil
@@ -172,7 +172,7 @@ function parseCharClass(p)
                     -- treat dash as literal, put back
                     ranges[#ranges+1] = {startCh, startCh}
                     ranges[#ranges+1] = {45, 45}
-                elseif afterDash == 92 then -- escape in range end
+                else if afterDash == 92 then -- escape in range end
                     parserAdvance(p)
                     endCh = parserAdvance(p)
                     ranges[#ranges+1] = {startCh, endCh}
@@ -255,10 +255,10 @@ function parseQuantified(p)
     if ch == 42 then -- '*'
         parserAdvance(p)
         return {type="quantifier", child=atom, kind="*"}
-    elseif ch == 43 then -- '+'
+    else if ch == 43 then -- '+'
         parserAdvance(p)
         return {type="quantifier", child=atom, kind="+"}
-    elseif ch == 63 then -- '?'
+    else if ch == 63 then -- '?'
         parserAdvance(p)
         return {type="quantifier", child=atom, kind="?"}
     end
@@ -276,7 +276,7 @@ function parseConcat(p)
     if #children == 0 then
         -- Empty expression (e.g. in alternation)
         return {type="concat", children={}}
-    elseif #children == 1 then
+    else if #children == 1 then
         return children[1]
     else
         return {type="concat", children=children}
@@ -500,9 +500,9 @@ function buildNFA(ast)
         local childFrag = buildNFA(ast.child)
         if ast.kind == "*" then
             return starFragment(childFrag)
-        elseif ast.kind == "+" then
+        else if ast.kind == "+" then
             return plusFragment(childFrag)
-        elseif ast.kind == "?" then
+        else if ast.kind == "?" then
             return optionalFragment(childFrag)
         end
     end
@@ -1473,7 +1473,7 @@ function runExtendedTests()
         local result
         if tc.fn == "isMatch" then
             result = isMatch(tc.pat, tc.txt)
-        elseif tc.fn == "fullMatch" then
+        else if tc.fn == "fullMatch" then
             result = fullMatch(tc.pat, tc.txt)
         end
         if result ~= tc.expect then

@@ -358,7 +358,7 @@ local function sweep(ras, fillRule, clipMinX, clipMaxX, clipMinY, clipMaxY)
                                 cov = bit32.band(cov, 511)
                                 if cov > 256 then
                                     cov = 512 - cov
-                                elseif cov == 256 then
+                                else if cov == 256 then
                                     cov = 255
                                 end
                             else
@@ -385,7 +385,7 @@ local function sweep(ras, fillRule, clipMinX, clipMaxX, clipMinY, clipMaxY)
                         cov = bit32.band(cov, 511)
                         if cov > 256 then
                             cov = 512 - cov
-                        elseif cov == 256 then
+                        else if cov == 256 then
                             cov = 255
                         end
                     else
@@ -437,7 +437,7 @@ function Rasterizer.rasterize(path, matrix, clipRect, fillRule)
             curY = math.floor(py * ONE_PIXEL + 0.5)
             startX, startY = curX, curY
             setCell(ras, trunc(curX), trunc(curY))
-        elseif cmd == Path.LINE_TO then
+        else if cmd == Path.LINE_TO then
             local px, py = data[di], data[di + 1]
             di = di + 2
             if matrix then
@@ -447,7 +447,7 @@ function Rasterizer.rasterize(path, matrix, clipRect, fillRule)
             local ny = math.floor(py * ONE_PIXEL + 0.5)
             renderLine(ras, curX, curY, nx, ny)
             curX, curY = nx, ny
-        elseif cmd == Path.CUBIC_TO then
+        else if cmd == Path.CUBIC_TO then
             local x1, y1 = data[di], data[di + 1]
             local x2, y2 = data[di + 2], data[di + 3]
             local x3, y3 = data[di + 4], data[di + 5]
@@ -465,7 +465,7 @@ function Rasterizer.rasterize(path, matrix, clipRect, fillRule)
             local ny3 = math.floor(y3 * ONE_PIXEL + 0.5)
             renderCubic(ras, curX, curY, nx1, ny1, nx2, ny2, nx3, ny3, 0)
             curX, curY = nx3, ny3
-        elseif cmd == Path.CLOSE then
+        else if cmd == Path.CLOSE then
             di = di + 2
             if curX ~= startX or curY ~= startY then
                 renderLine(ras, curX, curY, startX, startY)
@@ -490,7 +490,7 @@ function Rasterizer.intersectSpans(a, b)
 
         if bs.y > as.y then
             ai = ai + 1
-        elseif as.y > bs.y then
+        else if as.y > bs.y then
             bi = bi + 1
         else
             local ax1 = as.x
@@ -500,7 +500,7 @@ function Rasterizer.intersectSpans(a, b)
 
             if bx2 <= ax1 then
                 bi = bi + 1
-            elseif ax2 <= bx1 then
+            else if ax2 <= bx1 then
                 ai = ai + 1
             else
                 local x = math.max(ax1, bx1)

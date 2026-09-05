@@ -69,13 +69,13 @@ function parse_dimacs(text)
         local ch = string_sub(text, pos, pos)
         if ch == "\n" then
             pos = pos + 1
-        elseif ch == "c" then
+        else if ch == "c" then
             -- Comment line, skip to newline
             while pos <= len and string_sub(text, pos, pos) ~= "\n" do
                 pos = pos + 1
             end
             if pos <= len then pos = pos + 1 end
-        elseif ch == "p" then
+        else if ch == "p" then
             -- Problem line
             local line_end = string_find(text, "\n", pos) or (len + 1)
             local line = string_sub(text, pos, line_end - 1)
@@ -85,7 +85,7 @@ function parse_dimacs(text)
                 num_clauses = tonumber(nc)
             end
             pos = line_end + 1
-        elseif ch == "%" then
+        else if ch == "%" then
             -- End marker (some DIMACS files)
             break
         else
@@ -277,10 +277,10 @@ function solver_add_clause(s, lits, is_learned)
         -- At level 0, skip falsified literals
         if s.decision_level == 0 and val == FALSE_VAL then
             -- skip
-        elseif seen_lits[-l] then
+        else if seen_lits[-l] then
             -- Tautology
             return true
-        elseif not seen_lits[l] then
+        else if not seen_lits[l] then
             seen_lits[l] = true
             table_insert(cleaned, l)
         end
@@ -623,7 +623,7 @@ function solver_analyze(s, conflict_ci)
                 if v ~= (p and lit_var(p) or 0) and not s.seen[v] then
                     if s.level[v] == 0 then
                         -- Level 0 literals are always false, skip
-                    elseif s.level[v] >= s.decision_level then
+                    else if s.level[v] >= s.decision_level then
                         s.seen[v] = true
                         counter = counter + 1
                         var_bump_activity(s, v)
@@ -943,7 +943,7 @@ function assignment_checksum(assignment, num_vars)
         -- Mix bits
         if val == TRUE_VAL then
             sum = sum + i * 7919
-        elseif val == FALSE_VAL then
+        else if val == FALSE_VAL then
             sum = sum + i * 104729
         end
         sum = sum % 1000000007

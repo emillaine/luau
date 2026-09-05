@@ -28,13 +28,13 @@ end
 do
     local function clamp(x, lo, hi)
         if x < lo then return lo
-        elseif x > hi then return hi
+        else if x > hi then return hi
         else return x end
     end
 
     local function selectPath(mode, a, b, c)
         if mode == 1 then return a + b
-        elseif mode == 2 then return a * c
+        else if mode == 2 then return a * c
         else return 0 end
     end
 

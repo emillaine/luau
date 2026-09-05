@@ -26,7 +26,7 @@ function test()
 		if n < 32 then
 			return bit32.bor(bit32.lshift(h, n), bit32.rshift(l, 32 - n)),
 			       bit32.bor(bit32.lshift(l, n), bit32.rshift(h, 32 - n))
-		elseif n == 32 then
+		else if n == 32 then
 			return l, h
 		else
 			local m = n - 32

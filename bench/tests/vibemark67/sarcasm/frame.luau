@@ -75,7 +75,7 @@ function frame.preprocess(body, regions, policy)
 	for _, st in body do
 		if st.kind ~= "insn" then
 			emit(st)
-		elseif st.annotation and string.find(st.annotation, "alloca", 1, true) then
+		else if st.annotation and string.find(st.annotation, "alloca", 1, true) then
 			-- alloca-annotated instructions are turned into GC allocations by the transform;
 			-- pass them through untouched (no setup drop, escape check, or slot conversion).
 			emit(st)

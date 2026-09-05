@@ -378,7 +378,7 @@ void CFGBuilder::lower(AstStatIf* statIf)
         thenExit = currentBlock.get();
     }
 
-    // Else branch (may be nullptr, another AstStatIf for elseif, or a block)
+    // Else branch (may be nullptr, another AstStatIf for else-if, or a block)
     Block* elseBlock = newBlock(BlockKind::Linear, "else branch", currBlock);
     Block* elseExit = elseBlock; // If there is an else body, overwrite this
     seal(elseBlock);

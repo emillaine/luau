@@ -126,17 +126,17 @@ function CPU.evalCondition(self: CPU, cond: number): boolean
     local result: boolean
     if base == 0 then     -- EQ/NE
         result = self.Z
-    elseif base == 1 then -- CS/CC (HS/LO)
+    else if base == 1 then -- CS/CC (HS/LO)
         result = self.C
-    elseif base == 2 then -- MI/PL
+    else if base == 2 then -- MI/PL
         result = self.N
-    elseif base == 3 then -- VS/VC
+    else if base == 3 then -- VS/VC
         result = self.V
-    elseif base == 4 then -- HI/LS
+    else if base == 4 then -- HI/LS
         result = self.C and not self.Z
-    elseif base == 5 then -- GE/LT
+    else if base == 5 then -- GE/LT
         result = (self.N == self.V)
-    elseif base == 6 then -- GT/LE
+    else if base == 6 then -- GT/LE
         result = (not self.Z) and (self.N == self.V)
     else -- AL/NV
         result = true

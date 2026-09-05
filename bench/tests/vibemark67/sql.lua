@@ -138,7 +138,7 @@ function Tokenizer:skipWhitespace()
         local c = sbyte(self.src, self.pos)
         if c == 32 or c == 9 or c == 10 or c == 13 then
             self.pos = self.pos + 1
-        elseif c == 45 and self.pos + 1 <= self.len and sbyte(self.src, self.pos + 1) == 45 then
+        else if c == 45 and self.pos + 1 <= self.len and sbyte(self.src, self.pos + 1) == 45 then
             -- line comment
             self.pos = self.pos + 2
             while self.pos <= self.len and sbyte(self.src, self.pos) ~= 10 do
@@ -177,7 +177,7 @@ function Tokenizer:readNumber()
         local c = sbyte(self.src, self.pos)
         if self:isDigit(c) then
             self.pos = self.pos + 1
-        elseif c == 46 and not hasDot then
+        else if c == 46 and not hasDot then
             hasDot = true
             self.pos = self.pos + 1
         else
@@ -227,41 +227,41 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_IDENT, ident, startPos))
             end
-        elseif self:isDigit(c) then
+        else if self:isDigit(c) then
             local num = self:readNumber()
             tinsert(self.tokens, Token.new(TK_NUMBER, num, startPos))
-        elseif c == 39 then  -- single quote
+        else if c == 39 then  -- single quote
             local str = self:readString(39)
             tinsert(self.tokens, Token.new(TK_STRING, str, startPos))
-        elseif c == 34 then  -- double quote (identifier)
+        else if c == 34 then  -- double quote (identifier)
             local str = self:readString(34)
             tinsert(self.tokens, Token.new(TK_IDENT, str, startPos))
-        elseif c == 40 then  -- (
+        else if c == 40 then  -- (
             tinsert(self.tokens, Token.new(TK_LPAREN, "(", startPos))
             self.pos = self.pos + 1
-        elseif c == 41 then  -- )
+        else if c == 41 then  -- )
             tinsert(self.tokens, Token.new(TK_RPAREN, ")", startPos))
             self.pos = self.pos + 1
-        elseif c == 44 then  -- ,
+        else if c == 44 then  -- ,
             tinsert(self.tokens, Token.new(TK_COMMA, ",", startPos))
             self.pos = self.pos + 1
-        elseif c == 59 then  -- ;
+        else if c == 59 then  -- ;
             tinsert(self.tokens, Token.new(TK_SEMI, ";", startPos))
             self.pos = self.pos + 1
-        elseif c == 42 then  -- *
+        else if c == 42 then  -- *
             tinsert(self.tokens, Token.new(TK_STAR, "*", startPos))
             self.pos = self.pos + 1
-        elseif c == 46 then  -- .
+        else if c == 46 then  -- .
             tinsert(self.tokens, Token.new(TK_DOT, ".", startPos))
             self.pos = self.pos + 1
-        elseif c == 60 then  -- < or <= or <>
+        else if c == 60 then  -- < or <= or <>
             self.pos = self.pos + 1
             if self.pos <= self.len then
                 local nc = sbyte(self.src, self.pos)
                 if nc == 61 then  -- <=
                     tinsert(self.tokens, Token.new(TK_OP, "<=", startPos))
                     self.pos = self.pos + 1
-                elseif nc == 62 then  -- <>
+                else if nc == 62 then  -- <>
                     tinsert(self.tokens, Token.new(TK_OP, "<>", startPos))
                     self.pos = self.pos + 1
                 else
@@ -270,7 +270,7 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_OP, "<", startPos))
             end
-        elseif c == 62 then  -- > or >=
+        else if c == 62 then  -- > or >=
             self.pos = self.pos + 1
             if self.pos <= self.len and sbyte(self.src, self.pos) == 61 then
                 tinsert(self.tokens, Token.new(TK_OP, ">=", startPos))
@@ -278,10 +278,10 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_OP, ">", startPos))
             end
-        elseif c == 61 then  -- =
+        else if c == 61 then  -- =
             tinsert(self.tokens, Token.new(TK_OP, "=", startPos))
             self.pos = self.pos + 1
-        elseif c == 33 then  -- !=
+        else if c == 33 then  -- !=
             self.pos = self.pos + 1
             if self.pos <= self.len and sbyte(self.src, self.pos) == 61 then
                 tinsert(self.tokens, Token.new(TK_OP, "!=", startPos))
@@ -289,16 +289,16 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_OP, "!", startPos))
             end
-        elseif c == 43 then  -- +
+        else if c == 43 then  -- +
             tinsert(self.tokens, Token.new(TK_OP, "+", startPos))
             self.pos = self.pos + 1
-        elseif c == 45 then  -- -
+        else if c == 45 then  -- -
             tinsert(self.tokens, Token.new(TK_OP, "-", startPos))
             self.pos = self.pos + 1
-        elseif c == 47 then  -- /
+        else if c == 47 then  -- /
             tinsert(self.tokens, Token.new(TK_OP, "/", startPos))
             self.pos = self.pos + 1
-        elseif c == 37 then  -- %
+        else if c == 37 then  -- %
             tinsert(self.tokens, Token.new(TK_OP, "%", startPos))
             self.pos = self.pos + 1
         else
@@ -402,13 +402,13 @@ function Parser:parseStatement()
     if t.type == TK_KEYWORD then
         if t.value == "SELECT" then
             return self:parseSelect()
-        elseif t.value == "INSERT" then
+        else if t.value == "INSERT" then
             return self:parseInsert()
-        elseif t.value == "CREATE" then
+        else if t.value == "CREATE" then
             return self:parseCreate()
-        elseif t.value == "DELETE" then
+        else if t.value == "DELETE" then
             return self:parseDelete()
-        elseif t.value == "UPDATE" then
+        else if t.value == "UPDATE" then
             return self:parseUpdate()
         end
     end
@@ -490,7 +490,7 @@ function Parser:parseSelectColumns()
         local alias = nil
         if self:matchKeyword("AS") then
             alias = self:expect(TK_IDENT).value
-        elseif self:peekType() == TK_IDENT and not self:isKeyword("FROM") and not self:isKeyword("WHERE") then
+        else if self:peekType() == TK_IDENT and not self:isKeyword("FROM") and not self:isKeyword("WHERE") then
             -- implicit alias
             alias = self:advance().value
         end
@@ -505,7 +505,7 @@ function Parser:parseTableRef()
     local alias = nil
     if self:matchKeyword("AS") then
         alias = self:expect(TK_IDENT).value
-    elseif self:peekType() == TK_IDENT and not self:isKeyword("WHERE") and not self:isKeyword("ON")
+    else if self:peekType() == TK_IDENT and not self:isKeyword("WHERE") and not self:isKeyword("ON")
            and not self:isKeyword("JOIN") and not self:isKeyword("INNER") and not self:isKeyword("LEFT")
            and not self:isKeyword("ORDER") and not self:isKeyword("GROUP") and not self:isKeyword("LIMIT")
            and not self:isKeyword("CROSS") then
@@ -518,10 +518,10 @@ function Parser:parseJoin()
     local joinType = "INNER"
     if self:matchKeyword("INNER") then
         joinType = "INNER"
-    elseif self:matchKeyword("LEFT") then
+    else if self:matchKeyword("LEFT") then
         joinType = "LEFT"
         self:matchKeyword("OUTER")
-    elseif self:matchKeyword("CROSS") then
+    else if self:matchKeyword("CROSS") then
         joinType = "CROSS"
     end
     self:expect(TK_KEYWORD, "JOIN")
@@ -540,7 +540,7 @@ function Parser:parseOrderByList()
         local dir = "ASC"
         if self:matchKeyword("ASC") then
             dir = "ASC"
-        elseif self:matchKeyword("DESC") then
+        else if self:matchKeyword("DESC") then
             dir = "DESC"
         end
         tinsert(items, mkNode("ORDER_ITEM", { expr = expr, dir = dir }))
@@ -603,18 +603,18 @@ function Parser:parseComparison()
             if op == "<>" then op = "!=" end
             return mkNode("BINOP", { op = op, left = left, right = right })
         end
-    elseif t.type == TK_KEYWORD then
+    else if t.type == TK_KEYWORD then
         if t.value == "LIKE" then
             self:advance()
             local right = self:parseAddSub()
             return mkNode("BINOP", { op = "LIKE", left = left, right = right })
-        elseif t.value == "IN" then
+        else if t.value == "IN" then
             self:advance()
             self:expect(TK_LPAREN)
             local vals = self:parseExprList()
             self:expect(TK_RPAREN)
             return mkNode("IN_EXPR", { expr = left, values = vals })
-        elseif t.value == "IS" then
+        else if t.value == "IS" then
             self:advance()
             if self:matchKeyword("NOT") then
                 self:expect(TK_KEYWORD, "NULL")
@@ -623,7 +623,7 @@ function Parser:parseComparison()
                 self:expect(TK_KEYWORD, "NULL")
                 return mkNode("BINOP", { op = "IS NULL", left = left, right = mkNode("NULL_LIT") })
             end
-        elseif t.value == "BETWEEN" then
+        else if t.value == "BETWEEN" then
             self:advance()
             local lo = self:parseAddSub()
             self:expect(TK_KEYWORD, "AND")
@@ -657,7 +657,7 @@ function Parser:parseMulDiv()
             self:advance()
             local right = self:parseUnary()
             left = mkNode("BINOP", { op = t.value, left = left, right = right })
-        elseif t.type == TK_STAR then
+        else if t.type == TK_STAR then
             self:advance()
             local right = self:parseUnary()
             left = mkNode("BINOP", { op = "*", left = left, right = right })
@@ -684,18 +684,18 @@ function Parser:parsePrimary()
     if t.type == TK_NUMBER then
         self:advance()
         return mkNode("NUMBER_LIT", { value = t.value })
-    elseif t.type == TK_STRING then
+    else if t.type == TK_STRING then
         self:advance()
         return mkNode("STRING_LIT", { value = t.value })
-    elseif t.type == TK_KEYWORD and t.value == "NULL" then
+    else if t.type == TK_KEYWORD and t.value == "NULL" then
         self:advance()
         return mkNode("NULL_LIT")
-    elseif t.type == TK_LPAREN then
+    else if t.type == TK_LPAREN then
         self:advance()
         local expr = self:parseExpr()
         self:expect(TK_RPAREN)
         return expr
-    elseif t.type == TK_KEYWORD and (t.value == "COUNT" or t.value == "SUM" or t.value == "AVG" or t.value == "MIN" or t.value == "MAX") then
+    else if t.type == TK_KEYWORD and (t.value == "COUNT" or t.value == "SUM" or t.value == "AVG" or t.value == "MIN" or t.value == "MAX") then
         local funcName = t.value
         self:advance()
         self:expect(TK_LPAREN)
@@ -709,7 +709,7 @@ function Parser:parsePrimary()
         end
         self:expect(TK_RPAREN)
         return mkNode("AGG_FUNC", { func = funcName, arg = argExpr, star = isStar })
-    elseif t.type == TK_IDENT then
+    else if t.type == TK_IDENT then
         local name = t.value
         self:advance()
         -- check for table.column
@@ -735,7 +735,7 @@ function Parser:parsePrimary()
             return mkNode("FUNC_CALL", { name = name, args = args })
         end
         return mkNode("COLUMN_REF", { table_name = nil, column = name })
-    elseif t.type == TK_STAR then
+    else if t.type == TK_STAR then
         self:advance()
         return mkNode("STAR_COL")
     end
@@ -773,7 +773,7 @@ function Parser:parseCreate()
     self:expect(TK_KEYWORD, "CREATE")
     if self:matchKeyword("TABLE") then
         return self:parseCreateTable()
-    elseif self:matchKeyword("INDEX") then
+    else if self:matchKeyword("INDEX") then
         return self:parseCreateIndex()
     end
     error("Parser: expected TABLE or INDEX after CREATE")
@@ -1136,15 +1136,15 @@ end
 function Executor:executeStatement(stmt)
     if stmt.kind == "CREATE_TABLE" then
         return self:execCreateTable(stmt)
-    elseif stmt.kind == "CREATE_INDEX" then
+    else if stmt.kind == "CREATE_INDEX" then
         return self:execCreateIndex(stmt)
-    elseif stmt.kind == "INSERT" then
+    else if stmt.kind == "INSERT" then
         return self:execInsert(stmt)
-    elseif stmt.kind == "SELECT" then
+    else if stmt.kind == "SELECT" then
         return self:execSelect(stmt)
-    elseif stmt.kind == "DELETE" then
+    else if stmt.kind == "DELETE" then
         return self:execDelete(stmt)
-    elseif stmt.kind == "UPDATE" then
+    else if stmt.kind == "UPDATE" then
         return self:execUpdate(stmt)
     end
     error("Executor: unknown statement kind: " .. tostring(stmt.kind))
@@ -1197,9 +1197,9 @@ end
 
 function Executor:evalLiteral(expr)
     if expr.kind == "NUMBER_LIT" then return expr.value
-    elseif expr.kind == "STRING_LIT" then return expr.value
-    elseif expr.kind == "NULL_LIT" then return nil
-    elseif expr.kind == "UNOP" and expr.op == "NEG" then
+    else if expr.kind == "STRING_LIT" then return expr.value
+    else if expr.kind == "NULL_LIT" then return nil
+    else if expr.kind == "UNOP" and expr.op == "NEG" then
         local v = self:evalLiteral(expr.operand)
         if type(v) == "number" then return -v end
         return nil
@@ -1538,7 +1538,7 @@ function Executor:execAggregateNoGroup(stmt, tbl, baseAlias, rows, joinTableInfo
                     tinsert(resultRow, nil)
                 end
             end
-        elseif col.kind == "STAR_COL" then
+        else if col.kind == "STAR_COL" then
             tinsert(resultCols, "*")
             tinsert(resultRow, nil)
         end
@@ -1646,7 +1646,7 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
             if val ~= nil then count = count + 1 end
         end
         return count
-    elseif fn == "SUM" then
+    else if fn == "SUM" then
         local sum = 0
         for _, row in next, groupRows do
             local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
@@ -1654,7 +1654,7 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
             if type(val) == "number" then sum = sum + val end
         end
         return sum
-    elseif fn == "AVG" then
+    else if fn == "AVG" then
         local sum = 0
         local count = 0
         for _, row in next, groupRows do
@@ -1667,7 +1667,7 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
         end
         if count == 0 then return nil end
         return sum / count
-    elseif fn == "MIN" then
+    else if fn == "MIN" then
         local result = nil
         for _, row in next, groupRows do
             local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
@@ -1677,7 +1677,7 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
             end
         end
         return result
-    elseif fn == "MAX" then
+    else if fn == "MAX" then
         local result = nil
         for _, row in next, groupRows do
             local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
@@ -1694,12 +1694,12 @@ end
 function Executor:evalExprWithAgg(expr, groupRows, tbl, baseAlias, joinTableInfo, ctx)
     if expr.kind == "AGG_FUNC" then
         return self:computeAggregate(expr, groupRows, tbl, baseAlias, joinTableInfo)
-    elseif expr.kind == "BINOP" then
+    else if expr.kind == "BINOP" then
         if expr.op == "AND" then
             local left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             local right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             return left and right
-        elseif expr.op == "OR" then
+        else if expr.op == "OR" then
             local left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             local right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             return left or right
@@ -1790,11 +1790,11 @@ function compareValues(a, b)
     if a == nil then return -1 end
     if b == nil then return 1 end
     if type(a) == "number" and type(b) == "number" then
-        if a < b then return -1 elseif a > b then return 1 else return 0 end
+        if a < b then return -1 else if a > b then return 1 else return 0 end
     end
     local sa = tostring(a)
     local sb = tostring(b)
-    if sa < sb then return -1 elseif sa > sb then return 1 else return 0 end
+    if sa < sb then return -1 else if sa > sb then return 1 else return 0 end
 end
 
 function Executor:getResultColumns(columns, tbl, baseAlias, joinTableInfo)
@@ -1811,7 +1811,7 @@ function Executor:getResultColumns(columns, tbl, baseAlias, joinTableInfo)
                     end
                 end
             end
-        elseif col.kind == "COLUMN" then
+        else if col.kind == "COLUMN" then
             local alias = col.alias or self:exprToName(col.expr, ci)
             tinsert(result, alias)
         end
@@ -1825,7 +1825,7 @@ function Executor:exprToName(expr, idx)
             return expr.table_name .. "." .. expr.column
         end
         return expr.column
-    elseif expr.kind == "AGG_FUNC" then
+    else if expr.kind == "AGG_FUNC" then
         if expr.star then return expr.func .. "(*)" end
         return expr.func .. "(" .. self:exprToName(expr.arg, idx) .. ")"
     end
@@ -1856,7 +1856,7 @@ function Executor:projectRow(columns, row, tbl, baseAlias, joinTableInfo, allRow
                     end
                 end
             end
-        elseif col.kind == "COLUMN" and col.expr then
+        else if col.kind == "COLUMN" and col.expr then
             if col.expr.kind == "AGG_FUNC" then
                 local val = self:computeAggregate(col.expr, allRows, tbl, baseAlias, joinTableInfo)
                 tinsert(result, val)
@@ -1873,32 +1873,32 @@ function Executor:evalExpr(expr, ctx)
 
     if expr.kind == "NUMBER_LIT" then
         return expr.value
-    elseif expr.kind == "STRING_LIT" then
+    else if expr.kind == "STRING_LIT" then
         return expr.value
-    elseif expr.kind == "NULL_LIT" then
+    else if expr.kind == "NULL_LIT" then
         return nil
-    elseif expr.kind == "COLUMN_REF" then
+    else if expr.kind == "COLUMN_REF" then
         return ctx:resolve(expr.table_name, expr.column)
-    elseif expr.kind == "BINOP" then
+    else if expr.kind == "BINOP" then
         return self:evalBinop(expr, ctx)
-    elseif expr.kind == "UNOP" then
+    else if expr.kind == "UNOP" then
         return self:evalUnop(expr, ctx)
-    elseif expr.kind == "IN_EXPR" then
+    else if expr.kind == "IN_EXPR" then
         local val = self:evalExpr(expr.expr, ctx)
         for _, v in next, expr.values do
             local vv = self:evalExpr(v, ctx)
             if val == vv then return true end
         end
         return false
-    elseif expr.kind == "BETWEEN" then
+    else if expr.kind == "BETWEEN" then
         local val = self:evalExpr(expr.expr, ctx)
         local lo = self:evalExpr(expr.lo, ctx)
         local hi = self:evalExpr(expr.hi, ctx)
         if val == nil or lo == nil or hi == nil then return false end
         return val >= lo and val <= hi
-    elseif expr.kind == "FUNC_CALL" then
+    else if expr.kind == "FUNC_CALL" then
         return self:evalFuncCall(expr, ctx)
-    elseif expr.kind == "AGG_FUNC" then
+    else if expr.kind == "AGG_FUNC" then
         -- When evaluated in a non-aggregate context, just return nil or column value
         if expr.arg then
             return self:evalExpr(expr.arg, ctx)
@@ -1914,7 +1914,7 @@ function Executor:evalBinop(expr, ctx)
         local left = self:evalExpr(expr.left, ctx)
         if not left then return false end
         return self:evalExpr(expr.right, ctx) and true or false
-    elseif op == "OR" then
+    else if op == "OR" then
         local left = self:evalExpr(expr.left, ctx)
         if left then return true end
         return self:evalExpr(expr.right, ctx) and true or false
@@ -1926,16 +1926,16 @@ function Executor:evalBinop(expr, ctx)
     if op == "+" then
         if type(left) == "number" and type(right) == "number" then return left + right end
         return nil
-    elseif op == "-" then
+    else if op == "-" then
         if type(left) == "number" and type(right) == "number" then return left - right end
         return nil
-    elseif op == "*" then
+    else if op == "*" then
         if type(left) == "number" and type(right) == "number" then return left * right end
         return nil
-    elseif op == "/" then
+    else if op == "/" then
         if type(left) == "number" and type(right) == "number" and right ~= 0 then return left / right end
         return nil
-    elseif op == "%" then
+    else if op == "%" then
         if type(left) == "number" and type(right) == "number" and right ~= 0 then return left % right end
         return nil
     end
@@ -1947,26 +1947,26 @@ function evalComparison(op, left, right)
     if op == "=" then
         if left == nil and right == nil then return true end
         return left == right
-    elseif op == "!=" then
+    else if op == "!=" then
         if left == nil and right == nil then return false end
         return left ~= right
-    elseif op == "<" then
+    else if op == "<" then
         if left == nil or right == nil then return false end
         return left < right
-    elseif op == ">" then
+    else if op == ">" then
         if left == nil or right == nil then return false end
         return left > right
-    elseif op == "<=" then
+    else if op == "<=" then
         if left == nil or right == nil then return false end
         return left <= right
-    elseif op == ">=" then
+    else if op == ">=" then
         if left == nil or right == nil then return false end
         return left >= right
-    elseif op == "LIKE" then
+    else if op == "LIKE" then
         return evalLike(left, right)
-    elseif op == "IS NULL" then
+    else if op == "IS NULL" then
         return left == nil
-    elseif op == "IS NOT NULL" then
+    else if op == "IS NOT NULL" then
         return left ~= nil
     end
     return false
@@ -1982,9 +1982,9 @@ function evalLike(str, pattern)
         local c = ssub(pattern, i, i)
         if c == "%" then
             luaPat = luaPat .. ".*"
-        elseif c == "_" then
+        else if c == "_" then
             luaPat = luaPat .. "."
-        elseif c == "." or c == "(" or c == ")" or c == "[" or c == "]" or c == "^" or c == "$" or c == "+" or c == "-" or c == "?" then
+        else if c == "." or c == "(" or c == ")" or c == "[" or c == "]" or c == "^" or c == "$" or c == "+" or c == "-" or c == "?" then
             luaPat = luaPat .. "%" .. c
         else
             luaPat = luaPat .. c
@@ -1998,7 +1998,7 @@ function Executor:evalUnop(expr, ctx)
     local val = self:evalExpr(expr.operand, ctx)
     if expr.op == "NOT" then
         return not val
-    elseif expr.op == "NEG" then
+    else if expr.op == "NEG" then
         if type(val) == "number" then return -val end
         return nil
     end
@@ -2013,13 +2013,13 @@ function Executor:evalFuncCall(expr, ctx)
     end
     if name == "ABS" then
         return mabs(args[1] or 0)
-    elseif name == "UPPER" then
+    else if name == "UPPER" then
         return supper(tostring(args[1] or ""))
-    elseif name == "LOWER" then
+    else if name == "LOWER" then
         return slower(tostring(args[1] or ""))
-    elseif name == "LENGTH" then
+    else if name == "LENGTH" then
         return slen(tostring(args[1] or ""))
-    elseif name == "SUBSTR" or name == "SUBSTRING" then
+    else if name == "SUBSTR" or name == "SUBSTRING" then
         local s = tostring(args[1] or "")
         local start = args[2] or 1
         local len = args[3]
@@ -2027,20 +2027,20 @@ function Executor:evalFuncCall(expr, ctx)
             return ssub(s, start, start + len - 1)
         end
         return ssub(s, start)
-    elseif name == "COALESCE" then
+    else if name == "COALESCE" then
         for _, v in next, args do
             if v ~= nil then return v end
         end
         return nil
-    elseif name == "IFNULL" then
+    else if name == "IFNULL" then
         if args[1] ~= nil then return args[1] end
         return args[2]
-    elseif name == "ROUND" then
+    else if name == "ROUND" then
         local n = args[1] or 0
         local d = args[2] or 0
         local mult = 10 ^ d
         return floor(n * mult + 0.5) / mult
-    elseif name == "REPLACE" then
+    else if name == "REPLACE" then
         local s = tostring(args[1] or "")
         local old = tostring(args[2] or "")
         local new = tostring(args[3] or "")
@@ -2467,7 +2467,7 @@ function StatsCollector:analyze(tableName)
                     if colStats.maxVal == nil or val > colStats.maxVal then
                         colStats.maxVal = val
                     end
-                elseif type(val) == "string" then
+                else if type(val) == "string" then
                     if colStats.minVal == nil or val < colStats.minVal then
                         colStats.minVal = val
                     end
@@ -2500,13 +2500,13 @@ function StatsCollector:getSelectivity(tableName, colName, op, value)
     if op == "=" then
         if colStats.distinctCount == 0 then return 0 end
         return 1.0 / colStats.distinctCount
-    elseif op == "<" or op == "<=" then
+    else if op == "<" or op == "<=" then
         if colStats.minVal == nil or colStats.maxVal == nil then return 0.5 end
         if type(value) ~= "number" then return 0.5 end
         local range = colStats.maxVal - colStats.minVal
         if range == 0 then return 0.5 end
         return (value - colStats.minVal) / range
-    elseif op == ">" or op == ">=" then
+    else if op == ">" or op == ">=" then
         if colStats.minVal == nil or colStats.maxVal == nil then return 0.5 end
         if type(value) ~= "number" then return 0.5 end
         local range = colStats.maxVal - colStats.minVal
@@ -2545,9 +2545,9 @@ end
 function ExprCache:getKey(expr)
     if expr.kind == "COLUMN_REF" then
         return (expr.table_name or "") .. "." .. expr.column
-    elseif expr.kind == "NUMBER_LIT" then
+    else if expr.kind == "NUMBER_LIT" then
         return "N:" .. tostring(expr.value)
-    elseif expr.kind == "STRING_LIT" then
+    else if expr.kind == "STRING_LIT" then
         return "S:" .. expr.value
     end
     return nil  -- not cacheable
@@ -2648,7 +2648,7 @@ function SortMergeJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
         local cmp = compareValues(lk, rk)
         if cmp < 0 then
             li = li + 1
-        elseif cmp > 0 then
+        else if cmp > 0 then
             ri = ri + 1
         else
             -- Match: collect all matching from right

@@ -1561,7 +1561,6 @@ static AutocompleteEntryMap autocompleteStatement(
             if (!statIf->elsebody || (statIf->elseLocation && statIf->elseLocation->containsClosed(position)))
             {
                 result.emplace("else", AutocompleteEntry{AutocompleteEntryKind::Keyword});
-                result.emplace("elseif", AutocompleteEntry{AutocompleteEntryKind::Keyword});
             }
         }
 
@@ -1576,7 +1575,6 @@ static AutocompleteEntryMap autocompleteStatement(
             statIf != nullptr && !statIf->elsebody && iter[2]->is<AstStatBlock>() && iter[1]->is<AstStatError>() && isIdentifier(iter[0]))
         {
             result.emplace("else", AutocompleteEntry{AutocompleteEntryKind::Keyword});
-            result.emplace("elseif", AutocompleteEntry{AutocompleteEntryKind::Keyword});
         }
     }
 
@@ -1622,7 +1620,6 @@ static bool autocompleteIfElseExpression(
     else if (!ifElseExpr->hasElse)
     {
         outResult["else"] = {AutocompleteEntryKind::Keyword};
-        outResult["elseif"] = {AutocompleteEntryKind::Keyword};
         return true;
     }
     else
@@ -2253,7 +2250,7 @@ AutocompleteResult autocomplete_(
     else if (AstStatIf* statIf = node->as<AstStatIf>(); statIf && !statIf->elseLocation.has_value())
     {
         return {
-            {{"else", AutocompleteEntry{AutocompleteEntryKind::Keyword}}, {"elseif", AutocompleteEntry{AutocompleteEntryKind::Keyword}}},
+            {{"else", AutocompleteEntry{AutocompleteEntryKind::Keyword}}},
             ancestry,
             AutocompleteContext::Keyword
         };

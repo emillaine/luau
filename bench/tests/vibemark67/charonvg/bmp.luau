@@ -63,7 +63,7 @@ function Bmp.write(surface, filename)
             -- Unpremultiply and composite over white background for display
             if a == 0 then
                 r, g, b = 255, 255, 255
-            elseif a < 255 then
+            else if a < 255 then
                 r = math.min(255, math.floor(r * 255 / a + 0.5))
                 g = math.min(255, math.floor(g * 255 / a + 0.5))
                 b = math.min(255, math.floor(b * 255 / a + 0.5))

@@ -97,17 +97,17 @@ local function applyShift(val: integer, shiftType: number, amount: number, is32:
     end
     if shiftType == 0 then -- LSL
         val = Int.shl(val, amount)
-    elseif shiftType == 1 then -- LSR
+    else if shiftType == 1 then -- LSR
         if is32 then
             val = Int.band(val, Int.MASK32)
         end
         val = Int.shr(val, amount)
-    elseif shiftType == 2 then -- ASR
+    else if shiftType == 2 then -- ASR
         if is32 then
             val = Int.signExtend(Int.band(val, Int.MASK32), 32)
         end
         val = Int.sar(val, amount)
-    elseif shiftType == 3 then -- ROR
+    else if shiftType == 3 then -- ROR
         local width = if is32 then 32 else 64
         local amt = amount % width
         if is32 then
@@ -126,19 +126,19 @@ local function applyExtend(val: integer, extType: number, shift: number): intege
     -- extType: 000=UXTB, 001=UXTH, 010=UXTW, 011=UXTX, 100=SXTB, 101=SXTH, 110=SXTW, 111=SXTX
     if extType == 0 then -- UXTB
         val = Int.band(val, Int.MASK8)
-    elseif extType == 1 then -- UXTH
+    else if extType == 1 then -- UXTH
         val = Int.band(val, Int.MASK16)
-    elseif extType == 2 then -- UXTW
+    else if extType == 2 then -- UXTW
         val = Int.band(val, Int.MASK32)
-    elseif extType == 3 then -- UXTX
+    else if extType == 3 then -- UXTX
         -- no-op, full 64-bit
-    elseif extType == 4 then -- SXTB
+    else if extType == 4 then -- SXTB
         val = Int.signExtend(Int.band(val, Int.MASK8), 8)
-    elseif extType == 5 then -- SXTH
+    else if extType == 5 then -- SXTH
         val = Int.signExtend(Int.band(val, Int.MASK16), 16)
-    elseif extType == 6 then -- SXTW
+    else if extType == 6 then -- SXTW
         val = Int.signExtend(Int.band(val, Int.MASK32), 32)
-    elseif extType == 7 then -- SXTX
+    else if extType == 7 then -- SXTX
         -- no-op
     end
     if shift > 0 then
@@ -241,19 +241,19 @@ function Decode.execDPImm(cpu: CPU.CPU, insn: number, pc: integer)
     if op0 == 0 or op0 == 1 then
         -- PC-rel addressing: ADR/ADRP
         Decode.execPCRel(cpu, insn, pc)
-    elseif op0 == 2 or op0 == 3 then
+    else if op0 == 2 or op0 == 3 then
         -- Add/Sub immediate
         Decode.execAddSubImm(cpu, insn, pc)
-    elseif op0 == 4 then
+    else if op0 == 4 then
         -- Logical immediate
         Decode.execLogicalImm(cpu, insn, pc)
-    elseif op0 == 5 then
+    else if op0 == 5 then
         -- Move wide immediate
         Decode.execMoveWide(cpu, insn, pc)
-    elseif op0 == 6 then
+    else if op0 == 6 then
         -- Bitfield
         Decode.execBitfield(cpu, insn, pc)
-    elseif op0 == 7 then
+    else if op0 == 7 then
         -- Extract
         Decode.execExtract(cpu, insn, pc)
     else
@@ -354,9 +354,9 @@ function Decode.execLogicalImm(cpu: CPU.CPU, insn: number, pc: integer)
 
     if opc == 0 then -- AND
         result = Int.band(operand1, imm)
-    elseif opc == 1 then -- ORR
+    else if opc == 1 then -- ORR
         result = Int.bor(operand1, imm)
-    elseif opc == 2 then -- EOR
+    else if opc == 2 then -- EOR
         result = Int.bxor(operand1, imm)
     else -- ANDS (3)
         result = Int.band(operand1, imm)
@@ -392,10 +392,10 @@ function Decode.execMoveWide(cpu: CPU.CPU, insn: number, pc: integer)
         val = Int.bnot(val)
         if sf == 0 then val = Int.band(val, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, val) else cpu:writeW(rd, val) end
-    elseif opc == 2 then -- MOVZ
+    else if opc == 2 then -- MOVZ
         if sf == 0 then val = Int.band(val, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, val) else cpu:writeW(rd, val) end
-    elseif opc == 3 then -- MOVK
+    else if opc == 3 then -- MOVK
         local existing = if sf == 1 then cpu:readX(rd) else cpu:readW(rd)
         -- Clear the 16-bit slot, then OR in new value
         local mask = Int.bnot(Int.shl(Int.from(0xFFFF), shift))
@@ -437,7 +437,7 @@ function Decode.execBitfield(cpu: CPU.CPU, insn: number, pc: integer)
         if sf == 0 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
 
-    elseif opc == 1 then -- BFM (bitfield move)
+    else if opc == 1 then -- BFM (bitfield move)
         -- Handles: BFI, BFXIL
         local dst = if sf == 1 then cpu:readX(rd) else cpu:readW(rd)
         local result: integer
@@ -457,7 +457,7 @@ function Decode.execBitfield(cpu: CPU.CPU, insn: number, pc: integer)
         if sf == 0 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
 
-    elseif opc == 2 then -- UBFM (unsigned bitfield move)
+    else if opc == 2 then -- UBFM (unsigned bitfield move)
         -- Handles: LSL, LSR, UBFIZ, UBFX, UXTB, UXTH
         local result: integer
         if imms >= immr then
@@ -576,7 +576,7 @@ function Decode.execBranch(cpu: CPU.CPU, insn: number, pc: integer)
     if bit32.band(insn, 0xFF000000) == 0xD4000000 then
         if bit32.band(insn, 0xFFE0001F) == 0xD4000001 then -- SVC
             Syscall.handle(cpu)
-        elseif bit32.band(insn, 0xFFE0001F) == 0xD4200000 then -- BRK
+        else if bit32.band(insn, 0xFFE0001F) == 0xD4200000 then -- BRK
             local imm16 = bit32.band(bit32.rshift(insn, 5), 0xFFFF)
             error(string.format("BRK #%d at PC=0x%x", imm16, Int.toNumber(pc)))
         end
@@ -590,10 +590,10 @@ function Decode.execBranch(cpu: CPU.CPU, insn: number, pc: integer)
         local rn = bit32.band(bit32.rshift(insn, 5), 0x1F)
         if opc == 0 then -- BR
             cpu.PC = cpu:readX(rn)
-        elseif opc == 1 then -- BLR
+        else if opc == 1 then -- BLR
             cpu:writeX(30, Int.add(pc, Int.from(4)))
             cpu.PC = cpu:readX(rn)
-        elseif opc == 2 then -- RET
+        else if opc == 2 then -- RET
             cpu.PC = cpu:readX(rn)
         else
             Decode.unimplemented(cpu, insn, pc)
@@ -645,11 +645,11 @@ function Decode.execSystem(cpu: CPU.CPU, insn: number, pc: integer)
         if op0sys == 3 and op1sys == 3 and crn == 13 and crm == 0 and op2sys == 2 then
             -- TPIDR_EL0
             cpu:writeX(rt, cpu.tpidr_el0)
-        elseif op0sys == 3 and op1sys == 3 and crn == 0 and crm == 0 and op2sys == 7 then
+        else if op0sys == 3 and op1sys == 3 and crn == 0 and crm == 0 and op2sys == 7 then
             -- DCZID_EL0 - data cache zero ID register
             -- bit4=1 means DC ZVA is prohibited, let's say cache line = 64 bytes (log2(64/4)=4)
             cpu:writeX(rt, Int.from(0x10)) -- DZP=1 (prohibited)
-        elseif op0sys == 3 and op1sys == 3 and crn == 14 and crm == 0 and op2sys == 1 then
+        else if op0sys == 3 and op1sys == 3 and crn == 14 and crm == 0 and op2sys == 1 then
             -- CNTPCT_EL0 - counter timer
             cpu:writeX(rt, Int.ZERO)
         else
@@ -814,7 +814,7 @@ function Decode.execLoadStorePair(cpu: CPU.CPU, insn: number, pc: integer)
     local rn = bit32.band(bit32.rshift(insn, 5), 0x1F)
     local rt = bit32.band(insn, 0x1F)
 
-    local scale = if opc == 0 then 2 elseif opc == 1 then 2 else 3 -- 2 for 32-bit, 3 for 64-bit
+    local scale = if opc == 0 then 2 else if opc == 1 then 2 else 3 -- 2 for 32-bit, 3 for 64-bit
     -- opc: 00 = W (32-bit), 01 = LDPSW (signed 32->64), 10 = X (64-bit)
     local is64 = (opc == 2)
     local isSigned = (opc == 1)
@@ -831,10 +831,10 @@ function Decode.execLoadStorePair(cpu: CPU.CPU, insn: number, pc: integer)
     if mode == 1 then -- post-index (no-alloc pair uses 0, treat similarly)
         addr = base
         wback = Int.add(base, Int.from(offset))
-    elseif mode == 3 then -- pre-index
+    else if mode == 3 then -- pre-index
         addr = Int.add(base, Int.from(offset))
         wback = addr
-    elseif mode == 2 or mode == 0 then -- signed offset (or no-alloc)
+    else if mode == 2 or mode == 0 then -- signed offset (or no-alloc)
         addr = Int.add(base, Int.from(offset))
         wback = base -- no writeback
     else
@@ -899,19 +899,19 @@ function Decode.execLoadStoreReg(cpu: CPU.CPU, insn: number, pc: integer)
         local shift = if s == 1 then size else 0
         local offset = applyExtend(cpu:readX(rm), option, shift)
         addr = Int.add(base, offset)
-    elseif op4 == 0 then
+    else if op4 == 0 then
         -- Unscaled immediate (LDUR/STUR)
         local imm9 = bit32.band(bit32.rshift(insn, 12), 0x1FF)
         local offset = signExtendImm(imm9, 9)
         addr = Int.add(base, offset)
-    elseif op4 == 1 then
+    else if op4 == 1 then
         -- Post-index
         local imm9 = bit32.band(bit32.rshift(insn, 12), 0x1FF)
         local offset = signExtendImm(imm9, 9)
         addr = base
         wbackAddr = Int.add(base, offset)
         doWriteback = true
-    elseif op4 == 3 then
+    else if op4 == 3 then
         -- Pre-index
         local imm9 = bit32.band(bit32.rshift(insn, 12), 0x1FF)
         local offset = signExtendImm(imm9, 9)
@@ -955,41 +955,41 @@ function Decode.doLoadStore(cpu: CPU.CPU, size: number, opc: number, rt: number,
         -- Store
         if size == 0 then
             cpu.mem:writeU8(addr, Int.toNumber(Int.band(cpu:readX(rt), Int.MASK8)))
-        elseif size == 1 then
+        else if size == 1 then
             cpu.mem:writeU16(addr, Int.toNumber(Int.band(cpu:readX(rt), Int.MASK16)))
-        elseif size == 2 then
+        else if size == 2 then
             cpu.mem:writeU32(addr, Int.toNumber(Int.band(cpu:readX(rt), Int.MASK32)))
         else
             cpu.mem:writeU64(addr, cpu:readX(rt))
         end
-    elseif opc == 1 then
+    else if opc == 1 then
         -- Load zero-extend
         if size == 0 then
             cpu:writeX(rt, Int.from(cpu.mem:readU8(addr)))
-        elseif size == 1 then
+        else if size == 1 then
             cpu:writeX(rt, Int.from(cpu.mem:readU16(addr)))
-        elseif size == 2 then
+        else if size == 2 then
             cpu:writeX(rt, Int.from(cpu.mem:readU32(addr)))
         else
             cpu:writeX(rt, cpu.mem:readU64(addr))
         end
-    elseif opc == 2 then
+    else if opc == 2 then
         -- Load sign-extend to 64-bit
         if size == 0 then
             cpu:writeX(rt, Int.signExtend(Int.from(cpu.mem:readU8(addr)), 8))
-        elseif size == 1 then
+        else if size == 1 then
             cpu:writeX(rt, Int.signExtend(Int.from(cpu.mem:readU16(addr)), 16))
-        elseif size == 2 then
+        else if size == 2 then
             cpu:writeX(rt, Int.signExtend(Int.from(cpu.mem:readU32(addr)), 32))
         else
             -- PRFM for size==3, opc==2 — treat as NOP
             return
         end
-    elseif opc == 3 then
+    else if opc == 3 then
         -- Load sign-extend to 32-bit (only for size 0,1) or PRFM (size 2,3)
         if size == 0 then
             cpu:writeW(rt, Int.signExtend(Int.from(cpu.mem:readU8(addr)), 8))
-        elseif size == 1 then
+        else if size == 1 then
             cpu:writeW(rt, Int.signExtend(Int.from(cpu.mem:readU16(addr)), 16))
         else
             -- PRFM - NOP
@@ -1004,26 +1004,26 @@ function Decode.decodeSIMDModifiedImm(imm8: number, cmode: number, op: number): 
     if cmodeHigh == 0 then -- 32-bit, no shift
         local w = imm8
         return Int.bor(Int.from(w), Int.shl(Int.from(w), 32))
-    elseif cmodeHigh == 1 then -- 32-bit, LSL #8
+    else if cmodeHigh == 1 then -- 32-bit, LSL #8
         local w = imm8 * 256
         return Int.bor(Int.from(w), Int.shl(Int.from(w), 32))
-    elseif cmodeHigh == 2 then -- 32-bit, LSL #16
+    else if cmodeHigh == 2 then -- 32-bit, LSL #16
         local w = imm8 * 65536
         return Int.bor(Int.from(w), Int.shl(Int.from(w), 32))
-    elseif cmodeHigh == 3 then -- 32-bit, LSL #24
+    else if cmodeHigh == 3 then -- 32-bit, LSL #24
         local w = imm8 * 16777216
         return Int.bor(Int.from(w), Int.shl(Int.from(w), 32))
-    elseif cmodeHigh == 4 then -- 16-bit, no shift
+    else if cmodeHigh == 4 then -- 16-bit, no shift
         local h = Int.from(imm8)
         local result = Int.ZERO
         for s = 0, 48, 16 do result = Int.bor(result, Int.shl(h, s)) end
         return result
-    elseif cmodeHigh == 5 then -- 16-bit, LSL #8
+    else if cmodeHigh == 5 then -- 16-bit, LSL #8
         local h = Int.from(imm8 * 256)
         local result = Int.ZERO
         for s = 0, 48, 16 do result = Int.bor(result, Int.shl(h, s)) end
         return result
-    elseif cmodeHigh == 6 then -- 32-bit, MSL #8 or MSL #16
+    else if cmodeHigh == 6 then -- 32-bit, MSL #8 or MSL #16
         local shift = if bit32.band(cmode, 1) == 0 then 8 else 16
         local mask = bit32.lshift(1, shift) - 1
         local w = bit32.bor(bit32.lshift(imm8, shift), mask)
@@ -1037,7 +1037,7 @@ function Decode.decodeSIMDModifiedImm(imm8: number, cmode: number, op: number): 
                 result = Int.bor(result, Int.shl(b, s))
             end
             return result
-        elseif op == 0 and bit32.band(cmode, 1) == 1 then
+        else if op == 0 and bit32.band(cmode, 1) == 1 then
             -- 64-bit: each bit of imm8 selects 0x00 or 0xFF for corresponding byte
             local result = Int.ZERO
             for bit = 0, 7 do
@@ -1076,20 +1076,20 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
             local lo = Int.ZERO
             for s = 0, 56, 8 do lo = Int.bor(lo, Int.shl(elem, s)) end
             cpu:writeVFull(rd, lo, if q == 1 then lo else Int.ZERO)
-        elseif bit32.band(imm5, 3) == 2 then -- halfword
+        else if bit32.band(imm5, 3) == 2 then -- halfword
             local idx = bit32.rshift(imm5, 2)
             local src = if idx < 4 then srcLo else srcHi
             elem = Int.band(Int.shr(src, (idx % 4) * 16), Int.MASK16)
             local lo = Int.ZERO
             for s = 0, 48, 16 do lo = Int.bor(lo, Int.shl(elem, s)) end
             cpu:writeVFull(rd, lo, if q == 1 then lo else Int.ZERO)
-        elseif bit32.band(imm5, 7) == 4 then -- word
+        else if bit32.band(imm5, 7) == 4 then -- word
             local idx = bit32.rshift(imm5, 3)
             local src = if idx < 2 then srcLo else srcHi
             elem = Int.band(Int.shr(src, (idx % 2) * 32), Int.MASK32)
             local lo = Int.bor(elem, Int.shl(elem, 32))
             cpu:writeVFull(rd, lo, if q == 1 then lo else Int.ZERO)
-        elseif bit32.band(imm5, 15) == 8 then -- doubleword
+        else if bit32.band(imm5, 15) == 8 then -- doubleword
             local idx = bit32.rshift(imm5, 4)
             elem = if idx == 0 then srcLo else srcHi
             cpu:writeVFull(rd, elem, if q == 1 then elem else Int.ZERO)
@@ -1117,18 +1117,18 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
                 lo = Int.bor(lo, Int.shl(b, shift))
             end
             hi = if q == 1 then lo else Int.ZERO
-        elseif bit32.band(imm5, 3) == 2 then
+        else if bit32.band(imm5, 3) == 2 then
             -- Halfword
             local h = Int.band(src, Int.MASK16)
             lo = Int.ZERO
             for s = 0, 48, 16 do lo = Int.bor(lo, Int.shl(h, s)) end
             hi = if q == 1 then lo else Int.ZERO
-        elseif bit32.band(imm5, 7) == 4 then
+        else if bit32.band(imm5, 7) == 4 then
             -- Word
             local w = Int.band(src, Int.MASK32)
             lo = Int.bor(w, Int.shl(w, 32))
             hi = if q == 1 then lo else Int.ZERO
-        elseif bit32.band(imm5, 15) == 8 then
+        else if bit32.band(imm5, 15) == 8 then
             -- Doubleword
             lo = src
             hi = if q == 1 then src else Int.ZERO
@@ -1155,19 +1155,19 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
             local source = if idx < 8 then lo else hi
             local byteOff = idx % 8
             cpu:writeX(rd, Int.band(Int.shr(source, byteOff * 8), Int.MASK8))
-        elseif bit32.band(imm5, 3) == 2 then
+        else if bit32.band(imm5, 3) == 2 then
             -- Halfword
             local idx = bit32.rshift(imm5, 2)
             local source = if idx < 4 then lo else hi
             local off = (idx % 4) * 16
             cpu:writeX(rd, Int.band(Int.shr(source, off), Int.MASK16))
-        elseif bit32.band(imm5, 7) == 4 then
+        else if bit32.band(imm5, 7) == 4 then
             -- Word
             local idx = bit32.rshift(imm5, 3)
             local source = if idx < 2 then lo else hi
             local off = (idx % 2) * 32
             cpu:writeX(rd, Int.band(Int.shr(source, off), Int.MASK32))
-        elseif bit32.band(imm5, 15) == 8 then
+        else if bit32.band(imm5, 15) == 8 then
             -- Doubleword
             local idx = bit32.rshift(imm5, 4)
             local source = if idx == 0 then lo else hi
@@ -1218,15 +1218,15 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
         if opcode == 6 then -- FP -> GP
             if sf == 0 then
                 cpu:writeW(rd, Int.band(cpu:readVLo(rn), Int.MASK32))
-            elseif rmode == 1 then -- Vn.D[1] -> Xd
+            else if rmode == 1 then -- Vn.D[1] -> Xd
                 cpu:writeX(rd, cpu:readVHi(rn))
             else
                 cpu:writeX(rd, cpu:readVLo(rn))
             end
-        elseif opcode == 7 then -- GP -> FP
+        else if opcode == 7 then -- GP -> FP
             if sf == 0 then
                 cpu:writeVFull(rd, Int.band(cpu:readX(rn), Int.MASK32), Int.ZERO)
-            elseif rmode == 1 then -- Xn -> Vd.D[1]
+            else if rmode == 1 then -- Xn -> Vd.D[1]
                 cpu:writeVFull(rd, cpu:readVLo(rd), cpu:readX(rn))
             else
                 cpu:writeVFull(rd, cpu:readX(rn), Int.ZERO)
@@ -1292,10 +1292,10 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
             local aLo = intToF64(cpu:readVLo(rn)); local aHi = intToF64(cpu:readVHi(rn))
             if opcode == 0x9 and u == 0 then -- FMUL
                 cpu:writeVFull(rd, f64ToInt(aLo * elemVal), if q == 1 then f64ToInt(aHi * elemVal) else Int.ZERO)
-            elseif opcode == 0x1 and u == 0 then -- FMLA
+            else if opcode == 0x1 and u == 0 then -- FMLA
                 local dLo = intToF64(cpu:readVLo(rd)); local dHi = intToF64(cpu:readVHi(rd))
                 cpu:writeVFull(rd, f64ToInt(dLo + aLo * elemVal), if q == 1 then f64ToInt(dHi + aHi * elemVal) else Int.ZERO)
-            elseif opcode == 0x5 and u == 0 then -- FMLS
+            else if opcode == 0x5 and u == 0 then -- FMLS
                 local dLo = intToF64(cpu:readVLo(rd)); local dHi = intToF64(cpu:readVHi(rd))
                 cpu:writeVFull(rd, f64ToInt(dLo - aLo * elemVal), if q == 1 then f64ToInt(dHi - aHi * elemVal) else Int.ZERO)
             else
@@ -1327,7 +1327,7 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
                 cpu:writeVFull(rd, dLo, dHi)
             end
             if opcode == 0x9 and u == 0 then applyS(function(a,b) return a*b end)
-            elseif opcode == 0x1 and u == 0 then
+            else if opcode == 0x1 and u == 0 then
                 -- FMLA: dst += src * elem
                 applyS(function(a,b)
                     return intToF32(Int.toNumber(Int.band(Int.shr(cpu:readVLo(rd), 0), Int.MASK32))) + a*b
@@ -1357,15 +1357,15 @@ function Decode.execSimdDP(cpu: CPU.CPU, insn: number, pc: integer)
                 local idx = bit32.rshift(imm5, 1)
                 local src = if idx < 8 then srcLo else srcHi
                 elem = Int.band(Int.shr(src, (idx % 8) * 8), Int.MASK8)
-            elseif bit32.band(imm5, 3) == 2 then
+            else if bit32.band(imm5, 3) == 2 then
                 local idx = bit32.rshift(imm5, 2)
                 local src = if idx < 4 then srcLo else srcHi
                 elem = Int.band(Int.shr(src, (idx % 4) * 16), Int.MASK16)
-            elseif bit32.band(imm5, 7) == 4 then
+            else if bit32.band(imm5, 7) == 4 then
                 local idx = bit32.rshift(imm5, 3)
                 local src = if idx < 2 then srcLo else srcHi
                 elem = Int.band(Int.shr(src, (idx % 2) * 32), Int.MASK32)
-            elseif bit32.band(imm5, 15) == 8 then
+            else if bit32.band(imm5, 15) == 8 then
                 local idx = bit32.rshift(imm5, 4)
                 elem = if idx == 0 then srcLo else srcHi
             end
@@ -1493,25 +1493,25 @@ function Decode.execSimdThreeSame(cpu: CPU.CPU, insn: number, pc: integer)
 
         if u == 0 and size == 0 then -- AND
             cpu:writeVFull(rd, Int.band(nLo, mLo), if q == 1 then Int.band(nHi, mHi) else Int.ZERO)
-        elseif u == 0 and size == 1 then -- BIC
+        else if u == 0 and size == 1 then -- BIC
             cpu:writeVFull(rd, Int.band(nLo, Int.bnot(mLo)), if q == 1 then Int.band(nHi, Int.bnot(mHi)) else Int.ZERO)
-        elseif u == 0 and size == 2 then -- ORR
+        else if u == 0 and size == 2 then -- ORR
             cpu:writeVFull(rd, Int.bor(nLo, mLo), if q == 1 then Int.bor(nHi, mHi) else Int.ZERO)
-        elseif u == 0 and size == 3 then -- ORN
+        else if u == 0 and size == 3 then -- ORN
             cpu:writeVFull(rd, Int.bor(nLo, Int.bnot(mLo)), if q == 1 then Int.bor(nHi, Int.bnot(mHi)) else Int.ZERO)
-        elseif u == 1 and size == 0 then -- EOR
+        else if u == 1 and size == 0 then -- EOR
             cpu:writeVFull(rd, Int.bxor(nLo, mLo), if q == 1 then Int.bxor(nHi, mHi) else Int.ZERO)
-        elseif u == 1 and size == 1 then -- BSL: Vd = (Vn AND Vd) OR (Vm AND NOT Vd)
+        else if u == 1 and size == 1 then -- BSL: Vd = (Vn AND Vd) OR (Vm AND NOT Vd)
             local dLo = cpu:readVLo(rd); local dHi = cpu:readVHi(rd)
             cpu:writeVFull(rd,
                 Int.bor(Int.band(nLo, dLo), Int.band(mLo, Int.bnot(dLo))),
                 if q == 1 then Int.bor(Int.band(nHi, dHi), Int.band(mHi, Int.bnot(dHi))) else Int.ZERO)
-        elseif u == 1 and size == 2 then -- BIT: Vd = (Vd AND NOT Vm) OR (Vn AND Vm)
+        else if u == 1 and size == 2 then -- BIT: Vd = (Vd AND NOT Vm) OR (Vn AND Vm)
             local dLo = cpu:readVLo(rd); local dHi = cpu:readVHi(rd)
             cpu:writeVFull(rd,
                 Int.bor(Int.band(dLo, Int.bnot(mLo)), Int.band(nLo, mLo)),
                 if q == 1 then Int.bor(Int.band(dHi, Int.bnot(mHi)), Int.band(nHi, mHi)) else Int.ZERO)
-        elseif u == 1 and size == 3 then -- BIF: Vd = (Vd AND Vm) OR (Vn AND NOT Vm)
+        else if u == 1 and size == 3 then -- BIF: Vd = (Vd AND Vm) OR (Vn AND NOT Vm)
             local dLo = cpu:readVLo(rd); local dHi = cpu:readVHi(rd)
             cpu:writeVFull(rd,
                 Int.bor(Int.band(dLo, mLo), Int.band(nLo, Int.bnot(mLo))),
@@ -1581,7 +1581,7 @@ function Decode.execSimdThreeSame(cpu: CPU.CPU, insn: number, pc: integer)
                 cpu:writeVFull(rd, f64ToInt(dLo - aLo*bLo), if q == 1 then f64ToInt(dHi - aHi*bHi) else Int.ZERO)
                 return
             end
-        elseif sz == 0 then -- single precision (.4s or .2s)
+        else if sz == 0 then -- single precision (.4s or .2s)
             local function fpOp4s(op: (number, number) -> number)
                 local srcN_lo = cpu:readVLo(rn); local srcN_hi = cpu:readVHi(rn)
                 local srcM_lo = cpu:readVLo(rm); local srcM_hi = cpu:readVHi(rm)
@@ -1883,8 +1883,8 @@ function Decode.execSimdExt(cpu: CPU.CPU, insn: number, pc: integer)
     local function getByte(idx: number): number
         local src: integer
         if idx < 8 then src = nLo
-        elseif idx < 16 then src = nHi; idx -= 8
-        elseif idx < 24 then src = mLo; idx -= 16
+        else if idx < 16 then src = nHi; idx -= 8
+        else if idx < 24 then src = mLo; idx -= 16
         else src = mHi; idx -= 24 end
         return Int.toNumber(Int.band(Int.shr(src, idx * 8), Int.MASK8))
     end
@@ -1914,8 +1914,8 @@ function Decode.execSimdShiftImm(cpu: CPU.CPU, insn: number, pc: integer)
     -- Determine element size from immh
     local elemBits: number
     if bit32.band(immh, 8) ~= 0 then elemBits = 64
-    elseif bit32.band(immh, 4) ~= 0 then elemBits = 32
-    elseif bit32.band(immh, 2) ~= 0 then elemBits = 16
+    else if bit32.band(immh, 4) ~= 0 then elemBits = 32
+    else if bit32.band(immh, 2) ~= 0 then elemBits = 16
     else elemBits = 8 end
 
     local immhb = bit32.bor(bit32.lshift(immh, 3), immb)
@@ -2059,7 +2059,7 @@ function Decode.execLoadStorePairSimd(cpu: CPU.CPU, insn: number, pc: integer)
     local rt = bit32.band(insn, 0x1F)
 
     -- opc: 00=S(32-bit), 01=D(64-bit), 10=Q(128-bit)
-    local dataSize = if opc == 0 then 4 elseif opc == 1 then 8 else 16
+    local dataSize = if opc == 0 then 4 else if opc == 1 then 8 else 16
     local offset = signExtendN(imm7, 7) * dataSize
 
     local base = cpu:readXOrSP(rn)
@@ -2070,7 +2070,7 @@ function Decode.execLoadStorePairSimd(cpu: CPU.CPU, insn: number, pc: integer)
     if mode == 1 then -- post-index
         addr = base
         doWriteback = true
-    elseif mode == 3 then -- pre-index
+    else if mode == 3 then -- pre-index
         addr = Int.add(base, Int.from(offset))
         doWriteback = true
     else -- signed offset (mode 2) or no-alloc (mode 0)
@@ -2083,7 +2083,7 @@ function Decode.execLoadStorePairSimd(cpu: CPU.CPU, insn: number, pc: integer)
             local v2 = Int.from(cpu.mem:readU32(Int.add(addr, Int.from(4))))
             cpu:writeVLo(rt, v1)
             cpu:writeVLo(rt2, v2)
-        elseif dataSize == 8 then
+        else if dataSize == 8 then
             local v1 = cpu.mem:readU64(addr)
             local v2 = cpu.mem:readU64(Int.add(addr, Int.from(8)))
             cpu:writeVLo(rt, v1)
@@ -2100,7 +2100,7 @@ function Decode.execLoadStorePairSimd(cpu: CPU.CPU, insn: number, pc: integer)
         if dataSize == 4 then
             cpu.mem:writeU32(addr, Int.toNumber(Int.band(cpu:readVLo(rt), Int.MASK32)))
             cpu.mem:writeU32(Int.add(addr, Int.from(4)), Int.toNumber(Int.band(cpu:readVLo(rt2), Int.MASK32)))
-        elseif dataSize == 8 then
+        else if dataSize == 8 then
             cpu.mem:writeU64(addr, cpu:readVLo(rt))
             cpu.mem:writeU64(Int.add(addr, Int.from(8)), cpu:readVLo(rt2))
         else -- 16
@@ -2136,10 +2136,10 @@ function Decode.execLoadStoreRegSimd(cpu: CPU.CPU, insn: number, pc: integer)
     if opc == 0 then
         isLoad = false
         dataSize = bit32.lshift(1, size) -- 1,2,4,8
-    elseif opc == 1 then
+    else if opc == 1 then
         isLoad = true
         dataSize = bit32.lshift(1, size)
-    elseif opc == 2 then
+    else if opc == 2 then
         isLoad = false
         dataSize = 16 -- Q store (size must be 0)
     else
@@ -2157,21 +2157,21 @@ function Decode.execLoadStoreRegSimd(cpu: CPU.CPU, insn: number, pc: integer)
         local rm = bit32.band(bit32.rshift(insn, 16), 0x1F)
         local option = bit32.band(bit32.rshift(insn, 13), 0x7)
         local s = bit32.band(bit32.rshift(insn, 12), 1)
-        local scale = if dataSize == 16 then 4 elseif dataSize == 8 then 3 elseif dataSize == 4 then 2 elseif dataSize == 2 then 1 else 0
+        local scale = if dataSize == 16 then 4 else if dataSize == 8 then 3 else if dataSize == 4 then 2 else if dataSize == 2 then 1 else 0
         local shift = if s == 1 then scale else 0
         local offset = applyExtend(cpu:readX(rm), option, shift)
         addr = Int.add(base, offset)
-    elseif op4 == 0 then
+    else if op4 == 0 then
         -- Unscaled immediate
         local imm9 = bit32.band(bit32.rshift(insn, 12), 0x1FF)
         addr = Int.add(base, signExtendImm(imm9, 9))
-    elseif op4 == 1 then
+    else if op4 == 1 then
         -- Post-index
         local imm9 = bit32.band(bit32.rshift(insn, 12), 0x1FF)
         addr = base
         wbackAddr = Int.add(base, signExtendImm(imm9, 9))
         doWriteback = true
-    elseif op4 == 3 then
+    else if op4 == 3 then
         -- Pre-index
         local imm9 = bit32.band(bit32.rshift(insn, 12), 0x1FF)
         addr = Int.add(base, signExtendImm(imm9, 9))
@@ -2201,10 +2201,10 @@ function Decode.execLoadStoreUnsignedOffSimd(cpu: CPU.CPU, insn: number, pc: int
     if opc == 0 then
         isLoad = false
         dataSize = bit32.lshift(1, size)
-    elseif opc == 1 then
+    else if opc == 1 then
         isLoad = true
         dataSize = bit32.lshift(1, size)
-    elseif opc == 2 then
+    else if opc == 2 then
         isLoad = false
         dataSize = 16
     else
@@ -2212,7 +2212,7 @@ function Decode.execLoadStoreUnsignedOffSimd(cpu: CPU.CPU, insn: number, pc: int
         dataSize = 16
     end
 
-    local scale = if dataSize == 16 then 4 elseif dataSize == 8 then 3 elseif dataSize == 4 then 2 elseif dataSize == 2 then 1 else 0
+    local scale = if dataSize == 16 then 4 else if dataSize == 8 then 3 else if dataSize == 4 then 2 else if dataSize == 2 then 1 else 0
     local offset = imm12 * bit32.lshift(1, scale)
     local base = cpu:readXOrSP(rn)
     local addr = Int.add(base, Int.from(offset))
@@ -2239,34 +2239,34 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
             local b = readFPD(cpu, rm)
             local result: number
             if opcode == 0 then result = a * b      -- FMUL
-            elseif opcode == 1 then result = a / b  -- FDIV
-            elseif opcode == 2 then result = a + b  -- FADD
-            elseif opcode == 3 then result = a - b  -- FSUB
-            elseif opcode == 4 then result = b      -- FMAX (simplified)
+            else if opcode == 1 then result = a / b  -- FDIV
+            else if opcode == 2 then result = a + b  -- FADD
+            else if opcode == 3 then result = a - b  -- FSUB
+            else if opcode == 4 then result = b      -- FMAX (simplified)
                 result = if a > b then a else b
-            elseif opcode == 5 then                 -- FMIN
+            else if opcode == 5 then                 -- FMIN
                 result = if a < b then a else b
-            elseif opcode == 6 then result = if a > b then a else b -- FMAXNM
-            elseif opcode == 7 then result = if a < b then a else b -- FMINNM
-            elseif opcode == 8 then                 -- FNMUL
+            else if opcode == 6 then result = if a > b then a else b -- FMAXNM
+            else if opcode == 7 then result = if a < b then a else b -- FMINNM
+            else if opcode == 8 then                 -- FNMUL
                 result = -(a * b)
             else
                 Decode.unimplemented(cpu, insn, pc); return
             end
             writeFPD(cpu, rd, result)
-        elseif ftype == 0 then -- single
+        else if ftype == 0 then -- single
             local a = readFPS(cpu, rn)
             local b = readFPS(cpu, rm)
             local result: number
             if opcode == 0 then result = a * b
-            elseif opcode == 1 then result = a / b
-            elseif opcode == 2 then result = a + b
-            elseif opcode == 3 then result = a - b
-            elseif opcode == 4 then result = if a > b then a else b
-            elseif opcode == 5 then result = if a < b then a else b
-            elseif opcode == 6 then result = if a > b then a else b
-            elseif opcode == 7 then result = if a < b then a else b
-            elseif opcode == 8 then result = -(a * b)
+            else if opcode == 1 then result = a / b
+            else if opcode == 2 then result = a + b
+            else if opcode == 3 then result = a - b
+            else if opcode == 4 then result = if a > b then a else b
+            else if opcode == 5 then result = if a < b then a else b
+            else if opcode == 6 then result = if a > b then a else b
+            else if opcode == 7 then result = if a < b then a else b
+            else if opcode == 8 then result = -(a * b)
             else
                 Decode.unimplemented(cpu, insn, pc); return
             end
@@ -2283,26 +2283,26 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
         if ftype == 1 then -- double
             local a = readFPD(cpu, rn)
             if opcode == 0 then writeFPD(cpu, rd, a)               -- FMOV
-            elseif opcode == 1 then writeFPD(cpu, rd, math.abs(a)) -- FABS
-            elseif opcode == 2 then writeFPD(cpu, rd, -a)          -- FNEG
-            elseif opcode == 3 then writeFPD(cpu, rd, math.sqrt(a))-- FSQRT
-            elseif opcode == 4 then                                -- FCVT D->S
+            else if opcode == 1 then writeFPD(cpu, rd, math.abs(a)) -- FABS
+            else if opcode == 2 then writeFPD(cpu, rd, -a)          -- FNEG
+            else if opcode == 3 then writeFPD(cpu, rd, math.sqrt(a))-- FSQRT
+            else if opcode == 4 then                                -- FCVT D->S
                 writeFPS(cpu, rd, a)
-            elseif opcode == 8 then writeFPD(cpu, rd, if a >= 0 then math.floor(a + 0.5) else math.ceil(a - 0.5)) -- FRINTN
-            elseif opcode == 9 then writeFPD(cpu, rd, if a >= 0 then math.floor(a + 0.5) else math.ceil(a - 0.5)) -- FRINTP
-            elseif opcode == 10 then writeFPD(cpu, rd, if a >= 0 then math.floor(a) else math.ceil(a))            -- FRINTM
-            elseif opcode == 11 then writeFPD(cpu, rd, if a >= 0 then math.floor(a) else math.ceil(a))            -- FRINTZ (toward zero)
+            else if opcode == 8 then writeFPD(cpu, rd, if a >= 0 then math.floor(a + 0.5) else math.ceil(a - 0.5)) -- FRINTN
+            else if opcode == 9 then writeFPD(cpu, rd, if a >= 0 then math.floor(a + 0.5) else math.ceil(a - 0.5)) -- FRINTP
+            else if opcode == 10 then writeFPD(cpu, rd, if a >= 0 then math.floor(a) else math.ceil(a))            -- FRINTM
+            else if opcode == 11 then writeFPD(cpu, rd, if a >= 0 then math.floor(a) else math.ceil(a))            -- FRINTZ (toward zero)
                 writeFPD(cpu, rd, if a >= 0 then math.floor(a) else math.ceil(a))
             else
                 Decode.unimplemented(cpu, insn, pc)
             end
-        elseif ftype == 0 then -- single
+        else if ftype == 0 then -- single
             local a = readFPS(cpu, rn)
             if opcode == 0 then writeFPS(cpu, rd, a)
-            elseif opcode == 1 then writeFPS(cpu, rd, math.abs(a))
-            elseif opcode == 2 then writeFPS(cpu, rd, -a)
-            elseif opcode == 3 then writeFPS(cpu, rd, math.sqrt(a))
-            elseif opcode == 5 then writeFPD(cpu, rd, a)           -- FCVT S->D
+            else if opcode == 1 then writeFPS(cpu, rd, math.abs(a))
+            else if opcode == 2 then writeFPS(cpu, rd, -a)
+            else if opcode == 3 then writeFPS(cpu, rd, math.sqrt(a))
+            else if opcode == 5 then writeFPD(cpu, rd, a)           -- FCVT S->D
             else
                 Decode.unimplemented(cpu, insn, pc)
             end
@@ -2327,9 +2327,9 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
         end
         if a ~= a or b ~= b then -- NaN
             cpu.N = false; cpu.Z = false; cpu.C = true; cpu.V = true
-        elseif a == b then
+        else if a == b then
             cpu.N = false; cpu.Z = true; cpu.C = true; cpu.V = false
-        elseif a < b then
+        else if a < b then
             cpu.N = true; cpu.Z = false; cpu.C = false; cpu.V = false
         else -- a > b
             cpu.N = false; cpu.Z = false; cpu.C = true; cpu.V = false
@@ -2362,19 +2362,19 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
             local c = readFPD(cpu, ra)
             local result: number
             if o1 == 0 and o0 == 0 then result = a * b + c      -- FMADD
-            elseif o1 == 0 and o0 == 1 then result = -(a * b) + c -- FMSUB (= c - a*b)
-            elseif o1 == 1 and o0 == 0 then result = -(a * b + c) -- FNMADD
+            else if o1 == 0 and o0 == 1 then result = -(a * b) + c -- FMSUB (= c - a*b)
+            else if o1 == 1 and o0 == 0 then result = -(a * b + c) -- FNMADD
             else result = a * b - c                               -- FNMSUB
             end
             writeFPD(cpu, rd, result)
-        elseif ftype == 0 then -- single
+        else if ftype == 0 then -- single
             local a = readFPS(cpu, rn)
             local b = readFPS(cpu, rm)
             local c = readFPS(cpu, ra)
             local result: number
             if o1 == 0 and o0 == 0 then result = a * b + c
-            elseif o1 == 0 and o0 == 1 then result = -(a * b) + c
-            elseif o1 == 1 and o0 == 0 then result = -(a * b + c)
+            else if o1 == 0 and o0 == 1 then result = -(a * b) + c
+            else if o1 == 1 and o0 == 0 then result = -(a * b + c)
             else result = a * b - c
             end
             writeFPS(cpu, rd, result)
@@ -2421,7 +2421,7 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
                 cpu:writeX(rd, cpu:readVLo(rn))
             end
             return
-        elseif opcode == 7 then -- FMOV GP->FP
+        else if opcode == 7 then -- FMOV GP->FP
             if sf == 0 then
                 cpu:writeVFull(rd, Int.band(cpu:readX(rn), Int.MASK32), Int.ZERO)
             else
@@ -2436,16 +2436,16 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
             if opcode == 0 then -- FCVT*S (fp->signed int)
                 local intVal: number
                 if rmode == 0 then intVal = math.round(fpVal)       -- FCVTNS
-                elseif rmode == 1 then                              -- FCVTPS
+                else if rmode == 1 then                              -- FCVTPS
                     intVal = math.ceil(fpVal)
-                elseif rmode == 2 then                              -- FCVTMS
+                else if rmode == 2 then                              -- FCVTMS
                     intVal = math.floor(fpVal)
                 else                                                -- FCVTZS
                     intVal = if fpVal >= 0 then math.floor(fpVal) else math.ceil(fpVal)
                 end
                 if sf == 1 then cpu:writeX(rd, Int.from(intVal))
                 else cpu:writeW(rd, Int.band(Int.from(intVal), Int.MASK32)) end
-            elseif opcode == 1 then -- FCVT*U (fp->unsigned int)
+            else if opcode == 1 then -- FCVT*U (fp->unsigned int)
                 local intVal: number
                 if rmode == 3 then -- FCVTZU
                     intVal = if fpVal >= 0 then math.floor(fpVal) else 0
@@ -2454,10 +2454,10 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
                 end
                 if sf == 1 then cpu:writeX(rd, Int.from(if intVal >= 0 then intVal else 0))
                 else cpu:writeW(rd, Int.from(if intVal >= 0 then intVal else 0)) end
-            elseif opcode == 2 then -- SCVTF (signed int->fp)
+            else if opcode == 2 then -- SCVTF (signed int->fp)
                 local intVal = if sf == 1 then Int.toNumber(cpu:readX(rn)) else Int.toNumber(Int.signExtend(cpu:readW(rn), 32))
                 writeFPD(cpu, rd, intVal)
-            elseif opcode == 3 then -- UCVTF (unsigned int->fp)
+            else if opcode == 3 then -- UCVTF (unsigned int->fp)
                 local intVal: number
                 if sf == 1 then
                     -- Unsigned 64-bit to double: handle large values
@@ -2475,19 +2475,19 @@ function Decode.execFPScalar(cpu: CPU.CPU, insn: number, pc: integer)
             else
                 Decode.unimplemented(cpu, insn, pc)
             end
-        elseif ftype == 0 then -- source is single
+        else if ftype == 0 then -- source is single
             local fpVal = readFPS(cpu, rn)
             if opcode == 2 then -- SCVTF
                 local intVal = if sf == 1 then Int.toNumber(cpu:readX(rn)) else Int.toNumber(Int.signExtend(cpu:readW(rn), 32))
                 writeFPS(cpu, rd, intVal)
-            elseif opcode == 3 then -- UCVTF
+            else if opcode == 3 then -- UCVTF
                 local intVal = if sf == 1 then Int.toNumber(cpu:readX(rn)) else Int.toNumber(cpu:readW(rn))
                 writeFPS(cpu, rd, intVal)
-            elseif opcode == 0 then -- FCVTZS
+            else if opcode == 0 then -- FCVTZS
                 local intVal = if fpVal >= 0 then math.floor(fpVal) else math.ceil(fpVal)
                 if sf == 1 then cpu:writeX(rd, Int.from(intVal))
                 else cpu:writeW(rd, Int.band(Int.from(intVal), Int.MASK32)) end
-            elseif opcode == 1 then -- FCVTZU
+            else if opcode == 1 then -- FCVTZU
                 local intVal = if fpVal >= 0 then math.floor(fpVal) else 0
                 if sf == 1 then cpu:writeX(rd, Int.from(intVal))
                 else cpu:writeW(rd, Int.from(if intVal >= 0 then intVal else 0)) end
@@ -2519,12 +2519,12 @@ function Decode.execSimdLdSt(cpu: CPU.CPU, insn: number, pc: integer)
     -- Determine number of registers based on opcode
     local numRegs: number
     if opcode == 0x0 then numRegs = 4     -- LD4/ST4
-    elseif opcode == 0x2 then numRegs = 4 -- LD1x4/ST1x4
-    elseif opcode == 0x4 then numRegs = 3 -- LD3/ST3
-    elseif opcode == 0x6 then numRegs = 3 -- LD1x3/ST1x3
-    elseif opcode == 0x7 then numRegs = 1 -- LD1/ST1 (single reg)
-    elseif opcode == 0x8 then numRegs = 2 -- LD2/ST2
-    elseif opcode == 0xA then numRegs = 2 -- LD1x2/ST1x2
+    else if opcode == 0x2 then numRegs = 4 -- LD1x4/ST1x4
+    else if opcode == 0x4 then numRegs = 3 -- LD3/ST3
+    else if opcode == 0x6 then numRegs = 3 -- LD1x3/ST1x3
+    else if opcode == 0x7 then numRegs = 1 -- LD1/ST1 (single reg)
+    else if opcode == 0x8 then numRegs = 2 -- LD2/ST2
+    else if opcode == 0xA then numRegs = 2 -- LD1x2/ST1x2
     else numRegs = 1
     end
 
@@ -2581,8 +2581,8 @@ function Decode.execSimdLdStSingle(cpu: CPU.CPU, insn: number, pc: integer)
         local elemSize = bit32.lshift(1, size) -- 1,2,4,8 bytes
         local val = Int.ZERO
         if elemSize == 1 then val = Int.from(cpu.mem:readU8(addr))
-        elseif elemSize == 2 then val = Int.from(cpu.mem:readU16(addr))
-        elseif elemSize == 4 then val = Int.from(cpu.mem:readU32(addr))
+        else if elemSize == 2 then val = Int.from(cpu.mem:readU16(addr))
+        else if elemSize == 4 then val = Int.from(cpu.mem:readU32(addr))
         else val = cpu.mem:readU64(addr) end
 
         -- Replicate across vector
@@ -2607,11 +2607,11 @@ function Decode.doSimdLoadStore(cpu: CPU.CPU, rt: number, addr: integer, dataSiz
     if isLoad then
         if dataSize == 1 then
             cpu:writeVFull(rt, Int.from(cpu.mem:readU8(addr)), Int.ZERO)
-        elseif dataSize == 2 then
+        else if dataSize == 2 then
             cpu:writeVFull(rt, Int.from(cpu.mem:readU16(addr)), Int.ZERO)
-        elseif dataSize == 4 then
+        else if dataSize == 4 then
             cpu:writeVFull(rt, Int.from(cpu.mem:readU32(addr)), Int.ZERO)
-        elseif dataSize == 8 then
+        else if dataSize == 8 then
             cpu:writeVFull(rt, cpu.mem:readU64(addr), Int.ZERO)
         else -- 16
             local lo = cpu.mem:readU64(addr)
@@ -2621,11 +2621,11 @@ function Decode.doSimdLoadStore(cpu: CPU.CPU, rt: number, addr: integer, dataSiz
     else
         if dataSize == 1 then
             cpu.mem:writeU8(addr, Int.toNumber(Int.band(cpu:readVLo(rt), Int.MASK8)))
-        elseif dataSize == 2 then
+        else if dataSize == 2 then
             cpu.mem:writeU16(addr, Int.toNumber(Int.band(cpu:readVLo(rt), Int.MASK16)))
-        elseif dataSize == 4 then
+        else if dataSize == 4 then
             cpu.mem:writeU32(addr, Int.toNumber(Int.band(cpu:readVLo(rt), Int.MASK32)))
-        elseif dataSize == 8 then
+        else if dataSize == 8 then
             cpu.mem:writeU64(addr, cpu:readVLo(rt))
         else -- 16
             cpu.mem:writeU64(addr, cpu:readVLo(rt))
@@ -2644,9 +2644,9 @@ function Decode.execLoadLiteral(cpu: CPU.CPU, insn: number, pc: integer)
 
     if opc == 0 then -- LDR W
         cpu:writeX(rt, Int.from(cpu.mem:readU32(addr)))
-    elseif opc == 1 then -- LDR X
+    else if opc == 1 then -- LDR X
         cpu:writeX(rt, cpu.mem:readU64(addr))
-    elseif opc == 2 then -- LDRSW
+    else if opc == 2 then -- LDRSW
         cpu:writeX(rt, Int.signExtend(Int.from(cpu.mem:readU32(addr)), 32))
     else
         -- PRFM literal - NOP
@@ -2671,9 +2671,9 @@ function Decode.execLoadStoreExclusive(cpu: CPU.CPU, insn: number, pc: integer)
         -- LDXR/LDAXR/LDAR
         if size == 0 then
             cpu:writeX(rt, Int.from(cpu.mem:readU8(addr)))
-        elseif size == 1 then
+        else if size == 1 then
             cpu:writeX(rt, Int.from(cpu.mem:readU16(addr)))
-        elseif size == 2 then
+        else if size == 2 then
             cpu:writeX(rt, Int.from(cpu.mem:readU32(addr)))
         else
             cpu:writeX(rt, cpu.mem:readU64(addr))
@@ -2682,9 +2682,9 @@ function Decode.execLoadStoreExclusive(cpu: CPU.CPU, insn: number, pc: integer)
         -- STXR/STLXR/STLR
         if size == 0 then
             cpu.mem:writeU8(addr, Int.toNumber(Int.band(cpu:readX(rt), Int.MASK8)))
-        elseif size == 1 then
+        else if size == 1 then
             cpu.mem:writeU16(addr, Int.toNumber(Int.band(cpu:readX(rt), Int.MASK16)))
-        elseif size == 2 then
+        else if size == 2 then
             cpu.mem:writeU32(addr, Int.toNumber(Int.band(cpu:readX(rt), Int.MASK32)))
         else
             cpu.mem:writeU64(addr, cpu:readX(rt))
@@ -2710,9 +2710,9 @@ function Decode.execAtomic(cpu: CPU.CPU, insn: number, pc: integer)
     local oldVal: integer
     if size == 0 then
         oldVal = Int.from(cpu.mem:readU8(addr))
-    elseif size == 1 then
+    else if size == 1 then
         oldVal = Int.from(cpu.mem:readU16(addr))
-    elseif size == 2 then
+    else if size == 2 then
         oldVal = Int.from(cpu.mem:readU32(addr))
     else
         oldVal = cpu.mem:readU64(addr)
@@ -2722,19 +2722,19 @@ function Decode.execAtomic(cpu: CPU.CPU, insn: number, pc: integer)
     local newVal: integer
     if opc == 0 then -- LDADD
         newVal = Int.add(oldVal, sval)
-    elseif opc == 1 then -- LDCLR
+    else if opc == 1 then -- LDCLR
         newVal = Int.band(oldVal, Int.bnot(sval))
-    elseif opc == 2 then -- LDEOR
+    else if opc == 2 then -- LDEOR
         newVal = Int.bxor(oldVal, sval)
-    elseif opc == 3 then -- LDSET
+    else if opc == 3 then -- LDSET
         newVal = Int.bor(oldVal, sval)
-    elseif opc == 4 then -- LDSMAX
+    else if opc == 4 then -- LDSMAX
         if Int.gt(sval, oldVal) then newVal = sval else newVal = oldVal end
-    elseif opc == 5 then -- LDSMIN
+    else if opc == 5 then -- LDSMIN
         if Int.lt(sval, oldVal) then newVal = sval else newVal = oldVal end
-    elseif opc == 6 then -- LDUMAX
+    else if opc == 6 then -- LDUMAX
         if Int.ugt(sval, oldVal) then newVal = sval else newVal = oldVal end
-    elseif opc == 7 then -- LDUMIN
+    else if opc == 7 then -- LDUMIN
         if Int.ult(sval, oldVal) then newVal = sval else newVal = oldVal end
     else
         newVal = oldVal
@@ -2743,9 +2743,9 @@ function Decode.execAtomic(cpu: CPU.CPU, insn: number, pc: integer)
     -- Write new value
     if size == 0 then
         cpu.mem:writeU8(addr, Int.toNumber(Int.band(newVal, Int.MASK8)))
-    elseif size == 1 then
+    else if size == 1 then
         cpu.mem:writeU16(addr, Int.toNumber(Int.band(newVal, Int.MASK16)))
-    elseif size == 2 then
+    else if size == 2 then
         cpu.mem:writeU32(addr, Int.toNumber(Int.band(newVal, Int.MASK32)))
     else
         cpu.mem:writeU64(addr, newVal)
@@ -2799,10 +2799,10 @@ function Decode.execDPReg(cpu: CPU.CPU, insn: number, pc: integer)
         if bit32.band(bits2124, 0x8) == 0x8 then
             -- Data processing 3-source (MADD, MSUB, etc.)
             Decode.execDP3Source(cpu, insn, pc)
-        elseif bit32.band(bits2124, 0xE) == 0x4 then
+        else if bit32.band(bits2124, 0xE) == 0x4 then
             -- Conditional select
             Decode.execCondSelect(cpu, insn, pc)
-        elseif bit32.band(bits2124, 0xE) == 0x6 then
+        else if bit32.band(bits2124, 0xE) == 0x6 then
             -- Data processing 2-source (UDIV, SDIV, etc.) or 1-source (CLZ, etc.)
             local bit30 = bit32.band(bit32.rshift(insn, 30), 1)
             if bit30 == 0 then
@@ -2810,10 +2810,10 @@ function Decode.execDPReg(cpu: CPU.CPU, insn: number, pc: integer)
             else
                 Decode.execDP1Source(cpu, insn, pc)
             end
-        elseif bit32.band(bits2124, 0xE) == 0x0 then
+        else if bit32.band(bits2124, 0xE) == 0x0 then
             -- Add/sub with carry
             Decode.execAddSubCarry(cpu, insn, pc)
-        elseif bit32.band(bits2124, 0xE) == 0x2 then
+        else if bit32.band(bits2124, 0xE) == 0x2 then
             -- Conditional compare
             Decode.execCondCompare(cpu, insn, pc)
         else
@@ -2841,9 +2841,9 @@ function Decode.execLogicalShiftReg(cpu: CPU.CPU, insn: number, pc: integer)
     local result: integer
     if opc == 0 then -- AND / BIC
         result = Int.band(operand1, operand2)
-    elseif opc == 1 then -- ORR / ORN
+    else if opc == 1 then -- ORR / ORN
         result = Int.bor(operand1, operand2)
-    elseif opc == 2 then -- EOR / EON
+    else if opc == 2 then -- EOR / EON
         result = Int.bxor(operand1, operand2)
     else -- ANDS / BICS (3)
         result = Int.band(operand1, operand2)
@@ -2968,7 +2968,7 @@ function Decode.execDP3Source(cpu: CPU.CPU, insn: number, pc: integer)
         local product = Int.mul(a, b)
         local result = if o0 == 0 then Int.add(c, product) else Int.sub(c, product)
         cpu:writeX(rd, result)
-    elseif sf == 0 and op31 == 0 then
+    else if sf == 0 and op31 == 0 then
         -- MADD/MSUB (32-bit)
         local a = cpu:readW(rn)
         local b = cpu:readW(rm)
@@ -2977,7 +2977,7 @@ function Decode.execDP3Source(cpu: CPU.CPU, insn: number, pc: integer)
         local result = if o0 == 0 then Int.band(Int.add(c, product), Int.MASK32)
                        else Int.band(Int.sub(c, product), Int.MASK32)
         cpu:writeW(rd, result)
-    elseif sf == 1 and op31 == 1 then
+    else if sf == 1 and op31 == 1 then
         -- SMADDL/SMSUBL: signed 32x32 -> 64
         local a = Int.signExtend(cpu:readW(rn), 32)
         local b = Int.signExtend(cpu:readW(rm), 32)
@@ -2985,7 +2985,7 @@ function Decode.execDP3Source(cpu: CPU.CPU, insn: number, pc: integer)
         local product = Int.mul(a, b)
         local result = if o0 == 0 then Int.add(c, product) else Int.sub(c, product)
         cpu:writeX(rd, result)
-    elseif sf == 1 and op31 == 5 then
+    else if sf == 1 and op31 == 5 then
         -- UMADDL/UMSUBL: unsigned 32x32 -> 64
         local a = Int.band(cpu:readX(rn), Int.MASK32)
         local b = Int.band(cpu:readX(rm), Int.MASK32)
@@ -2993,12 +2993,12 @@ function Decode.execDP3Source(cpu: CPU.CPU, insn: number, pc: integer)
         local product = Int.mul(a, b)
         local result = if o0 == 0 then Int.add(c, product) else Int.sub(c, product)
         cpu:writeX(rd, result)
-    elseif sf == 1 and op31 == 2 then
+    else if sf == 1 and op31 == 2 then
         -- SMULH
         local a = cpu:readX(rn)
         local b = cpu:readX(rm)
         cpu:writeX(rd, Int.smulh(a, b))
-    elseif sf == 1 and op31 == 6 then
+    else if sf == 1 and op31 == 6 then
         -- UMULH
         local a = cpu:readX(rn)
         local b = cpu:readX(rm)
@@ -3027,13 +3027,13 @@ function Decode.execCondSelect(cpu: CPU.CPU, insn: number, pc: integer)
         -- Apply transformation to valM based on op and op2
         if op == 0 and op2 == 0 then -- CSEL
             result = valM
-        elseif op == 0 and op2 == 1 then -- CSINC
+        else if op == 0 and op2 == 1 then -- CSINC
             result = Int.add(valM, Int.ONE)
             if sf == 0 then result = Int.band(result, Int.MASK32) end
-        elseif op == 1 and op2 == 0 then -- CSINV
+        else if op == 1 and op2 == 0 then -- CSINV
             result = Int.bnot(valM)
             if sf == 0 then result = Int.band(result, Int.MASK32) end
-        elseif op == 1 and op2 == 1 then -- CSNEG
+        else if op == 1 and op2 == 1 then -- CSNEG
             result = Int.neg(valM)
             if sf == 0 then result = Int.band(result, Int.MASK32) end
         else
@@ -3064,7 +3064,7 @@ function Decode.execDP2Source(cpu: CPU.CPU, insn: number, pc: integer)
         end
         if is32 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 3 then -- SDIV
+    else if opcode == 3 then -- SDIV
         local a = if sf == 1 then cpu:readX(rn) else Int.signExtend(cpu:readW(rn), 32)
         local b = if sf == 1 then cpu:readX(rm) else Int.signExtend(cpu:readW(rm), 32)
         local result: integer
@@ -3075,24 +3075,24 @@ function Decode.execDP2Source(cpu: CPU.CPU, insn: number, pc: integer)
         end
         if is32 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 8 then -- LSLV
+    else if opcode == 8 then -- LSLV
         local a = if sf == 1 then cpu:readX(rn) else cpu:readW(rn)
         local shift = Int.toNumber(Int.band(cpu:readX(rm), Int.from(if is32 then 31 else 63)))
         local result = Int.shl(a, shift)
         if is32 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 9 then -- LSRV
+    else if opcode == 9 then -- LSRV
         local a = if sf == 1 then cpu:readX(rn) else cpu:readW(rn)
         local shift = Int.toNumber(Int.band(cpu:readX(rm), Int.from(if is32 then 31 else 63)))
         local result = Int.shr(a, shift)
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 10 then -- ASRV
+    else if opcode == 10 then -- ASRV
         local a = if sf == 1 then cpu:readX(rn) else Int.signExtend(cpu:readW(rn), 32)
         local shift = Int.toNumber(Int.band(cpu:readX(rm), Int.from(if is32 then 31 else 63)))
         local result = Int.sar(a, shift)
         if is32 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 11 then -- RORV
+    else if opcode == 11 then -- RORV
         local a = if sf == 1 then cpu:readX(rn) else cpu:readW(rn)
         local width = if is32 then 32 else 64
         local shift = Int.toNumber(Int.band(cpu:readX(rm), Int.from(width - 1)))
@@ -3121,12 +3121,12 @@ function Decode.execDP1Source(cpu: CPU.CPU, insn: number, pc: integer)
             result = Int.rbit64(val)
         end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 1 then -- REV16
+    else if opcode == 1 then -- REV16
         local val = if sf == 1 then cpu:readX(rn) else cpu:readW(rn)
         local result = Int.rev16(val)
         if is32 then result = Int.band(result, Int.MASK32) end
         if sf == 1 then cpu:writeX(rd, result) else cpu:writeW(rd, result) end
-    elseif opcode == 2 then -- REV32 (for 64-bit) or REV (for 32-bit)
+    else if opcode == 2 then -- REV32 (for 64-bit) or REV (for 32-bit)
         local val = if sf == 1 then cpu:readX(rn) else cpu:readW(rn)
         if is32 then
             cpu:writeW(rd, Int.rev32(val))
@@ -3136,10 +3136,10 @@ function Decode.execDP1Source(cpu: CPU.CPU, insn: number, pc: integer)
             local hi = Int.rev32(Int.band(Int.shr(val, 32), Int.MASK32))
             cpu:writeX(rd, Int.bor(lo, Int.shl(hi, 32)))
         end
-    elseif opcode == 3 then -- REV (64-bit)
+    else if opcode == 3 then -- REV (64-bit)
         local val = cpu:readX(rn)
         cpu:writeX(rd, Int.rev64(val))
-    elseif opcode == 4 then -- CLZ
+    else if opcode == 4 then -- CLZ
         local val = if sf == 1 then cpu:readX(rn) else cpu:readW(rn)
         local result: number
         if is32 then
@@ -3149,7 +3149,7 @@ function Decode.execDP1Source(cpu: CPU.CPU, insn: number, pc: integer)
             result = Int.clz64(val)
         end
         if sf == 1 then cpu:writeX(rd, Int.from(result)) else cpu:writeW(rd, Int.from(result)) end
-    elseif opcode == 5 then -- CLS (count leading sign bits)
+    else if opcode == 5 then -- CLS (count leading sign bits)
         local val = if sf == 1 then cpu:readX(rn) else Int.signExtend(cpu:readW(rn), 32)
         local width = if is32 then 32 else 64
         -- CLS = CLZ(val XOR (val << 1)) for the appropriate width

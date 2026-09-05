@@ -266,10 +266,10 @@ TEST_CASE_FIXTURE(Fixture, "type_pack_hidden_free_tail_infinite_growth")
 --!nonstrict
 if _ then
     _[function(l0)end],l0 = _
-elseif _ then
+else if _ then
     return l0(nil)
-elseif 1 / l0(nil) then
-elseif _ then
+else if 1 / l0(nil) then
+else if _ then
     return #_,l0()
 end
     )");

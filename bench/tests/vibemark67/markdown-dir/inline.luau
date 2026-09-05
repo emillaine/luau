@@ -27,7 +27,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 currentText ..= ch
                 pos += 1
             end
-        elseif ch == "`" then
+        else if ch == "`" then
             local tickCount = 0
             local tickStart = pos
             while pos <= len and string.sub(text, pos, pos) == "`" do
@@ -68,7 +68,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
             else
                 currentText ..= string.sub(text, tickStart, tickStart + tickCount - 1)
             end
-        elseif (ch == "*" or ch == "_") then
+        else if (ch == "*" or ch == "_") then
             local delimChar = ch
             local delimCount = 0
             local delimStart = pos
@@ -99,7 +99,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 else
                     currentText ..= string.rep(delimChar, delimCount)
                 end
-            elseif delimCount >= 1 and canOpen then
+            else if delimCount >= 1 and canOpen then
                 local closePos = string.find(text, delimChar, pos, true)
                 if closePos then
                     flushText()
@@ -120,7 +120,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
             else
                 currentText ..= string.rep(delimChar, delimCount)
             end
-        elseif ch == "[" or (ch == "!" and pos < len and string.sub(text, pos + 1, pos + 1) == "[") then
+        else if ch == "[" or (ch == "!" and pos < len and string.sub(text, pos + 1, pos + 1) == "[") then
             local isImage = ch == "!"
             local labelStart = if isImage then pos + 2 else pos + 1
             local bracketDepth = 1
@@ -128,7 +128,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
             while labelEnd <= len and bracketDepth > 0 do
                 local bc = string.sub(text, labelEnd, labelEnd)
                 if bc == "[" then bracketDepth += 1
-                elseif bc == "]" then bracketDepth -= 1
+                else if bc == "]" then bracketDepth -= 1
                 end
                 if bracketDepth > 0 then labelEnd += 1 end
             end
@@ -171,7 +171,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                         currentText ..= ch
                         pos = if isImage then pos + 1 else pos + 1
                     end
-                elseif afterLabel <= len and string.sub(text, afterLabel, afterLabel) == "[" then
+                else if afterLabel <= len and string.sub(text, afterLabel, afterLabel) == "[" then
                     local refEnd = string.find(text, "]", afterLabel + 1, true)
                     if refEnd then
                         local refLabel = string.sub(text, afterLabel + 1, refEnd - 1)
@@ -226,7 +226,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 currentText ..= ch
                 pos += 1
             end
-        elseif ch == "&" then
+        else if ch == "&" then
             local entity = string.match(text, "^&(#?%w+);", pos)
             if entity then
                 local decoded = ""
@@ -256,7 +256,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 currentText ..= ch
                 pos += 1
             end
-        elseif ch == "<" then
+        else if ch == "<" then
             local autolink = string.match(text, "^<([%w]+://[^>]+)>", pos)
             if autolink then
                 flushText()
@@ -277,7 +277,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                     pos += 1
                 end
             end
-        elseif ch == "\n" then
+        else if ch == "\n" then
             if #currentText >= 2 and string.sub(currentText, -2) == "  " then
                 currentText = string.sub(currentText, 1, -3)
                 flushText()

@@ -329,8 +329,8 @@ end
 function StackSlot_alignment(slot)
     local b = slot.byteSize
     if b <= 1 then return 1
-    elseif b <= 2 then return 2
-    elseif b <= 4 then return 4
+    else if b <= 2 then return 2
+    else if b <= 4 then return 4
     else return 8 end
 end
 function StackSlot_hash(slot)
@@ -489,35 +489,35 @@ function Arg_hash(arg)
         if t.isReg then result = result + Reg_hash(t)
         else result = result end  -- Tmp.hash() never called for virtual tmps
         result = int32(result)
-    elseif k == ArgImm or k == ArgBitImm then
+    else if k == ArgImm or k == ArgBitImm then
         result = result + arg.value
         result = int32(result)
-    elseif k == ArgBigImm or k == ArgBitImm64 then
+    else if k == ArgBigImm or k == ArgBitImm64 then
         result = result + arg.lowValue
         result = int32(result)
         result = result + arg.highValue
         result = int32(result)
-    elseif k == ArgCallArg then
+    else if k == ArgCallArg then
         result = result + arg.offset
         result = int32(result)
-    elseif k == ArgRelCond then
+    else if k == ArgRelCond then
         result = result + arg.condition  -- condition IS the relCondCode
         result = int32(result)
-    elseif k == ArgResCond then
+    else if k == ArgResCond then
         result = result + arg.condition  -- condition IS the resCondCode
         result = int32(result)
-    elseif k == ArgDoubleCond then
+    else if k == ArgDoubleCond then
         result = result + arg.condition  -- condition IS the doubleCondCode
         result = int32(result)
-    elseif k == ArgWidth then
+    else if k == ArgWidth then
         result = result + arg.width
         result = int32(result)
-    elseif k == ArgAddr then
+    else if k == ArgAddr then
         result = result + arg.offset
         result = int32(result)
         result = result + Reg_hash(arg.base)
         result = int32(result)
-    elseif k == ArgIndex then
+    else if k == ArgIndex then
         result = result + arg.offset
         result = int32(result)
         result = result + arg.scale
@@ -526,7 +526,7 @@ function Arg_hash(arg)
         result = int32(result)
         result = result + Reg_hash(arg.index_reg)
         result = int32(result)
-    elseif k == ArgStack then
+    else if k == ArgStack then
         result = result + arg.offset
         result = int32(result)
         result = result + arg.slot.index
@@ -613,7 +613,7 @@ Inst_forEachArg_dispatch[Add32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -634,7 +634,7 @@ Inst_forEachArg_dispatch[Add64] = function(inst, func)
     if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
-    elseif n == 3 then
+    else if n == 3 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Def, GP, 64)
@@ -647,7 +647,7 @@ Inst_forEachArg_dispatch[AddDouble] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_Use, FP, 64)
     inst:visitArg(3, func, ArgRole_Def, FP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 64)
     end
@@ -659,7 +659,7 @@ Inst_forEachArg_dispatch[AddFloat] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 32)
     end
@@ -681,7 +681,7 @@ Inst_forEachArg_dispatch[SubDouble] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_Use, FP, 64)
     inst:visitArg(3, func, ArgRole_Def, FP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 64)
     end
@@ -693,7 +693,7 @@ Inst_forEachArg_dispatch[SubFloat] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 32)
     end
@@ -717,7 +717,7 @@ Inst_forEachArg_dispatch[Mul32] = function(inst, func)
     if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
-    elseif n == 3 then
+    else if n == 3 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
@@ -729,7 +729,7 @@ Inst_forEachArg_dispatch[Mul64] = function(inst, func)
     if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
-    elseif n == 3 then
+    else if n == 3 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Def, GP, 64)
@@ -794,7 +794,7 @@ Inst_forEachArg_dispatch[MulDouble] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_Use, FP, 64)
     inst:visitArg(3, func, ArgRole_Def, FP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 64)
     end
@@ -806,7 +806,7 @@ Inst_forEachArg_dispatch[MulFloat] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 32)
     end
@@ -818,7 +818,7 @@ Inst_forEachArg_dispatch[DivDouble] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 64)
     end
@@ -830,7 +830,7 @@ Inst_forEachArg_dispatch[DivFloat] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 32)
     end
@@ -869,7 +869,7 @@ Inst_forEachArg_dispatch[And32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -881,7 +881,7 @@ Inst_forEachArg_dispatch[And64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Def, GP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
     end
@@ -893,7 +893,7 @@ Inst_forEachArg_dispatch[AndDouble] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_Use, FP, 64)
     inst:visitArg(3, func, ArgRole_Def, FP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 64)
     end
@@ -905,7 +905,7 @@ Inst_forEachArg_dispatch[AndFloat] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 32)
     end
@@ -917,7 +917,7 @@ Inst_forEachArg_dispatch[XorDouble] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_Use, FP, 64)
     inst:visitArg(3, func, ArgRole_Def, FP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 64)
     end
@@ -929,7 +929,7 @@ Inst_forEachArg_dispatch[XorFloat] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Def, FP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, FP, 32)
     inst:visitArg(2, func, ArgRole_UseDef, FP, 32)
     end
@@ -941,7 +941,7 @@ Inst_forEachArg_dispatch[Lshift32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -953,7 +953,7 @@ Inst_forEachArg_dispatch[Lshift64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
     end
@@ -965,7 +965,7 @@ Inst_forEachArg_dispatch[Rshift32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -977,7 +977,7 @@ Inst_forEachArg_dispatch[Rshift64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
     end
@@ -989,7 +989,7 @@ Inst_forEachArg_dispatch[Urshift32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -1001,7 +1001,7 @@ Inst_forEachArg_dispatch[Urshift64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
     end
@@ -1013,7 +1013,7 @@ Inst_forEachArg_dispatch[Or32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -1025,7 +1025,7 @@ Inst_forEachArg_dispatch[Or64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Def, GP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
     end
@@ -1037,7 +1037,7 @@ Inst_forEachArg_dispatch[Xor32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_ZDef, GP, 32)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_UseZDef, GP, 32)
     end
@@ -1049,7 +1049,7 @@ Inst_forEachArg_dispatch[Xor64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Def, GP, 64)
-    elseif n == 2 then
+    else if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_UseDef, GP, 64)
     end
@@ -1060,7 +1060,7 @@ Inst_forEachArg_dispatch[Not32] = function(inst, func)
     if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_ZDef, GP, 32)
-    elseif n == 1 then
+    else if n == 1 then
     inst:visitArg(1, func, ArgRole_UseZDef, GP, 32)
     end
 end
@@ -1070,7 +1070,7 @@ Inst_forEachArg_dispatch[Not64] = function(inst, func)
     if n == 2 then
     inst:visitArg(1, func, ArgRole_Use, GP, 64)
     inst:visitArg(2, func, ArgRole_Def, GP, 64)
-    elseif n == 1 then
+    else if n == 1 then
     inst:visitArg(1, func, ArgRole_UseDef, GP, 64)
     end
 end
@@ -1365,7 +1365,7 @@ Inst_forEachArg_dispatch[BranchAdd32] = function(inst, func)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
     inst:visitArg(4, func, ArgRole_ZDef, GP, 32)
-    elseif n == 3 then
+    else if n == 3 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_UseZDef, GP, 32)
@@ -1379,7 +1379,7 @@ Inst_forEachArg_dispatch[BranchAdd64] = function(inst, func)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Use, GP, 64)
     inst:visitArg(4, func, ArgRole_ZDef, GP, 64)
-    elseif n == 3 then
+    else if n == 3 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_UseDef, GP, 64)
@@ -1392,12 +1392,12 @@ Inst_forEachArg_dispatch[BranchMul32] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_UseZDef, GP, 32)
-    elseif n == 4 then
+    else if n == 4 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
     inst:visitArg(4, func, ArgRole_ZDef, GP, 32)
-    elseif n == 6 then
+    else if n == 6 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
@@ -1413,7 +1413,7 @@ Inst_forEachArg_dispatch[BranchMul64] = function(inst, func)
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_UseZDef, GP, 64)
-    elseif n == 6 then
+    else if n == 6 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Use, GP, 64)
@@ -1453,7 +1453,7 @@ Inst_forEachArg_dispatch[MoveConditionally32] = function(inst, func)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
     inst:visitArg(4, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(5, func, ArgRole_UseDef, GP, Ptr)
-    elseif n == 6 then
+    else if n == 6 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
@@ -1471,7 +1471,7 @@ Inst_forEachArg_dispatch[MoveConditionally64] = function(inst, func)
     inst:visitArg(3, func, ArgRole_Use, GP, 64)
     inst:visitArg(4, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(5, func, ArgRole_UseDef, GP, Ptr)
-    elseif n == 6 then
+    else if n == 6 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 64)
     inst:visitArg(3, func, ArgRole_Use, GP, 64)
@@ -1489,7 +1489,7 @@ Inst_forEachArg_dispatch[MoveConditionallyTest32] = function(inst, func)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
     inst:visitArg(4, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(5, func, ArgRole_UseDef, GP, Ptr)
-    elseif n == 6 then
+    else if n == 6 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
@@ -1507,7 +1507,7 @@ Inst_forEachArg_dispatch[MoveConditionallyTest64] = function(inst, func)
     inst:visitArg(3, func, ArgRole_Use, GP, 64)
     inst:visitArg(4, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(5, func, ArgRole_UseDef, GP, Ptr)
-    elseif n == 6 then
+    else if n == 6 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, GP, 32)
     inst:visitArg(3, func, ArgRole_Use, GP, 32)
@@ -1526,7 +1526,7 @@ Inst_forEachArg_dispatch[MoveConditionallyDouble] = function(inst, func)
     inst:visitArg(4, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(5, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(6, func, ArgRole_Def, GP, Ptr)
-    elseif n == 5 then
+    else if n == 5 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 64)
     inst:visitArg(3, func, ArgRole_Use, FP, 64)
@@ -1544,7 +1544,7 @@ Inst_forEachArg_dispatch[MoveConditionallyFloat] = function(inst, func)
     inst:visitArg(4, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(5, func, ArgRole_Use, GP, Ptr)
     inst:visitArg(6, func, ArgRole_Def, GP, Ptr)
-    elseif n == 5 then
+    else if n == 5 then
     inst:visitArg(1, func, ArgRole_Use, GP, 32)
     inst:visitArg(2, func, ArgRole_Use, FP, 32)
     inst:visitArg(3, func, ArgRole_Use, FP, 32)
@@ -1671,13 +1671,13 @@ function Inst_hasNonArgEffects(inst)
         op == RetDouble or
         op == Oops then
         return true
-    elseif op == Shuffle then
+    else if op == Shuffle then
         return ShuffleCustom_hasNonArgNonControlEffects(inst)
-    elseif op == Patch then
+    else if op == Patch then
         return PatchCustom_hasNonArgNonControlEffects(inst)
-    elseif op == CCall then
+    else if op == CCall then
         return CCallCustom_hasNonArgNonControlEffects(inst)
-    elseif op == ColdCCall then
+    else if op == ColdCCall then
         return CCallCustom_hasNonArgNonControlEffects(inst)
     end
     return false
@@ -2091,7 +2091,7 @@ function allocateStack(code)
                         newInst.args[1] = Arg_createStackAddr(arg.offset + 4 + slot.offsetFromFP, code.frameSize, width)
                     end
                     return Arg_createStackAddr(arg.offset + slot.offsetFromFP, code.frameSize, width)
-                elseif arg.kind == ArgCallArg then
+                else if arg.kind == ArgCallArg then
                     return Arg_createStackAddr(arg.offset - code.frameSize, code.frameSize, width)
                 end
                 return nil

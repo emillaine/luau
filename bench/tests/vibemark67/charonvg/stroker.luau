@@ -22,12 +22,12 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
             local x, y = ...
             current = { { x, y } }
             contours[#contours + 1] = current
-        elseif cmd == Path.LINE_TO then
+        else if cmd == Path.LINE_TO then
             local x, y = ...
             if current then
                 current[#current + 1] = { x, y }
             end
-        elseif cmd == Path.CLOSE then
+        else if cmd == Path.CLOSE then
             if current and #current > 1 then
                 current.closed = true
             end
@@ -121,7 +121,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                     local arr = side == "left" and left or right
                     arr[#arr + 1] = { pt[1] + nx1 * sign * radius, pt[2] + ny1 * sign * radius }
                     addArc(arr, pt[1], pt[2], a1, a2, radius)
-                elseif join == "bevel" then
+                else if join == "bevel" then
                     if side == "left" then
                         left[#left + 1] = { pt[1] + nx1 * radius, pt[2] + ny1 * radius }
                         left[#left + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }

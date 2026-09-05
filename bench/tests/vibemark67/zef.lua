@@ -94,14 +94,14 @@ function tokenize(source)
             pos = pos + 1
 
         -- Skip single-line comments
-        elseif c == 47 and pos < len and byte(source, pos + 1) == 47 then
+        else if c == 47 and pos < len and byte(source, pos + 1) == 47 then
             pos = pos + 2
             while pos <= len and byte(source, pos) ~= 10 do
                 pos = pos + 1
             end
 
         -- Numbers
-        elseif isDigit(c) then
+        else if isDigit(c) then
             local start = pos
             while pos <= len and isDigit(byte(source, pos)) do
                 pos = pos + 1
@@ -116,7 +116,7 @@ function tokenize(source)
             tokens[tcount] = {TK_NUMBER, tonumber(sub(source, start, pos - 1))}
 
         -- Strings
-        elseif c == 34 then
+        else if c == 34 then
             pos = pos + 1
             local parts = {}
             local pcount = 0
@@ -126,9 +126,9 @@ function tokenize(source)
                     pos = pos + 1
                     local esc = byte(source, pos)
                     if esc == 110 then pcount = pcount + 1; parts[pcount] = "\n"
-                    elseif esc == 116 then pcount = pcount + 1; parts[pcount] = "\t"
-                    elseif esc == 34 then pcount = pcount + 1; parts[pcount] = "\""
-                    elseif esc == 92 then pcount = pcount + 1; parts[pcount] = "\\"
+                    else if esc == 116 then pcount = pcount + 1; parts[pcount] = "\t"
+                    else if esc == 34 then pcount = pcount + 1; parts[pcount] = "\""
+                    else if esc == 92 then pcount = pcount + 1; parts[pcount] = "\\"
                     else pcount = pcount + 1; parts[pcount] = char(esc)
                     end
                 else
@@ -142,7 +142,7 @@ function tokenize(source)
             tokens[tcount] = {TK_STRING, concat(parts)}
 
         -- Identifiers and keywords
-        elseif isAlpha(c) then
+        else if isAlpha(c) then
             local start = pos
             while pos <= len and isAlnum(byte(source, pos)) do
                 pos = pos + 1
@@ -152,39 +152,39 @@ function tokenize(source)
             tokens[tcount] = {TK_IDENT, word}
 
         -- Two-character operators
-        elseif c == 62 and pos < len and byte(source, pos + 1) == 61 then
+        else if c == 62 and pos < len and byte(source, pos + 1) == 61 then
             tcount = tcount + 1; tokens[tcount] = {TK_GE}; pos = pos + 2
-        elseif c == 60 and pos < len and byte(source, pos + 1) == 61 then
+        else if c == 60 and pos < len and byte(source, pos + 1) == 61 then
             tcount = tcount + 1; tokens[tcount] = {TK_LE}; pos = pos + 2
-        elseif c == 61 and pos < len and byte(source, pos + 1) == 61 then
+        else if c == 61 and pos < len and byte(source, pos + 1) == 61 then
             tcount = tcount + 1; tokens[tcount] = {TK_EQ}; pos = pos + 2
-        elseif c == 33 and pos < len and byte(source, pos + 1) == 61 then
+        else if c == 33 and pos < len and byte(source, pos + 1) == 61 then
             tcount = tcount + 1; tokens[tcount] = {TK_NE}; pos = pos + 2
-        elseif c == 38 and pos < len and byte(source, pos + 1) == 38 then
+        else if c == 38 and pos < len and byte(source, pos + 1) == 38 then
             tcount = tcount + 1; tokens[tcount] = {TK_AND}; pos = pos + 2
-        elseif c == 124 and pos < len and byte(source, pos + 1) == 124 then
+        else if c == 124 and pos < len and byte(source, pos + 1) == 124 then
             tcount = tcount + 1; tokens[tcount] = {TK_OR}; pos = pos + 2
 
         -- Single-character operators
-        elseif c == 40 then tcount = tcount + 1; tokens[tcount] = {TK_LPAREN}; pos = pos + 1
-        elseif c == 41 then tcount = tcount + 1; tokens[tcount] = {TK_RPAREN}; pos = pos + 1
-        elseif c == 123 then tcount = tcount + 1; tokens[tcount] = {TK_LBRACE}; pos = pos + 1
-        elseif c == 125 then tcount = tcount + 1; tokens[tcount] = {TK_RBRACE}; pos = pos + 1
-        elseif c == 91 then tcount = tcount + 1; tokens[tcount] = {TK_LBRACKET}; pos = pos + 1
-        elseif c == 93 then tcount = tcount + 1; tokens[tcount] = {TK_RBRACKET}; pos = pos + 1
-        elseif c == 44 then tcount = tcount + 1; tokens[tcount] = {TK_COMMA}; pos = pos + 1
-        elseif c == 59 then tcount = tcount + 1; tokens[tcount] = {TK_SEMI}; pos = pos + 1
-        elseif c == 46 then tcount = tcount + 1; tokens[tcount] = {TK_DOT}; pos = pos + 1
-        elseif c == 43 then tcount = tcount + 1; tokens[tcount] = {TK_PLUS}; pos = pos + 1
-        elseif c == 45 then tcount = tcount + 1; tokens[tcount] = {TK_MINUS}; pos = pos + 1
-        elseif c == 42 then tcount = tcount + 1; tokens[tcount] = {TK_STAR}; pos = pos + 1
-        elseif c == 47 then tcount = tcount + 1; tokens[tcount] = {TK_SLASH}; pos = pos + 1
-        elseif c == 37 then tcount = tcount + 1; tokens[tcount] = {TK_PERCENT}; pos = pos + 1
-        elseif c == 62 then tcount = tcount + 1; tokens[tcount] = {TK_GT}; pos = pos + 1
-        elseif c == 60 then tcount = tcount + 1; tokens[tcount] = {TK_LT}; pos = pos + 1
-        elseif c == 33 then tcount = tcount + 1; tokens[tcount] = {TK_NOT}; pos = pos + 1
-        elseif c == 61 then tcount = tcount + 1; tokens[tcount] = {TK_ASSIGN}; pos = pos + 1
-        elseif c == 58 then tcount = tcount + 1; tokens[tcount] = {TK_COLON}; pos = pos + 1
+        else if c == 40 then tcount = tcount + 1; tokens[tcount] = {TK_LPAREN}; pos = pos + 1
+        else if c == 41 then tcount = tcount + 1; tokens[tcount] = {TK_RPAREN}; pos = pos + 1
+        else if c == 123 then tcount = tcount + 1; tokens[tcount] = {TK_LBRACE}; pos = pos + 1
+        else if c == 125 then tcount = tcount + 1; tokens[tcount] = {TK_RBRACE}; pos = pos + 1
+        else if c == 91 then tcount = tcount + 1; tokens[tcount] = {TK_LBRACKET}; pos = pos + 1
+        else if c == 93 then tcount = tcount + 1; tokens[tcount] = {TK_RBRACKET}; pos = pos + 1
+        else if c == 44 then tcount = tcount + 1; tokens[tcount] = {TK_COMMA}; pos = pos + 1
+        else if c == 59 then tcount = tcount + 1; tokens[tcount] = {TK_SEMI}; pos = pos + 1
+        else if c == 46 then tcount = tcount + 1; tokens[tcount] = {TK_DOT}; pos = pos + 1
+        else if c == 43 then tcount = tcount + 1; tokens[tcount] = {TK_PLUS}; pos = pos + 1
+        else if c == 45 then tcount = tcount + 1; tokens[tcount] = {TK_MINUS}; pos = pos + 1
+        else if c == 42 then tcount = tcount + 1; tokens[tcount] = {TK_STAR}; pos = pos + 1
+        else if c == 47 then tcount = tcount + 1; tokens[tcount] = {TK_SLASH}; pos = pos + 1
+        else if c == 37 then tcount = tcount + 1; tokens[tcount] = {TK_PERCENT}; pos = pos + 1
+        else if c == 62 then tcount = tcount + 1; tokens[tcount] = {TK_GT}; pos = pos + 1
+        else if c == 60 then tcount = tcount + 1; tokens[tcount] = {TK_LT}; pos = pos + 1
+        else if c == 33 then tcount = tcount + 1; tokens[tcount] = {TK_NOT}; pos = pos + 1
+        else if c == 61 then tcount = tcount + 1; tokens[tcount] = {TK_ASSIGN}; pos = pos + 1
+        else if c == 58 then tcount = tcount + 1; tokens[tcount] = {TK_COLON}; pos = pos + 1
         else
             pos = pos + 1 -- skip unknown
         end
@@ -330,7 +330,7 @@ function parseStatement(p)
         return {ND_VARDECL, name, val}
 
     -- Function declaration: fn name(args) { body }
-    elseif tk[1] == TK_IDENT and tk[2] == KW_FN then
+    else if tk[1] == TK_IDENT and tk[2] == KW_FN then
         advance(p)
         local name = expect(p, TK_IDENT)[2]
         local params = parseParams(p)
@@ -339,29 +339,29 @@ function parseStatement(p)
         return {ND_VARDECL, name, {ND_FUNC, params, body, name}}
 
     -- Class declaration
-    elseif tk[1] == TK_IDENT and tk[2] == KW_CLASS then
+    else if tk[1] == TK_IDENT and tk[2] == KW_CLASS then
         return parseClass(p)
 
     -- If statement
-    elseif tk[1] == TK_IDENT and tk[2] == KW_IF then
+    else if tk[1] == TK_IDENT and tk[2] == KW_IF then
         return parseIf(p)
 
     -- While statement
-    elseif tk[1] == TK_IDENT and tk[2] == KW_WHILE then
+    else if tk[1] == TK_IDENT and tk[2] == KW_WHILE then
         return parseWhile(p)
 
     -- For statement: for (init; cond; step) { body }
-    elseif tk[1] == TK_IDENT and tk[2] == KW_FOR then
+    else if tk[1] == TK_IDENT and tk[2] == KW_FOR then
         return parseFor(p)
 
     -- Break statement
-    elseif tk[1] == TK_IDENT and tk[2] == KW_BREAK then
+    else if tk[1] == TK_IDENT and tk[2] == KW_BREAK then
         advance(p)
         matchToken(p, TK_SEMI)
         return {ND_BREAK}
 
     -- Return statement
-    elseif tk[1] == TK_IDENT and tk[2] == KW_RETURN then
+    else if tk[1] == TK_IDENT and tk[2] == KW_RETURN then
         advance(p)
         local val = nil
         if peekType(p) ~= TK_SEMI and peekType(p) ~= TK_RBRACE and peekType(p) ~= TK_EOF then
@@ -371,7 +371,7 @@ function parseStatement(p)
         return {ND_RETURN, val}
 
     -- println
-    elseif tk[1] == TK_IDENT and tk[2] == KW_PRINTLN then
+    else if tk[1] == TK_IDENT and tk[2] == KW_PRINTLN then
         advance(p)
         expect(p, TK_LPAREN)
         local val = parseExpr(p)
@@ -417,7 +417,7 @@ function parseClass(p)
             matchToken(p, TK_SEMI)
             fcount = fcount + 1
             fields[fcount] = fname
-        elseif tk2[1] == TK_IDENT and tk2[2] == KW_FN then
+        else if tk2[1] == TK_IDENT and tk2[2] == KW_FN then
             advance(p)
             -- Check if it's a named method or constructor
             if peekType(p) == TK_LPAREN then
@@ -542,7 +542,7 @@ function parseEquality(p)
         local tt = peekType(p)
         if tt == TK_EQ then
             advance(p); left = {ND_BINARY, "==", left, parseComparison(p)}
-        elseif tt == TK_NE then
+        else if tt == TK_NE then
             advance(p); left = {ND_BINARY, "!=", left, parseComparison(p)}
         else
             break
@@ -557,11 +557,11 @@ function parseComparison(p)
         local tt = peekType(p)
         if tt == TK_GT then
             advance(p); left = {ND_BINARY, ">", left, parseAddSub(p)}
-        elseif tt == TK_LT then
+        else if tt == TK_LT then
             advance(p); left = {ND_BINARY, "<", left, parseAddSub(p)}
-        elseif tt == TK_GE then
+        else if tt == TK_GE then
             advance(p); left = {ND_BINARY, ">=", left, parseAddSub(p)}
-        elseif tt == TK_LE then
+        else if tt == TK_LE then
             advance(p); left = {ND_BINARY, "<=", left, parseAddSub(p)}
         else
             break
@@ -576,7 +576,7 @@ function parseAddSub(p)
         local tt = peekType(p)
         if tt == TK_PLUS then
             advance(p); left = {ND_BINARY, "+", left, parseMulDiv(p)}
-        elseif tt == TK_MINUS then
+        else if tt == TK_MINUS then
             advance(p); left = {ND_BINARY, "-", left, parseMulDiv(p)}
         else
             break
@@ -591,9 +591,9 @@ function parseMulDiv(p)
         local tt = peekType(p)
         if tt == TK_STAR then
             advance(p); left = {ND_BINARY, "*", left, parseUnary(p)}
-        elseif tt == TK_SLASH then
+        else if tt == TK_SLASH then
             advance(p); left = {ND_BINARY, "/", left, parseUnary(p)}
-        elseif tt == TK_PERCENT then
+        else if tt == TK_PERCENT then
             advance(p); left = {ND_BINARY, "%", left, parseUnary(p)}
         else
             break
@@ -608,7 +608,7 @@ function parseUnary(p)
         advance(p)
         local operand = parseUnary(p)
         return {ND_UNARY, "!", operand}
-    elseif tt == TK_MINUS then
+    else if tt == TK_MINUS then
         advance(p)
         local operand = parseUnary(p)
         return {ND_UNARY, "-", operand}
@@ -630,12 +630,12 @@ function parsePostfix(p)
             else
                 expr = {ND_FIELD, expr, field}
             end
-        elseif tt == TK_LBRACKET then
+        else if tt == TK_LBRACKET then
             advance(p)
             local idx = parseExpr(p)
             expect(p, TK_RBRACKET)
             expr = {ND_INDEX, expr, idx}
-        elseif tt == TK_LPAREN then
+        else if tt == TK_LPAREN then
             local args = parseArgs(p)
             expr = {ND_CALL, expr, args}
         else
@@ -668,22 +668,22 @@ function parsePrimary(p)
         advance(p)
         return {ND_NUMBER, tk[2]}
 
-    elseif tk[1] == TK_STRING then
+    else if tk[1] == TK_STRING then
         advance(p)
         return {ND_STRING, tk[2]}
 
-    elseif tk[1] == TK_IDENT then
+    else if tk[1] == TK_IDENT then
         local val = tk[2]
         if val == KW_NULL then
             advance(p)
             return {ND_NULL}
-        elseif val == KW_TRUE then
+        else if val == KW_TRUE then
             advance(p)
             return {ND_BOOL, true}
-        elseif val == KW_FALSE then
+        else if val == KW_FALSE then
             advance(p)
             return {ND_BOOL, false}
-        elseif val == KW_FN then
+        else if val == KW_FN then
             advance(p)
             -- Lambda: fn(args) { body } or fn(args) expr
             local params = parseParams(p)
@@ -694,13 +694,13 @@ function parsePrimary(p)
             return {ND_IDENT, val}
         end
 
-    elseif tk[1] == TK_LPAREN then
+    else if tk[1] == TK_LPAREN then
         advance(p)
         local expr = parseExpr(p)
         expect(p, TK_RPAREN)
         return expr
 
-    elseif tk[1] == TK_LBRACKET then
+    else if tk[1] == TK_LBRACKET then
         advance(p)
         local elems = {}
         local ec = 0
@@ -922,21 +922,21 @@ function evalNode(node, env)
     if ntype == ND_NUMBER then
         return node[2]
 
-    elseif ntype == ND_STRING then
+    else if ntype == ND_STRING then
         return node[2]
 
-    elseif ntype == ND_NULL then
+    else if ntype == ND_NULL then
         return 0
 
-    elseif ntype == ND_BOOL then
+    else if ntype == ND_BOOL then
         if node[2] then return 1 else return 0 end
 
-    elseif ntype == ND_IDENT then
+    else if ntype == ND_IDENT then
         local val = envGet(env, node[2])
         if val == nil then return 0 end
         return val
 
-    elseif ntype == ND_ARRAY then
+    else if ntype == ND_ARRAY then
         local elems = node[2]
         local vals = {}
         for i = 1, #elems do
@@ -944,25 +944,25 @@ function evalNode(node, env)
         end
         return makeArray(vals)
 
-    elseif ntype == ND_FUNC then
+    else if ntype == ND_FUNC then
         return makeFunc(node[2], node[3], env, node[4])
 
-    elseif ntype == ND_BINARY then
+    else if ntype == ND_BINARY then
         return evalBinary(node, env)
 
-    elseif ntype == ND_UNARY then
+    else if ntype == ND_UNARY then
         return evalUnary(node, env)
 
-    elseif ntype == ND_CALL then
+    else if ntype == ND_CALL then
         return evalCall(node, env)
 
-    elseif ntype == ND_METHOD then
+    else if ntype == ND_METHOD then
         return evalMethod(node, env)
 
-    elseif ntype == ND_FIELD then
+    else if ntype == ND_FIELD then
         return evalField(node, env)
 
-    elseif ntype == ND_INDEX then
+    else if ntype == ND_INDEX then
         local obj = evalNode(node[2], env)
         local idx = evalNode(node[3], env)
         if type(obj) == "table" and obj._isArray then
@@ -970,18 +970,18 @@ function evalNode(node, env)
         end
         return 0
 
-    elseif ntype == ND_VARDECL then
+    else if ntype == ND_VARDECL then
         local val = evalNode(node[3], env)
         envDeclare(env, node[2], val)
         return nil
 
-    elseif ntype == ND_ASSIGN then
+    else if ntype == ND_ASSIGN then
         return evalAssign(node, env)
 
-    elseif ntype == ND_BLOCK then
+    else if ntype == ND_BLOCK then
         return evalBlock(node, env)
 
-    elseif ntype == ND_IF then
+    else if ntype == ND_IF then
         local cond = evalNode(node[2], env)
         if isTruthy(cond) then
             local result = evalNode(node[3], env)
@@ -990,7 +990,7 @@ function evalNode(node, env)
                     return result
                 end
             end
-        elseif node[4] then
+        else if node[4] then
             local result = evalNode(node[4], env)
             if type(result) == "table" then
                 if result[1] == RETURN_SENTINEL or result[1] == BREAK_SENTINEL then
@@ -1000,7 +1000,7 @@ function evalNode(node, env)
         end
         return nil
 
-    elseif ntype == ND_WHILE then
+    else if ntype == ND_WHILE then
         while true do
             local cond = evalNode(node[2], env)
             if not isTruthy(cond) then break end
@@ -1012,7 +1012,7 @@ function evalNode(node, env)
         end
         return nil
 
-    elseif ntype == ND_FOR then
+    else if ntype == ND_FOR then
         -- for (init; cond; step) { body }
         local forEnv = newEnv(env)
         evalNode(node[2], forEnv) -- init
@@ -1028,20 +1028,20 @@ function evalNode(node, env)
         end
         return nil
 
-    elseif ntype == ND_BREAK then
+    else if ntype == ND_BREAK then
         return {BREAK_SENTINEL}
 
-    elseif ntype == ND_RETURN then
+    else if ntype == ND_RETURN then
         local val = nil
         if node[2] then
             val = evalNode(node[2], env)
         end
         return {RETURN_SENTINEL, val}
 
-    elseif ntype == ND_CLASS then
+    else if ntype == ND_CLASS then
         return evalClassDecl(node, env)
 
-    elseif ntype == ND_PRINTLN then
+    else if ntype == ND_PRINTLN then
         local val = evalNode(node[2], env)
         appendOutput(toZefString(val))
         return nil
@@ -1073,7 +1073,7 @@ function evalBinary(node, env)
         if not isTruthy(left) then return 0 end
         local right = evalNode(node[4], env)
         if isTruthy(right) then return 1 else return 0 end
-    elseif op == "||" then
+    else if op == "||" then
         local left = evalNode(node[3], env)
         if isTruthy(left) then return 1 end
         local right = evalNode(node[4], env)
@@ -1087,9 +1087,9 @@ function evalBinary(node, env)
     if type(left) == "table" and left._isInstance then
         local methodName = nil
         if op == "+" then methodName = "add"
-        elseif op == "-" then methodName = "sub"
-        elseif op == "*" then methodName = "mul"
-        elseif op == "/" then methodName = "div"
+        else if op == "-" then methodName = "sub"
+        else if op == "*" then methodName = "mul"
+        else if op == "/" then methodName = "div"
         end
         if methodName then
             local m = lookupMethod(left, methodName)
@@ -1105,19 +1105,19 @@ function evalBinary(node, env)
     end
 
     if op == "+" then return left + right
-    elseif op == "-" then return left - right
-    elseif op == "*" then return left * right
-    elseif op == "/" then
+    else if op == "-" then return left - right
+    else if op == "*" then return left * right
+    else if op == "/" then
         if right == 0 then return 0 end
         return left / right
-    elseif op == "%" then return left % right
-    elseif op == ">" then return (left > right) and 1 or 0
-    elseif op == "<" then return (left < right) and 1 or 0
-    elseif op == ">=" then return (left >= right) and 1 or 0
-    elseif op == "<=" then return (left <= right) and 1 or 0
-    elseif op == "==" then
+    else if op == "%" then return left % right
+    else if op == ">" then return (left > right) and 1 or 0
+    else if op == "<" then return (left < right) and 1 or 0
+    else if op == ">=" then return (left >= right) and 1 or 0
+    else if op == "<=" then return (left <= right) and 1 or 0
+    else if op == "==" then
         if left == right then return 1 else return 0 end
-    elseif op == "!=" then
+    else if op == "!=" then
         if left ~= right then return 1 else return 0 end
     end
     return 0
@@ -1128,7 +1128,7 @@ function evalUnary(node, env)
     local val = evalNode(node[3], env)
     if op == "!" then
         return isTruthy(val) and 0 or 1
-    elseif op == "-" then
+    else if op == "-" then
         return -val
     end
     return 0
@@ -1145,7 +1145,7 @@ function evalCall(node, env)
     if type(callee) == "table" then
         if callee._isFunc then
             return callFunction(callee, args, nil)
-        elseif callee._isClass then
+        else if callee._isClass then
             -- Instantiate
             local inst = makeInstance(callee)
             -- Initialize fields
@@ -1191,11 +1191,11 @@ function evalMethod(node, env)
         if methodName == "push" then
             arrayPush(obj, args[1])
             return nil
-        elseif methodName == "size" then
+        else if methodName == "size" then
             return obj._size
-        elseif methodName == "get" then
+        else if methodName == "get" then
             return arrayGet(obj, args[1])
-        elseif methodName == "set" then
+        else if methodName == "set" then
             arraySet(obj, args[1], args[2])
             return nil
         end
@@ -1205,9 +1205,9 @@ function evalMethod(node, env)
     if type(obj) == "string" then
         if methodName == "size" then
             return #obj
-        elseif methodName == "toString" then
+        else if methodName == "toString" then
             return obj
-        elseif methodName == "charAt" then
+        else if methodName == "charAt" then
             local idx = args[1]
             return sub(obj, idx + 1, idx + 1)
         end
@@ -1277,12 +1277,12 @@ function evalAssign(node, env)
 
     if target[1] == ND_IDENT then
         envSet(env, target[2], val)
-    elseif target[1] == ND_FIELD then
+    else if target[1] == ND_FIELD then
         local obj = evalNode(target[2], env)
         if type(obj) == "table" and obj._isInstance then
             obj._fields[target[3]] = val
         end
-    elseif target[1] == ND_INDEX then
+    else if target[1] == ND_INDEX then
         local obj = evalNode(target[2], env)
         local idx = evalNode(target[3], env)
         if type(obj) == "table" and obj._isArray then

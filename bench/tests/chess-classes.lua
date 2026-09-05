@@ -325,7 +325,7 @@ class Board
 			if p == '/' then
 				rank = rank - 1
 				file = 0
-			elseif tonumber(p) ~= nil then
+			else if tonumber(p) ~= nil then
 				file = file + tonumber(p)
 			else
 				local pidx = PieceSymbols:find(p)
@@ -493,7 +493,7 @@ class Board
 			out = out:bor(captures)
 
 			return out
-		elseif type == 5 then
+		else if type == 5 then
 			-- King
 			for x=-1,1,1 do
 				for y = -1,1,1 do
@@ -507,7 +507,7 @@ class Board
 					end
 				end
 			end
-		elseif type == 2 then
+		else if type == 2 then
 			-- Knight
 			for _,j in ipairs(KNIGHT_MOVES) do
 				local w = r:move(j[1],j[2])
@@ -525,7 +525,7 @@ class Board
 			local slides
 			if type == 1 then
 				slides = ROOK_SLIDES
-			elseif type == 3 then
+			else if type == 3 then
 				slides = BISHOP_SLIDES
 			else
 				slides = QUEEN_SLIDES
@@ -579,7 +579,7 @@ class Board
 				end
 				if mark ~= nil and mark:index(n) ~= 0 then
 					table.insert(out, ')')
-				elseif mark ~= nil and n < 63 and y < 8 and mark:index(n+1) ~= 0 then
+				else if mark ~= nil and n < 63 and y < 8 and mark:index(n+1) ~= 0 then
 					table.insert(out, '(')
 				else
 					table.insert(out, ' ')
@@ -656,7 +656,7 @@ class Board
 					for i=3,9,2 do
 						emit(bit32.replace(id, i, 15, 4))
 					end
-				elseif p == 2 and m < 8 then
+				else if p == 2 and m < 8 then
 					for i=4,10,2 do
 						emit(bit32.replace(id, i, 15, 4))
 					end

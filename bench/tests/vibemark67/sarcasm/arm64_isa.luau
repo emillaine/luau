@@ -74,27 +74,27 @@ function arm64.classify(insn)
 		control, fallsThrough = "branch", false
 		targets = {}
 		for _, o in ops do if o.kind == "sym" then table.insert(targets, o.text) end end
-	elseif m == "br" then
+	else if m == "br" then
 		control, fallsThrough = "indirect", false
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
-	elseif m == "bl" then
+	else if m == "bl" then
 		control = "call"
-	elseif m == "blr" then
+	else if m == "blr" then
 		control = "indcall"
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
-	elseif m == "ret" then
+	else if m == "ret" then
 		control, fallsThrough = "return", false
-	elseif m == "cbz" or m == "cbnz" then
+	else if m == "cbz" or m == "cbnz" then
 		control = "condbranch"
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
 		targets = {}
 		for _, o in ops do if o.kind == "sym" then table.insert(targets, o.text) end end
-	elseif m == "tbz" or m == "tbnz" then
+	else if m == "tbz" or m == "tbnz" then
 		control = "condbranch"
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
 		targets = {}
 		for _, o in ops do if o.kind == "sym" then table.insert(targets, o.text) end end
-	elseif string.sub(m, 1, 2) == "b." or COND_BRANCH_ALIASES[m] then
+	else if string.sub(m, 1, 2) == "b." or COND_BRANCH_ALIASES[m] then
 		control = "condbranch"
 		targets = {}
 		for _, o in ops do if o.kind == "sym" then table.insert(targets, o.text) end end
@@ -113,46 +113,46 @@ function arm64.classify(insn)
 	-- Non-control instructions.
 	if FLAGS_ONLY[m] then
 		for _, o in ops do
-			if isGpr(o) then table.insert(uses, o) elseif o.kind == "mem" then memRegs(o, uses, defs, rmw) end
+			if isGpr(o) then table.insert(uses, o) else if o.kind == "mem" then memRegs(o, uses, defs, rmw) end
 		end
-	elseif LOADS[m] then
+	else if LOADS[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 		for i = 2, #ops do
 			local o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
-			elseif isGpr(o) then table.insert(uses, o) end
+			else if isGpr(o) then table.insert(uses, o) end
 		end
-	elseif LOAD_PAIR[m] then
+	else if LOAD_PAIR[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 		if isGpr(ops[2]) then table.insert(defs, ops[2]) end
 		for i = 3, #ops do
 			local o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
-			elseif isGpr(o) then table.insert(uses, o) end
+			else if isGpr(o) then table.insert(uses, o) end
 		end
-	elseif STORES[m] then
+	else if STORES[m] then
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
 		for i = 2, #ops do
 			local o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
-			elseif isGpr(o) then table.insert(uses, o) end
+			else if isGpr(o) then table.insert(uses, o) end
 		end
-	elseif STORE_PAIR[m] then
+	else if STORE_PAIR[m] then
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
 		if isGpr(ops[2]) then table.insert(uses, ops[2]) end
 		for i = 3, #ops do
 			local o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
-			elseif isGpr(o) then table.insert(uses, o) end
+			else if isGpr(o) then table.insert(uses, o) end
 		end
-	elseif DST_RMW[m] then
+	else if DST_RMW[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]); table.insert(uses, ops[1]); table.insert(rmw, ops[1].num) end
 		for i = 2, #ops do if isGpr(ops[i]) then table.insert(uses, ops[i]) end end
-	elseif DST_FIRST[m] then
+	else if DST_FIRST[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 		for i = 2, #ops do
 			local o = ops[i]
-			if isGpr(o) then table.insert(uses, o) elseif o.kind == "mem" then memRegs(o, uses, defs, rmw) end
+			if isGpr(o) then table.insert(uses, o) else if o.kind == "mem" then memRegs(o, uses, defs, rmw) end
 		end
 		if m == "mov" and isGpr(ops[1]) and isGpr(ops[2]) and #ops == 2 and not ops[2].shift then
 			isMove = { dstIdx = 1, srcIdx = 2 }
@@ -163,7 +163,7 @@ function arm64.classify(insn)
 		for _, o in ops do
 			if isGpr(o) then
 				if first then table.insert(defs, o); first = false else table.insert(uses, o) end
-			elseif o.kind == "mem" then memRegs(o, uses, defs, rmw) end
+			else if o.kind == "mem" then memRegs(o, uses, defs, rmw) end
 		end
 		return { defs = defs, uses = uses, rmw = rmw, control = "none", fallsThrough = true,
 			isMove = isMove, unknown = true }

@@ -18,7 +18,7 @@ local _bit = rawget(_G, "bit")
 if type(_bit32) == "table" then
     band, bor, bxor, bnot, lshift, rshift =
         _bit32.band, _bit32.bor, _bit32.bxor, _bit32.bnot, _bit32.lshift, _bit32.rshift
-elseif type(_bit) == "table" then
+else if type(_bit) == "table" then
     band, bor, bxor, lshift, rshift =
         _bit.band, _bit.bor, _bit.bxor, _bit.lshift, _bit.rshift
     bnot = function(x) return bxor(x, 0xFFFFFFFF) end
@@ -120,10 +120,10 @@ function sha1(message)
             if i <= 19 then
                 f = bor(band(b, c), band(bnot(b), d))
                 k = 0x5A827999
-            elseif i <= 39 then
+            else if i <= 39 then
                 f = bxor(b, c, d)
                 k = 0x6ED9EBA1
-            elseif i <= 59 then
+            else if i <= 59 then
                 f = bor(band(b, c), band(b, d), band(c, d))
                 k = 0x8F1BBCDC
             else
@@ -280,11 +280,11 @@ function parseCommit(content)
         local key, value = line:match("^(%S+)%s(.+)$")
         if key == "tree" then
             result.tree = value
-        elseif key == "parent" then
+        else if key == "parent" then
             result.parents[#result.parents + 1] = value
-        elseif key == "author" then
+        else if key == "author" then
             result.author = value
-        elseif key == "committer" then
+        else if key == "committer" then
             result.committer = value
         end
         i = i + 1
@@ -504,7 +504,7 @@ function groupIntoHunks(edits, aLines, bLines, contextSize)
                 hunkLines[#hunkLines + 1] = " " .. aLines[edit.aIdx]
                 aCount = aCount + 1
                 bCount = bCount + 1
-            elseif edit.op == "delete" then
+            else if edit.op == "delete" then
                 if not aStart then aStart = edit.aIdx end
                 if not bStart then
                     -- bStart is the line in b after last context
@@ -514,7 +514,7 @@ function groupIntoHunks(edits, aLines, bLines, contextSize)
                 end
                 hunkLines[#hunkLines + 1] = "-" .. aLines[edit.aIdx]
                 aCount = aCount + 1
-            elseif edit.op == "insert" then
+            else if edit.op == "insert" then
                 if not aStart then aStart = 1 end
                 if not bStart then bStart = edit.bIdx end
                 hunkLines[#hunkLines + 1] = "+" .. bLines[edit.bIdx]
@@ -568,9 +568,9 @@ function parsePatch(patchText)
         local line = lines[i]
         if not seenHunk and startsWith(line, "--- ") then
             aFile = sub(line, 5)
-        elseif not seenHunk and startsWith(line, "+++ ") then
+        else if not seenHunk and startsWith(line, "+++ ") then
             bFile = sub(line, 5)
-        elseif startsWith(line, "@@") then
+        else if startsWith(line, "@@") then
             seenHunk = true
             local aStart, aCount, bStart, bCount =
                 line:match("^@@ %-(%d+),(%d+) %+(%d+),(%d+) @@")
@@ -584,7 +584,7 @@ function parsePatch(patchText)
                 }
                 hunks[#hunks + 1] = currentHunk
             end
-        elseif currentHunk then
+        else if currentHunk then
             if startsWith(line, " ") or startsWith(line, "+") or startsWith(line, "-") then
                 currentHunk.lines[#currentHunk.lines + 1] = line
             end
@@ -617,9 +617,9 @@ function applyPatch(originalText, patch)
             if prefix == " " then
                 result[#result + 1] = content
                 origIdx = origIdx + 1
-            elseif prefix == "-" then
+            else if prefix == "-" then
                 origIdx = origIdx + 1
-            elseif prefix == "+" then
+            else if prefix == "+" then
                 result[#result + 1] = content
             end
         end
@@ -662,13 +662,13 @@ function threeWayMerge(baseText, oursText, theirsText)
             -- No changes, keep base
             result[#result + 1] = baseLines[baseIdx]
             baseIdx = baseIdx + 1
-        elseif oc and not tc then
+        else if oc and not tc then
             -- Only ours changed
             for j = 1, #oc.newLines do
                 result[#result + 1] = oc.newLines[j]
             end
             baseIdx = baseIdx + oc.baseCount
-        elseif tc and not oc then
+        else if tc and not oc then
             -- Only theirs changed
             for j = 1, #tc.newLines do
                 result[#result + 1] = tc.newLines[j]
@@ -727,7 +727,7 @@ function buildChangeMap(edits, baseLines, newLines)
                 if e.op == "delete" then
                     if not baseStart then baseStart = e.aIdx end
                     baseCount = baseCount + 1
-                elseif e.op == "insert" then
+                else if e.op == "insert" then
                     if not baseStart then
                         -- Pure insert, anchor to next base line
                         baseStart = e.bIdx
@@ -791,7 +791,7 @@ function diffCommits(store, commitA, commitB)
             -- Deleted
             diffs[#diffs + 1] = { file = fname, status = "deleted",
                 patch = diffToUnified("a/" .. fname, "/dev/null", contentA, "") }
-        elseif contentA ~= contentB then
+        else if contentA ~= contentB then
             -- Modified
             diffs[#diffs + 1] = { file = fname, status = "modified",
                 patch = diffToUnified("a/" .. fname, "b/" .. fname, contentA, contentB) }
@@ -833,11 +833,11 @@ function mergeCommits(store, baseCommit, oursCommit, theirsCommit)
             if ours ~= "" then
                 merged[fname] = ours
             end
-        elseif ours == base then
+        else if ours == base then
             if theirs ~= "" then
                 merged[fname] = theirs
             end
-        elseif theirs == base then
+        else if theirs == base then
             if ours ~= "" then
                 merged[fname] = ours
             end

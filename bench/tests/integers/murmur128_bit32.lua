@@ -118,7 +118,7 @@ function test()
 				k2h, k2l = bit32.bor(bit32.lshift(k2l, 1), bit32.rshift(k2h, 31)), bit32.bor(bit32.lshift(k2h, 1), bit32.rshift(k2l, 31))
 				k2h, k2l = mul64(k2h, k2l, C1h, C1l)
 				h2h, h2l = xor64(h2h, h2l, k2h, k2l)
-			elseif rem == 8 then
+			else if rem == 8 then
 				k1h, k1l = buffer.readu32(buf, tailStart + 4), buffer.readu32(buf, tailStart)
 			else
 				for j = 0, rem - 1 do

@@ -57,12 +57,12 @@ do
     end
 end
 
--- elseif with independent bindings
+-- else if with independent bindings
 do
     local result = ""
     if local x = nil then
         result = "first"
-    elseif local y = "hello" then
+    else if local y = "hello" then
         assert(y == "hello")
         result = "second"
     else
@@ -71,12 +71,12 @@ do
     assert(result == "second")
 end
 
--- elseif falls through correctly
+-- else if falls through correctly
 do
     local result = ""
     if local x = nil then
         result = "first"
-    elseif local y = false then
+    else if local y = false then
         result = "second"
     else
         result = "else"

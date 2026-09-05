@@ -39,15 +39,15 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 		if node.kind == "prologue" then
 			avail = {}
 			render.prologue(rc)
-		elseif node.kind == "epilogue" then
+		else if node.kind == "epilogue" then
 			avail = {}
 			render.epilogue(rc)
-		elseif node.kind == "rootstore" then
+		else if node.kind == "rootstore" then
 			render.rootStore(rc, node)
-		elseif node.kind == "label" then
+		else if node.kind == "label" then
 			avail = {}
 			table.insert(out, node.name .. ":")
-		elseif node.kind == "insn" then
+		else if node.kind == "insn" then
 			if node.spillReload then
 				local r = colorNum(node.spillTemp)
 				if avail[node.spillOff] == r then
@@ -57,7 +57,7 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 					avail[node.spillOff] = r
 					table.insert(out, render.renderInsn(node, colorNum, syntax))
 				end
-			elseif node.spillStore then
+			else if node.spillStore then
 				avail[node.spillOff] = colorNum(node.spillTemp)
 				table.insert(out, render.renderInsn(node, colorNum, syntax))
 			else
@@ -69,7 +69,7 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 				local ctl = node.control or (node.c and node.c.control) or "none"
 				if ctl ~= "none" then avail = {} end  -- branch/call/ret ends the region
 			end
-		elseif node.kind == "raw" then
+		else if node.kind == "raw" then
 			table.insert(out, node.text)
 		end
 	end

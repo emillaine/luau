@@ -923,13 +923,13 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "if_else_if")
     auto region = getAutocompleteRegion(
         R"(
 if true then
-elseif
+else if
 end
 
 )",
-        Position{2, 8}
+        Position{2, 9}
     );
-    CHECK_EQ(Location{{2, 8}, {2, 8}}, region.fragmentLocation);
+    CHECK_EQ(Location{{2, 9}, {2, 9}}, region.fragmentLocation);
     REQUIRE(region.parentBlock);
     CHECK(region.nearestStatement->as<AstStatIf>());
 }
@@ -939,11 +939,11 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "if_else_if_no_end")
     auto region = getAutocompleteRegion(
         R"(
 if true then
-elseif
+else if
 )",
-        Position{2, 8}
+        Position{2, 9}
     );
-    CHECK_EQ(Location{{2, 8}, {2, 8}}, region.fragmentLocation);
+    CHECK_EQ(Location{{2, 9}, {2, 9}}, region.fragmentLocation);
     REQUIRE(region.parentBlock);
     CHECK(region.nearestStatement->as<AstStatIf>());
 }
@@ -953,13 +953,13 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "if_else_if_after_then")
     auto region = getAutocompleteRegion(
         R"(
 if true then
-elseif false then
+else if false then
 end
 
 )",
-        Position{2, 17}
+        Position{2, 18}
     );
-    CHECK_EQ(Location{{2, 17}, {2, 17}}, region.fragmentLocation);
+    CHECK_EQ(Location{{2, 18}, {2, 18}}, region.fragmentLocation);
     REQUIRE(region.parentBlock);
     CHECK(region.nearestStatement->as<AstStatIf>());
 }
@@ -969,7 +969,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "if_else_if_after_then_new_line")
     auto region = getAutocompleteRegion(
         R"(
 if true then
-elseif false then
+else if false then
 
 end
 
@@ -3812,7 +3812,7 @@ end
         {
             REQUIRE(result.result);
             CHECK(result.result->acResults.entryMap.count("else"));
-            CHECK(result.result->acResults.entryMap.count("elseif"));
+            CHECK(result.result->acResults.entryMap.count("elseif") == 0);
         }
     );
 }
@@ -3824,7 +3824,7 @@ type T = {xa : number, y : number}
 local t : T = {xa = 3, y = 3}
 
 if t.x then
-elseif
+else if
 end
 )";
 
@@ -3833,7 +3833,7 @@ type T = {xa : number, y : number}
 local t : T = {xa = 3, y = 3}
 
 if t.x then
-elseif t.xa t@1
+else if t.xa t@1
 end
     )";
 
@@ -3859,7 +3859,7 @@ type T = {xa : number, y : number}
 local t : T = {xa = 3, y = 3}
 
 if t.x then
-elseif  then
+else if  then
 end
 )";
 
@@ -3868,7 +3868,7 @@ type T = {xa : number, y : number}
 local t : T = {xa = 3, y = 3}
 
 if t.x then
-elseif t.@1  then
+else if t.@1  then
 end
 )";
 

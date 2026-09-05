@@ -138,7 +138,7 @@ local function parseNumber(str, pos)
     local c = string.byte(str, pos)
     if c == 43 then
         pos = pos + 1
-    elseif c == 45 then
+    else if c == 45 then
         pos = pos + 1
         sign = -1
     end
@@ -193,7 +193,7 @@ local function parseNumber(str, pos)
                 c = string.byte(str, pos)
                 if c == 43 then
                     pos = pos + 1
-                elseif c == 45 then
+                else if c == 45 then
                     pos = pos + 1
                     expsign = -1
                 end

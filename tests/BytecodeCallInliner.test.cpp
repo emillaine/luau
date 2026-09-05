@@ -1379,7 +1379,7 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "graph_builds_loop_exit_phi_for_downst
                 local cmp = key - x.k
                 if cmp < 0 then
                     x = x.left
-                elseif cmp > 0 then
+                else if cmp > 0 then
                     x = x.right
                 else
                     return "found"

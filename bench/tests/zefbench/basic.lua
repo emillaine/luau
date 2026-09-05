@@ -15,10 +15,10 @@ local _bit = rawget(_G, "bit")
 if type(_bit32) == "table" then
     band, bor, bxor, lshift, rshift =
         _bit32.band, _bit32.bor, _bit32.bxor, _bit32.lshift, _bit32.rshift
-elseif type(_bit) == "table" then
+else if type(_bit) == "table" then
     band, bor, bxor, lshift, rshift =
         _bit.band, _bit.bor, _bit.bxor, _bit.lshift, _bit.rshift
-elseif bit32 ~= nil and type(bit32) == "table" then
+else if bit32 ~= nil and type(bit32) == "table" then
     band, bor, bxor, lshift, rshift =
         bit32.band, bit32.bor, bit32.bxor, bit32.lshift, bit32.rshift
 else
@@ -46,7 +46,7 @@ local mmax = math.max
 local unpack_ = table.unpack or unpack
 
 local function msign(x)
-    if x > 0 then return 1 elseif x < 0 then return -1 else return 0 end
+    if x > 0 then return 1 else if x < 0 then return -1 else return 0 end
 end
 
 -- Emulate JS ""+number: integer-valued numbers render without a decimal point,
@@ -399,13 +399,13 @@ function Basic.Print(self, state)
         local kind = item.kind
         if kind == "comma" then
             while #s % 14 ~= 0 do s = s .. " " end
-        elseif kind == "tab" then
+        else if kind == "tab" then
             local v = item.value:evaluate(state)
             v = mmax(floor(v + 0.5), 1)
             while #s % v ~= 0 do s = s .. " " end
-        elseif kind == "string" then
+        else if kind == "string" then
             s = s .. item.value:evaluate(state)
-        elseif kind == "number" then
+        else if kind == "number" then
             s = s .. formatNumber(item.value:evaluate(state))
         else
             error("Bad item kind: " .. tostring(kind))
@@ -576,7 +576,7 @@ local function lex(source)
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
                     }
-                elseif isDigit(c) or (c == "." and pos + 1 <= len and isDigit(line:sub(pos + 1, pos + 1))) then
+                else if isDigit(c) or (c == "." and pos + 1 <= len and isDigit(line:sub(pos + 1, pos + 1))) then
                     -- number: int, int.frac?, .frac, optional e[+-]?digits
                     local start = pos
                     while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
@@ -597,7 +597,7 @@ local function lex(source)
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
                     }
-                elseif c == '"' then
+                else if c == '"' then
                     local start = pos
                     pos = pos + 1
                     while pos <= len do
@@ -633,7 +633,7 @@ local function lex(source)
                     if two == "<>" or two == "<=" or two == ">=" then
                         opStr = two
                         pos = pos + 2
-                    elseif c == "-" or c == "+" or c == "*" or c == "/" or c == "^"
+                    else if c == "-" or c == "+" or c == "*" or c == "/" or c == "^"
                             or c == "(" or c == ")" or c == "<" or c == ">" or c == "="
                             or c == "," or c == "$" or c == ";" then
                         opStr = c
@@ -733,9 +733,9 @@ local function parse(tokens)
                     consumeToken(")")
                 end
                 return r
-            elseif t.kind == "number" then
+            else if t.kind == "number" then
                 return { evaluate = Basic.Const, value = t.value }
-            elseif t.kind == "operator" and t.string == "(" then
+            else if t.kind == "operator" and t.string == "(" then
                 local r = parseNumericExpression()
                 consumeToken(")")
                 return r
@@ -761,7 +761,7 @@ local function parse(tokens)
                 if s == "*" then
                     nextToken()
                     factor = { evaluate = Basic.NumberMul, left = factor, right = parseFactor() }
-                elseif s == "/" then
+                else if s == "/" then
                     nextToken()
                     factor = { evaluate = Basic.NumberDiv, left = factor, right = parseFactor() }
                 else break end
@@ -772,7 +772,7 @@ local function parse(tokens)
         local negate = false
         local s = peekToken().string
         if s == "+" then nextToken()
-        elseif s == "-" then negate = true; nextToken() end
+        else if s == "-" then negate = true; nextToken() end
 
         local term = parseTerm()
         if negate then term = { evaluate = Basic.NumberNeg, term = term } end
@@ -782,7 +782,7 @@ local function parse(tokens)
             if s2 == "+" then
                 nextToken()
                 term = { evaluate = Basic.NumberAdd, left = term, right = parseTerm() }
-            elseif s2 == "-" then
+            else if s2 == "-" then
                 nextToken()
                 term = { evaluate = Basic.NumberSub, left = term, right = parseTerm() }
             else break end
@@ -808,7 +808,7 @@ local function parse(tokens)
         local t = nextToken()
         if t.kind == "string" then
             return { evaluate = Basic.Const, value = t.value }
-        elseif t.kind == "identifier" then
+        else if t.kind == "identifier" then
             consumeToken("$")
             return { evaluate = Basic.StringVar, name = t.string }
         end
@@ -821,7 +821,7 @@ local function parse(tokens)
             local op = nextToken()
             local ev
             if op.string == "=" then ev = Basic.Equals
-            elseif op.string == "<>" then ev = Basic.NotEquals
+            else if op.string == "<>" then ev = Basic.NotEquals
             else error("At " .. tostring(op.sourceLineNumber) .. ": expected a string comparison operator but got: " .. op.string) end
             return { evaluate = ev, left = left, right = parseStringExpression() }
         end
@@ -829,11 +829,11 @@ local function parse(tokens)
         local op = nextToken()
         local ev
         if op.string == "=" then ev = Basic.Equals
-        elseif op.string == "<>" then ev = Basic.NotEquals
-        elseif op.string == "<" then ev = Basic.LessThan
-        elseif op.string == ">" then ev = Basic.GreaterThan
-        elseif op.string == "<=" then ev = Basic.LessEqual
-        elseif op.string == ">=" then ev = Basic.GreaterEqual
+        else if op.string == "<>" then ev = Basic.NotEquals
+        else if op.string == "<" then ev = Basic.LessThan
+        else if op.string == ">" then ev = Basic.GreaterThan
+        else if op.string == "<=" then ev = Basic.LessEqual
+        else if op.string == ">=" then ev = Basic.GreaterEqual
         else error("At " .. tostring(op.sourceLineNumber) .. ": expected a numeric comparison operator but got: " .. op.string) end
         return { evaluate = ev, left = left, right = parseNumericExpression() }
     end
@@ -878,38 +878,38 @@ local function parse(tokens)
                     until peekToken().string ~= ","
                 end
                 statement.expression = parseNumericExpression()
-            elseif cmd == "let" then
+            else if cmd == "let" then
                 statement.process = Basic.Let
                 statement.variable = parseVariable()
                 consumeToken("=")
                 statement.expression = parseNumericExpression()
-            elseif cmd == "go" then
+            else if cmd == "go" then
                 local nxt = nextToken()
                 if strlower(nxt.string) == "to" then
                     statement.process = Basic.GoTo
                     statement.target = parseNonNegativeInteger()
-                elseif strlower(nxt.string) == "sub" then
+                else if strlower(nxt.string) == "sub" then
                     statement.process = Basic.GoSub
                     statement.target = parseNonNegativeInteger()
                 else
                     error("At " .. tostring(nxt.sourceLineNumber) .. ": expected to or sub but got: " .. nxt.string)
                 end
-            elseif cmd == "goto" then
+            else if cmd == "goto" then
                 statement.process = Basic.GoTo
                 statement.target = parseNonNegativeInteger()
-            elseif cmd == "gosub" then
+            else if cmd == "gosub" then
                 statement.process = Basic.GoSub
                 statement.target = parseNonNegativeInteger()
-            elseif cmd == "if" then
+            else if cmd == "if" then
                 statement.process = Basic.If
                 statement.condition = parseRelationalExpression()
                 consumeToken("then")
                 statement.target = parseNonNegativeInteger()
-            elseif cmd == "return" then
+            else if cmd == "return" then
                 statement.process = Basic.Return
-            elseif cmd == "stop" then
+            else if cmd == "stop" then
                 statement.process = Basic.Stop
-            elseif cmd == "on" then
+            else if cmd == "on" then
                 statement.process = Basic.On
                 statement.expression = parseNumericExpression()
                 if peekToken().string == "go" then
@@ -923,7 +923,7 @@ local function parse(tokens)
                     if peekToken().string ~= "," then break end
                     nextToken()
                 end
-            elseif cmd == "for" then
+            else if cmd == "for" then
                 statement.process = Basic.For
                 statement.variable = consumeKind("identifier").string
                 consumeToken("=")
@@ -948,10 +948,10 @@ local function parse(tokens)
                 lastStatement.target = statement
                 statement.target = lastStatement
                 return statement
-            elseif cmd == "next" then
+            else if cmd == "next" then
                 statement.process = Basic.Next
                 statement.variable = consumeKind("identifier").string
-            elseif cmd == "print" then
+            else if cmd == "print" then
                 statement.process = Basic.Print
                 statement.items = {}
                 while true do
@@ -959,14 +959,14 @@ local function parse(tokens)
                     if s == "," then
                         nextToken()
                         statement.items[#statement.items + 1] = { kind = "comma" }
-                    elseif s == ";" then
+                    else if s == ";" then
                         nextToken()
-                    elseif s == "tab" then
+                    else if s == "tab" then
                         nextToken()
                         consumeToken("(")
                         statement.items[#statement.items + 1] =
                             { kind = "tab", value = parseNumericExpression() }
-                    elseif s == "\n" then
+                    else if s == "\n" then
                         break
                     else
                         if isStringExpression() then
@@ -978,7 +978,7 @@ local function parse(tokens)
                         end
                     end
                 end
-            elseif cmd == "input" then
+            else if cmd == "input" then
                 statement.process = Basic.Input
                 statement.items = {}
                 while true do
@@ -986,7 +986,7 @@ local function parse(tokens)
                     if peekToken().string ~= "," then break end
                     nextToken()
                 end
-            elseif cmd == "read" then
+            else if cmd == "read" then
                 statement.process = Basic.Read
                 statement.items = {}
                 while true do
@@ -994,16 +994,16 @@ local function parse(tokens)
                     if peekToken().string ~= "," then break end
                     nextToken()
                 end
-            elseif cmd == "restore" then
+            else if cmd == "restore" then
                 statement.process = Basic.Restore
-            elseif cmd == "data" then
+            else if cmd == "data" then
                 while true do
                     -- parseConstant, simplified: +n, -n, string, number
                     local s = peekToken().string
                     if s == "+" then
                         nextToken()
                         program.data[#program.data + 1] = consumeKind("number").value
-                    elseif s == "-" then
+                    else if s == "-" then
                         nextToken()
                         program.data[#program.data + 1] = -consumeKind("number").value
                     else
@@ -1016,7 +1016,7 @@ local function parse(tokens)
                     if peekToken().string ~= "," then break end
                     nextToken()
                 end
-            elseif cmd == "dim" then
+            else if cmd == "dim" then
                 statement.process = Basic.Dim
                 statement.items = {}
                 while true do
@@ -1033,25 +1033,25 @@ local function parse(tokens)
                     if peekToken().string ~= "," then break end
                     consumeToken(",")
                 end
-            elseif cmd == "option" then
+            else if cmd == "option" then
                 consumeToken("base")
                 local base = parseNonNegativeInteger()
                 if base ~= 0 and base ~= 1 then
                     error("At " .. tostring(command.sourceLineNumber) .. ": unexpected base: " .. base)
                 end
                 program.base = base
-            elseif cmd == "randomize" then
+            else if cmd == "randomize" then
                 -- Basic.Randomize would reseed from a random source. Our tests
                 -- don't use it; left as a no-op processor.
                 statement.process = function(_, state)
                     state.rng = createRNGWithFixedSeed()
                 end
-            elseif cmd == "end" then
+            else if cmd == "end" then
                 statement.process = Basic.End
             else
                 error("At " .. tostring(command.sourceLineNumber) .. ": unexpected command but got: " .. command.string)
             end
-        elseif command.kind == "remark" then
+        else if command.kind == "remark" then
             -- Ignore
         else
             error("At " .. tostring(command.sourceLineNumber) .. ": expected command but got: " .. command.string .. " (of kind " .. command.kind .. ")")

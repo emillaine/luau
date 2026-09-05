@@ -42,20 +42,20 @@ local function renderOperand(node, op, colorNum, syntax)
 		local num = numOf(op)
 		local name = (num ~= nil) and regName(num, op.width or 64) or op.name
 		return syntax == "att" and ("%" .. name) or name
-	elseif op.kind == "imm" then
+	else if op.kind == "imm" then
 		return syntax == "att" and ("$" .. op.text) or op.text
-	elseif op.kind == "sym" then
+	else if op.kind == "sym" then
 		local t = op.text
 		if op.reloc == "plt" then t = t .. "@PLT"
-		elseif op.reloc == "gotpcrel" then t = t .. "@GOTPCREL" end
+		else if op.reloc == "gotpcrel" then t = t .. "@GOTPCREL" end
 		return t
-	elseif op.kind == "mem" then
+	else if op.kind == "mem" then
 		local ripBase = op.base and op.base.kind == "reg" and op.base.rc == "rip"
 		local disp = ""
 		if op.dispSym then
 			disp = op.dispSym
 			if op.dispReloc == "gotpcrel" then disp = disp .. "@GOTPCREL"
-			elseif op.dispReloc == "plt" then disp = disp .. "@PLT" end
+			else if op.dispReloc == "plt" then disp = disp .. "@PLT" end
 		end
 		if syntax == "att" then
 			local dtext = disp
@@ -96,7 +96,7 @@ local function opSize(node, colorNum)
 	local w = nil
 	for _, op in (node.operands or {}) do
 		if op.kind == "reg" and op.rc ~= "rip" then w = math.max(w or 0, op.width or 64)
-		elseif op.kind == "mem" and op.size then w = math.max(w or 0, op.size * 8) end
+		else if op.kind == "mem" and op.size then w = math.max(w or 0, op.size * 8) end
 	end
 	return w or 64
 end
@@ -122,7 +122,7 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 	if syntax == "att" then
 		if (base == "movzx" or base == "movsx") and string.match(low, "^mov[zs][bwlq][bwlq]$") then
 			outMnem = low  -- already a full AT&T form (movzbl, movslq, ...): render verbatim
-		elseif base == "movzx" or base == "movsx" then
+		else if base == "movzx" or base == "movsx" then
 			local letter = string.match(low, "^mov[zs]([bw])")
 			local srcBytes = letter and ({ b = 1, w = 2 })[letter] or nil
 			if not srcBytes then for _, op in ops do if op.kind == "mem" and op.size then srcBytes = op.size end end end
@@ -133,12 +133,12 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 			local dstW = 32
 			for _, op in ops do if op.kind == "reg" and op.rc ~= "rip" then dstW = op.width or 64; break end end
 			outMnem = "mov" .. (base == "movzx" and "z" or "s") .. SUFFIX[srcBytes * 8] .. SUFFIX[dstW]
-		elseif node.synth then
+		else if node.synth then
 			if low == "lea" then outMnem = "leaq"
-			elseif SUFFIXABLE[low] then
+			else if SUFFIXABLE[low] then
 				outMnem = low .. (SUFFIX[opSize(node, colorNum)] or "q")
 			end
-		elseif SUFFIXABLE[low] then
+		else if SUFFIXABLE[low] then
 			-- Lifted node with a bare mnemonic (Intel input) and no register operand to imply
 			-- the operand width (e.g. `cmp $0, 8(%rdx)`): AT&T needs an explicit size suffix.
 			local hasReg = false
@@ -154,7 +154,7 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 		local hasMem = false
 		for _, op in ops do
 			if op.kind == "reg" and op.rc ~= "rip" then w = math.max(w, op.width or 64)
-			elseif op.kind == "mem" then hasMem = true; if op.size then w = math.max(w, op.size*8) end end
+			else if op.kind == "mem" then hasMem = true; if op.size then w = math.max(w, op.size*8) end end
 		end
 		if hasMem and syntax == "intel" then memSize = math.floor((w > 0 and w or 64) / 8) end
 	end

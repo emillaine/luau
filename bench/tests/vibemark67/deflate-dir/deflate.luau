@@ -90,7 +90,7 @@ local function decompress(compressed: {number}, originalSize: number): {number}
         local sym = huffman.decodeSymbol(reader, litLookup, litTree.maxLen)
         if sym == 257 then
             break
-        elseif sym <= 256 then
+        else if sym <= 256 then
             output[outPos] = sym - 1
             outPos += 1
         else

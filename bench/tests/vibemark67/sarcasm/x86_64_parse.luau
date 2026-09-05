@@ -65,8 +65,8 @@ local function splitOperands(s)
 	for i = 1, #s do
 		local c = string.sub(s, i, i)
 		if c == "(" or c == "[" then depth += 1; table.insert(cur, c)
-		elseif c == ")" or c == "]" then depth -= 1; table.insert(cur, c)
-		elseif c == "," and depth == 0 then table.insert(out, trim(table.concat(cur))); cur = {}
+		else if c == ")" or c == "]" then depth -= 1; table.insert(cur, c)
+		else if c == "," and depth == 0 then table.insert(out, trim(table.concat(cur))); cur = {}
 		else table.insert(cur, c) end
 	end
 	local last = trim(table.concat(cur))
@@ -147,7 +147,7 @@ local function parseIntelOperand(field)
 		while i <= n do
 			local c = string.sub(inside, i, i)
 			if c == "+" then flush(); sign = 1
-			elseif c == "-" then flush(); sign = -1
+			else if c == "-" then flush(); sign = -1
 			else table.insert(tok, c) end
 			i += 1
 		end
@@ -161,7 +161,7 @@ local function parseIntelOperand(field)
 				local r = classifyReg(t)
 				if r then
 					if r.rc == "rip" then mem.base = r
-					elseif not mem.base then mem.base = r else mem.index = r end
+					else if not mem.base then mem.base = r else mem.index = r end
 				else
 					local num = tonumber(t)
 					if num then mem.dispVal = (mem.dispVal or 0) + term.sign * num
@@ -197,7 +197,7 @@ local function stripComment(s)
 	for i = 1, #s do
 		local c = string.sub(s, i, i)
 		if c == '"' then inStr = not inStr
-		elseif not inStr and c == "#" then return string.sub(s, 1, i - 1) end
+		else if not inStr and c == "#" then return string.sub(s, 1, i - 1) end
 	end
 	return s
 end

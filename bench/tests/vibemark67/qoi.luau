@@ -175,7 +175,7 @@ local function decodeQoi(source: buffer, sourceSize: number, output: buffer, ind
                 local a = bit32.extract(previous, 24, 8)
                 inputOffset += 3
                 pixel = packRgba(r, g, b, a)
-            elseif tag == QOI_OP_RGBA then
+            else if tag == QOI_OP_RGBA then
                 assert(inputOffset + 4 <= dataEnd)
                 pixel = buffer.readu32(source, inputOffset)
                 inputOffset += 4
@@ -184,7 +184,7 @@ local function decodeQoi(source: buffer, sourceSize: number, output: buffer, ind
 
                 if tagType == QOI_OP_INDEX then
                     pixel = buffer.readu32(index, bit32.band(tag, 0x3f) * 4)
-                elseif tagType == QOI_OP_DIFF then
+                else if tagType == QOI_OP_DIFF then
                     local r = bit32.extract(previous, 0, 8)
                     local g = bit32.extract(previous, 8, 8)
                     local b = bit32.extract(previous, 16, 8)
@@ -193,7 +193,7 @@ local function decodeQoi(source: buffer, sourceSize: number, output: buffer, ind
                     g = bit32.band(g + bit32.extract(tag, 2, 2) - 2, 0xff)
                     b = bit32.band(b + bit32.extract(tag, 0, 2) - 2, 0xff)
                     pixel = packRgba(r, g, b, a)
-                elseif tagType == QOI_OP_LUMA then
+                else if tagType == QOI_OP_LUMA then
                     assert(inputOffset < dataEnd)
                     local second = buffer.readu8(source, inputOffset)
                     inputOffset += 1
@@ -243,19 +243,19 @@ local function makeSource(): buffer
                 g = (y * 7 + band * 13) % 256
                 b = (y * 11 + band * 17) % 256
                 a = 255
-            elseif y < 64 then
+            else if y < 64 then
                 local value = (x + (y - 32) * WIDTH) % 256
                 r, g, b, a = value, value, value, 255
-            elseif y < 96 then
+            else if y < 96 then
                 local value = (x + (y - 64) * WIDTH) % 256
                 r, g, b, a = value * 2 % 256, value, 80, 255
-            elseif y < 144 then
+            else if y < 144 then
                 if x % 2 == 0 then
                     r, g, b, a = 10, 20, 30, 255
                 else
                     r, g, b, a = 100, 100, 100, 255
                 end
-            elseif y < 224 then
+            else if y < 224 then
                 state = bit32.band(state * 1664525 + 1013904223, 0xffffffff)
                 r = bit32.extract(state, 0, 8)
                 g = bit32.extract(state, 8, 8)
@@ -295,16 +295,16 @@ local function assertAllOpcodes(encoded: buffer, encodedSize: number)
         if tag == QOI_OP_RGB then
             counts[5] += 1
             offset += 3
-        elseif tag == QOI_OP_RGBA then
+        else if tag == QOI_OP_RGBA then
             counts[6] += 1
             offset += 4
         else
             local tagType = bit32.band(tag, QOI_MASK_2)
             if tagType == QOI_OP_INDEX then
                 counts[1] += 1
-            elseif tagType == QOI_OP_DIFF then
+            else if tagType == QOI_OP_DIFF then
                 counts[2] += 1
-            elseif tagType == QOI_OP_LUMA then
+            else if tagType == QOI_OP_LUMA then
                 counts[3] += 1
                 offset += 1
             else

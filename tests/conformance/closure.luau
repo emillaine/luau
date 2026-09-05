@@ -102,8 +102,8 @@ function f(x)
           end
         end
     if x == 1 then do break end
-    elseif x == 2 then return
-    else if x != 3 then error() end
+    else if x == 2 then return
+    else do if x != 3 then error() end end
     end
     first = nil
   end

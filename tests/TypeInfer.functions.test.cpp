@@ -2555,7 +2555,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "regex_benchmark_string_format_minimization")
         (nil :: any)(function(n)
             if tonumber(n) then
                 n = tonumber(n)
-            elseif n != nil then
+            else if n != nil then
                 string.format("invalid argument #4 to 'sub': number expected, got %s", typeof(n))
             end
         end);
@@ -2592,7 +2592,7 @@ end
 function odd(n)
     if n == 0 then
         return false
-    elseif n == 1 then
+    else if n == 1 then
         return true
     else
         return even(n - 1)
@@ -2644,7 +2644,7 @@ end
 function odd(n: number)
     if n == 0 then
         return false
-    elseif n == 1 then
+    else if n == 1 then
         return true
     else
         return even(n - 1)
@@ -2989,7 +2989,7 @@ TEST_CASE_FIXTURE(Fixture, "unifier_should_not_bind_free_types")
             local success,result = player:thing()
             if(success) then
                 return "Successfully posted message.";
-            elseif(not result) then
+            else if(not result) then
                 return false;
             else
                 return result;
@@ -3066,12 +3066,12 @@ local l0 = require(module0)
 end
 local function l0()
 end
-elseif _ then
+else if _ then
 l0 = _
 end
 do end
 while _ do
-_ = if _ then _ elseif _ then _,if _ then _ else _
+_ = if _ then _ else if _ then _,if _ then _ else _
 _ = _()
 do end
 do end

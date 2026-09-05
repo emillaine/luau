@@ -330,7 +330,7 @@ function foo()
      func = function(p)
       return p.id
      end
-    elseif mode == 'Price'then
+    else if mode == 'Price'then
      func = function(p)
       return p.price
      end
@@ -366,7 +366,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generalization_should_not_leak_free_type")
                     func = function(p)
                         return p.id
                     end
-                elseif mode == 'Price'then
+                else if mode == 'Price'then
                     func = function(p)
                         return p.price
                     end

@@ -5013,7 +5013,7 @@ TEST_CASE_FIXTURE(Fixture, "mymovie_read_write_tables_bug_2")
             assert(mockedResponse.type == 'body', 'Mocked response is not a body')
 
             if typeof(mockedResponse.body) == 'string' then
-            elseif typeof(mockedResponse.body) == 'table' then
+            else if typeof(mockedResponse.body) == 'table' then
             else
                 return mockedResponseToHttpResponse(mockedResponse)
             end
@@ -6681,7 +6681,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_indexing_into_error_or_not_nil")
             local value = select(i, ...)
             local valueType = typeof(value)
             if value == nil then
-            elseif valueType == "table" then
+            else if valueType == "table" then
                 for k = 1, #value do
                     local _ = value[k]
                 end
@@ -7545,7 +7545,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2597_constraint_forcing_bad_refinement")
         function MyClass.__index.call<T>(self: MyClass<T>, f: MyFunction<T>): ()
             if type(f) == "function" then
                 f(self)
-            elseif f.fn then
+            else if f.fn then
                 const thevalue = f.fn
                 local _ = thevalue
                 f.fn(self)

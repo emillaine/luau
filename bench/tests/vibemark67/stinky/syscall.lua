@@ -38,11 +38,11 @@ function Syscall.handle(cpu: CPU.CPU)
 
     if sysno == 64 then -- write
         result = Syscall.sysWrite(cpu, x0, x1, x2)
-    elseif sysno == 63 then -- read
+    else if sysno == 63 then -- read
         result = Syscall.sysRead(cpu, x0, x1, x2)
-    elseif sysno == 66 then -- writev
+    else if sysno == 66 then -- writev
         result = Syscall.sysWritev(cpu, x0, x1, x2)
-    elseif sysno == 93 then -- exit
+    else if sysno == 93 then -- exit
         cpu.halted = true
         cpu.exitCode = Int.toNumber(Int.band(x0, Int.MASK32))
         -- Treat as signed
@@ -50,24 +50,24 @@ function Syscall.handle(cpu: CPU.CPU)
             cpu.exitCode = cpu.exitCode - 0x100000000
         end
         result = Int.ZERO
-    elseif sysno == 94 then -- exit_group
+    else if sysno == 94 then -- exit_group
         cpu.halted = true
         cpu.exitCode = Int.toNumber(Int.band(x0, Int.MASK32))
         if cpu.exitCode > 0x7FFFFFFF then
             cpu.exitCode = cpu.exitCode - 0x100000000
         end
         result = Int.ZERO
-    elseif sysno == 214 then -- brk
+    else if sysno == 214 then -- brk
         result = Syscall.sysBrk(cpu, x0)
-    elseif sysno == 222 then -- mmap
+    else if sysno == 222 then -- mmap
         result = Syscall.sysMmap(cpu, x0, x1, x2, x3, x4, x5)
-    elseif sysno == 215 then -- munmap
+    else if sysno == 215 then -- munmap
         result = Int.ZERO -- pretend success
-    elseif sysno == 226 then -- mprotect
+    else if sysno == 226 then -- mprotect
         result = Int.ZERO -- pretend success
-    elseif sysno == 233 then -- madvise
+    else if sysno == 233 then -- madvise
         result = Int.ZERO -- pretend success
-    elseif sysno == 216 then -- mremap
+    else if sysno == 216 then -- mremap
         -- Just allocate new memory at a new address
         local newSize = x2
         mmapBase = Int.add(mmapBase, Int.from(4096))
@@ -77,33 +77,33 @@ function Syscall.handle(cpu: CPU.CPU)
         mmapBase = Int.band(mmapBase, Int.bnot(Int.from(4095)))
         cpu.mem:zeroFill(addr, size)
         result = addr
-    elseif sysno == 134 then -- rt_sigaction
+    else if sysno == 134 then -- rt_sigaction
         result = Int.ZERO -- ignore signal setup
-    elseif sysno == 135 then -- rt_sigprocmask
+    else if sysno == 135 then -- rt_sigprocmask
         result = Int.ZERO -- ignore signal mask
-    elseif sysno == 96 then -- set_tid_address
+    else if sysno == 96 then -- set_tid_address
         result = Int.from(nextTid)
         nextTid += 1
-    elseif sysno == 293 then -- rseq
+    else if sysno == 293 then -- rseq
         result = Int.neg(Int.from(38)) -- -ENOSYS
-    elseif sysno == 172 then -- getpid
+    else if sysno == 172 then -- getpid
         result = Int.from(1000)
-    elseif sysno == 178 then -- gettid
+    else if sysno == 178 then -- gettid
         result = Int.from(1000)
-    elseif sysno == 167 then -- prctl
+    else if sysno == 167 then -- prctl
         result = Int.ZERO -- pretend success
-    elseif sysno == 98 then -- futex
+    else if sysno == 98 then -- futex
         -- Single-threaded: FUTEX_WAIT returns 0, FUTEX_WAKE returns 0
         result = Int.ZERO
-    elseif sysno == 131 then -- tgkill
+    else if sysno == 131 then -- tgkill
         -- Sending signal to ourselves - ignore
         result = Int.ZERO
-    elseif sysno == 113 then -- clock_gettime
+    else if sysno == 113 then -- clock_gettime
         -- Write zeros (time = 0)
         cpu.mem:writeU64(x1, Int.ZERO) -- tv_sec
         cpu.mem:writeU64(Int.add(x1, Int.from(8)), Int.ZERO) -- tv_nsec
         result = Int.ZERO
-    elseif sysno == 80 then -- fstat
+    else if sysno == 80 then -- fstat
         -- Return a minimal stat struct (not a terminal — to avoid complex glibc paths)
         cpu.mem:zeroFill(x1, 128)
         -- st_mode = S_IFREG | 0644 (regular file)
@@ -111,24 +111,24 @@ function Syscall.handle(cpu: CPU.CPU)
         -- st_blksize = 4096
         cpu.mem:writeU64(Int.add(x1, Int.from(56)), Int.from(4096))
         result = Int.ZERO
-    elseif sysno == 78 then -- readlinkat
+    else if sysno == 78 then -- readlinkat
         result = Int.neg(Int.from(22)) -- -EINVAL
-    elseif sysno == 99 then -- set_robust_list
+    else if sysno == 99 then -- set_robust_list
         result = Int.ZERO
-    elseif sysno == 29 then -- ioctl
+    else if sysno == 29 then -- ioctl
         result = Int.neg(Int.from(25)) -- -ENOTTY
-    elseif sysno == 17 then -- getcwd
+    else if sysno == 17 then -- getcwd
         -- Return "/"
         cpu.mem:writeU8(x0, 47) -- '/'
         cpu.mem:writeU8(Int.add(x0, Int.ONE), 0)
         result = Int.from(2)
-    elseif sysno == 56 then -- openat
+    else if sysno == 56 then -- openat
         result = Int.neg(Int.from(2)) -- -ENOENT
-    elseif sysno == 79 then -- fstatat/newfstatat
+    else if sysno == 79 then -- fstatat/newfstatat
         result = Int.neg(Int.from(2)) -- -ENOENT
-    elseif sysno == 25 then -- fcntl
+    else if sysno == 25 then -- fcntl
         result = Int.ZERO
-    elseif sysno == 261 then -- prlimit64
+    else if sysno == 261 then -- prlimit64
         -- Return some reasonable defaults
         local resource = Int.toNumber(x1)
         if not Int.isZero(x3) then
@@ -137,35 +137,35 @@ function Syscall.handle(cpu: CPU.CPU)
             cpu.mem:writeU64(Int.add(x3, Int.from(8)), Int.fromHex("FFFFFFFFFFFFFFFF")) -- rlim_max
         end
         result = Int.ZERO
-    elseif sysno == 179 then -- sysinfo
+    else if sysno == 179 then -- sysinfo
         -- Fill with zeros (minimal sysinfo)
         for off = 0, 111 do
             cpu.mem:writeU8(Int.add(x0, Int.from(off)), 0)
         end
         result = Int.ZERO
-    elseif sysno == 122 then -- sched_setaffinity
+    else if sysno == 122 then -- sched_setaffinity
         result = Int.ZERO
-    elseif sysno == 123 then -- sched_getaffinity
+    else if sysno == 123 then -- sched_getaffinity
         -- Write a single CPU in the mask
         local bufsize = Int.toNumber(x1)
         local buf = x2
         cpu.mem:zeroFill(buf, bufsize)
         cpu.mem:writeU8(buf, 1) -- CPU 0
         result = Int.from(bufsize)
-    elseif sysno == 119 then -- sched_setscheduler
+    else if sysno == 119 then -- sched_setscheduler
         result = Int.ZERO
-    elseif sysno == 120 then -- sched_getscheduler
+    else if sysno == 120 then -- sched_getscheduler
         result = Int.ZERO
-    elseif sysno == 121 then -- sched_getparam
+    else if sysno == 121 then -- sched_getparam
         cpu.mem:writeU32(x1, 0) -- sched_priority = 0
         result = Int.ZERO
-    elseif sysno == 124 then -- sched_yield
+    else if sysno == 124 then -- sched_yield
         result = Int.ZERO
-    elseif sysno == 125 then -- sched_get_priority_max
+    else if sysno == 125 then -- sched_get_priority_max
         result = Int.from(99)
-    elseif sysno == 126 then -- sched_get_priority_min
+    else if sysno == 126 then -- sched_get_priority_min
         result = Int.ZERO
-    elseif sysno == 160 then -- uname
+    else if sysno == 160 then -- uname
         -- Write minimal uname struct
         local buf = x0
         cpu.mem:zeroFill(buf, 390)
@@ -180,7 +180,7 @@ function Syscall.handle(cpu: CPU.CPU)
         writeField(195, "#1")
         writeField(260, "aarch64")
         result = Int.ZERO
-    elseif sysno == 278 then -- getrandom
+    else if sysno == 278 then -- getrandom
         -- Fill buffer with deterministic "random" data
         local buf = x0
         local count = Int.toNumber(x1)

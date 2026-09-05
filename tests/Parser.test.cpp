@@ -1626,8 +1626,8 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_with_too_many_changed_elseif_statements"
     ScopedFastInt sfis{FInt::LuauRecursionLimit, 10};
 
     matchParseErrorPrefix(
-        "function f() if false then elseif false then elseif false then elseif false then elseif false then elseif false then elseif "
-        "false then elseif false then elseif false then elseif false then elseif false then end end",
+        "function f() if false then else if false then else if false then else if false then else if false then else if false then else if "
+        "false then else if false then else if false then else if false then else if false then end end",
         "Exceeded allowed recursion depth;"
     );
 }
@@ -1637,8 +1637,8 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_with_too_many_nested_ifelse_expressions1
     ScopedFastInt sfis{FInt::LuauRecursionLimit, 10};
 
     matchParseError(
-        "function f() return if true then 1 elseif true then 2 elseif true then 3 elseif true then 4 elseif true then 5 elseif true then "
-        "6 elseif true then 7 elseif true then 8 elseif true then 9 elseif true then 10 else 11 end",
+        "function f() return if true then 1 else if true then 2 else if true then 3 else if true then 4 else if true then 5 else if true then "
+        "6 else if true then 7 else if true then 8 else if true then 9 else if true then 10 else 11 end",
         "Exceeded allowed recursion depth; simplify your expression to make the code compile"
     );
 }
@@ -2794,7 +2794,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_else_expression")
     }
 
     {
-        AstStat* stat = parse("return if true then 1 elseif true then 2 else 3");
+        AstStat* stat = parse("return if true then 1 else if true then 2 else 3");
 
         REQUIRE(stat != nullptr);
         AstStatReturn* str = stat->as<AstStatBlock>()->body.data[0]->as<AstStatReturn>();
@@ -2806,9 +2806,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_else_expression")
         REQUIRE(ifElseExpr2 != nullptr);
     }
 
-    // Use "else if" as opposed to elseif
+    // Whitespace between `else` and `if` is insignificant.
     {
-        AstStat* stat = parse("return if true then 1 else if true then 2 else 3");
+        AstStat* stat = parse("return if true then 1 else\nif true then 2 else 3");
 
         REQUIRE(stat != nullptr);
         AstStatReturn* str = stat->as<AstStatBlock>()->body.data[0]->as<AstStatReturn>();
@@ -6384,7 +6384,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_elseif_local")
     AstStatBlock* block = parse(R"(
         if local x = a() then
             print(x)
-        elseif local y = b() then
+        else if local y = b() then
             print(y)
         end
     )");
@@ -6433,9 +6433,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local_interleaved_with_non_initializers")
     AstStatBlock* block = parse(R"(
         if a() then
             print(1)
-        elseif local y = b() then
+        else if local y = b() then
             print(y)
-        elseif c() then
+        else if c() then
             print(3)
         end
     )");
@@ -6465,7 +6465,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_deeply_nested_if_local")
 
     std::string src = "if local v0 = f() then\n";
     for (int i = 1; i < depth; ++i)
-        src += "elseif local v" + std::to_string(i) + " = f() then\n";
+        src += "else if local v" + std::to_string(i) + " = f() then\n";
     src += "end\n";
 
     AstStatBlock* block = parse(src);

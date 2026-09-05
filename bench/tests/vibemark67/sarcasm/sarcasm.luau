@@ -109,14 +109,14 @@ local function splitFunctions(stmts)
 				cur = { name = st.name, sigAnn = st.annotation, body = { st }, startIdx = idx }
 				table.insert(functions, cur)
 				consumed[idx] = cur
-			elseif funcSyms[st.name] then
+			else if funcSyms[st.name] then
 				error("sarcasm: function '" .. st.name .. "' has no ;! signature annotation "
 					.. "(add one to its label, e.g. `" .. st.name .. ": ;! int(ptr)`)")
-			elseif cur then
+			else if cur then
 				table.insert(cur.body, st)
 				consumed[idx] = cur
 			end
-		elseif cur then
+		else if cur then
 			table.insert(cur.body, st)
 			consumed[idx] = cur
 			if st.kind == "directive" and st.name == ".size" then
@@ -134,7 +134,7 @@ local function buildRaInsns(nodes)
 	for _, node in nodes do
 		if node.kind == "label" then
 			table.insert(ra, { defs = {}, uses = {}, isLabelDef = node.name, fallsThrough = true })
-		elseif node.kind == "insn" then
+		else if node.kind == "insn" then
 			local control = node.control or (node.c and node.c.control) or "none"
 			local targets = node.targets or (node.c and node.c.targets)
 			local fallsThrough = node.fallsThrough
@@ -147,11 +147,11 @@ local function buildRaInsns(nodes)
 				targets = targets,
 				fallsThrough = fallsThrough,
 			})
-		elseif node.kind == "epilogue" then
+		else if node.kind == "epilogue" then
 			table.insert(ra, { defs = {}, uses = node.useTemps or {}, fallsThrough = true })
-		elseif node.kind == "rootstore" then
+		else if node.kind == "rootstore" then
 			table.insert(ra, { defs = {}, uses = node.useTemps or {}, fallsThrough = true })
-		elseif node.kind == "prologue" then
+		else if node.kind == "prologue" then
 			table.insert(ra, { defs = {}, uses = {}, fallsThrough = true })
 		else
 			table.insert(ra, { defs = {}, uses = {}, fallsThrough = true })
@@ -178,7 +178,7 @@ local function remapNodeTemps(node, remap)
 			if node.opTemp and node.opTemp[op] and remap[node.opTemp[op]] then
 				node.opTemp[op] = remap[node.opTemp[op]]
 			end
-		elseif op.kind == "mem" then
+		else if op.kind == "mem" then
 			remapOp(op.base); remapOp(op.index)
 		end
 	end
@@ -239,7 +239,7 @@ local function packSpillSlots(tr, spillBase, numSlots, target)
 	for _, node in tr.fipNodes do
 		if node.kind == "label" then
 			table.insert(slotInsns, { defs = {}, uses = {}, isLabelDef = node.name, fallsThrough = true })
-		elseif node.kind == "insn" then
+		else if node.kind == "insn" then
 			local control = node.control or (node.c and node.c.control) or "none"
 			local targets = node.targets or (node.c and node.c.targets)
 			local ft = node.fallsThrough
@@ -290,7 +290,7 @@ local function packSpillSlots(tr, spillBase, numSlots, target)
 	for i, node in tr.fipNodes do
 		if node.kind == "insn" and node.spillReload then
 			tr.fipNodes[i] = target.spillReload(node.spillTemp, spillBase + 8 * color[slotIdOf(node.spillOff)])
-		elseif node.kind == "insn" and node.spillStore then
+		else if node.kind == "insn" and node.spillStore then
 			tr.fipNodes[i] = target.spillStore(node.spillTemp, spillBase + 8 * color[slotIdOf(node.spillOff)])
 		end
 	end
@@ -444,19 +444,19 @@ function sarcasm.main(argv)
 		local a = argv[i]
 		if a == "-h" or a == "--help" then
 			print(HELP); return 0
-		elseif a == "--version" then
+		else if a == "--version" then
 			print(PROGNAME .. " " .. VERSION); return 0
-		elseif a == "-o" then
+		else if a == "-o" then
 			i += 1; output = argv[i]
 			if not output then return usageError("option '-o' requires an argument") end
-		elseif a == "-g" then
+		else if a == "-g" then
 			debug = true
-		elseif a == "-S" or a == "--no-assemble" then
+		else if a == "-S" or a == "--no-assemble" then
 			noAssemble = true
-		elseif a == "--as" then
+		else if a == "--as" then
 			i += 1; asCmd = argv[i]
 			if not asCmd then return usageError("option '--as' requires an argument") end
-		elseif string.sub(a, 1, 1) == "-" then
+		else if string.sub(a, 1, 1) == "-" then
 			return usageError("unrecognized option '" .. a .. "'")
 		else
 			if input then

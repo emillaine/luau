@@ -21,9 +21,9 @@ repeat
 
 _,_ = if _.number == "" or _.number or _._ then
              _
-      elseif _.__index == _._G then
+      else if _.__index == _._G then
             tostring
-      elseif _ then
+      else if _ then
              _
       else
            ``,_._G

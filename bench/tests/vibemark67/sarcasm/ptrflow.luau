@@ -72,7 +72,7 @@ function ptrflow.analyze(lf, seeds, allocTemp, opts)
 				if d then
 					if m == "mov" and #us == 1 and not hasMemSrc then
 						if isPtr[us[1]] then markFrom(us[1]) end
-					elseif m == "add" or m == "sub" or m == "orr" or m == "lea"
+					else if m == "add" or m == "sub" or m == "orr" or m == "lea"
 						or m == "lsl" or m == "lsr" or m == "asr" or m == "and"
 						or m == "or" or m == "shl" or m == "shr" or m == "sar" then
 						-- address arithmetic / alignment: a pointer combined with integers

@@ -33,9 +33,9 @@ local function ttProbe(hash: number, depth: number, alpha: number, beta: number)
         if entry.depth >= depth then
             if entry.flag == TT_EXACT then
                 return entry.score, entry.bestFrom, entry.bestTo
-            elseif entry.flag == TT_ALPHA and entry.score <= alpha then
+            else if entry.flag == TT_ALPHA and entry.score <= alpha then
                 return alpha, entry.bestFrom, entry.bestTo
-            elseif entry.flag == TT_BETA and entry.score >= beta then
+            else if entry.flag == TT_BETA and entry.score >= beta then
                 return beta, entry.bestFrom, entry.bestTo
             end
         end

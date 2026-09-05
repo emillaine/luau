@@ -285,7 +285,7 @@ local function parseNumber(str, pos)
         local c = string.byte(str, pos)
         if c == 43 then
             pos = pos + 1
-        elseif c == 45 then
+        else if c == 45 then
             pos = pos + 1
             sign = -1
         end
@@ -338,7 +338,7 @@ local function parseNumber(str, pos)
                 c = string.byte(str, pos)
                 if c == 43 then
                     pos = pos + 1
-                elseif c == 45 then
+                else if c == 45 then
                     pos = pos + 1
                     expsign = -1
                 end
@@ -430,7 +430,7 @@ function Color.parse(str)
                 local c4 = hexDigit(string.byte(str, hexStart + 3))
                 a = c4 * 16 + c4
             end
-        elseif count == 6 or count == 8 then
+        else if count == 6 or count == 8 then
             r = hexDigit(string.byte(str, hexStart)) * 16 + hexDigit(string.byte(str, hexStart + 1))
             g = hexDigit(string.byte(str, hexStart + 2)) * 16 + hexDigit(string.byte(str, hexStart + 3))
             b = hexDigit(string.byte(str, hexStart + 4)) * 16 + hexDigit(string.byte(str, hexStart + 5))
@@ -452,7 +452,7 @@ function Color.parse(str)
 
     if name == "transparent" then
         return makeColor(0, 0, 0, 0)
-    elseif name == "rgb" or name == "rgba" then
+    else if name == "rgb" or name == "rgba" then
         pos = skipWs(str, pos)
         if pos > len or string.byte(str, pos) ~= 40 then
             return nil
@@ -494,7 +494,7 @@ function Color.parse(str)
             return nil
         end
         return Color.rgba(r, g, b, a)
-    elseif name == "hsl" or name == "hsla" then
+    else if name == "hsl" or name == "hsla" then
         pos = skipWs(str, pos)
         if pos > len or string.byte(str, pos) ~= 40 then
             return nil

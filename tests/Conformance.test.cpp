@@ -5228,7 +5228,7 @@ TEST_CASE("CodegenRandomizeCodeSizeNonDecreasing")
         local function classify(x)
             if x > 0 then
                 return "positive"
-            elseif x < 0 then
+            else if x < 0 then
                 return "negative"
             else
                 return "zero"

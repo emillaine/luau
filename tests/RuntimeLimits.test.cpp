@@ -515,8 +515,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unification_runs_a_limited_number_of_iterati
         end
 
         _ = if _._ then function(l0)
-        end elseif _._G then if `` then {n0=_,} else "luauExprConstantSt" elseif _[_][l0] then function()
-        end elseif _.n0 then if _[_] then if _ then _ else "aeld" elseif false then 0 else "lead"
+        end else if _._G then if `` then {n0=_,} else "luauExprConstantSt" else if _[_][l0] then function()
+        end else if _.n0 then if _[_] then if _ then _ else "aeld" else if false then 0 else "lead"
         return _.n0
     )");
 
@@ -545,8 +545,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "native_stack_guard_prevents_stack_overflows"
             end
 
             _ = if _._ then function(l0)
-            end elseif _._G then if `` then {n0=_,} else "luauExprConstantSt" elseif _[_][l0] then function()
-            end elseif _.n0 then if _[_] then if _ then _ else "aeld" elseif false then 0 else "lead"
+            end else if _._G then if `` then {n0=_,} else "luauExprConstantSt" else if _[_][l0] then function()
+            end else if _.n0 then if _[_] then if _ then _ else "aeld" else if false then 0 else "lead"
             return _.n0
         )");
     }
@@ -612,10 +612,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_oom_unions" * doctest::timeout(LUAU_T
 {
     LUAU_REQUIRE_ERRORS(check(R"(
         local _ = true,l0
-        _ = if _ then _ else _._,if _[_] then nil elseif _ then `` else _._,...
-        _ = if _ then _ elseif _ then `` else _.n0,true,...
+        _ = if _ then _ else _._,if _[_] then nil else if _ then `` else _._,...
+        _ = if _ then _ else if _ then `` else _.n0,true,...
         _G = if "" then _ else _.n0,_
-        _ = if _[_] then _ elseif _ then _ + n0 else _._,32804,...
+        _ = if _[_] then _ else if _ then _ + n0 else _._,32804,...
         _.readstring = _,_
         local l0 = require(module0)
         _ = _,l0,_

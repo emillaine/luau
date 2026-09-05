@@ -808,10 +808,10 @@ do
     if idx == 3 then
       assert(key == "foo")
       assert(val == 1)
-    elseif idx == 2 then
+    else if idx == 2 then
       assert(key == "bar")
       assert(val == "string")
-    elseif idx == 1 then
+    else if idx == 1 then
       assert(key == "thing")
       assert(val == true)
     end

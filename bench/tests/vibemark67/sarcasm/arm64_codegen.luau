@@ -132,7 +132,7 @@ function M.make(ctx)
 			local idxOp = rt(idx)
 			if scale and scale > 1 then build.withShift(idxOp, "lsl", math.floor(math.log(scale) / math.log(2))) end
 			emit(build.insn("add", { rt(dst), rt(base), idxOp }, { defs = {dst}, uses = {base, idx} }))
-		elseif off and off ~= 0 then
+		else if off and off ~= 0 then
 			local op = off > 0 and "add" or "sub"
 			emit(build.insn(op, { rt(dst), rt(base), build.imm(math.abs(off)) }, { defs = {dst}, uses = {base} }))
 		else
@@ -185,18 +185,18 @@ function M.make(ctx)
 		local indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or nil
 		local capLo
 		if baseTemp and pf.isPtr[baseTemp] then capLo = pf.lowerTemp[baseTemp]
-		elseif indexTemp and pf.isPtr[indexTemp] then capLo = pf.lowerTemp[indexTemp] end
+		else if indexTemp and pf.isPtr[indexTemp] then capLo = pf.lowerTemp[indexTemp] end
 		local effTemp = baseTemp
 		if mem.writeback == "post" then
 			effTemp = baseTemp
-		elseif mem.index and mem.index.kind == "imm" then
+		else if mem.index and mem.index.kind == "imm" then
 			local off = mem.index.value or tonumber(mem.index.text) or 0
 			if off ~= 0 then
 				effTemp = allocTemp({ role = "eff" })
 				local op = off > 0 and "add" or "sub"
 				emit(build.insn(op, { rt(effTemp), rt(baseTemp), build.imm(math.abs(off)) }, { defs = {effTemp}, uses = {baseTemp} }))
 			end
-		elseif indexTemp then
+		else if indexTemp then
 			effTemp = allocTemp({ role = "eff" })
 			local idxOp = rt(indexTemp)
 			if mem.shift then build.withShift(idxOp, mem.shift.op, mem.shift.amount) end

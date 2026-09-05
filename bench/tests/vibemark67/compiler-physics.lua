@@ -94,9 +94,9 @@ local function skipWhitespaceAndComments(L)
         local ch = byte(L.source, L.pos)
         if ch == 32 or ch == 9 or ch == 13 or ch == 12 then
             L.pos = L.pos + 1; L.col = L.col + 1
-        elseif ch == 10 then
+        else if ch == 10 then
             L.pos = L.pos + 1; L.line = L.line + 1; L.col = 1
-        elseif ch == 45 and byte(L.source, L.pos + 1) == 45 then
+        else if ch == 45 and byte(L.source, L.pos + 1) == 45 then
             L.pos = L.pos + 2; L.col = L.col + 2
             if byte(L.source, L.pos) == 91 then
                 local level = 0
@@ -148,12 +148,12 @@ local function readString(L, quote)
             local esc = byte(L.source, L.pos)
             L.pos = L.pos + 1; L.col = L.col + 1
             if esc == 110 then insert(parts, "\n")
-            elseif esc == 116 then insert(parts, "\t")
-            elseif esc == 114 then insert(parts, "\r")
-            elseif esc == 92 then insert(parts, "\\")
-            elseif esc == 34 then insert(parts, "\"")
-            elseif esc == 39 then insert(parts, "'")
-            elseif esc == 48 or (esc >= 49 and esc <= 57) then
+            else if esc == 116 then insert(parts, "\t")
+            else if esc == 114 then insert(parts, "\r")
+            else if esc == 92 then insert(parts, "\\")
+            else if esc == 34 then insert(parts, "\"")
+            else if esc == 39 then insert(parts, "'")
+            else if esc == 48 or (esc >= 49 and esc <= 57) then
                 local numstr = char(esc)
                 for _ = 1, 2 do
                     local d = byte(L.source, L.pos)
@@ -163,23 +163,23 @@ local function readString(L, quote)
                     else break end
                 end
                 insert(parts, char(tonumber(numstr)))
-            elseif esc == 120 then -- \xNN
+            else if esc == 120 then -- \xNN
                 local h1 = byte(L.source, L.pos); L.pos = L.pos + 1
                 local h2 = byte(L.source, L.pos); L.pos = L.pos + 1
                 insert(parts, char(tonumber(char(h1) .. char(h2), 16)))
-            elseif esc == 10 then
+            else if esc == 10 then
                 L.line = L.line + 1; L.col = 1
                 insert(parts, "\n")
-            elseif esc == 97 then insert(parts, "\a")
-            elseif esc == 98 then insert(parts, "\b")
-            elseif esc == 102 then insert(parts, "\f")
-            elseif esc == 118 then insert(parts, "\v")
-            elseif esc == 122 then -- \z skip whitespace
+            else if esc == 97 then insert(parts, "\a")
+            else if esc == 98 then insert(parts, "\b")
+            else if esc == 102 then insert(parts, "\f")
+            else if esc == 118 then insert(parts, "\v")
+            else if esc == 122 then -- \z skip whitespace
                 while true do
                     local w = byte(L.source, L.pos)
                     if w == 32 or w == 9 or w == 13 or w == 12 then
                         L.pos = L.pos + 1; L.col = L.col + 1
-                    elseif w == 10 then
+                    else if w == 10 then
                         L.pos = L.pos + 1; L.line = L.line + 1; L.col = 1
                     else break end
                 end
@@ -202,7 +202,7 @@ local function readLongString(L)
     end
     L.pos = L.pos + 1
     if byte(L.source, L.pos) == 10 then L.pos = L.pos + 1; L.line = L.line + 1; L.col = 1
-    elseif byte(L.source, L.pos) == 13 then
+    else if byte(L.source, L.pos) == 13 then
         L.pos = L.pos + 1
         if byte(L.source, L.pos) == 10 then L.pos = L.pos + 1 end
         L.line = L.line + 1; L.col = 1
@@ -300,42 +300,42 @@ local function nextToken(L)
     L.pos = L.pos + 1; L.col = L.col + 1
 
     if ch == 43 then return { type = TK.PLUS, line = line, col = col }
-    elseif ch == 42 then return { type = TK.STAR, line = line, col = col }
-    elseif ch == 94 then return { type = TK.CARET, line = line, col = col }
-    elseif ch == 37 then return { type = TK.PERCENT, line = line, col = col }
-    elseif ch == 38 then return { type = TK.AMP, line = line, col = col }
-    elseif ch == 124 then return { type = TK.PIPE, line = line, col = col }
-    elseif ch == 40 then return { type = TK.LPAREN, line = line, col = col }
-    elseif ch == 41 then return { type = TK.RPAREN, line = line, col = col }
-    elseif ch == 123 then return { type = TK.LBRACE, line = line, col = col }
-    elseif ch == 125 then return { type = TK.RBRACE, line = line, col = col }
-    elseif ch == 93 then return { type = TK.RBRACKET, line = line, col = col }
-    elseif ch == 59 then return { type = TK.SEMI, line = line, col = col }
-    elseif ch == 44 then return { type = TK.COMMA, line = line, col = col }
-    elseif ch == 35 then return { type = TK.HASH, line = line, col = col }
-    elseif ch == 45 then
+    else if ch == 42 then return { type = TK.STAR, line = line, col = col }
+    else if ch == 94 then return { type = TK.CARET, line = line, col = col }
+    else if ch == 37 then return { type = TK.PERCENT, line = line, col = col }
+    else if ch == 38 then return { type = TK.AMP, line = line, col = col }
+    else if ch == 124 then return { type = TK.PIPE, line = line, col = col }
+    else if ch == 40 then return { type = TK.LPAREN, line = line, col = col }
+    else if ch == 41 then return { type = TK.RPAREN, line = line, col = col }
+    else if ch == 123 then return { type = TK.LBRACE, line = line, col = col }
+    else if ch == 125 then return { type = TK.RBRACE, line = line, col = col }
+    else if ch == 93 then return { type = TK.RBRACKET, line = line, col = col }
+    else if ch == 59 then return { type = TK.SEMI, line = line, col = col }
+    else if ch == 44 then return { type = TK.COMMA, line = line, col = col }
+    else if ch == 35 then return { type = TK.HASH, line = line, col = col }
+    else if ch == 45 then
         return { type = TK.MINUS, line = line, col = col }
-    elseif ch == 47 then
+    else if ch == 47 then
         if lexerMatch(L, 47) then return { type = TK.DSLASH, line = line, col = col } end
         return { type = TK.SLASH, line = line, col = col }
-    elseif ch == 60 then
+    else if ch == 60 then
         if lexerMatch(L, 61) then return { type = TK.LEQ, line = line, col = col } end
         if lexerMatch(L, 60) then return { type = TK.LTLT, line = line, col = col } end
         return { type = TK.LT, line = line, col = col }
-    elseif ch == 62 then
+    else if ch == 62 then
         if lexerMatch(L, 61) then return { type = TK.GEQ, line = line, col = col } end
         if lexerMatch(L, 62) then return { type = TK.GTGT, line = line, col = col } end
         return { type = TK.GT, line = line, col = col }
-    elseif ch == 61 then
+    else if ch == 61 then
         if lexerMatch(L, 61) then return { type = TK.EQ, line = line, col = col } end
         return { type = TK.ASSIGN, line = line, col = col }
-    elseif ch == 126 then
+    else if ch == 126 then
         if lexerMatch(L, 61) then return { type = TK.NEQ, line = line, col = col } end
         return { type = TK.TILDE, line = line, col = col }
-    elseif ch == 58 then
+    else if ch == 58 then
         if lexerMatch(L, 58) then return { type = TK.DCOLON, line = line, col = col } end
         return { type = TK.COLON, line = line, col = col }
-    elseif ch == 46 then
+    else if ch == 46 then
         if byte(L.source, L.pos) == 46 then
             L.pos = L.pos + 1; L.col = L.col + 1
             if byte(L.source, L.pos) == 46 then
@@ -345,7 +345,7 @@ local function nextToken(L)
             return { type = TK.DOTDOT, line = line, col = col }
         end
         return { type = TK.DOT, line = line, col = col }
-    elseif ch == 91 then
+    else if ch == 91 then
         if byte(L.source, L.pos) == 91 or byte(L.source, L.pos) == 61 then
             local s = readLongString(L)
             return { type = TK.STRING, value = s, line = line, col = col }
@@ -444,7 +444,7 @@ local function parseTableConstructor(P, line)
             expect(P, TK.ASSIGN)
             field.value = parseExpr(P)
             field.kind = "bracket"
-        elseif check(P, TK.NAME) and P.tokens[P.pos + 1].type == TK.ASSIGN then
+        else if check(P, TK.NAME) and P.tokens[P.pos + 1].type == TK.ASSIGN then
             field.key = { tag = "String", value = parseName(P) }
             expect(P, TK.ASSIGN)
             field.value = parseExpr(P)
@@ -501,11 +501,11 @@ local function parseArgs(P)
         end
         expect(P, TK.RPAREN)
         return args
-    elseif check(P, TK.LBRACE) then
+    else if check(P, TK.LBRACE) then
         local line = peek(P).line
         advance(P)
         return { parseTableConstructor(P, line) }
-    elseif check(P, TK.STRING) then
+    else if check(P, TK.STRING) then
         local tok = advance(P)
         return { { tag = "String", value = tok.value, line = tok.line } }
     end
@@ -517,7 +517,7 @@ local function parsePrimaryExpr(P)
     if tok.type == TK.NAME then
         advance(P)
         return { tag = "Id", name = tok.value, line = tok.line }
-    elseif tok.type == TK.LPAREN then
+    else if tok.type == TK.LPAREN then
         advance(P)
         local expr = parseExpr(P)
         expect(P, TK.RPAREN)
@@ -533,17 +533,17 @@ parsePrefixExpr = function(P)
             advance(P)
             local name = parseName(P)
             expr = { tag = "Index", obj = expr, key = { tag = "String", value = name }, line = expr.line }
-        elseif check(P, TK.LBRACKET) then
+        else if check(P, TK.LBRACKET) then
             advance(P)
             local key = parseExpr(P)
             expect(P, TK.RBRACKET)
             expr = { tag = "Index", obj = expr, key = key, line = expr.line }
-        elseif check(P, TK.COLON) then
+        else if check(P, TK.COLON) then
             advance(P)
             local method = parseName(P)
             local args = parseArgs(P)
             expr = { tag = "MethodCall", obj = expr, method = method, args = args, line = expr.line }
-        elseif check(P, TK.LPAREN) or check(P, TK.LBRACE) or check(P, TK.STRING) then
+        else if check(P, TK.LPAREN) or check(P, TK.LBRACE) or check(P, TK.STRING) then
             local args = parseArgs(P)
             expr = { tag = "Call", func = expr, args = args, line = expr.line }
         else
@@ -558,25 +558,25 @@ local function parseSimpleExpr(P)
     if tok.type == TK.NUMBER then
         advance(P)
         return { tag = "Number", value = tok.value, raw = tok.raw, line = tok.line }
-    elseif tok.type == TK.STRING then
+    else if tok.type == TK.STRING then
         advance(P)
         return { tag = "String", value = tok.value, line = tok.line }
-    elseif tok.type == TK.TRUE then
+    else if tok.type == TK.TRUE then
         advance(P)
         return { tag = "True", line = tok.line }
-    elseif tok.type == TK.FALSE then
+    else if tok.type == TK.FALSE then
         advance(P)
         return { tag = "False", line = tok.line }
-    elseif tok.type == TK.NIL then
+    else if tok.type == TK.NIL then
         advance(P)
         return { tag = "Nil", line = tok.line }
-    elseif tok.type == TK.DOTDOTDOT then
+    else if tok.type == TK.DOTDOTDOT then
         advance(P)
         return { tag = "Vararg", line = tok.line }
-    elseif tok.type == TK.LBRACE then
+    else if tok.type == TK.LBRACE then
         advance(P)
         return parseTableConstructor(P, tok.line)
-    elseif tok.type == TK.FUNCTION then
+    else if tok.type == TK.FUNCTION then
         advance(P)
         return parseFuncBody(P, tok.line)
     else
@@ -760,26 +760,26 @@ end
 parseStatement = function(P)
     local tok = peek(P)
     if tok.type == TK.IF then return parseIfStat(P)
-    elseif tok.type == TK.WHILE then return parseWhileStat(P)
-    elseif tok.type == TK.DO then return parseDoStat(P)
-    elseif tok.type == TK.FOR then return parseForStat(P)
-    elseif tok.type == TK.REPEAT then return parseRepeatStat(P)
-    elseif tok.type == TK.FUNCTION then
+    else if tok.type == TK.WHILE then return parseWhileStat(P)
+    else if tok.type == TK.DO then return parseDoStat(P)
+    else if tok.type == TK.FOR then return parseForStat(P)
+    else if tok.type == TK.REPEAT then return parseRepeatStat(P)
+    else if tok.type == TK.FUNCTION then
         local line = tok.line
         advance(P)
         local names, method = parseFuncName(P)
         local func = parseFuncBody(P, line)
         return { tag = "FuncDef", names = names, method = method, func = func, line = line }
-    elseif tok.type == TK.LOCAL then return parseLocalStat(P)
-    elseif tok.type == TK.RETURN then return parseReturnStat(P)
-    elseif tok.type == TK.BREAK then
+    else if tok.type == TK.LOCAL then return parseLocalStat(P)
+    else if tok.type == TK.RETURN then return parseReturnStat(P)
+    else if tok.type == TK.BREAK then
         advance(P)
         return { tag = "Break", line = tok.line }
-    elseif tok.type == TK.GOTO then
+    else if tok.type == TK.GOTO then
         advance(P)
         local name = parseName(P)
         return { tag = "Goto", name = name, line = tok.line }
-    elseif tok.type == TK.DCOLON then
+    else if tok.type == TK.DCOLON then
         advance(P)
         local name = parseName(P)
         expect(P, TK.DCOLON)
@@ -865,16 +865,16 @@ end
 local function typeToString(t)
     if not t then return "nil" end
     if t.kind == "nil" then return "nil"
-    elseif t.kind == "boolean" then return "boolean"
-    elseif t.kind == "integer" then return "integer"
-    elseif t.kind == "number" then return "number"
-    elseif t.kind == "string" then return "string"
-    elseif t.kind == "any" then return "any"
-    elseif t.kind == "table" then return "table"
-    elseif t.kind == "struct" then return "struct_" .. t.id
-    elseif t.kind == "array" then return "array_" .. t.id
-    elseif t.kind == "function" then return "func_" .. t.id
-    elseif t.kind == "map" then return "map_" .. t.id
+    else if t.kind == "boolean" then return "boolean"
+    else if t.kind == "integer" then return "integer"
+    else if t.kind == "number" then return "number"
+    else if t.kind == "string" then return "string"
+    else if t.kind == "any" then return "any"
+    else if t.kind == "table" then return "table"
+    else if t.kind == "struct" then return "struct_" .. t.id
+    else if t.kind == "array" then return "array_" .. t.id
+    else if t.kind == "function" then return "func_" .. t.id
+    else if t.kind == "map" then return "map_" .. t.id
     else return "unknown" end
 end
 
@@ -969,19 +969,19 @@ inferExpr = function(node, env)
             node.inferredType = T.NUMBER
         end
         return node.inferredType
-    elseif node.tag == "String" then
+    else if node.tag == "String" then
         node.inferredType = T.STRING
         return T.STRING
-    elseif node.tag == "True" or node.tag == "False" then
+    else if node.tag == "True" or node.tag == "False" then
         node.inferredType = T.BOOLEAN
         return T.BOOLEAN
-    elseif node.tag == "Nil" then
+    else if node.tag == "Nil" then
         node.inferredType = T.NIL
         return T.NIL
-    elseif node.tag == "Vararg" then
+    else if node.tag == "Vararg" then
         node.inferredType = T.ANY
         return T.ANY
-    elseif node.tag == "Id" then
+    else if node.tag == "Id" then
         local info = scopeLookup(env.scope, node.name)
         if info then
             node.inferredType = info.type or T.ANY
@@ -991,7 +991,7 @@ inferExpr = function(node, env)
             node.isGlobal = true
         end
         return node.inferredType
-    elseif node.tag == "Index" then
+    else if node.tag == "Index" then
         local objType = inferExpr(node.obj, env)
         local keyType = inferExpr(node.key, env)
         if objType and objType.kind == "struct" and node.key.tag == "String" then
@@ -1001,53 +1001,53 @@ inferExpr = function(node, env)
             node.inferredType = T.ANY
         end
         return node.inferredType
-    elseif node.tag == "Unop" then
+    else if node.tag == "Unop" then
         local operandType = inferExpr(node.operand, env)
         if node.op == TK.MINUS then
             node.inferredType = operandType or T.NUMBER
-        elseif node.op == TK.HASH then
+        else if node.op == TK.HASH then
             node.inferredType = T.INTEGER
-        elseif node.op == TK.NOT then
+        else if node.op == TK.NOT then
             node.inferredType = T.BOOLEAN
-        elseif node.op == TK.TILDE then
+        else if node.op == TK.TILDE then
             node.inferredType = T.INTEGER
         else
             node.inferredType = T.ANY
         end
         return node.inferredType
-    elseif node.tag == "Binop" then
+    else if node.tag == "Binop" then
         local lt = inferExpr(node.left, env)
         local rt = inferExpr(node.right, env)
         local op = node.op
         if op == TK.PLUS or op == TK.MINUS or op == TK.STAR or op == TK.SLASH or op == TK.CARET then
             if op == TK.SLASH or op == TK.CARET then
                 node.inferredType = T.NUMBER
-            elseif lt and lt.kind == "integer" and rt and rt.kind == "integer" then
+            else if lt and lt.kind == "integer" and rt and rt.kind == "integer" then
                 node.inferredType = T.INTEGER
             else
                 node.inferredType = T.NUMBER
             end
-        elseif op == TK.DSLASH or op == TK.PERCENT then
+        else if op == TK.DSLASH or op == TK.PERCENT then
             if lt and lt.kind == "integer" and rt and rt.kind == "integer" then
                 node.inferredType = T.INTEGER
             else
                 node.inferredType = T.NUMBER
             end
-        elseif op == TK.DOTDOT then
+        else if op == TK.DOTDOT then
             node.inferredType = T.STRING
-        elseif op == TK.EQ or op == TK.NEQ or op == TK.LT or op == TK.GT or op == TK.LEQ or op == TK.GEQ then
+        else if op == TK.EQ or op == TK.NEQ or op == TK.LT or op == TK.GT or op == TK.LEQ or op == TK.GEQ then
             node.inferredType = T.BOOLEAN
-        elseif op == TK.AND then
+        else if op == TK.AND then
             node.inferredType = rt or T.ANY
-        elseif op == TK.OR then
+        else if op == TK.OR then
             node.inferredType = lt or T.ANY
-        elseif op == TK.AMP or op == TK.PIPE or op == TK.TILDE or op == TK.LTLT or op == TK.GTGT then
+        else if op == TK.AMP or op == TK.PIPE or op == TK.TILDE or op == TK.LTLT or op == TK.GTGT then
             node.inferredType = T.INTEGER
         else
             node.inferredType = T.ANY
         end
         return node.inferredType
-    elseif node.tag == "Table" then
+    else if node.tag == "Table" then
         local hasNamedFields = false
         local hasPositional = false
         local fields = {}
@@ -1057,7 +1057,7 @@ inferExpr = function(node, env)
                 hasNamedFields = true
                 local vt = inferExpr(field.value, env)
                 fields[field.key.value] = vt
-            elseif field.kind == "positional" then
+            else if field.kind == "positional" then
                 hasPositional = true
                 posCount = posCount + 1
                 inferExpr(field.value, env)
@@ -1069,14 +1069,14 @@ inferExpr = function(node, env)
         if hasNamedFields and not hasPositional then
             local st = makeStructType(fields)
             node.inferredType = st
-        elseif hasPositional and not hasNamedFields then
+        else if hasPositional and not hasNamedFields then
             node.inferredType = T.TABLE
             node.isArray = true
         else
             node.inferredType = T.TABLE
         end
         return node.inferredType
-    elseif node.tag == "Function" then
+    else if node.tag == "Function" then
         local funcScope = createScope(env.scope)
         for _, p in ipairs(node.params) do
             scopeDefine(funcScope, p, { type = T.ANY, name = p })
@@ -1085,21 +1085,21 @@ inferExpr = function(node, env)
         inferBlock(node.body, funcEnv)
         node.inferredType = T.ANY
         return node.inferredType
-    elseif node.tag == "Call" then
+    else if node.tag == "Call" then
         inferExpr(node.func, env)
         for _, a in ipairs(node.args) do
             inferExpr(a, env)
         end
         node.inferredType = T.ANY
         return T.ANY
-    elseif node.tag == "MethodCall" then
+    else if node.tag == "MethodCall" then
         inferExpr(node.obj, env)
         for _, a in ipairs(node.args) do
             inferExpr(a, env)
         end
         node.inferredType = T.ANY
         return T.ANY
-    elseif node.tag == "Paren" then
+    else if node.tag == "Paren" then
         local t = inferExpr(node.expr, env)
         node.inferredType = t
         return t
@@ -1120,7 +1120,7 @@ local function inferStatement(stmt, env)
             stmt.varInfos = stmt.varInfos or {}
             stmt.varInfos[i] = info
         end
-    elseif stmt.tag == "LocalFunc" then
+    else if stmt.tag == "LocalFunc" then
         local info = scopeDefine(env.scope, stmt.name, { type = T.ANY, name = stmt.name, isFunc = true })
         local funcScope = createScope(env.scope)
         for _, p in ipairs(stmt.func.params) do
@@ -1132,7 +1132,7 @@ local function inferStatement(stmt, env)
         local funcEnv = { scope = funcScope, func = stmt.func }
         inferBlock(stmt.func.body, funcEnv)
         stmt.varInfo = info
-    elseif stmt.tag == "FuncDef" then
+    else if stmt.tag == "FuncDef" then
         local funcScope = createScope(env.scope)
         if stmt.method then
             scopeDefine(funcScope, "self", { type = T.ANY, name = "self" })
@@ -1145,7 +1145,7 @@ local function inferStatement(stmt, env)
         end
         local funcEnv = { scope = funcScope, func = stmt.func }
         inferBlock(stmt.func.body, funcEnv)
-    elseif stmt.tag == "Assign" then
+    else if stmt.tag == "Assign" then
         local rhsTypes = inferExprList(stmt.rhs, env)
         for i, lhs in ipairs(stmt.lhs) do
             inferExpr(lhs, env)
@@ -1153,7 +1153,7 @@ local function inferStatement(stmt, env)
                 lhs.varInfo.type = mergeTypes(lhs.varInfo.type, rhsTypes[i])
             end
         end
-    elseif stmt.tag == "If" then
+    else if stmt.tag == "If" then
         for _, clause in ipairs(stmt.clauses) do
             inferExpr(clause.cond, env)
             local ifScope = createScope(env.scope)
@@ -1163,15 +1163,15 @@ local function inferStatement(stmt, env)
             local elseScope = createScope(env.scope)
             inferBlock(stmt.elseBody, { scope = elseScope, func = env.func })
         end
-    elseif stmt.tag == "While" then
+    else if stmt.tag == "While" then
         inferExpr(stmt.cond, env)
         local whileScope = createScope(env.scope)
         inferBlock(stmt.body, { scope = whileScope, func = env.func })
-    elseif stmt.tag == "Repeat" then
+    else if stmt.tag == "Repeat" then
         local repScope = createScope(env.scope)
         inferBlock(stmt.body, { scope = repScope, func = env.func })
         inferExpr(stmt.cond, { scope = repScope, func = env.func })
-    elseif stmt.tag == "ForNum" then
+    else if stmt.tag == "ForNum" then
         inferExpr(stmt.start, env)
         inferExpr(stmt.stop, env)
         if stmt.step then inferExpr(stmt.step, env) end
@@ -1186,7 +1186,7 @@ local function inferStatement(stmt, env)
         scopeDefine(forScope, stmt.name, { type = varType, name = stmt.name })
         stmt.varType = varType
         inferBlock(stmt.body, { scope = forScope, func = env.func })
-    elseif stmt.tag == "ForIn" then
+    else if stmt.tag == "ForIn" then
         local forScope = createScope(env.scope)
         for _, iter in ipairs(stmt.iters) do
             inferExpr(iter, env)
@@ -1195,16 +1195,16 @@ local function inferStatement(stmt, env)
             scopeDefine(forScope, name, { type = T.ANY, name = name })
         end
         inferBlock(stmt.body, { scope = forScope, func = env.func })
-    elseif stmt.tag == "Do" then
+    else if stmt.tag == "Do" then
         local doScope = createScope(env.scope)
         inferBlock(stmt.body, { scope = doScope, func = env.func })
-    elseif stmt.tag == "Return" then
+    else if stmt.tag == "Return" then
         inferExprList(stmt.exprs, env)
-    elseif stmt.tag == "ExprStat" then
+    else if stmt.tag == "ExprStat" then
         inferExpr(stmt.expr, env)
-    elseif stmt.tag == "Break" then
-    elseif stmt.tag == "Goto" then
-    elseif stmt.tag == "Label" then
+    else if stmt.tag == "Break" then
+    else if stmt.tag == "Goto" then
+    else if stmt.tag == "Label" then
     end
 end
 
@@ -1380,12 +1380,12 @@ local function genStringLiteral(s)
     for i = 1, #s do
         local b = byte(s, i)
         if b == 92 then insert(result, "\\\\")
-        elseif b == 34 then insert(result, "\\\"")
-        elseif b == 10 then insert(result, "\\n")
-        elseif b == 13 then insert(result, "\\r")
-        elseif b == 9 then insert(result, "\\t")
-        elseif b == 0 then insert(result, "\\0")
-        elseif b < 32 or b > 126 then insert(result, format("\\x%02x", b))
+        else if b == 34 then insert(result, "\\\"")
+        else if b == 10 then insert(result, "\\n")
+        else if b == 13 then insert(result, "\\r")
+        else if b == 9 then insert(result, "\\t")
+        else if b == 0 then insert(result, "\\0")
+        else if b < 32 or b > 126 then insert(result, format("\\x%02x", b))
         else insert(result, char(b))
         end
     end
@@ -1417,7 +1417,7 @@ local function scanUpvals(params, body)
                     insert(upvals, { name = n.name, cname = cname })
                 end
             end
-        elseif n.tag == "Function" then
+        else if n.tag == "Function" then
             return
         else
             for _, nk in ipairs(sortedKeys(n)) do
@@ -1461,11 +1461,11 @@ local function genExprNum(node)
         local s = format("%.17g", node.value)
         if not find(s, "[%.eE]") then s = s .. ".0" end
         return s
-    elseif node.tag == "Id" then
+    else if node.tag == "Id" then
         local cname = lookupVar(node.name)
         if cname then return "lua_tonumber_fast(" .. cname .. ")" end
         return "lua_tonumber_fast(lua_getglobal(L, \"" .. node.name .. "\"))"
-    elseif node.tag == "Index" then
+    else if node.tag == "Index" then
         if node.key.tag == "String" then
             -- Optimized struct field access
             if node.obj.tag == "Id" then
@@ -1488,7 +1488,7 @@ local function genExprNum(node)
                             local ftype = wideShape.fieldTypes[fname]
                             if ftype == "num" then
                                 return wsVar .. "." .. sanitizeFieldName(fname)
-                            elseif ftype == "bool" then
+                            else if ftype == "bool" then
                                 return "(double)" .. wsVar .. "." .. sanitizeFieldName(fname)
                             end
                             break
@@ -1519,27 +1519,27 @@ local function genExprNum(node)
             return "lua_getfield_num(" .. obj .. ", \"" .. node.key.value .. "\")"
         end
         return nil
-    elseif node.tag == "Unop" then
+    else if node.tag == "Unop" then
         if node.op == TK.MINUS then
             local inner = genExprNum(node.operand)
             if inner then return "(-(" .. inner .. "))" end
-        elseif node.op == TK.HASH then
+        else if node.op == TK.HASH then
             local operand = genExpr(node.operand)
             return "(double)lua_len(" .. operand .. ")"
         end
-    elseif node.tag == "Binop" then
+    else if node.tag == "Binop" then
         local op = node.op
         if op == TK.AND or op == TK.OR then return nil end
         local ln = genExprNum(node.left)
         local rn = genExprNum(node.right)
         if ln and rn then
             if op == TK.PLUS then return "((" .. ln .. ") + (" .. rn .. "))"
-            elseif op == TK.MINUS then return "((" .. ln .. ") - (" .. rn .. "))"
-            elseif op == TK.STAR then return "((" .. ln .. ") * (" .. rn .. "))"
-            elseif op == TK.SLASH then return "((" .. ln .. ") / (" .. rn .. "))"
-            elseif op == TK.CARET then return "pow(" .. ln .. ", " .. rn .. ")"
-            elseif op == TK.DSLASH then return "floor((" .. ln .. ") / (" .. rn .. "))"
-            elseif op == TK.PERCENT then
+            else if op == TK.MINUS then return "((" .. ln .. ") - (" .. rn .. "))"
+            else if op == TK.STAR then return "((" .. ln .. ") * (" .. rn .. "))"
+            else if op == TK.SLASH then return "((" .. ln .. ") / (" .. rn .. "))"
+            else if op == TK.CARET then return "pow(" .. ln .. ", " .. rn .. ")"
+            else if op == TK.DSLASH then return "floor((" .. ln .. ") / (" .. rn .. "))"
+            else if op == TK.PERCENT then
                 local tmp1 = newTemp()
                 local tmp2 = newTemp()
                 emit("double ", tmp1, " = ", ln, ";")
@@ -1547,10 +1547,10 @@ local function genExprNum(node)
                 return "(" .. tmp1 .. " - floor(" .. tmp1 .. " / " .. tmp2 .. ") * " .. tmp2 .. ")"
             end
         end
-    elseif node.tag == "Call" then
+    else if node.tag == "Call" then
         -- For known math functions, could inline. For now, fall through.
         return nil
-    elseif node.tag == "Paren" then
+    else if node.tag == "Paren" then
         return genExprNum(node.expr)
     end
     return nil
@@ -1579,18 +1579,18 @@ genExpr = function(node)
             if not find(s, "[%.eE]") then s = s .. ".0" end
             return "lua_box_num(" .. s .. ")"
         end
-    elseif node.tag == "String" then
+    else if node.tag == "String" then
         return "lua_makestr(" .. genStringLiteral(node.value) .. ", " .. tostring(#node.value) .. ")"
-    elseif node.tag == "True" then
+    else if node.tag == "True" then
         return "LUA_TRUE"
-    elseif node.tag == "False" then
+    else if node.tag == "False" then
         return "LUA_FALSE"
-    elseif node.tag == "Nil" then
+    else if node.tag == "Nil" then
         return "LUA_NIL"
-    elseif node.tag == "Vararg" then
+    else if node.tag == "Vararg" then
         -- Varargs: pack into multiret and return first
         return "lua_vararg(_varargs, _vararg_count)"
-    elseif node.tag == "Id" then
+    else if node.tag == "Id" then
         local cname = lookupVar(node.name)
         if cname then
             -- If this is a lazy-boxed struct variable being used as LuaValue,
@@ -1612,7 +1612,7 @@ genExpr = function(node)
             return "g_" .. sanitizeName(node.name)
         end
         return "lua_getglobal(L, \"" .. node.name .. "\")"
-    elseif node.tag == "Index" then
+    else if node.tag == "Index" then
         -- Check if obj is a variable with a struct shadow and key is a known field
         if node.obj.tag == "Id" and node.key.tag == "String" then
             local varInfo = lookupVarInfo(node.obj.name)
@@ -1635,9 +1635,9 @@ genExpr = function(node)
                         local ftype = wideShape.fieldTypes[fname]
                         if ftype == "num" then
                             return "lua_box_num(" .. wsVar .. "." .. sanitizeFieldName(fname) .. ")"
-                        elseif ftype == "bool" then
+                        else if ftype == "bool" then
                             return "lua_box_bool(" .. wsVar .. "." .. sanitizeFieldName(fname) .. ")"
-                        elseif ftype == "vec2" then
+                        else if ftype == "vec2" then
                             -- Return a table with x,y from the cached values
                             local tmp = newTemp()
                             emit("LuaValue ", tmp, " = lua_newtable();")
@@ -1678,19 +1678,19 @@ genExpr = function(node)
             local key = genExpr(node.key)
             return "lua_gettable(" .. obj .. ", " .. key .. ")"
         end
-    elseif node.tag == "Unop" then
+    else if node.tag == "Unop" then
         local operand = genExpr(node.operand)
         if node.op == TK.MINUS then
             return "lua_arith_unm(" .. operand .. ")"
-        elseif node.op == TK.NOT then
+        else if node.op == TK.NOT then
             return "lua_not(" .. operand .. ")"
-        elseif node.op == TK.HASH then
+        else if node.op == TK.HASH then
             return "lua_box_int(lua_len(" .. operand .. "))"
-        elseif node.op == TK.TILDE then
+        else if node.op == TK.TILDE then
             return "lua_arith_bnot(" .. operand .. ")"
         end
         return "LUA_NIL"
-    elseif node.tag == "Binop" then
+    else if node.tag == "Binop" then
         local op = node.op
         -- Short-circuit: and/or must not evaluate right side eagerly
         if op == TK.AND then
@@ -1704,7 +1704,7 @@ genExpr = function(node)
             CG.indent = CG.indent - 1
             emit("}")
             return tmp
-        elseif op == TK.OR then
+        else if op == TK.OR then
             local left = genExpr(node.left)
             local tmp = newTemp()
             emit("LuaValue ", tmp, " = ", left, ";")
@@ -1719,27 +1719,27 @@ genExpr = function(node)
         local left = genExpr(node.left)
         local right = genExpr(node.right)
         if op == TK.PLUS then return "lua_arith_add(" .. left .. ", " .. right .. ")"
-        elseif op == TK.MINUS then return "lua_arith_sub(" .. left .. ", " .. right .. ")"
-        elseif op == TK.STAR then return "lua_arith_mul(" .. left .. ", " .. right .. ")"
-        elseif op == TK.SLASH then return "lua_arith_div(" .. left .. ", " .. right .. ")"
-        elseif op == TK.DSLASH then return "lua_arith_idiv(" .. left .. ", " .. right .. ")"
-        elseif op == TK.PERCENT then return "lua_arith_mod(" .. left .. ", " .. right .. ")"
-        elseif op == TK.CARET then return "lua_arith_pow(" .. left .. ", " .. right .. ")"
-        elseif op == TK.DOTDOT then return "lua_concat(" .. left .. ", " .. right .. ")"
-        elseif op == TK.EQ then return "lua_box_bool(lua_eq(" .. left .. ", " .. right .. "))"
-        elseif op == TK.NEQ then return "lua_box_bool(lua_neq(" .. left .. ", " .. right .. "))"
-        elseif op == TK.LT then return "lua_box_bool(lua_lt(" .. left .. ", " .. right .. "))"
-        elseif op == TK.GT then return "lua_box_bool(lua_lt(" .. right .. ", " .. left .. "))"
-        elseif op == TK.LEQ then return "lua_box_bool(lua_le(" .. left .. ", " .. right .. "))"
-        elseif op == TK.GEQ then return "lua_box_bool(lua_le(" .. right .. ", " .. left .. "))"
-        elseif op == TK.AMP then return "lua_arith_band(" .. left .. ", " .. right .. ")"
-        elseif op == TK.PIPE then return "lua_arith_bor(" .. left .. ", " .. right .. ")"
-        elseif op == TK.TILDE then return "lua_arith_bxor(" .. left .. ", " .. right .. ")"
-        elseif op == TK.LTLT then return "lua_arith_shl(" .. left .. ", " .. right .. ")"
-        elseif op == TK.GTGT then return "lua_arith_shr(" .. left .. ", " .. right .. ")"
+        else if op == TK.MINUS then return "lua_arith_sub(" .. left .. ", " .. right .. ")"
+        else if op == TK.STAR then return "lua_arith_mul(" .. left .. ", " .. right .. ")"
+        else if op == TK.SLASH then return "lua_arith_div(" .. left .. ", " .. right .. ")"
+        else if op == TK.DSLASH then return "lua_arith_idiv(" .. left .. ", " .. right .. ")"
+        else if op == TK.PERCENT then return "lua_arith_mod(" .. left .. ", " .. right .. ")"
+        else if op == TK.CARET then return "lua_arith_pow(" .. left .. ", " .. right .. ")"
+        else if op == TK.DOTDOT then return "lua_concat(" .. left .. ", " .. right .. ")"
+        else if op == TK.EQ then return "lua_box_bool(lua_eq(" .. left .. ", " .. right .. "))"
+        else if op == TK.NEQ then return "lua_box_bool(lua_neq(" .. left .. ", " .. right .. "))"
+        else if op == TK.LT then return "lua_box_bool(lua_lt(" .. left .. ", " .. right .. "))"
+        else if op == TK.GT then return "lua_box_bool(lua_lt(" .. right .. ", " .. left .. "))"
+        else if op == TK.LEQ then return "lua_box_bool(lua_le(" .. left .. ", " .. right .. "))"
+        else if op == TK.GEQ then return "lua_box_bool(lua_le(" .. right .. ", " .. left .. "))"
+        else if op == TK.AMP then return "lua_arith_band(" .. left .. ", " .. right .. ")"
+        else if op == TK.PIPE then return "lua_arith_bor(" .. left .. ", " .. right .. ")"
+        else if op == TK.TILDE then return "lua_arith_bxor(" .. left .. ", " .. right .. ")"
+        else if op == TK.LTLT then return "lua_arith_shl(" .. left .. ", " .. right .. ")"
+        else if op == TK.GTGT then return "lua_arith_shr(" .. left .. ", " .. right .. ")"
         end
         return "LUA_NIL"
-    elseif node.tag == "Table" then
+    else if node.tag == "Table" then
         local tmp = newTemp()
         local nfields = #node.fields
         -- Check if ALL fields are named (shaped table candidate)
@@ -1769,7 +1769,7 @@ genExpr = function(node)
                 local val = genExpr(field.value)
                 if field.kind == "name" then
                     emit("lua_setfield(", tmp, ", \"", field.key.value, "\", ", val, ");")
-                elseif field.kind == "positional" then
+                else if field.kind == "positional" then
                     local isLastMulti = (fi == nfields) and
                         (field.value.tag == "Call" or field.value.tag == "MethodCall" or field.value.tag == "Vararg")
                     if isLastMulti then
@@ -1786,7 +1786,7 @@ genExpr = function(node)
             end
         end
         return tmp
-    elseif node.tag == "Function" then
+    else if node.tag == "Function" then
         local funcName = "_fn" .. newTemp()
         local upvals = scanUpvals(node.params, node.body)
         insert(CG.funcDecls, { node = node, name = funcName, upvals = upvals })
@@ -1799,7 +1799,7 @@ genExpr = function(node)
             end
             return "lua_makeclosure((void*)" .. funcName .. ", (LuaValue[]){" .. concat(upvalExprs, ", ") .. "}, " .. tostring(#upvals) .. ")"
         end
-    elseif node.tag == "Call" then
+    else if node.tag == "Call" then
         -- Try typed (struct) call optimization with recursive argument resolution
         if node.func.tag == "Id" and typedFuncRegistry[node.func.name] then
             local reg = typedFuncRegistry[node.func.name]
@@ -1833,7 +1833,7 @@ genExpr = function(node)
                         return "(" .. expectedShape.ctype .. "){" .. concat(parts, ", ") .. "}"
                     end
                     return nil
-                elseif arg.tag == "Table" then
+                else if arg.tag == "Table" then
                     local shape = getTableShape(arg)
                     if shape and shape.key == expectedShape.key then
                         local fieldExprs = {}
@@ -1853,7 +1853,7 @@ genExpr = function(node)
                         end
                     end
                     return nil
-                elseif arg.tag == "Call" and arg.func.tag == "Id" and typedFuncRegistry[arg.func.name] then
+                else if arg.tag == "Call" and arg.func.tag == "Id" and typedFuncRegistry[arg.func.name] then
                     local innerReg = typedFuncRegistry[arg.func.name]
                     if innerReg.retShape and innerReg.retShape.key == expectedShape.key then
                         local innerInfo = funcStructInfo[arg.func.name]
@@ -1869,7 +1869,7 @@ genExpr = function(node)
                         return sanitizeName(arg.func.name) .. "_typed(" .. concat(innerArgs, ", ") .. ")"
                     end
                     return nil
-                elseif arg.tag == "Index" and arg.key.tag == "String" then
+                else if arg.tag == "Index" and arg.key.tag == "String" then
                     -- Field access (e.g., body.velocity passed to vecAdd expecting Shape_1)
                     local objExpr = genExpr(arg)
                     local tmp = newTemp()
@@ -1939,7 +1939,7 @@ genExpr = function(node)
             insert(args, genExpr(a))
         end
         return "lua_call(" .. func .. ", " .. tostring(#args) .. ", (LuaValue[]){" .. concat(args, ", ") .. "})"
-    elseif node.tag == "MethodCall" then
+    else if node.tag == "MethodCall" then
         -- Emit obj to a temp first to avoid double-evaluation
         local obj = genExpr(node.obj)
         local tmp = newTemp()
@@ -1951,7 +1951,7 @@ genExpr = function(node)
         local allArgs = { tmp }
         for _, a in ipairs(args) do insert(allArgs, a) end
         return "lua_mcall(" .. tmp .. ", \"" .. node.method .. "\", " .. tostring(#allArgs) .. ", (LuaValue[]){" .. concat(allArgs, ", ") .. "})"
-    elseif node.tag == "Paren" then
+    else if node.tag == "Paren" then
         return genExpr(node.expr)
     end
     return "LUA_NIL"
@@ -1975,7 +1975,7 @@ genStatement = function(stmt)
                         else
                             emit("lua_setglobal(L, \"", name, "\", ", val, ");")
                         end
-                    elseif i == nexprs then
+                    else if i == nexprs then
                         local val = genExpr(stmt.exprs[i])
                         if immutableTopLocals[name] then
                             emit("g_", sanitizeName(name), " = ", val, ";")
@@ -2007,14 +2007,14 @@ genStatement = function(stmt)
                     end
                 end
             end
-        elseif lastIsCall and nnames > nexprs then
+        else if lastIsCall and nnames > nexprs then
             -- Function scope: use local C variables
             for i, name in ipairs(stmt.names) do
                 local cname = sanitizeName(name) .. "_" .. newTemp():sub(2)
                 if i < nexprs then
                     local val = genExpr(stmt.exprs[i])
                     emit("LuaValue ", cname, " = ", val, ";")
-                elseif i == nexprs then
+                else if i == nexprs then
                     local val = genExpr(stmt.exprs[i])
                     emit("LuaValue ", cname, " = ", val, ";")
                 else
@@ -2047,7 +2047,7 @@ genStatement = function(stmt)
                                 else
                                     canType = false; break
                                 end
-                            elseif arg.tag == "Table" then
+                            else if arg.tag == "Table" then
                                 local shape = getTableShape(arg)
                                 if shape and shape.key == expectedShape.key then
                                     local fieldExprs = {}
@@ -2087,7 +2087,7 @@ genStatement = function(stmt)
                             end
                             didTyped = true
                         end
-                    elseif expr.tag == "Table" then
+                    else if expr.tag == "Table" then
                         -- Direct table constructor: check if it has a shape used by typed functions
                         local shape = getTableShape(expr)
                         -- Only optimize if this shape is used as a typed function return type
@@ -2146,7 +2146,7 @@ genStatement = function(stmt)
                 end
             end
         end
-    elseif stmt.tag == "LocalFunc" then
+    else if stmt.tag == "LocalFunc" then
         local cname = sanitizeName(stmt.name) .. "_" .. newTemp():sub(2)
         local funcImplName = cname .. "_impl"
         local upvals = scanUpvals(stmt.func.params, stmt.func.body)
@@ -2166,7 +2166,7 @@ genStatement = function(stmt)
         else
             emit("lua_setglobal(L, \"", stmt.name, "\", ", cname, ");")
         end
-    elseif stmt.tag == "FuncDef" then
+    else if stmt.tag == "FuncDef" then
         local funcImplName
         if #stmt.names == 1 and not stmt.method then
             funcImplName = sanitizeName(stmt.names[1]) .. "_impl"
@@ -2205,7 +2205,7 @@ genStatement = function(stmt)
                 emit("lua_setfield(", obj, ", \"", last, "\", ", closureExpr, ");")
             end
         end
-    elseif stmt.tag == "Assign" then
+    else if stmt.tag == "Assign" then
         -- Evaluate all RHS first
         local nrhs = #stmt.rhs
         local nlhs = #stmt.lhs
@@ -2238,7 +2238,7 @@ genStatement = function(stmt)
                 else
                     emit("lua_setglobal(L, \"", lhs.name, "\", ", rhsVal, ");")
                 end
-            elseif lhs.tag == "Index" then
+            else if lhs.tag == "Index" then
                 -- Check for wide struct field write optimization
                 local didWideWrite = false
                 if lhs.obj.tag == "Id" and lhs.key.tag == "String" then
@@ -2255,11 +2255,11 @@ genStatement = function(stmt)
                                     emit(wsVar, ".", sanitizeFieldName(fname), " = lua_tonumber_fast(", rhsVal, ");")
                                     emit("lua_setfield(", varInfo.cname, ", \"", fname, "\", ", rhsVal, ");")
                                     didWideWrite = true
-                                elseif ftype == "bool" then
+                                else if ftype == "bool" then
                                     emit(wsVar, ".", sanitizeFieldName(fname), " = lua_truthy(", rhsVal, ");")
                                     emit("lua_setfield(", varInfo.cname, ", \"", fname, "\", ", rhsVal, ");")
                                     didWideWrite = true
-                                elseif ftype == "vec2" then
+                                else if ftype == "vec2" then
                                     -- Write to struct cache (extract x,y) and table
                                     emit(wsVar, ".", sanitizeFieldName(fname), "_x = lua_getfield_num(", rhsVal, ", \"x\");")
                                     emit(wsVar, ".", sanitizeFieldName(fname), "_y = lua_getfield_num(", rhsVal, ", \"y\");")
@@ -2287,7 +2287,7 @@ genStatement = function(stmt)
                 end
             end
         end
-    elseif stmt.tag == "If" then
+    else if stmt.tag == "If" then
         for i, clause in ipairs(stmt.clauses) do
             if i == 1 then
                 local cond = genExpr(clause.cond)
@@ -2321,7 +2321,7 @@ genStatement = function(stmt)
             end
         end
         emit("}")
-    elseif stmt.tag == "While" then
+    else if stmt.tag == "While" then
         local breakLbl = newLabel()
         insert(breakLabelStack, breakLbl)
         emit("while (1) {")
@@ -2335,7 +2335,7 @@ genStatement = function(stmt)
         emit("}")
         emit(breakLbl, ": (void)0;")
         remove(breakLabelStack)
-    elseif stmt.tag == "Repeat" then
+    else if stmt.tag == "Repeat" then
         local breakLbl = newLabel()
         insert(breakLabelStack, breakLbl)
         emit("do {")
@@ -2349,7 +2349,7 @@ genStatement = function(stmt)
         emit("} while (1);")
         emit(breakLbl, ": (void)0;")
         remove(breakLabelStack)
-    elseif stmt.tag == "ForNum" then
+    else if stmt.tag == "ForNum" then
         local breakLbl = newLabel()
         insert(breakLabelStack, breakLbl)
         pushScope()
@@ -2402,7 +2402,7 @@ genStatement = function(stmt)
         emit(breakLbl, ": (void)0;")
         popScope()
         remove(breakLabelStack)
-    elseif stmt.tag == "ForIn" then
+    else if stmt.tag == "ForIn" then
         local breakLbl = newLabel()
         insert(breakLabelStack, breakLbl)
         pushScope()
@@ -2443,7 +2443,7 @@ genStatement = function(stmt)
         emit(breakLbl, ": (void)0;")
         popScope()
         remove(breakLabelStack)
-    elseif stmt.tag == "Do" then
+    else if stmt.tag == "Do" then
         emit("{")
         CG.indent = CG.indent + 1
         pushScope()
@@ -2451,10 +2451,10 @@ genStatement = function(stmt)
         popScope()
         CG.indent = CG.indent - 1
         emit("}")
-    elseif stmt.tag == "Return" then
+    else if stmt.tag == "Return" then
         if #stmt.exprs == 0 then
             emit("G_L->multiret_n = 0; return LUA_NIL;")
-        elseif #stmt.exprs == 1 then
+        else if #stmt.exprs == 1 then
             -- Single return: check if it's a call (pass multiret through)
             local lastIsCall = stmt.exprs[1].tag == "Call" or stmt.exprs[1].tag == "MethodCall" or stmt.exprs[1].tag == "Vararg"
             local val = genExpr(stmt.exprs[1])
@@ -2469,18 +2469,18 @@ genStatement = function(stmt)
             end
             emit("return lua_pack(", tostring(#parts), ", (LuaValue[]){", concat(parts, ", "), "});")
         end
-    elseif stmt.tag == "ExprStat" then
+    else if stmt.tag == "ExprStat" then
         local val = genExpr(stmt.expr)
         emit("(void)", val, ";")
-    elseif stmt.tag == "Break" then
+    else if stmt.tag == "Break" then
         if #breakLabelStack > 0 then
             emit("goto ", breakLabelStack[#breakLabelStack], ";")
         else
             emit("break;")
         end
-    elseif stmt.tag == "Goto" then
+    else if stmt.tag == "Goto" then
         emit("goto ", sanitizeName(stmt.name), ";")
-    elseif stmt.tag == "Label" then
+    else if stmt.tag == "Label" then
         emitRaw(sanitizeName(stmt.name) .. ": (void)0;")
     end
 end
@@ -2650,12 +2650,12 @@ local function genFunction(decl)
                 local cfield = sanitizeFieldName(fname)
                 if ftype == "num" then
                     emit(svar, ".", cfield, " = lua_getfield_num(", cname, ", \"", fname, "\");")
-                elseif ftype == "vec2" then
+                else if ftype == "vec2" then
                     local tmpVec = newTemp()
                     emit("LuaValue ", tmpVec, " = lua_getfield(", cname, ", \"", fname, "\");")
                     emit(svar, ".", cfield, "_x = lua_getfield_num(", tmpVec, ", \"x\");")
                     emit(svar, ".", cfield, "_y = lua_getfield_num(", tmpVec, ", \"y\");")
-                elseif ftype == "bool" then
+                else if ftype == "bool" then
                     emit(svar, ".", cfield, " = lua_truthy(lua_getfield(", cname, ", \"", fname, "\"));")
                 else
                     emit(svar, ".", cfield, " = lua_getfield(", cname, ", \"", fname, "\");")
@@ -2748,7 +2748,7 @@ local function genTypedFunction(funcName, info)
             local s = format("%.17g", exprNode.value)
             if not find(s, "[%.eE]") then s = s .. ".0" end
             return s
-        elseif exprNode.tag == "Id" then
+        else if exprNode.tag == "Id" then
             -- Check if it's a parameter (struct typed)
             for _, p in ipairs(params) do
                 if p == exprNode.name then
@@ -2756,7 +2756,7 @@ local function genTypedFunction(funcName, info)
                 end
             end
             return nil -- can't handle non-param locals in typed path
-        elseif exprNode.tag == "Index" and exprNode.key.tag == "String" then
+        else if exprNode.tag == "Index" and exprNode.key.tag == "String" then
             if exprNode.obj.tag == "Id" then
                 for _, p in ipairs(params) do
                     if p == exprNode.obj.name then
@@ -2766,28 +2766,28 @@ local function genTypedFunction(funcName, info)
             end
             -- Could be a local variable that holds a struct return
             return nil
-        elseif exprNode.tag == "Binop" then
+        else if exprNode.tag == "Binop" then
             local op = exprNode.op
             if op == TK.AND or op == TK.OR then return nil end
             local left = genTypedExpr(exprNode.left)
             local right = genTypedExpr(exprNode.right)
             if not left or not right then return nil end
             if op == TK.PLUS then return "((" .. left .. ") + (" .. right .. "))"
-            elseif op == TK.MINUS then return "((" .. left .. ") - (" .. right .. "))"
-            elseif op == TK.STAR then return "((" .. left .. ") * (" .. right .. "))"
-            elseif op == TK.SLASH then return "((" .. left .. ") / (" .. right .. "))"
-            elseif op == TK.CARET then return "pow(" .. left .. ", " .. right .. ")"
+            else if op == TK.MINUS then return "((" .. left .. ") - (" .. right .. "))"
+            else if op == TK.STAR then return "((" .. left .. ") * (" .. right .. "))"
+            else if op == TK.SLASH then return "((" .. left .. ") / (" .. right .. "))"
+            else if op == TK.CARET then return "pow(" .. left .. ", " .. right .. ")"
             end
             return nil
-        elseif exprNode.tag == "Unop" then
+        else if exprNode.tag == "Unop" then
             if exprNode.op == TK.MINUS then
                 local inner = genTypedExpr(exprNode.operand)
                 if inner then return "(-(" .. inner .. "))" end
             end
             return nil
-        elseif exprNode.tag == "Paren" then
+        else if exprNode.tag == "Paren" then
             return genTypedExpr(exprNode.expr)
-        elseif exprNode.tag == "Call" then
+        else if exprNode.tag == "Call" then
             -- Check if calling another typed function
             if exprNode.func.tag == "Id" then
                 local calleeName = exprNode.func.name
@@ -2825,7 +2825,7 @@ local function genTypedFunction(funcName, info)
                 local s = format("%.17g", exprNode.value)
                 if not find(s, "[%.eE]") then s = s .. ".0" end
                 return s
-            elseif exprNode.tag == "Id" then
+            else if exprNode.tag == "Id" then
                 for _, p in ipairs(params) do
                     if p == exprNode.name then return sanitizeName(p) end
                 end
@@ -2833,7 +2833,7 @@ local function genTypedFunction(funcName, info)
                     return localVars[exprNode.name]
                 end
                 return nil
-            elseif exprNode.tag == "Index" and exprNode.key.tag == "String" then
+            else if exprNode.tag == "Index" and exprNode.key.tag == "String" then
                 if exprNode.obj.tag == "Id" then
                     for _, p in ipairs(params) do
                         if p == exprNode.obj.name then
@@ -2845,29 +2845,29 @@ local function genTypedFunction(funcName, info)
                     end
                 end
                 return nil
-            elseif exprNode.tag == "Binop" then
+            else if exprNode.tag == "Binop" then
                 local op = exprNode.op
                 if op == TK.AND or op == TK.OR then return nil end
                 local left = resolveTypedExpr(exprNode.left)
                 local right = resolveTypedExpr(exprNode.right)
                 if not left or not right then return nil end
                 if op == TK.PLUS then return "((" .. left .. ") + (" .. right .. "))"
-                elseif op == TK.MINUS then return "((" .. left .. ") - (" .. right .. "))"
-                elseif op == TK.STAR then return "((" .. left .. ") * (" .. right .. "))"
-                elseif op == TK.SLASH then return "((" .. left .. ") / (" .. right .. "))"
-                elseif op == TK.CARET then return "pow(" .. left .. ", " .. right .. ")"
-                elseif op == TK.DSLASH then return "floor((" .. left .. ") / (" .. right .. "))"
+                else if op == TK.MINUS then return "((" .. left .. ") - (" .. right .. "))"
+                else if op == TK.STAR then return "((" .. left .. ") * (" .. right .. "))"
+                else if op == TK.SLASH then return "((" .. left .. ") / (" .. right .. "))"
+                else if op == TK.CARET then return "pow(" .. left .. ", " .. right .. ")"
+                else if op == TK.DSLASH then return "floor((" .. left .. ") / (" .. right .. "))"
                 end
                 return nil
-            elseif exprNode.tag == "Unop" then
+            else if exprNode.tag == "Unop" then
                 if exprNode.op == TK.MINUS then
                     local inner = resolveTypedExpr(exprNode.operand)
                     if inner then return "(-(" .. inner .. "))" end
                 end
                 return nil
-            elseif exprNode.tag == "Paren" then
+            else if exprNode.tag == "Paren" then
                 return resolveTypedExpr(exprNode.expr)
-            elseif exprNode.tag == "Call" then
+            else if exprNode.tag == "Call" then
                 if exprNode.func.tag == "Id" then
                     local calleeName = exprNode.func.name
                     if typedFuncRegistry[calleeName] then
@@ -2953,7 +2953,7 @@ local function genTypedFunction(funcName, info)
                         return nil -- uninitialized local
                     end
                 end
-            elseif stmt.tag == "Return" then
+            else if stmt.tag == "Return" then
                 if #stmt.exprs == 1 then
                     local retExpr = stmt.exprs[1]
                     if not retShape then
@@ -2964,7 +2964,7 @@ local function genTypedFunction(funcName, info)
                             return bodyLines
                         end
                         return nil
-                    elseif retExpr.tag == "Table" then
+                    else if retExpr.tag == "Table" then
                         -- Build struct literal
                         local shape = getTableShape(retExpr)
                         if shape and shape.key == retShape.key then
@@ -2982,14 +2982,14 @@ local function genTypedFunction(funcName, info)
                             insert(bodyLines, "    return (" .. retShape.ctype .. "){" .. concat(parts, ", ") .. "};")
                             return bodyLines
                         end
-                    elseif retExpr.tag == "Call" and retExpr.func.tag == "Id" then
+                    else if retExpr.tag == "Call" and retExpr.func.tag == "Id" then
                         -- Returning a call to another typed function
                         local callExpr = resolveTypedExpr(retExpr)
                         if callExpr then
                             insert(bodyLines, "    return " .. callExpr .. ";")
                             return bodyLines
                         end
-                    elseif retExpr.tag == "Id" then
+                    else if retExpr.tag == "Id" then
                         if localVars[retExpr.name] and localShapes[retExpr.name] then
                             insert(bodyLines, "    return " .. localVars[retExpr.name] .. ";")
                             return bodyLines
@@ -2998,7 +2998,7 @@ local function genTypedFunction(funcName, info)
                     return nil
                 end
                 return nil
-            elseif stmt.tag == "If" then
+            else if stmt.tag == "If" then
                 -- Handle simple if/return patterns (like vecNormalize, vecClamp)
                 -- For now, bail on complex control flow
                 return nil
@@ -3090,7 +3090,7 @@ local function analyzeImmutability(ast)
     for _, stmt in ipairs(ast) do
         if stmt.tag == "Local" then
             for _, name in ipairs(stmt.names) do topLocals[name] = true end
-        elseif stmt.tag == "LocalFunc" then
+        else if stmt.tag == "LocalFunc" then
             topLocals[stmt.name] = true
         end
     end
@@ -3211,11 +3211,11 @@ local function generateC(ast)
             local cfield = sanitizeFieldName(fname)
             if ftype == "num" then
                 insert(fields, "    double " .. cfield .. ";")
-            elseif ftype == "int" then
+            else if ftype == "int" then
                 insert(fields, "    int64_t " .. cfield .. ";")
-            elseif ftype == "bool" then
+            else if ftype == "bool" then
                 insert(fields, "    int " .. cfield .. ";")
-            elseif ftype == "vec2" then
+            else if ftype == "vec2" then
                 insert(fields, "    double " .. cfield .. "_x;")
                 insert(fields, "    double " .. cfield .. "_y;")
             else
@@ -3332,23 +3332,23 @@ local function analyzeFuncShapes(funcName, funcNode)
         if node.tag == "Binop" then
             walkExpr(node.left)
             walkExpr(node.right)
-        elseif node.tag == "Unop" then
+        else if node.tag == "Unop" then
             walkExpr(node.operand)
-        elseif node.tag == "Call" then
+        else if node.tag == "Call" then
             walkExpr(node.func)
             for _, a in ipairs(node.args) do walkExpr(a) end
-        elseif node.tag == "MethodCall" then
+        else if node.tag == "MethodCall" then
             walkExpr(node.obj)
             for _, a in ipairs(node.args) do walkExpr(a) end
-        elseif node.tag == "Index" then
+        else if node.tag == "Index" then
             walkExpr(node.obj)
             walkExpr(node.key)
-        elseif node.tag == "Table" then
+        else if node.tag == "Table" then
             for _, f in ipairs(node.fields) do
                 walkExpr(f.value)
                 if f.key then walkExpr(f.key) end
             end
-        elseif node.tag == "Paren" then
+        else if node.tag == "Paren" then
             walkExpr(node.expr)
         end
     end
@@ -3364,9 +3364,9 @@ local function analyzeFuncShapes(funcName, funcNode)
                 if shape then
                     if returnShape == nil then
                         returnShape = shape
-                    elseif returnShape == false then
+                    else if returnShape == false then
                         -- already invalidated, stay false
-                    elseif returnShape.key ~= shape.key then
+                    else if returnShape.key ~= shape.key then
                         returnShape = false -- inconsistent returns
                     end
                 else
@@ -3375,36 +3375,36 @@ local function analyzeFuncShapes(funcName, funcNode)
             else
                 returnShape = false
             end
-        elseif stmt.tag == "Local" then
+        else if stmt.tag == "Local" then
             if stmt.exprs then
                 for _, e in ipairs(stmt.exprs) do walkExpr(e) end
             end
-        elseif stmt.tag == "Assign" then
+        else if stmt.tag == "Assign" then
             for _, lhs in ipairs(stmt.lhs) do walkExpr(lhs) end
             for _, rhs in ipairs(stmt.rhs) do walkExpr(rhs) end
-        elseif stmt.tag == "If" then
+        else if stmt.tag == "If" then
             for _, clause in ipairs(stmt.clauses) do
                 walkExpr(clause.cond)
                 walkBlock(clause.body)
             end
             if stmt.elseBody then walkBlock(stmt.elseBody) end
-        elseif stmt.tag == "While" then
+        else if stmt.tag == "While" then
             walkExpr(stmt.cond)
             walkBlock(stmt.body)
-        elseif stmt.tag == "Repeat" then
+        else if stmt.tag == "Repeat" then
             walkBlock(stmt.body)
             walkExpr(stmt.cond)
-        elseif stmt.tag == "ForNum" then
+        else if stmt.tag == "ForNum" then
             walkExpr(stmt.start)
             walkExpr(stmt.stop)
             if stmt.step then walkExpr(stmt.step) end
             walkBlock(stmt.body)
-        elseif stmt.tag == "ForIn" then
+        else if stmt.tag == "ForIn" then
             for _, iter in ipairs(stmt.iters) do walkExpr(iter) end
             walkBlock(stmt.body)
-        elseif stmt.tag == "Do" then
+        else if stmt.tag == "Do" then
             walkBlock(stmt.body)
-        elseif stmt.tag == "ExprStat" then
+        else if stmt.tag == "ExprStat" then
             walkExpr(stmt.expr)
         end
     end
@@ -3444,7 +3444,7 @@ local function analyzeFuncShapes(funcName, funcNode)
                     else
                         returnsScalar = false
                     end
-                elseif s.tag == "Return" and #s.exprs ~= 1 then
+                else if s.tag == "Return" and #s.exprs ~= 1 then
                     returnsScalar = false
                 end
             end
@@ -3465,7 +3465,7 @@ local function runShapeAnalysis(ast)
                 funcStructInfo[stmt.name] = info
                 funcStructInfo[stmt.name].node = stmt.func
             end
-        elseif stmt.tag == "FuncDef" and #stmt.names == 1 and not stmt.method then
+        else if stmt.tag == "FuncDef" and #stmt.names == 1 and not stmt.method then
             local info = analyzeFuncShapes(stmt.names[1], stmt.func)
             if info.returnShape or next(info.params) then
                 funcStructInfo[stmt.names[1]] = info
@@ -3511,10 +3511,10 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                 -- This is a read of paramName.fieldName
                 if context == "num" then
                     usedAsNum = true
-                elseif context == "subfield" then
+                else if context == "subfield" then
                     readSubfield = true
                 end
-            elseif node.obj.tag == "Index" and node.obj.key.tag == "String" then
+            else if node.obj.tag == "Index" and node.obj.key.tag == "String" then
                 -- Check for param.field.subfield pattern
                 if node.obj.obj.tag == "Id" and node.obj.obj.name == paramName and node.obj.key.value == fieldName then
                     local sf = node.key.value
@@ -3534,19 +3534,19 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                 walkExpr(node.left, nil)
                 walkExpr(node.right, nil)
             end
-        elseif node.tag == "Unop" then
+        else if node.tag == "Unop" then
             if node.op == "-" then
                 walkExpr(node.operand, "num")
             else
                 walkExpr(node.operand, nil)
             end
-        elseif node.tag == "Call" then
+        else if node.tag == "Call" then
             walkExpr(node.func, nil)
             for _, a in ipairs(node.args) do walkExpr(a, nil) end
-        elseif node.tag == "MethodCall" then
+        else if node.tag == "MethodCall" then
             walkExpr(node.obj, nil)
             for _, a in ipairs(node.args) do walkExpr(a, nil) end
-        elseif node.tag == "Index" then
+        else if node.tag == "Index" then
             if node.key.tag == "String" then
                 -- Check if the object is our target field
                 if node.obj.tag == "Index" and node.obj.key.tag == "String"
@@ -3561,12 +3561,12 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                 walkExpr(node.obj, nil)
                 walkExpr(node.key, nil)
             end
-        elseif node.tag == "Table" then
+        else if node.tag == "Table" then
             for _, f in ipairs(node.fields) do
                 walkExpr(f.value, nil)
                 if f.key then walkExpr(f.key, nil) end
             end
-        elseif node.tag == "Paren" then
+        else if node.tag == "Paren" then
             walkExpr(node.expr, context)
         end
     end
@@ -3577,7 +3577,7 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                 if stmt.exprs then
                     for _, e in ipairs(stmt.exprs) do walkExpr(e, nil) end
                 end
-            elseif stmt.tag == "Assign" then
+            else if stmt.tag == "Assign" then
                 for _, lhs in ipairs(stmt.lhs) do
                     -- Check if we're assigning TO param.fieldName
                     if lhs.tag == "Index" and lhs.key.tag == "String" and lhs.key.value == fieldName
@@ -3587,9 +3587,9 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                             if ri == 1 then -- simplification: first rhs matches first lhs
                                 if rhs.tag == "Number" then
                                     assignedNum = true
-                                elseif rhs.tag == "True" or rhs.tag == "False" then
+                                else if rhs.tag == "True" or rhs.tag == "False" then
                                     assignedBool = true
-                                elseif rhs.tag == "Call" and rhs.func.tag == "Id" then
+                                else if rhs.tag == "Call" and rhs.func.tag == "Id" then
                                     -- Check if it returns a Vec2 (typed function with Shape_1 return)
                                     local reg = typedFuncRegistry[rhs.func.name]
                                     if reg and reg.retShape then
@@ -3598,12 +3598,12 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                                             assignedVec2 = true
                                         end
                                     end
-                                elseif rhs.tag == "Table" then
+                                else if rhs.tag == "Table" then
                                     local shape = getTableShape(rhs)
                                     if shape and shape.key == "x,y" then
                                         assignedVec2 = true
                                     end
-                                elseif rhs.tag == "Binop" then
+                                else if rhs.tag == "Binop" then
                                     assignedNum = true
                                 end
                             end
@@ -3612,31 +3612,31 @@ local function classifyFieldType(funcNode, paramName, fieldName)
                 end
                 for _, lhs in ipairs(stmt.lhs) do walkExpr(lhs, nil) end
                 for _, rhs in ipairs(stmt.rhs) do walkExpr(rhs, nil) end
-            elseif stmt.tag == "If" then
+            else if stmt.tag == "If" then
                 for _, clause in ipairs(stmt.clauses) do
                     walkExpr(clause.cond, nil)
                     walkBlock(clause.body)
                 end
                 if stmt.elseBody then walkBlock(stmt.elseBody) end
-            elseif stmt.tag == "While" then
+            else if stmt.tag == "While" then
                 walkExpr(stmt.cond, nil)
                 walkBlock(stmt.body)
-            elseif stmt.tag == "Repeat" then
+            else if stmt.tag == "Repeat" then
                 walkBlock(stmt.body)
                 walkExpr(stmt.cond, nil)
-            elseif stmt.tag == "ForNum" then
+            else if stmt.tag == "ForNum" then
                 walkExpr(stmt.start, nil)
                 walkExpr(stmt.stop, nil)
                 if stmt.step then walkExpr(stmt.step, nil) end
                 walkBlock(stmt.body)
-            elseif stmt.tag == "ForIn" then
+            else if stmt.tag == "ForIn" then
                 for _, iter in ipairs(stmt.iters) do walkExpr(iter, nil) end
                 walkBlock(stmt.body)
-            elseif stmt.tag == "Do" then
+            else if stmt.tag == "Do" then
                 walkBlock(stmt.body)
-            elseif stmt.tag == "ExprStat" then
+            else if stmt.tag == "ExprStat" then
                 walkExpr(stmt.expr, nil)
-            elseif stmt.tag == "Return" then
+            else if stmt.tag == "Return" then
                 for _, e in ipairs(stmt.exprs) do walkExpr(e, nil) end
             end
         end
@@ -3647,9 +3647,9 @@ local function classifyFieldType(funcNode, paramName, fieldName)
     -- Classify
     if readSubfield or assignedVec2 then
         return "vec2"
-    elseif usedAsNum or assignedNum then
+    else if usedAsNum or assignedNum then
         return "num"
-    elseif assignedBool then
+    else if assignedBool then
         return "bool"
     else
         return "value"
@@ -3703,7 +3703,7 @@ local function analyzeWideStructs(funcName, funcNode)
                 end
                 walkExpr(a)
             end
-        elseif node.tag == "MethodCall" then
+        else if node.tag == "MethodCall" then
             if node.obj.tag == "Id" then
                 for _, p in ipairs(params) do
                     if p == node.obj.name then
@@ -3725,17 +3725,17 @@ local function analyzeWideStructs(funcName, funcNode)
                 walkExpr(a)
             end
         -- Recurse for other node types
-        elseif node.tag == "Binop" then walkExpr(node.left); walkExpr(node.right)
-        elseif node.tag == "Unop" then walkExpr(node.operand)
-        elseif node.tag == "Index" then
+        else if node.tag == "Binop" then walkExpr(node.left); walkExpr(node.right)
+        else if node.tag == "Unop" then walkExpr(node.operand)
+        else if node.tag == "Index" then
             walkExpr(node.obj)
             walkExpr(node.key)
-        elseif node.tag == "Table" then
+        else if node.tag == "Table" then
             for _, f in ipairs(node.fields) do
                 walkExpr(f.value)
                 if f.key then walkExpr(f.key) end
             end
-        elseif node.tag == "Paren" then
+        else if node.tag == "Paren" then
             walkExpr(node.expr)
         end
     end
@@ -3760,35 +3760,35 @@ local function analyzeWideStructs(funcName, funcNode)
                 walkExpr(lhs)
             end
             for _, rhs in ipairs(stmt.rhs) do walkExpr(rhs) end
-        elseif stmt.tag == "Local" then
+        else if stmt.tag == "Local" then
             if stmt.exprs then
                 for _, e in ipairs(stmt.exprs) do walkExpr(e) end
             end
-        elseif stmt.tag == "If" then
+        else if stmt.tag == "If" then
             for _, clause in ipairs(stmt.clauses) do
                 walkExpr(clause.cond)
                 walkBlock2(clause.body)
             end
             if stmt.elseBody then walkBlock2(stmt.elseBody) end
-        elseif stmt.tag == "While" then
+        else if stmt.tag == "While" then
             walkExpr(stmt.cond)
             walkBlock2(stmt.body)
-        elseif stmt.tag == "Repeat" then
+        else if stmt.tag == "Repeat" then
             walkBlock2(stmt.body)
             walkExpr(stmt.cond)
-        elseif stmt.tag == "ForNum" then
+        else if stmt.tag == "ForNum" then
             walkExpr(stmt.start)
             walkExpr(stmt.stop)
             if stmt.step then walkExpr(stmt.step) end
             walkBlock2(stmt.body)
-        elseif stmt.tag == "ForIn" then
+        else if stmt.tag == "ForIn" then
             for _, iter in ipairs(stmt.iters) do walkExpr(iter) end
             walkBlock2(stmt.body)
-        elseif stmt.tag == "Do" then
+        else if stmt.tag == "Do" then
             walkBlock2(stmt.body)
-        elseif stmt.tag == "ExprStat" then
+        else if stmt.tag == "ExprStat" then
             walkExpr(stmt.expr)
-        elseif stmt.tag == "Return" then
+        else if stmt.tag == "Return" then
             for _, e in ipairs(stmt.exprs) do walkExpr(e) end
         end
     end
@@ -3849,7 +3849,7 @@ local function runWideStructAnalysis(ast)
     for _, stmt in ipairs(ast) do
         if stmt.tag == "LocalFunc" then
             analyzeWideStructs(stmt.name, stmt.func)
-        elseif stmt.tag == "FuncDef" and #stmt.names == 1 and not stmt.method then
+        else if stmt.tag == "FuncDef" and #stmt.names == 1 and not stmt.method then
             analyzeWideStructs(stmt.names[1], stmt.func)
         end
     end

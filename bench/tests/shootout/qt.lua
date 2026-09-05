@@ -58,9 +58,9 @@ local function imul(xmin,xmax,ymin,ymax)
 	local Mm=xmax*ymin
 	local MM=xmax*ymax
 	local m,M=mm,mm
-	if m>mM then m=mM elseif M<mM then M=mM end
-	if m>Mm then m=Mm elseif M<Mm then M=Mm end
-	if m>MM then m=MM elseif M<MM then M=MM end
+	if m>mM then m=mM else if M<mM then M=mM end
+	if m>Mm then m=Mm else if M<Mm then M=Mm end
+	if m>MM then m=MM else if M<MM then M=MM end
 	return m,M
 end
 
@@ -83,8 +83,8 @@ end
 
 local function outside(xmin,xmax,ymin,ymax)
 	local x,y
-	if 0.0<xmin then x=xmin elseif 0.0<xmax then x=0.0 else x=xmax end
-	if 0.0<ymin then y=ymin elseif 0.0<ymax then y=0.0 else y=ymax end
+	if 0.0<xmin then x=xmin else if 0.0<xmax then x=0.0 else x=xmax end
+	if 0.0<ymin then y=ymin else if 0.0<ymax then y=0.0 else y=ymax end
 	return x^2+y^2>4.0
 end
 
@@ -208,7 +208,7 @@ end
 local function recolor(q)
 	if q.color==-gray then
 		q.color=gray
-	elseif q.color==gray then
+	else if q.color==gray then
 		if q[1]==nil then
 			q.color=black
 		else
@@ -223,7 +223,7 @@ end
 local function area(q)
 	if q[1]==nil then
 		if q.color==white then return 0.0,0.0
-		elseif q.color==black then return 0.0,1.0
+		else if q.color==black then return 0.0,1.0
 		else return 1.0,0.0 end
 	else
 		local g1,b1=area(q[1])

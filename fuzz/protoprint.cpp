@@ -739,7 +739,7 @@ struct ProtoToLuau
         }
         else if (expr.has_elseif())
         {
-            source += " else";
+            source += " else ";
             print(expr.elseif());
         }
     }
@@ -907,7 +907,7 @@ struct ProtoToLuau
         }
         else if (stat.has_elseif())
         {
-            source += "else";
+            source += "else ";
             print(stat.elseif());
         }
         else

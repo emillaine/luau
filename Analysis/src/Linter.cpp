@@ -2817,7 +2817,7 @@ private:
         if (!stat->elsebody->is<AstStatIf>())
             return true;
 
-        // if..elseif chain detected, we need to unroll it
+        // if/else-if chain detected, we need to unroll it
         std::vector<AstExpr*> conditions;
         conditions.reserve(2);
 
@@ -2853,7 +2853,7 @@ private:
         if (!expr->falseExpr->is<AstExprIfElse>())
             return true;
 
-        // if..elseif chain detected, we need to unroll it
+        // if/else-if chain detected, we need to unroll it
         std::vector<AstExpr*> conditions;
         conditions.reserve(2);
 

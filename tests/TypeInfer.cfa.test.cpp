@@ -64,7 +64,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_return_elif_not_y_return")
         local function f(x: string?, y: string?)
             if not x then
                 return
-            elseif not y then
+            else if not y then
                 return
             end
 
@@ -86,7 +86,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_break_elif_not_y_break")
                 local recordY = y[i]
                 if not recordX.value then
                     break
-                elseif not recordY.value then
+                else if not recordY.value then
                     break
                 end
 
@@ -109,7 +109,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_continue_elif_not_y_continue")
                 local recordY = y[i]
                 if not recordX.value then
                     continue
-                elseif not recordY.value then
+                else if not recordY.value then
                     continue
                 end
 
@@ -132,7 +132,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_return_elif_not_y_break")
                 local recordY = y[i]
                 if not recordX.value then
                     return
-                elseif not recordY.value then
+                else if not recordY.value then
                     break
                 end
 
@@ -155,7 +155,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_break_elif_not_y_continue")
                 local recordY = y[i]
                 if not recordX.value then
                     break
-                elseif not recordY.value then
+                else if not recordY.value then
                     continue
                 end
 
@@ -176,9 +176,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_return_elif_rand_return_elif_not_y_
         local function f(x: string?, y: string?)
             if not x then
                 return
-            elseif math.random() > 0.5 then
+            else if math.random() > 0.5 then
                 return
-            elseif not y then
+            else if not y then
                 return
             end
 
@@ -200,9 +200,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_break_elif_rand_break_elif_not_y_br
                 local recordY = y[i]
                 if not recordX.value then
                     break
-                elseif math.random() > 0.5 then
+                else if math.random() > 0.5 then
                     break
-                elseif not recordY.value then
+                else if not recordY.value then
                     break
                 end
 
@@ -225,9 +225,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_continue_elif_rand_continue_elif_no
                 local recordY = y[i]
                 if not recordX.value then
                     continue
-                elseif math.random() > 0.5 then
+                else if math.random() > 0.5 then
                     continue
-                elseif not recordY.value then
+                else if not recordY.value then
                     continue
                 end
 
@@ -248,9 +248,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_return_elif_not_rand_return_elif_no
         local function f(x: string?, y: string?)
             if not x then
                 return
-            elseif math.random() > 0.5 then
+            else if math.random() > 0.5 then
                 return
-            elseif not y then
+            else if not y then
 
             end
 
@@ -272,9 +272,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_break_elif_rand_break_elif_not_y_fa
                 local recordY = y[i]
                 if not recordX.value then
                     break
-                elseif math.random() > 0.5 then
+                else if math.random() > 0.5 then
                     break
-                elseif not recordY.value then
+                else if not recordY.value then
 
                 end
 
@@ -297,9 +297,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_continue_elif_rand_continue_elif_no
                 local recordY = y[i]
                 if not recordX.value then
                     continue
-                elseif math.random() > 0.5 then
+                else if math.random() > 0.5 then
                     continue
-                elseif not recordY.value then
+                else if not recordY.value then
 
                 end
 
@@ -320,9 +320,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_return_elif_not_y_fallthrough_elif_
         local function f(x: string?, y: string?, z: string?)
             if not x then
                 return
-            elseif not y then
+            else if not y then
 
-            elseif not z then
+            else if not z then
                 return
             end
 
@@ -347,9 +347,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_break_elif_not_y_fallthrough_elif_n
                 local recordZ = y[i]
                 if not recordX.value then
                     break
-                elseif not recordY.value then
+                else if not recordY.value then
 
-                elseif not recordZ.value then
+                else if not recordZ.value then
                     break
                 end
 
@@ -375,9 +375,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_continue_elif_not_y_fallthrough_eli
                 local recordZ = y[i]
                 if not recordX.value then
                     continue
-                elseif not recordY.value then
+                else if not recordY.value then
 
-                elseif not recordZ.value then
+                else if not recordZ.value then
                     continue
                 end
 
@@ -403,9 +403,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_continue_elif_not_y_throw_elif_not_
                 local recordZ = y[i]
                 if not recordX.value then
                     continue
-                elseif not recordY.value then
+                else if not recordY.value then
                     error("Y value not defined")
-                elseif not recordZ.value then
+                else if not recordZ.value then
 
                 end
 
@@ -431,9 +431,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_not_x_return_elif_not_y_fallthrough_elif_
                 local recordZ = y[i]
                 if not recordX.value then
                     return
-                elseif not recordY.value then
+                else if not recordY.value then
 
-                elseif not recordZ.value then
+                else if not recordZ.value then
                     break
                 end
 

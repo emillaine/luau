@@ -530,7 +530,7 @@ function bvh_build(objects)
         stable_sort(objects, function(a, b)
             return aabb_centroid(a.bounds).x < aabb_centroid(b.bounds).x
         end)
-    elseif axis == 2 then
+    else if axis == 2 then
         stable_sort(objects, function(a, b)
             return aabb_centroid(a.bounds).y < aabb_centroid(b.bounds).y
         end)
@@ -585,15 +585,15 @@ function bvh_intersect(node, ray, t_min, t_max)
 
         if current.bounds == nil then
             -- skip
-        elseif not aabb_intersect(current.bounds, ray.origin, dir_inv, t_min, closest_t) then
+        else if not aabb_intersect(current.bounds, ray.origin, dir_inv, t_min, closest_t) then
             -- skip
-        elseif current.object ~= nil then
+        else if current.object ~= nil then
             -- Leaf node
             local hit = nil
             local obj = current.object
             if obj.type == "sphere" then
                 hit = sphere_intersect(obj, ray, t_min, closest_t)
-            elseif obj.type == "triangle" then
+            else if obj.type == "triangle" then
                 hit = triangle_intersect(obj, ray, t_min, closest_t)
             end
             if hit and hit.t < closest_t then
@@ -1488,7 +1488,7 @@ function pattern_gradient(point, color1, color2, axis, scale)
     scale = scale or 1.0
     local t
     if axis == "x" then t = point.x * scale
-    elseif axis == "y" then t = point.y * scale
+    else if axis == "y" then t = point.y * scale
     else t = point.z * scale end
     t = t - math_floor(t)  -- fract
     return {
@@ -1740,7 +1740,7 @@ function create_multilight_scene()
         local mat
         if i % 3 == 0 then
             mat = material_diffuse(0.8, 0.2, 0.2)
-        elseif i % 3 == 1 then
+        else if i % 3 == 1 then
             mat = material_diffuse(0.2, 0.8, 0.2)
         else
             mat = material_diffuse(0.2, 0.2, 0.8)

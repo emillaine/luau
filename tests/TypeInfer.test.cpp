@@ -922,9 +922,9 @@ TEST_CASE_FIXTURE(Fixture, "tc_if_else_expressions1")
 
 TEST_CASE_FIXTURE(Fixture, "tc_if_else_expressions2")
 {
-    // Test expression containing elseif
+    // Test expression containing else if
     CheckResult result = check(R"(
-local a = if false then "a" elseif false then "b" else "c"
+local a = if false then "a" else if false then "b" else "c"
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     TypeId aType = requireType("a");
@@ -1279,7 +1279,7 @@ TEST_CASE_FIXTURE(Fixture, "follow_on_new_types_in_substitution")
             self.fieldA = function(object)
                 if object.a then
                     self.arr[object] = true
-                elseif object.b then
+                else if object.b then
                     self.fieldB[object] = object:Connect(function(arg)
                         self.arr[arg] = nil
                     end)
@@ -2148,7 +2148,7 @@ _ = _[0]
 _._ *= _
 end
 if _ then
-elseif "" then
+else if "" then
 end
 _ = _[0]
 _ = ""
@@ -2234,22 +2234,22 @@ local outln, group_id, verb_flags = {}, {}, {
     not_empty = 0
 }
 if not escape_c then
-elseif escape_c >= 48 and escape_c <= 57 then
-elseif escape_c == 69 then
-elseif escape_c == 81 then
-elseif escape_c == 78 then
+else if escape_c >= 48 and escape_c <= 57 then
+else if escape_c == 69 then
+else if escape_c == 81 then
+else if escape_c == 78 then
     if codes[i] != 125 or i == start_i then
     end
     table.insert(outln, code_point)
-elseif escape_c == 80 or escape_c == 112 then
+else if escape_c == 80 or escape_c == 112 then
     if script_set then
-    elseif not valid_categories[c_name]then
+    else if not valid_categories[c_name]then
     else
         table.insert(outln, { 'category', negate, c_name })
     end
-elseif escape_c == 103 and (codes[i + 1] == 123 or codes[i + 1] >= 48 and codes[i + 1] <= 57)then
-elseif escape_c == 111 then
-elseif escape_c == 120 then
+else if escape_c == 103 and (codes[i + 1] == 123 or codes[i + 1] >= 48 and codes[i + 1] <= 57)then
+else if escape_c == 111 then
+else if escape_c == 120 then
 else
     table.insert(outln, esc_char or escape_c)
 end
@@ -2257,7 +2257,7 @@ end
 for i, v in ipairs(outln)do
     if type(v) == 'table' and (v[1] == 40 or v[1] == 'quantifier' and type(v[5]) == 'table' and v[5][1] == 40)then
         v = v[5]
-    elseif type(v) == 'table' and (v[1] == 'backref' or v[1] == 'recurmatch')then
+    else if type(v) == 'table' and (v[1] == 'backref' or v[1] == 'recurmatch')then
         for i1, v1 in ipairs(outln)do
             break
         end
@@ -2314,7 +2314,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "config_reader_example")
         function ConfigReader:read(config_name: string)
             if Config[config_name] != nil then
                 return Config[config_name]
-            elseif Defaults[config_name] != nil then
+            else if Defaults[config_name] != nil then
                 return Defaults[config_name]
             else
                 error(config_name .. " must be defined in Config")
@@ -2374,12 +2374,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "is_safe_integer_example")
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_remover_heap_use_after_free")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        _ = if l0.n0.n0 then {n4(...,setmetatable(setmetatable(_),_)),_ == _,} elseif _.ceil._ then _ elseif _ then not _
+        _ = if l0.n0.n0 then {n4(...,setmetatable(setmetatable(_),_)),_ == _,} else if _.ceil._ then _ else if _ then not _
     )"));
 
     LUAU_REQUIRE_ERRORS(check(R"(
         do
-        _ = if _[_] then {[_(``)]="y",} elseif _ then _ elseif _[_] then "" elseif _ then _ elseif _[_] then {} elseif _[_] then false else ""
+        _ = if _[_] then {[_(``)]="y",} else if _ then _ else if _[_] then "" else if _ then _ else if _[_] then {} else if _[_] then false else ""
         end
     )"));
 
@@ -2432,7 +2432,7 @@ TEST_CASE_FIXTURE(Fixture, "read_table_type_refinements_persist_scope")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_ERRORS(check(R"(
-_ = {n0=_,},if _._ then ... else if _[if _ then _ else ({nil,})].setmetatable then if _ then _ elseif l0 then ... elseif _.n0 then _ elseif function<A>(l0)
+_ = {n0=_,},if _._ then ... else if _[if _ then _ else ({nil,})].setmetatable then if _ then _ else if l0 then ... else if _.n0 then _ else if function<A>(l0)
 return _._G,_
 end then _._G else ...
     )"));
@@ -2634,9 +2634,9 @@ TEST_CASE_FIXTURE(Fixture, "constraint_generation_recursion_limit")
     // This shouldn't ICE
     CheckResult result = check(R"(
         if true then
-        elseif true then
-        elseif true then
-        elseif true then
+        else if true then
+        else if true then
+        else if true then
         else
         local x = 1
         end
@@ -2726,7 +2726,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "any_type_in_function_argument_should_not_err
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_avoid_singleton_union")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        _ = if true then _ else {},if (_) then _ elseif "" then {} elseif _ then {} elseif _ then _ else {}
+        _ = if true then _ else {},if (_) then _ else if "" then {} else if _ then {} else if _ then _ else {}
         for l0,l2 in setmetatable(_,_),l0,_ do
         end
     )"));
@@ -2764,7 +2764,7 @@ TEST_CASE_FIXTURE(Fixture, "captured_globals_are_not_blocked")
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_missing_follow_in_instantiation2")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        _ = if {l0._,} then if _ then _ elseif rawset({[_]=_,[{_._,}]=_,}) then _ else {_._,} elseif rawset(_) then (true),""
+        _ = if {l0._,} then if _ then _ else if rawset({[_]=_,[{_._,}]=_,}) then _ else {_._,} else if rawset(_) then (true),""
     )"));
 }
 
@@ -2826,7 +2826,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_missing_follow_in_function_call")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
         do end
-        _ = if _ then true elseif _ then if _ then _ elseif _ then 2 .. {} elseif _._ then l0 else _ elseif _ then if ... then _ elseif {} then `` elseif _ then {_G=_,}
+        _ = if _ then true else if _ then if _ then _ else if _ then 2 .. {} else if _._ then l0 else _ else if _ then if ... then _ else if {} then `` else if _ then {_G=_,}
         type t0<),A,)...> = ({_G:any,write n0:any,write _:any<<A...>()->()>,write [any]:""""""""""""""""""""userda290013136ta:(0x000062900131369029001313690"""})|(l0.any)
     )"));
 }
@@ -2837,7 +2837,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_avoid_emplacing_blocked_types_you_don
         if if _ then _ else nil then
             local l0 = require(module0)
             _ = l0
-        elseif _ then
+        else if _ then
             function _(l0:true,...)
             end
         else

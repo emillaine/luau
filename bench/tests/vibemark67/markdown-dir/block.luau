@@ -187,7 +187,7 @@ local function parseBlocks(parser: BlockParser): ast.Node
 
         if isBlankLine(line) then
             parser.pos += 1
-        elseif isThematicBreak(line) then
+        else if isThematicBreak(line) then
             ast.addChild(doc, ast.createThematicBreak())
             parser.pos += 1
         else
@@ -220,7 +220,7 @@ local function parseBlocks(parser: BlockParser): ast.Node
                             if isQ then
                                 table.insert(quoteLines, qc)
                                 parser.pos += 1
-                            elseif not isBlankLine(ql) then
+                            else if not isBlankLine(ql) then
                                 table.insert(quoteLines, ql)
                                 parser.pos += 1
                             else

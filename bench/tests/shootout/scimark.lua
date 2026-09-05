@@ -376,7 +376,7 @@ end
 
 local function fmtparams(p1, p2)
   if p2 then return format("[%d, %d]", p1, p2)
-  elseif p1 then return format("[%d]", p1) end
+  else if p1 then return format("[%d]", p1) end
   return ""
 end
 
@@ -409,11 +409,11 @@ while arg and arg[1] do
   local a = table.remove(arg, 1)
   if a == "-noffi" then
     package.preload.ffi = nil
-  elseif a == "-small" then
+  else if a == "-small" then
     SIZE_SELECT = "small"
-  elseif a == "-large" then
+  else if a == "-large" then
     SIZE_SELECT = "large"
-  elseif benchmarks[a] then
+  else if benchmarks[a] then
     local p = benchmarks[SIZE_SELECT][a]
     measure(MIN_TIME, a, tonumber(arg[1]) or p[1], tonumber(arg[2]) or p[2])
     return

@@ -59,8 +59,8 @@ local function splitArgs(s: string): { string }
 	for i = 1, #s do
 		local c = string.sub(s, i, i)
 		if c == "(" then depth += 1; table.insert(cur, c)
-		elseif c == ")" then depth -= 1; table.insert(cur, c)
-		elseif c == "," and depth == 0 then
+		else if c == ")" then depth -= 1; table.insert(cur, c)
+		else if c == "," and depth == 0 then
 			table.insert(out, table.concat(cur)); cur = {}
 		else table.insert(cur, c) end
 	end

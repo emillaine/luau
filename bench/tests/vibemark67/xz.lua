@@ -117,7 +117,7 @@ end
 
 local function lzma_state_update_literal(state: number): number
     if state < 4 then return 0
-    elseif state < 10 then return state - 3
+    else if state < 10 then return state - 3
     else return state - 6 end
 end
 
@@ -272,7 +272,7 @@ local function lzma2_decode(input: string, input_offset: number, expected_uncomp
     local function decode_len(choice, choice2, low, mid, high, ps): number
         if decode_bit(choice, 1) == 0 then
             return decode_bit_tree(low[ps], 3)
-        elseif decode_bit(choice2, 1) == 0 then
+        else if decode_bit(choice2, 1) == 0 then
             return 8 + decode_bit_tree(mid[ps], 3)
         else
             return 16 + decode_bit_tree(high, 8)
@@ -302,7 +302,7 @@ local function lzma2_decode(input: string, input_offset: number, expected_uncomp
             end
             total_output = total_output + unpack_size
             uncompressed_pos = uncompressed_pos + unpack_size
-        elseif control >= 0x80 then
+        else if control >= 0x80 then
             local unpack_high = bit32.band(control, 0x1F)
             local do_reset_dict = control >= 0xE0
             local do_reset_state = control >= 0xA0
@@ -635,7 +635,7 @@ local function xz_decompress(input: string): string
                 if ctrl == 1 or ctrl == 2 then
                     local sz = bit32.lshift(string.byte(input, scan_pos), 8) + string.byte(input, scan_pos + 1) + 1
                     scan_pos = scan_pos + 2 + sz
-                elseif ctrl >= 0x80 then
+                else if ctrl >= 0x80 then
                     scan_pos = scan_pos + 2  -- unpack size
                     local psz = bit32.lshift(string.byte(input, scan_pos), 8) + string.byte(input, scan_pos + 1) + 1
                     scan_pos = scan_pos + 2
@@ -658,10 +658,10 @@ local function xz_decompress(input: string): string
         if check_type == 0x04 then
             -- CRC64 (8 bytes)
             pos = pos + 8
-        elseif check_type == 0x01 then
+        else if check_type == 0x01 then
             -- CRC32 (4 bytes)
             pos = pos + 4
-        elseif check_type == 0x0A then
+        else if check_type == 0x0A then
             -- SHA-256 (32 bytes)
             pos = pos + 32
         end
@@ -974,7 +974,7 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
         if len < 8 then
             rc_encode_bit(rc, choice, 1, 0)
             rc_encode_bit_tree(rc, low[pos_state], 3, len)
-        elseif len < 16 then
+        else if len < 16 then
             rc_encode_bit(rc, choice, 1, 1)
             rc_encode_bit(rc, choice2, 1, 0)
             rc_encode_bit_tree(rc, mid[pos_state], 3, len - 8)
@@ -1155,7 +1155,7 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
     local function length_price(choice, choice2, low, mid, high, pos_state, len)
         if len < 8 then
             return bit_price(choice, 1, 0) + bit_tree_price(low[pos_state], 3, len)
-        elseif len < 16 then
+        else if len < 16 then
             return bit_price(choice, 1, 1) + bit_price(choice2, 1, 0)
                    + bit_tree_price(mid[pos_state], 3, len - 8)
         else
@@ -1306,11 +1306,11 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
                 cost = cost + bit_price(is_rep0_long, sidx + 1, 1)
                     + length_price(rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high, pos_state, len_raw)
             end
-        elseif rep_idx == 1 then
+        else if rep_idx == 1 then
             cost = cost + bit_price(is_rep_g0, cur_st + 1, 1)
                        + bit_price(is_rep_g1, cur_st + 1, 0)
                        + length_price(rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high, pos_state, len_raw)
-        elseif rep_idx == 2 then
+        else if rep_idx == 2 then
             cost = cost + bit_price(is_rep_g0, cur_st + 1, 1)
                        + bit_price(is_rep_g1, cur_st + 1, 1)
                        + bit_price(is_rep_g2, cur_st + 1, 0)
@@ -1339,9 +1339,9 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
     local function reps_after_rep(rep_idx, r0, r1, r2, r3)
         if rep_idx == 0 then
             return r0, r1, r2, r3  -- rep0 stays rep0
-        elseif rep_idx == 1 then
+        else if rep_idx == 1 then
             return r1, r0, r2, r3
-        elseif rep_idx == 2 then
+        else if rep_idx == 2 then
             return r2, r0, r1, r3
         else -- rep_idx == 3
             return r3, r0, r1, r2
@@ -1364,7 +1364,7 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
             local prev_byte = if pos > start_offset then buffer.readu8(data_buf, pos - 1) else 0
             encode_literal(pos, cur_byte, prev_byte)
             state = next_state_lit(state)
-        elseif is_short_rep then
+        else if is_short_rep then
             -- Short rep (rep0, len=1)
             rc_encode_bit(rc, is_match, state_idx + 1, 1)
             rc_encode_bit(rc, is_rep, state + 1, 1)
@@ -1372,17 +1372,17 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
             rc_encode_bit(rc, is_rep0_long, state_idx + 1, 0)
             state = next_state_short_rep(state)
             -- rep0 stays the same
-        elseif is_rep_match then
+        else if is_rep_match then
             local rep_idx = token_dist_or_rep
             rc_encode_bit(rc, is_match, state_idx + 1, 1)
             rc_encode_bit(rc, is_rep, state + 1, 1)
             if rep_idx == 0 then
                 rc_encode_bit(rc, is_rep_g0, state + 1, 0)
                 rc_encode_bit(rc, is_rep0_long, state_idx + 1, 1)
-            elseif rep_idx == 1 then
+            else if rep_idx == 1 then
                 rc_encode_bit(rc, is_rep_g0, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g1, state + 1, 0)
-            elseif rep_idx == 2 then
+            else if rep_idx == 2 then
                 rc_encode_bit(rc, is_rep_g0, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g1, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g2, state + 1, 0)
@@ -1396,9 +1396,9 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
             -- Update reps
             if rep_idx == 1 then
                 local tmp = rep1; rep1 = rep0; rep0 = tmp
-            elseif rep_idx == 2 then
+            else if rep_idx == 2 then
                 local tmp = rep2; rep2 = rep1; rep1 = rep0; rep0 = tmp
-            elseif rep_idx == 3 then
+            else if rep_idx == 3 then
                 local tmp = rep3; rep3 = rep2; rep2 = rep1; rep1 = rep0; rep0 = tmp
             end
             -- rep0 unchanged for rep_idx==0
@@ -1591,15 +1591,15 @@ local function lzma_encode(data_buf: buffer, start_offset: number, end_offset: n
 
             if tok_type == TOK_LIT then
                 emit_token(emit_pos, 1, 0, false, false)
-            elseif tok_type == TOK_SHORT_REP then
+            else if tok_type == TOK_SHORT_REP then
                 emit_token(emit_pos, 1, 0, false, true)
-            elseif tok_type == TOK_REP0 then
+            else if tok_type == TOK_REP0 then
                 emit_token(emit_pos, tok_len, 0, true, false)
-            elseif tok_type == TOK_REP1 then
+            else if tok_type == TOK_REP1 then
                 emit_token(emit_pos, tok_len, 1, true, false)
-            elseif tok_type == TOK_REP2 then
+            else if tok_type == TOK_REP2 then
                 emit_token(emit_pos, tok_len, 2, true, false)
-            elseif tok_type == TOK_REP3 then
+            else if tok_type == TOK_REP3 then
                 emit_token(emit_pos, tok_len, 3, true, false)
             else  -- TOK_MATCH
                 emit_token(emit_pos, tok_len, tok_dist, false, false)

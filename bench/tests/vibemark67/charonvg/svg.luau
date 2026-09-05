@@ -129,7 +129,7 @@ local function parseXml(str)
             local c = string.byte(str, pos)
             if c == 60 then
                 depth = depth + 1
-            elseif c == 62 then
+            else if c == 62 then
                 depth = depth - 1
             end
             pos = pos + 1
@@ -527,7 +527,7 @@ local function resolvePaint(value, element, idMap, extents, viewW, viewH, vars)
         if ref then
             if ref.tag == "linearGradient" then
                 return resolveLinearGradient(ref, idMap, extents, viewW, viewH)
-            elseif ref.tag == "radialGradient" then
+            else if ref.tag == "radialGradient" then
                 return resolveRadialGradient(ref, idMap, extents, viewW, viewH)
             end
         end
@@ -578,13 +578,13 @@ local function applyViewBox(canvas, viewBox, vpWidth, vpHeight, par)
 
     if align:find("xMid") then
         transX = transX + (vpWidth - scaledW) / 2
-    elseif align:find("xMax") then
+    else if align:find("xMax") then
         transX = transX + (vpWidth - scaledW)
     end
 
     if align:find("YMid") then
         transY = transY + (vpHeight - scaledH) / 2
-    elseif align:find("YMax") then
+    else if align:find("YMax") then
         transY = transY + (vpHeight - scaledH)
     end
 
@@ -638,13 +638,13 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
         for _, child in ipairs(element.children) do
             renderElement(child, ctx, idMap, viewW, viewH, depth + 1)
         end
-    elseif tag == "g" then
+    else if tag == "g" then
         for _, child in ipairs(element.children) do
             renderElement(child, ctx, idMap, viewW, viewH, depth + 1)
         end
-    elseif tag == "defs" then
+    else if tag == "defs" then
         -- Don't render, only accessible via url(#id) or <use>
-    elseif tag == "use" then
+    else if tag == "use" then
         local href = element.attrs.href
         if href then
             local refId = href:gsub("^#", "")
@@ -658,7 +658,7 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
                 renderElement(ref, ctx, idMap, viewW, viewH, depth + 1)
             end
         end
-    elseif tag == "rect" then
+    else if tag == "rect" then
         if visibility == "hidden" then
             ctx.canvas:restore()
             return
@@ -684,7 +684,7 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
             end
             drawShape(ctx, element, p, idMap, viewW, viewH)
         end
-    elseif tag == "circle" then
+    else if tag == "circle" then
         if visibility == "hidden" then
             ctx.canvas:restore()
             return
@@ -697,7 +697,7 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
             p:addCircle(cx, cy, r)
             drawShape(ctx, element, p, idMap, viewW, viewH)
         end
-    elseif tag == "ellipse" then
+    else if tag == "ellipse" then
         if visibility == "hidden" then
             ctx.canvas:restore()
             return
@@ -711,7 +711,7 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
             p:addEllipse(cx, cy, rx, ry)
             drawShape(ctx, element, p, idMap, viewW, viewH)
         end
-    elseif tag == "line" then
+    else if tag == "line" then
         if visibility == "hidden" then
             ctx.canvas:restore()
             return
@@ -724,7 +724,7 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
         p:moveTo(x1, y1)
         p:lineTo(x2, y2)
         drawShape(ctx, element, p, idMap, viewW, viewH)
-    elseif tag == "path" then
+    else if tag == "path" then
         if visibility == "hidden" then
             ctx.canvas:restore()
             return
@@ -736,7 +736,7 @@ local function renderElement(element, ctx, idMap, viewW, viewH, depth)
                 drawShape(ctx, element, p, idMap, viewW, viewH)
             end
         end
-    elseif tag == "polygon" or tag == "polyline" then
+    else if tag == "polygon" or tag == "polyline" then
         if visibility == "hidden" then
             ctx.canvas:restore()
             return
@@ -783,7 +783,7 @@ function drawShape(ctx, element, path, idMap, viewW, viewH)
         end
         if paint then
             canvas:setPaint(paint)
-        elseif color then
+        else if color then
             canvas:setColor(color)
         else
             canvas:setRgb(0, 0, 0)
@@ -825,7 +825,7 @@ function drawShape(ctx, element, path, idMap, viewW, viewH)
 
         if paint then
             canvas:setPaint(paint)
-        elseif color then
+        else if color then
             canvas:setColor(color)
         else
             canvas:setRgb(0, 0, 0)

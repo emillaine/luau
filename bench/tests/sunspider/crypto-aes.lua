@@ -150,7 +150,7 @@ local function KeyExpansion(key)  -- generate Key Schedule (byte-array Nr+1 x Nb
     if (i % Nk == 0) then
       temp = SubWord(RotWord(temp));
       for t = 0,3 do temp[t + 1] = bit32.bxor(temp[t + 1], Rcon[i/Nk + 1][t + 1]); end
-    elseif (Nk > 6 and i % Nk == 4) then
+    else if (Nk > 6 and i % Nk == 4) then
       temp = SubWord(temp);
     end
     for t = 0,3 do w[i + 1][t + 1] = bit32.bxor(w[i - Nk + 1][t + 1], temp[t + 1]); end

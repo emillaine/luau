@@ -23,9 +23,9 @@ function arm64_frame.analyzeFrame(body)
 			local ops = st.operands
 			if m == "sub" and ops[1] and ops[1].name == "sp" and ops[2] and ops[2].name == "sp" then
 				frameSize += math.abs(immVal(ops[3]))
-			elseif m == "mov" and ops[1] and ops[1].name == "x29" and ops[2] and ops[2].name == "sp" then
+			else if m == "mov" and ops[1] and ops[1].name == "x29" and ops[2] and ops[2].name == "sp" then
 				fpOffset = 0
-			elseif m == "add" and ops[1] and ops[1].name == "x29" and ops[2] and ops[2].name == "sp" then
+			else if m == "add" and ops[1] and ops[1].name == "x29" and ops[2] and ops[2].name == "sp" then
 				fpOffset = immVal(ops[3])
 			else
 				for _, o in ops do
@@ -81,14 +81,14 @@ function arm64_frame.rewrite(st, ctx)
 		if m == "str" or m == "stur" then
 			ctx.checkBounds(off, ops[1].width == 32 and 4 or 8, true, st.raw)
 			emit({ kind = "insn", mnemonic = "mov", operands = { ctx.slotReg(off, ops[1].width), ops[1] }, raw = st.raw })
-		elseif m == "ldr" or m == "ldur" then
+		else if m == "ldr" or m == "ldur" then
 			ctx.checkBounds(off, ops[1].width == 32 and 4 or 8, false, st.raw)
 			emit({ kind = "insn", mnemonic = "mov", operands = { ops[1], ctx.slotReg(off, ops[1].width) }, raw = st.raw })
-		elseif m == "stp" then
+		else if m == "stp" then
 			ctx.checkBounds(off, 16, true, st.raw)
 			emit({ kind = "insn", mnemonic = "mov", operands = { ctx.slotReg(off, ops[1].width), ops[1] }, raw = st.raw })
 			emit({ kind = "insn", mnemonic = "mov", operands = { ctx.slotReg(off + 8, ops[2].width), ops[2] }, raw = st.raw })
-		elseif m == "ldp" then
+		else if m == "ldp" then
 			ctx.checkBounds(off, 16, false, st.raw)
 			emit({ kind = "insn", mnemonic = "mov", operands = { ops[1], ctx.slotReg(off, ops[1].width) }, raw = st.raw })
 			emit({ kind = "insn", mnemonic = "mov", operands = { ops[2], ctx.slotReg(off + 8, ops[2].width) }, raw = st.raw })

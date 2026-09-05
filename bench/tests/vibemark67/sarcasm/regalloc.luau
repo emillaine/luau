@@ -309,7 +309,7 @@ function regalloc.color(insns, temps, opts)
 	for _, t in initial do
 		if degree[t] >= K then
 			table.insert(spillWorklist, t)
-		elseif moveRelated(t) then
+		else if moveRelated(t) then
 			table.insert(freezeWorklist, t)
 		else
 			table.insert(simplifyWorklist, t)
@@ -410,7 +410,7 @@ function regalloc.color(insns, temps, opts)
 		if u == v then
 			coalescedMoves[m] = true
 			addWorklist(u)
-		elseif precolored(v) or adj[u][v] then
+		else if precolored(v) or adj[u][v] then
 			constrainedMoves[m] = true
 			addWorklist(u); addWorklist(v)
 		else
@@ -473,9 +473,9 @@ function regalloc.color(insns, temps, opts)
 	-- main loop
 	while true do
 		if #simplifyWorklist > 0 then simplify()
-		elseif next(worklistMoves) then coalesce()
-		elseif #freezeWorklist > 0 then freeze()
-		elseif #spillWorklist > 0 then selectSpill()
+		else if next(worklistMoves) then coalesce()
+		else if #freezeWorklist > 0 then freeze()
+		else if #spillWorklist > 0 then selectSpill()
 		else break end
 	end
 

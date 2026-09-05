@@ -100,7 +100,7 @@ function test()
         gboard = {}
         for i = 1, #board do
             if board[i] == 0 then gboard[i] = '.'
-            elseif board[i] == 1 then gboard[i] = 'x'
+            else if board[i] == 1 then gboard[i] = 'x'
             else gboard[i] = 'o'
             end
         end
@@ -143,9 +143,9 @@ function test()
             for _, index in next, curr_qdr do -- iterate over all indices
                 if board[index] == 0 then
                     empties = empties + 1
-                elseif board[index] == 1 then
+                else if board[index] == 1 then
                     player_plus_fields = player_plus_fields + 1
-                elseif board[index] == -1 then
+                else if board[index] == -1 then
                     player_minus_fields = player_minus_fields + 1
                 end
             end
@@ -153,29 +153,29 @@ function test()
             if empties == 3 then 
                 if player_plus_fields == 1 then
                     player_plus_score = player_plus_score + 3
-                elseif player_minus_fields == 1 then
+                else if player_minus_fields == 1 then
                     player_minus_score = player_minus_score + 3
                 end
-            elseif empties == 2 then
+            else if empties == 2 then
                 if player_plus_fields == 2 then
                     player_plus_score = player_plus_score + 13
-                elseif player_minus_fields == 2 then
+                else if player_minus_fields == 2 then
                     player_minus_score = player_minus_score + 13
                 end
-            elseif empties == 1 then
+            else if empties == 1 then
                 if player_plus_fields == 3 then
                     player_plus_score = player_plus_score + 31
-                elseif player_minus_fields == 3 then
+                else if player_minus_fields == 3 then
                     player_minus_score = player_minus_score + 31
                 end
-            elseif empties == 0 then
+            else if empties == 0 then
                 -- check for winning situations
                 if player_plus_fields == 4 then
                     player_plus_score = 999-depth
                     player_minus_score = 0
                     game_won = true
                     break
-                elseif player_minus_fields == 4 then
+                else if player_minus_fields == 4 then
                     -- this should not happen if there is a proper terminal node detection!
                     player_plus_score = 0
                     player_minus_score = 999-depth

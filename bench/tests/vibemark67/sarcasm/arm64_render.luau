@@ -31,12 +31,12 @@ local function renderOperand(op, numOf): string
 		local name
 		if num ~= nil then name = regName(num, op.width) else name = op.name end
 		return name .. renderShift(op.shift)
-	elseif op.kind == "imm" then
+	else if op.kind == "imm" then
 		return "#" .. op.text
-	elseif op.kind == "sym" then
+	else if op.kind == "sym" then
 		if op.reloc then return ":" .. op.reloc .. ":" .. op.text end
 		return op.text
-	elseif op.kind == "mem" then
+	else if op.kind == "mem" then
 		local parts = {}
 		table.insert(parts, renderOperand(op.base, numOf))
 		if op.index then table.insert(parts, renderOperand(op.index, numOf)) end
@@ -82,16 +82,16 @@ function arm64_render.renderInsn(node, colorOf, syntax): string
 			local base = "[" .. renderOperand(op.base, numOf) .. "]"
 			table.insert(ops, base)
 			table.insert(ops, renderOperand(op.index, numOf))
-		elseif op.kind == "mem" and op.writeback == "post" and op.postShift then
+		else if op.kind == "mem" and op.writeback == "post" and op.postShift then
 			local base = "[" .. renderOperand(op.base, numOf) .. "]"
 			table.insert(ops, base .. ", " .. op.postShift.op .. " " .. (op.postShift.amountText or ""))
-		elseif op.kind == "reg" and op.shift then
+		else if op.kind == "reg" and op.shift then
 			local saved = op.shift
 			op.shift = nil
 			table.insert(ops, renderOperand(op, numOf))
 			op.shift = saved
 			table.insert(ops, shiftText(saved))
-		elseif op.kind == "imm" and op.shift then
+		else if op.kind == "imm" and op.shift then
 			-- a shifted immediate is a separate comma operand, e.g. `movk x6, #0xbc5, lsl 16`;
 			-- dropping the shift would silently corrupt the built constant.
 			table.insert(ops, "#" .. op.text)
@@ -136,7 +136,7 @@ function arm64_render.makeColorNum(color)
 	return function(t)
 		local c = color[t]
 		if not c then return nil end
-		if c == "sp" then return -2 elseif c == "xzr" then return -1 end
+		if c == "sp" then return -2 else if c == "xzr" then return -1 end
 		return tonumber(string.match(c, "%d+"))
 	end
 end
@@ -181,7 +181,7 @@ end
 local function emitAddSub(out, op, dst, src, imm)
 	if imm <= 4095 then
 		table.insert(out, "\t" .. op .. "\t" .. dst .. ", " .. src .. ", #" .. imm)
-	elseif (imm % 4096) == 0 then
+	else if (imm % 4096) == 0 then
 		table.insert(out, "\t" .. op .. "\t" .. dst .. ", " .. src .. ", #" .. math.floor(imm / 4096) .. ", lsl #12")
 	else
 		table.insert(out, "\t" .. op .. "\t" .. dst .. ", " .. src .. ", #" .. (imm % 4096))

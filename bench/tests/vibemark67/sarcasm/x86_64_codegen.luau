@@ -183,7 +183,7 @@ function M.make(ctx)
 		local indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or nil
 		local capLo
 		if baseTemp and pf.isPtr[baseTemp] then capLo = pf.lowerTemp[baseTemp]
-		elseif indexTemp and pf.isPtr[indexTemp] then capLo = pf.lowerTemp[indexTemp] end
+		else if indexTemp and pf.isPtr[indexTemp] then capLo = pf.lowerTemp[indexTemp] end
 		local disp = mem.dispVal or 0
 		local effTemp = baseTemp
 		if indexTemp or disp ~= 0 or not baseTemp then
@@ -219,7 +219,7 @@ function M.make(ctx)
 			local t = node.defTemps and node.defTemps[1]
 			if t then emit(build.insn("movslq", { rt(t, 64), rt(t, 32) }, { defs = {t}, uses = {t} })) else emit(node) end
 			return true
-		elseif base == "lea" then
+		else if base == "lea" then
 			emit(node); return true
 		end
 		return false

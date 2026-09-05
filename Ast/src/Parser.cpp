@@ -357,8 +357,7 @@ Parser::Parser(const char* buffer, size_t bufferSize, AstNameTable& names, Alloc
 
 bool Parser::blockFollow(const Lexeme& l)
 {
-    return l.type == Lexeme::Eof || l.type == Lexeme::ReservedElse || l.type == Lexeme::ReservedElseif || l.type == Lexeme::ReservedEnd ||
-           l.type == Lexeme::ReservedUntil;
+    return l.type == Lexeme::Eof || l.type == Lexeme::ReservedElse || l.type == Lexeme::ReservedEnd || l.type == Lexeme::ReservedUntil;
 }
 
 AstStatBlock* Parser::parseChunk()
@@ -429,7 +428,7 @@ AstStatBlock* Parser::parseBlockNoScope()
 // do block end |
 // while exp [do] block end |
 // repeat block until exp |
-// if exp [then] block {elseif exp [then] block} [else block] end |
+// if exp [then] block {else if exp [then] block} [else block] end |
 // for binding `=' exp `,' exp [`,' exp] [do] block end |
 // for namelist in explist [do] block end |
 // function funcname funcbody |
@@ -573,12 +572,12 @@ AstStat* Parser::parseStat()
     return reportStatError(expr->location, copy({expr}), {}, "Incomplete statement: expected assignment or a function call");
 }
 
-// if exp [then] block {elseif exp [then] block} [else block] end
+// if exp [then] block {else if exp [then] block} [else block] end
 AstStat* Parser::parseIf()
 {
     Location start = lexer.current().location;
 
-    nextLexeme(); // if / elseif
+    nextLexeme(); // if
 
     if (FFlag::DebugLuauIfLocalSyntax &&
         (lexer.current().type == Lexeme::ReservedLocal || (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "const")))
@@ -603,11 +602,11 @@ AstStat* Parser::parseIf()
     return allocator.alloc<AstStatIf>(Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation);
 }
 
-// (`if' | `elseif') (`local' | `const') binding `=' exp [then] block {elseif exp [then] block} [else block] end
+// (`if' | `else if') (`local' | `const') binding `=' exp [then] block {else if exp [then] block} [else block] end
 //
 // LUAU_NOINLINE keeps the `if local`/`if const` locals off parseIf's frame: parseIf recurses through
-// long if/elseif chains and this variant is rarely taken. `start` is the location of the already-
-// consumed `if`/`elseif` keyword; the current lexeme is the `local`/`const` keyword.
+// long if/else-if chains and this variant is rarely taken. `start` is the location of the already-
+// consumed `if` keyword; the current lexeme is the `local`/`const` keyword.
 LUAU_NOINLINE AstStat* Parser::parseIfLocalCondition(const Location& start)
 {
     LUAU_ASSERT(FFlag::DebugLuauIfLocalSyntax);
@@ -638,7 +637,7 @@ LUAU_NOINLINE AstStat* Parser::parseIfLocalCondition(const Location& start)
 
     AstStatBlock* thenbody = parseBlock();
 
-    // Restore locals after then-block so condLocal is not visible in else/elseif
+    // Restore locals after then-block so condLocal is not visible in else/else-if
     restoreLocals(localsBegin);
 
     Location end = start;
@@ -656,42 +655,45 @@ AstStat* Parser::parseElseBody(const Location& start, const Lexeme& matchThen, A
     end = start;
     elseLocation = std::nullopt;
 
-    if (lexer.current().type == Lexeme::ReservedElseif)
-    {
-        thenbody->hasEnd = true;
-        unsigned int oldRecursionCount = recursionCounter;
-        incrementRecursionCounter("elseif");
-        elseLocation = lexer.current().location;
-        elsebody = parseIf();
-        end = elsebody->location;
-        recursionCounter = oldRecursionCount;
-    }
-    else
+    if (lexer.current().type == Lexeme::ReservedElse)
     {
         Lexeme matchThenElse = matchThen;
 
-        if (lexer.current().type == Lexeme::ReservedElse)
-        {
-            thenbody->hasEnd = true;
-            elseLocation = lexer.current().location;
-            matchThenElse = lexer.current();
-            nextLexeme();
+        thenbody->hasEnd = true;
+        elseLocation = lexer.current().location;
+        matchThenElse = lexer.current();
+        nextLexeme();
 
+        // Keep a newline between `else` and `if` as a nested if statement.
+        // This preserves the unambiguous block form while `else if` on one line is an else-if clause.
+        if (lexer.current().type == Lexeme::ReservedIf &&
+            lexer.current().location.begin.line == matchThenElse.location.begin.line)
+        {
+            unsigned int oldRecursionCount = recursionCounter;
+            incrementRecursionCounter("else-if");
+            elsebody = parseIf();
+            end = elsebody->location;
+            recursionCounter = oldRecursionCount;
+        }
+        else
+        {
             elsebody = parseBlock();
             elsebody->location.begin = matchThenElse.location.end;
-        }
 
-        end = lexer.current().location;
+            end = lexer.current().location;
 
-        bool hasEnd = expectMatchEndAndConsume(Lexeme::ReservedEnd, matchThenElse);
+            bool hasEnd = expectMatchEndAndConsume(Lexeme::ReservedEnd, matchThenElse);
 
-        if (elsebody)
-        {
             if (AstStatBlock* elseBlock = elsebody->as<AstStatBlock>())
                 elseBlock->hasEnd = hasEnd;
         }
-        else
-            thenbody->hasEnd = hasEnd;
+    }
+    else
+    {
+        end = lexer.current().location;
+
+        bool hasEnd = expectMatchEndAndConsume(Lexeme::ReservedEnd, matchThen);
+        thenbody->hasEnd = hasEnd;
     }
 
     return elsebody;
@@ -4424,7 +4426,7 @@ AstExpr* Parser::parseIfElseExpr()
     bool hasElse = false;
     Location start = lexer.current().location;
 
-    nextLexeme(); // skip if / elseif
+    nextLexeme(); // skip if
 
     AstExpr* condition = parseExpr();
 
@@ -4438,14 +4440,21 @@ AstExpr* Parser::parseIfElseExpr()
 
     Position elsePosition = lexer.current().location.begin;
     bool isElseIf = false;
-    if (lexer.current().type == Lexeme::ReservedElseif)
+    if (lexer.current().type == Lexeme::ReservedElse)
     {
-        unsigned int oldRecursionCount = recursionCounter;
-        incrementRecursionCounter("expression");
         hasElse = true;
-        falseExpr = parseIfElseExpr();
-        recursionCounter = oldRecursionCount;
-        isElseIf = true;
+        nextLexeme();
+
+        if (lexer.current().type == Lexeme::ReservedIf)
+        {
+            unsigned int oldRecursionCount = recursionCounter;
+            incrementRecursionCounter("expression");
+            falseExpr = parseIfElseExpr();
+            recursionCounter = oldRecursionCount;
+            isElseIf = true;
+        }
+        else
+            falseExpr = parseExpr();
     }
     else
     {

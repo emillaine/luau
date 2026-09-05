@@ -918,7 +918,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_if_middle_keywords")
     CHECK_EQ(ac4.entryMap.count("then"), 0);
     CHECK_EQ(ac4.entryMap.count("else"), 1);
     CHECK_EQ(ac4.entryMap.count("function"), 1);
-    CHECK_EQ(ac4.entryMap.count("elseif"), 1);
+    CHECK_EQ(ac4.entryMap.count("elseif"), 0);
     CHECK_EQ(ac4.entryMap.count("end"), 0);
     CHECK_EQ(ac4.context, AutocompleteContext::Statement);
 
@@ -932,13 +932,13 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_if_middle_keywords")
     CHECK_EQ(ac4a.entryMap.count("then"), 0);
     CHECK_EQ(ac4a.entryMap.count("table"), 1);
     CHECK_EQ(ac4a.entryMap.count("else"), 1);
-    CHECK_EQ(ac4a.entryMap.count("elseif"), 1);
+    CHECK_EQ(ac4a.entryMap.count("elseif"), 0);
     CHECK_EQ(ac4a.context, AutocompleteContext::Statement);
 
     check(R"(
         if x then
 @1
-        elseif x then
+        else if x then
         end
     )");
 
@@ -2526,7 +2526,7 @@ until
 
     ac = autocomplete('2');
     CHECK(ac.entryMap.count("else"));
-    CHECK(ac.entryMap.count("elseif"));
+    CHECK(ac.entryMap.count("elseif") == 0);
 
     ac = autocomplete('3');
     CHECK(ac.entryMap.count("do"));
@@ -2550,7 +2550,7 @@ end
 
     auto ac = autocomplete('1');
     CHECK(ac.entryMap.count("else"));
-    CHECK(ac.entryMap.count("elseif"));
+    CHECK(ac.entryMap.count("elseif") == 0);
     CHECK(ac.entryMap.count("elsewhere") == 0);
 
     check(R"(
@@ -2581,7 +2581,7 @@ end
     )");
     ac = autocomplete('1');
     CHECK(ac.entryMap.count("else"));
-    CHECK(ac.entryMap.count("elseif"));
+    CHECK(ac.entryMap.count("elseif") == 0);
     CHECK(ac.entryMap.count("elsewhere"));
 }
 
@@ -2818,11 +2818,11 @@ a = if t@1emp then t
 a = if temp t@2
 a = if temp then e@3
 a = if temp then even e@4
-a = if temp then even elseif t@5
-a = if temp then even elseif true t@6
-a = if temp then even elseif true then t@7
-a = if temp then even elseif true then temp e@8
-a = if temp then even elseif true then temp else e@9
+a = if temp then even else if t@5
+a = if temp then even else if true t@6
+a = if temp then even else if true then t@7
+a = if temp then even else if true then temp e@8
+a = if temp then even else if true then temp else e@9
         )");
 
     auto ac = autocomplete('1');
@@ -2852,7 +2852,7 @@ a = if temp then even elseif true then temp else e@9
     CHECK(ac.entryMap.count("even") == 0);
     CHECK(ac.entryMap.count("then") == 0);
     CHECK(ac.entryMap.count("else"));
-    CHECK(ac.entryMap.count("elseif"));
+    CHECK(ac.entryMap.count("elseif") == 0);
     CHECK_EQ(ac.context, AutocompleteContext::Keyword);
 
     ac = autocomplete('5');
@@ -2883,7 +2883,7 @@ a = if temp then even elseif true then temp else e@9
     CHECK(ac.entryMap.count("even") == 0);
     CHECK(ac.entryMap.count("then") == 0);
     CHECK(ac.entryMap.count("else"));
-    CHECK(ac.entryMap.count("elseif"));
+    CHECK(ac.entryMap.count("elseif") == 0);
     CHECK_EQ(ac.context, AutocompleteContext::Keyword);
 
     ac = autocomplete('9');

@@ -32,7 +32,7 @@ bool isIdentifierChar(char c)
     return isIdentifierStartChar(c) || isDigit(c);
 }
 
-const std::vector<std::string> keywords = {"and",   "break", "do",  "else", "elseif", "end",    "false", "for",  "function", "if",   "in",
+const std::vector<std::string> keywords = {"and",   "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
                                            "local", "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 } // namespace
@@ -1587,7 +1587,9 @@ struct Printer
         {
             if (elseif.elseLocation)
                 advance(elseif.elseLocation->begin);
-            writer.keyword("elseif");
+            writer.keyword("else");
+            advance(elseifelseif->location.begin);
+            writer.keyword("if");
             visualizeElseIf(*elseifelseif);
         }
         else
@@ -1620,7 +1622,9 @@ struct Printer
                 advance(cstNode->elsePosition);
             if (auto elseifelseif = elseif.falseExpr->as<AstExprIfElse>(); elseifelseif && (!cstNode || cstNode->isElseIf))
             {
-                writer.keyword("elseif");
+                writer.keyword("else");
+                advance(elseifelseif->location.begin);
+                writer.keyword("if");
                 visualizeElseIfExpr(*elseifelseif);
             }
             else

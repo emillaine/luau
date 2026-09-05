@@ -2950,7 +2950,7 @@ end
 local function compute_adjustment_ratio(target_width, natural_width, total_stretch, total_shrink)
     if natural_width == target_width then
         return 0
-    elseif natural_width < target_width then
+    else if natural_width < target_width then
         -- Need to stretch
         if total_stretch > 0 then
             return (target_width - natural_width) / total_stretch
@@ -2970,9 +2970,9 @@ end
 local function compute_fitness_class(ratio)
     if ratio < -0.5 then
         return 0  -- tight
-    elseif ratio <= 0.5 then
+    else if ratio <= 0.5 then
         return 1  -- normal
-    elseif ratio <= 1.0 then
+    else if ratio <= 1.0 then
         return 2  -- loose
     else
         return 3  -- very loose
@@ -3010,7 +3010,7 @@ local function knuth_plass_break(items, line_lengths, options)
             sum_width[i + 1] = sum_width[i] + item.width
             sum_stretch[i + 1] = sum_stretch[i]
             sum_shrink[i + 1] = sum_shrink[i]
-        elseif item.type == "glue" then
+        else if item.type == "glue" then
             sum_width[i + 1] = sum_width[i] + item.width
             sum_stretch[i + 1] = sum_stretch[i] + item.stretch
             sum_shrink[i + 1] = sum_shrink[i] + item.shrink
@@ -3029,7 +3029,7 @@ local function knuth_plass_break(items, line_lengths, options)
     local function get_line_length(line_num)
         if type(line_lengths) == "number" then
             return line_lengths
-        elseif type(line_lengths) == "table" then
+        else if type(line_lengths) == "table" then
             if line_num <= #line_lengths then
                 return line_lengths[line_num]
             else
@@ -3047,7 +3047,7 @@ local function knuth_plass_break(items, line_lengths, options)
             if i > 1 and items[i - 1].type == "box" then
                 is_feasible_break = true
             end
-        elseif item.type == "penalty" then
+        else if item.type == "penalty" then
             if item.penalty < Penalty.INFINITY then
                 is_feasible_break = true
             end
@@ -3085,7 +3085,7 @@ local function knuth_plass_break(items, line_lengths, options)
                 if ratio < -1 then
                     -- Line is too short, deactivate this node
                     -- but first check if it was previously feasible
-                elseif ratio > tolerance and item.type == "glue" then
+                else if ratio > tolerance and item.type == "glue" then
                     -- Could still become feasible with later breaks, keep active
                     insert(new_active, node)
                 else
@@ -3102,7 +3102,7 @@ local function knuth_plass_break(items, line_lengths, options)
                         local demerits
                         if pen >= 0 then
                             demerits = (1 + badness + pen) * (1 + badness + pen)
-                        elseif pen > Penalty.NEG_INFINITY then
+                        else if pen > Penalty.NEG_INFINITY then
                             demerits = (1 + badness) * (1 + badness) - pen * pen
                         else
                             demerits = (1 + badness) * (1 + badness)
@@ -3368,7 +3368,7 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
         local target_width
         if type(line_lengths) == "number" then
             target_width = line_lengths
-        elseif type(line_lengths) == "table" then
+        else if type(line_lengths) == "table" then
             target_width = line_lengths[min(line_num, #line_lengths)]
         else
             target_width = 28000
@@ -3419,18 +3419,18 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
                     -- Empty box (indent)
                     x = x + item.width
                 end
-            elseif item.type == "glue" then
+            else if item.type == "glue" then
                 -- Adjust glue width based on ratio
                 local adjusted_width = item.width
                 if ratio > 0 then
                     adjusted_width = item.width + floor(ratio * item.stretch)
-                elseif ratio < 0 then
+                else if ratio < 0 then
                     adjusted_width = item.width + floor(ratio * item.shrink)
                 end
                 -- Add space glyph
                 glyph_run:add_glyph(32, x, 0, adjusted_width)
                 x = x + adjusted_width
-            elseif item.type == "penalty" then
+            else if item.type == "penalty" then
                 -- If this is the break point and it's a hyphen penalty, add hyphen glyph
                 if li == #line_items and item.flagged and item.width > 0 then
                     glyph_run:add_glyph(45, x, 0, item.width)

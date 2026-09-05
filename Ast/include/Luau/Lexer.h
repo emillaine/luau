@@ -68,7 +68,6 @@ struct Lexeme
         ReservedBreak,
         ReservedDo,
         ReservedElse,
-        ReservedElseif,
         ReservedEnd,
         ReservedFalse,
         ReservedFor,

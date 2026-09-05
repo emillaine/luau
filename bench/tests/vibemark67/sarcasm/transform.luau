@@ -134,9 +134,9 @@ function transform.transformFunction(name, sigDesc, body, backend)
 				else
 					allocaResultDefs[node] = true
 				end
-			elseif node.c.control == "call" and ann then callNodes[node] = ann
-			elseif ann == "load ptr" then loadPtrDefs[node] = true
-			elseif ann == "store ptr" then storePtrNodes[node] = true end
+			else if node.c.control == "call" and ann then callNodes[node] = ann
+			else if ann == "load ptr" then loadPtrDefs[node] = true
+			else if ann == "store ptr" then storePtrNodes[node] = true end
 		end
 	end
 
@@ -376,7 +376,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 			local sizeOp = cgm.allocaSizeOperand(node.stmt)
 			local sizeTemp = allocTemp({ role = "allocasize" })
 			if sizeOp and sizeOp.kind == "reg" then cg.move(sizeTemp, node.opTemp[sizeOp], true)
-			elseif sizeOp and sizeOp.kind == "imm" then cg.moveImm(sizeTemp, sizeOp.value or tonumber(sizeOp.text))
+			else if sizeOp and sizeOp.kind == "imm" then cg.moveImm(sizeTemp, sizeOp.value or tonumber(sizeOp.text))
 			else error("sarcasm: `alloca size` instruction has no size operand: " .. node.stmt.raw) end
 			allocaSizes[al.name] = sizeTemp
 			return
@@ -423,14 +423,14 @@ function transform.transformFunction(name, sigDesc, body, backend)
 				emit(node)
 				if loopHeaderLabels[node.name] then emitPollcheck() end
 			end
-		elseif node.kind == "other" then
+		else if node.kind == "other" then
 			-- drop directives
-		elseif node.kind == "insn" then
+		else if node.kind == "insn" then
 			local c = node.c
 			curLine = (node.stmt and node.stmt.line) or curLine
 			if allocaNodes[node] then
 				emitAlloca(node, allocaNodes[node])
-			elseif c.control == "return" then
+			else if c.control == "return" then
 				if not sigDesc.isVoid then
 					local retTemp
 					for _, r in c.uses do if r.retReg then retTemp = node.opTemp[r] end end
@@ -440,25 +440,25 @@ function transform.transformFunction(name, sigDesc, body, backend)
 				cg.clearRetFlag()
 				emit({ kind = "epilogue", name = name, useTemps = { vMyth } })
 				emit(build.insn("ret", {}, { control = "return", fallsThrough = false }))
-			elseif c.control == "call" and callNodes[node] then
+			else if c.control == "call" and callNodes[node] then
 				emitCall(node)
-			elseif emitRegionRedirect(node) then
+			else if emitRegionRedirect(node) then
 				-- sp-relative address computation redirected into an alloca region
 			else
 				local mem = cgm.memOperand(node.stmt)
 				if cg.lowerSpecial(node, mem) then
 					-- arch-specific passthrough lowering (e.g. x86 cltq -> movslq, lea passthrough)
-				elseif loadPtrDefs[node] then
+				else if loadPtrDefs[node] then
 					local dstIv = node.defTemps[1]
 					local dstLo = pf.lowerTemp[dstIv]
 					emitPtrLoad(node, mem, dstIv, dstLo)
 					emitRootStore(dstLo)
-				elseif storePtrNodes[node] then
+				else if storePtrNodes[node] then
 					local valOp = storeValueOperand(node.stmt, mem)
 					local valIv = valOp and node.opTemp[valOp] or nil
 					local valLo = valIv and pf.lowerTemp[valIv] or nil
 					emitPtrStore(node, mem, valIv, valLo)
-				elseif mem then
+				else if mem then
 					cg.checkMemInsn(node, mem)
 					local effTemp, capLo = cg.computeAddr(node, mem)
 					local size, align = cgm.accessSizeAlign(node.stmt)

@@ -788,11 +788,11 @@ local function detectCollision(bodyA, bodyB)
 
     if shapeA == SHAPE_CIRCLE and shapeB == SHAPE_CIRCLE then
         return findCircleCircleContacts(bodyA, bodyB)
-    elseif shapeA == SHAPE_POLYGON and shapeB == SHAPE_POLYGON then
+    else if shapeA == SHAPE_POLYGON and shapeB == SHAPE_POLYGON then
         return findPolygonPolygonContacts(bodyA, bodyB)
-    elseif shapeA == SHAPE_CIRCLE and shapeB == SHAPE_POLYGON then
+    else if shapeA == SHAPE_CIRCLE and shapeB == SHAPE_POLYGON then
         return findCirclePolygonContacts(bodyA, bodyB)
-    elseif shapeA == SHAPE_POLYGON and shapeB == SHAPE_CIRCLE then
+    else if shapeA == SHAPE_POLYGON and shapeB == SHAPE_CIRCLE then
         local manifold = findCirclePolygonContacts(bodyB, bodyA)
         if manifold then
             manifold.normal = vecNeg(manifold.normal)
@@ -1096,9 +1096,9 @@ end
 function solveJoint(joint, dt)
     if joint.type == "distance" then
         solveDistanceJoint(joint, dt)
-    elseif joint.type == "revolute" then
+    else if joint.type == "revolute" then
         solveRevoluteJoint(joint, dt)
-    elseif joint.type == "prismatic" then
+    else if joint.type == "prismatic" then
         solvePrismaticJoint(joint, dt)
     end
 end
@@ -1818,10 +1818,10 @@ local function distanceBetweenBodies(bodyA, bodyB)
     if bodyA.shape.type == SHAPE_CIRCLE and bodyB.shape.type == SHAPE_CIRCLE then
         local d = vecDist(bodyA.position, bodyB.position) - bodyA.shape.radius - bodyB.shape.radius
         return math_max(0, d)
-    elseif bodyA.shape.type == SHAPE_CIRCLE then
+    else if bodyA.shape.type == SHAPE_CIRCLE then
         local d = distancePointToPolygon(bodyA.position, bodyB) - bodyA.shape.radius
         return math_max(0, d)
-    elseif bodyB.shape.type == SHAPE_CIRCLE then
+    else if bodyB.shape.type == SHAPE_CIRCLE then
         local d = distancePointToPolygon(bodyB.position, bodyA) - bodyB.shape.radius
         return math_max(0, d)
     else
@@ -1857,17 +1857,17 @@ end
 function solveJointExtended(joint, dt)
     if joint.type == "distance" then
         solveDistanceJoint(joint, dt)
-    elseif joint.type == "revolute" then
+    else if joint.type == "revolute" then
         solveRevoluteJoint(joint, dt)
-    elseif joint.type == "prismatic" then
+    else if joint.type == "prismatic" then
         solvePrismaticJoint(joint, dt)
-    elseif joint.type == "weld" then
+    else if joint.type == "weld" then
         solveWeldJoint(joint, dt)
-    elseif joint.type == "rope" then
+    else if joint.type == "rope" then
         solveRopeJoint(joint, dt)
-    elseif joint.type == "wheel" then
+    else if joint.type == "wheel" then
         solveWheelJoint(joint, dt)
-    elseif joint.type == "gear" then
+    else if joint.type == "gear" then
         solveGearJoint(joint, dt)
     end
 end
@@ -2185,11 +2185,11 @@ function createTumblerScenario()
 
         if shapeType == 0 then
             body = createBody(createCircle(randomRange(0.3, 0.7)), x, y, 2.0, false)
-        elseif shapeType == 1 then
+        else if shapeType == 1 then
             local hw = randomRange(0.3, 0.8)
             local hh = randomRange(0.3, 0.8)
             body = createBody(createBox(hw, hh), x, y, 2.0, false)
-        elseif shapeType == 2 then
+        else if shapeType == 2 then
             body = createBody(createRegularPolygon(randomRange(0.4, 0.7), 5), x, y, 2.0, false)
         else
             body = createBody(createRegularPolygon(randomRange(0.4, 0.7), 6), x, y, 2.0, false)
@@ -2573,7 +2573,7 @@ function createConveyorScenario()
         local body
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.5)), x, y, 2.0, false)
-        elseif shapeChoice == 1 then
+        else if shapeChoice == 1 then
             body = createBody(createBox(randomRange(0.2, 0.5), randomRange(0.2, 0.5)), x, y, 2.0, false)
         else
             body = createBody(createRegularPolygon(randomRange(0.3, 0.5), 5), x, y, 2.0, false)
@@ -2999,9 +2999,9 @@ function createMixedStackScenario()
 
             if shapeChoice == 0 then
                 body = createBody(createCircle(randomRange(0.3, 0.6)), x, y + 0.5, 2.0, false)
-            elseif shapeChoice == 1 then
+            else if shapeChoice == 1 then
                 body = createBody(createBox(randomRange(0.4, 0.8), randomRange(0.3, 0.5)), x, y + 0.4, 2.0, false)
-            elseif shapeChoice == 2 then
+            else if shapeChoice == 2 then
                 body = createBody(createRegularPolygon(randomRange(0.3, 0.6), 5), x, y + 0.5, 2.0, false)
             else
                 body = createBody(createRegularPolygon(randomRange(0.3, 0.6), 3), x, y + 0.5, 2.0, false)
@@ -3034,7 +3034,7 @@ function createRaycastTestScenario()
         local body
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.5, 1.5)), x, y, 1.0, true)
-        elseif shapeChoice == 1 then
+        else if shapeChoice == 1 then
             body = createBody(createBox(randomRange(0.5, 2.0), randomRange(0.5, 2.0)), x, y, 1.0, true)
         else
             body = createBody(createRegularPolygon(randomRange(0.5, 1.5), math_floor(random() * 4) + 3), x, y, 1.0, true)
@@ -3398,7 +3398,7 @@ function createBuoyancyScenario()
         local body
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.3, 0.8)), x, y, randomRange(0.3, 1.5), false)
-        elseif shapeChoice == 1 then
+        else if shapeChoice == 1 then
             body = createBody(createBox(randomRange(0.4, 1.0), randomRange(0.3, 0.6)), x, y, randomRange(0.3, 1.5), false)
         else
             body = createBody(createRegularPolygon(randomRange(0.4, 0.7), 5), x, y, randomRange(0.3, 1.5), false)
@@ -3442,7 +3442,7 @@ function createTornadoScenario()
         local sc = math_floor(random() * 3)
         if sc == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.5)), x, y, 1.5, false)
-        elseif sc == 1 then
+        else if sc == 1 then
             body = createBody(createBox(randomRange(0.2, 0.6), randomRange(0.2, 0.6)), x, y, 1.5, false)
         else
             body = createBody(createRegularPolygon(randomRange(0.2, 0.5), math_floor(random() * 3) + 3), x, y, 1.5, false)
@@ -3537,7 +3537,7 @@ function createMarbleRunScenario()
         local body
         if o.type == "circle" then
             body = createBody(createCircle(o.r), o.x, o.y, 1, true)
-        elseif o.type == "triangle" then
+        else if o.type == "triangle" then
             body = createBody(createRegularPolygon(o.r, 3), o.x, o.y, 1, true)
         else
             body = createBody(createRegularPolygon(o.r, 5), o.x, o.y, 1, true)
@@ -3878,7 +3878,7 @@ end
 local function clampAngularVelocity(body, maxOmega)
     if body.angularVelocity > maxOmega then
         body.angularVelocity = maxOmega
-    elseif body.angularVelocity < -maxOmega then
+    else if body.angularVelocity < -maxOmega then
         body.angularVelocity = -maxOmega
     end
 end
@@ -3986,9 +3986,9 @@ function createStressTestScenario()
         local body
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.5)), x, y, 2.0, false)
-        elseif shapeChoice == 1 then
+        else if shapeChoice == 1 then
             body = createBody(createBox(randomRange(0.2, 0.6), randomRange(0.2, 0.6)), x, y, 2.0, false)
-        elseif shapeChoice == 2 then
+        else if shapeChoice == 2 then
             body = createBody(createRegularPolygon(randomRange(0.2, 0.5), 5), x, y, 2.0, false)
         else
             body = createBody(createRegularPolygon(randomRange(0.2, 0.5), 6), x, y, 2.0, false)
@@ -4380,7 +4380,7 @@ function createWindmillScenario()
         local body
         if sc == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.4)), x, y, 2.0, false)
-        elseif sc == 1 then
+        else if sc == 1 then
             body = createBody(createBox(randomRange(0.2, 0.5), randomRange(0.2, 0.5)), x, y, 2.0, false)
         else
             body = createBody(createRegularPolygon(randomRange(0.2, 0.4), 5), x, y, 2.0, false)
@@ -4783,9 +4783,9 @@ function createWreckingYardScenario()
         local body
         if sc == 0 then
             body = createBody(createCircle(randomRange(0.1, 0.4)), x, y, randomRange(1, 5), false)
-        elseif sc == 1 then
+        else if sc == 1 then
             body = createBody(createBox(randomRange(0.2, 0.8), randomRange(0.1, 0.4)), x, y, randomRange(1, 5), false)
-        elseif sc == 2 then
+        else if sc == 2 then
             body = createBody(createRegularPolygon(randomRange(0.2, 0.5), 5), x, y, randomRange(1, 5), false)
         else
             body = createBody(createRegularPolygon(randomRange(0.2, 0.5), 3), x, y, randomRange(1, 5), false)
@@ -5138,9 +5138,9 @@ function createAssemblyLineScenario()
         local body
         if choice == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.4)), x, y, 2.0, false)
-        elseif choice == 1 then
+        else if choice == 1 then
             body = createBody(createBox(0.3, 0.3), x, y, 2.0, false)
-        elseif choice == 2 then
+        else if choice == 2 then
             body = createBody(createRegularPolygon(0.3, 5), x, y, 2.0, false)
         else
             body = createBody(createRegularPolygon(0.25, 3), x, y, 2.0, false)
@@ -5294,9 +5294,9 @@ function createObstacleCourseScenario()
         if d.type == "box" then
             body = createBody(createBox(d.w, d.h), d.x, d.y, 1, d.static)
             if d.angle then body.angle = d.angle end
-        elseif d.type == "circle" then
+        else if d.type == "circle" then
             body = createBody(createCircle(d.r), d.x, d.y, 1, d.static)
-        elseif d.type == "polygon" then
+        else if d.type == "polygon" then
             body = createBody(createRegularPolygon(d.r, d.sides), d.x, d.y, 1, d.static)
         end
         if body then
@@ -5459,7 +5459,7 @@ function createHillTerrainScenario()
         local body
         if choice == 0 then
             body = createBody(createCircle(randomRange(0.3, 0.7)), x, y, 2.0, false)
-        elseif choice == 1 then
+        else if choice == 1 then
             body = createBody(createBox(randomRange(0.3, 0.6), randomRange(0.3, 0.6)), x, y, 2.0, false)
         else
             body = createBody(createRegularPolygon(randomRange(0.3, 0.5), 5), x, y, 2.0, false)
@@ -5573,7 +5573,7 @@ function createMechanismScenario()
                     j.maxMotorTorque = 50
                 end
                 worldAddJoint(world, j)
-            elseif jd.type == "prismatic" then
+            else if jd.type == "prismatic" then
                 local axis = vec(jd.axisX or 1, jd.axisY or 0)
                 local j = createPrismaticJoint(a, b, vec(jd.ax, jd.ay), vec(jd.bx, jd.by), axis)
                 worldAddJoint(world, j)

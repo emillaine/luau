@@ -345,15 +345,15 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
                     if spread == "pad" then
                         if pos < 0 then
                             pos = 0
-                        elseif pos >= COLOR_TABLE_SIZE then
+                        else if pos >= COLOR_TABLE_SIZE then
                             pos = COLOR_TABLE_SIZE - 1
                         end
-                    elseif spread == "repeat" then
+                    else if spread == "repeat" then
                         pos = pos % COLOR_TABLE_SIZE
                         if pos < 0 then
                             pos = pos + COLOR_TABLE_SIZE
                         end
-                    elseif spread == "reflect" then
+                    else if spread == "reflect" then
                         pos = pos % (COLOR_TABLE_SIZE * 2)
                         if pos < 0 then
                             pos = pos + COLOR_TABLE_SIZE * 2

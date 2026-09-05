@@ -281,7 +281,7 @@ function Path:arcTo(rx, ry, angle, largeArc, sweep, x, y)
 
     if not sweep and dth > 0 then
         dth = dth - TWO_PI
-    elseif sweep and dth < 0 then
+    else if sweep and dth < 0 then
         dth = dth + TWO_PI
     end
 
@@ -344,13 +344,13 @@ function Path:addPath(source, matrix)
             end
             if cmd == MOVE_TO then
                 self:moveTo(x, y)
-            elseif cmd == LINE_TO then
+            else if cmd == LINE_TO then
                 self:lineTo(x, y)
             else
                 self:close()
             end
             di = di + 2
-        elseif cmd == CUBIC_TO then
+        else if cmd == CUBIC_TO then
             local x1, y1 = srcData[di], srcData[di + 1]
             local x2, y2 = srcData[di + 2], srcData[di + 3]
             local x3, y3 = srcData[di + 4], srcData[di + 5]
@@ -392,13 +392,13 @@ function Path:traverse(callback)
         if cmd == MOVE_TO then
             callback(MOVE_TO, data[di], data[di + 1])
             di = di + 2
-        elseif cmd == LINE_TO then
+        else if cmd == LINE_TO then
             callback(LINE_TO, data[di], data[di + 1])
             di = di + 2
-        elseif cmd == CUBIC_TO then
+        else if cmd == CUBIC_TO then
             callback(CUBIC_TO, data[di], data[di + 1], data[di + 2], data[di + 3], data[di + 4], data[di + 5])
             di = di + 6
-        elseif cmd == CLOSE then
+        else if cmd == CLOSE then
             callback(CLOSE, data[di], data[di + 1])
             di = di + 2
         end
@@ -480,18 +480,18 @@ function Path:traverseFlatten(callback)
             callback(MOVE_TO, data[di], data[di + 1])
             curX, curY = data[di], data[di + 1]
             di = di + 2
-        elseif cmd == LINE_TO then
+        else if cmd == LINE_TO then
             callback(LINE_TO, data[di], data[di + 1])
             curX, curY = data[di], data[di + 1]
             di = di + 2
-        elseif cmd == CUBIC_TO then
+        else if cmd == CUBIC_TO then
             local x1, y1 = data[di], data[di + 1]
             local x2, y2 = data[di + 2], data[di + 3]
             local x3, y3 = data[di + 4], data[di + 5]
             flattenCubic(callback, curX, curY, x1, y1, x2, y2, x3, y3)
             curX, curY = x3, y3
             di = di + 6
-        elseif cmd == CLOSE then
+        else if cmd == CLOSE then
             callback(CLOSE, data[di], data[di + 1])
             curX, curY = data[di], data[di + 1]
             di = di + 2
@@ -594,10 +594,10 @@ function Path:traverseDashed(offset, dashes, callback)
             local mx, my = ...
             curX, curY = mx, my
             needsMoveTo = true
-        elseif cmd == LINE_TO then
+        else if cmd == LINE_TO then
             local lx, ly = ...
             dashSegment(lx, ly)
-        elseif cmd == CLOSE then
+        else if cmd == CLOSE then
             local clx, cly = ...
             dashSegment(clx, cly)
         end
@@ -610,10 +610,10 @@ function Path:cloneFlatten()
         if cmd == MOVE_TO then
             local x, y = ...
             new:moveTo(x, y)
-        elseif cmd == LINE_TO then
+        else if cmd == LINE_TO then
             local x, y = ...
             new:lineTo(x, y)
-        elseif cmd == CLOSE then
+        else if cmd == CLOSE then
             new:close()
         end
     end)
@@ -626,10 +626,10 @@ function Path:cloneDashed(offset, dashes)
         if cmd == MOVE_TO then
             local x, y = ...
             new:moveTo(x, y)
-        elseif cmd == LINE_TO then
+        else if cmd == LINE_TO then
             local x, y = ...
             new:lineTo(x, y)
-        elseif cmd == CLOSE then
+        else if cmd == CLOSE then
             new:close()
         end
     end)
@@ -680,17 +680,17 @@ function Path:extents(tight)
             local x, y = ...
             processPoint(x, y)
             prevX, prevY = x, y
-        elseif cmd == LINE_TO then
+        else if cmd == LINE_TO then
             local x, y = ...
             processPoint(x, y)
             accumulateLength(x, y)
-        elseif cmd == CUBIC_TO then
+        else if cmd == CUBIC_TO then
             local x1, y1, x2, y2, x3, y3 = ...
             processPoint(x1, y1)
             processPoint(x2, y2)
             processPoint(x3, y3)
             prevX, prevY = x3, y3
-        elseif cmd == CLOSE then
+        else if cmd == CLOSE then
             local x, y = ...
             accumulateLength(x, y)
         end
@@ -743,7 +743,7 @@ local function parseNumber(str, pos)
     local c = string.byte(str, pos)
     if c == 43 then
         pos = pos + 1
-    elseif c == 45 then
+    else if c == 45 then
         pos = pos + 1
         sign = -1
     end
@@ -792,7 +792,7 @@ local function parseNumber(str, pos)
                 c = string.byte(str, pos)
                 if c == 43 then
                     pos = pos + 1
-                elseif c == 45 then
+                else if c == 45 then
                     pos = pos + 1
                     expsign = -1
                 end
@@ -853,11 +853,11 @@ function Path.parse(str)
         if (c >= 65 and c <= 90) or (c >= 97 and c <= 122) then
             cmd = string.char(c)
             pos = pos + 1
-        elseif lastCmd then
+        else if lastCmd then
             -- implicit repeat
             if lastCmd == "M" then
                 cmd = "L"
-            elseif lastCmd == "m" then
+            else if lastCmd == "m" then
                 cmd = "l"
             else
                 cmd = lastCmd
@@ -886,7 +886,7 @@ function Path.parse(str)
             curX, curY = x, y
             startX, startY = x, y
             lastCpX, lastCpY = curX, curY
-        elseif cmd == "L" or cmd == "l" then
+        else if cmd == "L" or cmd == "l" then
             local x, y
             x, pos = parseNumber(str, pos)
             if not x then
@@ -903,7 +903,7 @@ function Path.parse(str)
             p:lineTo(x, y)
             curX, curY = x, y
             lastCpX, lastCpY = curX, curY
-        elseif cmd == "H" or cmd == "h" then
+        else if cmd == "H" or cmd == "h" then
             local x
             x, pos = parseNumber(str, pos)
             if not x then
@@ -915,7 +915,7 @@ function Path.parse(str)
             p:lineTo(x, curY)
             curX = x
             lastCpX, lastCpY = curX, curY
-        elseif cmd == "V" or cmd == "v" then
+        else if cmd == "V" or cmd == "v" then
             local y
             y, pos = parseNumber(str, pos)
             if not y then
@@ -927,7 +927,7 @@ function Path.parse(str)
             p:lineTo(curX, y)
             curY = y
             lastCpX, lastCpY = curX, curY
-        elseif cmd == "C" or cmd == "c" then
+        else if cmd == "C" or cmd == "c" then
             local x1, y1, x2, y2, x3, y3
             x1, pos = parseNumber(str, pos)
             if not x1 then
@@ -966,7 +966,7 @@ function Path.parse(str)
             p:cubicTo(x1, y1, x2, y2, x3, y3)
             lastCpX, lastCpY = x2, y2
             curX, curY = x3, y3
-        elseif cmd == "S" or cmd == "s" then
+        else if cmd == "S" or cmd == "s" then
             local x2, y2, x3, y3
             x2, pos = parseNumber(str, pos)
             if not x2 then
@@ -996,7 +996,7 @@ function Path.parse(str)
             p:cubicTo(x1, y1, x2, y2, x3, y3)
             lastCpX, lastCpY = x2, y2
             curX, curY = x3, y3
-        elseif cmd == "Q" or cmd == "q" then
+        else if cmd == "Q" or cmd == "q" then
             local x1, y1, x2, y2
             x1, pos = parseNumber(str, pos)
             if not x1 then
@@ -1024,7 +1024,7 @@ function Path.parse(str)
             p:quadTo(x1, y1, x2, y2)
             lastCpX, lastCpY = x1, y1
             curX, curY = x2, y2
-        elseif cmd == "T" or cmd == "t" then
+        else if cmd == "T" or cmd == "t" then
             local x2, y2
             x2, pos = parseNumber(str, pos)
             if not x2 then
@@ -1043,7 +1043,7 @@ function Path.parse(str)
             p:quadTo(x1, y1, x2, y2)
             lastCpX, lastCpY = x1, y1
             curX, curY = x2, y2
-        elseif cmd == "A" or cmd == "a" then
+        else if cmd == "A" or cmd == "a" then
             local rx, ry, angle, largeArc, sweep, x, y
             rx, pos = parseNumber(str, pos)
             if not rx then
@@ -1083,7 +1083,7 @@ function Path.parse(str)
             p:arcTo(rx, ry, angle * PI / 180, largeArc, sweep, x, y)
             curX, curY = x, y
             lastCpX, lastCpY = curX, curY
-        elseif cmd == "Z" or cmd == "z" then
+        else if cmd == "Z" or cmd == "z" then
             p:close()
             curX, curY = startX, startY
             lastCpX, lastCpY = curX, curY

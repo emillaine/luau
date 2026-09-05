@@ -545,7 +545,7 @@ TEST_CASE_FIXTURE(Fixture, "widening_happens_almost_everywhere_except_for_tables
             if tag == "Cat" then
                 local result = {tag = tag, meows = true}
                 return result
-            elseif tag == "Dog" then
+            else if tag == "Dog" then
                 local result = {tag = tag, barks = true}
                 return result
             else

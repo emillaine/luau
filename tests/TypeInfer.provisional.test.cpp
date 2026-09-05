@@ -47,7 +47,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
         function f(a)
             if type(a) == "boolean" then
                 local a1 = a
-            elseif a.fn() then
+            else if a.fn() then
                 local a2 = a
             end
         end
@@ -57,7 +57,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
         function f(a:{fn:()->(T,U...)}): ()
             if type(a) == 'boolean' then
                 local a1:boolean=a
-            elseif a.fn() then
+            else if a.fn() then
                 local a2:{fn:()->(T,U...)}=a
             end
         end
@@ -68,7 +68,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
         function f(a:{fn:()->(unknown,...unknown)}): ()
             if type(a) == 'boolean' then
                 local a1:{fn:()->(unknown,...unknown)}&boolean=a
-            elseif a.fn() then
+            else if a.fn() then
                 local a2:{fn:()->(unknown,...unknown)}&(userdata|function|nil|number|integer|string|thread|buffer|table)=a
             end
         end
@@ -79,7 +79,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
         function f(a:{fn:()->(unknown,...unknown)}): ()
             if type(a) == 'boolean' then
                 local a1:{fn:()->(unknown,...unknown)}&boolean=a
-            elseif a.fn() then
+            else if a.fn() then
                 local a2:{fn:()->(unknown,...unknown)}&(userdata|function|nil|number|string|thread|buffer|table)=a
             end
         end
@@ -1227,7 +1227,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bin_prov")
                 local item = self.head.item
                 if type(item) == "function" then
                     item()
-                elseif item.Destroy != nil then
+                else if item.Destroy != nil then
                 end
                 self.head = self.head.next
             end

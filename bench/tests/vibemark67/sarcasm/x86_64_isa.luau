@@ -55,7 +55,7 @@ function x86.classify(insn)
 	local control, targets, fallsThrough = "none", nil, true
 
 	local function useOperand(o)
-		if isGpr(o) then table.insert(uses, o) elseif o and o.kind == "mem" then memRegs(o, uses) end
+		if isGpr(o) then table.insert(uses, o) else if o and o.kind == "mem" then memRegs(o, uses) end
 	end
 
 	if m == "jmp" then
@@ -63,44 +63,44 @@ function x86.classify(insn)
 		targets = {}
 		for _, o in ops do if o.kind == "sym" then table.insert(targets, o.text) end end
 		if ops[1] and (isGpr(ops[1]) or (ops[1].kind == "mem")) then control = "indirect"; useOperand(ops[1]) end
-	elseif m == "jcc" then
+	else if m == "jcc" then
 		control = "condbranch"; targets = {}
 		for _, o in ops do if o.kind == "sym" then table.insert(targets, o.text) end end
-	elseif m == "call" then
+	else if m == "call" then
 		control = "call"
 		if ops[1] and (isGpr(ops[1]) or ops[1].kind == "mem") then control = "indcall"; useOperand(ops[1]) end
-	elseif m == "ret" then
+	else if m == "ret" then
 		control, fallsThrough = "return", false
-	elseif m == "nop" or m == "ud2" or m == "leave" then
+	else if m == "nop" or m == "ud2" or m == "leave" then
 		-- no gpr effects we model (leave restores rsp/rbp; frame handled elsewhere)
-	elseif m == "cltq" or m == "cqo" then
+	else if m == "cltq" or m == "cqo" then
 		table.insert(defs, { kind="reg", rc="gpr", num=0, width=64, name="rax" })
 		table.insert(uses, { kind="reg", rc="gpr", num=0, width=64, name="rax" })
 		table.insert(rmw, 0)
-	elseif FLAGS_ONLY[m] then
+	else if FLAGS_ONLY[m] then
 		for _, o in ops do useOperand(o) end
-	elseif ALU2[m] then
+	else if ALU2[m] then
 		-- dst = dst OP src : ops[1] is def+use, rest are uses
 		if isGpr(ops[1]) then table.insert(defs, ops[1]); table.insert(uses, ops[1]); table.insert(rmw, ops[1].num)
-		elseif ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
+		else if ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
 		for i = 2, #ops do useOperand(ops[i]) end
-	elseif DST_ONLY[m] then
+	else if DST_ONLY[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]); table.insert(uses, ops[1]); table.insert(rmw, ops[1].num)
-		elseif ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
-	elseif m == "mov" or m == "movzx" or m == "movsx" or m == "lea" or m == "cmov" or m == "setcc" then
+		else if ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
+	else if m == "mov" or m == "movzx" or m == "movsx" or m == "lea" or m == "cmov" or m == "setcc" then
 		-- ops[1] def, ops[2..] use (mem regs used); a store (mem dst) uses the value instead.
 		if isGpr(ops[1]) then table.insert(defs, ops[1])
-		elseif ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
+		else if ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
 		if (ops[1] and ops[1].kind == "mem") and isGpr(ops[2]) then table.insert(uses, ops[2]) end
 		if m == "cmov" and isGpr(ops[1]) then table.insert(uses, ops[1]); table.insert(rmw, ops[1].num) end
 		for i = 2, #ops do
 			local o = ops[i]
 			if o and o.kind == "mem" then memRegs(o, uses)
-			elseif isGpr(o) and not (ops[1] and ops[1].kind == "mem") then table.insert(uses, o) end
+			else if isGpr(o) and not (ops[1] and ops[1].kind == "mem") then table.insert(uses, o) end
 		end
-	elseif m == "push" then
+	else if m == "push" then
 		useOperand(ops[1])
-	elseif m == "pop" then
+	else if m == "pop" then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 	else
 		-- unknown: conservative (first reg def, rest use)
@@ -108,7 +108,7 @@ function x86.classify(insn)
 		for _, o in ops do
 			if isGpr(o) then
 				if first then table.insert(defs, o); first = false else table.insert(uses, o) end
-			elseif o and o.kind == "mem" then memRegs(o, uses) end
+			else if o and o.kind == "mem" then memRegs(o, uses) end
 		end
 		return { defs = defs, uses = uses, rmw = rmw, control = "none", fallsThrough = true, unknown = true }
 	end

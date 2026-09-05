@@ -383,10 +383,10 @@ function noise.writeMessage(hs: Handshake, payload: buffer?): buffer
 	local msg: buffer
 	if hs.initiator and hs.msgIndex == 0 then
 		msg = writeMsg1(hs, pl)
-	elseif not hs.initiator and hs.msgIndex == 1 then
+	else if not hs.initiator and hs.msgIndex == 1 then
 		msg = writeMsg2(hs, pl)
 		doSplit(hs)
-	elseif hs.initiator and hs.msgIndex == 2 then
+	else if hs.initiator and hs.msgIndex == 2 then
 		msg = writeMsg3(hs, pl)
 		doSplit(hs)
 	else
@@ -401,9 +401,9 @@ function noise.readMessage(hs: Handshake, message: buffer): buffer
 	local payload: buffer
 	if not hs.initiator and hs.msgIndex == 0 then
 		payload = readMsg1(hs, message)
-	elseif hs.initiator and hs.msgIndex == 1 then
+	else if hs.initiator and hs.msgIndex == 1 then
 		payload = readMsg2(hs, message)
-	elseif not hs.initiator and hs.msgIndex == 2 then
+	else if not hs.initiator and hs.msgIndex == 2 then
 		payload = readMsg3(hs, message)
 		doSplit(hs)
 	else

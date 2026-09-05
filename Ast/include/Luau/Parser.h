@@ -110,7 +110,7 @@ private:
     // do block end |
     // while exp [do] block end |
     // repeat block until exp |
-    // if exp [then] block {elseif exp [then] block} [else block] end |
+    // if exp [then] block {else if exp [then] block} [else block] end |
     // for Name `=' exp `,' exp [`,' exp] [do] block end |
     // for namelist in explist [do] block end |
     // [attributes] function funcname funcbody |
@@ -119,13 +119,13 @@ private:
     // laststat ::= return [explist] | break
     AstStat* parseStat();
 
-    // if exp [then] block {elseif exp [then] block} [else block] end
+    // if exp [then] block {else if exp [then] block} [else block] end
     AstStat* parseIf();
 
-    // (`if' | `elseif') (`local' | `const') binding `=' exp [then] block ... end -- parses an entire `if local`/`if const`
+    // (`if' | `else if') (`local' | `const') binding `=' exp [then] block ... end -- parses an entire `if local`/`if const`
     AstStat* parseIfLocalCondition(const Location& start);
 
-    // Parse the trailing `{elseif exp [then] block} [else block] end` shared by `parseIf` and `parseIfLocalCondition`
+    // Parse the trailing `{else if exp [then] block} [else block] end` shared by `parseIf` and `parseIfLocalCondition`
     AstStat* parseElseBody(const Location& start, const Lexeme& matchThen, AstStatBlock* thenbody, Location& end, std::optional<Location>& elseLocation);
 
     // while exp [do] block end

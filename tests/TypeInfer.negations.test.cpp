@@ -59,7 +59,7 @@ TEST_CASE_FIXTURE(Fixture, "cofinite_strings_can_be_compared_for_equality")
                 e = 'strictEqualObject'
             end
             if e == 'deepStrictEqual' or e == 'strictEqual' then
-            elseif e == 'notDeepStrictEqual' or e == 'notStrictEqual' then
+            else if e == 'notDeepStrictEqual' or e == 'notStrictEqual' then
             end
             return e
         end

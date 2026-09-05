@@ -52,7 +52,7 @@ function test()
 				end
 				k2 = integer.mul(integer.lrotate(integer.mul(k2, C2), 33i), C1)
 				h2 = integer.bxor(h2, k2)
-			elseif rem == 8 then
+			else if rem == 8 then
 				k1 = buffer.readinteger(buf, tailStart)
 			else
 				for j = 0, rem - 1 do

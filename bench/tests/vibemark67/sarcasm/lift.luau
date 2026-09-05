@@ -62,7 +62,7 @@ function lift.liftFunction(body, opts)
 		if st.kind == "label" then
 			table.insert(pendingLabels, st.name)
 			table.insert(nodes, { kind = "label", name = st.name })
-		elseif st.kind == "insn" then
+		else if st.kind == "insn" then
 			local c = classify(st)
 			if c.control == "return" and returnRegs then
 				for _, rn in returnRegs do

@@ -1656,7 +1656,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compare_singleton_string_to_string")
         local function test(a: string, b: string)
             if a == "Pet" and b == "Pet" then
                 return true
-            elseif a != b then
+            else if a != b then
                 return a < b
             else
                 return false

@@ -6491,7 +6491,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTagsAcrossChains")
                    R"(
 local function f(...)
     if bit32.btest(538976288,4,4,4,262144) then
-    elseif bit32.btest(538976288,4,_,4,67108864) then
+    else if bit32.btest(538976288,4,_,4,67108864) then
     end
 end
 )",
@@ -6720,7 +6720,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest12")
         getCodegenAssembly(R"(
 local function f(...)
     if buffer.readf64(_, bit32.bxor(0,_,0), function() _ += _ end) then
-    elseif ... then
+    else if ... then
     end
 end
 )")
@@ -6754,11 +6754,11 @@ local function f(...)
         l242,_,_,_._ = _,tanh,_,_
         _(...)
         _ = {}
-    elseif _ then
+    else if _ then
         l242,_,_,_._ = _,{_=_,_=_,},_
         _(...)
         _ = {}
-    elseif _ then
+    else if _ then
     end
 end
 )")

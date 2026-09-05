@@ -163,7 +163,7 @@ function lexSkipWhitespace(lex)
         if ch == " " or ch == "\t" or ch == "\r" or ch == "\n" then
             if ch == "\n" then lex.line = lex.line + 1 end
             lex.pos = lex.pos + 1
-        elseif ch == "-" and lex.pos + 1 <= lex.len and ssub(lex.source, lex.pos + 1, lex.pos + 1) == "-" then
+        else if ch == "-" and lex.pos + 1 <= lex.len and ssub(lex.source, lex.pos + 1, lex.pos + 1) == "-" then
             -- comment
             lex.pos = lex.pos + 2
             if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "[" then
@@ -293,7 +293,7 @@ function lexReadNumber(lex)
                 if c ~= "_" then clean = clean .. c end
             end
             return tonumber(clean)
-        elseif nxt == "b" or nxt == "B" then
+        else if nxt == "b" or nxt == "B" then
             lex.pos = lex.pos + 2
             while lex.pos <= lex.len do
                 local c = ssub(lex.source, lex.pos, lex.pos)
@@ -366,21 +366,21 @@ function lexReadString(lex, quote)
         if ch == quote then
             lex.pos = lex.pos + 1
             return tconcat(parts)
-        elseif ch == "\\" then
+        else if ch == "\\" then
             lex.pos = lex.pos + 1
             local esc = ssub(lex.source, lex.pos, lex.pos)
             lex.pos = lex.pos + 1
             if esc == "n" then tinsert(parts, "\n")
-            elseif esc == "t" then tinsert(parts, "\t")
-            elseif esc == "r" then tinsert(parts, "\r")
-            elseif esc == "\\" then tinsert(parts, "\\")
-            elseif esc == "\"" then tinsert(parts, "\"")
-            elseif esc == "'" then tinsert(parts, "'")
-            elseif esc == "0" then tinsert(parts, "\0")
-            elseif esc == "\n" then
+            else if esc == "t" then tinsert(parts, "\t")
+            else if esc == "r" then tinsert(parts, "\r")
+            else if esc == "\\" then tinsert(parts, "\\")
+            else if esc == "\"" then tinsert(parts, "\"")
+            else if esc == "'" then tinsert(parts, "'")
+            else if esc == "0" then tinsert(parts, "\0")
+            else if esc == "\n" then
                 lex.line = lex.line + 1
                 tinsert(parts, "\n")
-            elseif lexIsDigit(esc) then
+            else if lexIsDigit(esc) then
                 local numstr = esc
                 for _ = 1, 2 do
                     if lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) then
@@ -392,7 +392,7 @@ function lexReadString(lex, quote)
             else
                 tinsert(parts, esc)
             end
-        elseif ch == "\n" then
+        else if ch == "\n" then
             error("unfinished string at line " .. lex.line)
         else
             tinsert(parts, ch)
@@ -456,28 +456,28 @@ function lexNext(lex)
     -- Operators and punctuation
     lex.pos = lex.pos + 1
     if ch == "+" then lex.token = TK_PLUS; lex.value = nil
-    elseif ch == "*" then lex.token = TK_STAR; lex.value = nil
-    elseif ch == "%" then lex.token = TK_PERCENT; lex.value = nil
-    elseif ch == "^" then lex.token = TK_CARET; lex.value = nil
-    elseif ch == "#" then lex.token = TK_HASH; lex.value = nil
-    elseif ch == "," then lex.token = TK_COMMA; lex.value = nil
-    elseif ch == ";" then lex.token = TK_SEMI; lex.value = nil
-    elseif ch == "(" then lex.token = TK_LPAREN; lex.value = nil
-    elseif ch == ")" then lex.token = TK_RPAREN; lex.value = nil
-    elseif ch == "{" then lex.token = TK_LBRACE; lex.value = nil
-    elseif ch == "}" then lex.token = TK_RBRACE; lex.value = nil
-    elseif ch == "]" then lex.token = TK_RBRACKET; lex.value = nil
-    elseif ch == "[" then lex.token = TK_LBRACKET; lex.value = nil
-    elseif ch == "-" then
+    else if ch == "*" then lex.token = TK_STAR; lex.value = nil
+    else if ch == "%" then lex.token = TK_PERCENT; lex.value = nil
+    else if ch == "^" then lex.token = TK_CARET; lex.value = nil
+    else if ch == "#" then lex.token = TK_HASH; lex.value = nil
+    else if ch == "," then lex.token = TK_COMMA; lex.value = nil
+    else if ch == ";" then lex.token = TK_SEMI; lex.value = nil
+    else if ch == "(" then lex.token = TK_LPAREN; lex.value = nil
+    else if ch == ")" then lex.token = TK_RPAREN; lex.value = nil
+    else if ch == "{" then lex.token = TK_LBRACE; lex.value = nil
+    else if ch == "}" then lex.token = TK_RBRACE; lex.value = nil
+    else if ch == "]" then lex.token = TK_RBRACKET; lex.value = nil
+    else if ch == "[" then lex.token = TK_LBRACKET; lex.value = nil
+    else if ch == "-" then
         lex.token = TK_MINUS; lex.value = nil
-    elseif ch == "/" then
+    else if ch == "/" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "/" then
             lex.pos = lex.pos + 1
             lex.token = TK_DSLASH; lex.value = nil
         else
             lex.token = TK_SLASH; lex.value = nil
         end
-    elseif ch == "." then
+    else if ch == "." then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "." then
             lex.pos = lex.pos + 1
             if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "." then
@@ -486,7 +486,7 @@ function lexNext(lex)
             else
                 lex.token = TK_DOTDOT; lex.value = nil
             end
-        elseif lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) then
+        else if lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) then
             -- number starting with dot like .5
             lex.pos = lex.pos - 1 -- back up to include the dot
             -- Actually read as number
@@ -513,30 +513,30 @@ function lexNext(lex)
         else
             lex.token = TK_DOT; lex.value = nil
         end
-    elseif ch == ":" then
+    else if ch == ":" then
         lex.token = TK_COLON; lex.value = nil
-    elseif ch == "=" then
+    else if ch == "=" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
             lex.token = TK_EQ; lex.value = nil
         else
             lex.token = TK_ASSIGN; lex.value = nil
         end
-    elseif ch == "~" then
+    else if ch == "~" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
             lex.token = TK_NEQ; lex.value = nil
         else
             error("unexpected character '~' at line " .. lex.line)
         end
-    elseif ch == "<" then
+    else if ch == "<" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
             lex.token = TK_LE; lex.value = nil
         else
             lex.token = TK_LT; lex.value = nil
         end
-    elseif ch == ">" then
+    else if ch == ">" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
             lex.token = TK_GE; lex.value = nil
@@ -605,7 +605,7 @@ function parsePrimaryExpr(parser)
     if tk == TK_NAME then
         node = astNode("Var", {name = parser.lex.value})
         lexNext(parser.lex)
-    elseif tk == TK_LPAREN then
+    else if tk == TK_LPAREN then
         lexNext(parser.lex)
         node = parseExpr(parser)
         parserExpect(parser, TK_RPAREN)
@@ -624,17 +624,17 @@ function parseSuffixExpr(parser)
             lexNext(parser.lex)
             local field = parserExpect(parser, TK_NAME)
             node = astNode("Index", {obj = node, key = astNode("String", {value = field})})
-        elseif tk == TK_LBRACKET then
+        else if tk == TK_LBRACKET then
             lexNext(parser.lex)
             local key = parseExpr(parser)
             parserExpect(parser, TK_RBRACKET)
             node = astNode("Index", {obj = node, key = key})
-        elseif tk == TK_COLON then
+        else if tk == TK_COLON then
             lexNext(parser.lex)
             local method = parserExpect(parser, TK_NAME)
             local args = parseCallArgs(parser)
             node = astNode("MethodCall", {obj = node, method = method, args = args})
-        elseif tk == TK_LPAREN or tk == TK_LBRACE or tk == TK_STRING then
+        else if tk == TK_LPAREN or tk == TK_LBRACE or tk == TK_STRING then
             local args = parseCallArgs(parser)
             node = astNode("Call", {func = node, args = args})
         else
@@ -658,9 +658,9 @@ function parseCallArgs(parser)
         end
         parserExpect(parser, TK_RPAREN)
         return args
-    elseif tk == TK_LBRACE then
+    else if tk == TK_LBRACE then
         return {parseTableConstructor(parser)}
-    elseif tk == TK_STRING then
+    else if tk == TK_STRING then
         local val = parser.lex.value
         lexNext(parser.lex)
         return {astNode("String", {value = val})}
@@ -681,7 +681,7 @@ function parseTableConstructor(parser)
             parserExpect(parser, TK_ASSIGN)
             field.value = parseExpr(parser)
             field.kind = "bracket"
-        elseif parserCheck(parser, TK_NAME) then
+        else if parserCheck(parser, TK_NAME) then
             -- Could be name=value or just an expression
             local savedPos = parser.lex.pos
             local savedLine = parser.lex.line
@@ -722,25 +722,25 @@ function parseSimpleExpr(parser)
         local val = parser.lex.value
         lexNext(parser.lex)
         return astNode("Number", {value = val})
-    elseif tk == TK_STRING then
+    else if tk == TK_STRING then
         local val = parser.lex.value
         lexNext(parser.lex)
         return astNode("String", {value = val})
-    elseif tk == TK_NIL then
+    else if tk == TK_NIL then
         lexNext(parser.lex)
         return astNode("Nil", {})
-    elseif tk == TK_TRUE then
+    else if tk == TK_TRUE then
         lexNext(parser.lex)
         return astNode("Bool", {value = true})
-    elseif tk == TK_FALSE then
+    else if tk == TK_FALSE then
         lexNext(parser.lex)
         return astNode("Bool", {value = false})
-    elseif tk == TK_DOTS then
+    else if tk == TK_DOTS then
         lexNext(parser.lex)
         return astNode("Dots", {})
-    elseif tk == TK_LBRACE then
+    else if tk == TK_LBRACE then
         return parseTableConstructor(parser)
-    elseif tk == TK_FUNCTION then
+    else if tk == TK_FUNCTION then
         lexNext(parser.lex)
         return parseFuncBody(parser)
     else
@@ -754,11 +754,11 @@ function parseUnaryExpr(parser)
         lexNext(parser.lex)
         local expr = parseUnaryExpr(parser)
         return astNode("Unop", {op = "not", expr = expr})
-    elseif tk == TK_MINUS then
+    else if tk == TK_MINUS then
         lexNext(parser.lex)
         local expr = parseUnaryExpr(parser)
         return astNode("Unop", {op = "-", expr = expr})
-    elseif tk == TK_HASH then
+    else if tk == TK_HASH then
         lexNext(parser.lex)
         local expr = parseUnaryExpr(parser)
         return astNode("Unop", {op = "#", expr = expr})
@@ -780,12 +780,12 @@ end
 
 function getBinopPrecedence(tk)
     if tk == TK_OR then return 1
-    elseif tk == TK_AND then return 2
-    elseif tk == TK_LT or tk == TK_GT or tk == TK_LE or tk == TK_GE or tk == TK_NEQ or tk == TK_EQ then return 3
-    elseif tk == TK_DOTDOT then return 4
-    elseif tk == TK_PLUS or tk == TK_MINUS then return 5
-    elseif tk == TK_STAR or tk == TK_SLASH or tk == TK_DSLASH or tk == TK_PERCENT then return 6
-    elseif tk == TK_CARET then return 8
+    else if tk == TK_AND then return 2
+    else if tk == TK_LT or tk == TK_GT or tk == TK_LE or tk == TK_GE or tk == TK_NEQ or tk == TK_EQ then return 3
+    else if tk == TK_DOTDOT then return 4
+    else if tk == TK_PLUS or tk == TK_MINUS then return 5
+    else if tk == TK_STAR or tk == TK_SLASH or tk == TK_DSLASH or tk == TK_PERCENT then return 6
+    else if tk == TK_CARET then return 8
     else return -1
     end
 end
@@ -893,7 +893,7 @@ parseStat = function(parser)
             end
             return astNode("Local", {names = names, values = values})
         end
-    elseif tk == TK_FUNCTION then
+    else if tk == TK_FUNCTION then
         lexNext(parser.lex)
         -- function name or function t.name or function t:name
         local name = parserExpect(parser, TK_NAME)
@@ -910,7 +910,7 @@ parseStat = function(parser)
         end
         local func = parseFuncBody(parser)
         return astNode("FuncDef", {names = indexChain, isMethod = isMethod, func = func})
-    elseif tk == TK_IF then
+    else if tk == TK_IF then
         lexNext(parser.lex)
         local clauses = {}
         local cond = parseExpr(parser)
@@ -930,20 +930,20 @@ parseStat = function(parser)
         end
         parserExpect(parser, TK_END)
         return astNode("If", {clauses = clauses, elseBody = elseBody})
-    elseif tk == TK_WHILE then
+    else if tk == TK_WHILE then
         lexNext(parser.lex)
         local cond = parseExpr(parser)
         parserExpect(parser, TK_DO)
         local body = parseBlock(parser)
         parserExpect(parser, TK_END)
         return astNode("While", {cond = cond, body = body})
-    elseif tk == TK_REPEAT then
+    else if tk == TK_REPEAT then
         lexNext(parser.lex)
         local body = parseBlock(parser)
         parserExpect(parser, TK_UNTIL)
         local cond = parseExpr(parser)
         return astNode("Repeat", {body = body, cond = cond})
-    elseif tk == TK_FOR then
+    else if tk == TK_FOR then
         lexNext(parser.lex)
         local firstName = parserExpect(parser, TK_NAME)
         if parserCheck(parser, TK_ASSIGN) then
@@ -974,12 +974,12 @@ parseStat = function(parser)
             parserExpect(parser, TK_END)
             return astNode("GenFor", {names = names, iters = iterExprs, body = body})
         end
-    elseif tk == TK_DO then
+    else if tk == TK_DO then
         lexNext(parser.lex)
         local body = parseBlock(parser)
         parserExpect(parser, TK_END)
         return astNode("Do", {body = body})
-    elseif tk == TK_RETURN then
+    else if tk == TK_RETURN then
         lexNext(parser.lex)
         local values = {}
         if not parserCheck(parser, TK_END) and not parserCheck(parser, TK_ELSE) and not parserCheck(parser, TK_ELSEIF) and not parserCheck(parser, TK_UNTIL) and not parserCheck(parser, TK_EOF) and not parserCheck(parser, TK_SEMI) then
@@ -987,10 +987,10 @@ parseStat = function(parser)
         end
         parserMatch(parser, TK_SEMI)
         return astNode("Return", {values = values})
-    elseif tk == TK_BREAK then
+    else if tk == TK_BREAK then
         lexNext(parser.lex)
         return astNode("Break", {})
-    elseif tk == TK_CONTINUE then
+    else if tk == TK_CONTINUE then
         lexNext(parser.lex)
         return astNode("Continue", {})
     else
@@ -1116,12 +1116,12 @@ end
 function arith(interp, op, a, b)
     local metafield
     if op == "+" then metafield = "__add"
-    elseif op == "-" then metafield = "__sub"
-    elseif op == "*" then metafield = "__mul"
-    elseif op == "/" then metafield = "__div"
-    elseif op == "//" then metafield = "__idiv"
-    elseif op == "%" then metafield = "__mod"
-    elseif op == "^" then metafield = "__pow"
+    else if op == "-" then metafield = "__sub"
+    else if op == "*" then metafield = "__mul"
+    else if op == "/" then metafield = "__div"
+    else if op == "//" then metafield = "__idiv"
+    else if op == "%" then metafield = "__mod"
+    else if op == "^" then metafield = "__pow"
     end
     local handler = getMetafield(interp, a, metafield) or getMetafield(interp, b, metafield)
     if handler then
@@ -1142,7 +1142,7 @@ function tableIndex(interp, tbl, key)
         if idx ~= nil then
             if type(idx) == "table" then
                 return tableIndex(interp, idx, key)
-            elseif type(idx) == "function" or (type(idx) == "table" and idx._isClosure) then
+            else if type(idx) == "function" or (type(idx) == "table" and idx._isClosure) then
                 local results = callFunction(interp, idx, {tbl, key})
                 if results and #results > 0 then return results[1] end
                 return nil
@@ -1166,7 +1166,7 @@ function tableNewIndex(interp, tbl, key, value)
             if type(ni) == "function" or (type(ni) == "table" and ni._isClosure) then
                 callFunction(interp, ni, {tbl, key, value})
                 return
-            elseif type(ni) == "table" then
+            else if type(ni) == "table" then
                 tableNewIndex(interp, ni, key, value)
                 return
             end
@@ -1247,43 +1247,43 @@ function evalExprMulti(interp, node, env)
     local tag = node.tag
     if tag == "Number" then
         return {node.value}
-    elseif tag == "String" then
+    else if tag == "String" then
         return {node.value}
-    elseif tag == "Nil" then
+    else if tag == "Nil" then
         return {nil}
-    elseif tag == "Bool" then
+    else if tag == "Bool" then
         return {node.value}
-    elseif tag == "Dots" then
+    else if tag == "Dots" then
         local varargs = envGet(env, "...")
         if varargs then return varargs end
         return {}
-    elseif tag == "Var" then
+    else if tag == "Var" then
         local val = envGet(env, node.name)
         if val == nil then
             val = interp.globals[node.name]
         end
         return {val}
-    elseif tag == "Paren" then
+    else if tag == "Paren" then
         local val = evalExpr(interp, node.expr, env)
         return {val}
-    elseif tag == "Unop" then
+    else if tag == "Unop" then
         return {evalUnop(interp, node, env)}
-    elseif tag == "Binop" then
+    else if tag == "Binop" then
         return {evalBinop(interp, node, env)}
-    elseif tag == "Index" then
+    else if tag == "Index" then
         local obj = evalExpr(interp, node.obj, env)
         local key = evalExpr(interp, node.key, env)
         if type(obj) == "table" then
             return {tableIndex(interp, obj, key)}
         end
         error("attempt to index a " .. type(obj) .. " value")
-    elseif tag == "Call" then
+    else if tag == "Call" then
         return evalCall(interp, node, env)
-    elseif tag == "MethodCall" then
+    else if tag == "MethodCall" then
         return evalMethodCall(interp, node, env)
-    elseif tag == "Table" then
+    else if tag == "Table" then
         return {evalTableConstructor(interp, node, env)}
-    elseif tag == "Function" then
+    else if tag == "Function" then
         local cl = newClosure(node, env, interp.globals)
         cl._isClosure = true
         return {cl}
@@ -1304,7 +1304,7 @@ function evalUnop(interp, node, env)
             return nil
         end
         error("attempt to perform arithmetic on a " .. type(val) .. " value")
-    elseif op == "#" then
+    else if op == "#" then
         if type(val) == "string" then return slen(val) end
         if type(val) == "table" then
             local handler = getMetafield(interp, val, "__len")
@@ -1316,7 +1316,7 @@ function evalUnop(interp, node, env)
             return #val
         end
         error("attempt to get length of a " .. type(val) .. " value")
-    elseif op == "not" then
+    else if op == "not" then
         return not val
     end
 end
@@ -1329,7 +1329,7 @@ function evalBinop(interp, node, env)
         local left = evalExpr(interp, node.left, env)
         if not left then return left end
         return evalExpr(interp, node.right, env)
-    elseif op == TK_OR then
+    else if op == TK_OR then
         local left = evalExpr(interp, node.left, env)
         if left then return left end
         return evalExpr(interp, node.right, env)
@@ -1341,25 +1341,25 @@ function evalBinop(interp, node, env)
     if op == TK_PLUS then
         if type(left) == "number" and type(right) == "number" then return left + right end
         return arith(interp, "+", left, right)
-    elseif op == TK_MINUS then
+    else if op == TK_MINUS then
         if type(left) == "number" and type(right) == "number" then return left - right end
         return arith(interp, "-", left, right)
-    elseif op == TK_STAR then
+    else if op == TK_STAR then
         if type(left) == "number" and type(right) == "number" then return left * right end
         return arith(interp, "*", left, right)
-    elseif op == TK_SLASH then
+    else if op == TK_SLASH then
         if type(left) == "number" and type(right) == "number" then return left / right end
         return arith(interp, "/", left, right)
-    elseif op == TK_DSLASH then
+    else if op == TK_DSLASH then
         if type(left) == "number" and type(right) == "number" then return floor(left / right) end
         return arith(interp, "//", left, right)
-    elseif op == TK_PERCENT then
+    else if op == TK_PERCENT then
         if type(left) == "number" and type(right) == "number" then return left % right end
         return arith(interp, "%", left, right)
-    elseif op == TK_CARET then
+    else if op == TK_CARET then
         if type(left) == "number" and type(right) == "number" then return left ^ right end
         return arith(interp, "^", left, right)
-    elseif op == TK_DOTDOT then
+    else if op == TK_DOTDOT then
         if (type(left) == "string" or type(left) == "number") and (type(right) == "string" or type(right) == "number") then
             return tostring(left) .. tostring(right)
         end
@@ -1370,7 +1370,7 @@ function evalBinop(interp, node, env)
             return nil
         end
         error("attempt to concatenate a " .. type(left) .. " value")
-    elseif op == TK_EQ then
+    else if op == TK_EQ then
         if left == right then return true end
         if type(left) ~= type(right) then return false end
         local handler = getMetafield(interp, left, "__eq")
@@ -1380,7 +1380,7 @@ function evalBinop(interp, node, env)
             return false
         end
         return false
-    elseif op == TK_NEQ then
+    else if op == TK_NEQ then
         if left == right then return false end
         if type(left) ~= type(right) then return true end
         local handler = getMetafield(interp, left, "__eq")
@@ -1390,7 +1390,7 @@ function evalBinop(interp, node, env)
             return true
         end
         return true
-    elseif op == TK_LT then
+    else if op == TK_LT then
         if type(left) == "number" and type(right) == "number" then return left < right end
         if type(left) == "string" and type(right) == "string" then return left < right end
         local handler = getMetafield(interp, left, "__lt") or getMetafield(interp, right, "__lt")
@@ -1400,7 +1400,7 @@ function evalBinop(interp, node, env)
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
-    elseif op == TK_GT then
+    else if op == TK_GT then
         if type(left) == "number" and type(right) == "number" then return left > right end
         if type(left) == "string" and type(right) == "string" then return left > right end
         local handler = getMetafield(interp, right, "__lt") or getMetafield(interp, left, "__lt")
@@ -1410,7 +1410,7 @@ function evalBinop(interp, node, env)
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
-    elseif op == TK_LE then
+    else if op == TK_LE then
         if type(left) == "number" and type(right) == "number" then return left <= right end
         if type(left) == "string" and type(right) == "string" then return left <= right end
         local handler = getMetafield(interp, left, "__le") or getMetafield(interp, right, "__le")
@@ -1420,7 +1420,7 @@ function evalBinop(interp, node, env)
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
-    elseif op == TK_GE then
+    else if op == TK_GE then
         if type(left) == "number" and type(right) == "number" then return left >= right end
         if type(left) == "string" and type(right) == "string" then return left >= right end
         local handler = getMetafield(interp, right, "__le") or getMetafield(interp, left, "__le")
@@ -1486,7 +1486,7 @@ function evalTableConstructor(interp, node, env)
                 val = evalExpr(interp, field.value, env)
             end
             rawset(tbl, key, val)
-        elseif field.kind == "name" then
+        else if field.kind == "name" then
             local key = field.key.value
             local val = evalExpr(interp, field.value, env)
             rawset(tbl, key, val)
@@ -1526,32 +1526,32 @@ function execStat(interp, node, env)
 
     if tag == "Local" then
         return execLocal(interp, node, env)
-    elseif tag == "LocalFunc" then
+    else if tag == "LocalFunc" then
         return execLocalFunc(interp, node, env)
-    elseif tag == "Assign" then
+    else if tag == "Assign" then
         return execAssign(interp, node, env)
-    elseif tag == "FuncDef" then
+    else if tag == "FuncDef" then
         return execFuncDef(interp, node, env)
-    elseif tag == "If" then
+    else if tag == "If" then
         return execIf(interp, node, env)
-    elseif tag == "While" then
+    else if tag == "While" then
         return execWhile(interp, node, env)
-    elseif tag == "Repeat" then
+    else if tag == "Repeat" then
         return execRepeat(interp, node, env)
-    elseif tag == "NumFor" then
+    else if tag == "NumFor" then
         return execNumFor(interp, node, env)
-    elseif tag == "GenFor" then
+    else if tag == "GenFor" then
         return execGenFor(interp, node, env)
-    elseif tag == "Do" then
+    else if tag == "Do" then
         local blockEnv = newEnv(env)
         return execBlock(interp, node.body, blockEnv)
-    elseif tag == "Return" then
+    else if tag == "Return" then
         return execReturn(interp, node, env)
-    elseif tag == "Break" then
+    else if tag == "Break" then
         return SIGNAL_BREAK
-    elseif tag == "Continue" then
+    else if tag == "Continue" then
         return SIGNAL_CONTINUE
-    elseif tag == "ExprStat" then
+    else if tag == "ExprStat" then
         evalExprMulti(interp, node.expr, env)
         return nil
     else
@@ -1621,7 +1621,7 @@ function execAssign(interp, node, env)
             if not envSet(env, target.name, val) then
                 interp.globals[target.name] = val
             end
-        elseif target.tag == "Index" then
+        else if target.tag == "Index" then
             local obj = evalExpr(interp, target.obj, env)
             local key = evalExpr(interp, target.key, env)
             if type(obj) == "table" then
@@ -1973,7 +1973,7 @@ function setupStdlib(interp)
                 tinsert(result, ssub(s, pos, found - 1))
                 if type(repl) == "string" then
                     tinsert(result, repl)
-                elseif type(repl) == "function" then
+                else if type(repl) == "function" then
                     local r = repl(ssub(s, found, found + patLen - 1))
                     tinsert(result, r or "")
                 else
@@ -1997,7 +1997,7 @@ function setupStdlib(interp)
         local n = select("#", ...)
         if n == 1 then
             tinsert(t, args[1])
-        elseif n == 2 then
+        else if n == 2 then
             tinsert(t, args[1], args[2])
         end
     end

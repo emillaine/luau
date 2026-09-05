@@ -207,7 +207,7 @@ function pptostring(x)
     if type(x) == "table" then
         -- Just assume array-like tables for now.
         return arraytostring(x)
-    elseif type(x) == "string" then
+    else if type(x) == "string" then
         return '"' .. x .. '"'
     else
         return tostring(x)

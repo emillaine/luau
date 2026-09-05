@@ -65,7 +65,7 @@ CallSign_mt.__index = CallSign_mt
 
 function CallSign_mt:compareTo(other)
     if self._value < other._value then return -1
-    elseif self._value > other._value then return 1
+    else if self._value > other._value then return 1
     else return 0 end
 end
 
@@ -244,7 +244,7 @@ function RBTree:_leftRotate(x)
     y.parent = x.parent
     if not x.parent then
         self._root = y
-    elseif x == x.parent.left then
+    else if x == x.parent.left then
         x.parent.left = y
     else
         x.parent.right = y
@@ -261,7 +261,7 @@ function RBTree:_rightRotate(y)
     x.parent = y.parent
     if not y.parent then
         self._root = x
-    elseif y == y.parent.left then
+    else if y == y.parent.left then
         y.parent.left = x
     else
         y.parent.right = x
@@ -276,7 +276,7 @@ function RBTree:_findNode(key)
     while current do
         local cmp = key:compareTo(current.key)
         if cmp == 0 then return current
-        elseif cmp < 0 then current = current.left
+        else if cmp < 0 then current = current.left
         else current = current.right
         end
     end
@@ -291,7 +291,7 @@ function RBTree:_treeInsert(key, value)
         local cmp = key:compareTo(x.key)
         if cmp < 0 then
             x = x.left
-        elseif cmp > 0 then
+        else if cmp > 0 then
             x = x.right
         else
             local oldValue = x.value
@@ -303,7 +303,7 @@ function RBTree:_treeInsert(key, value)
     z.parent = y
     if not y then
         self._root = z
-    elseif key:compareTo(y.key) < 0 then
+    else if key:compareTo(y.key) < 0 then
         y.left = z
     else
         y.right = z
@@ -478,7 +478,7 @@ function RBTree:remove(key)
 
     if not y.parent then
         self._root = x
-    elseif y == y.parent.left then
+    else if y == y.parent.left then
         y.parent.left = x
     else
         y.parent.right = x
@@ -501,7 +501,7 @@ function RBTree:remove(key)
         else
             self._root = y
         end
-    elseif y.color == "black" then
+    else if y.color == "black" then
         self:_removeFixup(x, xParent)
     end
 

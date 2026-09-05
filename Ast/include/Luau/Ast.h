@@ -721,9 +721,9 @@ public:
      * This is usually but not always done with the 'end' keyword.  AstStatIf
      * and AstStatRepeat are the two main exceptions to this.
      *
-     * The 'then' clause of an if statement can properly be closed by the
-     * keywords 'else' or 'elseif'.  A 'repeat' loop's body is closed with the
-     * 'until' keyword.
+     * The 'then' clause of an if statement can properly be closed by the 'else'
+     * keyword, including the 'else if' form.  A 'repeat' loop's body is closed
+     * with the 'until' keyword.
      */
     bool hasEnd = false;
 };
@@ -762,7 +762,7 @@ public:
 
     std::optional<Location> thenLocation;
 
-    // Active for 'elseif' as well
+    // Active for an 'else if' clause as well
     std::optional<Location> elseLocation;
 
     // Active for 'if local' and 'if const' statements

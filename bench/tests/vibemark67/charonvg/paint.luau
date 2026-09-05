@@ -87,13 +87,13 @@ local function gradientClamp(pos, spread)
             return COLOR_TABLE_SIZE - 1
         end
         return pos
-    elseif spread == "repeat" then
+    else if spread == "repeat" then
         pos = pos % COLOR_TABLE_SIZE
         if pos < 0 then
             pos = pos + COLOR_TABLE_SIZE
         end
         return pos
-    elseif spread == "reflect" then
+    else if spread == "reflect" then
         pos = pos % (COLOR_TABLE_SIZE * 2)
         if pos < 0 then
             pos = pos + COLOR_TABLE_SIZE * 2

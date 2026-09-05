@@ -80,7 +80,7 @@ function Surface:getPixel(x, y)
     -- Unpremultiply
     if a == 0 then
         return 0, 0, 0, 0
-    elseif a == 255 then
+    else if a == 255 then
         return r, g, b, a
     else
         r = math.floor(r * 255 / a + 0.5)

@@ -1326,7 +1326,7 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_tag")
         local function f(animal: Animal)
             if animal.tag == "Cat" then
                 local cat = animal
-            elseif animal.tag == "Dog" then
+            else if animal.tag == "Dog" then
                 local dog = animal
             end
         end
@@ -1454,7 +1454,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_free_table_to_vec
 
             if type(vec) == "vector" then
                 local foo = vec
-            elseif typeof(vec) == "Instance" then
+            else if typeof(vec) == "Instance" then
                 local foo = vec
             else
                 local foo = vec
@@ -1580,7 +1580,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "x_as_any_if_x_is_instance_elseif
         local function f(x)
             if typeof(x) == "Instance" and x:IsA("Folder") then
                 local foo = x
-            elseif typeof(x) == "table" then
+            else if typeof(x) == "table" then
                 local foo = x
             end
         end
@@ -1606,7 +1606,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_param_of_type_instance_wi
         local function f(x: Instance)
             if x:IsA("Folder") then
                 local foo = x
-            elseif typeof(x) == "table" then
+            else if typeof(x) == "table" then
                 local foo = x
             end
         end
@@ -1727,7 +1727,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_doesnt_leak_to_elseif")
         function f(a)
            if type(a) == "boolean" then
                 local a1 = a
-            elseif a.fn() then
+            else if a.fn() then
                 local a2 = a
             else
                 local a3 = a
@@ -2039,7 +2039,7 @@ TEST_CASE_FIXTURE(Fixture, "cat_or_dog_through_a_local")
             local tag = animal.tag
             if tag == "dog" then
                 local dog = animal
-            elseif tag == "cat" then
+            else if tag == "cat" then
                 local cat = animal
             end
         end
@@ -3202,7 +3202,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184413_refinement_of_union_of_read_types_is_read
 
         function value:Open()
             if self.IsOpen == true then
-            elseif self.State == "Closing" or self.State == "Opening" then
+            else if self.State == "Closing" or self.State == "Opening" then
                 -- Prior, this line errored as we were erroneously refining
                 -- `self` with `{ State: "Closing" | "Opening" }` rather
                 -- than `{ read State: "Closing" | "Opening" }

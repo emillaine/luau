@@ -55,8 +55,8 @@ assert(x[2] == 'jojo' and type(x[1]) == 'table')
 
 local f = function (i)
   if i < 10 then return 'a';
-  elseif i < 20 then return 'b';
-  elseif i < 30 then return 'c';
+  else if i < 20 then return 'b';
+  else if i < 30 then return 'c';
   end;
 end
 
@@ -78,8 +78,8 @@ function f(b)
   repeat
     local a;
     if b==1 then local b=1; x=10; break
-    elseif b==2 then x=20; break;
-    elseif b==3 then x=30;
+    else if b==2 then x=20; break;
+    else if b==3 then x=30;
     else local a,b,c,d=math.sin(1); x=x+1;
     end
   until x>=12;
@@ -91,8 +91,8 @@ assert(f(1) == 10 and f(2) == 20 and f(3) == 30 and f(4)==12)
 
 local f = function (i)
   if i < 10 then return 'a'
-  elseif i < 20 then return 'b'
-  elseif i < 30 then return 'c'
+  else if i < 20 then return 'b'
+  else if i < 30 then return 'c'
   else return 8
   end
 end

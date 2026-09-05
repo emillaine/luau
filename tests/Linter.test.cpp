@@ -1786,7 +1786,7 @@ shadow()
 function fibonacci(n)
     if n == 0 then
         return 0
-    elseif n == 1 then
+    else if n == 1 then
         return 1
     else
         return fibonacci(n - 1) + fibonacci(n - 2)
@@ -2254,12 +2254,12 @@ TEST_CASE_FIXTURE(Fixture, "DuplicateConditions")
 {
     LintResult result = lint(R"(
 if true then
-elseif false then
-elseif true then -- duplicate
+else if false then
+else if true then -- duplicate
 end
 
 if true then
-elseif false then
+else if false then
 else
     if true then -- duplicate
     end
@@ -2274,7 +2274,7 @@ _ = (true and false) and (42 and false)
 
 _ = true and true or false -- no warning since this is is a common pattern used as a ternary replacement
 
-_ = if true then 1 elseif true then 2 else 3
+_ = if true then 1 else if true then 2 else 3
 )");
 
     REQUIRE(8 == result.warnings.size());
@@ -2296,8 +2296,8 @@ TEST_CASE_FIXTURE(Fixture, "DuplicateConditionsExpr")
 local correct, opaque = ...
 
 if correct({a = 1, b = 2 * (-2), c = opaque.path['with']("calls", `string {opaque}`)}) then
-elseif correct({a = 1, b = 2 * (-2), c = opaque.path['with']("calls", `string {opaque}`)}) then
-elseif correct({a = 1, b = 2 * (-2), c = opaque.path['with']("calls", false)}) then
+else if correct({a = 1, b = 2 * (-2), c = opaque.path['with']("calls", `string {opaque}`)}) then
+else if correct({a = 1, b = 2 * (-2), c = opaque.path['with']("calls", false)}) then
 end
 )");
 
@@ -2392,8 +2392,8 @@ TEST_CASE_FIXTURE(Fixture, "DuplicateConditionsIfStatAndExpr")
 {
     LintResult result = lint(R"(
 if if 1 then 2 else 3 then
-elseif if 1 then 2 else 3 then
-elseif if 0 then 5 else 4 then
+else if if 1 then 2 else 3 then
+else if if 0 then 5 else 4 then
 end
 )");
 

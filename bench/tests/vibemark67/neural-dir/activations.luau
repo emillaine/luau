@@ -45,11 +45,11 @@ end
 local function applyActivation(t: typeof(Tensor.new(1,1)), name: string): typeof(Tensor.new(1,1))
     if name == "relu" then
         return t:apply(relu)
-    elseif name == "sigmoid" then
+    else if name == "sigmoid" then
         return t:apply(sigmoid)
-    elseif name == "tanh" then
+    else if name == "tanh" then
         return t:apply(tanh_)
-    elseif name == "leaky_relu" then
+    else if name == "leaky_relu" then
         return t:apply(leakyRelu)
     end
     return t:clone()
@@ -58,11 +58,11 @@ end
 local function applyActivationDeriv(t: typeof(Tensor.new(1,1)), name: string): typeof(Tensor.new(1,1))
     if name == "relu" then
         return t:apply(reluDeriv)
-    elseif name == "sigmoid" then
+    else if name == "sigmoid" then
         return t:apply(sigmoidDeriv)
-    elseif name == "tanh" then
+    else if name == "tanh" then
         return t:apply(tanhDeriv)
-    elseif name == "leaky_relu" then
+    else if name == "leaky_relu" then
         return t:apply(leakyReluDeriv)
     end
     local result = Tensor.new(t.rows, t.cols)

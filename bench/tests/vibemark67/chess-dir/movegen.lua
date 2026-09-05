@@ -113,7 +113,7 @@ local function generatePawnMoves(board: boardMod.Board, moves: {Move}, sq: numbe
                     else
                         addMove(moves, sq, target, piece, 0, 0)
                     end
-                elseif target == board.epSquare then
+                else if target == board.epSquare then
                     local epPawn = bit32.bor(enemy, PAWN)
                     addMove(moves, sq, target, epPawn, 0, FLAG_EP)
                 end
@@ -133,7 +133,7 @@ local function generateSlidingMoves(board: boardMod.Board, moves: {Move}, sq: nu
             local piece = board.squares[next]
             if piece == EMPTY then
                 addMove(moves, sq, next, EMPTY, 0, 0)
-            elseif bit32.band(piece, 24) == enemy then
+            else if bit32.band(piece, 24) == enemy then
                 addMove(moves, sq, next, piece, 0, 0)
                 break
             else
@@ -152,7 +152,7 @@ local function generateKnightMoves(board: boardMod.Board, moves: {Move}, sq: num
             local piece = board.squares[target]
             if piece == EMPTY then
                 addMove(moves, sq, target, EMPTY, 0, 0)
-            elseif bit32.band(piece, 24) == enemy then
+            else if bit32.band(piece, 24) == enemy then
                 addMove(moves, sq, target, piece, 0, 0)
             end
         end
@@ -167,7 +167,7 @@ local function generateKingMoves(board: boardMod.Board, moves: {Move}, sq: numbe
             local piece = board.squares[target]
             if piece == EMPTY then
                 addMove(moves, sq, target, EMPTY, 0, 0)
-            elseif bit32.band(piece, 24) == enemy then
+            else if bit32.band(piece, 24) == enemy then
                 addMove(moves, sq, target, piece, 0, 0)
             end
         end
@@ -207,15 +207,15 @@ local function generatePseudoLegalMoves(board: boardMod.Board): {Move}
             local ptype = bit32.band(piece, 7)
             if ptype == PAWN then
                 generatePawnMoves(board, moves, sq, color)
-            elseif ptype == KNIGHT then
+            else if ptype == KNIGHT then
                 generateKnightMoves(board, moves, sq, color)
-            elseif ptype == BISHOP then
+            else if ptype == BISHOP then
                 generateSlidingMoves(board, moves, sq, color, bishopDirs)
-            elseif ptype == ROOK then
+            else if ptype == ROOK then
                 generateSlidingMoves(board, moves, sq, color, rookDirs)
-            elseif ptype == QUEEN then
+            else if ptype == QUEEN then
                 generateSlidingMoves(board, moves, sq, color, queenDirs)
-            elseif ptype == KING then
+            else if ptype == KING then
                 generateKingMoves(board, moves, sq, color)
             end
         end
@@ -321,13 +321,13 @@ local function makeMove(board: boardMod.Board, move: Move): boardMod.Board
         if move.to == 7 then
             b.squares[8] = EMPTY
             b.squares[6] = bit32.bor(WHITE, ROOK)
-        elseif move.to == 3 then
+        else if move.to == 3 then
             b.squares[1] = EMPTY
             b.squares[4] = bit32.bor(WHITE, ROOK)
-        elseif move.to == 63 then
+        else if move.to == 63 then
             b.squares[64] = EMPTY
             b.squares[62] = bit32.bor(BLACK, ROOK)
-        elseif move.to == 59 then
+        else if move.to == 59 then
             b.squares[57] = EMPTY
             b.squares[60] = bit32.bor(BLACK, ROOK)
         end

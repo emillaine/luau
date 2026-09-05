@@ -36,9 +36,9 @@ local RC_HI = {
 local function rotl64(lo: number, hi: number, r: number): (number, number)
 	if r == 0 then
 		return lo, hi
-	elseif r == 32 then
+	else if r == 32 then
 		return hi, lo
-	elseif r < 32 then
+	else if r < 32 then
 		local nlo = bit32.bor(bit32.lshift(lo, r), bit32.rshift(hi, 32 - r))
 		local nhi = bit32.bor(bit32.lshift(hi, r), bit32.rshift(lo, 32 - r))
 		return nlo, nhi

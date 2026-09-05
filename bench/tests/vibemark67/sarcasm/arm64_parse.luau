@@ -46,9 +46,9 @@ local function classifyReg(tok: string)
 		local n = tonumber(num)
 		if prefix == "x" and n <= 30 then
 			return { kind = "reg", name = low, rc = "gpr", width = 64, num = n }
-		elseif prefix == "w" and n <= 30 then
+		else if prefix == "w" and n <= 30 then
 			return { kind = "reg", name = low, rc = "gpr", width = 32, num = n }
-		elseif (prefix == "v" or prefix == "q" or prefix == "d" or prefix == "s" or prefix == "h" or prefix == "b") and n <= 31 then
+		else if (prefix == "v" or prefix == "q" or prefix == "d" or prefix == "s" or prefix == "h" or prefix == "b") and n <= 31 then
 			return { kind = "reg", name = low, rc = "neon", width = 128, num = n }
 		end
 	end
@@ -79,10 +79,10 @@ local function splitTopLevel(s: string): { string }
 		if c == "[" or c == "(" then
 			depth += 1
 			table.insert(cur, c)
-		elseif c == "]" or c == ")" then
+		else if c == "]" or c == ")" then
 			depth -= 1
 			table.insert(cur, c)
-		elseif c == "," and depth == 0 then
+		else if c == "," and depth == 0 then
 			table.insert(out, table.concat(cur))
 			cur = {}
 		else
@@ -192,7 +192,7 @@ local function parseOperands(s: string)
 		local field = fields[i]
 		if field == "" then
 			i += 1
-		elseif string.sub(field, 1, 1) == "[" then
+		else if string.sub(field, 1, 1) == "[" then
 			-- memory operand; check for post-index (a following field that is
 			-- not a shift and this bracket has no '!').
 			if string.sub(field, -1) ~= "!" and i + 1 <= #fields and not parseShift(fields[i + 1]) then
@@ -228,7 +228,7 @@ local function stripLineComment(s: string): string
 		local c = string.sub(s, i, i)
 		if c == '"' then
 			inStr = not inStr
-		elseif not inStr and c == "/" and string.sub(s, i + 1, i + 1) == "/" then
+		else if not inStr and c == "/" and string.sub(s, i + 1, i + 1) == "/" then
 			return string.sub(s, 1, i - 1)
 		end
 		i += 1

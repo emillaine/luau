@@ -60,7 +60,7 @@ function test()
 			local a, b, c = byte( b64, n-3, n-1 )
 			local v = decoder[a]*0x40000 + decoder[b]*0x1000 + decoder[c]*0x40
 			t[k] = char( extract(v,16,8), extract(v,8,8))
-		elseif padding == 2 then
+		else if padding == 2 then
 			local a, b = byte( b64, n-3, n-2 )
 			local v = decoder[a]*0x40000 + decoder[b]*0x1000
 			t[k] = char( extract(v,16,8))

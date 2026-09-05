@@ -1640,8 +1640,8 @@ L0: LOADN R0 20
 RETURN R0 0
 )");
 
-    // codegen for an if-else expression with multiple elseif's
-    CHECK_EQ("\n" + compileFunction0("result = if condition1 then 10 elseif condition2 then 20 elseif condition3 then 30 else 40"), R"(
+    // codegen for an if-else expression with multiple else if's
+    CHECK_EQ("\n" + compileFunction0("result = if condition1 then 10 else if condition2 then 20 else if condition3 then 30 else 40"), R"(
 GETIMPORT R1 1 [condition1]
 JUMPIFNOT R1 L0
 LOADN R0 10
@@ -8149,7 +8149,7 @@ do
 for l0=0,8 do
 end
 end
-elseif _ then
+else if _ then
 _ = nil
 do
 for l0=0,8 do
@@ -8718,7 +8718,7 @@ TEST_CASE("InlineConstConditionals")
 local function foo(a)
     if a == 1 then
         return 42
-    elseif a == 2 then
+    else if a == 2 then
         return -1
     else
         for i = 1,10 do
@@ -8751,7 +8751,7 @@ local function foo(a)
     for i = 1,5 do
         if a == 1 then
             s += i
-        elseif a == 2 then
+        else if a == 2 then
             s -= i
         else
             print(table.unpack(table.create(100, i)))
@@ -8814,10 +8814,10 @@ local function funnyhex(a)
     local z = string.byte('0')
     local set = "0123456789abcdef"
     if a < 10 then return string.sub(set, a+1, a+1)
-    elseif a < 100 then return `{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
-    elseif a < 1000 then return `{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
-    elseif a < 10000 then return `{string.sub(set, (a/1000)%10+1, (a/1000)%10+1)}{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
-    elseif a < 100000 then return `{string.sub(set, (a/10000)%10+1, (a/10000)%10+1)}{string.sub(set, (a/1000)%10+1, (a/1000)%10+1)}{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
+    else if a < 100 then return `{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
+    else if a < 1000 then return `{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
+    else if a < 10000 then return `{string.sub(set, (a/1000)%10+1, (a/1000)%10+1)}{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
+    else if a < 100000 then return `{string.sub(set, (a/10000)%10+1, (a/10000)%10+1)}{string.sub(set, (a/1000)%10+1, (a/1000)%10+1)}{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
     else return tostring(a) end
 end
 
@@ -10906,7 +10906,7 @@ TEST_CASE("ElideJumpAfterIf")
 local foo, bar = ...
 repeat
     if foo then break
-    elseif bar then break
+    else if bar then break
     end
     print(1234)
 until foo == bar
@@ -10931,7 +10931,7 @@ L2: RETURN R0 0
 local foo, bar = ...
 repeat
     if foo then while true do break end
-    elseif bar then while true do break end
+    else if bar then while true do break end
     end
     print(1234)
 until foo == bar
@@ -13579,7 +13579,7 @@ TEST_CASE("IfLocalElseif")
         "\n" + compileFunction0(R"(
             if local x = getValue() then
                 print(x)
-            elseif local x = getValue2() then
+            else if local x = getValue2() then
                 print(-x)
             else
                 print("nil")

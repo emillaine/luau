@@ -11,7 +11,7 @@ function False()
 end
 
 function EvalElseifChain(condition1, condition2, condition3)
-  return if condition1 then 10 elseif condition2 then 20 elseif condition3 then 30 else 40
+  return if condition1 then 10 else if condition2 then 20 else if condition3 then 30 else 40
 end
 
 function EvalElse_IfChain(condition1, condition2, condition3)
@@ -46,7 +46,7 @@ assert((7 + if true then 10 else 20) == 17)
 assert(if True() then true else false)
 assert(if False() then false else true)
 
--- Test evaluation of a "chain" of if/elseif/else in an expression
+-- Test evaluation of a "chain" of if/else if/else in an expression
 assert(EvalElseifChain(false, false, false) == 40)
 assert(EvalElseifChain(false, false, true) == 30)
 assert(EvalElseifChain(false, true, false) == 20)

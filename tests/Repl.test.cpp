@@ -99,7 +99,7 @@ function pptostring(x)
     if type(x) == "table" then
         -- Just assume array-like tables for now.
         return arraytostring(x)
-    elseif type(x) == "string" then
+    else if type(x) == "string" then
         return '"' .. x .. '"'
     else
         return tostring(x)
@@ -288,7 +288,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
             print("mt.__index called")
             if key == "foo" then
                 return "FOO"
-            elseif key == "bar" then
+            else if key == "bar" then
                 return "BAR"
             else
                 return nil

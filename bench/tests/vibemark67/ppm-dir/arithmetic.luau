@@ -51,7 +51,7 @@ function Encoder.encode(self: Encoder, cumLow: number, cumHigh: number, total: n
                 encoderOutputBit(self, 1)
             end
             self.pending = 0
-        elseif self.low >= HALF then
+        else if self.low >= HALF then
             encoderOutputBit(self, 1)
             for i = 1, self.pending do
                 encoderOutputBit(self, 0)
@@ -59,7 +59,7 @@ function Encoder.encode(self: Encoder, cumLow: number, cumHigh: number, total: n
             self.pending = 0
             self.low -= HALF
             self.high -= HALF
-        elseif self.low >= FIRST_QUARTER and self.high < THIRD_QUARTER then
+        else if self.low >= FIRST_QUARTER and self.high < THIRD_QUARTER then
             self.pending += 1
             self.low -= FIRST_QUARTER
             self.high -= FIRST_QUARTER
@@ -145,11 +145,11 @@ function Decoder.decode(self: Decoder, cumLow: number, cumHigh: number, total: n
     while true do
         if self.high < HALF then
             -- nothing
-        elseif self.low >= HALF then
+        else if self.low >= HALF then
             self.value -= HALF
             self.low -= HALF
             self.high -= HALF
-        elseif self.low >= FIRST_QUARTER and self.high < THIRD_QUARTER then
+        else if self.low >= FIRST_QUARTER and self.high < THIRD_QUARTER then
             self.value -= FIRST_QUARTER
             self.low -= FIRST_QUARTER
             self.high -= FIRST_QUARTER

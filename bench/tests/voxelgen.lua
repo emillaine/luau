@@ -69,7 +69,7 @@ end
 local function thresholdFilter(value, bottom, size)
     if value <= bottom then
         return 0
-    elseif value >= bottom+size then
+    else if value >= bottom+size then
         return 1
     else
         return (value-bottom)/size
@@ -119,12 +119,12 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
         choiceBiomeValue = .55
         choiceBiomeSurface = concrete
         choiceBiomeFill = slate
-    elseif choiceBiome == 'Water' then
+    else if choiceBiome == 'Water' then
         choiceBiomeValue = .36+getPerlin(x,y,z,2,50)*.08
         choiceBiomeSurface = 
             (1-verticalGradientTurbulence < .44 and slate)
             or sand
-    elseif choiceBiome == 'Marsh' then
+    else if choiceBiome == 'Marsh' then
         local preLedge = getPerlin(x+getPerlin(x,0,z,5,7,true)*10+getPerlin(x,0,z,6,30,true)*50,0,z+getPerlin(x,0,z,9,7,true)*10+getPerlin(x,0,z,10,30,true)*50,2,70)   --could use some turbulence
         local grassyLedge = thresholdFilter(preLedge,.65,0)
         local largeGradient = getPerlin(x,y,z,4,100)
@@ -140,7 +140,7 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
             or (1-verticalGradientTurbulence < waterLevel+.01 and ground)
             or grass
         choiceBiomeFill = slate
-    elseif choiceBiome == 'Plains' then
+    else if choiceBiome == 'Plains' then
         local rivulet = ridgedFlippedFilter(getPerlin(x+getPerlin(x,y,z,17,40)*25,0,z+getPerlin(x,y,z,19,40)*25,2,200))
         local rivuletThreshold = thresholdFilter(rivulet,.01,0)
 
@@ -165,7 +165,7 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
         choiceBiomeFill =
             (rockMap>0 and rock)
             or sandstone
-    elseif choiceBiome == 'Canyons' then
+    else if choiceBiome == 'Canyons' then
         local canyonNoise = ridgedFlippedFilter(getPerlin(x,0,z,2,200))
         local canyonNoiseTurbed = ridgedFlippedFilter(getPerlin(x+getPerlin(x,0,z,5,20,true)*20,0,z+getPerlin(x,0,z,9,20,true)*20,2,200))
         local sandbank = thresholdFilter(canyonNoiseTurbed,0,.05)
@@ -193,7 +193,7 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
             --or (mesaTop>0 and mesaTop<=1 and grass)                           --this for grassy mesa tops
             or sandstone
         choiceBiomeFill = canyonBandingMaterial[math.ceil((1-getNoise(1,y,2))*10)]
-    elseif choiceBiome == 'Hills' then
+    else if choiceBiome == 'Hills' then
         local rivulet = ridgedFlippedFilter(getPerlin(x+getPerlin(x,y,z,17,20)*20,0,z+getPerlin(x,y,z,19,20)*20,2,200))^(1/2)
         local largeHills = getPerlin(x,y,z,3,60)
         choiceBiomeValue = .48
@@ -208,14 +208,14 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
             or (surfaceMaterialGradient < waterLevel and ground)
             or grass
         choiceBiomeFill = slate
-    elseif choiceBiome == 'Dunes' then
+    else if choiceBiome == 'Dunes' then
         local duneTurbulence = getPerlin(x,0,z,227,20)*24
         local layer1 = ridgedFilter(getPerlin(x,0,z,201,40))
         local layer2 = ridgedFilter(getPerlin(x/10+duneTurbulence,0,z+duneTurbulence,200,48))
         choiceBiomeValue = .4+.1*(layer1 + layer2)
         choiceBiomeSurface = sand
         choiceBiomeFill = sandstone
-    elseif choiceBiome == 'Mountains' then
+    else if choiceBiome == 'Mountains' then
         local rivulet = ridgedFlippedFilter(getPerlin(x+getPerlin(x,y,z,17,20)*20,0,z+getPerlin(x,y,z,19,20)*20,2,200))
         choiceBiomeValue = -.4      --.3
             +fractalize(mountainsOperation,x,y/20,z, 8, .65)*1.2
@@ -228,7 +228,7 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
             or (1-verticalGradientTurbulence < waterLevel+.01 and mud)
             or (1-verticalGradientTurbulence < waterLevel+.015 and ground)
             or grass
-    elseif choiceBiome == 'Lavaflow' then
+    else if choiceBiome == 'Lavaflow' then
         local crackX = x+getPerlin(x,y*.25,z,21,8,true)*5
         local crackY = y+getPerlin(x,y*.25,z,22,8,true)*5
         local crackZ = z+getPerlin(x,y*.25,z,23,8,true)*5
@@ -250,7 +250,7 @@ local function findBiomeInfo(choiceBiome,x,y,z,verticalGradientTurbulence)
 
         choiceBiomeFill = (spires>0 and rock) or (cracks<1 and lava) or basalt
         choiceBiomeSurface = (choiceBiomeFill == lava and 1-verticalGradientTurbulence < waterLevel and basalt) or choiceBiomeFill
-    elseif choiceBiome == 'Arctic' then
+    else if choiceBiome == 'Arctic' then
         local preBoundary = getPerlin(x+getPerlin(x,0,z,5,8,true)*5,y/8,z+getPerlin(x,0,z,9,8,true)*5,2,20)
         --local cliffs = thresholdFilter(preBoundary,.5,0)
         local boundary = ridgedFilter(preBoundary)
@@ -279,9 +279,9 @@ end
 function findBiomeTransitionValue(biome,weight,value,averageValue)
     if biome == 'Arctic' then
         return (weight>.2 and 1 or 0)*value
-    elseif biome == 'Canyons' then
+    else if biome == 'Canyons' then
         return (weight>.7 and 1 or 0)*value
-    elseif biome == 'Mountains' then
+    else if biome == 'Mountains' then
         local weight = weight^3         --This improves the ease of mountains transitioning to other biomes
         return averageValue*(1-weight)+value*weight
     else
@@ -384,7 +384,7 @@ function generate()
                 if verticalGradient > .65 or verticalGradient < .1 then
                     --under surface of every biome; don't get biome data; waste of time.
                     choiceValue = .5
-                elseif #biomes == 1 then
+                else if #biomes == 1 then
                     choiceValue, choiceSurface, choiceFill = findBiomeInfo(biomes[1],x,y,z,verticalGradientTurbulence)
                 else
                     local averageValue = 0

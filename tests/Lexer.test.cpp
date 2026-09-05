@@ -138,6 +138,22 @@ TEST_CASE("lookahead")
     CHECK_EQ(lexer.lookahead().type, Lexeme::Eof);
 }
 
+TEST_CASE("elseif_is_not_reserved")
+{
+    const std::string testInput = "elseif else if";
+    Luau::Allocator alloc;
+    AstNameTable table(alloc);
+    Lexer lexer(testInput.c_str(), testInput.size(), table);
+
+    Lexeme elseif = lexer.next();
+    CHECK_EQ(elseif.type, Lexeme::Name);
+    CHECK_EQ(elseif.name, std::string("elseif"));
+    CHECK_FALSE(Lexer::isReserved("elseif"));
+
+    CHECK_EQ(lexer.next().type, Lexeme::ReservedElse);
+    CHECK_EQ(lexer.next().type, Lexeme::ReservedIf);
+}
+
 TEST_CASE("string_interpolation_basic")
 {
     const std::string testInput = R"(`foo {"bar"}`)";

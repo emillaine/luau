@@ -78,13 +78,13 @@ TEST_CASE("if_stmt_spaces_around_tokens")
     const std::string six = R"( if This then Once() else    Other() end)";
     CHECK_EQ(six, prettyPrint(six).code);
 
-    const std::string seven = R"( if This then Once()    elseif true then Other() end)";
+    const std::string seven = R"( if This then Once()    else if true then Other() end)";
     CHECK_EQ(seven, prettyPrint(seven).code);
 
-    const std::string eight = R"( if This then Once() elseif     true then Other() end)";
+    const std::string eight = R"( if This then Once() else if     true then Other() end)";
     CHECK_EQ(eight, prettyPrint(eight).code);
 
-    const std::string nine = R"( if This then Once() elseif true    then Other() end)";
+    const std::string nine = R"( if This then Once() else if true    then Other() end)";
     CHECK_EQ(nine, prettyPrint(nine).code);
 }
 
@@ -118,9 +118,9 @@ TEST_CASE("elseif_chains_indent_sensibly")
     const std::string code = R"(
         if This then
             Once()
-        elseif That then
+        else if That then
             Another()
-        elseif SecondLast then
+        else if SecondLast then
             Third()
         else
             IfAllElseFails()
@@ -1077,7 +1077,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else_multiple_conditions")
 {
-    std::string code = "local a = if 1 then 2 elseif 3 then 4 else 5";
+    std::string code = "local a = if 1 then 2 else if 3 then 4 else 5";
 
     CHECK_EQ(code, prettyPrint(code).code);
 }
@@ -1114,22 +1114,22 @@ TEST_CASE_FIXTURE(Fixture, "if_then_else_spaces_around_tokens")
     code = "local a = if 1 then 2 else   3";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2   elseif 3 then 4 else 5";
+    code = "local a = if 1 then 2   else if 3 then 4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 elseif   3 then 4 else 5";
+    code = "local a = if 1 then 2 else if   3 then 4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 elseif 3   then 4 else 5";
+    code = "local a = if 1 then 2 else if 3   then 4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 elseif 3 then   4 else 5";
+    code = "local a = if 1 then 2 else if 3 then   4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 elseif 3 then 4   else 5";
+    code = "local a = if 1 then 2 else if 3 then 4   else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 elseif 3 then 4 else   5";
+    code = "local a = if 1 then 2 else if 3 then 4 else   5";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -1974,8 +1974,8 @@ TEST_CASE("fuzzer_prettyPrint_with_zero_location")
 {
     const std::string example = R"(
 if _ then
-elseif _ then
-elseif l0 then
+else if _ then
+else if l0 then
 else
 local function l0<t0>(...):(t0<t0...>,(any)|(<t0>((any)|(<t0>(""[[[[[[[[[[[[[[[[[[[[[[[[!*t")->()))->()))
 end

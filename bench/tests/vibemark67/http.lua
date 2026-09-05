@@ -395,7 +395,7 @@ function match_segments(pattern_segs, path_segs)
             end
             params["*"] = concat(rest, "/")
             return params
-        elseif sub(seg, 1, 1) == ":" then
+        else if sub(seg, 1, 1) == ":" then
             -- parameterized segment
             if pi > #path_segs then return nil end
             local param_name = sub(seg, 2)
@@ -484,24 +484,24 @@ end
 
 function get_status_text(code)
     if code == 200 then return "OK"
-    elseif code == 201 then return "Created"
-    elseif code == 204 then return "No Content"
-    elseif code == 301 then return "Moved Permanently"
-    elseif code == 302 then return "Found"
-    elseif code == 304 then return "Not Modified"
-    elseif code == 400 then return "Bad Request"
-    elseif code == 401 then return "Unauthorized"
-    elseif code == 403 then return "Forbidden"
-    elseif code == 404 then return "Not Found"
-    elseif code == 405 then return "Method Not Allowed"
-    elseif code == 409 then return "Conflict"
-    elseif code == 413 then return "Payload Too Large"
-    elseif code == 415 then return "Unsupported Media Type"
-    elseif code == 422 then return "Unprocessable Entity"
-    elseif code == 429 then return "Too Many Requests"
-    elseif code == 500 then return "Internal Server Error"
-    elseif code == 502 then return "Bad Gateway"
-    elseif code == 503 then return "Service Unavailable"
+    else if code == 201 then return "Created"
+    else if code == 204 then return "No Content"
+    else if code == 301 then return "Moved Permanently"
+    else if code == 302 then return "Found"
+    else if code == 304 then return "Not Modified"
+    else if code == 400 then return "Bad Request"
+    else if code == 401 then return "Unauthorized"
+    else if code == 403 then return "Forbidden"
+    else if code == 404 then return "Not Found"
+    else if code == 405 then return "Method Not Allowed"
+    else if code == 409 then return "Conflict"
+    else if code == 413 then return "Payload Too Large"
+    else if code == 415 then return "Unsupported Media Type"
+    else if code == 422 then return "Unprocessable Entity"
+    else if code == 429 then return "Too Many Requests"
+    else if code == 500 then return "Internal Server Error"
+    else if code == 502 then return "Bad Gateway"
+    else if code == 503 then return "Service Unavailable"
     else return "Unknown"
     end
 end
@@ -537,18 +537,18 @@ function json_encode(val)
     local t = type(val)
     if val == nil then
         return "null"
-    elseif t == "boolean" then
+    else if t == "boolean" then
         return val and "true" or "false"
-    elseif t == "number" then
+    else if t == "number" then
         if val ~= val then return "null" end
         if val == math.huge or val == -math.huge then return "null" end
         if val == floor(val) and val > -1e15 and val < 1e15 then
             return format("%d", val)
         end
         return format("%.14g", val)
-    elseif t == "string" then
+    else if t == "string" then
         return json_encode_string(val)
-    elseif t == "table" then
+    else if t == "table" then
         -- check if array
         if is_json_array(val) then
             return json_encode_array(val)
@@ -564,11 +564,11 @@ function json_encode_string(s)
     for i = 1, #s do
         local c = byte(s, i)
         if c == 34 then insert(buf, '\\"')
-        elseif c == 92 then insert(buf, '\\\\')
-        elseif c == 10 then insert(buf, '\\n')
-        elseif c == 13 then insert(buf, '\\r')
-        elseif c == 9 then insert(buf, '\\t')
-        elseif c < 32 then
+        else if c == 92 then insert(buf, '\\\\')
+        else if c == 10 then insert(buf, '\\n')
+        else if c == 13 then insert(buf, '\\r')
+        else if c == 9 then insert(buf, '\\t')
+        else if c < 32 then
             insert(buf, format('\\u%04x', c))
         else
             insert(buf, char(c))
@@ -638,15 +638,15 @@ function json_parse_value(str, pos)
     local c = byte(str, pos)
     if c == 34 then
         return json_parse_string(str, pos)
-    elseif c == 123 then  -- {
+    else if c == 123 then  -- {
         return json_parse_object(str, pos)
-    elseif c == 91 then   -- [
+    else if c == 91 then   -- [
         return json_parse_array(str, pos)
-    elseif c == 116 then  -- t (true)
+    else if c == 116 then  -- t (true)
         return true, pos + 4
-    elseif c == 102 then  -- f (false)
+    else if c == 102 then  -- f (false)
         return false, pos + 5
-    elseif c == 110 then  -- n (null)
+    else if c == 110 then  -- n (null)
         return nil, pos + 4
     else
         return json_parse_number(str, pos)
@@ -660,18 +660,18 @@ function json_parse_string(str, pos)
         local c = byte(str, pos)
         if c == 34 then  -- closing quote
             return concat(buf), pos + 1
-        elseif c == 92 then  -- backslash
+        else if c == 92 then  -- backslash
             pos = pos + 1
             local esc = byte(str, pos)
             if esc == 34 then insert(buf, '"')
-            elseif esc == 92 then insert(buf, '\\')
-            elseif esc == 47 then insert(buf, '/')
-            elseif esc == 110 then insert(buf, '\n')
-            elseif esc == 114 then insert(buf, '\r')
-            elseif esc == 116 then insert(buf, '\t')
-            elseif esc == 98 then insert(buf, '\b')
-            elseif esc == 102 then insert(buf, '\f')
-            elseif esc == 117 then  -- \uXXXX
+            else if esc == 92 then insert(buf, '\\')
+            else if esc == 47 then insert(buf, '/')
+            else if esc == 110 then insert(buf, '\n')
+            else if esc == 114 then insert(buf, '\r')
+            else if esc == 116 then insert(buf, '\t')
+            else if esc == 98 then insert(buf, '\b')
+            else if esc == 102 then insert(buf, '\f')
+            else if esc == 117 then  -- \uXXXX
                 local hex = sub(str, pos + 1, pos + 4)
                 local codepoint = tonumber(hex, 16)
                 if codepoint and codepoint < 128 then
@@ -731,7 +731,7 @@ function json_parse_array(str, pos)
         local c = byte(str, pos)
         if c == 93 then  -- ]
             return arr, pos + 1
-        elseif c == 44 then  -- ,
+        else if c == 44 then  -- ,
             pos = pos + 1
         end
     end
@@ -759,7 +759,7 @@ function json_parse_object(str, pos)
         local c = byte(str, pos)
         if c == 125 then  -- }
             return obj, pos + 1
-        elseif c == 44 then  -- ,
+        else if c == 44 then  -- ,
             pos = pos + 1
         end
     end
@@ -786,7 +786,7 @@ function parse_multipart(body, boundary)
     pos = start + #delim
     -- skip CRLF after boundary
     if sub(body, pos, pos + 1) == "\r\n" then pos = pos + 2
-    elseif sub(body, pos, pos) == "\n" then pos = pos + 1
+    else if sub(body, pos, pos) == "\n" then pos = pos + 1
     end
 
     while pos <= #body do
@@ -807,7 +807,7 @@ function parse_multipart(body, boundary)
         if sub(body, pos, pos + 1) == "--" then break end
         -- skip CRLF
         if sub(body, pos, pos + 1) == "\r\n" then pos = pos + 2
-        elseif sub(body, pos, pos) == "\n" then pos = pos + 1
+        else if sub(body, pos, pos) == "\n" then pos = pos + 1
         end
     end
     return parts
@@ -1127,12 +1127,12 @@ function validate_request(req, rules)
         local value = nil
         if rule.source == "query" then
             value = req.query[rule.field]
-        elseif rule.source == "body" then
+        else if rule.source == "body" then
             local data = json_decode(req.body)
             if data then value = data[rule.field] end
-        elseif rule.source == "header" then
+        else if rule.source == "header" then
             value = headers_get(req.headers, rule.field)
-        elseif rule.source == "params" then
+        else if rule.source == "params" then
             value = req.params[rule.field]
         end
 
@@ -1256,7 +1256,7 @@ function parse_range_header(range_str, total_size)
         e = total_size - 1
         s = total_size - (tonumber(range_end) or 0)
         if s < 0 then s = 0 end
-    elseif range_end == "" then
+    else if range_end == "" then
         s = tonumber(range_start) or 0
         e = total_size - 1
     else
@@ -1303,7 +1303,7 @@ function build_ws_frame(payload, opcode)
     local len = #payload
     if len <= 125 then
         insert(frame, char(len))
-    elseif len <= 65535 then
+    else if len <= 65535 then
         insert(frame, char(126))
         insert(frame, char(floor(len / 256)))
         insert(frame, char(len % 256))
@@ -1336,7 +1336,7 @@ function parse_ws_frame(data)
         if #data < 4 then return nil end
         payload_len = byte(data, 3) * 256 + byte(data, 4)
         offset = 5
-    elseif payload_len == 127 then
+    else if payload_len == 127 then
         if #data < 10 then return nil end
         payload_len = byte(data, 7) * 16777216 + byte(data, 8) * 65536 + byte(data, 9) * 256 + byte(data, 10)
         offset = 11
@@ -1527,7 +1527,7 @@ function hpack_encode_headers(headers_list)
         if idx and full_match then
             -- Indexed header field
             insert(encoded, format("[I:%d]", idx))
-        elseif idx then
+        else if idx then
             -- Literal with name reference
             insert(encoded, format("[R:%d=%s]", idx, h.value))
         else
@@ -1583,11 +1583,11 @@ function normalize_path(path)
         local seg = segments[i]
         if seg == "." then
             -- skip
-        elseif seg == ".." then
+        else if seg == ".." then
             if #normalized > 0 then
                 table.remove(normalized)
             end
-        elseif seg ~= "" then
+        else if seg ~= "" then
             insert(normalized, seg)
         end
     end
@@ -1697,7 +1697,7 @@ function setup_framework()
         local data
         if find(ct, "application/json", 1, true) then
             data = json_decode(req.body)
-        elseif find(ct, "application/x-www-form-urlencoded", 1, true) then
+        else if find(ct, "application/x-www-form-urlencoded", 1, true) then
             data = parse_form_body(req.body)
         else
             data = { name = "unknown" }
@@ -1853,7 +1853,7 @@ function setup_framework()
         response_set_status(res, 200, "OK")
         if chosen == "application/json" then
             response_set_body(res, json_encode({ format = "json" }), chosen)
-        elseif chosen == "text/html" then
+        else if chosen == "text/html" then
             response_set_body(res, "<html><body>HTML response</body></html>", chosen)
         else
             response_set_body(res, "Plain text response", chosen)

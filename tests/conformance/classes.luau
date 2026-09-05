@@ -354,7 +354,7 @@ class Entry
         if self.tier != other.tier then
             if self.tier == "S" then
                 return true
-            elseif other.tier == "S" then
+            else if other.tier == "S" then
                 return false
             else
                 -- Assume it's a letter tier.
