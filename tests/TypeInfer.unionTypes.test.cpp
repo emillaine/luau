@@ -1056,24 +1056,24 @@ TEST_CASE_FIXTURE(Fixture, "oss_2134")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         local function addIndex <A, B, C> (op: ((value: A) -> B, array: {A}) -> {C})
             return function <K> (idxOp: (key: K, value: A) -> B, tbl: { [K]: A })
-                return {} :: { [K]: C }
+                return {} as { [K]: C }
             end
         end
 
         local function filter <A, K> (predicate: (value: A) -> boolean, tbl: {[K]: A })
-            return {} :: { A }
+            return {} as { A }
         end
 
         local function map <A, B, K> (mapper: (value: A) -> B, tbl: {[K]: A })
-            return {} :: { B }
+            return {} as { B }
         end
 
         local function filterWithIndex(index: string, value: string): boolean
-            return true :: boolean
+            return true as boolean
         end
 
         local function mapWithIndex(index: string, value: string): string
-            return "" :: string
+            return "" as string
         end
 
         local myArr = {first = "hi", second = "there", third = "what"}
@@ -1096,7 +1096,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2393")
             bar: (T?) -> ()
         }
 
-        local ex = {} :: Example<string>
+        local ex = {} as Example<string>
 
         local function process<T>(ref: Example<T>)
             return ref

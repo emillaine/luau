@@ -2437,11 +2437,11 @@ SubtypingResult Subtyping::isCovariantWith(
     {
         // It's fine to upcast a function with generics to a function without, for example:
         //
-        //  local f: ({number}) -> number = (nil :: <T>({T}) -> T)
+        //  local f: ({number}) -> number = (nil as <T>({T}) -> T)
         //
         // ... or even ...
         //
-        //  local f: () -> () = (nil :: <T>() -> ())
+        //  local f: () -> () = (nil as <T>() -> ())
         //
         // Intuitively: a generic function should always be a subtype of its instantiations.
         if (superFunction->generics.size() != subFunction->generics.size() && !superFunction->generics.empty())

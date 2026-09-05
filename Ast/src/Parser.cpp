@@ -3910,13 +3910,13 @@ AstExpr* Parser::parseMethodCall(Position start, AstExpr* expr)
     return expr;
 }
 
-// asexp -> simpleexp [`::' Type]
+// asexp -> simpleexp [`as' Type]
 AstExpr* Parser::parseAssertionExpr()
 {
     Location start = lexer.current().location;
     AstExpr* expr = parseSimpleExpr();
 
-    if (lexer.current().type == Lexeme::DoubleColon)
+    if (lexer.current().type == Lexeme::ReservedAs)
     {
         Position opPosition = lexer.current().location.begin;
         nextLexeme();

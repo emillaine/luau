@@ -1892,7 +1892,7 @@ TEST_CASE_FIXTURE(Fixture, "type_mismatch_on_massive_table_is_cut_short")
 
 
     CheckResult result = check(R"(
-        local t: {a: number,b: number, c: number, d: number, e: number, f: number} = nil :: any
+        local t: {a: number,b: number, c: number, d: number, e: number, f: number} = nil as any
         t = 1
     )");
 
@@ -2784,7 +2784,7 @@ local y = #x
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "dont_hang_when_trying_to_look_up_in_cyclic_metatable_index")
 {
-    // t :: t1 where t1 = {metatable {__index: t1, __tostring: (t1) -> string}}
+    // t as t1 where t1 = {metatable {__index: t1, __tostring: (t1) -> string}}
     CheckResult result = check(R"(
         local mt = {}
         local t = setmetatable({}, mt)
@@ -3418,7 +3418,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_simple_call")
     CheckResult result = check(R"(
         local a = setmetatable({ x = 2 }, {
             __call = function(self)
-                return (self.x :: number) * 2 -- should work without annotation in the future
+                return (self.x as number) * 2 -- should work without annotation in the future
             end
         })
         local b = a()
@@ -3701,9 +3701,9 @@ TEST_CASE_FIXTURE(Fixture, "scalar_is_a_subtype_of_a_compatible_polymorphic_shap
             return s:lower()
         end
 
-        f("foo" :: string)
-        f("bar" :: "bar")
-        f("baz" :: "bar" | "baz")
+        f("foo" as string)
+        f("bar" as "bar")
+        f("baz" as "bar" | "baz")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3717,9 +3717,9 @@ TEST_CASE_FIXTURE(Fixture, "scalar_is_not_a_subtype_of_a_compatible_polymorphic_
             return s:absolutely_no_scalar_has_this_method()
         end
 
-        f("foo" :: string)
-        f("bar" :: "bar")
-        f("baz" :: "bar" | "baz")
+        f("foo" as string)
+        f("bar" as "bar")
+        f("baz" as "bar" | "baz")
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -3964,7 +3964,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tables_should_be_fully_populated")
 {
     CheckResult result = check(R"(
         local t = {
-            x = 5 :: NonexistingTypeWhichEndsUpReturningAnErrorType,
+            x = 5 as NonexistingTypeWhichEndsUpReturningAnErrorType,
             y = 5
         }
     )");
@@ -5033,7 +5033,7 @@ type WorkerImpl<T..., R...> = {
 
 type WorkerProps = { id: number }
 
-export type Worker<T..., R...> = typeof(setmetatable({} :: WorkerProps, {} :: WorkerImpl<T..., R...>))
+export type Worker<T..., R...> = typeof(setmetatable({} as WorkerProps, {} as WorkerImpl<T..., R...>))
 
 return {}
     )";
@@ -5292,7 +5292,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "length_of_array_is_number")
     CheckResult result = check(R"(
         local function TestFunc(ranges: {number}): number
             if true then
-                ranges = {} :: {number}
+                ranges = {} as {number}
             end
             local numRanges: number = #ranges
             return numRanges
@@ -5310,7 +5310,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_with_a_metatable_table_path")
         type self = {} & {}
         type Class = typeof(setmetatable())
         local function _(): Class
-            return setmetatable({}::self, {})
+            return setmetatable({} as self, {})
         end
     )");
 
@@ -5452,7 +5452,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "read_only_property_reads")
         local t:readonlyTable = {id = 1}
 
         local _:{number} = {[t.id] = 1}
-        local _:{number} = {[t.id::number] = 1}
+        local _:{number} = {[t.id as number] = 1}
 
         local arr:{number} = {}
         arr[t.id] = 1
@@ -5595,7 +5595,7 @@ TEST_CASE_FIXTURE(Fixture, "returning_mismatched_optional_in_table")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        local Numbers = { str = ( "" :: string ) }
+        local Numbers = { str = ( "" as string ) }
         local function FuncB(): { Value: number? }
             return {
                 Value = Numbers.str
@@ -6083,7 +6083,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1651")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
         local MyModule = {}
-        MyModule._isEnabled = true :: boolean
+        MyModule._isEnabled = true as boolean
 
         assert(MyModule._isEnabled, `type solver`)
         MyModule._isEnabled = false
@@ -6239,7 +6239,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1914_access_after_assignment_with_assert
         local baseWall: WallHolder?
         for _, wall in walls do
             if wall.name == "Wall" then
-                baseWall = wall :: WallHolder
+                baseWall = wall as WallHolder
             end
         end
         assert(baseWall, "Failed to get base wall when creating room props")
@@ -6404,7 +6404,7 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_any_and_true")
 {
     CheckResult result = check(R"(
-        table.insert({} :: any, true)
+        table.insert({} as any, true)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -6413,7 +6413,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_any_and_true")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_array_of_any")
 {
     CheckResult result = check(R"(
-        table.insert({} :: { any }, 42)
+        table.insert({} as { any }, 42)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -6751,7 +6751,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2094_push_type_constraint_should_always_
 
         local function new<T>(t: T): Interface<TypeFn<T>>
             return {
-                _t = nil :: any,
+                _t = nil as any,
             }
         end
     )"));
@@ -6798,7 +6798,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184926_bidi_inference_pushes_into_lambda_return_
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type MyType = { Func: (transformFunction: () -> ({number})) -> () }
 
-        local myValue = {} :: MyType
+        local myValue = {} as MyType
 
         myValue.Func(function() return {} end)
     )"));
@@ -6963,7 +6963,7 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil :: any)
+local x : B = (nil as any)
 local found = x.parsed.foo["any"] == nil -- errors
 )");
 
@@ -6985,7 +6985,7 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil :: any)
+local x : B = (nil as any)
 local found = x.parsed.foo["any"] != nil -- errors
 )");
 
@@ -7007,7 +7007,7 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil :: any)
+local x : B = (nil as any)
 
 if x.parsed.foo["any"] != nil then
 end
@@ -7032,7 +7032,7 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil :: any)
+local x : B = (nil as any)
 
 if x.parsed.foo["any"] == nil then
 end
@@ -7078,7 +7078,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1890")
         }
 
         local function test_fn<T>(p: ListConfig<T>)
-            return nil :: any
+            return nil as any
         end
 
         local a = test_fn {

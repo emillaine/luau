@@ -139,7 +139,7 @@ TEST_CASE("strips_type_annotations")
 
 TEST_CASE("strips_type_assertion_expressions")
 {
-    const std::string code = R"( local s= some_function() :: any+ something_else() :: number )";
+    const std::string code = R"( local s= some_function() as any+ something_else() as number )";
     const std::string expected = R"( local s= some_function()       + something_else()           )";
     CHECK_EQ(expected, prettyPrint(code).code);
 }
@@ -1054,17 +1054,17 @@ TEST_CASE_FIXTURE(Fixture, "function_type_location")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_assertion")
 {
-    std::string code = "local a = 5 :: number";
+    std::string code = "local a = 5 as number";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "type_assertion_spaces_around_tokens")
 {
-    std::string code = "local a = 5   :: number";
+    std::string code = "local a = 5   as number";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a = 5 ::   number";
+    code = "local a = 5 as   number";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 

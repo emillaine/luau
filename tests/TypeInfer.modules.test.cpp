@@ -862,7 +862,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "internal_types_are_scrubbed_from_module")
     };
 
     fileResolver.source["game/A"] = R"(
-return function(): _luau_blocked_type return nil :: any end
+return function(): _luau_blocked_type return nil as any end
     )";
 
     CheckResult result = getFrontend().check("game/A");
@@ -881,7 +881,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "internal_type_errors_are_only_reported_once"
     };
 
     fileResolver.source["game/A"] = R"(
-return function(): { X: _luau_blocked_type, Y: _luau_blocked_type } return nil :: any end
+return function(): { X: _luau_blocked_type, Y: _luau_blocked_type } return nil as any end
     )";
 
     CheckResult result = getFrontend().check("game/A");
@@ -987,13 +987,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_194463_modify_bounds_of_visited_generic_
 
 
         function Container.new<K, V>(initialValues: {[K]: V}?): Container<K, V>
-            local self: Container<K, V> = setmetatable({}, Container) :: any
+            local self: Container<K, V> = setmetatable({}, Container) as any
             if initialValues then
                 for key, value in initialValues do
                     rawset(self, key, value)
                 end
             end
-            return self :: any
+            return self as any
         end
 
         function Container.Set<K, V>(self: Container<K, V>, key: K, value: V)
@@ -1005,7 +1005,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_194463_modify_bounds_of_visited_generic_
 
     fileResolver.source["game/Main"] = R"(
         local Container = require(game.Container)
-        local states: Container.Container<any, any> = Container.new(nil :: any)
+        local states: Container.Container<any, any> = Container.new(nil as any)
         return {}
     )";
 

@@ -311,7 +311,7 @@ TEST_CASE_FIXTURE(Fixture, "type_assertion_expr_carry_its_constraints")
 {
     CheckResult result = check(R"(
         function g(a: number?, b: string?)
-            if (a :: any) and (b :: any) then
+            if (a as any) and (b as any) then
                 local x = a
                 local y = b
             end
@@ -479,7 +479,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_to_undefined_method_is_not_a_refinement
                 if x.foo() then
                 end
             end
-            return (nil :: never)
+            return (nil as never)
         end
     )");
 
@@ -1668,7 +1668,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
 {
 
     CheckResult result = check(R"(
-        local weld: WeldConstraint = nil :: any
+        local weld: WeldConstraint = nil as any
         assert(weld.Part1)
         print(weld) -- hover type incorrectly becomes `never`
         assert(weld.Part1.Name == "RootPart")
@@ -1688,7 +1688,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_non_existent_properties_should_not_refine_extern_types_to_never")
 {
     CheckResult result = check(R"(
-        local weld: WeldConstraint = nil :: any
+        local weld: WeldConstraint = nil as any
         assert(weld.Part8)
         print(weld)
         assert(weld.Part8.Name == "RootPart")
@@ -1966,7 +1966,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_a_param_that_got_resolved
 TEST_CASE_FIXTURE(Fixture, "refine_a_property_of_some_global")
 {
     CheckResult result = check(R"(
-        foo = { bar = 5 :: number? }
+        foo = { bar = 5 as number? }
 
         if foo.bar then
             local bar = foo.bar
@@ -2667,8 +2667,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1451")
             HasTag: (Part, string) -> boolean,
             Name: string,
         }
-        local myList = {} :: {Part}
-        local nextPart = (table.remove(myList)) :: Part
+        local myList = {} as {Part}
+        local nextPart = (table.remove(myList)) as Part
 
         if nextPart:HasTag("foo") then
           return
@@ -2849,7 +2849,7 @@ TEST_CASE_FIXTURE(Fixture, "table_name_index_without_prior_assignment_from_branc
     // - `CharEntry` is represented as a phi node in the data flow graph;
     // - We never _set_ `CharEntry.Player` prior to accessing it.
     CheckResult results = check(R"(
-        local GetDictionary : (unknown, boolean) -> { Player: {} }? = nil :: any
+        local GetDictionary : (unknown, boolean) -> { Player: {} }? = nil as any
 
         local CharEntry = GetDictionary(nil, false)
         if not CharEntry then
@@ -2941,7 +2941,7 @@ TEST_CASE_FIXTURE(Fixture, "len_operator_in_if_is_just_a_proposition")
 
     CheckResult result = check(R"(
 type Pool = { x : number }
-local pool = p :: Pool
+local pool = p as Pool
 if #pool then
     local y = pool
 end
@@ -2958,7 +2958,7 @@ TEST_CASE_FIXTURE(Fixture, "unm_operator_is_just_a_proposition")
 
     CheckResult result = check(R"(
 type Pool = { x : number }
-local pool = p :: Pool
+local pool = p as Pool
 if -pool then
     local y = pool
 end
@@ -2979,8 +2979,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "inline_if_conditional_context")
 
         local function peek<T>(state: Value<T> | T): T
             return if typeof(state) == "table" and state.kind == "value"
-                then (state :: Value<T>).value :: T
-                else state :: T
+                then (state as Value<T>).value as T
+                else state as T
         end
     )"));
 }
@@ -3016,7 +3016,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeof_refinement_context")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
 
-        local x = {} :: unknown
+        local x = {} as unknown
 
         if typeof(x) == "table" then
             if typeof(x.transform) == "function" then
@@ -3033,7 +3033,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_and_typeof_refinement_context")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
 
-        local x = {} :: unknown
+        local x = {} as unknown
 
         if typeof(x) == "table" then
             assert(typeof(x.transform) == "function")
@@ -3048,7 +3048,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "foo_call_should_not_refine")
     CheckResult result = check(R"(
         --!strict
 
-        local x = {} :: unknown
+        local x = {} as unknown
         local function foo(_: boolean) end
 
         if typeof(x) == "table" then
@@ -3131,7 +3131,7 @@ TEST_CASE_FIXTURE(Fixture, "type_function_reduction_with_union_type_application"
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_any_and_unknown_should_still_be_any")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local REACT_FRAGMENT_TYPE = (nil :: any)
+        local REACT_FRAGMENT_TYPE = (nil as any)
         local function typeOf(object: any)
             local __type = object.type
 
@@ -3198,7 +3198,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184413_refinement_of_union_of_read_types_is_read
             Open: (self: MyType<A>) -> (),
         }
 
-        local value = {} :: MyType
+        local value = {} as MyType
 
         function value:Open()
             if self.IsOpen == true then
@@ -3252,7 +3252,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_181894_refinement_cancelled_by_for_loop")
         --!strict
         type LightingChanger = { [string]: number, Instances: LightingChanger }
 
-        local lightingChangers: { LightingChanger } = nil :: any
+        local lightingChangers: { LightingChanger } = nil as any
 
         local closestChanger: LightingChanger?
         if #lightingChangers == 1 then

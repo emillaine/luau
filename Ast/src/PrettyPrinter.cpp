@@ -32,7 +32,7 @@ bool isIdentifierChar(char c)
     return isIdentifierStartChar(c) || isDigit(c);
 }
 
-const std::vector<std::string> keywords = {"and",   "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
+const std::vector<std::string> keywords = {"and",   "as",    "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
                                            "local", "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 } // namespace
@@ -801,8 +801,8 @@ struct Printer
                 if (const auto* cstNode = lookupCstNode<CstExprTypeAssertion>(a))
                     advance(cstNode->opPosition);
                 else
-                    writer.maybeSpace(a->annotation->location.begin, 2);
-                writer.symbol("::");
+                    writer.space();
+                writer.symbol("as");
                 visualizeTypeAnnotation(*a->annotation);
             }
         }

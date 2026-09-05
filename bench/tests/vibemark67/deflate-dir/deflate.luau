@@ -55,7 +55,7 @@ local function compress(data: {number}): {number}
         if token.literal then
             huffman.writeCode(writer, litTree, token.literal + 1)
         else
-            local match = token.match :: lz77.Match
+            local match = token.match as lz77.Match
             local lenCode, lenExtra, lenExtraBits = lengthToCode(match.length)
             huffman.writeCode(writer, litTree, lenCode)
             if lenExtra > 0 then

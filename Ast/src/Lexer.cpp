@@ -58,7 +58,7 @@ unsigned int Lexeme::getLength() const
     return length;
 }
 
-static const char* kReserved[] = {"and",   "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
+static const char* kReserved[] = {"and",   "as",    "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
                                   "local", "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 std::string Lexeme::toString() const
@@ -88,9 +88,6 @@ std::string Lexeme::toString() const
 
     case SkinnyArrow:
         return "'->'";
-
-    case DoubleColon:
-        return "'::'";
 
     case FloorDiv:
         return "'//'";
@@ -966,18 +963,6 @@ Lexeme Lexer::readNext()
         }
         else
             return Lexeme(Location(start, 1), '^');
-
-    case ':':
-    {
-        consume();
-        if (peekch() == ':')
-        {
-            consume();
-            return Lexeme(Location(start, 2), Lexeme::DoubleColon);
-        }
-        else
-            return Lexeme(Location(start, 1), ':');
-    }
 
     case '(':
     case ')':

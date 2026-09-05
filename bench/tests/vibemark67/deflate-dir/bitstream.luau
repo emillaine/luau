@@ -3,7 +3,7 @@
 local BitWriter = {}
 BitWriter.__index = BitWriter
 
-export type BitWriter = typeof(setmetatable({} :: {
+export type BitWriter = typeof(setmetatable({} as {
     buffer: {number},
     bitBuf: number,
     bitCount: number,
@@ -51,7 +51,7 @@ end
 local BitReader = {}
 BitReader.__index = BitReader
 
-export type BitReader = typeof(setmetatable({} :: {
+export type BitReader = typeof(setmetatable({} as {
     data: {number},
     pos: number,
     bitBuf: number,

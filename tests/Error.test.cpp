@@ -27,7 +27,7 @@ Account.__index = Account
 function Account.deposit(self: Account, x: number)
 	self.balance += x
 end
-type Account = typeof(setmetatable({} :: { balance: number }, Account))
+type Account = typeof(setmetatable({} as { balance: number }, Account))
 local x: Account = 5
 )");
 

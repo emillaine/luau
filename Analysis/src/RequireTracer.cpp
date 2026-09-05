@@ -19,7 +19,7 @@ struct RequireTracer : AstVisitor
 
     bool visit(AstExprTypeAssertion* expr) override
     {
-        // suppress `require() :: any`
+        // suppress `require() as any`
         return false;
     }
 

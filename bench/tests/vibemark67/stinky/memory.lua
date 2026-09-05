@@ -12,7 +12,7 @@ local PAGE_SIZE = 4096
 local Memory = {}
 Memory.__index = Memory
 
-export type Memory = typeof(setmetatable({} :: {
+export type Memory = typeof(setmetatable({} as {
     pages: { [number]: buffer },
 }, Memory))
 

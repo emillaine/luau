@@ -403,15 +403,15 @@ TEST_CASE_FIXTURE(Fixture, "function_annotation_with_a_defined_function")
 
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expr")
 {
-    CheckResult result = check("local a = 55 :: any");
+    CheckResult result = check("local a = 55 as any");
     REQUIRE_EQ("any", toString(requireType("a")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "as_expr_does_not_propagate_type_info")
 {
     CheckResult result = check(R"(
-        local a = 55 :: any
-        local b = a :: number
+        local a = 55 as any
+        local b = a as number
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -423,8 +423,8 @@ TEST_CASE_FIXTURE(Fixture, "as_expr_does_not_propagate_type_info")
 TEST_CASE_FIXTURE(Fixture, "as_expr_is_bidirectional")
 {
     CheckResult result = check(R"(
-        local a = 55 :: number?
-        local b = a :: number
+        local a = 55 as number?
+        local b = a as number
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -436,7 +436,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expr_is_bidirectional")
 TEST_CASE_FIXTURE(Fixture, "as_expr_warns_on_unrelated_cast")
 {
     CheckResult result = check(R"(
-        local a = 55 :: string
+        local a = 55 as string
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -449,7 +449,7 @@ TEST_CASE_FIXTURE(Fixture, "type_annotations_inside_function_bodies")
 {
     CheckResult result = check(R"(
         function get_message()
-            local message = 'That smarts!' :: string
+            local message = 'That smarts!' as string
             return message
         end
     )");
@@ -1062,10 +1062,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "react_use_state_partial_annotation")
         type BasicStateAction<S> = ((S) -> S) | S
         type Dispatch<A> = (A) -> ()
 
-        local useState: <S>( (() -> S) | S ) -> (S, Dispatch<BasicStateAction<S>>) = nil :: any
+        local useState: <S>( (() -> S) | S ) -> (S, Dispatch<BasicStateAction<S>>) = nil as any
 
         local v: number, setV = useState(0)
-        local w, setW = useState(0 :: number?)
+        local w, setW = useState(0 as number?)
         local x, setX = useState(0)
     )"));
 

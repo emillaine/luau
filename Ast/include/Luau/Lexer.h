@@ -28,7 +28,6 @@ struct Lexeme
         Dot2,
         Dot3,
         SkinnyArrow,
-        DoubleColon,
         FloorDiv,
 
         InterpStringBegin,
@@ -65,6 +64,7 @@ struct Lexeme
 
         Reserved_BEGIN,
         ReservedAnd = Reserved_BEGIN,
+        ReservedAs,
         ReservedBreak,
         ReservedDo,
         ReservedElse,

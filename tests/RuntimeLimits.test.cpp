@@ -299,11 +299,11 @@ TEST_CASE_FIXTURE(LimitFixture, "Signal_exerpt" * doctest::timeout(LUAU_TIMEOUT)
         local Signal = {}
         Signal.ClassName = "Signal"
         export type Signal<T...> = typeof(setmetatable(
-            {} :: {},
-            {} :: typeof({ __index = Signal })
+            {} as {},
+            {} as typeof({ __index = Signal })
         ))
         function Signal.new<T...>(): Signal<T...>
-            return nil :: any
+            return nil as any
         end
 
         function Signal.Connect<T...>(self: Signal<T...>)
@@ -472,9 +472,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
     local InMemoryCache = {}
     InMemoryCache.__index = InMemoryCache
 
-    -- InMemoryCache.batch = nil :: any
+    -- InMemoryCache.batch = nil as any
     function InMemoryCache:batch()
-	    self = self :: InMemoryCachePrivate
+	    self = self as InMemoryCachePrivate
 
 	    if self.txCount == 0 then
 		    self:broadcastWatches() --  problematic call?
@@ -585,7 +585,7 @@ export type DeriveScopeConstructor = (<S>(Scope<S>) -> Scope<S>)
     & (<S, A, B, C, D, E, F, G, H, I, J, K>(Scope<S>, A & {}, B & {}, C & {}, D & {}, E & {}, F & {}, G & {}, H & {}, I & {}, J & {}, K & {}) -> Scope<S & A & B & C & D & E & F & G & H & I & J & K>)
     & (<S, A, B, C, D, E, F, G, H, I, J, K, L>(Scope<S>, A & {}, B & {}, C & {}, D & {}, E & {}, F & {}, G & {}, H & {}, I & {}, J & {}, K & {}, L & {}) -> Scope<S & A & B & C & D & E & F & G & H & I & J & K & L>)
 
-local deriveScopeImpl : DeriveScopeConstructor = (nil :: any)
+local deriveScopeImpl : DeriveScopeConstructor = (nil as any)
 
 local function innerScope<T>(
     existing: Types.Scope<T>,

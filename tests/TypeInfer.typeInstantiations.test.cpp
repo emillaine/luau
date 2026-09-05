@@ -22,7 +22,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_correct")
         CheckResult result = check(R"(
         --!strict
         local function f<T>(): T
-            return nil :: any
+            return nil as any
         end
 
         local correct = f<<number>>() + 5
@@ -39,7 +39,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_incorrect")
         CheckResult result = check(R"(
         --!strict
         local function f<T>(): T
-            return nil :: any
+            return nil as any
         end
 
         local incorrect = f<<string>>() + 5
@@ -68,7 +68,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_correct")
         CheckResult result = check(R"(
         --!strict
         local function f<T>(a: T, b: T)
-            return nil :: any
+            return nil as any
         end
 
         f<<number | string>>(1, "a")
@@ -85,7 +85,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_incorrect")
         CheckResult result = check(R"(
         --!strict
         local function f<T>(a: T, b: T)
-            return nil :: any
+            return nil as any
         end
 
         f<<number | boolean>>(1, "a")
@@ -113,7 +113,7 @@ TEST_CASE_FIXTURE(Fixture, "multiple_calls")
         CheckResult result = check(R"(
         --!strict
         local function f<T>(): T
-            return nil :: any
+            return nil as any
         end
 
         local a: number = f<<number>>()
@@ -131,7 +131,7 @@ TEST_CASE_FIXTURE(Fixture, "anonymous_type_inferred")
         CheckResult result = check(R"(
         --!strict
         local function f<T, U>(): { a: T, b: U }
-            return nil :: any
+            return nil as any
         end
 
         local correct: { a: number, b: string } = f<<number>>()
@@ -171,7 +171,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_method")
     --!strict
     local t: {
         f: <T..., U...>(self: any, T...) -> U...,
-    } = nil :: any
+    } = nil as any
 
     local a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, {})
     )");
@@ -205,7 +205,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_incorrect_method")
     --!strict
     local t: {
         f: <T..., U...>(self: any, T...) -> U...,
-    } = nil :: any
+    } = nil as any
 
     local a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, "uh oh")
     )");
@@ -221,7 +221,7 @@ TEST_CASE_FIXTURE(Fixture, "dot_index_call")
         --!strict
         local t = {
             f = function<T>(): T
-                return nil :: any
+                return nil as any
             end,
         }
 
@@ -242,7 +242,7 @@ TEST_CASE_FIXTURE(Fixture, "method_index_call")
         --!strict
         local t = {
             f = function<T>(self: any): T
-                return nil :: any
+                return nil as any
             end,
         }
 
@@ -263,7 +263,7 @@ TEST_CASE_FIXTURE(Fixture, "stored_as_variable")
         CheckResult result = check(R"(
         --!strict
         local function f<T>(): T
-            return nil :: any
+            return nil as any
         end
 
         local fNumber = f<<number>>
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_call")
         --!strict
         local t = setmetatable({}, {
             __call = function<T>(self): T
-                return nil :: any
+                return nil as any
             end,
         })
 
@@ -325,7 +325,7 @@ TEST_CASE_FIXTURE(Fixture, "method_call_incomplete")
         --!strict
         local t = {
             f = function<T, U>(self: any): T | U
-                return nil :: any
+                return nil as any
             end,
         }
 
@@ -475,7 +475,7 @@ TEST_CASE_FIXTURE(Fixture, "function_intersections")
     {
         CheckResult result = check(R"(
         --!strict
-        local f: (<T>(T) -> T) & (<T>(T?) -> T) = nil :: any
+        local f: (<T>(T) -> T) & (<T>(T?) -> T) = nil as any
         f<<number>>()
         )");
 
@@ -491,7 +491,7 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_type_packs")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-            local f: <A, T...>() -> (A, T...) = nil :: any
+            local f: <A, T...>() -> (A, T...) = nil as any
             local correct: string, b: number, c: boolean = f<<string>>()
             local incorrect: number, b: number, c: boolean = f<<string>>()
         )");
@@ -510,7 +510,7 @@ TEST_CASE_FIXTURE(Fixture, "replacing_generic_with_generic")
     };
 
     CheckResult result = check(R"(
-        local foo: <A, B>() -> (A, B) = nil :: any
+        local foo: <A, B>() -> (A, B) = nil as any
 
         local function bar<T>()
             return foo<<T, number>>()

@@ -916,7 +916,7 @@ end
 do
   local function mutate(x) x.a = 99 end
   local t = { a = 1 }
-  mutate(t :: any)
+  mutate(t as any)
   assert(t.a == 99)
 end
 

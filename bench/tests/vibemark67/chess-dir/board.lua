@@ -3,7 +3,7 @@
 local Board = {}
 Board.__index = Board
 
-export type Board = typeof(setmetatable({} :: {
+export type Board = typeof(setmetatable({} as {
     squares: {number},
     whiteToMove: boolean,
     castling: number, -- bitmask: WK=1, WQ=2, BK=4, BQ=8

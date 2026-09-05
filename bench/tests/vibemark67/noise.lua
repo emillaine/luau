@@ -139,8 +139,8 @@ local function runConnection(connIndex: number)
 	check(equal(r3, p3), "handshake payload 3")
 	check(noise.handshakeFinished(alice) and noise.handshakeFinished(bob), "handshake incomplete")
 	check(equal(noise.handshakeHash(alice), noise.handshakeHash(bob)), "handshake hash disagreement")
-	check(equal((bob :: any).rs, aliceStatic.pub), "responder learned wrong initiator static")
-	check(equal((alice :: any).rs, bobStatic.pub), "initiator learned wrong responder static")
+	check(equal((bob as any).rs, aliceStatic.pub), "responder learned wrong initiator static")
+	check(equal((alice as any).rs, bobStatic.pub), "initiator learned wrong responder static")
 
 	-- Fold the on-the-wire handshake bytes and the channel-binding hash.
 	fold(m1)
@@ -148,10 +148,10 @@ local function runConnection(connIndex: number)
 	fold(m3)
 	fold(noise.handshakeHash(alice))
 
-	local aliceSend = (alice :: any).sendCS
-	local aliceRecv = (alice :: any).recvCS
-	local bobSend = (bob :: any).sendCS
-	local bobRecv = (bob :: any).recvCS
+	local aliceSend = (alice as any).sendCS
+	local aliceRecv = (alice as any).recvCS
+	local bobSend = (bob as any).sendCS
+	local bobRecv = (bob as any).recvCS
 
 	-- Bidirectional transport: alternate direction so both CipherStates and
 	-- nonce counters are exercised.

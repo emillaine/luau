@@ -786,7 +786,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_quantify_unresolved_aliases")
 
         function newKeyPool()
             local pool = {
-                available = {} :: {Key},
+                available = {} as {Key},
             }
 
             return setmetatable(pool, KeyPool)
@@ -827,7 +827,7 @@ TEST_CASE_FIXTURE(Fixture, "forward_declared_alias_is_not_clobbered_by_prior_uni
 
     CheckResult result = check(R"(
         local function x()
-            local y: FutureType = {}::any
+            local y: FutureType = {} as any
             return 1
         end
         type FutureType = { foo: typeof(x()) }
@@ -961,7 +961,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_lose_track_of_PendingExpansionTypes_aft
         local RCD = require(script.Parent.Parent.Parent.ReactCurrentDispatcher)
 
         local function resolveDispatcher(): RCD.Dispatcher
-            return (nil :: any) :: RCD.Dispatcher
+            return (nil as any) as RCD.Dispatcher
         end
 
         function useState<S>(
@@ -1021,7 +1021,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "alias_expands_to_bare_reference_to_imported_
         type ReadOnly<T> = T
 
         local function f(): ReadOnly<Object>
-            return nil :: any
+            return nil as any
         end
     )";
 
@@ -1239,7 +1239,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_dont_crash_on_bad_name")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        type typeof = typeof(nil :: any)
+        type typeof = typeof(nil as any)
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK(get<ReservedIdentifier>(result.errors[0]));
@@ -1250,11 +1250,11 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_dont_crash_on_duplicate_with_typeof")
     // NOTE: This pattern looks quite silly, but it's pretty common in the old
     // solver in:
     //
-    //  type Foo = typeof(setmetatable({} :: SomeType, {} :: SomeMetatableType))
+    //  type Foo = typeof(setmetatable({} as SomeType, {} as SomeMetatableType))
     //
     CheckResult result = check(R"(
-        type A = typeof(nil :: any)
-        type A = typeof(nil :: any)
+        type A = typeof(nil as any)
+        type A = typeof(nil as any)
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK(get<DuplicateTypeDefinition>(result.errors[0]));
@@ -1475,7 +1475,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "blocked_type_alias_do_not_leak_generic_argum
     ScopedFastFlag luauBlockingTypeAliasExpansion{FFlag::LuauBlockingTypeAliasExpansion, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-type Alias<Generic> = typeof(getmetatable(... :: Generic))
+type Alias<Generic> = typeof(getmetatable(... as Generic))
 
 type Value = { x: number, y: number }
 type Meta = setmetatable<Value, { __len : (Value) -> number }>

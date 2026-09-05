@@ -445,7 +445,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "detailed_class_unification_error")
 {
     CheckResult result = check(R"(
 local function foo(v)
-    return v.X :: number + string.len(v.Y)
+    return v.X as number + string.len(v.Y)
 end
 
 local a: Vector2
@@ -584,18 +584,18 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "optional_class_casts_work_in_new_solver")
         type A = { x: ChildClass }
         type B = { x: BaseClass }
 
-        local a = { x = ChildClass.New() } :: A
-        local opt_a = a :: A?
-        local b = { x = BaseClass.New() } :: B
-        local opt_b = b :: B?
-        local b_from_a = a :: B
-        local b_from_opt_a = opt_a :: B
-        local opt_b_from_a = a :: B?
-        local opt_b_from_opt_a = opt_a :: B?
-        local a_from_b = b :: A
-        local a_from_opt_b = opt_b :: A
-        local opt_a_from_b = b :: A?
-        local opt_a_from_opt_b = opt_b :: A?
+        local a = { x = ChildClass.New() } as A
+        local opt_a = a as A?
+        local b = { x = BaseClass.New() } as B
+        local opt_b = b as B?
+        local b_from_a = a as B
+        local b_from_opt_a = opt_a as B
+        local opt_b_from_a = a as B?
+        local opt_b_from_opt_a = opt_a as B?
+        local a_from_b = b as A
+        local a_from_opt_b = opt_b as A
+        local opt_a_from_b = b as A?
+        local opt_a_from_opt_b = opt_b as A?
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

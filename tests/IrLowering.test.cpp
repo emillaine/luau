@@ -3827,7 +3827,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "ImmediateTypeAnnotationHelp")
         "\n" + getCodegenAssembly(
                    R"(
 local function foo(arr, i)
-    return (arr[i] :: vector) / 5
+    return (arr[i] as vector) / 5
 end
 )",
                    /* includeIrTypes */ true

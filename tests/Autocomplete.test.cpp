@@ -1478,7 +1478,7 @@ TEST_CASE_FIXTURE(ACFixture, "as_types")
 {
     check(R"(
 local a: any = 5
-local b: number = (a :: n@1
+local b: number = (a as n@1
     )");
 
     auto ac = autocomplete('1');
@@ -3072,7 +3072,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "autocomplete_oop_implicit_self")
 --!strict
 local Class = {}
 Class.__index = Class
-type Class = typeof(setmetatable({} :: { x: number }, Class))
+type Class = typeof(setmetatable({} as { x: number }, Class))
 function Class.new(x: number): Class
     return setmetatable({x = x}, Class)
 end
@@ -4052,7 +4052,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_response_perf1" * doctest::timeout(LU
 
     source += " }\n";
 
-    source += "local Instance: Instance = {} :: any\n";
+    source += "local Instance: Instance = {} as any\n";
     source += "local function c(): boolean return t@1 end\n";
 
     check(source);
@@ -4951,7 +4951,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_in_type_assertion")
 {
     check(R"(
         type Entry = { field: number, prop: string }
-        return ( { f@1, p@2 } :: Entry )
+        return ( { f@1, p@2 } as Entry )
     )");
 
     auto ac1 = autocomplete('1');
@@ -5044,7 +5044,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "autocomplete_via_bidirectional_self")
             balance: number
         }, IAccount>;
 
-        local Account = {} :: IAccount
+        local Account = {} as IAccount
         Account.__index = Account
 
         function Account.new(name, balance): Account
@@ -5658,7 +5658,7 @@ local function foo(t : BadMTType)
         return t2
 end
 
-local x = foo(nil :: any)
+local x = foo(nil as any)
 x.@1
     )");
 
@@ -5714,7 +5714,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_react")
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        local createElement: createElementFn = nil :: any
+        local createElement: createElementFn = nil as any
 
         local function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
         	return nil
@@ -5744,7 +5744,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "cli_197197_autocomplete_generic_keyof")
             -- don't need to do anything here.
         end
 
-        local tbl: { Changed: bool, RemoveTag: bool } = nil :: any
+        local tbl: { Changed: bool, RemoveTag: bool } = nil as any
 
         ToggleButton(tbl, "@1")
     )");
@@ -5846,7 +5846,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_on_nonexistent_table")
     check(R"(
         local mygame = {}
 
-        local char = (nil :: any) :: {
+        local char = (nil as any) as {
             Humanoid: {
                 Animator: number
             }
@@ -5888,12 +5888,12 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_deprecated_on_recursive_intersection"
             prop: number
         }
         local function make(): MakeT
-            return nil :: any
+            return nil as any
         end
 
         type MakeT = typeof(make()) & T
 
-        local var: MakeT = nil :: any
+        local var: MakeT = nil as any
 
         @1
     )");

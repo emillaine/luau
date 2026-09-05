@@ -144,7 +144,7 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_function_call_with_singletons")
 {
     CheckResult result = check(R"(
         function f(a, b) end
-        local g : ((true, string) -> ()) & ((false, number) -> ()) = (f::any)
+        local g : ((true, string) -> ()) & ((false, number) -> ()) = (f as any)
         g(true, "foo")
         g(false, 37)
     )");
@@ -646,7 +646,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "singletons_stick_around_under_assignment")
             kind: "Foo",
         }
 
-        local foo = (nil :: any) :: Foo
+        local foo = (nil as any) as Foo
 
         print(foo.kind == "Bar") -- type of equality refines to `false`
         local kind = foo.kind
@@ -725,7 +725,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2010")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         local function foo<T>(my_enum: "" | T): T
-            return my_enum :: T
+            return my_enum as T
         end
 
         local var = foo("meow")
@@ -796,11 +796,11 @@ TEST_CASE_FIXTURE(Fixture, "oss_2010_but_with_booleans")
 
     CheckResult results = check(R"(
         local function foo<T>(my_enum: true | T): T
-            return my_enum :: T
+            return my_enum as T
         end
 
         local function bar<T>(my_enum: true & T): T
-            return my_enum :: T
+            return my_enum as T
         end
 
         local var1 = foo(true)

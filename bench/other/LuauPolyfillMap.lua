@@ -79,58 +79,58 @@ function Array.from<T, U>(
 
 	if valueType == "table" and Array.isArray(value) then
 		if mapFn then
-			for i = 1, #(value :: Array<T>) do
+			for i = 1, #(value as Array<T>) do
 				if thisArg ~= nil then
-					array[i] = (mapFn :: mapFnWithThisArg<T, U>)(thisArg, (value :: Array<T>)[i], i)
+					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as Array<T>)[i], i)
 				else
-					array[i] = (mapFn :: mapFn<T, U>)((value :: Array<T>)[i], i)
+					array[i] = (mapFn as mapFn<T, U>)((value as Array<T>)[i], i)
 				end
 			end
 		else
-			for i = 1, #(value :: Array<T>) do
-				array[i] = (value :: Array<any>)[i]
+			for i = 1, #(value as Array<T>) do
+				array[i] = (value as Array<any>)[i]
 			end
 		end
 	elseif instanceOf(value, Set) then
 		if mapFn then
-			for i, v in (value :: any):ipairs() do
+			for i, v in (value as any):ipairs() do
 				if thisArg ~= nil then
-					array[i] = (mapFn :: mapFnWithThisArg<T, U>)(thisArg, v, i)
+					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, v, i)
 				else
-					array[i] = (mapFn :: mapFn<T, U>)(v, i)
+					array[i] = (mapFn as mapFn<T, U>)(v, i)
 				end
 			end
 		else
-			for i, v in (value :: any):ipairs() do
+			for i, v in (value as any):ipairs() do
 				array[i] = v
 			end
 		end
 	elseif instanceOf(value, Map) then
 		if mapFn then
-			for i, v in (value :: any):ipairs() do
+			for i, v in (value as any):ipairs() do
 				if thisArg ~= nil then
-					array[i] = (mapFn :: mapFnWithThisArg<T, U>)(thisArg, v, i)
+					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, v, i)
 				else
-					array[i] = (mapFn :: mapFn<T, U>)(v, i)
+					array[i] = (mapFn as mapFn<T, U>)(v, i)
 				end
 			end
 		else
-			for i, v in (value :: any):ipairs() do
+			for i, v in (value as any):ipairs() do
 				array[i] = v
 			end
 		end
 	elseif valueType == "string" then
 		if mapFn then
-			for i = 1, (value :: string):len() do
+			for i = 1, (value as string):len() do
 				if thisArg ~= nil then
-					array[i] = (mapFn :: mapFnWithThisArg<T, U>)(thisArg, (value :: any):sub(i, i), i)
+					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as any):sub(i, i), i)
 				else
-					array[i] = (mapFn :: mapFn<T, U>)((value :: any):sub(i, i), i)
+					array[i] = (mapFn as mapFn<T, U>)((value as any):sub(i, i), i)
 				end
 			end
 		else
-			for i = 1, (value :: string):len() do
-				array[i] = (value :: any):sub(i, i)
+			for i = 1, (value as string):len() do
+				array[i] = (value as any):sub(i, i)
 			end
 		end
 	end
@@ -166,9 +166,9 @@ function Array.map<T, U, V>(
 			local mappedValue
 
 			if thisArg ~= nil then
-				mappedValue = (callback :: callbackFnWithThisArgArrayMap<T, U, V>)(thisArg, kValue, k, t)
+				mappedValue = (callback as callbackFnWithThisArgArrayMap<T, U, V>)(thisArg, kValue, k, t)
 			else
-				mappedValue = (callback :: callbackFnArrayMap<T, U>)(kValue, k, t)
+				mappedValue = (callback as callbackFnArrayMap<T, U>)(kValue, k, t)
 			end
 
 			A[k] = mappedValue
@@ -237,9 +237,9 @@ function Array.forEach<T, U>(
 		local kValue = t[k]
 
 		if thisArg ~= nil then
-			(callback :: callbackFnWithThisArgArrayForEach<T, U>)(thisArg, kValue, k, t)
+			(callback as callbackFnWithThisArgArrayForEach<T, U>)(thisArg, kValue, k, t)
 		else
-			(callback :: callbackFnArrayForEach<T>)(kValue, k, t)
+			(callback as callbackFnArrayForEach<T>)(kValue, k, t)
 		end
 
 		if #t < len then
@@ -275,17 +275,17 @@ function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | nil): Set<
 	local map = {}
 	if iterable ~= nil then
 		local arrayIterable: Array<any>
-		-- ROBLOX TODO: remove type casting from (iterable :: any).ipairs in next release
+		-- ROBLOX TODO: remove type casting from (iterable as any).ipairs in next release
 		if typeof(iterable) == "table" then
 			if Array.isArray(iterable) then
-				arrayIterable = Array.from(iterable :: Array<any>)
-			elseif typeof((iterable :: Iterable).ipairs) == "function" then
+				arrayIterable = Array.from(iterable as Array<any>)
+			elseif typeof((iterable as Iterable).ipairs) == "function" then
 				-- handle in loop below
 			elseif _G.__DEV__ then
 				error("cannot create array from an object-like table")
 			end
 		elseif typeof(iterable) == "string" then
-			arrayIterable = Array.from(iterable :: string)
+			arrayIterable = Array.from(iterable as string)
 		else
 			error(("cannot create array from value of type `%s`"):format(typeof(iterable)))
 		end
@@ -297,8 +297,8 @@ function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | nil): Set<
 					table.insert(array, element)
 				end
 			end
-		elseif typeof(iterable) == "table" and typeof((iterable :: Iterable).ipairs) == "function" then
-			for _, element in (iterable :: Iterable):ipairs() do
+		elseif typeof(iterable) == "table" and typeof((iterable as Iterable).ipairs) == "function" then
+			for _, element in (iterable as Iterable):ipairs() do
 				if not map[element] then
 					map[element] = true
 					table.insert(array, element)
@@ -311,13 +311,13 @@ function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | nil): Set<
 		size = #array,
 		_map = map,
 		_array = array,
-	}, Set) :: any) :: Set<T>
+	}, Set) as any) as Set<T>
 end
 
 function Set:add(value)
 	if not self._map[value] then
 		-- Luau FIXME: analyze should know self is Set<T> which includes size as a number
-		self.size = self.size :: number + 1
+		self.size = self.size as number + 1
 		self._map[value] = true
 		table.insert(self._array, value)
 	end
@@ -335,7 +335,7 @@ function Set:delete(value): boolean
 		return false
 	end
 	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
-	self.size = self.size :: number - 1
+	self.size = self.size as number - 1
 	self._map[value] = nil
 	local index = table.find(self._array, value)
 	if index then
@@ -353,9 +353,9 @@ function Set:forEach<T>(callback: callbackFnSet<T> | callbackFnWithThisArgSet<T>
 
 	return Array.forEach(self._array, function(value: T)
 		if thisArg ~= nil then
-			(callback :: callbackFnWithThisArgSet<T>)(thisArg, value, value, self)
+			(callback as callbackFnWithThisArgSet<T>)(thisArg, value, value, self)
 		else
-			(callback :: callbackFnSet<T>)(value, value, self)
+			(callback as callbackFnSet<T>)(value, value, self)
 		end
 	end)
 end
@@ -372,18 +372,18 @@ end
 
 -- #region Object
 function Object.entries(value: string | Object | Array<any>): Array<any>
-	assert(value :: any ~= nil, "cannot get entries from a nil value")
+	assert(value as any ~= nil, "cannot get entries from a nil value")
 	local valueType = typeof(value)
 
 	local entries: Array<Tuple<string, any>> = {}
 	if valueType == "table" then
-		for key, keyValue in pairs(value :: Object) do
+		for key, keyValue in pairs(value as Object) do
 			-- Luau FIXME: Luau should see entries as Array<any>, given object is [string]: any, but it sees it as Array<Array<string>> despite all the manual annotation
-			table.insert(entries, { key :: string, keyValue :: any })
+			table.insert(entries, { key as string, keyValue as any })
 		end
 	elseif valueType == "string" then
-		for i = 1, string.len(value :: string) do
-			entries[i] = { tostring(i), string.sub(value :: string, i, i) }
+		for i = 1, string.len(value as string) do
+			entries[i] = { tostring(i), string.sub(value as string, i, i) }
 		end
 	end
 
@@ -472,14 +472,14 @@ function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 		size = #array,
 		_map = map,
 		_array = array,
-	}, Map) :: any) :: Map<K, V>
+	}, Map) as any) as Map<K, V>
 end
 
 function Map:set<K, V>(key: K, value: V): Map<K, V>
 	-- preserve initial insertion order
 	if self._map[key] == nil then
 		-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
-		self.size = self.size :: number + 1
+		self.size = self.size as number + 1
 		table.insert(self._array, key)
 	end
 	-- always update value
@@ -503,7 +503,7 @@ function Map:delete(key): boolean
 		return false
 	end
 	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
-	self.size = self.size :: number - 1
+	self.size = self.size as number - 1
 	self._map[key] = nil
 	local index = table.find(self._array, key)
 	if index then
@@ -520,12 +520,12 @@ function Map:forEach<K, V>(callback: callbackFn<K, V> | callbackFnWithThisArg<K,
 	end
 
 	return Array.forEach(self._array, function(key: K)
-		local value: V = self._map[key] :: V
+		local value: V = self._map[key] as V
 
 		if thisArg ~= nil then
-			(callback :: callbackFnWithThisArg<K, V>)(thisArg, value, key, self)
+			(callback as callbackFnWithThisArg<K, V>)(thisArg, value, key, self)
 		else
-			(callback :: callbackFn<K, V>)(value, key, self)
+			(callback as callbackFn<K, V>)(value, key, self)
 		end
 	end)
 end
@@ -568,7 +568,7 @@ function Map.__newindex(table_, key, value)
 end
 
 local function coerceToMap(mapLike: Map<any, any> | Table<any, any>): Map<any, any>
-	return instanceOf(mapLike, Map) and mapLike :: Map<any, any> -- ROBLOX: order is preservered
+	return instanceOf(mapLike, Map) and mapLike as Map<any, any> -- ROBLOX: order is preservered
 		or Map.new(Object.entries(mapLike)) -- ROBLOX: order is not preserved
 end
 
@@ -684,7 +684,7 @@ end)
 
 it("sets values correctly to true/false", function()
 	-- Luau FIXME: Luau insists that arrays can't be mixed type
-	local foo = Map.new({ { AN_ITEM, false :: any } })
+	local foo = Map.new({ { AN_ITEM, false as any } })
 	foo:set(AN_ITEM, false)
 	assert(foo.size == 1)
 	assert(foo:get(AN_ITEM) == false)
@@ -764,7 +764,7 @@ end)
 
 it("deletes value set to false", function()
 	-- Luau FIXME: Luau insists arrays can't be mixed type
-	local foo = Map.new({ { AN_ITEM, false :: any } })
+	local foo = Map.new({ { AN_ITEM, false as any } })
 
 	foo:delete(AN_ITEM)
 
@@ -787,7 +787,7 @@ end)
 
 it("returns correctly with value set to false", function()
 	-- Luau FIXME: Luau insists arrays can't be mixed type
-	local foo = Map.new({ { AN_ITEM, false :: any } })
+	local foo = Map.new({ { AN_ITEM, false as any } })
 
 	assert(foo:has(AN_ITEM) == true)
 end)
@@ -889,7 +889,7 @@ end)
 
 -- #region [Child Describe] "Integration Tests"
 -- it("MDN Examples", function()
--- 	local myMap = Map.new() :: Map<string | Object | Function, string>
+-- 	local myMap = Map.new() as Map<string | Object | Function, string>
 
 -- 	local keyString = "a string"
 -- 	local keyObj = {}
@@ -915,7 +915,7 @@ end)
 -- end)
 
 it("handles non-traditional keys", function()
-	local myMap = Map.new() :: Map<boolean | number | string, string>
+	local myMap = Map.new() as Map<boolean | number | string, string>
 
 	local falseKey = false
 	local trueKey = true

@@ -563,7 +563,7 @@ TEST_CASE_FIXTURE(TypePathBuiltinsFixture, "complex_chains")
                 __add: (Tab, Tab) -> number,
             }
 
-            type Tab = typeof(setmetatable({}, {} :: Meta))
+            type Tab = typeof(setmetatable({}, {} as Meta))
         )");
 
         TypeId root = requireTypeAlias("Tab");

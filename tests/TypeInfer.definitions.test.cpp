@@ -614,7 +614,7 @@ TEST_CASE_FIXTURE(Fixture, "vector3_overflow")
 --!strict
 local function graphPoint(t : number, points : { Vector3 }) : Vector3
     local n : number = #points - 1
-    local p : Vector3 = (nil :: any)
+    local p : Vector3 = (nil as any)
     for i = 0, n do
         local x = points[i + 1]
         p = p and p + x or x

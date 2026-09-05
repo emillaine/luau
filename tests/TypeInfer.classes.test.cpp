@@ -318,7 +318,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "isinstance_refines_imported_class")
     fileResolver.source["game/B"] = R"(
         local A = require(game.A)
 
-        local x : unknown = (A.Point.new { x = 0 } ) :: any
+        local x : unknown = (A.Point.new { x = 0 } ) as any
         if class.isinstance(x, A.Point) then
             local y = x
         end
@@ -343,7 +343,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "isinstance_refines_imported_class_but_not_a_c
     fileResolver.source["game/B"] = R"(
         local A = require(game.A)
 
-        local x : unknown = (A.Point.new { x = 0 } ) :: any
+        local x : unknown = (A.Point.new { x = 0 } ) as any
         if class.isinstance(x, A.notAPoint) then
             local y = x
         end
@@ -864,8 +864,8 @@ TEST_CASE_FIXTURE(ClassesFixture, "type_assertion_loophole")
         class Foo
             public x: number
             function __init(self)
-                something = self :: Foo
-                something = (self :: Foo).x
+                something = self as Foo
+                something = (self as Foo).x
             end
         end
     )");

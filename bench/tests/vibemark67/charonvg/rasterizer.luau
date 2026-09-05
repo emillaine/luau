@@ -485,18 +485,18 @@ function Rasterizer.intersectSpans(a, b)
     local na, nb = #a, #b
 
     while ai <= na and bi <= nb do
-        local as = a[ai]
-        local bs = b[bi]
+        local aSpan = a[ai]
+        local bSpan = b[bi]
 
-        if bs.y > as.y then
+        if bSpan.y > aSpan.y then
             ai = ai + 1
-        else if as.y > bs.y then
+        elseif aSpan.y > bSpan.y then
             bi = bi + 1
         else
-            local ax1 = as.x
-            local ax2 = ax1 + as.len
-            local bx1 = bs.x
-            local bx2 = bx1 + bs.len
+            local ax1 = aSpan.x
+            local ax2 = ax1 + aSpan.len
+            local bx1 = bSpan.x
+            local bx2 = bx1 + bSpan.len
 
             if bx2 <= ax1 then
                 bi = bi + 1
@@ -509,9 +509,9 @@ function Rasterizer.intersectSpans(a, b)
                     nresult = nresult + 1
                     result[nresult] = {
                         x = x,
-                        y = as.y,
+                        y = aSpan.y,
                         len = len,
-                        coverage = math.floor(as.coverage * bs.coverage / 255),
+                        coverage = math.floor(aSpan.coverage * bSpan.coverage / 255),
                     }
                 end
                 if ax2 < bx2 then

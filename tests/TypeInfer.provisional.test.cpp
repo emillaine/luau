@@ -118,7 +118,7 @@ return function<T, U>(t: Array<T>, callback: callbackFn<T> | callbackFnWithThisA
 		for i = 1, len do
 			local kValue = t[i]
 			if kValue != nil then
-				if (callback :: callbackFn<T>)(kValue, i, t) then
+				if (callback as callbackFn<T>)(kValue, i, t) then
 					res[i] = kValue
 				end
 			end
@@ -852,7 +852,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_with_a_singleton_argument")
         end
 
         local t = foo({}, "hi")
-        table.insert(t, "totally_unrelated_type" :: "totally_unrelated_type")
+        table.insert(t, "totally_unrelated_type" as "totally_unrelated_type")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -917,7 +917,7 @@ TEST_CASE_FIXTURE(Fixture, "floating_generics_should_not_be_allowed")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local assign : <T, U, V, W>(target: T, source0: U?, source1: V?, source2: W?, ...any) -> T & U & V & W = (nil :: any)
+        local assign : <T, U, V, W>(target: T, source0: U?, source1: V?, source2: W?, ...any) -> T & U & V & W = (nil as any)
 
         -- We have a big problem here: The generics U, V, and W are not bound to anything!
         -- Things get strange because of this.
@@ -1124,11 +1124,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "normalization_limit_in_unify_with_any")
     source += " }\n";
 
     source += R"(
-local Instance: Instance = {} :: any
+local Instance: Instance = {} as any
 
 local function foo(a: typeof(Instance.new)) return if a then 2 else 3 end
 
-foo(1 :: any)
+foo(1 as any)
 )";
 
     CheckResult result = check(source);
@@ -1146,7 +1146,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_roact_useState_nilable_state_1")
 
         type ScriptConnection = { Disconnect: (ScriptConnection) -> () }
 
-        local blah = nil :: any
+        local blah = nil as any
 
         local function useState<S>(
             initialState: (() -> S) | S,
@@ -1155,11 +1155,11 @@ TEST_CASE_FIXTURE(Fixture, "luau_roact_useState_nilable_state_1")
             return blah, blah
         end
 
-        local a, b = useState(nil :: ScriptConnection?)
+        local a, b = useState(nil as ScriptConnection?)
 
         if a then
             a:Disconnect()
-            b(nil :: ScriptConnection?)
+            b(nil as ScriptConnection?)
         end
     )");
 
@@ -1196,7 +1196,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_roact_useState_minimization")
             end
         end
 
-        local test, setTest = useState(nil :: string?)
+        local test, setTest = useState(nil as string?)
 
         setTest(nil) -- this line causes the type to be narrowed in the old solver!!!
 
@@ -1405,7 +1405,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_and_many_nested_typeof_contexts")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local foo: unknown = nil :: any
+        local foo: unknown = nil as any
         assert(typeof(foo) == "table")
         if typeof(typeof(foo.x)) == "string" then
         end

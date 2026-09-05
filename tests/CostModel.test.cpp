@@ -152,7 +152,7 @@ TEST_CASE("VarArgs")
 {
     uint64_t model = modelFunction(R"(
 function test(...)
-    return select('#', ...) :: number
+    return select('#', ...) as number
 end
 )");
 

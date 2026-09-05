@@ -94,7 +94,7 @@ local function denseForward(layer: DenseLayer, input: typeof(Tensor.new(1,1))): 
 end
 
 local function denseBackward(layer: DenseLayer, gradOutput: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
-    local input = layer.input :: typeof(Tensor.new(1,1))
+    local input = layer.input as typeof(Tensor.new(1,1))
     layer.dWeights = Tensor.matmul(input:transpose(), gradOutput)
     layer.dBias = gradOutput:sumRows()
     return Tensor.matmul(gradOutput, layer.weights:transpose())
@@ -128,7 +128,7 @@ local function conv1DForward(layer: Conv1DLayer, input: typeof(Tensor.new(1,1)))
 end
 
 local function conv1DBackward(layer: Conv1DLayer, gradOutput: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
-    local input = layer.input :: typeof(Tensor.new(1,1))
+    local input = layer.input as typeof(Tensor.new(1,1))
     local batchSize = input.rows
     local inputLen = math.floor(input.cols / layer.inputChannels)
     local outputLen = inputLen - layer.kernelSize + 1

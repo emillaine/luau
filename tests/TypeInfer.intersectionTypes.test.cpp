@@ -1673,7 +1673,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bounds_propagate_into_free_intersection_boun
         end
 
         local b = f("hello")
-        local c = f(("world" :: string))
+        local c = f(("world" as string))
     )");
 
     LUAU_CHECK_NO_ERRORS(result);

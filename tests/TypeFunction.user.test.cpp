@@ -1319,7 +1319,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_math_reset")
         type function foo(x)
             return types.singleton(tostring(math.random(1, 100)))
         end
-        local x: foo<'a'> = ('' :: any) :: foo<'b'>
+        local x: foo<'a'> = ('' as any) as foo<'b'>
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1472,7 +1472,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_type_methods_on_types")
 
     CheckResult result = check(R"(
         type function test(x)
-            return if (types :: any).is(x, "number") then types.string else types.boolean
+            return if (types as any).is(x, "number") then types.string else types.boolean
         end
         local function ok(tbl: test<number>): never return tbl end
     )");
@@ -1570,7 +1570,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_serialization")
             return x
         end
 
-        local a: number = {} :: id<makemttbl<>>
+        local a: number = {} as id<makemttbl<>>
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1596,11 +1596,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "implicit_export")
 
     fileResolver.source["game/A"] = R"(
 type function concat(a: type, b: type)
-    local as = a:value()
-    local bs = b:value()
-    assert(typeof(as) == "string")
-    assert(typeof(bs) == "string")
-    return types.singleton(as .. bs)
+    local aString = a:value()
+    local bString = b:value()
+    assert(typeof(aString) == "string")
+    assert(typeof(bString) == "string")
+    return types.singleton(aString .. bString)
 end
 export type Concat<T, U> = concat<T, U>
 local a: concat<'first', 'second'>
@@ -1634,7 +1634,7 @@ local function test()
         return types.singleton(foo())
     end
 
-    return ("" :: any) :: bar<>
+    return ("" as any) as bar<>
 end
 local a = test()
     )");
@@ -1650,11 +1650,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "explicit_export")
 
     fileResolver.source["game/A"] = R"(
 export type function concat(a: type, b: type)
-    local as = a:value()
-    local bs = b:value()
-    assert(typeof(as) == "string")
-    assert(typeof(bs) == "string")
-    return types.singleton(as .. bs)
+    local aString = a:value()
+    local bString = b:value()
+    assert(typeof(aString) == "string")
+    assert(typeof(bString) == "string")
+    return types.singleton(aString .. bString)
 end
 local a: concat<'first', 'second'>
 return {}
@@ -2348,7 +2348,7 @@ end
 
 type wrap<T> = { a: func<T?> }
 
-local x: wrap<string> = nil :: any
+local x: wrap<string> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2367,7 +2367,7 @@ end
 
 type wrap<T> = { a: func<<T>(T) -> number>, b: T }
 
-local x: wrap<string> = nil :: any
+local x: wrap<string> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2922,7 +2922,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeof_into_type_function_should_not_crash")
 
         type func<parameters...> = typeof(function(...: parameters...) end)
         local whomp: <T>(arg1: T) -> identity<T>
-        whomp(function(...) end :: func<any>)
+        whomp(function(...) end as func<any>)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3043,7 +3043,7 @@ local function f<D, L>(data: D & {}, index: L | "Test"): index<D, L>
     return data[index]
 end
 
-local test = f :: test<typeof(f)>
+local test = f as test<typeof(f)>
 type function test(t: type) return t end
     )");
 
@@ -3597,7 +3597,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "types_singleton_error_message")
     CheckResult results = check(R"(
         type alias = {}
         type function meow()
-            return types.singleton(alias :: any)
+            return types.singleton(alias as any)
         end
 
         type test = meow<>

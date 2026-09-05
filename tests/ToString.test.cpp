@@ -516,7 +516,7 @@ TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names_and_self")
     CheckResult result = check(R"(
 local tbl = {}
 tbl.a = 2
-function tbl:foo(b: number, c: number) return (self.a :: number) + b + c end
+function tbl:foo(b: number, c: number) return (self.a as number) + b + c end
 type Table = typeof(tbl)
 type Foo = typeof(tbl.foo)
 local u: Foo

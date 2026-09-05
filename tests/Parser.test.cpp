@@ -693,7 +693,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_error_messages")
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expression")
 {
     (void)parse(R"(
-        local a = something() :: any
+        local a = something() as any
     )");
 }
 
@@ -707,7 +707,7 @@ TEST_CASE_FIXTURE(Fixture, "last_line_does_not_have_to_be_blank")
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expression_binds_tightly")
 {
     AstStatBlock* stat = parse(R"(
-        local a = one :: any + two :: any
+        local a = one as any + two as any
     )");
 
     REQUIRE(stat != nullptr);
@@ -2009,7 +2009,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_confusing_function_call")
         R"(
         function add(x, y) return x + y end
         local f = add
-        (f :: any)['x'] = 2
+        (f as any)['x'] = 2
     )",
         "Ambiguous syntax: this looks like an argument list for a function call, but could also be a start of new statement; use ';' to separate "
         "statements"

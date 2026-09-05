@@ -581,7 +581,7 @@ end
 
 -- Randomness source: injected so both a real RNG and tests can drive it.
 -- Defaults to nil; callers must set mlkem.randomBytes for the non-derand API.
-mlkem.randomBytes = (nil :: any) :: ((n: number) -> buffer)?
+mlkem.randomBytes = (nil as any) as ((n: number) -> buffer)?
 
 local function randBytes(n: number): buffer
 	local rng = mlkem.randomBytes

@@ -868,7 +868,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_assertion_value_type")
 {
     CheckResult result = check(R"(
 local function f()
-    return {4, "b", 3} :: {string|number}
+    return {4, "b", 3} as {string|number}
 end
     )");
 
@@ -1613,7 +1613,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "be_sure_to_use_active_txnlog_when_evaluating
 {
     CheckResult result = check(R"(
         local function concat<T>(target: {T}, ...: {T} | T): {T}
-            return (nil :: any) :: {T}
+            return (nil as any) as {T}
         end
 
         local res = concat({"alic"}, 1, 2)
@@ -1761,7 +1761,7 @@ TEST_CASE_FIXTURE(Fixture, "visit_error_nodes_in_lvalue")
     // nodes) as:
     //
     //  do
-    //      x :: T, y = z
+    //      x as T, y = z
     //  end
     //
     // We assume that `T` has some resolved type that is set up during
@@ -1770,7 +1770,7 @@ TEST_CASE_FIXTURE(Fixture, "visit_error_nodes_in_lvalue")
     // in lvalue positions.
     LUAU_REQUIRE_ERRORS(check(R"(
         --!strict
-        (::,
+        (as,
     )"));
 }
 
@@ -1850,7 +1850,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "getmetatable_works_with_any")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         return {
             new = function(name: string)
-                local self = newproxy(true) :: any
+                local self = newproxy(true) as any
 
                 getmetatable(self).__tostring = function()
                     return "Hello, I am " .. name
@@ -1988,8 +1988,8 @@ TEST_CASE_FIXTURE(Fixture, "fuzz_dont_double_solve_compound_assignment" * doctes
 TEST_CASE_FIXTURE(Fixture, "assert_allows_singleton_union_or_intersection")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = 42 :: | number
-        local y = 42 :: & number
+        local x = 42 as | number
+        local y = 42 as & number
     )"));
 }
 
@@ -2586,7 +2586,7 @@ TEST_CASE_FIXTURE(Fixture, "txnlog_checks_for_occurrence_before_self_binding_a_t
     ScopedFastFlag sff[] = {{FFlag::DebugLuauForceOldSolver, true}};
 
     CheckResult result = check(R"(
-        local any = nil :: any
+        local any = nil as any
 
         function f1(x)
             x:m()
@@ -2795,7 +2795,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_local_table_with_optional_index
         --!strict
         type TypeA = {Value: any}
 
-        local list = {} :: {[string]: TypeA?}
+        local list = {} as {[string]: TypeA?}
 
         for index, a in list do
             a.Value = 1

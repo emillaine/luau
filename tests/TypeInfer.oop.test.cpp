@@ -305,7 +305,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_oop")
 local Class = {}
 Class.__index = Class
 
-type Class = typeof(setmetatable({} :: { x: number }, Class))
+type Class = typeof(setmetatable({} as { x: number }, Class))
 
 function Class.new(x: number): Class
     return setmetatable({x = x}, Class)
@@ -331,13 +331,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "set_prop_of_intersection_containing_metatabl
 {
     CheckResult result = check(R"(
         export type Set<T> = typeof(setmetatable(
-            {} :: {
+            {} as {
                 add: (self: Set<T>, T) -> Set<T>,
             },
             {}
         ))
 
-        local Set = {} :: Set<any> & {}
+        local Set = {} as Set<any> & {}
 
         function Set:add(t)
             return self
@@ -800,7 +800,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
         export type Base = setmetatable<BaseStructure, typeof(Base)>
 
         function Base.new() : Base
-            return nil :: any
+            return nil as any
         end
 
         local Sub = {}
@@ -811,7 +811,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
         type Sub = setmetatable<SubStructure, typeof(Sub)> & Base
 
         function Sub.new() : Sub
-            local self: Sub = setmetatable(Base.new(), Sub) :: any
+            local self: Sub = setmetatable(Base.new(), Sub) as any
 
             self.SubString = 5 -- Line 24
             self.BaseString = 5 -- Line 25

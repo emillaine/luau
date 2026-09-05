@@ -381,7 +381,7 @@ TEST_CASE_FIXTURE(Fixture, "generics_dont_leak_into_callback")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local func: <T>(T, (T) -> ()) -> () = nil :: any
+        local func: <T>(T, (T) -> ()) -> () = nil as any
         func({}, function(obj)
             local _ = obj
         end)
@@ -400,8 +400,8 @@ TEST_CASE_FIXTURE(Fixture, "generics_dont_leak_into_callback_2")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-local func: <T>(T, (T) -> ()) -> () = nil :: any
-local foobar: (number) -> () = nil :: any
+local func: <T>(T, (T) -> ()) -> () = nil as any
+local foobar: (number) -> () = nil as any
 func({}, function(obj)
     foobar(obj)
 end)

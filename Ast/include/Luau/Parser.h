@@ -338,7 +338,7 @@ private:
     AstExpr* parseIndexExpr(Position start, AstExpr* expr);
     AstExpr* parseMethodCall(Position start, AstExpr* expr);
 
-    // asexp -> simpleexp [`::' Type]
+    // asexp -> simpleexp [`as' Type]
     AstExpr* parseAssertionExpr();
 
     // simpleexp -> NUMBER | STRING | NIL | true | false | ... | constructor | [attributes] FUNCTION body | primaryexp

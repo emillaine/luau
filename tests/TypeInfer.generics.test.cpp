@@ -62,10 +62,10 @@ TEST_CASE_FIXTURE(Fixture, "unions_and_generics")
 {
     CheckResult result = check(R"(
         type foo = <T>(T | {T}) -> T
-        local foo = (nil :: any) :: foo
+        local foo = (nil as any) as foo
 
         type Test = number | {number}
-        local res = foo(1 :: Test)
+        local res = foo(1 as Test)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1541,7 +1541,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions_2")
         type t = <a>(a, a, (a, a) -> a) -> a
         type u = (number, number, <X>(X, X) -> X) -> number
 
-        local foo = (nil :: any) :: t
+        local foo = (nil as any) as t
         local bar : u = foo
         )");
 
@@ -1623,9 +1623,9 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics3")
     // cyclic types under local type inference.
 
     CheckResult result = check(R"(
-        local getReturnValue: <V>(cb: () -> V) -> V = nil :: any
+        local getReturnValue: <V>(cb: () -> V) -> V = nil as any
 
-        local y = getReturnValue(function() return nil :: any end)
+        local y = getReturnValue(function() return nil as any end)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1676,7 +1676,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_always_instantiate_generic_intersection_types
             new: <T>() -> Array<T>,
         }
 
-        local _Arr : Array<any> & Array_Statics = {} :: Array_Statics
+        local _Arr : Array<any> & Array_Statics = {} as Array_Statics
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -1811,7 +1811,7 @@ type Dispatch<A> = (A) -> ()
 type BasicStateAction<S> = ((S) -> S) | S
 
 function updateReducer<S, I, A>(reducer: (S, A) -> S, initialArg: I, init: ((I) -> S)?): (S, Dispatch<A>)
-    return 1 :: any, 2 :: any
+    return 1 as any, 2 as any
 end
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S
@@ -1996,8 +1996,8 @@ local u: U = t
 TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error")
 {
     CheckResult res = check(R"(
-        local func: <T>(T, (T) -> ()) -> () = nil :: any
-        local foobar: (number) -> () = nil :: any
+        local func: <T>(T, (T) -> ()) -> () = nil as any
+        local foobar: (number) -> () = nil as any
         func({}, foobar)
     )");
 
@@ -2027,7 +2027,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "xpcall_should_work_with_generics")
 {
     CheckResult result = check(R"(
 --!strict
-local v: (number) -> (number) = nil :: any
+local v: (number) -> (number) = nil as any
 
 local x = 3
 
@@ -2162,8 +2162,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_185450_instantiate_generics_prior_to_pus
             Func: (self: Child) -> (Child?),
         }
 
-        local Parent = {} :: Parent
-        local Child = {} :: Child
+        local Parent = {} as Parent
+        local Child = {} as Child
 
         function Parent:Func1(value, ...)
             if value then return self else return nil end

@@ -95,7 +95,7 @@ TEST_CASE_FIXTURE(Fixture, "table_with_prop_of_type_never_is_uninhabitable")
 TEST_CASE_FIXTURE(Fixture, "table_with_prop_of_type_never_is_also_reflexive")
 {
     CheckResult result = check(R"(
-        local t: {x: never} = {x = 5 :: never}
+        local t: {x: never} = {x = 5 as never}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -113,7 +113,7 @@ TEST_CASE_FIXTURE(Fixture, "array_like_table_of_never_is_inhabitable")
 TEST_CASE_FIXTURE(Fixture, "type_packs_containing_never_is_itself_uninhabitable")
 {
     CheckResult result = check(R"(
-        local function f() return "foo", 5 :: never end
+        local function f() return "foo", 5 as never end
 
         local x, y, z = f()
     )");
@@ -140,8 +140,8 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_containing_never_is_itself_uninhabitable"
 TEST_CASE_FIXTURE(Fixture, "type_packs_containing_never_is_itself_uninhabitable2")
 {
     CheckResult result = check(R"(
-        local function f(): (string, never) return "", 5 :: never end
-        local function g(): (never, string) return 5 :: never, "" end
+        local function f(): (string, never) return "", 5 as never end
+        local function g(): (never, string) return 5 as never, "" end
 
         local x1, x2 = f()
         local y1, y2 = g()
@@ -168,7 +168,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_containing_never_is_itself_uninhabitable2
 TEST_CASE_FIXTURE(Fixture, "index_on_never")
 {
     CheckResult result = check(R"(
-        local x: never = 5 :: never
+        local x: never = 5 as never
         local z = x.y
     )");
 
@@ -180,7 +180,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_never")
 TEST_CASE_FIXTURE(Fixture, "call_never")
 {
     CheckResult result = check(R"(
-        local f: never = 5 :: never
+        local f: never = 5 as never
         local x, y, z = f()
     )");
 
@@ -213,7 +213,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_to_global_which_is_never")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        t = 5 :: never
+        t = 5 as never
         t = ""
     )");
 
@@ -245,7 +245,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_to_subscript_which_is_never")
 TEST_CASE_FIXTURE(Fixture, "for_loop_over_never")
 {
     CheckResult result = check(R"(
-        for i, v in (5 :: never) do
+        for i, v in (5 as never) do
         end
     )");
 
@@ -275,7 +275,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_union_of_tables_for_properties_that_is_neve
             return disjoint.foo
         end
 
-        local foo = f({foo = 5 :: never, bar = true, tag = "ok"})
+        local foo = f({foo = 5 as never, bar = true, tag = "ok"})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -295,7 +295,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_union_of_tables_for_properties_that_is_sort
             return disjoint.foo
         end
 
-        local foo = f({foo = 5 :: never, bar = true, tag = "ok"})
+        local foo = f({foo = 5 as never, bar = true, tag = "ok"})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -306,7 +306,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_union_of_tables_for_properties_that_is_sort
 TEST_CASE_FIXTURE(Fixture, "unary_minus_of_never")
 {
     CheckResult result = check(R"(
-        local x = -(5 :: never)
+        local x = -(5 as never)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -317,7 +317,7 @@ TEST_CASE_FIXTURE(Fixture, "unary_minus_of_never")
 TEST_CASE_FIXTURE(Fixture, "length_of_never")
 {
     CheckResult result = check(R"(
-        local x = #({} :: never)
+        local x = #({} as never)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -426,7 +426,7 @@ TEST_CASE_FIXTURE(Fixture, "cast_from_never_does_not_error")
 {
     CheckResult result = check(R"(
         local function f(x: never): number
-            return x :: number
+            return x as number
         end
     )");
 

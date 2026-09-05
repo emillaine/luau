@@ -420,7 +420,7 @@ struct Reducer
                  * Promoting a statement's children to the enclosing block.
                  * Deleting type annotations
                  * Deleting parts of type annotations
-                 * Replacing subexpressions with ({} :: any)
+                 * Replacing subexpressions with ({} as any)
                  * Inlining type aliases
                  * Inlining constants
                  * Inlining functions

@@ -10,7 +10,7 @@ local Memory = require("./memory")
 local CPU = {}
 CPU.__index = CPU
 
-export type CPU = typeof(setmetatable({} :: {
+export type CPU = typeof(setmetatable({} as {
     X: { integer },       -- X[0]..X[30], 1-indexed so X[1] = X0
     SP: integer,
     PC: integer,

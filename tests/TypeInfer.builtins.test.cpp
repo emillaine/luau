@@ -382,7 +382,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_on_union_of_tables")
         type T = A | B
 
         type X = typeof(
-            setmetatable({} :: T, {})
+            setmetatable({} as T, {})
         )
     )");
 
@@ -1757,8 +1757,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_should_support_any_2")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local fmt = "Hello, %s!" :: any
-        local x = "world" :: any
+        local fmt = "Hello, %s!" as any
+        local x = "world" as any
         print(string.format(fmt, x))
         print(string.format(fmt, "hello"))
         print(string.format(fmt, 5)) -- unchecked because the format string is `any`!
@@ -1799,7 +1799,7 @@ TEST_CASE_FIXTURE(Fixture, "write_only_table_assertion")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_into_any")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-table.insert(1::any, 2::any)
+table.insert(1 as any, 2 as any)
     )"));
 }
 

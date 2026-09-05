@@ -287,7 +287,7 @@ struct SimplifyConstraint
 // assuming that `expr` is a lambda who's un-generalized type is `functionType`.
 // Similar to `FunctionCheckConstraint`. For example:
 //
-//  local Foo = {} :: { bar : (number) -> () }
+//  local Foo = {} as { bar : (number) -> () }
 //
 //  function Foo.bar(x) end
 //

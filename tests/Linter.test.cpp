@@ -1594,14 +1594,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "DeprecatedApiFenv")
 local f, g, h = ...
 
 getfenv(1)
-getfenv(f :: () -> ())
-getfenv(g :: number)
-getfenv(h :: any)
+getfenv(f as () -> ())
+getfenv(g as number)
+getfenv(h as any)
 
 setfenv(1, {})
-setfenv(f :: () -> (), {})
-setfenv(g :: number, {})
-setfenv(h :: any, {})
+setfenv(f as () -> (), {})
+setfenv(g as number, {})
+setfenv(h as any, {})
 )");
 
     REQUIRE(4 == result.warnings.size());
@@ -2161,7 +2161,7 @@ table.move(t, 0, #t, 1, tt)
 table.move(t, 1, #t, 0, tt)
 
 table.create(42, {})
-table.create(42, {} :: {})
+table.create(42, {} as {})
 )");
 
     REQUIRE(10 == result.warnings.size());

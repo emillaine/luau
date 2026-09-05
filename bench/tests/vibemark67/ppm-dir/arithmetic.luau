@@ -9,7 +9,7 @@ local THIRD_QUARTER = FIRST_QUARTER + HALF
 local Encoder = {}
 Encoder.__index = Encoder
 
-export type Encoder = typeof(setmetatable({} :: {
+export type Encoder = typeof(setmetatable({} as {
     low: number,
     high: number,
     pending: number,
@@ -96,7 +96,7 @@ end
 local Decoder = {}
 Decoder.__index = Decoder
 
-export type Decoder = typeof(setmetatable({} :: {
+export type Decoder = typeof(setmetatable({} as {
     low: number,
     high: number,
     value: number,

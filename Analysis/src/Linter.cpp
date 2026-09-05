@@ -2748,7 +2748,7 @@ private:
                     "table.create with a table literal will reuse the same object for all elements; consider using a for loop instead"
                 );
 
-            // table.create(n, {...} :: ?)
+            // table.create(n, {...} as ?)
             if (AstExprTypeAssertion* as = args[1]->as<AstExprTypeAssertion>(); as && as->expr->is<AstExprTable>())
                 emitWarning(
                     *context,

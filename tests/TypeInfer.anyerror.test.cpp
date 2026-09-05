@@ -62,7 +62,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any2")
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any")
 {
     CheckResult result = check(R"(
-        local bar = nil :: any
+        local bar = nil as any
 
         local a
         for b in bar do
@@ -81,7 +81,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any")
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any2")
 {
     CheckResult result = check(R"(
-        local bar = nil :: any
+        local bar = nil as any
 
         local a
         for b in bar() do
@@ -220,7 +220,7 @@ TEST_CASE_FIXTURE(Fixture, "can_subscript_any")
 TEST_CASE_FIXTURE(Fixture, "can_get_length_of_any")
 {
     CheckResult result = check(R"(
-        local foo = ({} :: any)
+        local foo = ({} as any)
         local bar = #foo
     )");
 
@@ -437,7 +437,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "cast_to_table_of_any")
 {
     CheckResult result = check(R"(
-        local v = {true} :: {any}
+        local v = {true} as {any}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

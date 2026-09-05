@@ -300,7 +300,7 @@ TEST_CASE_FIXTURE(JsonEncoderFixture, "encode_AstExprBinary")
 
 TEST_CASE_FIXTURE(JsonEncoderFixture, "encode_AstExprTypeAssertion")
 {
-    AstExpr* expr = expectParseExpr("b :: any");
+    AstExpr* expr = expectParseExpr("b as any");
 
     std::string_view expected =
         R"({"type":"AstExprTypeAssertion","location":"0,4 - 0,12","expr":{"type":"AstExprGlobal","location":"0,4 - 0,5","global":"b"},"annotation":{"type":"AstTypeReference","location":"0,9 - 0,12","name":"any","nameLocation":"0,9 - 0,12","parameters":[]}})";

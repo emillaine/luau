@@ -52,6 +52,17 @@ TEST_CASE("comment_skipped")
     CHECK_EQ(lexer.next().type, Lexeme::Type::Eof);
 }
 
+TEST_CASE("as_is_reserved")
+{
+    const std::string testInput = "as";
+    Luau::Allocator alloc;
+    AstNameTable table(alloc);
+    Lexer lexer(testInput.c_str(), testInput.size(), table);
+
+    CHECK_EQ(lexer.next().type, Lexeme::ReservedAs);
+    CHECK_EQ(lexer.next().type, Lexeme::Eof);
+}
+
 TEST_CASE("multilineCommentWithLexemeInAndAfter")
 {
     const std::string testInput = "--[[ function \n"

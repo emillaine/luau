@@ -3894,7 +3894,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "ok" then
 
@@ -3906,7 +3906,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "ok" then
     result.@1
@@ -3932,7 +3932,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "err" then
 
@@ -3944,7 +3944,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "err" then
     result.@1
@@ -3972,7 +3972,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "ok" then
 
@@ -3984,7 +3984,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "ok" then
     result.@1
@@ -4010,7 +4010,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "err" then
 
@@ -4022,7 +4022,7 @@ type Ok<T> = { type: "ok", value: T}
 type Err<E> = { type : "err", error : E}
 type Result<T,E> = Ok<T> | Err<E>
 
-local result = {} :: Result<number, string>
+local result = {} as Result<number, string>
 
 if result.type == "err" then
     result.@1
@@ -4127,7 +4127,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "self_with_fancy_metatabl
             balance: number
         }, IAccount>;
 
-        local Account = {} :: IAccount
+        local Account = {} as IAccount
         Account.__index = Account
 
         function Account.new(name, balance): Account
@@ -4154,7 +4154,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "self_with_fancy_metatabl
             balance: number
         }, IAccount>;
 
-        local Account = {} :: IAccount
+        local Account = {} as IAccount
         Account.__index = Account
 
         function Account.new(name, balance): Account
@@ -4283,7 +4283,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "for_in_should_rec")
 {
     const std::string source = R"(
 type T = { x : {[number] : number}, y: number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for _,n in pairs(x.@1) do
 end
 )";
@@ -4304,13 +4304,13 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "for_expr_in_should_rec_n
 {
     const std::string source = R"(
 type T = { x : {[number] : number}, y: number, z: number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i =
 end
 )";
     const std::string dest = R"(
 type T = { x : {[number] : number}, y: number, z : number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.@1
 end
 )";
@@ -4332,13 +4332,13 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "for_expr_in_should_rec_w
 {
     const std::string source = R"(
 type T = { x : {[number] : number}, y: number, z: number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.y, 100 do
 end
 )";
     const std::string dest = R"(
 type T = { x : {[number] : number}, y: number, z : number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.y, 100, x.@1 do
 end
 )";
@@ -4360,13 +4360,13 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "for_expr_in_should_rec_w
 {
     const std::string source = R"(
 type T = { x : {[number] : number}, y: number, z: number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.y, x.z do
 end
 )";
     const std::string dest = R"(
 type T = { x : {[number] : number}, y: number, z : number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.y, x.@1 do
 end
 )";
@@ -4388,13 +4388,13 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "for_expr_in_should_rec_w
 {
     const std::string source = R"(
 type T = { x : {[number] : number}, y: number, z: number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.y do
 end
 )";
     const std::string dest = R"(
 type T = { x : {[number] : number}, y: number, z : number}
-local x : T = ({} :: T)
+local x : T = ({} as T)
 for i = x.y, x.@1 do
 end
 )";
@@ -4480,7 +4480,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "len_operator_needs_to_pr
 type Pool = { numbers: { number }}
 
 local function foobar(p)
-    local pool = p :: Pool
+    local pool = p as Pool
     if #pool
 end
 )";
@@ -4488,7 +4488,7 @@ end
 type Pool = { numbers: { number }}
 
 local function foobar(p)
-    local pool = p :: Pool
+    local pool = p as Pool
     if #pool.@1
 end
 )";
@@ -4510,7 +4510,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "unary_minus_operator_nee
 type Pool = { x : number }
 
 local function foobar(p)
-    local pool = p :: Pool
+    local pool = p as Pool
     if -pool
 end
 )";
@@ -4518,7 +4518,7 @@ end
 type Pool = { x : number }
 
 local function foobar(p)
-    local pool = p :: Pool
+    local pool = p as Pool
     if -pool.@1
 end
 )";
@@ -4918,7 +4918,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_prop
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        local createElement: createElementFn = nil :: any
+        local createElement: createElementFn = nil as any
 
         local function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
         	return nil
@@ -4941,7 +4941,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_prop
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        local createElement: createElementFn = nil :: any
+        local createElement: createElementFn = nil as any
 
         local function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
         	return nil
@@ -5003,7 +5003,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_narr
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        local createElement: createElementFn = nil :: any
+        local createElement: createElementFn = nil as any
 
         local function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
         	return nil
@@ -5027,7 +5027,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_narr
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        local createElement: createElementFn = nil :: any
+        local createElement: createElementFn = nil as any
 
         local function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
         	return nil
@@ -5493,7 +5493,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_ac_on_nonexistent_table
     const std::string source = R"(
         local mygame = {}
 
-        local char = (nil :: any) :: {
+        local char = (nil as any) as {
             Humanoid: {
                 Animator: number
             }
@@ -5503,7 +5503,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_ac_on_nonexistent_table
     const std::string updated = R"(
         local mygame = {}
 
-        local char = (nil :: any) :: {
+        local char = (nil as any) as {
             Humanoid: {
                 Animator: number
             }

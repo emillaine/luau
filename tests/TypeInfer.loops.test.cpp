@@ -52,7 +52,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_no_table_passed")
 
 type Iterable = typeof(setmetatable(
     {},
-    {}::{
+    {} as {
         __iter: (self: Iterable) -> (any, number) -> (number, string)
     }
 ))
@@ -77,7 +77,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967")
     CheckResult result = check(R"(
         type Iterable = typeof(setmetatable(
             {},
-            {}::{
+            {} as {
                 __iter: (self: Iterable) -> () -> (number, string)
             }
         ))
@@ -98,7 +98,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967_alt")
     CheckResult result = check(R"(
         type Iterable = typeof(setmetatable(
             {},
-            {}::{
+            {} as {
                 __iter: (self: Iterable) -> () -> (number, string)
             }
         ))
@@ -1269,11 +1269,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "forin_metatable_iter_mm")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        type Iterable<T...> = typeof(setmetatable({}, {} :: {
+        type Iterable<T...> = typeof(setmetatable({}, {} as {
             __iter: (Iterable<T...>) -> () -> T...
         }))
 
-        for i, v in {} :: Iterable<...number> do
+        for i, v in {} as Iterable<...number> do
             print(i, v)
         end
     )");
@@ -1341,7 +1341,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1480")
         type Part = { Parent: Part? }
         type Instance = Part
 
-        local part = {} :: Part
+        local part = {} as Part
 
         local currentParent: Instance? = part.Parent
         while currentParent != nil do

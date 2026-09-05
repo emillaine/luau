@@ -230,7 +230,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_group")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation")
 {
     AstStatBlock* block = parse(R"(
-        local R = game.Test :: (typeof(game.Redirect))
+        local R = game.Test as (typeof(game.Redirect))
         require(R)
     )");
     REQUIRE_EQ(2, block->body.size);
@@ -246,7 +246,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation_2")
 {
     AstStatBlock* block = parse(R"(
-        local R = game.Test :: (typeof(game.Redirect))
+        local R = game.Test as (typeof(game.Redirect))
         local N = R.Nested
         require(N)
     )");

@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "invalidate_type_refinements_upon_assignment
         local function f<T, E>(res: Result<T, E>)
             assert(res.tag == "ok")
             local tag: "ok", val: T = res.tag, res.val
-            res = { tag = "err" :: "err", err = (5 :: any) :: E }
+            res = { tag = "err" as "err", err = (5 as any) as E }
             local tag: "err", err: E = res.tag, res.err
         end
     )");
@@ -646,7 +646,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_else_branch")
     CheckResult result = check(R"(
         --!strict
         local x
-        local coinflip : () -> boolean = (nil :: any)
+        local coinflip : () -> boolean = (nil as any)
 
         if coinflip () then
             x = "I win."
@@ -667,7 +667,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch")
     CheckResult result = check(R"(
         --!strict
         local x
-        local coinflip : () -> boolean = (nil :: any)
+        local coinflip : () -> boolean = (nil as any)
 
         if coinflip () then
             error("You lose.")
@@ -691,7 +691,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring")
         type Payload = { payload: number }
 
         local function decode(s: string): Payload?
-            return (nil :: any)
+            return (nil as any)
         end
 
         local function decodeEx(s: string): Payload
@@ -754,7 +754,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch_and_do_nothing_in_else")
     CheckResult result = check(R"(
         --!strict
         local x
-        local coinflip : () -> boolean = (nil :: any)
+        local coinflip : () -> boolean = (nil as any)
 
         if coinflip () then
             error("You lose.")
@@ -776,7 +776,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_in_an_if_branch_without_else")
     CheckResult result = check(R"(
         --!strict
         local x
-        local coinflip : () -> boolean = (nil :: any)
+        local coinflip : () -> boolean = (nil as any)
 
         if coinflip () then
             x = "I win."

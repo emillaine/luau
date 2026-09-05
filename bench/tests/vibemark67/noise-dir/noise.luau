@@ -132,7 +132,7 @@ local function decryptWithAd(cs: CipherState, ad: buffer, ciphertext: buffer): b
 	local pt = aead.open(k, nonceBuffer(cs.n), ct, tag, ad)
 	assert(pt ~= nil, "Noise: decryption failed (authentication)")
 	cs.n += 1
-	return pt :: buffer
+	return pt as buffer
 end
 
 -- Encrypt a transport message (empty associated data).
@@ -293,10 +293,10 @@ local function writeMsg2(hs: Handshake, payload: buffer): buffer
 	mixHash(ss, e.pub)
 
 	-- ee
-	mixKey(ss, x25519.scalarMult(e.priv, hs.re :: buffer))
+	mixKey(ss, x25519.scalarMult(e.priv, hs.re as buffer))
 
 	-- ekem: encapsulate to the initiator's ML-KEM key.
-	local kemSecret, kemCt = mlkem.encaps(hs.remoteEk :: buffer)
+	local kemSecret, kemCt = mlkem.encaps(hs.remoteEk as buffer)
 	mixHash(ss, kemCt)
 	mixKey(ss, kemSecret)
 
@@ -304,7 +304,7 @@ local function writeMsg2(hs: Handshake, payload: buffer): buffer
 	local encStatic = encryptAndHash(ss, hs.s.pub)
 
 	-- es = DH(responder static, initiator ephemeral)
-	mixKey(ss, x25519.scalarMult(hs.s.priv, hs.re :: buffer))
+	mixKey(ss, x25519.scalarMult(hs.s.priv, hs.re as buffer))
 
 	local payloadPart = encryptAndHash(ss, payload)
 	return concat({ e.pub, kemCt, encStatic, payloadPart })
@@ -319,13 +319,13 @@ local function readMsg2(hs: Handshake, message: buffer): buffer
 	mixHash(ss, re)
 
 	-- ee
-	mixKey(ss, x25519.scalarMult((hs.e :: KeyPair).priv, re))
+	mixKey(ss, x25519.scalarMult((hs.e as KeyPair).priv, re))
 
 	-- ekem: decapsulate the ciphertext.
 	local kemCt = slice(message, off, CTKEM_LEN)
 	off += CTKEM_LEN
 	mixHash(ss, kemCt)
-	local kemSecret = mlkem.decaps((hs.kem :: any).dk, kemCt)
+	local kemSecret = mlkem.decaps((hs.kem as any).dk, kemCt)
 	mixKey(ss, kemSecret)
 
 	-- s (responder static): encrypted 32-byte key + 16-byte tag.
@@ -335,7 +335,7 @@ local function readMsg2(hs: Handshake, message: buffer): buffer
 	hs.rs = rs
 
 	-- es = DH(initiator ephemeral, responder static)
-	mixKey(ss, x25519.scalarMult((hs.e :: KeyPair).priv, rs))
+	mixKey(ss, x25519.scalarMult((hs.e as KeyPair).priv, rs))
 
 	local rest = slice(message, off, buffer.len(message) - off)
 	return decryptAndHash(ss, rest)
@@ -348,7 +348,7 @@ local function writeMsg3(hs: Handshake, payload: buffer): buffer
 	-- s (initiator static, encrypted)
 	local encStatic = encryptAndHash(ss, hs.s.pub)
 	-- se = DH(initiator static, responder ephemeral)
-	mixKey(ss, x25519.scalarMult(hs.s.priv, hs.re :: buffer))
+	mixKey(ss, x25519.scalarMult(hs.s.priv, hs.re as buffer))
 	local payloadPart = encryptAndHash(ss, payload)
 	return concat({ encStatic, payloadPart })
 end
@@ -359,7 +359,7 @@ local function readMsg3(hs: Handshake, message: buffer): buffer
 	local rs = decryptAndHash(ss, encStatic)
 	hs.rs = rs
 	-- se = DH(responder ephemeral, initiator static)
-	mixKey(ss, x25519.scalarMult((hs.e :: KeyPair).priv, rs))
+	mixKey(ss, x25519.scalarMult((hs.e as KeyPair).priv, rs))
 	local rest = slice(message, DHLEN + TAGLEN, buffer.len(message) - DHLEN - TAGLEN)
 	return decryptAndHash(ss, rest)
 end

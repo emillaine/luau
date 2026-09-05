@@ -478,7 +478,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_never_for_empty_table")
     CheckResult result = check(R"(
         type KeyofEmpty = keyof<{}>
 
-        local foo = ((nil :: any) :: KeyofEmpty)
+        local foo = ((nil as any) as KeyofEmpty)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -576,7 +576,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_never_for_empty_table
     CheckResult result = check(R"(
         type RawkeyofEmpty = rawkeyof<{}>
 
-        local foo = ((nil :: any) :: RawkeyofEmpty)
+        local foo = ((nil as any) as RawkeyofEmpty)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1045,7 +1045,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cyclic_metatable_should_not_crash_index")
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
-    // t :: t1 where t1 = {metatable {__index: t1, __tostring: (t1) -> string}}
+    // t as t1 where t1 = {metatable {__index: t1, __tostring: (t1) -> string}}
     CheckResult result = check(R"(
         local mt = {}
         local t = setmetatable({}, mt)
@@ -1960,7 +1960,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184124_recursive_restraint_violation_from_devfor
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type TypeA<A... = ()> = { Func: (self: TypeA<A...>, func: (A...) -> ()) -> () }
         type TypeB<A = any> = { Value: TypeA<TypeB<A>> }
-        local value = {} :: TypeB
+        local value = {} as TypeB
     )"));
 }
 
@@ -2031,7 +2031,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2114_type_instantiation_on_type_function
         end
 
         local function fn<T>(): id<T>
-            return nil :: any
+            return nil as any
         end
 
         local y = fn<<number>>()
@@ -2128,7 +2128,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_negation_of_nontestable_type_doesnt_cras
             local dn = types.negationof(types.unionof(types.newfunction(), types.number))
             return types.intersectionof(types.number, types.negationof(types.unionof(dn, types.string)))
         end
-        local x: tf<> = nil :: any
+        local x: tf<> = nil as any
         print(x)
     )");
 
@@ -2167,7 +2167,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2634_negation_of_nontestable_type_doesnt
             local dn = types.negationof(types.unionof(types.newfunction(), types.number))
             return types.negationof(types.unionof(dn, types.string))
         end
-        local f: tf<> = nil :: any
+        local f: tf<> = nil as any
         f()
     )");
 

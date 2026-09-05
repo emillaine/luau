@@ -718,7 +718,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unknown_types_in_non_strict_2")
 {
     CheckResult result = check(Mode::Nonstrict, R"(
         --!nonstrict
-        local foo = 1 :: Foo
+        local foo = 1 as Foo
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);

@@ -3,7 +3,7 @@
 local Tensor = {}
 Tensor.__index = Tensor
 
-export type Tensor = typeof(setmetatable({} :: {
+export type Tensor = typeof(setmetatable({} as {
     data: {number},
     rows: number,
     cols: number,

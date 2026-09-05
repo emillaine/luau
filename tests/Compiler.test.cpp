@@ -4705,7 +4705,7 @@ TEST_CASE("AsConstant")
 {
     const char* source = R"(
 --!strict
-return (1 + 2) :: number
+return (1 + 2) as number
 )";
 
     Luau::CompileOptions options;
@@ -6053,7 +6053,7 @@ TEST_CASE("TypeAssertion")
     // validate that type assertions work with the compiler and that the code inside type assertion isn't evaluated
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-print(foo() :: typeof(error("compile time")))
+print(foo() as typeof(error("compile time")))
 )"),
         R"(
 GETIMPORT R0 1 [print]
@@ -8213,7 +8213,7 @@ local function foo(a)
 end
 
 local x = ...
-local y = foo(x :: number)
+local y = foo(x as number)
 return y
 )",
                    1,
@@ -8240,7 +8240,7 @@ end
 local x = ...
 mutator = function() x = 42 end
 
-local y = foo(x :: number)
+local y = foo(x as number)
 return y
 )",
                    2,
@@ -9007,7 +9007,7 @@ RETURN R1 1
                    R"(
 local t = {
     f = function(x) return x + 1 end
-} :: any
+} as any
 return t.f(100)
 )",
                    1,
@@ -10056,7 +10056,7 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 local x, y = ...
-return (x), y :: number
+return (x), y as number
 )"),
         R"(
 GETVARARGS R0 2
@@ -10502,7 +10502,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 local function test(a, b)
-    local c = (a :: number)
+    local c = (a as number)
     return c + b
 end
 )"),
@@ -10880,7 +10880,7 @@ LOADNIL R0
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a a = a :: number"), R"(
+    CHECK_EQ("\n" + compileFunction0("local a a = a as number"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
@@ -11486,7 +11486,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 local x, y = ...
-return if x then x :: number else 0
+return if x then x as number else 0
 )"),
         R"(
 GETVARARGS R0 2
@@ -11525,7 +11525,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 local x, y = ...
-return if x then y else x :: number
+return if x then y else x as number
 )"),
         R"(
 GETVARARGS R0 2

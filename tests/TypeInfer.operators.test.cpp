@@ -117,7 +117,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "primitive_arith_no_metatable")
 {
     CheckResult result = check(R"(
         function add(a: number, b: string)
-            return a + (tonumber(b) :: number), tostring(a) .. b
+            return a + (tonumber(b) as number), tostring(a) .. b
         end
         local n, s = add(2,"3")
     )");
@@ -1737,14 +1737,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "overload_concat")
             end;
         }
 
-        export type cls = typeof(setmetatable({}::classData, metatable))
+        export type cls = typeof(setmetatable({} as classData, metatable))
 
         --returns a long string
         local new = function():cls
             return setmetatable({
-                b = buffer.create(100_000::number);
+                b = buffer.create(100_000 as number);
                 len = 0;
-            }::classData,metatable)::cls
+            } as classData,metatable) as cls
         end
         local class = new()
 

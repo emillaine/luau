@@ -1708,7 +1708,7 @@ TEST_CASE_FIXTURE(Fixture, "inferred_higher_order_functions_are_quantified_at_th
         --!strict
 
         local function resolveDispatcher()
-            return (nil :: any) :: {useContext: (number?) -> any}
+            return (nil as any) as {useContext: (number?) -> any}
         end
 
         local useContext
@@ -1750,7 +1750,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_decl_non_self_unsealed_overwrite")
     ScopedFastFlag _{FFlag::LuauCheckFunctionStatementTypes, true};
 
     CheckResult result = check(R"(
-local t = { f = nil :: ((x: number) -> number)? }
+local t = { f = nil as ((x: number) -> number)? }
 
 function t.f(x: string): string -- 1st error: new function value type is incompatible
     return x .. "asd"
@@ -1967,7 +1967,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_mutate_the_underlying_head_of_typepack_when_cal
     CheckResult result = check(R"(
         local t = {}
         function t:m(x) end
-        function f(): never return 5 :: never end
+        function f(): never return 5 as never end
         t:m(f())
         t:m(f())
     )");
@@ -2194,14 +2194,14 @@ TEST_CASE_FIXTURE(Fixture, "instantiated_type_packs_must_have_a_non_null_scope")
 {
     CheckResult result = check(R"(
         function pcall<A..., R...>(...: (A...) -> R...): (boolean, R...)
-            return nil :: any
+            return nil as any
         end
 
         type Dispatch<A> = (A) -> ()
 
         function mountReducer()
             dispatchAction()
-            return nil :: any
+            return nil as any
         end
 
         function dispatchAction()
@@ -2385,8 +2385,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_checks_argument_types")
     ScopedFastFlag _{FFlag::LuauFixCallMetamethodErrorReporting, true};
 
     CheckResult result = check(R"(
-        type Callable = typeof(setmetatable({}, {} :: { __call: (Callable, number) -> string }))
-        local f = (nil :: any) :: Callable
+        type Callable = typeof(setmetatable({}, {} as { __call: (Callable, number) -> string }))
+        local f = (nil as any) as Callable
 
         local ok: string = f(1)
         local bad: string = f("wrong")
@@ -2401,8 +2401,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_checks_variadic_argument_typ
     ScopedFastFlag _{FFlag::LuauFixCallMetamethodErrorReporting, true};
 
     CheckResult result = check(R"(
-        type Callable = typeof(setmetatable({}, {} :: { __call: (Callable, ...number) -> () }))
-        local f = (nil :: any) :: Callable
+        type Callable = typeof(setmetatable({}, {} as { __call: (Callable, ...number) -> () }))
+        local f = (nil as any) as Callable
 
         f(1, 2, 3)
         f(1, "wrong")
@@ -2418,8 +2418,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_variadic_blames_the_offendin
     ScopedFastFlag _{FFlag::LuauFixCallMetamethodErrorReporting, true};
 
     CheckResult result = check(R"(
-        type Callable = typeof(setmetatable({}, {} :: { __call: (Callable, ...number) -> () }))
-        local f = (nil :: any) :: Callable
+        type Callable = typeof(setmetatable({}, {} as { __call: (Callable, ...number) -> () }))
+        local f = (nil as any) as Callable
 
         f(1, "wrong", 3)
     )");
@@ -2436,8 +2436,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_variadic_blames_each_offendi
     ScopedFastFlag _{FFlag::LuauFixCallMetamethodErrorReporting, true};
 
     CheckResult result = check(R"(
-        type Callable = typeof(setmetatable({}, {} :: { __call: (Callable, ...number) -> () }))
-        local f = (nil :: any) :: Callable
+        type Callable = typeof(setmetatable({}, {} as { __call: (Callable, ...number) -> () }))
+        local f = (nil as any) as Callable
 
         f("a", 2, "b")
     )");
@@ -2552,7 +2552,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "apply_of_lambda_with_inferred_and_explicit_t
 TEST_CASE_FIXTURE(BuiltinsFixture, "regex_benchmark_string_format_minimization")
 {
     CheckResult result = check(R"(
-        (nil :: any)(function(n)
+        (nil as any)(function(n)
             if tonumber(n) then
                 n = tonumber(n)
             else if n != nil then
@@ -2943,7 +2943,7 @@ return _
 TEST_CASE_FIXTURE(Fixture, "cannot_call_union_of_functions")
 {
     CheckResult result = check(R"(
-         local f: (() -> ()) | (() -> () -> ()) = nil :: any
+         local f: (() -> ()) | (() -> () -> ()) = nil as any
          f()
      )");
 
@@ -3217,7 +3217,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_pack")
 TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_pack_variadic")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local foo : () -> (...string) = (nil :: any)
+        local foo : () -> (...string) = (nil as any)
         print(string.format("%s %s %s", foo()))
     )"));
 }
@@ -3232,7 +3232,7 @@ TEST_CASE_FIXTURE(Fixture, "table_annotated_explicit_self")
             field: number
         }
 
-        local Foo = {} :: MyObject
+        local Foo = {} as MyObject
 
         function Foo:fn()
             local _ = self
@@ -3279,7 +3279,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "io_manager_oop_ish")
             memory: { [string]: number }
         }, IIOManager>;
 
-        local IO = {} :: IIOManager
+        local IO = {} as IIOManager
         IO.__index = IO
 
         function IO:write(text, label)
@@ -3305,7 +3305,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_function_statement")
             foobar: <T>(number, string, T) -> T
         }
 
-        local Obj = {} :: Object
+        local Obj = {} as Object
         function Obj.foobar(bing, quxx, dunno)
             local _ = bing
             local _ = quxx
@@ -3539,7 +3539,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_pick_better_arity")
         -- Casting here so that we always hit the case in overload selection
         -- where one part has the correct arity but incorrect argument types,
         -- and the other has the incorrect arity.
-        local g = f("s" :: string)
+        local g = f("s" as string)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3556,7 +3556,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_no_compatible_option")
 
     auto result = check(R"(
         local f: ((number) -> "one") & ((boolean) -> "two")
-        local g = f("s" :: string)
+        local g = f("s" as string)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3596,7 +3596,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_union_of_functions")
             return f()
         end
 
-        local g = foo(nil :: any)
+        local g = foo(nil as any)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3649,7 +3649,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_unambiguous_with_constraint")
 TEST_CASE_FIXTURE(Fixture, "oss_2118")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local foo: <P>(constructor: (P) -> any) -> (P) -> any = (nil :: any)
+        local foo: <P>(constructor: (P) -> any) -> (P) -> any = (nil as any)
         local fn = foo(function (value: { test: true })
             return value.test
         end)
@@ -3676,7 +3676,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2125")
                 end
             end
 
-            return types.newtable(t :: any, { index = types.number, readresult = c, writeresult = c })
+            return types.newtable(t as any, { index = types.number, readresult = c, writeresult = c })
         end
 
         type SpecialProperties = {
@@ -3726,7 +3726,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bidirectional_lambda_inference_applies_nilab
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local listdir: (string, ((string) -> boolean)?) -> { string } = nil :: any
+        local listdir: (string, ((string) -> boolean)?) -> { string } = nil as any
         listdir("my_directory", function (path)
             print(path)
             return true
@@ -3741,7 +3741,7 @@ TEST_CASE_FIXTURE(Fixture, "function_statement_with_incorrect_function_type")
     ScopedFastFlag _{FFlag::LuauCheckFunctionStatementTypes, true};
 
     CheckResult result = check(R"(
-        local Library: { isnan: (number) -> number } = {} :: any
+        local Library: { isnan: (number) -> number } = {} as any
 
         function Library.isnan(s: string): boolean
             return s == "NaN"
@@ -3765,7 +3765,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_inference_allow_internal_generics")
     CheckResult result = check(R"(
         type testsuite = { case: (self: testsuite, <T>(T) -> T) -> () }
 
-        local test1: { suite: (string, (testsuite) -> ()) -> () } = nil :: any
+        local test1: { suite: (string, (testsuite) -> ()) -> () } = nil as any
 
         test1.suite("LuteTestCommand", function(suite)
             suite:case(42)
@@ -3786,7 +3786,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2143")
         end
 
         local function fn(a: number): { number }
-            return nil :: any
+            return nil as any
         end
 
         local function fn2<T>(b: { T }, x: (T) -> ())
@@ -3810,10 +3810,10 @@ TEST_CASE_FIXTURE(Fixture, "apply_example_from_oss")
         type something = { Something: number }
         type example = { Example: number }
         local function test(a: something): example
-            return nil :: any
+            return nil as any
         end
         local function apply<T..., U...>(func: (T...) -> U..., ...: T...): (boolean, U...)
-            return nil :: any
+            return nil as any
         end
         local b, result = apply(test, {
             Something = 1
@@ -3845,7 +3845,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2109")
                 end
             until Results[1] or CurrentRetry == MaxRetries
 
-            return unpack(Results :: any, 2)
+            return unpack(Results as any, 2)
         end
 
         local function Test(a: number, b: number): number
@@ -3875,7 +3875,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "bidirectional_function_statement_inference
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type HasClass = { f: (ClassWithGenericMethod) -> () }
-        local t = {} :: HasClass
+        local t = {} as HasClass
         function t.f(cls)
             local _ = cls
             local foobar = cls.identity(42)
@@ -4130,7 +4130,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_polarity_of_annotated_code")
     // This test is _just_ for checking the polarity of the generic in the
     // annotation.
     check(R"(
-        local f: <T>(T) -> T = nil :: any
+        local f: <T>(T) -> T = nil as any
     )");
 
     auto ftv = get<FunctionType>(requireType("f"));
@@ -4256,7 +4256,7 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_functions_complete_ex")
         }
 
         local function useRemoteEvent<T...>(remoteEventName: string, isUnreliable: boolean?): RemoteEventWrapper<T...>
-            return nil :: any
+            return nil as any
         end
 
         type Payload = {
@@ -4355,7 +4355,7 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_union_of_functions_4")
 TEST_CASE_FIXTURE(BuiltinsFixture, "bidi_inference_variadic_inner_lambda")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local f: ({ (number, ...string) -> () }) -> () = nil :: any
+        local f: ({ (number, ...string) -> () }) -> () = nil as any
         f(
             {
                 function (alpha, beta, gamma)
@@ -4455,8 +4455,8 @@ TEST_CASE_FIXTURE(Fixture, "call_with_any_arg_and_optional_return_arg")
     auto result = check(R"(
         --!strict
         local hrp : any = true
-        local boo : () -> number? = (nil ::any)
-        local bad : (x : number, y : number) -> () = (nil :: any)
+        local boo : () -> number? = (nil as any)
+        local bad : (x : number, y : number) -> () = (nil as any)
         bad(hrp, boo())
     )");
     LUAU_CHECK_ERROR_COUNT(1, result);
@@ -4504,7 +4504,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2670_generic_leaking_indexer_1")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         local function setDefault<K, V>(t: { [K]: V? }): V
-            return nil :: any
+            return nil as any
         end
 
         local t = {hello = "world"}

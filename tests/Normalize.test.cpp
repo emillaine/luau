@@ -1215,7 +1215,7 @@ type Array<T> = { [number] : T}
 type Object = { [number] : any}
 
 type Set<T> = typeof(setmetatable(
-	{} :: {
+	{} as {
 		size: number,
 		-- method definitions
 		add: (self: Set<T>, T) -> Set<T>,
@@ -1224,14 +1224,14 @@ type Set<T> = typeof(setmetatable(
 		has: (self: Set<T>, T) -> boolean,
 		ipairs: (self: Set<T>) -> any,
 	},
-	{} :: {
+	{} as {
 		__index: Set<T>,
 		__iter: (self: Set<T>) -> (<K, V>({ [K]: V }, K?) -> (K, V), T),
 	}
 ))
 
 type Map<K, V> = typeof(setmetatable(
-	{} :: {
+	{} as {
 		size: number,
 		-- method definitions
 		set: (self: Map<K, V>, K, V) -> Map<K, V>,
@@ -1250,7 +1250,7 @@ type Map<K, V> = typeof(setmetatable(
 		__iter: (self: Map<K, V>) -> (<K, V>({ [K]: V }, K?) -> (K?, V), V),
 		__newindex: (self: Map<K, V>, key: K, value: V) -> (),
 	},
-	{} :: {
+	{} as {
 		__index: Map<K, V>,
 		__iter: (self: Map<K, V>) -> (<K, V>({ [K]: V }, K?) -> (K, V), V),
 		__newindex: (self: Map<K, V>, key: K, value: V) -> (),
@@ -1296,7 +1296,7 @@ return function<T, U>(
 	local array: Array<U> | Array<T> | Array<string>
 
     if instanceof(value, Set) then
-		array = fromSet(value :: Set<T>, mapFn, thisArg)
+		array = fromSet(value as Set<T>, mapFn, thisArg)
 	else
 		array = {}
 	end

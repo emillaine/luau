@@ -1457,9 +1457,9 @@ function Decode.execSimdThreeSame(cpu: CPU.CPU, insn: number, pc: integer)
     -- CMGE (signed >=): U=0, opcode=0x07
     if u == 0 and opcode5 == 0x07 then
         Decode.simdBinOp(cpu, insn, function(a, b, bits)
-            local as = Int.signExtend(a, bits)
-            local bs = Int.signExtend(b, bits)
-            return if Int.ge(as, bs) then Int.sub(Int.shl(Int.ONE, bits), Int.ONE) else Int.ZERO
+            local aSigned = Int.signExtend(a, bits)
+            local bSigned = Int.signExtend(b, bits)
+            return if Int.ge(aSigned, bSigned) then Int.sub(Int.shl(Int.ONE, bits), Int.ONE) else Int.ZERO
         end)
         return
     end
@@ -1467,9 +1467,9 @@ function Decode.execSimdThreeSame(cpu: CPU.CPU, insn: number, pc: integer)
     -- CMGT (signed >): U=0, opcode=0x06
     if u == 0 and opcode5 == 0x06 then
         Decode.simdBinOp(cpu, insn, function(a, b, bits)
-            local as = Int.signExtend(a, bits)
-            local bs = Int.signExtend(b, bits)
-            return if Int.gt(as, bs) then Int.sub(Int.shl(Int.ONE, bits), Int.ONE) else Int.ZERO
+            local aSigned = Int.signExtend(a, bits)
+            local bSigned = Int.signExtend(b, bits)
+            return if Int.gt(aSigned, bSigned) then Int.sub(Int.shl(Int.ONE, bits), Int.ONE) else Int.ZERO
         end)
         return
     end

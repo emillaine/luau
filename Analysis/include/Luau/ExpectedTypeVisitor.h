@@ -59,7 +59,7 @@ struct ExpectedTypeVisitor : public AstVisitor
 
     // If we have an expression of type:
     //
-    //   return X :: Y
+    //   return X as Y
     //
     // Then surely the expected type of `X` is `Y`
     bool visit(AstExprTypeAssertion* expr) override;

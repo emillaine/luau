@@ -815,7 +815,7 @@ bool MagicFormat::typeCheck(const MagicFunctionTypeCheckContext& context)
     // CLI-150726: The block below effectively constructs a type pack and then type checks it by going parameter-by-parameter.
     // This does _not_ handle cases like:
     //
-    //  local foo : () -> (...string) = (nil :: any)
+    //  local foo : () -> (...string) = (nil as any)
     //  print(string.format("%s %d %s", foo()))
     //
     // ... which should be disallowed.

@@ -257,7 +257,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "any_annotation_breaks_cycle")
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
         local Modules = game:GetService('Gui').Modules
-        local A = require(Modules.A) :: any
+        local A = require(Modules.A) as any
         return {hello = A.hello}
     )";
 
@@ -717,7 +717,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "ignore_require_to_nonexistent_file")
 {
     fileResolver.source["Modules/A"] = R"(
         local Modules = script
-        local B = require(Modules.B) :: any
+        local B = require(Modules.B) as any
     )";
 
     CheckResult result = getFrontend().check("Modules/A");
