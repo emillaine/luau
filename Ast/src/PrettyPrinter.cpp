@@ -936,9 +936,11 @@ struct Printer
         {
             writer.keyword("while");
             visualize(*a->condition);
-            // TODO: what if 'hasDo = false'?
-            advance(a->doLocation.begin);
-            writer.keyword("do");
+            if (a->hasDo)
+            {
+                advance(a->doLocation.begin);
+                writer.keyword("do");
+            }
             visualizeBlock(*a->body);
             advance(a->body->location.end);
             writer.keyword("end");
@@ -1054,8 +1056,11 @@ struct Printer
 
                 visualize(*a->step);
             }
-            advance(a->doLocation.begin);
-            writer.keyword("do");
+            if (a->hasDo)
+            {
+                advance(a->doLocation.begin);
+                writer.keyword("do");
+            }
             visualizeBlock(*a->body);
 
             advance(a->body->location.end);
@@ -1091,8 +1096,11 @@ struct Printer
                 visualize(*val);
             }
 
-            advance(a->doLocation.begin);
-            writer.keyword("do");
+            if (a->hasDo)
+            {
+                advance(a->doLocation.begin);
+                writer.keyword("do");
+            }
 
             visualizeBlock(*a->body);
 
@@ -1564,8 +1572,10 @@ struct Printer
             visualize(*elseif.condition);
         }
         if (elseif.thenLocation)
+        {
             advance(elseif.thenLocation->begin);
-        writer.keyword("then");
+            writer.keyword("then");
+        }
         visualizeBlock(*elseif.thenbody);
 
         if (elseif.elsebody == nullptr)
@@ -1599,7 +1609,7 @@ struct Printer
         visualize(*elseif.condition);
         if (cstNode)
             maybeAdvanceAndWrite(cstNode->thenPosition, "then");
-        else
+        else if (elseif.hasThen)
             writer.keyword("then");
 
         visualize(*elseif.trueExpr);

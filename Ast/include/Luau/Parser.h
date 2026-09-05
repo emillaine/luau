@@ -108,27 +108,27 @@ private:
     // varlist `=' explist |
     // functioncall |
     // do block end |
-    // while exp do block end |
+    // while exp [do] block end |
     // repeat block until exp |
-    // if exp then block {elseif exp then block} [else block] end |
-    // for Name `=' exp `,' exp [`,' exp] do block end |
-    // for namelist in explist do block end |
+    // if exp [then] block {elseif exp [then] block} [else block] end |
+    // for Name `=' exp `,' exp [`,' exp] [do] block end |
+    // for namelist in explist [do] block end |
     // [attributes] function funcname funcbody |
     // [attributes] local function Name funcbody |
     // local namelist [`=' explist]
     // laststat ::= return [explist] | break
     AstStat* parseStat();
 
-    // if exp then block {elseif exp then block} [else block] end
+    // if exp [then] block {elseif exp [then] block} [else block] end
     AstStat* parseIf();
 
-    // (`if' | `elseif') (`local' | `const') binding `=' exp then block ... end -- parses an entire `if local`/`if const`
+    // (`if' | `elseif') (`local' | `const') binding `=' exp [then] block ... end -- parses an entire `if local`/`if const`
     AstStat* parseIfLocalCondition(const Location& start);
 
-    // Parse the trailing `{elseif exp then block} [else block] end` shared by `parseIf` and `parseIfLocalCondition`
+    // Parse the trailing `{elseif exp [then] block} [else block] end` shared by `parseIf` and `parseIfLocalCondition`
     AstStat* parseElseBody(const Location& start, const Lexeme& matchThen, AstStatBlock* thenbody, Location& end, std::optional<Location>& elseLocation);
 
-    // while exp do block end
+    // while exp [do] block end
     AstStat* parseWhile();
 
     // repeat block until exp
@@ -143,8 +143,8 @@ private:
     // continue
     AstStat* parseContinue(const Location& start);
 
-    // for Name `=' exp `,' exp [`,' exp] do block end |
-    // for namelist in explist do block end |
+    // for Name `=' exp `,' exp [`,' exp] [do] block end |
+    // for namelist in explist [do] block end |
     AstStat* parseFor();
 
     // funcname ::= Name {`.' Name} [`:' Name]

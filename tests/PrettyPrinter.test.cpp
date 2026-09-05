@@ -88,6 +88,31 @@ TEST_CASE("if_stmt_spaces_around_tokens")
     CHECK_EQ(nine, prettyPrint(nine).code);
 }
 
+TEST_CASE("optional_then_and_do_after_newline")
+{
+    const std::string code = R"(if true
+    print("if")
+end
+while true
+    break
+end
+for i = 1, 2
+    print(i)
+end
+for k, v in pairs({})
+    print(k, v)
+end)";
+
+    CHECK_EQ(code, prettyPrint(code).code);
+
+    Fixture fixture;
+    AstStatBlock* block = fixture.parse(code);
+    REQUIRE(block != nullptr);
+    const std::string printed = prettyPrint(*block);
+    CHECK_EQ(printed.find(" then"), std::string::npos);
+    CHECK_EQ(printed.find(" do"), std::string::npos);
+}
+
 TEST_CASE("elseif_chains_indent_sensibly")
 {
     const std::string code = R"(

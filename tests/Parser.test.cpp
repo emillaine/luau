@@ -6275,6 +6275,71 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local")
     CHECK(ifStat->condition != nullptr);
 }
 
+TEST_CASE_FIXTURE(Fixture, "optional_then_and_do_after_newline")
+{
+    AstStatBlock* block = parse(R"(
+        if true
+            print("if")
+        end
+
+        while true
+            break
+        end
+
+        for i = 1, 2
+            print(i)
+        end
+
+        for k, v in pairs({})
+            print(k, v)
+        end
+    )");
+
+    REQUIRE_EQ(block->body.size, 4);
+
+    AstStatIf* ifStat = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(ifStat != nullptr);
+    CHECK_FALSE(ifStat->thenLocation.has_value());
+
+    AstStatWhile* whileStat = block->body.data[1]->as<AstStatWhile>();
+    REQUIRE(whileStat != nullptr);
+    CHECK_FALSE(whileStat->hasDo);
+
+    AstStatFor* forStat = block->body.data[2]->as<AstStatFor>();
+    REQUIRE(forStat != nullptr);
+    CHECK_FALSE(forStat->hasDo);
+
+    AstStatForIn* forInStat = block->body.data[3]->as<AstStatForIn>();
+    REQUIRE(forInStat != nullptr);
+    CHECK_FALSE(forInStat->hasDo);
+}
+
+TEST_CASE_FIXTURE(Fixture, "optional_then_after_newline_in_if_else_expression")
+{
+    AstStatBlock* block = parse(R"(
+        local value = if true
+            1
+        else
+            2
+    )");
+
+    REQUIRE_EQ(block->body.size, 1);
+    AstStatLocal* local = block->body.data[0]->as<AstStatLocal>();
+    REQUIRE(local != nullptr);
+    REQUIRE_EQ(local->values.size, 1);
+
+    AstExprIfElse* ifElse = local->values.data[0]->as<AstExprIfElse>();
+    REQUIRE(ifElse != nullptr);
+    CHECK_FALSE(ifElse->hasThen);
+}
+
+TEST_CASE_FIXTURE(Fixture, "then_and_do_are_still_required_on_same_line")
+{
+    matchParseError("if true print() end", "Expected 'then' when parsing if statement, got 'print'");
+    matchParseError("while true break end", "Expected 'do' when parsing while loop, got 'break'");
+    matchParseError("for i = 1, 2 print(i) end", "Expected 'do' when parsing for loop, got 'print'");
+}
+
 TEST_CASE_FIXTURE(Fixture, "parse_if_const")
 {
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};

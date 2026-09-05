@@ -427,11 +427,11 @@ AstStatBlock* Parser::parseBlockNoScope()
 // varlist `=' explist |
 // functioncall |
 // do block end |
-// while exp do block end |
+// while exp [do] block end |
 // repeat block until exp |
-// if exp then block {elseif exp then block} [else block] end |
-// for binding `=' exp `,' exp [`,' exp] do block end |
-// for namelist in explist do block end |
+// if exp [then] block {elseif exp [then] block} [else block] end |
+// for binding `=' exp `,' exp [`,' exp] [do] block end |
+// for namelist in explist [do] block end |
 // function funcname funcbody |
 // attributes function funcname funcbody |
 // local function Name funcbody |
@@ -573,7 +573,7 @@ AstStat* Parser::parseStat()
     return reportStatError(expr->location, copy({expr}), {}, "Incomplete statement: expected assignment or a function call");
 }
 
-// if exp then block {elseif exp then block} [else block] end
+// if exp [then] block {elseif exp [then] block} [else block] end
 AstStat* Parser::parseIf()
 {
     Location start = lexer.current().location;
@@ -588,8 +588,11 @@ AstStat* Parser::parseIf()
 
     Lexeme matchThen = lexer.current();
     std::optional<Location> thenLocation;
-    if (expectAndConsume(Lexeme::ReservedThen, "if statement"))
-        thenLocation = matchThen.location;
+    if (lexer.current().type == Lexeme::ReservedThen || cond->location.end.line == lexer.current().location.begin.line)
+    {
+        if (expectAndConsume(Lexeme::ReservedThen, "if statement"))
+            thenLocation = matchThen.location;
+    }
 
     AstStatBlock* thenbody = parseBlock();
 
@@ -600,7 +603,7 @@ AstStat* Parser::parseIf()
     return allocator.alloc<AstStatIf>(Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation);
 }
 
-// (`if' | `elseif') (`local' | `const') binding `=' exp then block {elseif exp then block} [else block] end
+// (`if' | `elseif') (`local' | `const') binding `=' exp [then] block {elseif exp [then] block} [else block] end
 //
 // LUAU_NOINLINE keeps the `if local`/`if const` locals off parseIf's frame: parseIf recurses through
 // long if/elseif chains and this variant is rarely taken. `start` is the location of the already-
@@ -627,8 +630,11 @@ LUAU_NOINLINE AstStat* Parser::parseIfLocalCondition(const Location& start)
 
     Lexeme matchThen = lexer.current();
     std::optional<Location> thenLocation;
-    if (expectAndConsume(Lexeme::ReservedThen, "if statement"))
-        thenLocation = matchThen.location;
+    if (lexer.current().type == Lexeme::ReservedThen || cond->location.end.line == lexer.current().location.begin.line)
+    {
+        if (expectAndConsume(Lexeme::ReservedThen, "if statement"))
+            thenLocation = matchThen.location;
+    }
 
     AstStatBlock* thenbody = parseBlock();
 
@@ -691,7 +697,7 @@ AstStat* Parser::parseElseBody(const Location& start, const Lexeme& matchThen, A
     return elsebody;
 }
 
-// while exp do block end
+// while exp [do] block end
 AstStat* Parser::parseWhile()
 {
     Location start = lexer.current().location;
@@ -701,7 +707,9 @@ AstStat* Parser::parseWhile()
     AstExpr* cond = parseExpr();
 
     Lexeme matchDo = lexer.current();
-    bool hasDo = expectAndConsume(Lexeme::ReservedDo, "while loop");
+    bool hasDo = false;
+    if (lexer.current().type == Lexeme::ReservedDo || cond->location.end.line == lexer.current().location.begin.line)
+        hasDo = expectAndConsume(Lexeme::ReservedDo, "while loop");
 
     functionStack.back().loopDepth++;
 
@@ -796,8 +804,8 @@ AstStat* Parser::parseContinue(const Location& start)
     return allocator.alloc<AstStatContinue>(start);
 }
 
-// for binding `=' exp `,' exp [`,' exp] do block end |
-// for bindinglist in explist do block end |
+// for binding `=' exp `,' exp [`,' exp] [do] block end |
+// for bindinglist in explist [do] block end |
 AstStat* Parser::parseFor()
 {
     Location start = lexer.current().location;
@@ -830,7 +838,10 @@ AstStat* Parser::parseFor()
         }
 
         Lexeme matchDo = lexer.current();
-        bool hasDo = expectAndConsume(Lexeme::ReservedDo, "for loop");
+        bool hasDo = false;
+        AstExpr* lastExpression = step ? step : to;
+        if (lexer.current().type == Lexeme::ReservedDo || lastExpression->location.end.line == lexer.current().location.begin.line)
+            hasDo = expectAndConsume(Lexeme::ReservedDo, "for loop");
 
         unsigned int localsBegin = saveLocals();
 
@@ -885,7 +896,9 @@ AstStat* Parser::parseFor()
         parseExprList(values, options.storeCstData ? &valuesCommaPositions : nullptr);
 
         Lexeme matchDo = lexer.current();
-        bool hasDo = expectAndConsume(Lexeme::ReservedDo, "for loop");
+        bool hasDo = false;
+        if (lexer.current().type == Lexeme::ReservedDo || values.back()->location.end.line == lexer.current().location.begin.line)
+            hasDo = expectAndConsume(Lexeme::ReservedDo, "for loop");
 
         unsigned int localsBegin = saveLocals();
 
@@ -4415,7 +4428,9 @@ AstExpr* Parser::parseIfElseExpr()
 
     AstExpr* condition = parseExpr();
 
-    bool hasThen = expectAndConsume(Lexeme::ReservedThen, "if then else expression");
+    bool hasThen = false;
+    if (lexer.current().type == Lexeme::ReservedThen || condition->location.end.line == lexer.current().location.begin.line)
+        hasThen = expectAndConsume(Lexeme::ReservedThen, "if then else expression");
     Position thenPosition = hasThen ? lexer.previousLocation().begin : Position::missing();
 
     AstExpr* trueExpr = parseExpr();
