@@ -1,14 +1,9 @@
 name: benchmark
 
+# Disabled: this workflow pushes to luau-lang/benchmark-data using the BENCH_GITHUB_TOKEN secret,
+# neither of which exists for this fork. Re-enable once we add a benchmark data repo for our fork.
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - "docs/**"
-      - "papers/**"
-      - "rfcs/**"
-      - "*.md"
+  workflow_dispatch:
 
 jobs:
   callgrind:
