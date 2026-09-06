@@ -431,7 +431,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "avoid_cross_module_mutation_in_bidirectional
     fileResolver.source["Module/ListFns"] = R"(
         local mod = {}
         function mod.findWhere(list, predicate): number?
-            for i = 1, #list do
+            for i = 1, list.count do
                 if predicate(list[i], i) then
                     return i
                 end

@@ -9,11 +9,11 @@ _G.arg = nil
 function f(a, ...)
   local arg = { n=select('#',...), ... }
   if a then
-    assert(#arg == #a)
+    assert(arg.count == a.count)
   else
-    assert(#arg == 0)
+    assert(arg.count == 0)
   end
-  for i=1,#arg do assert(a[i]==arg[i]) end
+  for i=1,arg.count do assert(a[i]==arg[i]) end
   return arg.n
 end
 

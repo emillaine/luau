@@ -580,7 +580,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_142285_reduce_minted_union_func")
         end
 
         local function find<T>(array: {T}, item: T): number?
-            local l, m, r = 1, middle(1, #array), #array
+            local l, m, r = 1, middle(1, array.count), array.count
             while l <= r do
                 if item <= array[m] then
                     if item == array[m] then return m end
@@ -613,7 +613,7 @@ TEST_CASE_FIXTURE(Fixture, "vector3_overflow")
     CheckResult result = check(R"(
 --!strict
 local function graphPoint(t : number, points : { Vector3 }) : Vector3
-    local n : number = #points - 1
+    local n : number = points.count - 1
     local p : Vector3 = (nil as any)
     for i = 0, n do
         local x = points[i + 1]

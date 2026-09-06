@@ -193,7 +193,6 @@ message ExprUnary
     {
         Not = 0;
         Minus = 1;
-        Len = 2;
     }
 
     required Op op = 1;

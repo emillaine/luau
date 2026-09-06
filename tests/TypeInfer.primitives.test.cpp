@@ -23,7 +23,7 @@ TEST_CASE_FIXTURE(Fixture, "string_length")
 {
     CheckResult result = check(R"(
         local s = "Hello, World!"
-        local t = #s
+        local t = s.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

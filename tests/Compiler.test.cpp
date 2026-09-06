@@ -1674,9 +1674,9 @@ MINUS R1 R0
 RETURN R1 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... return #a"), R"(
+    CHECK_EQ("\n" + compileFunction0("local a = ... return a.count"), R"(
 GETVARARGS R0 1
-LENGTH R1 R0
+GETTABLEKS R1 R0 K0 ['count']
 RETURN R1 1
 )");
 }
@@ -1978,7 +1978,7 @@ RETURN R0 1
 
 TEST_CASE("ConstantFoldStringLen")
 {
-    CHECK_EQ("\n" + compileFunction0("return #'string', #'', #'a', #('b')"), R"(
+    CHECK_EQ("\n" + compileFunction0("return ('string').count, ('').count, ('a').count, ('b').count"), R"(
 LOADN R0 6
 LOADN R1 0
 LOADN R2 1

@@ -1465,7 +1465,7 @@ local b = -1
 local c = true
 local d = not c
 local e = 'hello'
-local d = #e
+local d = e.count
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1478,8 +1478,8 @@ local _ =   -1
 local _ = -  1
 local _ =   not true
 local _ = not   true
-local _ =   #e
-local _ = #  e
+local _ =   e.count
+local _ = e  .  count
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);

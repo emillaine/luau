@@ -234,7 +234,7 @@ do
     local i = 0
     return function()
       i += 1
-      if i > #keys then return nil end
+      if i > keys.count then return nil end
       coroutine.yield()
       return keys[i], t[keys[i]]
     end
@@ -283,7 +283,7 @@ do
   end
 
   -- 6 yields + 1 final return = 7 resumes
-  assert(#yields == 7)
+  assert(yields.count == 7)
   assert(yields[1] == "first" and yields[2] == "second")
   assert(yields[7] == 6) -- final return value is the sum
 end
@@ -547,7 +547,7 @@ do
   end
 
   -- 3 yields (index 0, 1, 2) + final return
-  assert(#yields == 4)
+  assert(yields.count == 4)
   assert(yields[1] == 0 and yields[2] == 1 and yields[3] == 2)
   assert(yields[4] == 600) -- 100 + 200 + 300
 end

@@ -47,7 +47,7 @@ end
 
 foo()
 c = getcoverage(foo)
-assert(#c == 1)
+assert(c.count == 1)
 assert(c[1].name == "foo")
 assert(c[1].linedefined == 4)
 assert(c[1].depth == 0)
@@ -55,7 +55,7 @@ assert(validate(c[1], {5, 6, 7}, {}))
 
 bar()
 c = getcoverage(bar)
-assert(#c == 3)
+assert(c.count == 3)
 assert(c[1].name == "bar")
 assert(c[1].linedefined == 10)
 assert(c[1].depth == 0)

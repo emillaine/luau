@@ -62,7 +62,7 @@ for i = 1, NB do
   -- small numbers with signal extension ("\xFF...")
   local s = string.rep("\xff", i)
   assert(pack("i" .. i, -1) == s)
-  assert(packsize("i" .. i) == #s)
+  assert(packsize("i" .. i) == s.count)
   assert(unpack("i" .. i, s) == -1)
 
   -- small unsigned number ("\0...\xAA")
@@ -205,7 +205,7 @@ do
 
   for i = 2, NB do
     local s1 = pack("s" .. i, s)
-    assert(unpack("s" .. i, s1) == s and #s1 == #s + i)
+    assert(unpack("s" .. i, s1) == s and s1.count == s.count + i)
   end
 end
 
@@ -237,7 +237,7 @@ end
 -- testing multiple types and sequence
 do
   local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
-  assert(#x == packsize("<b h b f d f n i"))
+  assert(x.count == packsize("<b h b f d f n i"))
   local a, b, c, d, e, f, g, h = unpack("<b h b f d f n i", x)
   assert(a == 1 and b == 2 and c == 3 and d == 4 and e == 5 and f == 6 and
          g == 7 and h == 8) 
@@ -247,13 +247,13 @@ print "testing alignment"
 do
   assert(pack(" < i1 i2 ", 2, 3) == "\2\3\0")   -- no alignment by default
   local x = pack(">!8 b Xh i4 i8 c1 Xi8", -12, 100, 200, "\xEC")
-  assert(#x == packsize(">!8 b Xh i4 i8 c1 Xi8"))
+  assert(x.count == packsize(">!8 b Xh i4 i8 c1 Xi8"))
   assert(x == "\xf4" .. "\0\0\0" ..
               "\0\0\0\100" ..
               "\0\0\0\0\0\0\0\xC8" .. 
               "\xEC" .. "\0\0\0\0\0\0\0")
   local a, b, c, d, pos = unpack(">!8 c1 Xh i4 i8 b Xi8 XI XH", x)
-  assert(a == "\xF4" and b == 100 and c == 200 and d == -20 and (pos - 1) == #x)
+  assert(a == "\xF4" and b == 100 and c == 200 and d == -20 and (pos - 1) == x.count)
 
   x = pack(">!4 c3 c4 c2 z i4 c5 c2 Xi4",
                   "abc", "abcd", "xz", "hello", 5, "world", "xy")
@@ -266,7 +266,7 @@ do
   assert(packsize(" b b Xd b Xb x") == 4)
   assert(x == "\1\2\3\0")
   a, b, c, pos = unpack("bbXdb", x)
-  assert(a == 1 and b == 2 and c == 3 and pos == #x)
+  assert(a == 1 and b == 2 and c == 3 and pos == x.count)
 
   -- only alignment
   assert(packsize("!8 xXi8") == 8)
@@ -304,16 +304,16 @@ do    -- testing initial position
   assert(i == 4 and p == 17)
   local i, p = unpack("!4 i4", x, -7)
   assert(i == 4 and p == 17)
-  local i, p = unpack("!4 i4", x, -#x)
+  local i, p = unpack("!4 i4", x, -x.count)
   assert(i == 1 and p == 5)
   local i, p = unpack("!4 i4", x, 0)
   assert(i == 1 and p == 5)
 
   -- limits
-  for i = 1, #x + 1 do
+  for i = 1, x.count + 1 do
     assert(unpack("c0", x, i) == "")
   end
-  checkerror("out of string", unpack, "c0", x, #x + 2)
+  checkerror("out of string", unpack, "c0", x, x.count + 2)
  
 end
 

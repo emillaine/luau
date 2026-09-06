@@ -27,7 +27,6 @@ inline const std::unordered_map<AstExprBinary::Op, const char*> kBinaryOpMetamet
 
 inline const std::unordered_map<AstExprUnary::Op, const char*> kUnaryOpMetamethods{
     {AstExprUnary::Op::Minus, "__unm"},
-    {AstExprUnary::Op::Len, "__len"},
 };
 
 } // namespace Luau

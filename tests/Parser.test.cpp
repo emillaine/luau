@@ -1475,7 +1475,7 @@ function stringifyTable(t)
         k = tostring(k)
 
         -- add another entry to our stringified table
-        entries[#entries + 1] = ("s = s"):format(k, v)
+        entries[entries.count + 1] = ("s = s"):format(k, v)
     end
 
     -- the memory location of the table

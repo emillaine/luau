@@ -679,8 +679,6 @@ struct ProtoToLuau
             source += "not ";
         else if (expr.op() == luau::ExprUnary::Minus)
             source += "- ";
-        else if (expr.op() == luau::ExprUnary::Len)
-            source += "# ";
 
         print(expr.expr());
     }

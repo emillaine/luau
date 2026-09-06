@@ -653,10 +653,10 @@ TEST_CASE_FIXTURE(Fixture, "ForRangeTable")
     LintResult result = lint(R"(
 local t = {}
 
-for i=#t,1 do
+for i=t.count,1 do
 end
 
-for i=#t,1,-1 do
+for i=t.count,1,-1 do
 end
 )");
 
@@ -698,13 +698,13 @@ end
 TEST_CASE_FIXTURE(Fixture, "ForRangeZero")
 {
     LintResult result = lint(R"(
-for i=0,#t do
+for i=0,t.count do
 end
 
-for i=(0),#t do -- to silence
+for i=(0),t.count do -- to silence
 end
 
-for i=#t,0 do
+for i=t.count,0 do
 end
 )");
 
@@ -2143,22 +2143,22 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "TableOperations")
 local t = {}
 local tt = {}
 
-table.insert(t, #t, 42)
-table.insert(t, (#t), 42) -- silenced
+table.insert(t, t.count, 42)
+table.insert(t, (t.count), 42) -- silenced
 
-table.insert(t, #t + 1, 42)
-table.insert(t, #tt + 1, 42) -- different table, ok
+table.insert(t, t.count + 1, 42)
+table.insert(t, tt.count + 1, 42) -- different table, ok
 
 table.insert(t, 0, 42)
 
 table.remove(t, 0)
 
-table.remove(t, #t-1)
+table.remove(t, t.count-1)
 
 table.insert(t, string.find("hello", "h"))
 
-table.move(t, 0, #t, 1, tt)
-table.move(t, 1, #t, 0, tt)
+table.move(t, 0, t.count, 1, tt)
+table.move(t, 1, t.count, 0, tt)
 
 table.create(42, {})
 table.create(42, {} as {})
@@ -2209,20 +2209,20 @@ local t7: string = "hello" -- ok: string
 local t8: {number} | {n: number} = {} -- ok: union
 
 -- not ok
-print(#t3)
-print(#t5)
+print(t3.count)
+print(t5.count)
 ipairs(t5)
 
 -- disabled
--- ipairs(t3) adds indexer to t3, silencing error on #t3
+-- ipairs(t3) adds indexer to t3, silencing error on t3.count
 
 -- ok
-print(#t1)
-print(#t2)
-print(#t4)
-print(#t6)
-print(#t7)
-print(#t8)
+print(t1.count)
+print(t2.count)
+print(t4.count)
+print(t6.count)
+print(t7.count)
+print(t8.count)
 
 ipairs(t1)
 ipairs(t2)
@@ -2235,7 +2235,7 @@ ipairs(t8)
 -- type checker assigns a type of generic table with the 'sub' member; we don't emit warnings on generic tables
 -- to avoid generating a false positive here
 function _impliedstring(element, text)
-        for i = 1, #text do
+        for i = 1, text.count do
                 element:sendText(text:sub(i, i))
         end
 end
@@ -2243,9 +2243,9 @@ end
 
     REQUIRE(3 == result.warnings.size());
     CHECK_EQ(result.warnings[0].location.begin.line + 1, 12);
-    CHECK_EQ(result.warnings[0].text, "Using '#' on a table without an array part is likely a bug");
+    CHECK_EQ(result.warnings[0].text, "Using '.count' on a table without an array part is likely a bug");
     CHECK_EQ(result.warnings[1].location.begin.line + 1, 13);
-    CHECK_EQ(result.warnings[1].text, "Using '#' on a table with string keys is likely a bug");
+    CHECK_EQ(result.warnings[1].text, "Using '.count' on a table with string keys is likely a bug");
     CHECK_EQ(result.warnings[2].location.begin.line + 1, 14);
     CHECK_EQ(result.warnings[2].text, "Using 'ipairs' on a table with string keys is likely a bug");
 }

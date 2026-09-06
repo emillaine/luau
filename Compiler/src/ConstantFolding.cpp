@@ -7,6 +7,7 @@
 #include "Luau/Lexer.h"
 
 #include <vector>
+#include <cstring>
 #include <math.h>
 
 LUAU_FASTFLAG(LuauIntegerType2)
@@ -92,14 +93,6 @@ static void foldUnary(Constant& result, AstExprUnary::Op op, const Constant& arg
             result.valueVectord[1] = -arg.valueVectord[1];
             result.valueVectord[2] = -arg.valueVectord[2];
             result.valueVectord[3] = -arg.valueVectord[3];
-        }
-        break;
-
-    case AstExprUnary::Op::Len:
-        if (arg.type == Constant::Type_String)
-        {
-            result.type = Constant::Type_Number;
-            result.valueNumber = double(arg.stringLength);
         }
         break;
 
@@ -892,6 +885,12 @@ struct ConstantVisitor : AstVisitor
                         result = *prop;
                 }
             }
+            // `.count` on a string literal folds to its length (field wins already handled above for tables).
+            else if (value.type == Constant::Type_String && expr->index == "count")
+            {
+                result.type = Constant::Type_Number;
+                result.valueNumber = double(value.stringLength);
+            }
             else if (value.type == Constant::Type_Vectorf)
             {
                 if (expr->index == "x" || expr->index == "X")
@@ -983,6 +982,14 @@ struct ConstantVisitor : AstVisitor
                     if (const Constant* prop = props.find(std::move(indexName)))
                         result = *prop;
                 }
+            }
+            // `t["count"]` on a string literal folds to length when no explicit field (strings have none).
+            else if (
+                tableVal.type == Constant::Type_String && indexVal.type == Constant::Type_String && indexVal.stringLength == 5 &&
+                memcmp(indexVal.valueString, "count", 5) == 0)
+            {
+                result.type = Constant::Type_Number;
+                result.valueNumber = double(tableVal.stringLength);
             }
         }
         else if (AstExprFunction* expr = node->as<AstExprFunction>())

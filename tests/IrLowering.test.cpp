@@ -3656,7 +3656,7 @@ type Vertex = { p: vector, uv: vector, n: vector, t: vector, b: vector, h: numbe
 local mesh: { vertices: {Vertex}, indices: {number} } = ...
 
 local function compute()
-    for i = 1,#mesh.indices,3 do
+    for i = 1,mesh.indices.count,3 do
         local a = mesh.vertices[mesh.indices[i]]
         local b = mesh.vertices[mesh.indices[i + 1]]
         local c = mesh.vertices[mesh.indices[i + 2]]
@@ -3678,28 +3678,28 @@ end
         R"(
 ; function compute() line 5
 ; U0: table ['mesh']
-; R2: number from 0 to 78 [local 'i']
-; R3: table from 7 to 78 [local 'a']
-; R4: table from 15 to 78 [local 'b']
-; R5: table from 24 to 78 [local 'c']
-; R6: vector from 33 to 78 [local 'vba']
-; R7: vector from 37 to 38
-; R7: vector from 38 to 78 [local 'vca']
-; R8: vector from 37 to 38
-; R8: vector from 42 to 43
-; R8: vector from 43 to 78 [local 'uvba']
-; R9: vector from 42 to 43
-; R9: vector from 47 to 48
-; R9: vector from 48 to 78 [local 'uvca']
-; R10: vector from 47 to 48
-; R10: vector from 52 to 53
-; R10: number from 53 to 78 [local 'r']
-; R11: vector from 52 to 53
-; R11: vector from 65 to 78 [local 'sdir']
-; R12: vector from 72 to 73
-; R12: vector from 75 to 76
-; R13: vector from 71 to 72
-; R14: vector from 71 to 72
+; R2: number from 0 to 79 [local 'i']
+; R3: table from 8 to 79 [local 'a']
+; R4: table from 16 to 79 [local 'b']
+; R5: table from 25 to 79 [local 'c']
+; R6: vector from 34 to 79 [local 'vba']
+; R7: vector from 38 to 39
+; R7: vector from 39 to 79 [local 'vca']
+; R8: vector from 38 to 39
+; R8: vector from 43 to 44
+; R8: vector from 44 to 79 [local 'uvba']
+; R9: vector from 43 to 44
+; R9: vector from 48 to 49
+; R9: vector from 49 to 79 [local 'uvca']
+; R10: vector from 48 to 49
+; R10: vector from 53 to 54
+; R10: number from 54 to 79 [local 'r']
+; R11: vector from 53 to 54
+; R11: vector from 66 to 79 [local 'sdir']
+; R12: vector from 73 to 74
+; R12: vector from 76 to 77
+; R13: vector from 72 to 73
+; R14: vector from 72 to 73
 )"
     );
 }
@@ -3716,7 +3716,7 @@ local function temp(b: vector, c: vector) : number
 end
 
 local function compute()
-    for i = 1,#mesh.indices,3 do
+    for i = 1,mesh.indices.count,3 do
         local a = mesh.vertices[mesh.indices[i]]
         local b = mesh.vertices[mesh.indices[i + 1]]
         local c = mesh.vertices[mesh.indices[i + 2]]
@@ -3733,22 +3733,22 @@ end
         R"(
 ; function compute() line 9
 ; U0: table ['mesh']
-; R2: number from 0 to 63 [local 'i']
-; R3: table from 7 to 63 [local 'a']
-; R4: table from 15 to 63 [local 'b']
-; R5: table from 24 to 63 [local 'c']
-; R6: vector from 43 to 55 [local 'b']
-; R6: vector from 33 to 63 [local 'uvba']
-; R7: vector from 37 to 38
-; R7: vector from 43 to 55 [local 'c']
-; R7: vector from 38 to 63 [local 'uvca']
-; R8: vector from 37 to 38
-; R8: vector from 42 to 43
-; R8: number from 43 to 63 [local 'r']
-; R9: vector from 42 to 43
-; R9: vector from 60 to 61
-; R10: vector from 60 to 61
-; R11: vector from 59 to 60
+; R2: number from 0 to 64 [local 'i']
+; R3: table from 8 to 64 [local 'a']
+; R4: table from 16 to 64 [local 'b']
+; R5: table from 25 to 64 [local 'c']
+; R6: vector from 44 to 56 [local 'b']
+; R6: vector from 34 to 64 [local 'uvba']
+; R7: vector from 38 to 39
+; R7: vector from 44 to 56 [local 'c']
+; R7: vector from 39 to 64 [local 'uvca']
+; R8: vector from 38 to 39
+; R8: vector from 43 to 44
+; R8: number from 44 to 64 [local 'r']
+; R9: vector from 43 to 44
+; R9: vector from 61 to 62
+; R10: vector from 61 to 62
+; R11: vector from 60 to 61
 )"
     );
 }
@@ -3870,17 +3870,17 @@ TEST_CASE_FIXTURE(LoweringFixture, "UnaryTypeResolve")
 local function foo(a, b: vector, c)
     local d = not a
     local e = -b
-    local f = #c
+    local f = c.count
     return (if d then e else vector(f, 2, 3)).X
 end
 )"),
         R"(
 ; function foo(a, b, c) line 2
 ; R1: vector [argument 'b']
-; R3: boolean from 0 to 17 [local 'd']
-; R4: vector from 1 to 17 [local 'e']
-; R5: number from 2 to 17 [local 'f']
-; R6: vector from 14 to 16
+; R3: boolean from 0 to 18 [local 'd']
+; R4: vector from 1 to 18 [local 'e']
+; R5: any from 2 to 18 [local 'f']
+; R6: vector from 15 to 17
 )"
     );
 }
@@ -4357,7 +4357,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataMetamethodDirectFlow3")
         "\n" + getCodegenAssembly(
                    R"(
 local function foo(a: sequence)
-    return #a
+    return a.count
 end
 )",
                    /* includeIrTypes */ true
@@ -4371,9 +4371,8 @@ bb_0:
 bb_2:
   JUMP bb_bytecode_1
 bb_bytecode_1:
-  SET_SAVEDPC 1u
-  DO_LEN R1, R0
-  INTERRUPT 1u
+  FALLBACK_GETTABLEKS 0u, R1, R0, K0 ('count')
+  INTERRUPT 2u
   RETURN R1, 1i
 )"
     );
@@ -6422,7 +6421,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval1")
     CHECK(
         getCodegenAssembly(R"(
 repeat
-local _ = # {} < # {} < _ < _ < _ ^ _ ^ ""
+local _ = ({}).count < ({}).count < _ < _ < _ ^ _ ^ ""
 until ""
 )")
             .size() > 0
@@ -6533,7 +6532,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest1")
 local _ = 5633,5633
 while _ do
     _ ^= _
-    for l0=_,_,{[# {}]=_,} do
+    for l0=_,_,{[({}).count]=_,} do
         repeat
         until _
     end
@@ -6585,7 +6584,7 @@ local _ = math.exp,_(),_
 local _ = math._,_(_(_),_(_ and _),_(_(_),_,_,_()),`{nil}`),_
 for l41=_,_ do
 end
-l0 -= _(0,_(# _,_(_),_(_(_),_(_),_,_()),`{nil}`))
+l0 -= _(0,_(_.count,_(_),_(_(_),_(_),_,_()),`{nil}`))
 )")
             .size() > 0
     );
@@ -6616,7 +6615,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest6")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local l0:any = _(393216),# 0,n0
+local l0:any = _(393216),(0).count,n0
 while vector.sign(_ and true) do
 _ ..= nil
 do end
@@ -6657,7 +6656,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest8")
         getCodegenAssembly(R"(
 local function f(...)
     local _ = bit32.arshift
-    local _ = (_),_(_(# # true,0),30),_(l158(true,_),0),_(_(l9,8258560),_)(_),_ + _,_
+    local _ = (_),_(_((true).count.count,0),30),_(l158(true,_),0),_(_(l9,8258560),_)(_),_ + _,_
 end
 )")
             .size() > 0
@@ -7187,7 +7186,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "UpvalueAccessLoadStore4")
 local arr: {number}
 
 local function foo(a: number)
-    for i = 1,#arr do
+    for i = 1,arr.count do
         arr[i] = arr[i] + arr[i] * a
     end
 end
@@ -7205,103 +7204,103 @@ bb_bytecode_1:
   STORE_DOUBLE R3, 1
   STORE_TAG R3, tnumber
   %6 = GET_UPVALUE U0
-  STORE_TVALUE R4, %6
-  CHECK_TAG R4, ttable, exit(2)
-  %10 = LOAD_POINTER R4
-  CHECK_NO_METATABLE %10, bb_fallback_5
-  %12 = TABLE_LEN %10
-  %13 = INT_TO_NUM %12
-  STORE_DOUBLE R1, %13
-  STORE_TAG R1, tnumber
+  STORE_TVALUE R1, %6
+  CHECK_TAG R1, ttable, exit(2)
+  %10 = LOAD_POINTER R1
+  %11 = GET_SLOT_NODE_ADDR %10, 2u, K0 ('count')
+  CHECK_SLOT_MATCH %11, K0 ('count'), bb_fallback_5
+  %13 = LOAD_TVALUE %11, 0i
+  STORE_TVALUE R1, %13
   JUMP bb_6
 bb_6:
   STORE_DOUBLE R2, 1
   STORE_TAG R2, tnumber
-  %26 = LOAD_DOUBLE R1
-  JUMP_CMP_NUM R3, %26, not_le, bb_bytecode_3, bb_bytecode_2
+  CHECK_TAG R1, tnumber, exit(5)
+  %24 = LOAD_DOUBLE R1
+  JUMP_CMP_NUM R3, %24, not_le, bb_bytecode_3, bb_bytecode_2
 bb_bytecode_2:
-  INTERRUPT 5u
-  %30 = GET_UPVALUE U0
-  STORE_TVALUE R4, %30
-  STORE_TVALUE R7, %30
-  CHECK_TAG R7, ttable, exit(7)
-  %38 = LOAD_POINTER R7
-  %39 = LOAD_DOUBLE R3
-  %40 = TRY_NUM_TO_INDEX %39, bb_fallback_7
-  %41 = SUB_INT %40, 1i
-  CHECK_ARRAY_SIZE %38, %41, bb_fallback_7
-  CHECK_NO_METATABLE %38, bb_fallback_7
-  %44 = GET_ARR_ADDR %38, %41
-  %45 = LOAD_TVALUE %44
-  STORE_TVALUE R6, %45
+  INTERRUPT 6u
+  %28 = GET_UPVALUE U0
+  STORE_TVALUE R4, %28
+  STORE_TVALUE R7, %28
+  CHECK_TAG R7, ttable, exit(8)
+  %36 = LOAD_POINTER R7
+  %37 = LOAD_DOUBLE R3
+  %38 = TRY_NUM_TO_INDEX %37, bb_fallback_7
+  %39 = SUB_INT %38, 1i
+  CHECK_ARRAY_SIZE %36, %39, bb_fallback_7
+  CHECK_NO_METATABLE %36, bb_fallback_7
+  %42 = GET_ARR_ADDR %36, %39
+  %43 = LOAD_TVALUE %42
+  STORE_TVALUE R6, %43
   JUMP bb_linear_17
 bb_linear_17:
-  STORE_TVALUE R8, %45
+  STORE_TVALUE R8, %43
   CHECK_TAG R8, tnumber, bb_fallback_11
-  %140 = LOAD_DOUBLE R8
-  %142 = MUL_NUM %140, R0
-  %152 = ADD_NUM %140, %142
-  STORE_DOUBLE R5, %152
+  %138 = LOAD_DOUBLE R8
+  %140 = MUL_NUM %138, R0
+  %150 = ADD_NUM %138, %140
+  STORE_DOUBLE R5, %150
   STORE_TAG R5, tnumber
-  CHECK_READONLY %38, bb_fallback_15
-  STORE_SPLIT_TVALUE %44, tnumber, %152
+  CHECK_READONLY %36, bb_fallback_15
+  STORE_SPLIT_TVALUE %42, tnumber, %150
   CHECK_GC
-  %171 = LOAD_DOUBLE R1
-  %173 = ADD_NUM %39, 1
-  STORE_DOUBLE R3, %173
-  JUMP_CMP_NUM %173, %171, le, bb_bytecode_2, bb_bytecode_3
+  %169 = LOAD_DOUBLE R1
+  %171 = ADD_NUM %37, 1
+  STORE_DOUBLE R3, %171
+  JUMP_CMP_NUM %171, %169, le, bb_bytecode_2, bb_bytecode_3
 bb_8:
-  %51 = GET_UPVALUE U0
-  STORE_TVALUE R9, %51
-  CHECK_TAG R9, ttable, exit(9)
-  %57 = LOAD_POINTER R9
-  %58 = LOAD_DOUBLE R3
-  %59 = TRY_NUM_TO_INDEX %58, bb_fallback_9
-  %60 = SUB_INT %59, 1i
-  CHECK_ARRAY_SIZE %57, %60, bb_fallback_9
-  CHECK_NO_METATABLE %57, bb_fallback_9
-  %63 = GET_ARR_ADDR %57, %60
-  %64 = LOAD_TVALUE %63
-  STORE_TVALUE R8, %64
+  %49 = GET_UPVALUE U0
+  STORE_TVALUE R9, %49
+  CHECK_TAG R9, ttable, exit(10)
+  %55 = LOAD_POINTER R9
+  %56 = LOAD_DOUBLE R3
+  %57 = TRY_NUM_TO_INDEX %56, bb_fallback_9
+  %58 = SUB_INT %57, 1i
+  CHECK_ARRAY_SIZE %55, %58, bb_fallback_9
+  CHECK_NO_METATABLE %55, bb_fallback_9
+  %61 = GET_ARR_ADDR %55, %58
+  %62 = LOAD_TVALUE %61
+  STORE_TVALUE R8, %62
   JUMP bb_10
 bb_10:
   CHECK_TAG R8, tnumber, bb_fallback_11
-  %74 = LOAD_DOUBLE R8
-  %76 = MUL_NUM %74, R0
-  STORE_DOUBLE R7, %76
+  %72 = LOAD_DOUBLE R8
+  %74 = MUL_NUM %72, R0
+  STORE_DOUBLE R7, %74
   STORE_TAG R7, tnumber
   JUMP bb_12
 bb_12:
   CHECK_TAG R6, tnumber, bb_fallback_13
   CHECK_TAG R7, tnumber, bb_fallback_13
-  %87 = LOAD_DOUBLE R6
-  %89 = ADD_NUM %87, R7
-  STORE_DOUBLE R5, %89
+  %85 = LOAD_DOUBLE R6
+  %87 = ADD_NUM %85, R7
+  STORE_DOUBLE R5, %87
   STORE_TAG R5, tnumber
   JUMP bb_14
 bb_14:
-  CHECK_TAG R4, ttable, exit(12)
-  %100 = LOAD_POINTER R4
-  %101 = LOAD_DOUBLE R3
-  %102 = TRY_NUM_TO_INDEX %101, bb_fallback_15
-  %103 = SUB_INT %102, 1i
-  CHECK_ARRAY_SIZE %100, %103, bb_fallback_15
-  CHECK_NO_METATABLE %100, bb_fallback_15
-  CHECK_READONLY %100, bb_fallback_15
-  %107 = GET_ARR_ADDR %100, %103
-  %108 = LOAD_TVALUE R5
-  STORE_TVALUE %107, %108
-  BARRIER_TABLE_FORWARD %100, R5, undef
+  CHECK_TAG R4, ttable, exit(13)
+  %98 = LOAD_POINTER R4
+  %99 = LOAD_DOUBLE R3
+  %100 = TRY_NUM_TO_INDEX %99, bb_fallback_15
+  %101 = SUB_INT %100, 1i
+  CHECK_ARRAY_SIZE %98, %101, bb_fallback_15
+  CHECK_NO_METATABLE %98, bb_fallback_15
+  CHECK_READONLY %98, bb_fallback_15
+  %105 = GET_ARR_ADDR %98, %101
+  %106 = LOAD_TVALUE R5
+  STORE_TVALUE %105, %106
+  BARRIER_TABLE_FORWARD %98, R5, undef
   JUMP bb_16
 bb_16:
   CHECK_GC
-  %116 = LOAD_DOUBLE R1
-  %117 = LOAD_DOUBLE R3
-  %118 = ADD_NUM %117, 1
-  STORE_DOUBLE R3, %118
-  JUMP_CMP_NUM %118, %116, le, bb_bytecode_2, bb_bytecode_3
+  %114 = LOAD_DOUBLE R1
+  %115 = LOAD_DOUBLE R3
+  %116 = ADD_NUM %115, 1
+  STORE_DOUBLE R3, %116
+  JUMP_CMP_NUM %116, %114, le, bb_bytecode_2, bb_bytecode_3
 bb_bytecode_3:
-  INTERRUPT 14u
+  INTERRUPT 15u
   RETURN R0, 0i
 )"
     );
@@ -7675,7 +7674,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "LoopStepDetection2")
                    R"(
 local function foo(n: number, t: {number})
     local s = 0
-    for i = 1,#t do
+    for i = 1,t.count do
         s += t[i]
     end
     return s
@@ -7696,46 +7695,46 @@ bb_bytecode_1:
   STORE_DOUBLE R5, 1
   STORE_TAG R5, tnumber
   %12 = LOAD_POINTER R1
-  CHECK_NO_METATABLE %12, bb_fallback_5
-  %14 = TABLE_LEN %12
-  %15 = INT_TO_NUM %14
-  STORE_DOUBLE R3, %15
-  STORE_TAG R3, tnumber
+  %13 = GET_SLOT_NODE_ADDR %12, 2u, K0 ('count')
+  CHECK_SLOT_MATCH %13, K0 ('count'), bb_fallback_5
+  %15 = LOAD_TVALUE %13, 0i
+  STORE_TVALUE R3, %15
   JUMP bb_6
 bb_6:
   STORE_DOUBLE R4, 1
   STORE_TAG R4, tnumber
-  %28 = LOAD_DOUBLE R3
-  JUMP_CMP_NUM R5, %28, not_le, bb_bytecode_3, bb_bytecode_2
+  CHECK_TAG R3, tnumber, exit(5)
+  %26 = LOAD_DOUBLE R3
+  JUMP_CMP_NUM R5, %26, not_le, bb_bytecode_3, bb_bytecode_2
 bb_bytecode_2:
-  INTERRUPT 5u
-  CHECK_TAG R5, tnumber, exit(5)
-  %36 = LOAD_POINTER R1
-  %37 = LOAD_DOUBLE R5
-  %38 = TRY_NUM_TO_INDEX %37, bb_fallback_7
-  %39 = SUB_INT %38, 1i
-  CHECK_ARRAY_SIZE %36, %39, bb_fallback_7
-  CHECK_NO_METATABLE %36, bb_fallback_7
-  %42 = GET_ARR_ADDR %36, %39
-  %43 = LOAD_TVALUE %42
-  STORE_TVALUE R6, %43
+  INTERRUPT 6u
+  CHECK_TAG R5, tnumber, exit(6)
+  %34 = LOAD_POINTER R1
+  %35 = LOAD_DOUBLE R5
+  %36 = TRY_NUM_TO_INDEX %35, bb_fallback_7
+  %37 = SUB_INT %36, 1i
+  CHECK_ARRAY_SIZE %34, %37, bb_fallback_7
+  CHECK_NO_METATABLE %34, bb_fallback_7
+  %40 = GET_ARR_ADDR %34, %37
+  %41 = LOAD_TVALUE %40
+  STORE_TVALUE R6, %41
   JUMP bb_8
 bb_8:
-  CHECK_TAG R2, tnumber, exit(6)
+  CHECK_TAG R2, tnumber, exit(7)
   CHECK_TAG R6, tnumber, bb_fallback_9
-  %53 = LOAD_DOUBLE R2
-  %55 = ADD_NUM %53, R6
-  STORE_DOUBLE R2, %55
+  %51 = LOAD_DOUBLE R2
+  %53 = ADD_NUM %51, R6
+  STORE_DOUBLE R2, %53
   JUMP bb_10
 bb_10:
   CHECK_GC
-  %62 = LOAD_DOUBLE R3
-  %63 = LOAD_DOUBLE R5
-  %64 = ADD_NUM %63, 1
-  STORE_DOUBLE R5, %64
-  JUMP_CMP_NUM %64, %62, le, bb_bytecode_2, bb_bytecode_3
+  %60 = LOAD_DOUBLE R3
+  %61 = LOAD_DOUBLE R5
+  %62 = ADD_NUM %61, 1
+  STORE_DOUBLE R5, %62
+  JUMP_CMP_NUM %62, %60, le, bb_bytecode_2, bb_bytecode_3
 bb_bytecode_3:
-  INTERRUPT 8u
+  INTERRUPT 9u
   RETURN R2, 1i
 )"
     );

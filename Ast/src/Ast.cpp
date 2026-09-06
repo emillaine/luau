@@ -427,8 +427,6 @@ std::string toString(AstExprUnary::Op op)
         return "-";
     case AstExprUnary::Op::Not:
         return "not";
-    case AstExprUnary::Op::Len:
-        return "#";
     default:
         LUAU_ASSERT(false);
         return ""; // MSVC requires this even though the switch/case is exhaustive

@@ -256,7 +256,7 @@ end
 
 -- testing deep nested calls with a large thread stack
 if not limitedstack then
-  function recurse(n, ...) return n <= 1 and (1 + #{...}) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
+  function recurse(n, ...) return n <= 1 and (1 + ({...}).count) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
 
   local ok, msg = pcall(recurse, 19000)
   assert(not ok and string.find(msg, "too many results to unpack"))

@@ -1541,7 +1541,7 @@ TEST_CASE_FIXTURE(ACFixture, "type_correct_suggestion_in_argument")
 {
     // local
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local one = 4
 local two = "hello"
@@ -1555,7 +1555,7 @@ return target(o@1
     CHECK(ac.entryMap["two"].typeCorrect == TypeCorrectKind::None);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local one = 4
 local two = "hello"
@@ -1570,7 +1570,7 @@ return target(one, t@1
 
     // member
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local a = { one = 4, two = "hello" }
 return target(a.@1
@@ -1583,7 +1583,7 @@ return target(a.@1
     CHECK(ac.entryMap["two"].typeCorrect == TypeCorrectKind::None);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local a = { one = 4, two = "hello" }
 return target(a.one, a.@1
@@ -1597,7 +1597,7 @@ return target(a.one, a.@1
 
     // union match
     check(R"(
-local function target(a: string?) return #b end
+local function target(a: string?) return b.count end
 
 local a = { one = 4, two = "hello" }
 return target(a.@1
@@ -1642,7 +1642,7 @@ local b: Foo = { b = a.@1
 TEST_CASE_FIXTURE(ACFixture, "type_correct_function_return_types")
 {
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 local function bar1(a: number) return -a end
 local function bar2(a: string) return a .. 'x' end
 
@@ -1656,7 +1656,7 @@ return target(b@1
     CHECK(ac.entryMap["bar2"].typeCorrect == TypeCorrectKind::None);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 local function bar1(a: number) return -a end
 local function bar2(a: string) return a .. 'x' end
 
@@ -1670,7 +1670,7 @@ return target(bar1, b@1
     CHECK(ac.entryMap["bar1"].typeCorrect == TypeCorrectKind::None);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 local function bar1(a: number): (...number) return -a, a end
 local function bar2(a: string) return a .. 'x' end
 
@@ -1758,7 +1758,7 @@ local a: boolean, b: n@1 = false, f()
 TEST_CASE_FIXTURE(ACFixture, "type_correct_function_type_suggestion")
 {
     check(R"(
-local b: (n@1) -> number = function(a: number, b: string) return a + #b end
+local b: (n@1) -> number = function(a: number, b: string) return a + b.count end
     )");
 
     auto ac = autocomplete('1');
@@ -1767,7 +1767,7 @@ local b: (n@1) -> number = function(a: number, b: string) return a + #b end
     CHECK(ac.entryMap["number"].typeCorrect == TypeCorrectKind::Correct);
 
     check(R"(
-local b: (number, s@1 = function(a: number, b: string) return a + #b end
+local b: (number, s@1 = function(a: number, b: string) return a + b.count end
     )");
 
     ac = autocomplete('1');
@@ -1776,7 +1776,7 @@ local b: (number, s@1 = function(a: number, b: string) return a + #b end
     CHECK(ac.entryMap["string"].typeCorrect == TypeCorrectKind::Correct);
 
     check(R"(
-local b: (number, string) -> b@1 = function(a: number, b: string): boolean return a + #b == 0 end
+local b: (number, string) -> b@1 = function(a: number, b: string): boolean return a + b.count == 0 end
     )");
 
     ac = autocomplete('1');
@@ -1832,7 +1832,7 @@ local b: @1= function(a: number) return -a end
 TEST_CASE_FIXTURE(ACFixture, "type_correct_argument_type_suggestion")
 {
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local function d(a: n@1, b)
     return target(a, b)
@@ -1845,7 +1845,7 @@ end
     CHECK(ac.entryMap["number"].typeCorrect == TypeCorrectKind::Correct);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local function d(a, b: s@1)
     return target(a, b)
@@ -1858,7 +1858,7 @@ end
     CHECK(ac.entryMap["string"].typeCorrect == TypeCorrectKind::Correct);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local function d(a:@1 @2, b)
     return target(a, b)
@@ -1876,7 +1876,7 @@ end
     CHECK(ac.entryMap["number"].typeCorrect == TypeCorrectKind::Correct);
 
     check(R"(
-local function target(a: number, b: string) return a + #b end
+local function target(a: number, b: string) return a + b.count end
 
 local function d(a, b: @1)@2: number
     return target(a, b)
@@ -1921,7 +1921,7 @@ local x = target(function(a: n@1
 local function target(callback: (a: number, b: string) -> number) return callback(4, "hello") end
 
 local x = target(function(a: n@1, b: @2)
-    return a + #b
+    return a + b.count
 end)
     )");
 

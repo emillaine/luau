@@ -1372,7 +1372,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1413")
             values = table.clone(values)
             table.sort(values)
 
-            local count = #values
+            local count = values.count
             local range = (count - 1)
 
             local digitIndex = range // 2 + 1

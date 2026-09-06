@@ -9,7 +9,7 @@ end
 
 
 local function len (s)
-  return #string.gsub(s, "[\x80-\xBF]", "")
+  return (string.gsub(s, "[\x80-\xBF]", "")).count
 end
 
 
@@ -19,8 +19,8 @@ local justone = "^" .. utf8.charpattern .. "$"
 local function checksyntax (s, t)
   -- creates a string "return '\u{t[1]}...\u{t[n]}'"
   local ts = {"return '"}
-  for i = 1, #t do ts[i + 1] = string.format("\\u{%x}", t[i]) end
-  ts[#t + 2] = "'"
+  for i = 1, t.count do ts[i + 1] = string.format("\\u{%x}", t[i]) end
+  ts[t.count + 2] = "'"
   ts = table.concat(ts)
   -- its execution should result in 's'
   assert(assert(loadstring(ts))() == s)
@@ -33,7 +33,7 @@ assert(not utf8.offset("alo", -4))
 -- 't' is the list of codepoints of 's'.
 local function check (s, t)
   local l = utf8.len(s, 1, -1)
-  assert(#t == l and len(s) == l)
+  assert(t.count == l and len(s) == l)
   assert(utf8.char(table.unpack(t)) == s)   -- 't' and 's' are equivalent
 
   assert(utf8.offset(s, 0) == 1)
@@ -42,8 +42,8 @@ local function check (s, t)
 
   -- creates new table with all codepoints of 's'
   local t1 = {utf8.codepoint(s, 1, -1)}
-  assert(#t == #t1)
-  for i = 1, #t do assert(t[i] == t1[i]) end   -- 't' is equal to 't1'
+  assert(t.count == t1.count)
+  for i = 1, t.count do assert(t[i] == t1[i]) end   -- 't' is equal to 't1'
 
   for i = 1, l do   -- for all codepoints
     local pi = utf8.offset(s, i)        -- position of i-th char
@@ -51,7 +51,7 @@ local function check (s, t)
     assert(string.find(string.sub(s, pi, pi1 - 1), justone))
     assert(utf8.offset(s, -1, pi1) == pi)
     assert(utf8.offset(s, i - l - 1) == pi)
-    assert(pi1 - pi == #utf8.char(utf8.codepoint(s, pi, pi)))
+    assert(pi1 - pi == (utf8.char(utf8.codepoint(s, pi, pi))).count)
     for j = pi, pi1 - 1 do
       assert(utf8.offset(s, 0, j) == pi)
     end
@@ -71,17 +71,17 @@ local function check (s, t)
     assert(c == t[i] and p == utf8.offset(s, i))
     assert(utf8.codepoint(s, p, p) == c)
   end
-  assert(i == #t)
+  assert(i == t.count)
 
   i = 0
   for c in string.gmatch(s, utf8.charpattern) do
     i = i + 1
     assert(c == utf8.char(t[i]))
   end
-  assert(i == #t)
+  assert(i == t.count)
 
   for i = 1, l do
-    assert(utf8.offset(s, i) == utf8.offset(s, i - l - 1, #s + 1))
+    assert(utf8.offset(s, i) == utf8.offset(s, i - l - 1, s.count + 1))
   end
 
 end
@@ -96,10 +96,10 @@ do    -- error indication in utf8.len
   check("\xF4\x9F\xBF", 1)
   check("\xF4\x9F\xBF\xBF", 1)
   -- spurious continuation bytes
-  check("汉字\x80", #("汉字") + 1)
+  check("汉字\x80", ("汉字").count + 1)
   check("\x80hello", 1)
   check("hel\x80lo", 4)
-  check("汉字\xBF", #("汉字") + 1)
+  check("汉字\xBF", ("汉字").count + 1)
   check("\xBFhello", 1)
   check("hel\xBFlo", 4)
 end
@@ -149,14 +149,14 @@ check("汉字/漢字", {27721, 23383, 47, 28450, 23383,})
 
 do
   local s = "áéí\128"
-  local t = {utf8.codepoint(s,1,#s - 1)}
-  assert(#t == 3 and t[1] == 225 and t[2] == 233 and t[3] == 237)
-  checkerror("invalid UTF%-8 code", utf8.codepoint, s, 1, #s)
-  checkerror("out of range", utf8.codepoint, s, #s + 1)
+  local t = {utf8.codepoint(s,1,s.count - 1)}
+  assert(t.count == 3 and t[1] == 225 and t[2] == 233 and t[3] == 237)
+  checkerror("invalid UTF%-8 code", utf8.codepoint, s, 1, s.count)
+  checkerror("out of range", utf8.codepoint, s, s.count + 1)
   t = {utf8.codepoint(s, 4, 3)}
-  assert(#t == 0)
-  checkerror("out of range", utf8.codepoint, s, -(#s + 1), 1)
-  checkerror("out of range", utf8.codepoint, s, 1, #s + 1)
+  assert(t.count == 0)
+  checkerror("out of range", utf8.codepoint, s, -(s.count + 1), 1)
+  checkerror("out of range", utf8.codepoint, s, 1, s.count + 1)
   -- surrogates
   assert(utf8.codepoint("\u{D7FF}") == 0xD800 - 1)
   assert(utf8.codepoint("\u{E000}") == 0xDFFF + 1)
@@ -229,7 +229,7 @@ for p, c in string.gmatch(x, "()(" .. utf8.charpattern .. ")") do
   assert(utf8.offset(x, i) == p)
   assert(utf8.len(x, p) == utf8.len(x) - i + 1)
   assert(utf8.len(c) == 1)
-  for j = 1, #c - 1 do
+  for j = 1, c.count - 1 do
     assert(utf8.offset(x, 0, p + j - 1) == p)
   end
 end

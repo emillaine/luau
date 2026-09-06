@@ -632,9 +632,6 @@ struct TypeMapVisitor : AstVisitor
 
             break;
         }
-        case AstExprUnary::Op::Len:
-            recordResolvedType(node, &builtinTypes.numberType);
-            break;
         }
 
         return false;

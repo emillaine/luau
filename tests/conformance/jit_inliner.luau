@@ -66,7 +66,7 @@ do
     -- shift the CALL and break the FASTCALL skip offset. The inliner must refuse to inline `append`.
     local function append(list, ...)
         local new = {}
-        local len = #list
+        local len = list.count
         for key = 1, len do
             new[key] = list[key]
         end
@@ -78,7 +78,7 @@ do
 
     local function run()
         local r = append({ 1, 2 }, 7, 8, 9)
-        return #r * 10000 + r[3] * 100 + r[5]
+        return r.count * 10000 + r[3] * 100 + r[5]
     end
 
     for _ = 1, INLINING_THREASHOLD do

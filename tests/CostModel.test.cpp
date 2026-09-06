@@ -185,7 +185,7 @@ TEST_CASE("TableAssign")
 {
     uint64_t model = modelFunction(R"(
 function test(a)
-    for i=1,#a do
+    for i=1,a.count do
         a[i] = i
     end
 end
@@ -195,7 +195,7 @@ end
     const bool args2[] = {true};
 
     CHECK_EQ(7, Luau::Compile::computeCost(model, args1, 1));
-    CHECK_EQ(6, Luau::Compile::computeCost(model, args2, 1));
+    CHECK_EQ(7, Luau::Compile::computeCost(model, args2, 1));
 }
 
 TEST_CASE("InterpString")

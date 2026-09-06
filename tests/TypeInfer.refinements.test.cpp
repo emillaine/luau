@@ -1364,7 +1364,7 @@ TEST_CASE_FIXTURE(Fixture, "and_or_peephole_refinement")
 {
     CheckResult result = check(R"(
         local function len(a: {any})
-            return a and #a or nil
+            return a and a.count or nil
         end
     )");
 
@@ -1885,7 +1885,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_take_the_length
     CheckResult result = check(R"(
         local function f(x: unknown)
             if typeof(x) == "table" then
-                local len = #x
+                local len = (x).count
             end
         end
     )");
@@ -1893,12 +1893,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_take_the_length
     if (!FFlag::DebugLuauForceOldSolver)
     {
         LUAU_REQUIRE_NO_ERRORS(result);
-        CHECK_EQ("table", toString(requireTypeAtPosition({3, 29})));
+        CHECK_EQ("table", toString(requireTypeAtPosition({3, 30})));
     }
     else
     {
         LUAU_REQUIRE_ERROR_COUNT(1, result);
-        CHECK_EQ("unknown", toString(requireTypeAtPosition({3, 29})));
+        CHECK_EQ("unknown", toString(requireTypeAtPosition({3, 30})));
     }
 }
 
@@ -2942,7 +2942,7 @@ TEST_CASE_FIXTURE(Fixture, "len_operator_in_if_is_just_a_proposition")
     CheckResult result = check(R"(
 type Pool = { x : number }
 local pool = p as Pool
-if #pool then
+if pool.count then
     local y = pool
 end
 )");
@@ -3255,7 +3255,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_181894_refinement_cancelled_by_for_loop")
         local lightingChangers: { LightingChanger } = nil as any
 
         local closestChanger: LightingChanger?
-        if #lightingChangers == 1 then
+        if lightingChangers.count == 1 then
             closestChanger = lightingChangers[1]
         end
         if closestChanger == nil then

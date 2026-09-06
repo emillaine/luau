@@ -10,7 +10,7 @@ end
 
 function checkresults(e, ...)
 	local t = table.pack(...)
-	assert(t.n == #e)
+	assert(t.n == e.count)
 	for i=1,t.n do
 		assert(striplines(t[i]) == e[i])
 	end
@@ -43,7 +43,7 @@ function colog(f)
 		else
 			table.insert(res, "error");
 		end
-		table.move(run, 2, #run, 1 + #res, res) -- equivalent to table.append(res, run)
+		table.move(run, 2, run.count, 1 + res.count, res) -- equivalent to table.append(res, run)
 		print(coroutine.status(co), table.unpack(res))
 	end
 	assert(coroutine.status(co) == "dead")
@@ -71,7 +71,7 @@ local function run_base_tests()
 
 		function stackover() return pcall(stackover) end
 		local res = {pcall(stackover)}
-		assert(#res == 10000) -- stack limit (LUAI_MAXCALLS is 20000 and we use 2 calls per recursion)
+		assert(res.count == 10000) -- stack limit (LUAI_MAXCALLS is 20000 and we use 2 calls per recursion)
 	end
 
 	-- yield tests
@@ -91,10 +91,10 @@ local function run_base_tests()
 
 	-- returning lots of results (past MINSTACK limits)
 	local res = {pcall(function() return table.unpack(table.create(100, 'a')) end)}
-	assert(#res == 101 and res[1] == true and res[2] == 'a' and res[101] == 'a')
+	assert(res.count == 101 and res[1] == true and res[2] == 'a' and res[101] == 'a')
 
 	local res = {corun(function() return pcall(function() coroutine.yield() return table.unpack(table.create(100, 'a')) end) end)}
-	assert(#res == 102 and res[1] == true and res[2] == true and res[3] == 'a' and res[102] == 'a')
+	assert(res.count == 102 and res[1] == true and res[2] == true and res[3] == 'a' and res[102] == 'a')
 
 	-- pcall a C function after yield; resume gets multiple C entries this way
 	checkresults({ "yield", 1, 2, 3, "return", true }, colog(function() return pcall(coroutine.yield, 1, 2, 3) end))

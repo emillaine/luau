@@ -2410,10 +2410,6 @@ void TypeChecker2::visit(AstExprUnary* expr)
             {
                 if (std::optional<TypeId> ret = first(ftv->retTypes))
                 {
-                    if (expr->op == AstExprUnary::Op::Len)
-                    {
-                        testIsSubtype(follow(*ret), builtinTypes->numberType, expr->location);
-                    }
                 }
                 else
                 {
@@ -2441,35 +2437,7 @@ void TypeChecker2::visit(AstExprUnary* expr)
         }
     }
 
-    if (expr->op == AstExprUnary::Op::Len)
-    {
-        DenseHashSet<TypeId> seen;
-        int recursionCount = 0;
-        std::shared_ptr<const NormalizedType> nty = normalizer.normalize(operandType);
-
-        if (nty && nty->shouldSuppressErrors())
-            return;
-
-        switch (normalizer.isInhabited(nty.get()))
-        {
-        case NormalizationResult::True:
-            break;
-        case NormalizationResult::False:
-            return;
-        case NormalizationResult::HitLimits:
-            reportError(NormalizationTooComplex{}, expr->location);
-            return;
-        }
-
-        if (!hasLength(operandType, seen, &recursionCount))
-        {
-            if (isOptional(operandType))
-                reportError(OptionalValueAccess{operandType}, expr->location);
-            else
-                reportError(NotATable{operandType}, expr->location);
-        }
-    }
-    else if (expr->op == AstExprUnary::Op::Minus)
+    if (expr->op == AstExprUnary::Op::Minus)
     {
         // A negated integer literal is folded into one constant by the compiler, so it never negates anything.
         if (FFlag::LuauIntegerType2 && expr->expr->is<AstExprConstantInteger>())
@@ -4154,7 +4122,12 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
     seen.insert(ty);
 
     if (get<ErrorType>(ty) || get<AnyType>(ty) || get<NeverType>(ty))
+    {
+        // `.count` on `never` is `number` (matches old `#never`).
+        if (prop == "count" && context == ValueContext::RValue && get<NeverType>(ty))
+            return {NormalizationResult::True, {builtinTypes->numberType}};
         return {NormalizationResult::True, {ty}};
+    }
 
     if (isString(ty))
     {
@@ -4168,7 +4141,8 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
         if (auto resTy = findTablePropertyRespectingMeta(builtinTypes, errors, ty, prop, context, location, /* useNewSolver */ true))
             return {NormalizationResult::True, resTy};
 
-        if (tt->indexer)
+        // `.count` ignores indexers: only an explicit field wins.
+        if (prop != "count" && tt->indexer)
         {
             TypeId indexType = follow(tt->indexer->indexType);
             TypeId givenType = module->internalTypes->addType(SingletonType{StringSingleton{prop}});
@@ -4180,6 +4154,15 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
                     return {NormalizationResult::False, {}};
                 return {NormalizationResult::True, {tt->indexer->indexResultType}};
             }
+        }
+
+        // `.count` magic: missing prop falls back to length (number) on reads.
+        if (prop == "count" && context == ValueContext::RValue)
+        {
+            DenseHashSet<TypeId> seenCount;
+            int rc = 0;
+            if (hasLength(ty, seenCount, &rc))
+                return {NormalizationResult::True, {builtinTypes->numberType}};
         }
 
         return {NormalizationResult::False, {builtinTypes->unknownType}};
@@ -4197,6 +4180,9 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
             else
                 return {NormalizationResult::True, context == ValueContext::LValue ? property->writeTy : property->readTy};
         }
+        // `.count` ignores indexers (explicit field only).
+        if (prop == "count")
+            return {NormalizationResult::False, {}};
         if (cls->indexer)
         {
             TypeId inhabitedTestType = module->internalTypes->addType(IntersectionType{{cls->indexer->indexType, astIndexExprType}});
@@ -4265,7 +4251,21 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
         return {NormalizationResult::False, {}};
     }
     else if (const PrimitiveType* pt = get<PrimitiveType>(ty))
+    {
+        if (prop == "count" && context == ValueContext::RValue && pt->type == PrimitiveType::Table)
+            return {NormalizationResult::True, {builtinTypes->numberType}};
         return {(inConditional(typeContext) && pt->type == PrimitiveType::Table) ? NormalizationResult::True : NormalizationResult::False, {ty}};
+    }
+    else if (prop == "count" && context == ValueContext::RValue)
+    {
+        // Strings are already rewritten to their __index table above, but metatables
+        // and other lengthable types (e.g. top table) fall through here.
+        DenseHashSet<TypeId> seenCount;
+        int rc = 0;
+        if (hasLength(ty, seenCount, &rc))
+            return {NormalizationResult::True, {builtinTypes->numberType}};
+        return {NormalizationResult::False, {}};
+    }
     else
         return {NormalizationResult::False, {}};
 }

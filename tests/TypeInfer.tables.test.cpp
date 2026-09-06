@@ -44,7 +44,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generalization_shouldnt_seal_table_in_len_fu
         return;
     CheckResult result = check(R"(
 local t = {}
-for i = #t, 2, -1 do
+for i = t.count, 2, -1 do
     t[i] = t[i + 1]
 end
     )");
@@ -691,7 +691,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_array_2")
 
         function createButton( actionName, functionInfoTable )
             local position = nil
-            for i = 1,#buttonVector do
+            for i = 1,buttonVector.count do
                 if buttonVector[i] == "empty" then
                     position = i
                     break
@@ -2743,7 +2743,7 @@ TEST_CASE_FIXTURE(Fixture, "length_operator_union")
 {
     CheckResult result = check(R"(
 local x: {number} | {string}
-local y = #x
+local y = x.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2753,7 +2753,7 @@ TEST_CASE_FIXTURE(Fixture, "length_operator_intersection")
 {
     CheckResult result = check(R"(
 local x: {number} & {z:string} -- mixed tables are evil
-local y = #x
+local y = x.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2763,7 +2763,7 @@ TEST_CASE_FIXTURE(Fixture, "length_operator_non_table_union")
 {
     CheckResult result = check(R"(
 local x: {number} | any | string
-local y = #x
+local y = x.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2775,11 +2775,11 @@ TEST_CASE_FIXTURE(Fixture, "length_operator_union_errors")
 
     CheckResult result = check(R"(
 local x: {number} | number | string
-local y = #x
+local y = x.count
     )");
 
-    // CLI-119936: This shouldn't double error but does under the new solver.
-    LUAU_REQUIRE_ERROR_COUNT(2, result);
+    // `.count` reports a single MissingUnionProperty (old `#` double-errored, CLI-119936).
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "dont_hang_when_trying_to_look_up_in_cyclic_metatable_index")
@@ -2929,7 +2929,7 @@ TEST_CASE_FIXTURE(Fixture, "table_length")
 {
     CheckResult result = check(R"(
         local t = {}
-        local s = #t
+        local s = t.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3067,7 +3067,7 @@ TEST_CASE_FIXTURE(Fixture, "generalize_table_argument")
     CheckResult result = check(R"(
         function foo(arr)
             local work = {}
-            for i = 1, #arr do
+            for i = 1, arr.count do
                 work[i] = arr[i]
             end
 
@@ -3111,13 +3111,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_quantify_table_that_belongs_to_outer_sc
         Counter.__index = Counter
 
         function Counter.new()
-            local self = setmetatable({count=0}, Counter)
+            local self = setmetatable({cnt=0}, Counter)
             return self
         end
 
         function Counter:incr()
-            self.count = 1
-            return self.count
+            self.cnt = 1
+            return self.cnt
         end
 
         local self = Counter.new()
@@ -3838,7 +3838,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "a_free_shape_can_turn_into_a_scalar_directly
     CheckResult result = check(R"(
         local function stringByteList(str)
             local out = {}
-            for i = 1, #str do
+            for i = 1, str.count do
                 table.insert(out, string.byte(str, i))
             end
             return table.concat(out, ",")
@@ -5294,7 +5294,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "length_of_array_is_number")
             if true then
                 ranges = {} as {number}
             end
-            local numRanges: number = #ranges
+            local numRanges: number = ranges.count
             return numRanges
         end
     )");
@@ -6682,7 +6682,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_indexing_into_error_or_not_nil")
             local valueType = typeof(value)
             if value == nil then
             else if valueType == "table" then
-                for k = 1, #value do
+                for k = 1, value.count do
                     local _ = value[k]
                 end
             end

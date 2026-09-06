@@ -512,7 +512,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         end
 
         function Promise._all(traceback, promises, amount)
-            if #promises == 0 or amount == 0 then
+            if promises.count == 0 or amount == 0 then
                 return Promise.resolve({})
             end
             return Promise._new(traceback, function(resolve, reject, onCancel)
@@ -598,7 +598,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_metatable")
     CHECK("{ @metatable cls, tbl }" == toString(clsType));
 }
 
-// https://luau.org/typecheck#adding-types-for-faux-object-oriented-programs
+// https://luau.org/typecheckadding.count-types-for-faux-object-oriented-programs
 TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern")
 {
     if (FFlag::DebugLuauForceOldSolver)

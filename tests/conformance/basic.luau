@@ -150,15 +150,15 @@ assert((function() local a = true a = not a return a end)() == false)
 assert((function() local a = false a = not a return a end)() == true)
 assert((function() local a = nil a = not a return a end)() == true)
 
-assert((function() return #_G end)() == 0)
-assert((function() return #{1,2} end)() == 2)
-assert((function() return #'g' end)() == 1)
+assert((function() return _G.count end)() == 0)
+assert((function() return ({1,2}).count end)() == 2)
+assert((function() return ('g').count end)() == 1)
 
 assert((function() local a = 1 a = -a return a end)() == -1)
 
 -- __len metamethod
-assert((function() local ud = newproxy(true) getmetatable(ud).__len = function() return 42 end return #ud end)() == 42)
-assert((function() local t = {} setmetatable(t, { __len = function() return 42 end }) return #t end)() == 42)
+assert((function() local ud = newproxy(true) getmetatable(ud).__len = function() return 42 end return ud.count end)() == 42)
+assert((function() local t = {} setmetatable(t, { __len = function() return 42 end }) return t.count end)() == 42)
 
 -- while/repeat
 assert((function() local a = 10 local b = 1 while a > 1 do b = b * 2 a = a - 1 end return b end)() == 512)
@@ -246,8 +246,8 @@ assert((function() local a = {} for k,v in pairs({a=1, b=2, c=3}) do a[k] = v en
 
 -- pairs on mixed array/table + gaps in the array portion
 -- note that a,b,c results in a,c,b during traversal since index is based on hash & size
-assert((function() local a = {} for k,v in pairs({1, 2, 3, a=5, b=6, c=7}) do a[#a+1] = v end return table.concat(a, ',') end)() == "1,2,3,5,7,6")
-assert((function() local a = {} for k,v in pairs({1, 2, 3, nil, 4, a=5, b=6, c=7}) do a[#a+1] = v end return table.concat(a, ',') end)() == "1,2,3,4,5,7,6")
+assert((function() local a = {} for k,v in pairs({1, 2, 3, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,5,7,6")
+assert((function() local a = {} for k,v in pairs({1, 2, 3, nil, 4, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,4,5,7,6")
 
 -- pairs manually
 assert((function() local a = '' for k in next,{5, 6, 7} do a = a .. k end return a end)() == "123")
@@ -284,9 +284,9 @@ assert((function() local function f() return {5,6,7},8,9,0 end local a = '' for 
 
 -- table literals
 -- basic tests
-assert((function() local t = {} return #t end)() == 0)
+assert((function() local t = {} return t.count end)() == 0)
 
-assert((function() local t = {1, 2} return #t end)() == 2)
+assert((function() local t = {1, 2} return t.count end)() == 2)
 assert((function() local t = {1, 2} return t[1] + t[2] end)() == 3)
 
 assert((function() local t = {data = 4} return t.data end)() == 4)
@@ -361,13 +361,13 @@ assert((function() function foo(...) return ... end function bar(...) return foo
 assert((function() function foo(a, ...) return a + 10, ... end function bar(a, ...) return foo(a * 2, ...) end return concat(bar(1, 2, 3)) end)() == "12,2,3")
 
 -- manual pack
-assert((function() function pack(first, ...) if not first then return {} end local t = pack(...) table.insert(t, 1, first) return t end function foo(...) return pack(...) end return #foo(0, 1, 2) end)() == 3)
+assert((function() function pack(first, ...) if not first then return {} end local t = pack(...) table.insert(t, 1, first) return t end function foo(...) return pack(...) end return (foo(0, 1, 2)).count end)() == 3)
 
 -- multret + table literals
 -- basic tests
-assert((function() function foo(...) return { ... } end return #(foo()) end)() == 0)
-assert((function() function foo(...) return { ... } end return #(foo(1, 2, 3)) end)() == 3)
-assert((function() function foo() return 1, 2, 3 end return #({foo()}) end)() == 3)
+assert((function() function foo(...) return { ... } end return (foo()).count end)() == 0)
+assert((function() function foo(...) return { ... } end return (foo(1, 2, 3)).count end)() == 3)
+assert((function() function foo() return 1, 2, 3 end return ({foo()}).count end)() == 3)
 
 -- since table ctor is chunked in groups of 16, we should be careful with edge cases around that
 assert((function() function foo() return 1, 2, 3 end return table.concat({foo()}, ',') end)() == "1,2,3")
@@ -512,9 +512,9 @@ assert((function() a = {} setmetatable(a, {}) return concat(a == a, a != a) end)
 assert((function() a = {} b = {} mt = {} setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "false,true")
 
 -- tables, __eq with same mt/different mt but same function/different function
-assert((function() a = {} b = {} mt = { __eq = function(l, r) return #l == #r end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "true,false")
-assert((function() a = {} b = {} function eq(l, r) return #l == #r end setmetatable(a, {__eq = eq}) setmetatable(b, {__eq = eq}) return concat(a == b, a != b) end)() == "true,false")
-assert((function() a = {} b = {} setmetatable(a, {__eq = function(l, r) return #l == #r end}) setmetatable(b, {__eq = function(l, r) return #l == #r end}) return concat(a == b, a != b) end)() == "false,true")
+assert((function() a = {} b = {} mt = { __eq = function(l, r) return l.count == r.count end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "true,false")
+assert((function() a = {} b = {} function eq(l, r) return l.count == r.count end setmetatable(a, {__eq = eq}) setmetatable(b, {__eq = eq}) return concat(a == b, a != b) end)() == "true,false")
+assert((function() a = {} b = {} setmetatable(a, {__eq = function(l, r) return l.count == r.count end}) setmetatable(b, {__eq = function(l, r) return l.count == r.count end}) return concat(a == b, a != b) end)() == "false,true")
 
 -- userdata, reference equality (no mt or mt.__eq)
 assert((function() a = newproxy() return concat(a == newproxy(),a != newproxy()) end)() == "false,true")
@@ -529,7 +529,7 @@ assert(rawequal(0, -0) == true)
 assert(rawequal(1, 2) == false)
 assert(rawequal("a", "a") == true)
 assert(rawequal("a", "b") == false)
-assert((function() a = {} b = {} mt = { __eq = function(l, r) return #l == #r end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, rawequal(a, b)) end)() == "true,false")
+assert((function() a = {} b = {} mt = { __eq = function(l, r) return l.count == r.count end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, rawequal(a, b)) end)() == "true,false")
 
 -- rawequal fallback
 assert(concat(pcall(rawequal, "a", "a")) == "true,true")
@@ -611,7 +611,7 @@ assert((function()
     local res = {}
 
     for i=1,5 do
-        res[#res+1] = (function() return i end)
+        res[res.count+1] = (function() return i end)
     end
 
     local sum = 0
@@ -624,7 +624,7 @@ assert((function()
     local res = {}
 
     for i in ipairs({1,2,3,4,5}) do
-        res[#res+1] =(function() return i end)
+        res[res.count+1] =(function() return i end)
     end
 
     local sum = 0
@@ -639,7 +639,7 @@ assert((function()
     local i = 0
     while i <= 5 do
         local j = i
-        res[#res+1] = (function() return j end)
+        res[res.count+1] = (function() return j end)
         i = i + 1
     end
 
@@ -655,7 +655,7 @@ assert((function()
     local i = 0
     repeat
         local j = i
-        res[#res+1] = (function() return j end)
+        res[res.count+1] = (function() return j end)
         i = i + 1
     until i > 5
 
@@ -670,7 +670,7 @@ assert((function()
     local res = {}
 
     for i=1,10 do
-        res[#res+1] = (function() return i end)
+        res[res.count+1] = (function() return i end)
         if i == 5 then
             break
         end
@@ -686,7 +686,7 @@ assert((function()
     local res = {}
 
     for i in ipairs({1,2,3,4,5,6,7,8,9,10}) do
-        res[#res+1] =(function() return i end)
+        res[res.count+1] =(function() return i end)
         if i == 5 then
             break
         end
@@ -704,7 +704,7 @@ assert((function()
     local i = 0
     while i < 10 do
         local j = i
-        res[#res+1] = (function() return j end)
+        res[res.count+1] = (function() return j end)
         if i == 5 then
             break
         end
@@ -723,7 +723,7 @@ assert((function()
     local i = 0
     repeat
         local j = i
-        res[#res+1] = (function() return j end)
+        res[res.count+1] = (function() return j end)
         if i == 5 then
             break
         end
@@ -850,7 +850,7 @@ assert((function()
     local res = {}
 
     for i=1,10 do
-        res[#res+1] = (function() return i end)
+        res[res.count+1] = (function() return i end)
         if i == 5 then
             continue
         end
@@ -867,7 +867,7 @@ assert((function()
     local res = {}
 
     for i in ipairs({1,2,3,4,5,6,7,8,9,10}) do
-        res[#res+1] =(function() return i end)
+        res[res.count+1] =(function() return i end)
         if i == 5 then
             continue
         end
@@ -886,7 +886,7 @@ assert((function()
     local i = 1
     while i <= 10 do
         local j = i
-        res[#res+1] = (function() return j end)
+        res[res.count+1] = (function() return j end)
         if i == 5 then
             i = i + 1
             continue
@@ -907,7 +907,7 @@ assert((function()
     local i = 1
     repeat
         local j = i
-        res[#res+1] = (function() return j end)
+        res[res.count+1] = (function() return j end)
         if i == 5 then
             i = i + 1
             continue

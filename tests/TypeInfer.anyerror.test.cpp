@@ -167,7 +167,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error2")
 TEST_CASE_FIXTURE(Fixture, "length_of_error_type_does_not_produce_an_error")
 {
     CheckResult result = check(R"(
-        local l = #this_is_not_defined
+        local l = this_is_not_defined.count
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -221,7 +221,7 @@ TEST_CASE_FIXTURE(Fixture, "can_get_length_of_any")
 {
     CheckResult result = check(R"(
         local foo = ({} as any)
-        local bar = #foo
+        local bar = foo.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

@@ -1416,7 +1416,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "global_singleton_types_are_sealed")
     CheckResult result = check(R"(
 local function f(x: string)
     local p = x:split('a')
-    p = table.pack(table.unpack(p, 1, #p - 1))
+    p = table.pack(table.unpack(p, 1, p.count - 1))
     return p
 end
     )");

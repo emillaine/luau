@@ -3,10 +3,10 @@
 print"testing sort"
 
 function checksort(t, f, ...)
-  assert(#t == select('#', ...))
+  assert(t.count == select('#', ...))
   local copy = table.clone(t)
   table.sort(copy, f)
-  for i=1,#t do assert(copy[i] == select(i, ...)) end
+  for i=1,t.count do assert(copy[i] == select(i, ...)) end
 end
 
 -- basic edge cases
@@ -146,7 +146,7 @@ do
   end)
 
   -- repeat the sort for the generated sequence; it should produce an integer sequence and trigger heap sort, although we can't confirm the latter
-  local arr = table.create(#t)
+  local arr = table.create(t.count)
   for k,v in t do
     arr[v] = k
   end

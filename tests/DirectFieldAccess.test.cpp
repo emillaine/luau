@@ -210,7 +210,7 @@ TEST_CASE("unregistered_tag_falls_through_to_index_metamethod")
         local uds = {createVec2(1, 0), createOther()}
         local results = {}
         for _, v in uds do
-            results[#results + 1] = v.X
+            results[results.count + 1] = v.X
         end
         return table.unpack(results)
     )");

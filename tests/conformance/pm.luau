@@ -12,7 +12,7 @@ function f1(s, p)
   p = string.gsub(p, "^(^?)", "%1()", 1)
   p = string.gsub(p, "($?)$", "()%1", 1)
   local t = {string.match(s, p)}
-  return string.sub(s, t[1], t[#t] - 1)
+  return string.sub(s, t[1], t[t.count] - 1)
 end
 
 a,b = string.find('', '')    -- empty patterns are tricky
@@ -279,7 +279,7 @@ local a = {1, 5, 9, 14, 17,}
 for k in string.gmatch("alo alo th02 is 1hat", "()%f[%w%d]") do
   assert(table.remove(a, 1) == k)
 end
-assert(#a == 0)
+assert(a.count == 0)
 
 
 -- malformed patterns

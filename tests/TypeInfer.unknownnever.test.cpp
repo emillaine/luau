@@ -317,7 +317,7 @@ TEST_CASE_FIXTURE(Fixture, "unary_minus_of_never")
 TEST_CASE_FIXTURE(Fixture, "length_of_never")
 {
     CheckResult result = check(R"(
-        local x = #({} as never)
+        local x = ({} as never).count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

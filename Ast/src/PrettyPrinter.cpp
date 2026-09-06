@@ -745,9 +745,6 @@ struct Printer
             case AstExprUnary::Op::Minus:
                 writer.symbol("-");
                 break;
-            case AstExprUnary::Op::Len:
-                writer.symbol("#");
-                break;
             }
             visualize(*a->expr);
         }

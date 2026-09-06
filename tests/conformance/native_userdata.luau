@@ -4,7 +4,7 @@ print('testing userdata')
 function ecall(fn, ...)
 	local ok, err = pcall(fn, ...)
 	assert(not ok)
-	return err:sub((err:find(": ") or -1) + 2, #err)
+	return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
 local function realmad(a: vec2, b: vec2, c: vec2): vec2

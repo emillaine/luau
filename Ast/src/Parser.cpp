@@ -3518,8 +3518,6 @@ std::optional<AstExprUnary::Op> Parser::parseUnaryOp(const Lexeme& l)
         return AstExprUnary::Op::Not;
     else if (l.type == '-')
         return AstExprUnary::Op::Minus;
-    else if (l.type == '#')
-        return AstExprUnary::Op::Len;
     else
         return std::nullopt;
 }
@@ -3675,10 +3673,23 @@ AstExpr* Parser::parseExpr(unsigned int limit)
 
     AstExpr* expr;
 
-    std::optional<AstExprUnary::Op> uop = parseUnaryOp(lexer.current());
+    // The '#' length operator was removed; use '.count' instead.
+    if (lexer.current().type == '#')
+    {
+        Location hashLoc = lexer.current().location;
+        report(hashLoc, "Unexpected '#'; the length operator has been removed, use '.count' instead");
+        nextLexeme();
 
-    if (!uop)
-        uop = checkUnaryConfusables();
+        // Recover by parsing the operand and returning it, so only one error is reported.
+        AstExpr* subexpr = parseExpr(unaryPriority);
+        expr = subexpr;
+    }
+    else
+    {
+        std::optional<AstExprUnary::Op> uop = parseUnaryOp(lexer.current());
+
+        if (!uop)
+            uop = checkUnaryConfusables();
 
     if (uop)
     {
@@ -3694,6 +3705,7 @@ AstExpr* Parser::parseExpr(unsigned int limit)
     else
     {
         expr = parseAssertionExpr();
+    }
     }
 
     // expand while operators have priorities higher than `limit'

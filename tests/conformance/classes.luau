@@ -578,7 +578,7 @@ expectpass("hoisting: mutually referential classes work via capture by ref", fun
     local c = p:createChild()
     assert(class.isinstance(c, Child))
     assert(c.parent == p)
-    assert(#p.children == 1)
+    assert(p.children.count == 1)
     assert(p.children[1] == c)
 
     local p2 = c:createParent()

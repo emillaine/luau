@@ -86,7 +86,7 @@ static const std::unordered_map<std::string, const char*> kBinaryOps{
 };
 
 // this list of unary operator type functions is used for better stringification of type functions errors
-static const std::unordered_map<std::string, const char*> kUnaryOps{{"unm", "-"}, {"len", "#"}, {"not", "not"}};
+static const std::unordered_map<std::string, const char*> kUnaryOps{{"unm", "-"}, {"not", "not"}};
 
 // this list of type functions will receive a special error indicating that the user should file a bug on the GitHub repository
 // putting a type function in this list indicates that it is expected to _always_ reduce

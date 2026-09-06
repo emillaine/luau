@@ -19,6 +19,7 @@
 #include "Luau/VisitType.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iterator>
 
 LUAU_FASTFLAGVARIABLE(DebugLuauMagicTypes)
@@ -2041,9 +2042,14 @@ WithPredicate<TypeId> TypeChecker::checkExpr(const ScopePtr& scope, const AstExp
     // Redundant call if we find a refined lvalue, but this function must be called in order to recursively populate astTypes.
     TypeId lhsType = checkExpr(scope, *expr.expr).type;
 
-    if (std::optional<LValue> lvalue = tryGetLValue(expr))
-        if (std::optional<TypeId> ty = resolveLValue(scope, *lvalue))
-            return {*ty, {TruthyPredicate{std::move(*lvalue), expr.location}}};
+    // `.count` magic requires __len validation which is skipped by speculative
+    // LValue resolution, so bypass it to ensure errors are reported.
+    if (name != "count")
+    {
+        if (std::optional<LValue> lvalue = tryGetLValue(expr))
+            if (std::optional<TypeId> ty = resolveLValue(scope, *lvalue))
+                return {*ty, {TruthyPredicate{std::move(*lvalue), expr.location}}};
+    }
 
     lhsType = stripFromNilAndReport(lhsType, expr.expr->location);
 
@@ -2100,7 +2106,12 @@ std::optional<TypeId> TypeChecker::getIndexTypeFromTypeImpl(
     type = follow(type);
 
     if (get<ErrorType>(type) || get<AnyType>(type) || get<NeverType>(type))
+    {
+        // `.count` on `any`/`error`/`never` is `number` (matches old `#` semantics).
+        if (name == "count")
+            return numberType;
         return type;
+    }
 
     tablify(type);
 
@@ -2117,22 +2128,34 @@ std::optional<TypeId> TypeChecker::getIndexTypeFromTypeImpl(
             return it->second.type_DEPRECATED();
         else if (auto indexer = tableType->indexer)
         {
-            // TODO: Property lookup should work with string singletons or unions thereof as the indexer key type.
-            ErrorVec errors = tryUnify(stringType, indexer->indexType, scope, location);
+            // `.count` ignores indexers: only an explicit field wins, otherwise length fallback below.
+            if (name != "count")
+            {
+                // TODO: Property lookup should work with string singletons or unions thereof as the indexer key type.
+                ErrorVec errors = tryUnify(stringType, indexer->indexType, scope, location);
 
-            if (errors.empty())
-                return indexer->indexResultType;
+                if (errors.empty())
+                    return indexer->indexResultType;
 
-            if (addErrors)
-                reportError(location, UnknownProperty{type, name});
+                if (addErrors)
+                    reportError(location, UnknownProperty{type, name});
 
-            return std::nullopt;
+                return std::nullopt;
+            }
         }
         else if (tableType->state == TableState::Free)
         {
-            TypeId result = freshType(tableType->level);
-            tableType->props[name] = {result};
-            return result;
+            // `.count` on a free table is length (number), not a fresh field.
+            if (name == "count")
+            {
+                // Fall through to length fallback below (skip fresh field creation).
+            }
+            else
+            {
+                TypeId result = freshType(tableType->level);
+                tableType->props[name] = {result};
+                return result;
+            }
         }
 
         if (auto found = findTablePropertyRespectingMeta(type, name, location, addErrors))
@@ -2144,7 +2167,12 @@ std::optional<TypeId> TypeChecker::getIndexTypeFromTypeImpl(
         if (prop)
             return prop->type_DEPRECATED();
 
-        if (auto indexer = cls->indexer)
+        // `.count` ignores indexers (explicit field only).
+        if (name == "count")
+        {
+            // Fall through to length fallback below.
+        }
+        else if (auto indexer = cls->indexer)
         {
             // TODO: Property lookup should work with string singletons or unions thereof as the indexer key type.
             ErrorVec errors = tryUnify(stringType, indexer->indexType, scope, location);
@@ -2222,6 +2250,53 @@ std::optional<TypeId> TypeChecker::getIndexTypeFromTypeImpl(
             return parts[0];
 
         return addType(IntersectionType{std::move(parts)}); // Not at all correct.
+    }
+
+    // `.count` is a magic read-only property: if no real field exists, fall back to length semantics.
+    if (name == "count")
+    {
+        // Field wins: check explicit props / __index first (covers metatables).
+        if (auto explicitProp = findTablePropertyRespectingMeta(type, name, location, /* addErrors= */ false))
+            return *explicitProp;
+
+        TypeId stripped;
+        if (addErrors)
+            stripped = stripFromNilAndReport(type, location);
+        else
+        {
+            stripped = follow(type);
+            if (std::optional<TypeId> strippedUnion = tryStripUnionFromNil(stripped))
+                stripped = follow(*strippedUnion);
+        }
+        if (get<AnyType>(stripped) || get<ErrorType>(stripped) || get<NeverType>(stripped))
+            return numberType;
+
+        DenseHashSet<TypeId> seen;
+        if (typeCouldHaveMetatable(stripped))
+        {
+            if (auto fnt = findMetatableEntry(stripped, "__len", location, /* addErrors= */ addErrors))
+            {
+                TypeId actualFunctionType = instantiate(scope, *fnt, location);
+                TypePackId arguments = addTypePack({stripped});
+                TypePackId retTypePack = addTypePack({numberType});
+                TypeId expectedFunctionType = addType(FunctionType(scope->level, arguments, retTypePack));
+
+                Unifier state = mkUnifier(scope, location);
+                state.tryUnify(actualFunctionType, expectedFunctionType, /*isFunctionCall*/ true);
+                state.log.commit();
+
+                if (addErrors)
+                    reportErrors(state.errors);
+            }
+        }
+
+        if (hasLength(stripped, seen, &recursionCount))
+            return numberType;
+
+        if (addErrors)
+            reportError(location, NotATable{stripped});
+
+        return std::nullopt;
     }
 
     if (addErrors)
@@ -2535,40 +2610,6 @@ WithPredicate<TypeId> TypeChecker::checkExpr(const ScopePtr& scope, const AstExp
         }
 
         reportErrors(tryUnify(operandType, numberType, scope, expr.location));
-        return WithPredicate{numberType};
-    }
-    case AstExprUnary::Op::Len:
-    {
-        tablify(operandType);
-
-        operandType = stripFromNilAndReport(operandType, expr.location);
-
-        // # operator is guaranteed to return number
-        if (get<AnyType>(operandType) || get<ErrorType>(operandType) || get<NeverType>(operandType))
-            return WithPredicate{numberType};
-
-        DenseHashSet<TypeId> seen;
-
-        if (typeCouldHaveMetatable(operandType))
-        {
-            if (auto fnt = findMetatableEntry(operandType, "__len", expr.location, /* addErrors= */ true))
-            {
-                TypeId actualFunctionType = instantiate(scope, *fnt, expr.location);
-                TypePackId arguments = addTypePack({operandType});
-                TypePackId retTypePack = addTypePack({numberType});
-                TypeId expectedFunctionType = addType(FunctionType(scope->level, arguments, retTypePack));
-
-                Unifier state = mkUnifier(scope, expr.location);
-                state.tryUnify(actualFunctionType, expectedFunctionType, /*isFunctionCall*/ true);
-                state.log.commit();
-
-                reportErrors(state.errors);
-            }
-        }
-
-        if (!hasLength(operandType, seen, &recursionCount))
-            reportError(TypeError{expr.location, NotATable{operandType}});
-
         return WithPredicate{numberType};
     }
     default:
@@ -3495,6 +3536,30 @@ TypeId TypeChecker::checkLValueBinding(const ScopePtr& scope, const AstExprIndex
 
     lhs = stripFromNilAndReport(lhs, expr.expr->location);
 
+    // `.count` is read-only when no real field exists: forbid creating it via assignment.
+    if (name == "count" && ctx == ValueContext::LValue)
+    {
+        bool hasRealProp = false;
+        if (TableType* tt = getMutableTableType(lhs))
+            hasRealProp = tt->props.find(name) != tt->props.end();
+        else if (const ExternType* et = get<ExternType>(lhs))
+            hasRealProp = lookupExternTypeProp(et, name) != nullptr;
+        else if (const MetatableType* mt = get<MetatableType>(lhs))
+        {
+            if (TableType* mtt = getMutableTableType(follow(mt->table)))
+                hasRealProp = mtt->props.find(name) != mtt->props.end();
+            // __index providing `count` counts as a real field for writes? Writes go to
+            // the main table, not __index, so only main-table props allow assignment.
+            // (If main table lacks it, forbid even when __index has it.)
+        }
+
+        if (!hasRealProp)
+        {
+            reportError(TypeError{expr.location, GenericError{"Cannot assign to read-only property '.count'"}});
+            return errorRecoveryType(scope);
+        }
+    }
+
     if (TableType* lhsTable = getMutableTableType(lhs))
     {
         const auto& it = lhsTable->props.find(name);
@@ -3593,6 +3658,33 @@ TypeId TypeChecker::checkLValueBinding(const ScopePtr& scope, const AstExprIndex
         return unknownType;
 
     AstExprConstantString* value = expr.index->as<AstExprConstantString>();
+
+    // `.count` is read-only when no real field exists.
+    if (value && ctx == ValueContext::LValue && value->value.size == 5 && memcmp(value->value.data, "count", 5) == 0)
+    {
+        bool hasRealProp = false;
+        if (TableType* tt = getMutableTableType(exprType))
+            hasRealProp = tt->props.find("count") != tt->props.end();
+        else if (const ExternType* et = get<ExternType>(exprType))
+            hasRealProp = lookupExternTypeProp(et, "count") != nullptr;
+
+        if (!hasRealProp)
+        {
+            reportError(TypeError{expr.location, GenericError{"Cannot assign to read-only property '.count'"}});
+            return errorRecoveryType(scope);
+        }
+    }
+
+    // `t["count"]` is sugar for `t.count`: use property logic (explicit wins, else length),
+    // bypassing indexer index-type unification (arrays have number indexers).
+    if (value && value->value.size == 5 && memcmp(value->value.data, "count", 5) == 0 && ctx == ValueContext::RValue)
+    {
+        Name countName = std::string("count");
+        if (std::optional<TypeId> ty = getIndexTypeFromType(scope, exprType, countName, expr.location, /* addErrors= */ true))
+            return *ty;
+
+        return errorRecoveryType(scope);
+    }
 
     if (value)
     {

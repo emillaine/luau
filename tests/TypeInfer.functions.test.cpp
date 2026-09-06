@@ -779,13 +779,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "higher_order_function_4")
 
         function mergesort<T>(arr: {T}, comp: (T, T) -> boolean)
             local work = {}
-            for i = 1, #arr do
+            for i = 1, arr.count do
                 work[i] = arr[i]
             end
             local width = 1
-            while width < #arr do
-                for i = 1, #arr, 2*width do
-                    bottomupmerge(comp, arr, work, i, math.min(i+width, #arr), math.min(i+2*width-1, #arr))
+            while width < arr.count do
+                for i = 1, arr.count, 2*width do
+                    bottomupmerge(comp, arr, work, i, math.min(i+width, arr.count), math.min(i+2*width-1, arr.count))
                 end
                 local temp = work
                 work = arr
@@ -2717,11 +2717,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tf_suggest_arg_type_2")
 
     CheckResult result = check(R"(
         local function escape_fslash(pre)
-            return (#pre % 2 == 0 and '\\' or '') .. pre .. '.'
+            return (pre.count % 2 == 0 and '\\' or '') .. pre .. '.'
         end
     )");
 
-    LUAU_REQUIRE_ERROR(result, NotATable);
+    LUAU_REQUIRE_ERROR(result, UnknownProperty);
 }
 
 TEST_CASE_FIXTURE(Fixture, "local_function_fwd_decl_doesnt_crash")
@@ -3981,7 +3981,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2216_recursive_global_function_works_as_
         function flatten(... : tb_any) : tb_any
             local out = {}
             local par = {...}
-            for i = 1,#par do
+            for i = 1,par.count do
                 if par[i] and typeof(par[i]) == "table" then
                     for n,v in par[i] do
                         if typeof(n) == "number" then

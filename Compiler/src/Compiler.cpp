@@ -1839,9 +1839,6 @@ struct Compiler
         case AstExprUnary::Op::Minus:
             return LOP_MINUS;
 
-        case AstExprUnary::Op::Len:
-            return LOP_LENGTH;
-
         default:
             LUAU_ASSERT(!"Unexpected unary operation");
             return LOP_NOP;

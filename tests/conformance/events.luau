@@ -382,24 +382,24 @@ do
   local t = {1}
 
   setmetatable(t, {})
-  assert(#t == 1)
+  assert(t.count == 1)
 
   setmetatable(t, { __len = rawlen })
-  assert(#t == 1)
+  assert(t.count == 1)
 
   setmetatable(t, { __len = function() return 42 end })
-  assert(#t == 42)
+  assert(t.count == 42)
 
   setmetatable(t, { __len = 42 })
-  local ok, err = pcall(function() return #t end)
+  local ok, err = pcall(function() return t.count end)
   assert(not ok and err:match("attempt to call a number value"))
 
   setmetatable(t, { __len = function() end })
-  local ok, err = pcall(function() return #t end)
+  local ok, err = pcall(function() return t.count end)
   assert(not ok and err:match("'__len' must return a number"))
 
   setmetatable(t, { __len = error })
-  local ok, err = pcall(function() return #t end)
+  local ok, err = pcall(function() return t.count end)
   assert(not ok and err == t)
 end
 
@@ -462,7 +462,7 @@ do
 
   -- validate the assignment sequence
   local ei = { "b", "c", "b", "c", 2, 3, 2, 3 }
-  assert(#ni == #ei)
+  assert(ni.count == ei.count)
   for k,v in ni do
     assert(ei[k] == v)
   end

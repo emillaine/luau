@@ -10,7 +10,7 @@ end
 function ecall(fn, ...)
   local ok, err = pcall(fn, ...)
   assert(not ok)
-  return err:sub(err:find(": ") + 2, #err)
+  return err:sub(err:find(": ") + 2, err.count)
 end
 
 local function add(a: number, b: number, native: boolean)

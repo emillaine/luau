@@ -1251,6 +1251,18 @@ public:
 private:
     LintContext* context;
 
+    static bool isCountLength(AstExpr* expr)
+    {
+        if (AstExprIndexName* n = expr->as<AstExprIndexName>())
+            return n->index == "count";
+        if (AstExprIndexExpr* e = expr->as<AstExprIndexExpr>())
+        {
+            if (AstExprConstantString* s = e->index->as<AstExprConstantString>())
+                return s->value.size == 5 && memcmp(s->value.data, "count", 5) == 0;
+        }
+        return false;
+    }
+
     double getLoopEnd(double from, double to)
     {
         return from + floor(to - from);
@@ -1262,14 +1274,14 @@ private:
         if (!node->step)
         {
             AstExprConstantNumber* fc = node->from->as<AstExprConstantNumber>();
-            AstExprUnary* fu = node->from->as<AstExprUnary>();
             AstExprConstantNumber* tc = node->to->as<AstExprConstantNumber>();
-            AstExprUnary* tu = node->to->as<AstExprUnary>();
+            bool fromIsCount = isCountLength(node->from);
+            bool toIsCount = isCountLength(node->to);
 
             Location rangeLocation(node->from->location, node->to->location);
 
-            // for i=#t,1 do
-            if (fu && fu->op == AstExprUnary::Op::Len && tc && tc->value == 1.0)
+            // for i=t.count,1 do
+            if (fromIsCount && tc && tc->value == 1.0)
                 emitWarning(
                     *context, LintWarning::Code_ForRange, rangeLocation, "For loop should iterate backwards; did you forget to specify -1 as step?"
                 );
@@ -1288,11 +1300,11 @@ private:
                     getLoopEnd(fc->value, tc->value),
                     tc->value
                 );
-            // for i=0,#t do
-            else if (fc && tu && fc->value == 0.0 && tu->op == AstExprUnary::Op::Len)
+            // for i=0,t.count do
+            else if (fc && toIsCount && fc->value == 0.0)
                 emitWarning(*context, LintWarning::Code_ForRange, rangeLocation, "For loop starts at 0, but arrays start at 1");
-            // for i=#t,0 do
-            else if (fu && fu->op == AstExprUnary::Op::Len && tc && tc->value == 0.0)
+            // for i=t.count,0 do
+            else if (fromIsCount && tc && tc->value == 0.0)
                 emitWarning(
                     *context,
                     LintWarning::Code_ForRange,
@@ -2592,10 +2604,21 @@ private:
     {
     }
 
-    bool visit(AstExprUnary* node) override
+    bool visit(AstExprIndexName* node) override
     {
-        if (node->op == AstExprUnary::Op::Len)
-            checkIndexer(node, node->expr, "#");
+        if (node->index == "count")
+            checkIndexer(node, node->expr, ".count");
+
+        return true;
+    }
+
+    bool visit(AstExprIndexExpr* node) override
+    {
+        if (AstExprConstantString* s = node->index->as<AstExprConstantString>())
+        {
+            if (s->value.size == 5 && memcmp(s->value.data, "count", 5) == 0)
+                checkIndexer(node, node->expr, ".count");
+        }
 
         return true;
     }
@@ -2669,7 +2692,7 @@ private:
                     "table.insert uses index 0 but arrays are 1-based; did you mean 1 instead?"
                 );
 
-            // table.insert(t, #t, ?)
+            // table.insert(t, t.count, ?)
             if (isLength(args[1], args[0]))
                 emitWarning(
                     *context,
@@ -2679,7 +2702,7 @@ private:
                     "wrap it in parentheses to silence"
                 );
 
-            // table.insert(t, #t+1, ?)
+            // table.insert(t, t.count+1, ?)
             if (AstExprBinary* add = args[1]->as<AstExprBinary>();
                 add && add->op == AstExprBinary::Add && isLength(add->left, args[0]) && isConstant(add->right, 1.0))
                 emitWarning(
@@ -2701,10 +2724,10 @@ private:
                     "table.remove uses index 0 but arrays are 1-based; did you mean 1 instead?"
                 );
 
-            // note: it's tempting to check for table.remove(t, #t), which is equivalent to table.remove(t), but it's correct, occurs frequently,
+            // note: it's tempting to check for table.remove(t, t.count), which is equivalent to table.remove(t), but it's correct, occurs frequently,
             // and also reads better.
 
-            // table.remove(t, #t-1)
+            // table.remove(t, t.count-1)
             if (AstExprBinary* sub = args[1]->as<AstExprBinary>();
                 sub && sub->op == AstExprBinary::Sub && isLength(sub->left, args[0]) && isConstant(sub->right, 1.0))
                 emitWarning(
@@ -2767,8 +2790,14 @@ private:
 
     bool isLength(AstExpr* expr, AstExpr* table)
     {
-        AstExprUnary* n = expr->as<AstExprUnary>();
-        return n && n->op == AstExprUnary::Op::Len && similar(n->expr, table);
+        if (AstExprIndexName* n = expr->as<AstExprIndexName>())
+            return n->index == "count" && similar(n->expr, table);
+        if (AstExprIndexExpr* e = expr->as<AstExprIndexExpr>())
+        {
+            if (AstExprConstantString* s = e->index->as<AstExprConstantString>())
+                return s->value.size == 5 && memcmp(s->value.data, "count", 5) == 0 && similar(e->expr, table);
+        }
+        return false;
     }
 
     size_t getReturnCount(TypeId ty)

@@ -3457,11 +3457,6 @@ Inference ConstraintGenerator::check(const ScopePtr& scope, AstExprUnary* unary)
         TypeId resultType = createTypeFunctionInstance(builtinTypes->typeFunctions->notFunc, {operandType}, {}, scope, unary->location);
         return Inference{resultType, refinementArena.negation(refinement)};
     }
-    case AstExprUnary::Op::Len:
-    {
-        TypeId resultType = createTypeFunctionInstance(builtinTypes->typeFunctions->lenFunc, {operandType}, {}, scope, unary->location);
-        return Inference{resultType, std::move(refinement)};
-    }
     case AstExprUnary::Op::Minus:
     {
         // compileExprUnary folds `-1i` into one negative constant, so a negated integer literal is a value rather than

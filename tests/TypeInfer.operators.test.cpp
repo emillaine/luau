@@ -729,7 +729,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_len_error")
             value = 10,
         }, mt)
 
-        local a = #foo
+        local a = foo.count
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1527,7 +1527,7 @@ return function(value: any): boolean
         return true
     end
 
-    local length = #value
+    local length = value.count
 
     if length == 0 then
         return false
@@ -1732,7 +1732,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "overload_concat")
         local metatable = {
             __concat = function(self:cls,str:string):cls
                 buffer.writestring(self.b,self.len,str)
-                self.len+=#str
+                self.len+=str.count
                 return self
             end;
         }

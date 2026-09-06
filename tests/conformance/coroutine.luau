@@ -19,8 +19,8 @@ assert(not pcall(coroutine.status, 0))
 -- tests for multiple yield/resume arguments
 
 local function eqtab (t1, t2)
-  assert(#t1 == #t2)
-  for i = 1, #t1 do
+  assert(t1.count == t2.count)
+  for i = 1, t1.count do
     local v = t1[i]
     assert(t2[i] == v)
   end
@@ -36,7 +36,7 @@ function foo (a, ...)
   assert(coroutine.status(f) == "running")
   local arg = {...}
   assert(coroutine.isyieldable())
-  for i=1,#arg do
+  for i=1,arg.count do
     _G.x = {coroutine.yield(table.unpack(arg[i]))}
   end
   return table.unpack(a)
@@ -113,7 +113,7 @@ while 1 do
   x = filter(n, x)
 end
 
-assert(#a == 22 and a[#a] == 79)
+assert(a.count == 22 and a[a.count] == 79)
 x, a = nil
 
 
@@ -276,7 +276,7 @@ if not limitedstack then
   local j = 2^9
   local lim = 1000000    -- (C stack limit; assume 32-bit machine)
   local t = {lim - 10, lim - 5, lim - 1, lim, lim + 1}
-  for i = 1, #t do
+  for i = 1, t.count do
     local j = t[i]
     co = coroutine.create(function()
            local t = {}
@@ -315,8 +315,8 @@ for i=0,30 do
   local co = coroutine.create(function() coroutine.yield(table.unpack(T)) end)
   local T2 = table.pack(coroutine.resume(co))
   assert(T2[1] == true)
-  assert(1 + #T == #T2)
-  assert(#T2 == 1 or T2[#T2] == 42)
+  assert(1 + T.count == T2.count)
+  assert(T2.count == 1 or T2[T2.count] == 42)
 end
 
 -- test coroutine.close

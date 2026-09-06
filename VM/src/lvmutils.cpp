@@ -19,6 +19,16 @@
 
 LUAU_FASTFLAG(DebugLuauUserDefinedClassesRuntime)
 
+void luaV_dolen(lua_State* L, StkId ra, const TValue* rb);
+
+static bool isCountKey(const TValue* key)
+{
+    if (!ttisstring(key))
+        return false;
+    TString* ts = tsvalue(key);
+    return ts->len == 5 && memcmp(getstr(ts), "count", 5) == 0;
+}
+
 const TValue* luaV_tonumber(const TValue* obj, TValue* n)
 {
     double num;
@@ -100,6 +110,13 @@ static void callTM(lua_State* L, const TValue* f, const TValue* p1, const TValue
 
 void luaV_gettable(lua_State* L, const TValue* t, TValue* key, StkId val)
 {
+    // `.count` is a magic read-only property that falls back to length semantics
+    // when no real field is present (field wins if present).
+    bool wantCount = isCountKey(key);
+    TValue orig;
+    if (wantCount)
+        setobj(L, &orig, t);
+
     int loop;
     for (loop = 0; loop < MAXTAGLOOP; loop++)
     {
@@ -116,6 +133,11 @@ void luaV_gettable(lua_State* L, const TValue* t, TValue* key, StkId val)
             if (!ttisnil(res) // result is no nil?
                 || (tm = fasttm(L, h->metatable, TM_INDEX)) == NULL)
             { // or no TM?
+                if (ttisnil(res) && wantCount)
+                {
+                    luaV_dolen(L, val, &orig);
+                    return;
+                }
                 setobj2s(L, val, res);
                 return;
             }
@@ -165,10 +187,19 @@ void luaV_gettable(lua_State* L, const TValue* t, TValue* key, StkId val)
             return;
         }
         else if (ttisnil(tm = luaT_gettmbyobj(L, t, TM_INDEX)))
+        {
+            if (wantCount)
+            {
+                luaV_dolen(L, val, &orig);
+                return;
+            }
             luaG_indexerror(L, t, key);
+        }
         if (ttisfunction(tm))
         {
-            callTMres(L, val, tm, t, key);
+            StkId res = callTMres(L, val, tm, t, key);
+            if (wantCount && ttisnil(res))
+                luaV_dolen(L, res, &orig);
             return;
         }
         t = tm; // else repeat with `tm'

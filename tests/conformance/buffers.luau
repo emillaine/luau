@@ -10,7 +10,7 @@ end
 function ecall(fn, ...)
   local ok, err = pcall(fn, ...)
   assert(not ok)
-  return err:sub((err:find(": ") or -1) + 2, #err)
+  return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
 local function simple_byte_reads()
@@ -639,11 +639,11 @@ local function misc(t16)
   assert(select('#', buffer.writei32(b, 10, 40)) == 0)
   assert(select('#', buffer.writef32(b, 20, 40.0)) == 0)
 
-  -- some extra operation to place '#t16' into a linear block
+  -- some extra operation to place 't16.count' into a linear block
   t16[1] = 10
   t16[15] = 20
 
-  buffer.writei32(b, #t16, 10)
+  buffer.writei32(b, t16.count, 10)
   assert(buffer.readi32(b, 16) == 10)
 
   buffer.writeu8(b, 100, 0xff)

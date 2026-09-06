@@ -5,7 +5,7 @@ function ecall(fn, ...)
     local ok, err = pcall(fn, ...)
     print(ok, err)
     assert(not ok)
-    return err:sub(err:find(": ") + 2, #err)
+    return err:sub(err:find(": ") + 2, err.count)
 end
 
 function resume(co, ...)
@@ -19,7 +19,7 @@ function eresume(co, ...)
     local ok, err = coroutine.resume(co)
     print(ok, err)
     assert(not ok)
-    return err:sub(err:find(": ") + 2, #err)
+    return err:sub(err:find(": ") + 2, err.count)
 end
 
 -- Regular yield from a C function

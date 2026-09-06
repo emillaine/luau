@@ -84,7 +84,7 @@ function quux(...)
 	return {debug.info(...)}
 end
 
-assert(#(quux(1, "nlsf")) == 4)
+assert((quux(1, "nlsf")).count == 4)
 assert(quux(1, "nlsf")[1] == "quux")
 assert(quux(1, "nlsf")[2] > 64)
 assert(quux(1, "nlsf")[3] == "debug.luau")

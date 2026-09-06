@@ -232,7 +232,7 @@ end
 
 -- shrinking thread stacks should be robust against an OOM
 do
-    function recurse(n, ...) return n <= 1 and (1 + #{...}) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
+    function recurse(n, ...) return n <= 1 and (1 + ({...}).count) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
     recurse(100)
 
     setblockallocations(true)

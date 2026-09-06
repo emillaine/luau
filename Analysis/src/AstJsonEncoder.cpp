@@ -606,8 +606,6 @@ struct AstJsonEncoder : public AstVisitor
             return writeString("Not");
         case AstExprUnary::Op::Minus:
             return writeString("Minus");
-        case AstExprUnary::Op::Len:
-            return writeString("Len");
         }
     }
 

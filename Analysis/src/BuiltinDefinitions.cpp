@@ -514,7 +514,7 @@ void registerBuiltinGlobals(Frontend& frontend, GlobalTypes& globals, bool typeC
         }
 
         ttv->props["getn"].deprecated = true;
-        ttv->props["getn"].deprecatedSuggestion = "#";
+        ttv->props["getn"].deprecatedSuggestion = ".count";
         ttv->props["foreach"].deprecated = true;
         ttv->props["foreachi"].deprecated = true;
 

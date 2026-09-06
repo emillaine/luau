@@ -601,13 +601,13 @@ TEST_CASE_FIXTURE(Fixture, "taking_the_length_of_string_singleton")
     CheckResult result = check(R"(
         local a: string = "hi"
         if a == "hi" then
-            local x = #a
+            local x = (a).count
         end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ(R"("hi")", toString(requireTypeAtPosition({3, 23})));
+    CHECK_EQ(R"("hi")", toString(requireTypeAtPosition({3, 24})));
 }
 
 TEST_CASE_FIXTURE(Fixture, "taking_the_length_of_union_of_string_singleton")
@@ -615,13 +615,13 @@ TEST_CASE_FIXTURE(Fixture, "taking_the_length_of_union_of_string_singleton")
     CheckResult result = check(R"(
         local a: string = "hi"
         if a == "hi" or a == "bye" then
-            local x = #a
+            local x = (a).count
         end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ(R"("bye" | "hi")", toString(requireTypeAtPosition({3, 23})));
+    CHECK_EQ(R"("bye" | "hi")", toString(requireTypeAtPosition({3, 24})));
 }
 
 TEST_CASE_FIXTURE(Fixture, "no_widening_from_callsites")

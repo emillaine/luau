@@ -396,7 +396,7 @@ assert(not a and b:match('[^ ]+') == "thisisaverylongstringitssolongthatitwontfi
 function ecall(fn, ...)
   local ok, err = pcall(fn, ...)
   assert(not ok)
-  return err:sub((err:find(": ") or -1) + 2, #err)
+  return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
 -- arith errors

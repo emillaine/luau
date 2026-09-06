@@ -494,6 +494,16 @@ const Instruction* executeGETTABLEKS(lua_State* L, const Instruction* pc, StkId 
                 VM_PATCH_C(pc - 2, cachedslot);
             }
 
+            if (ttisnil(res))
+            {
+                TString* kts = tsvalue(kv);
+                if (kts->len == 5 && memcmp(getstr(kts), "count", 5) == 0)
+                {
+                    setnvalue(ra, cast_num(luaH_getn(h)));
+                    return pc;
+                }
+            }
+
             setobj2s(L, ra, res);
             return pc;
         }

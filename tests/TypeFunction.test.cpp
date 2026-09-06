@@ -1630,7 +1630,7 @@ local t = setmetatable({}, { __mode = "v" })
 
 local function f()
     table.insert(t, {})
-    print(#t * 100)
+    print(t.count * 100)
 end
     )");
 

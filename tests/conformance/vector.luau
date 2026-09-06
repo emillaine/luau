@@ -7,7 +7,7 @@ local vector_size = if pcall(function() return vector.create(0, 0, 0).w end) the
 function ecall(fn, ...)
 	local ok, err = pcall(fn, ...)
 	assert(not ok)
-	return err:sub((err:find(": ") or -1) + 2, #err)
+	return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
 -- equality

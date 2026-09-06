@@ -415,14 +415,11 @@ TEST_CASE_FIXTURE(Fixture, "optional_length_error")
     CheckResult result = check(R"(
         type A = {number}
         function f(a: A?)
-            local b = #a
+            local b = a.count
         end
     )");
 
-    // CLI-119936: This shouldn't double error but does under the new solver.
-    LUAU_REQUIRE_ERROR_COUNT(2, result);
-    CHECK_EQ("Operator '#' could not be applied to operand of type A?; there is no corresponding overload for __len", toString(result.errors[0]));
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[1]));
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
 }
 
 TEST_CASE_FIXTURE(Fixture, "optional_missing_key_error_details")

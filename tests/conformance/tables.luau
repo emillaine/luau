@@ -15,7 +15,7 @@ for i=1,100 do a[i.."+"] = nil end
 -- fill hash part with numeric indices testing size operator
 for i=1,100 do
   a[i] = true
-  assert(#a == i)
+  assert(a.count == i)
 end
 
 
@@ -63,7 +63,7 @@ for i=1,lim do
   local s = s
   for k=0,lim do 
     local t = loadstring(s..'}')()
-    assert(#t == i)
+    assert(t.count == i)
     check(t, fb(i), mp2(k))
     s = string.format('%sa%d=%d,', s, k, k)
   end
@@ -75,11 +75,11 @@ local a = {}
 for i=1,lim do a[i] = i end   -- build auxiliary table
 for k=0,lim do
   local a = {unpack(a,1,k)}
-  assert(#a == k)
+  assert(a.count == k)
   check(a, k, 0)
   a = {1,2,3,unpack(a,1,k)}
   check(a, k+3, 0)
-  assert(#a == k + 3)
+  assert(a.count == k + 3)
 end
 
 
@@ -95,7 +95,7 @@ do
   a = {}
   for i = 1,lim do
     a[i] = 1
-    assert(#a == i)
+    assert(a.count == i)
     check(a, mp2(i), 0)
   end
 end
@@ -104,7 +104,7 @@ do
   local a = {}
   for i = 1,lim do
     a['a'..i] = 1
-    assert(#a == 0)
+    assert(a.count == 0)
     check(a, 0, mp2(i))
   end
 end
@@ -166,11 +166,11 @@ end
 
 
 -- test size operation on empty tables
-assert(#{} == 0)
-assert(#{nil} == 0)
-assert(#{nil, nil} == 0)
-assert(#{nil, nil, nil} == 0)
-assert(#{nil, nil, nil, nil} == 0)
+assert(({}).count == 0)
+assert(({nil}).count == 0)
+assert(({nil, nil}).count == 0)
+assert(({nil, nil, nil}).count == 0)
+assert(({nil, nil, nil, nil}).count == 0)
 print'+'
 
 
@@ -399,9 +399,9 @@ assert(next({}, nil) == nil)
 -- testing table.create and table.find
 do
   local t = table.create(5)
-  assert(#t == 0) -- filled with nil!
+  assert(t.count == 0) -- filled with nil!
   t[5] = 5
-  assert(#t == 5) -- magic
+  assert(t.count == 5) -- magic
 
   local t2 = table.create(5, "nice")
   assert(table.concat(t2,"!") == "nice!nice!nice!nice!nice")
@@ -524,45 +524,45 @@ do
   assert(getmetatable(t) == "nope")
 end
 
--- test #t
+-- test t.count
 do
   local t = table.create(10, 1)
-  assert(#t == 10)
+  assert(t.count == 10)
   t[5] = nil
-  assert(#t == 10)
+  assert(t.count == 10)
   t[10] = nil
-  assert(#t == 9)
+  assert(t.count == 9)
   t[9] = nil
   t[8] = nil
-  assert(#t == 7)
+  assert(t.count == 7)
 
   t = table.create(10)
-  assert(#t == 0)
+  assert(t.count == 0)
   t[1] = 1
-  assert(#t == 1)
+  assert(t.count == 1)
   t[2] = 1
-  assert(#t == 2)
+  assert(t.count == 2)
   t[3] = 1
   t[4] = 1
-  assert(#t == 4)
+  assert(t.count == 4)
 
   t = table.create(10)
-  assert(#t == 0)
+  assert(t.count == 0)
   table.insert(t, 1)
-  assert(#t == 1)
+  assert(t.count == 1)
   table.insert(t, 1)
-  assert(#t == 2)
+  assert(t.count == 2)
   table.insert(t, 1)
   table.insert(t, 1)
-  assert(#t == 4)
+  assert(t.count == 4)
 
   t = table.create(10, 1)
-  assert(#t == 10)
+  assert(t.count == 10)
   table.remove(t)
-  assert(#t == 9)
+  assert(t.count == 9)
   table.remove(t)
   table.remove(t)
-  assert(#t == 7)
+  assert(t.count == 7)
 end
 
 -- test clone
@@ -570,7 +570,7 @@ do
   local t = {a = 1, b = 2, 3, 4, 5}
   local tt = table.clone(t)
 
-  assert(#tt == 3)
+  assert(tt.count == 3)
   assert(tt.a == 1 and tt.b == 2)
 
   t.c = 3
@@ -610,7 +610,7 @@ do
   arr[1] = nil
   arr.a = 'a' -- trigger rehash
 
-  assert(#arr == 5) -- technically 0 is also valid, but it happens to be 5 because array capacity is 5
+  assert(arr.count == 5) -- technically 0 is also valid, but it happens to be 5 because array capacity is 5
 end
 
 -- test boundary invariant maintenance when replacing hash keys
@@ -620,7 +620,7 @@ do
   arr.a = nil
   arr[1] = 1 -- should rehash and resize array part, otherwise # won't find the boundary in array part
 
-  assert(#arr == 1)
+  assert(arr.count == 1)
 end
 
 -- test boundary invariant maintenance when table is filled from the end
@@ -628,16 +628,16 @@ do
   local arr = {}
   for i=5,2,-1 do
     arr[i] = i
-    assert(#arr == 0)
+    assert(arr.count == 0)
   end
   arr[1] = 1
-  assert(#arr == 5)
+  assert(arr.count == 5)
 end
 
 -- test boundary invariant maintenance when table is filled using SETLIST opcode
 do
   local arr = {[2]=2,1}
-  assert(#arr == 2)
+  assert(arr.count == 2)
 end
 
 -- test boundary invariant maintenance when table is filled using table.move
@@ -646,7 +646,7 @@ do
   local t2 = {[6] = 6}
 
   table.move(t1, 1, 5, 1, t2)
-  assert(#t2 == 6)
+  assert(t2.count == 6)
 end
 
 -- test boundary invariant in sparse arrays or various kinds

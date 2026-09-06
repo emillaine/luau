@@ -3563,7 +3563,7 @@ local foo = 8)");
 TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "TypeCorrectLocalReturn_assert")
 {
     const std::string source = R"()";
-    const std::string dest = R"(local function target(a: number, b: string) return a + #b end
+    const std::string dest = R"(local function target(a: number, b: string) return a + b.count end
 local function bar1(a: string) reutrn a .. 'x' end
 local function bar2(a: number) return -a end
 return target(bar@1)";
@@ -3586,7 +3586,7 @@ return target(bar@1)";
 TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "TypeCorrectLocalRank_assert")
 {
     const std::string source = R"()";
-    const std::string dest = R"(local function target(a: number, b: string) return a + #b end
+    const std::string dest = R"(local function target(a: number, b: string) return a + b.count end
 local bar1 = 'hello'
 local bar2 = 4
 return target(bar@1)";
@@ -4481,7 +4481,7 @@ type Pool = { numbers: { number }}
 
 local function foobar(p)
     local pool = p as Pool
-    if #pool
+    if pool.count
 end
 )";
     std::string dest = R"(
@@ -4489,7 +4489,7 @@ type Pool = { numbers: { number }}
 
 local function foobar(p)
     local pool = p as Pool
-    if #pool.@1
+    if pool.@1
 end
 )";
     autocompleteFragmentInBothSolvers(

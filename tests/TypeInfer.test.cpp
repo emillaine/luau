@@ -1416,7 +1416,7 @@ TEST_CASE_FIXTURE(Fixture, "dcr_delays_expansion_of_function_containing_blocked_
             local a = b[1] or 'Cn'
             local c = x[1]
 
-            if a:sub(1, #c) == c then
+            if a:sub(1, c.count) == c then
             end
         end
     )");
@@ -2176,10 +2176,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_has_indexer_can_create_cyclic_union")
                 repeat
                     _ = {[_[l0]] = _[_]}
                     return
-                until #next(_) < _
+                until (next(_)).count < _
             end
             local l0 = require(module0)
-        until #_[_](_) < next(_)
+        until _.count[_](_) < next(_)
     )"));
 }
 

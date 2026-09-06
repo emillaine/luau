@@ -270,7 +270,7 @@ else if _ then
     return l0(nil)
 else if 1 / l0(nil) then
 else if _ then
-    return #_,l0()
+    return _.count,l0()
 end
     )");
 

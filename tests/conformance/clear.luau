@@ -20,10 +20,10 @@ do
 	checkerror("table expected", table.clear)
 	checkerror("table expected", table.clear, 1, 2)
 
-	assert(#generateClearedTable(0, 0) == 0, "table array part should stay empty")
-	assert(#generateClearedTable(10, 0) == 0, "table array part should be empty (had array)")
-	assert(#generateClearedTable(0, 10) == 0, "table array part should be empty (had hash)")
-	assert(#generateClearedTable(10, 10) == 0, "table array part should be empty (had both)")
+	assert((generateClearedTable(0, 0)).count == 0, "table array part should stay empty")
+	assert((generateClearedTable(10, 0)).count == 0, "table array part should be empty (had array)")
+	assert((generateClearedTable(0, 10)).count == 0, "table array part should be empty (had hash)")
+	assert((generateClearedTable(10, 10)).count == 0, "table array part should be empty (had both)")
 
 	assert(next(generateClearedTable(0, 0)) == nil, "table hash part should stay empty")
 	assert(next(generateClearedTable(10, 0)) == nil, "table hash part should be empty (had array)")
@@ -36,7 +36,7 @@ do
 		local t2 = table.create(16)
 		t1[i] = true
 		t2[i] = true
-		assert(#t1 == #t2, "table length mismatch with i=" .. i .. "(" .. #t1 .. " vs " .. #t2 .. ")")
+		assert(t1.count == t2.count, "table length mismatch with i=" .. i .. "(" .. t1.count .. " vs " .. t2.count .. ")")
 	end
 
 	do
@@ -60,7 +60,7 @@ do
 		for i = 1, 40 do
 			tb[i] = i
 		end
-		assert(#tb == 40, "wrong array part size after expand")
+		assert(tb.count == 40, "wrong array part size after expand")
 	end
 
 	do -- Check expanding the hash part after clear

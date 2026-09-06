@@ -2074,6 +2074,63 @@ bool ConstraintSolver::tryDispatch(const HasPropConstraint& c, NotNull<const Con
     if (isBlocked(subjectType))
         return block(subjectType, constraint);
 
+    // `.count` magic: explicit field wins; otherwise length (number) on reads.
+    // Never block waiting for an explicit `count`: it cannot be created via
+    // assignment (read-only), so length fallback is final.
+    // Exception: free types block until concrete (to avoid polluting upper bounds
+    // with a synthetic `count` prop that would over-constrain generics like {T}).
+    if (c.prop == "count" && c.context == ValueContext::RValue)
+    {
+        // `never.count` is `number` (matches old `#never` semantics).
+        if (get<NeverType>(follow(subjectType)))
+        {
+            bind(constraint, resultType, builtinTypes->numberType);
+            return true;
+        }
+
+        bool hasExplicit = false;
+        if (auto tt = getTableType(subjectType))
+            hasExplicit = tt->props.find(c.prop) != tt->props.end();
+        else if (auto et = get<ExternType>(subjectType))
+            hasExplicit = lookupExternTypeProp(et, c.prop) != nullptr;
+        else if (auto mt = get<MetatableType>(subjectType))
+        {
+            if (auto mtt = getTableType(follow(mt->table)))
+                hasExplicit = mtt->props.find(c.prop) != mtt->props.end();
+        }
+        else if (get<FreeType>(follow(subjectType)))
+        {
+            // Free types resolve optimistically to number (matches old `#x`
+            // which tablified frees to tables); avoids polluting upper bounds
+            // with a synthetic `count` prop that would over-constrain generics.
+            bind(constraint, resultType, builtinTypes->numberType);
+            return true;
+        }
+
+        if (!hasExplicit)
+        {
+            DenseHashSet<TypeId> seenCount;
+            int rcCount = 0;
+            TypeId hlSubject = subjectType;
+            // Inferred literals/locals are often free types with concrete bounds
+            // (e.g. ("hello" <: 'a <: string)); check the bounds for length.
+            if (auto ft = get<FreeType>(follow(subjectType)))
+            {
+                TypeId ub = follow(ft->upperBound);
+                DenseHashSet<TypeId> seenUb;
+                int rcUb = 0;
+                if (hasLength(ub, seenUb, &rcUb))
+                    hlSubject = ub;
+            }
+            if (hasLength(hlSubject, seenCount, &rcCount))
+            {
+                bind(constraint, resultType, builtinTypes->numberType);
+                return true;
+            }
+        }
+        // else: explicit field exists — fall through to normal handling.
+    }
+
     if (const TableType* subjectTable = getTableType(subjectType))
     {
         if (subjectTable->state == TableState::Unsealed && subjectTable->remainingProps > 0 && subjectTable->props.count(c.prop) == 0)
@@ -2424,6 +2481,28 @@ bool ConstraintSolver::tryDispatch(const AssignPropConstraint& c, NotNull<const 
 
     if (isBlocked(lhsType))
         return block(lhsType, constraint);
+
+    // `.count` is read-only when no real field exists (field wins if present).
+    if (propName == "count")
+    {
+        bool hasRealProp = false;
+        if (auto tt = getTableType(lhsType))
+            hasRealProp = tt->props.find(propName) != tt->props.end();
+        else if (auto et = get<ExternType>(lhsType))
+            hasRealProp = lookupExternTypeProp(et, propName) != nullptr;
+        else if (auto mt = get<MetatableType>(lhsType))
+        {
+            if (auto mtt = getTableType(follow(mt->table)))
+                hasRealProp = mtt->props.find(propName) != mtt->props.end();
+        }
+
+        if (!hasRealProp)
+        {
+            reportError(GenericError{"Cannot assign to read-only property '.count'"}, constraint->location, *constraint->moduleName);
+            bind(constraint, c.propType, builtinTypes->errorType);
+            return true;
+        }
+    }
 
     // 1. lhsType is a class that already has the prop
     // 2. lhsType is a table that already has the prop (or a union or

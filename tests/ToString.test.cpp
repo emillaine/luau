@@ -689,7 +689,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_map")
     CheckResult result = check(R"(
         local function map(arr, fn)
             local t = {}
-            for i = 0, #arr do
+            for i = 0, arr.count do
                 t[i] = fn(arr[i])
             end
             return t
