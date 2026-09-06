@@ -1,5 +1,15 @@
 # AGENTS.md — fork context and workflow
 
+## Git workflow
+
+- Start each task on a feature branch created from the latest local `master`:
+  `git checkout -b <short-kebab-case-name> master`. If already on a
+  task-specific feature branch based on recent `master`, keep using it.
+- Commit each coherent change as its own commit as you go: one logical change
+  (code plus its tests, `.luau` migrations, and snapshot updates) is one commit;
+  unrelated fixes are separate commits.
+- Leave the feature branch checked out with `git status` clean, ready for review.
+
 ## What this repo is
 
 This is a **breaking-change fork of Luau** (`luau-lang/luau`), not upstream Luau.
