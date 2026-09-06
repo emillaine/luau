@@ -4136,6 +4136,13 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
         ty = *mtIndex;
     }
 
+    if (isBuffer(ty))
+    {
+        std::optional<TypeId> mtIndex = Luau::findMetatableEntry(builtinTypes, errors, builtinTypes->bufferType, "__index", location);
+        if (mtIndex)
+            ty = *mtIndex;
+    }
+
     if (auto tt = getTableType(ty))
     {
         if (auto resTy = findTablePropertyRespectingMeta(builtinTypes, errors, ty, prop, context, location, /* useNewSolver */ true))
@@ -4163,6 +4170,17 @@ PropertyType TypeChecker2::hasIndexTypeFromType(
             int rc = 0;
             if (hasLength(ty, seenCount, &rc))
                 return {NormalizationResult::True, {builtinTypes->numberType}};
+        }
+
+        // Method fallback: `t:insert(...)` resolves against the table library
+        // (minus constructors) when the table itself lacks the property.
+        if (context == ValueContext::RValue && builtinTypes->tableMethodTable)
+        {
+            if (const TableType* methods = get<TableType>(follow(*builtinTypes->tableMethodTable)))
+            {
+                if (auto it = methods->props.find(prop); it != methods->props.end() && it->second.readTy)
+                    return {NormalizationResult::True, {*it->second.readTy}};
+            }
         }
 
         return {NormalizationResult::False, {builtinTypes->unknownType}};

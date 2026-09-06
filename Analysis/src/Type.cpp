@@ -296,6 +296,14 @@ std::optional<TypeId> getMetatable(TypeId type, NotNull<BuiltinTypes> builtinTyp
         LUAU_ASSERT(ptv && ptv->metatable);
         return ptv->metatable;
     }
+    else if (isBuffer(type))
+    {
+        // The buffer metatable is attached after the definition file is loaded;
+        // it may be absent while checking the definition file itself.
+        auto ptv = get<PrimitiveType>(builtinTypes->bufferType);
+        if (ptv && ptv->metatable)
+            return ptv->metatable;
+    }
 
     return std::nullopt;
 }

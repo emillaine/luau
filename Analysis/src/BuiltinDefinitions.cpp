@@ -400,7 +400,27 @@ void registerBuiltinGlobals(Frontend& frontend, GlobalTypes& globals, bool typeC
         metatableTy->props["__mul"] = {makeIntersection(arena, mulOverloads)};
         metatableTy->props["__div"] = {makeIntersection(arena, mulOverloads)};
         metatableTy->props["__idiv"] = {makeIntersection(arena, mulOverloads)};
+
+        // Expose vector library functions (except the constructor) as methods, e.g. `v:magnitude()`
+        if (TableType* vecLib = getMutable<TableType>(getGlobalBinding(globals, "vector")))
+        {
+            const char* methods[] = {
+                "magnitude", "normalize", "cross", "dot", "angle", "floor", "ceil", "abs", "sign", "clamp", "max", "min",
+                "lerp", nullptr,
+            };
+
+            for (const char** name = methods; *name; ++name)
+            {
+                auto it = vecLib->props.find(*name);
+                if (it != vecLib->props.end())
+                    vectorCls->props[*name] = it->second;
+            }
+        }
     }
+
+    // Give `buffer` a metatable with `__index` pointing at the buffer library, mirroring strings.
+    // This makes `b:readu8(0)` typecheck the same as `buffer.readu8(b, 0)`.
+    attachBufferMetatable(builtinTypes, getGlobalBinding(globals, "buffer"));
 
     // next<K, V>(t: Table<K, V>, i: K?) -> (K?, V)
     TypePackId nextArgsTypePack = arena.addTypePack(TypePack{{mapOfKtoV, makeOption(builtinTypes, arena, genericK)}});
@@ -521,6 +541,19 @@ void registerBuiltinGlobals(Frontend& frontend, GlobalTypes& globals, bool typeC
         attachMagicFunction(*ttv->props["pack"].readTy, std::make_shared<MagicPack>());
         attachMagicFunction(*ttv->props["clone"].readTy, std::make_shared<MagicClone>());
         attachMagicFunction(*ttv->props["freeze"].readTy, std::make_shared<MagicFreeze>());
+
+        // Method table for `t:method()` calls: the table library minus constructors (create, pack).
+        // Consulted by the new solver when a table type is missing a property on a read.
+        TableType::Props methodProps;
+        for (auto& [name, prop] : ttv->props)
+        {
+            if (name != "create" && name != "pack")
+                methodProps[name] = prop;
+        }
+
+        TypeId methodTableTy = arena.addType(TableType{std::move(methodProps), std::nullopt, TypeLevel{}, TableState::Sealed});
+        builtinTypes->tableMethodTable = methodTableTy;
+        persist(methodTableTy);
     }
 
     TypeId requireTy = getGlobalBinding(globals, "require");
@@ -1209,9 +1242,31 @@ bool MagicPcall::infer(const MagicFunctionCallContext& ctx)
     return true;
 }
 
-TypeId makeStringMetatable(NotNull<BuiltinTypes> builtinTypes, SolverMode mode)
+void attachBufferMetatable(NotNull<BuiltinTypes> builtinTypes, TypeId bufferLibTy)
 {
+    // Method table mirrors the runtime one: the buffer library minus constructors.
+    TableType::Props methodProps;
+    if (const TableType* lib = get<TableType>(follow(bufferLibTy)))
+    {
+        for (auto& [name, prop] : lib->props)
+        {
+            if (name != "create" && name != "fromstring")
+                methodProps[name] = prop;
+        }
+    }
+
+    unfreeze(*builtinTypes->arena);
     NotNull<TypeArena> arena{builtinTypes->arena.get()};
+    TypeId methodsTy = arena->addType(TableType{std::move(methodProps), std::nullopt, TypeLevel{}, TableState::Sealed});
+    TypeId bufferMtTy = arena->addType(TableType{{{{"__index", {methodsTy}}}}, std::nullopt, TypeLevel{}, TableState::Sealed});
+    asMutable(builtinTypes->bufferType)->ty.emplace<PrimitiveType>(PrimitiveType::Buffer, bufferMtTy);
+    persist(methodsTy);
+    persist(bufferMtTy);
+    freeze(*builtinTypes->arena);
+}
+
+TypeId makeStringMetatable(NotNull<BuiltinTypes> builtinTypes, SolverMode mode)
+{    NotNull<TypeArena> arena{builtinTypes->arena.get()};
 
     const TypeId nilType = builtinTypes->nilType;
     const TypeId numberType = builtinTypes->numberType;
@@ -1678,7 +1733,8 @@ bool MagicClone::infer(const MagicFunctionCallContext& context)
     TypeArena* arena = context.solver->arena;
 
     const auto& [paramTypes, paramTail] = flatten(context.arguments);
-    if (paramTypes.empty() || context.callSite->args.size == 0)
+    size_t selfOffset = context.callSite->self ? 1 : 0;
+    if (paramTypes.empty() || context.callSite->args.size + selfOffset == 0)
     {
         if (FFlag::LuauCyclicRequireTypeInference)
             context.solver->reportError(CountMismatch{1, std::nullopt, 0}, context.callSite->argLocation, *context.constraint->moduleName);
@@ -1769,12 +1825,23 @@ bool MagicFreeze::infer(const MagicFunctionCallContext& context)
     Scope* scope = context.constraint->scope.get();
 
     const auto& [paramTypes, paramTail] = extendTypePack(*arena, context.solver->builtinTypes, context.arguments, 1);
-    if (paramTypes.empty() || context.callSite->args.size == 0)
+    if (paramTypes.empty() || context.callSite->args.size + (context.callSite->self ? 1 : 0) == 0)
         return false;
 
     TypeId inputType = follow(paramTypes[0]);
 
-    AstExpr* targetExpr = context.callSite->args.data[0];
+    AstExpr* targetExpr = nullptr;
+    if (context.callSite->self)
+    {
+        if (auto index = context.callSite->func->as<AstExprIndexName>())
+            targetExpr = unwrapGroup(index->expr);
+    }
+    else if (context.callSite->args.size > 0)
+        targetExpr = context.callSite->args.data[0];
+
+    if (!targetExpr)
+        return false;
+
     std::optional<DefId> resultDef = dfg->getDefOptional(targetExpr);
     std::optional<TypeId> resultTy = resultDef ? scope->lookup(*resultDef) : std::nullopt;
 
@@ -1850,7 +1917,8 @@ bool MagicFreeze::typeCheck(const MagicFunctionTypeCheckContext& ctx)
     // Also report error if there's more than 1 argument explicitly provided to table.freeze.
     if (paramTypes.size() > 1)
     {
-        ctx.typechecker->reportError(CountMismatch{1, 1, ctx.callSite->args.size, CountMismatch::Arg, false, "table.freeze"}, ctx.callSite->location);
+        size_t argCount = ctx.callSite->args.size + (ctx.callSite->self ? 1 : 0);
+        ctx.typechecker->reportError(CountMismatch{1, 1, argCount, CountMismatch::Arg, false, "table.freeze"}, ctx.callSite->location);
     }
 
     return true;

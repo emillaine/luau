@@ -1021,6 +1021,7 @@ struct BuiltinTypes
     TypePackId errorRecoveryTypePack(TypePackId guess) const;
 
     friend TypeId makeStringMetatable(NotNull<BuiltinTypes> builtinTypes, SolverMode mode);
+    friend void attachBufferMetatable(NotNull<BuiltinTypes> builtinTypes, TypeId bufferLibTy);
     friend struct GlobalTypes;
 
 private:
@@ -1062,6 +1063,10 @@ public:
     const TypePackId neverTypePack;
     const TypePackId uninhabitableTypePack;
     const TypePackId errorTypePack;
+
+    // Method table for `t:method()` calls on tables (table library minus constructors).
+    // Set up in registerBuiltinGlobals after the definition file is loaded.
+    std::optional<TypeId> tableMethodTable;
 };
 
 void persist(TypeId ty);

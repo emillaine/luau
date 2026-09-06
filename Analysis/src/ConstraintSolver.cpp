@@ -3583,6 +3583,22 @@ TablePropLookupResult ConstraintSolver::lookupTableProp(
                 return {/* blockedTypes */ {}, ttv->indexer->indexResultType, /* isIndex */ true};
         }
 
+        // Method fallback: `t:insert(...)` resolves against the table library
+        // (minus constructors) when the table itself lacks the property.
+        // Reads only; writes still extend the table. Checked before free-table
+        // inference so method calls don't pollute inferred shapes.
+        if (context == ValueContext::RValue && builtinTypes->tableMethodTable)
+        {
+            if (const TableType* methods = get<TableType>(follow(*builtinTypes->tableMethodTable)))
+            {
+                if (auto it = methods->props.find(propName); it != methods->props.end())
+                {
+                    if (auto rt = it->second.readTy)
+                        return {{}, rt};
+                }
+            }
+        }
+
         if (ttv->state == TableState::Free)
         {
             TypeId result = freshType(arena, builtinTypes, ttv->scope, Polarity::Mixed);
