@@ -3,16 +3,16 @@
 -- instruction into register defs/uses and control flow. Operands come from x86parse
 -- (already normalized to destination-first, so ops[1] is the destination).
 
-local x86 = {}
+x86 = {}
 
 -- Normalize a mnemonic to its base operation (strip AT&T size suffix; unify movz*/movs*).
-local BASE = {}
+BASE = {}
 for _, m in { "mov","add","sub","and","or","xor","sal","shl","sar","shr","cmp","test",
 	"lea","imul","inc","dec","neg","not","push","pop","adc","sbb","mul","idiv","div","ror","rol" } do
 	BASE[m] = m
 	BASE[m .. "b"] = m; BASE[m .. "w"] = m; BASE[m .. "l"] = m; BASE[m .. "q"] = m
 end
-local FIXED = {
+FIXED = {
 	movabs = "mov", movabsq = "mov",
 	movzx = "movzx", movsx = "movsx", movsxd = "movsx",
 	movzbl = "movzx", movzbw = "movzx", movzbq = "movzx", movzwl = "movzx", movzwq = "movzx",
@@ -33,28 +33,28 @@ function x86.baseMnemonic(m)
 	return m
 end
 
-local ALU2 = { add=true, sub=true, ["and"]=true, ["or"]=true, xor=true, sal=true, shl=true,
+ALU2 = { add=true, sub=true, ["and"]=true, ["or"]=true, xor=true, sal=true, shl=true,
 	sar=true, shr=true, imul=true, adc=true, sbb=true, ror=true, rol=true }
-local FLAGS_ONLY = { cmp=true, test=true }
-local DST_ONLY = { inc=true, dec=true, neg=true, ["not"]=true }
+FLAGS_ONLY = { cmp=true, test=true }
+DST_ONLY = { inc=true, dec=true, neg=true, ["not"]=true }
 -- condition -> whether it's an unsigned/eq branch we generate; classify only needs control.
-local COND_JMP = { jcc = true }
+COND_JMP = { jcc = true }
 
-local function isGpr(op) return op and op.kind == "reg" and op.rc == "gpr" end
+function isGpr(op) return op and op.kind == "reg" and op.rc == "gpr" end
 
-local function memRegs(op, uses)
+function memRegs(op, uses)
 	if op.base and isGpr(op.base) then table.insert(uses, op.base) end
 	if op.index and isGpr(op.index) then table.insert(uses, op.index) end
 end
 
 -- Classify. Returns { defs, uses, rmw, control, targets, fallsThrough }.
 function x86.classify(insn)
-	local m = x86.baseMnemonic(insn.mnemonic)
-	local ops = insn.operands or {}
-	local defs, uses, rmw = {}, {}, {}
-	local control, targets, fallsThrough = "none", nil, true
+	m = x86.baseMnemonic(insn.mnemonic)
+	ops = insn.operands or {}
+	defs, uses, rmw = {}, {}, {}
+	control, targets, fallsThrough = "none", nil, true
 
-	local function useOperand(o)
+	function useOperand(o)
 		if isGpr(o) then table.insert(uses, o) else if o and o.kind == "mem" then memRegs(o, uses) end
 	end
 
@@ -94,7 +94,7 @@ function x86.classify(insn)
 		if (ops[1] and ops[1].kind == "mem") and isGpr(ops[2]) then table.insert(uses, ops[2]) end
 		if m == "cmov" and isGpr(ops[1]) then table.insert(uses, ops[1]); table.insert(rmw, ops[1].num) end
 		for i = 2, #ops do
-			local o = ops[i]
+			o = ops[i]
 			if o and o.kind == "mem" then memRegs(o, uses)
 			else if isGpr(o) and not (ops[1] and ops[1].kind == "mem") then table.insert(uses, o) end
 		end
@@ -104,7 +104,7 @@ function x86.classify(insn)
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 	else
 		-- unknown: conservative (first reg def, rest use)
-		local first = true
+		first = true
 		for _, o in ops do
 			if isGpr(o) then
 				if first then table.insert(defs, o); first = false else table.insert(uses, o) end

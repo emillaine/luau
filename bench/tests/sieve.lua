@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
@@ -17,27 +17,27 @@ function test()
   function filter (p, g)
     return coroutine.wrap(function ()
       while 1 do
-        local n = g()
+        n = g()
         if n == nil then return end
-        if n % p ~= 0 then coroutine.yield(n) end
+        if n % p != 0 then coroutine.yield(n) end
       end
     end)
   end
 
-  local ts0 = os.clock()
+  ts0 = os.clock()
 
   for loops=1,100 do
     N = 1000
     x = gen(N)		-- generate primes up to N
     while 1 do
-      local n = x()		-- pick a number until done
+      n = x()		-- pick a number until done
       if n == nil then break end
       -- print(n)		-- must be a prime number
       x = filter(n, x)	-- now remove its multiples
     end
   end
 
-  local ts1 = os.clock()
+  ts1 = os.clock()
 
   return ts1-ts0
 end

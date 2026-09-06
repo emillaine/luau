@@ -21,20 +21,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
 
-local random, floor = math.random, math.floor
+random, floor = math.random, math.floor
 floor = math.ifloor or floor
 
 function heapsort(n, ra)
-    local j, i, rra
-    local l = floor(n/2) + 1
+    j, i, rra = nil, nil, nil
+    l = floor(n/2) + 1
     -- local l = (n//2) + 1
-    local ir = n;
+    ir = n;
     while 1 do
         if l > 1 then
             l = l - 1
@@ -66,10 +66,10 @@ function heapsort(n, ra)
     end
 end
 
-local Num = tonumber((arg and arg[1])) or 4
+Num = tonumber((arg and arg[1])) or 4
 for i=1,Num do
-  local N = tonumber((arg and arg[2])) or 10000
-  local a = {}
+  N = tonumber((arg and arg[2])) or 10000
+  a = {}
   for i=1,N do a[i] = random() end
   heapsort(N, a)
   for i=1,N-1 do assert(a[i] <= a[i+1]) end

@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -7,10 +7,10 @@ function test()
     -- https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
     --contributed by Mike Pall
 
-    local PI = 3.141592653589793
-    local SOLAR_MASS = 4 * PI * PI
-    local DAYS_PER_YEAR = 365.24
-    local bodies = {
+    PI = 3.141592653589793
+    SOLAR_MASS = 4 * PI * PI
+    DAYS_PER_YEAR = 365.24
+    bodies = {
         { --Sun
         x = 0,
         y = 0,
@@ -58,17 +58,17 @@ function test()
         }
     }
 
-    local function advance(bodies, nbody, dt)
+    function advance(bodies, nbody, dt)
         for i = 1, nbody do
-            local bi = bodies[i]
-            local bix, biy, biz, bimass = bi.x, bi.y, bi.z, bi.mass
-            local bivx, bivy, bivz = bi.vx, bi.vy, bi.vz
+            bi = bodies[i]
+            bix, biy, biz, bimass = bi.x, bi.y, bi.z, bi.mass
+            bivx, bivy, bivz = bi.vx, bi.vy, bi.vz
             for j = i + 1, nbody do
-                local bj = bodies[j]
-                local dx, dy, dz = bix - bj.x, biy - bj.y, biz - bj.z
-                local distance = math.sqrt(dx*dx + dy*dy + dz*dz)
-                local mag = dt / (distance * distance * distance)
-                local bim, bjm = bimass*mag, bj.mass*mag
+                bj = bodies[j]
+                dx, dy, dz = bix - bj.x, biy - bj.y, biz - bj.z
+                distance = math.sqrt(dx*dx + dy*dy + dz*dz)
+                mag = dt / (distance * distance * distance)
+                bim, bjm = bimass*mag, bj.mass*mag
                 bivx = bivx - (dx * bjm)
                 bivy = bivy - (dy * bjm)
                 bivz = bivz - (dz * bjm)
@@ -81,34 +81,34 @@ function test()
             bi.vz = bivz
         end
         for i = 1, nbody do
-            local bi = bodies[i]
+            bi = bodies[i]
             bi.x = bi.x + (dt * bi.vx)
             bi.y = bi.y + (dt * bi.vy)
             bi.z = bi.z + (dt * bi.vz)
         end
     end
 
-    local function energy(bodies, nbody)
-        local e = 0
+    function energy(bodies, nbody)
+        e = 0
         for i = 1, nbody do
-            local bi = bodies[i]
-            local vx, vy, vz, bim = bi.vx, bi.vy, bi.vz, bi.mass
+            bi = bodies[i]
+            vx, vy, vz, bim = bi.vx, bi.vy, bi.vz, bi.mass
             e = e + (0.5 * bim * (vx*vx + vy*vy + vz*vz))
             for j = i + 1, nbody do
-                local bj = bodies[j]
-                local dx, dy, dz = bi.x - bj.x, bi.y - bj.y, bi.z - bj.z
-                local distance = math.sqrt(dx*dx + dy*dy + dz*dz)
+                bj = bodies[j]
+                dx, dy, dz = bi.x - bj.x, bi.y - bj.y, bi.z - bj.z
+                distance = math.sqrt(dx*dx + dy*dy + dz*dz)
                 e = e - ((bim * bj.mass) / distance)
             end
         end
         return e
     end
 
-    local function offsetMomentum(b, nbody)
-        local px, py, pz = 0, 0, 0
+    function offsetMomentum(b, nbody)
+        px, py, pz = 0, 0, 0
         for i = 1, nbody do
-            local bi = b[i]
-            local bim = bi.mass
+            bi = b[i]
+            bim = bi.mass
             px = px + (bi.vx * bim)
             py = py + (bi.vy * bim)
             pz = pz + (bi.vz * bim)
@@ -118,13 +118,13 @@ function test()
         b[1].vz = -pz / SOLAR_MASS
     end
 
-    local N = 20000
-    local nbody = #bodies
+    N = 20000
+    nbody = #bodies
 
-    local ts0 = os.clock()
+    ts0 = os.clock()
     offsetMomentum(bodies, nbody)
     for i = 1, N do advance(bodies, nbody, 0.01) end
-    local ts1 = os.clock()
+    ts1 = os.clock()
 
     assert(math.abs(energy(bodies, nbody) + 0.169089263) < 1e-6)
 

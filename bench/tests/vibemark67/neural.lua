@@ -1,86 +1,86 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
-local tensorMod = require("./neural-dir/tensor")
-local layers = require("./neural-dir/layers")
-local activations = require("./neural-dir/activations")
-local optimizer = require("./neural-dir/optimizer")
+tensorMod = require("./neural-dir/tensor")
+layers = require("./neural-dir/layers")
+activations = require("./neural-dir/activations")
+optimizer = require("./neural-dir/optimizer")
 
 function test()
 
 -- Neural network benchmark: train a multi-layer network on procedurally generated data
 
-local Tensor = tensorMod.Tensor
+Tensor = tensorMod.Tensor
 
-local BATCH_SIZE = 32
-local INPUT_SIZE = 64
-local HIDDEN1_SIZE = 128
-local HIDDEN2_SIZE = 64
-local OUTPUT_SIZE = 10
-local NUM_EPOCHS = 5
-local NUM_BATCHES = 5
+BATCH_SIZE = 32
+INPUT_SIZE = 64
+HIDDEN1_SIZE = 128
+HIDDEN2_SIZE = 64
+OUTPUT_SIZE = 10
+NUM_EPOCHS = 5
+NUM_BATCHES = 5
 
-local seed = 42424242
+seed = 42424242
 
-local function generateBatch(batchSize: number, inputSize: number, outputSize: number): (typeof(Tensor.new(1,1)), typeof(Tensor.new(1,1)), number)
-    local input
+function generateBatch(batchSize: number, inputSize: number, outputSize: number): (typeof(Tensor.new(1,1)), typeof(Tensor.new(1,1)), number)
+    input = nil
     input, seed = Tensor.randomNormal(batchSize, inputSize, seed, 1.0)
-    local targets = Tensor.new(batchSize, outputSize)
+    targets = Tensor.new(batchSize, outputSize)
     for i = 1, batchSize do
-        local sum = 0
-        local offset = (i - 1) * inputSize
+        sum = 0
+        offset = (i - 1) * inputSize
         for j = 1, inputSize do
             sum += input.data[offset + j]
         end
-        local classIdx = (math.floor(math.abs(sum * 100)) % outputSize) + 1
+        classIdx = (math.floor(math.abs(sum * 100)) % outputSize) + 1
         targets.data[(i - 1) * outputSize + classIdx] = 1
     end
     return input, targets, seed
 end
 
-local dense1
+dense1 = nil
 dense1, seed = layers.createDense(INPUT_SIZE, HIDDEN1_SIZE, seed)
-local dense2
+dense2 = nil
 dense2, seed = layers.createDense(HIDDEN1_SIZE, HIDDEN2_SIZE, seed)
-local dense3
+dense3 = nil
 dense3, seed = layers.createDense(HIDDEN2_SIZE, OUTPUT_SIZE, seed)
 
-local adam1 = optimizer.createAdam(0.001)
-local adam2 = optimizer.createAdam(0.001)
-local adam3 = optimizer.createAdam(0.001)
+adam1 = optimizer.createAdam(0.001)
+adam2 = optimizer.createAdam(0.001)
+adam3 = optimizer.createAdam(0.001)
 
-local totalLoss = 0
-local totalBatches = 0
+totalLoss = 0
+totalBatches = 0
 
 for epoch = 1, NUM_EPOCHS do
-    local epochLoss = 0
+    epochLoss = 0
 
     for batch = 1, NUM_BATCHES do
-        local input, targets
+        input, targets = nil, nil
         input, targets, seed = generateBatch(BATCH_SIZE, INPUT_SIZE, OUTPUT_SIZE)
 
         -- Forward pass
-        local z1 = layers.denseForward(dense1, input)
-        local a1 = activations.applyActivation(z1, "relu")
+        z1 = layers.denseForward(dense1, input)
+        a1 = activations.applyActivation(z1, "relu")
 
-        local z2 = layers.denseForward(dense2, a1)
-        local a2 = activations.applyActivation(z2, "leaky_relu")
+        z2 = layers.denseForward(dense2, a1)
+        a2 = activations.applyActivation(z2, "leaky_relu")
 
-        local z3 = layers.denseForward(dense3, a2)
-        local output = activations.softmax(z3)
+        z3 = layers.denseForward(dense3, a2)
+        output = activations.softmax(z3)
 
         -- Loss (cross-entropy approximated by MSE for simplicity)
-        local loss = Tensor.meanSquaredError(output, targets)
+        loss = Tensor.meanSquaredError(output, targets)
         epochLoss += loss
 
         -- Backward pass
-        local gradOutput = Tensor.sub(output, targets):mulScalar(2.0 / (BATCH_SIZE * OUTPUT_SIZE))
+        gradOutput = Tensor.sub(output, targets):mulScalar(2.0 / (BATCH_SIZE * OUTPUT_SIZE))
 
-        local gradZ3 = gradOutput
-        local gradA2 = layers.denseBackward(dense3, gradZ3)
-        local gradZ2 = Tensor.hadamard(gradA2, activations.applyActivationDeriv(z2, "leaky_relu"))
-        local gradA1 = layers.denseBackward(dense2, gradZ2)
-        local gradZ1 = Tensor.hadamard(gradA1, activations.applyActivationDeriv(z1, "relu"))
+        gradZ3 = gradOutput
+        gradA2 = layers.denseBackward(dense3, gradZ3)
+        gradZ2 = Tensor.hadamard(gradA2, activations.applyActivationDeriv(z2, "leaky_relu"))
+        gradA1 = layers.denseBackward(dense2, gradZ2)
+        gradZ1 = Tensor.hadamard(gradA1, activations.applyActivationDeriv(z1, "relu"))
         layers.denseBackward(dense1, gradZ1)
 
         -- Adam updates
@@ -97,10 +97,10 @@ for epoch = 1, NUM_EPOCHS do
     totalLoss += epochLoss / NUM_BATCHES
 end
 
-local avgLoss = totalLoss / NUM_EPOCHS
+avgLoss = totalLoss / NUM_EPOCHS
 print(string.format("Neural benchmark complete: %d epochs, %d batches, avg_loss=%.17g", NUM_EPOCHS, totalBatches, avgLoss))
 
-if avgLoss ~= 0.099400851977591437 then
+if avgLoss != 0.099400851977591437 then
     error("Bad result")
 end
 

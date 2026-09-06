@@ -1,5 +1,33 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+-- forward declarations (implicit-local dialect has no hoisted globals)
+callFunction = nil
+evalAssign = nil
+evalBinary = nil
+evalBlock = nil
+evalCall = nil
+evalClassDecl = nil
+evalField = nil
+evalMethod = nil
+evalNode = nil
+evalUnary = nil
+lookupMethod = nil
+parseAddSub = nil
+parseAnd = nil
+parseArgs = nil
+parseClass = nil
+parseComparison = nil
+parseEquality = nil
+parseExpr = nil
+parseFor = nil
+parseIf = nil
+parseMulDiv = nil
+parseOr = nil
+parsePostfix = nil
+parsePrimary = nil
+parseStatement = nil
+parseUnary = nil
+parseWhile = nil
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -8,14 +36,14 @@ function test()
 -- A complete interpreter for the Zef programming language.
 -- Compatible with: Luau (lute), Lua 5.1+, LuaJIT
 
-local clock = os.clock
-local floor = math.floor
-local concat = table.concat
-local sub = string.sub
-local byte = string.byte
-local char = string.char
-local find = string.find
-local format = string.format
+clock = os.clock
+floor = math.floor
+concat = table.concat
+sub = string.sub
+byte = string.byte
+char = string.char
+find = string.find
+format = string.format
 
 -- ============================================================================
 -- LEXER
@@ -81,13 +109,13 @@ function isAlnum(c)
 end
 
 function tokenize(source)
-    local tokens = {}
-    local pos = 1
-    local len = #source
-    local tcount = 0
+    tokens = {}
+    pos = 1
+    len = #source
+    tcount = 0
 
     while pos <= len do
-        local c = byte(source, pos)
+        c = byte(source, pos)
 
         -- Skip whitespace
         if c == 32 or c == 9 or c == 10 or c == 13 then
@@ -96,13 +124,13 @@ function tokenize(source)
         -- Skip single-line comments
         else if c == 47 and pos < len and byte(source, pos + 1) == 47 then
             pos = pos + 2
-            while pos <= len and byte(source, pos) ~= 10 do
+            while pos <= len and byte(source, pos) != 10 do
                 pos = pos + 1
             end
 
         -- Numbers
         else if isDigit(c) then
-            local start = pos
+            start = pos
             while pos <= len and isDigit(byte(source, pos)) do
                 pos = pos + 1
             end
@@ -118,13 +146,13 @@ function tokenize(source)
         -- Strings
         else if c == 34 then
             pos = pos + 1
-            local parts = {}
-            local pcount = 0
-            while pos <= len and byte(source, pos) ~= 34 do
-                local ch = byte(source, pos)
+            parts = {}
+            pcount = 0
+            while pos <= len and byte(source, pos) != 34 do
+                ch = byte(source, pos)
                 if ch == 92 then -- backslash
                     pos = pos + 1
-                    local esc = byte(source, pos)
+                    esc = byte(source, pos)
                     if esc == 110 then pcount = pcount + 1; parts[pcount] = "\n"
                     else if esc == 116 then pcount = pcount + 1; parts[pcount] = "\t"
                     else if esc == 34 then pcount = pcount + 1; parts[pcount] = "\""
@@ -143,11 +171,11 @@ function tokenize(source)
 
         -- Identifiers and keywords
         else if isAlpha(c) then
-            local start = pos
+            start = pos
             while pos <= len and isAlnum(byte(source, pos)) do
                 pos = pos + 1
             end
-            local word = sub(source, start, pos - 1)
+            word = sub(source, start, pos - 1)
             tcount = tcount + 1
             tokens[tcount] = {TK_IDENT, word}
 
@@ -225,7 +253,7 @@ ND_CLASS = "class"
 ND_PRINTLN = "println"
 
 function createParser(tokens)
-    local p = {}
+    p = {}
     p.tokens = tokens
     p.pos = 1
     return p
@@ -240,14 +268,14 @@ function peekType(p)
 end
 
 function advance(p)
-    local t = p.tokens[p.pos]
+    t = p.tokens[p.pos]
     p.pos = p.pos + 1
     return t
 end
 
 function expect(p, tktype)
-    local t = p.tokens[p.pos]
-    if t[1] ~= tktype then
+    t = p.tokens[p.pos]
+    if t[1] != tktype then
         error("Parser error: expected token type " .. tostring(tktype) .. " got " .. tostring(t[1]) .. " at pos " .. p.pos)
     end
     p.pos = p.pos + 1
@@ -255,8 +283,8 @@ function expect(p, tktype)
 end
 
 function expectIdent(p, val)
-    local t = p.tokens[p.pos]
-    if t[1] ~= TK_IDENT or t[2] ~= val then
+    t = p.tokens[p.pos]
+    if t[1] != TK_IDENT or t[2] != val then
         error("Parser error: expected '" .. val .. "' at pos " .. p.pos)
     end
     p.pos = p.pos + 1
@@ -264,7 +292,7 @@ function expectIdent(p, val)
 end
 
 function isIdent(p, val)
-    local t = p.tokens[p.pos]
+    t = p.tokens[p.pos]
     return t[1] == TK_IDENT and t[2] == val
 end
 
@@ -279,9 +307,9 @@ end
 -- Parse a parameter list: (a, b, c)
 function parseParams(p)
     expect(p, TK_LPAREN)
-    local params = {}
-    local pc = 0
-    if peekType(p) ~= TK_RPAREN then
+    params = {}
+    pc = 0
+    if peekType(p) != TK_RPAREN then
         pc = pc + 1
         params[pc] = expect(p, TK_IDENT)[2]
         while matchToken(p, TK_COMMA) do
@@ -296,9 +324,9 @@ end
 -- Parse a block: { stmts }
 function parseBlock(p)
     expect(p, TK_LBRACE)
-    local stmts = {}
-    local sc = 0
-    while peekType(p) ~= TK_RBRACE and peekType(p) ~= TK_EOF do
+    stmts = {}
+    sc = 0
+    while peekType(p) != TK_RBRACE and peekType(p) != TK_EOF do
         sc = sc + 1
         stmts[sc] = parseStatement(p)
     end
@@ -312,29 +340,29 @@ function parseFuncBody(p)
         return parseBlock(p)
     else
         -- expression-bodied function
-        local expr = parseExpr(p)
+        expr = parseExpr(p)
         return {ND_BLOCK, {{ND_RETURN, expr}}}
     end
 end
 
 function parseStatement(p)
-    local tk = peek(p)
+    tk = peek(p)
 
     -- Variable declaration: my x = expr
     if tk[1] == TK_IDENT and tk[2] == KW_MY then
         advance(p)
-        local name = expect(p, TK_IDENT)[2]
+        name = expect(p, TK_IDENT)[2]
         expect(p, TK_ASSIGN)
-        local val = parseExpr(p)
+        val = parseExpr(p)
         matchToken(p, TK_SEMI)
         return {ND_VARDECL, name, val}
 
     -- Function declaration: fn name(args) { body }
     else if tk[1] == TK_IDENT and tk[2] == KW_FN then
         advance(p)
-        local name = expect(p, TK_IDENT)[2]
-        local params = parseParams(p)
-        local body = parseFuncBody(p)
+        name = expect(p, TK_IDENT)[2]
+        params = parseParams(p)
+        body = parseFuncBody(p)
         matchToken(p, TK_SEMI)
         return {ND_VARDECL, name, {ND_FUNC, params, body, name}}
 
@@ -363,8 +391,8 @@ function parseStatement(p)
     -- Return statement
     else if tk[1] == TK_IDENT and tk[2] == KW_RETURN then
         advance(p)
-        local val = nil
-        if peekType(p) ~= TK_SEMI and peekType(p) ~= TK_RBRACE and peekType(p) ~= TK_EOF then
+        val = nil
+        if peekType(p) != TK_SEMI and peekType(p) != TK_RBRACE and peekType(p) != TK_EOF then
             val = parseExpr(p)
         end
         matchToken(p, TK_SEMI)
@@ -374,18 +402,18 @@ function parseStatement(p)
     else if tk[1] == TK_IDENT and tk[2] == KW_PRINTLN then
         advance(p)
         expect(p, TK_LPAREN)
-        local val = parseExpr(p)
+        val = parseExpr(p)
         expect(p, TK_RPAREN)
         matchToken(p, TK_SEMI)
         return {ND_PRINTLN, val}
 
     -- Expression statement (assignment or call)
     else
-        local expr = parseExpr(p)
+        expr = parseExpr(p)
         -- Check for assignment
         if peekType(p) == TK_ASSIGN then
             advance(p)
-            local val = parseExpr(p)
+            val = parseExpr(p)
             matchToken(p, TK_SEMI)
             return {ND_ASSIGN, expr, val}
         end
@@ -396,24 +424,24 @@ end
 
 function parseClass(p)
     advance(p) -- skip 'class'
-    local name = expect(p, TK_IDENT)[2]
-    local parent = nil
+    name = expect(p, TK_IDENT)[2]
+    parent = nil
     if matchToken(p, TK_COLON) then
         parent = expect(p, TK_IDENT)[2]
     end
     expect(p, TK_LBRACE)
 
-    local fields = {}
-    local fcount = 0
-    local methods = {}
-    local mcount = 0
-    local constructor = nil
+    fields = {}
+    fcount = 0
+    methods = {}
+    mcount = 0
+    constructor = nil
 
-    while peekType(p) ~= TK_RBRACE and peekType(p) ~= TK_EOF do
-        local tk2 = peek(p)
+    while peekType(p) != TK_RBRACE and peekType(p) != TK_EOF do
+        tk2 = peek(p)
         if tk2[1] == TK_IDENT and tk2[2] == KW_READABLE then
             advance(p)
-            local fname = expect(p, TK_IDENT)[2]
+            fname = expect(p, TK_IDENT)[2]
             matchToken(p, TK_SEMI)
             fcount = fcount + 1
             fields[fcount] = fname
@@ -422,15 +450,15 @@ function parseClass(p)
             -- Check if it's a named method or constructor
             if peekType(p) == TK_LPAREN then
                 -- Constructor: fn(args) { body }
-                local params = parseParams(p)
-                local body = parseFuncBody(p)
+                params = parseParams(p)
+                body = parseFuncBody(p)
                 matchToken(p, TK_SEMI)
                 constructor = {params, body}
             else
                 -- Named method: fn name(args) { body }
-                local mname = expect(p, TK_IDENT)[2]
-                local params = parseParams(p)
-                local body = parseFuncBody(p)
+                mname = expect(p, TK_IDENT)[2]
+                params = parseParams(p)
+                body = parseFuncBody(p)
                 matchToken(p, TK_SEMI)
                 mcount = mcount + 1
                 methods[mcount] = {mname, params, body}
@@ -448,10 +476,10 @@ end
 function parseIf(p)
     advance(p) -- skip 'if'
     expect(p, TK_LPAREN)
-    local cond = parseExpr(p)
+    cond = parseExpr(p)
     expect(p, TK_RPAREN)
-    local thenBlock = parseBlock(p)
-    local elseBlock = nil
+    thenBlock = parseBlock(p)
+    elseBlock = nil
     if isIdent(p, KW_ELSE) then
         advance(p)
         if isIdent(p, KW_IF) then
@@ -466,9 +494,9 @@ end
 function parseWhile(p)
     advance(p) -- skip 'while'
     expect(p, TK_LPAREN)
-    local cond = parseExpr(p)
+    cond = parseExpr(p)
     expect(p, TK_RPAREN)
-    local body = parseBlock(p)
+    body = parseBlock(p)
     return {ND_WHILE, cond, body}
 end
 
@@ -476,18 +504,18 @@ function parseFor(p)
     advance(p) -- skip 'for'
     expect(p, TK_LPAREN)
     -- init: my x = expr or expr
-    local init = nil
+    init = nil
     if isIdent(p, KW_MY) then
         advance(p)
-        local name = expect(p, TK_IDENT)[2]
+        name = expect(p, TK_IDENT)[2]
         expect(p, TK_ASSIGN)
-        local val = parseExpr(p)
+        val = parseExpr(p)
         init = {ND_VARDECL, name, val}
     else
-        local expr = parseExpr(p)
+        expr = parseExpr(p)
         if peekType(p) == TK_ASSIGN then
             advance(p)
-            local val = parseExpr(p)
+            val = parseExpr(p)
             init = {ND_ASSIGN, expr, val}
         else
             init = expr
@@ -495,20 +523,20 @@ function parseFor(p)
     end
     expect(p, TK_SEMI)
     -- condition
-    local cond = parseExpr(p)
+    cond = parseExpr(p)
     expect(p, TK_SEMI)
     -- step: usually assignment
-    local stepExpr = parseExpr(p)
-    local step
+    stepExpr = parseExpr(p)
+    step = nil
     if peekType(p) == TK_ASSIGN then
         advance(p)
-        local val = parseExpr(p)
+        val = parseExpr(p)
         step = {ND_ASSIGN, stepExpr, val}
     else
         step = stepExpr
     end
     expect(p, TK_RPAREN)
-    local body = parseBlock(p)
+    body = parseBlock(p)
     return {ND_FOR, init, cond, step, body}
 end
 
@@ -517,29 +545,29 @@ function parseExpr(p)
 end
 
 function parseOr(p)
-    local left = parseAnd(p)
+    left = parseAnd(p)
     while peekType(p) == TK_OR do
         advance(p)
-        local right = parseAnd(p)
+        right = parseAnd(p)
         left = {ND_BINARY, "||", left, right}
     end
     return left
 end
 
 function parseAnd(p)
-    local left = parseEquality(p)
+    left = parseEquality(p)
     while peekType(p) == TK_AND do
         advance(p)
-        local right = parseEquality(p)
+        right = parseEquality(p)
         left = {ND_BINARY, "&&", left, right}
     end
     return left
 end
 
 function parseEquality(p)
-    local left = parseComparison(p)
+    left = parseComparison(p)
     while true do
-        local tt = peekType(p)
+        tt = peekType(p)
         if tt == TK_EQ then
             advance(p); left = {ND_BINARY, "==", left, parseComparison(p)}
         else if tt == TK_NE then
@@ -552,9 +580,9 @@ function parseEquality(p)
 end
 
 function parseComparison(p)
-    local left = parseAddSub(p)
+    left = parseAddSub(p)
     while true do
-        local tt = peekType(p)
+        tt = peekType(p)
         if tt == TK_GT then
             advance(p); left = {ND_BINARY, ">", left, parseAddSub(p)}
         else if tt == TK_LT then
@@ -571,9 +599,9 @@ function parseComparison(p)
 end
 
 function parseAddSub(p)
-    local left = parseMulDiv(p)
+    left = parseMulDiv(p)
     while true do
-        local tt = peekType(p)
+        tt = peekType(p)
         if tt == TK_PLUS then
             advance(p); left = {ND_BINARY, "+", left, parseMulDiv(p)}
         else if tt == TK_MINUS then
@@ -586,9 +614,9 @@ function parseAddSub(p)
 end
 
 function parseMulDiv(p)
-    local left = parseUnary(p)
+    left = parseUnary(p)
     while true do
-        local tt = peekType(p)
+        tt = peekType(p)
         if tt == TK_STAR then
             advance(p); left = {ND_BINARY, "*", left, parseUnary(p)}
         else if tt == TK_SLASH then
@@ -603,40 +631,40 @@ function parseMulDiv(p)
 end
 
 function parseUnary(p)
-    local tt = peekType(p)
+    tt = peekType(p)
     if tt == TK_NOT then
         advance(p)
-        local operand = parseUnary(p)
+        operand = parseUnary(p)
         return {ND_UNARY, "!", operand}
     else if tt == TK_MINUS then
         advance(p)
-        local operand = parseUnary(p)
+        operand = parseUnary(p)
         return {ND_UNARY, "-", operand}
     end
     return parsePostfix(p)
 end
 
 function parsePostfix(p)
-    local expr = parsePrimary(p)
+    expr = parsePrimary(p)
     while true do
-        local tt = peekType(p)
+        tt = peekType(p)
         if tt == TK_DOT then
             advance(p)
-            local field = expect(p, TK_IDENT)[2]
+            field = expect(p, TK_IDENT)[2]
             -- Check if it's a method call
             if peekType(p) == TK_LPAREN then
-                local args = parseArgs(p)
+                args = parseArgs(p)
                 expr = {ND_METHOD, expr, field, args}
             else
                 expr = {ND_FIELD, expr, field}
             end
         else if tt == TK_LBRACKET then
             advance(p)
-            local idx = parseExpr(p)
+            idx = parseExpr(p)
             expect(p, TK_RBRACKET)
             expr = {ND_INDEX, expr, idx}
         else if tt == TK_LPAREN then
-            local args = parseArgs(p)
+            args = parseArgs(p)
             expr = {ND_CALL, expr, args}
         else
             break
@@ -647,9 +675,9 @@ end
 
 function parseArgs(p)
     expect(p, TK_LPAREN)
-    local args = {}
-    local ac = 0
-    if peekType(p) ~= TK_RPAREN then
+    args = {}
+    ac = 0
+    if peekType(p) != TK_RPAREN then
         ac = ac + 1
         args[ac] = parseExpr(p)
         while matchToken(p, TK_COMMA) do
@@ -662,7 +690,7 @@ function parseArgs(p)
 end
 
 function parsePrimary(p)
-    local tk = peek(p)
+    tk = peek(p)
 
     if tk[1] == TK_NUMBER then
         advance(p)
@@ -673,7 +701,7 @@ function parsePrimary(p)
         return {ND_STRING, tk[2]}
 
     else if tk[1] == TK_IDENT then
-        local val = tk[2]
+        val = tk[2]
         if val == KW_NULL then
             advance(p)
             return {ND_NULL}
@@ -686,8 +714,8 @@ function parsePrimary(p)
         else if val == KW_FN then
             advance(p)
             -- Lambda: fn(args) { body } or fn(args) expr
-            local params = parseParams(p)
-            local body = parseFuncBody(p)
+            params = parseParams(p)
+            body = parseFuncBody(p)
             return {ND_FUNC, params, body, nil}
         else
             advance(p)
@@ -696,15 +724,15 @@ function parsePrimary(p)
 
     else if tk[1] == TK_LPAREN then
         advance(p)
-        local expr = parseExpr(p)
+        expr = parseExpr(p)
         expect(p, TK_RPAREN)
         return expr
 
     else if tk[1] == TK_LBRACKET then
         advance(p)
-        local elems = {}
-        local ec = 0
-        if peekType(p) ~= TK_RBRACKET then
+        elems = {}
+        ec = 0
+        if peekType(p) != TK_RBRACKET then
             ec = ec + 1
             elems[ec] = parseExpr(p)
             while matchToken(p, TK_COMMA) do
@@ -721,9 +749,9 @@ function parsePrimary(p)
 end
 
 function parseProgram(p)
-    local stmts = {}
-    local sc = 0
-    while peekType(p) ~= TK_EOF do
+    stmts = {}
+    sc = 0
+    while peekType(p) != TK_EOF do
         sc = sc + 1
         stmts[sc] = parseStatement(p)
     end
@@ -762,10 +790,10 @@ function newEnv(parent)
 end
 
 function envGet(env, name)
-    local e = env
+    e = env
     while e do
-        local v = e.vars[name]
-        if v ~= nil then
+        v = e.vars[name]
+        if v != nil then
             return v
         end
         e = e.parent
@@ -774,9 +802,9 @@ function envGet(env, name)
 end
 
 function envSet(env, name, val)
-    local e = env
+    e = env
     while e do
-        if e.vars[name] ~= nil then
+        if e.vars[name] != nil then
             e.vars[name] = val
             return
         end
@@ -793,7 +821,7 @@ end
 function isTruthy(val)
     if val == nil or val == 0 or val == false then return false end
     if val == true then return true end
-    if type(val) == "number" then return val ~= 0 end
+    if type(val) == "number" then return val != 0 end
     return true
 end
 
@@ -811,16 +839,16 @@ function toZefString(val)
     if type(val) == "string" then return val end
     if type(val) == "table" then
         if val._isArray then
-            local parts = {}
+            parts = {}
             for i = 1, val._size do
                 parts[i] = toZefString(val._data[i])
             end
             return "[" .. concat(parts, ", ") .. "]"
         end
         if val._isInstance then
-            local cls = val._class
+            cls = val._class
             -- Check for toString method
-            local toStr = lookupMethod(val, "toString")
+            toStr = lookupMethod(val, "toString")
             if toStr then
                 return callFunction(toStr, {val}, nil)
             end
@@ -835,7 +863,7 @@ function toZefString(val)
 end
 
 function makeArray(elems)
-    local arr = {_isArray = true, _data = {}, _size = 0}
+    arr = {_isArray = true, _data = {}, _size = 0}
     if elems then
         for i = 1, #elems do
             arr._data[i] = elems[i]
@@ -861,7 +889,7 @@ end
 
 -- Class / instance helpers
 function makeClass(name, parent, fields, methods, constructor)
-    local cls = {
+    cls = {
         _isClass = true,
         _name = name,
         _parent = parent,
@@ -873,14 +901,14 @@ function makeClass(name, parent, fields, methods, constructor)
 end
 
 function makeInstance(cls)
-    local inst = {_isInstance = true, _class = cls, _fields = {}}
+    inst = {_isInstance = true, _class = cls, _fields = {}}
     return inst
 end
 
 function lookupMethod(inst, methodName)
-    local cls = inst._class
+    cls = inst._class
     while cls do
-        local meths = cls._methods
+        meths = cls._methods
         if meths[methodName] then
             return meths[methodName]
         end
@@ -900,15 +928,15 @@ end
 
 -- Call a function value
 function callFunction(func, args, thisObj)
-    local env = newEnv(func._closure)
-    local params = func._params
+    env = newEnv(func._closure)
+    params = func._params
     for i = 1, #params do
         envDeclare(env, params[i], args[i])
     end
     if thisObj then
         envDeclare(env, "this", thisObj)
     end
-    local result = evalNode(func._body, env)
+    result = evalNode(func._body, env)
     if type(result) == "table" and result[1] == RETURN_SENTINEL then
         return result[2]
     end
@@ -917,7 +945,7 @@ end
 
 -- Main eval
 function evalNode(node, env)
-    local ntype = node[1]
+    ntype = node[1]
 
     if ntype == ND_NUMBER then
         return node[2]
@@ -932,13 +960,13 @@ function evalNode(node, env)
         if node[2] then return 1 else return 0 end
 
     else if ntype == ND_IDENT then
-        local val = envGet(env, node[2])
+        val = envGet(env, node[2])
         if val == nil then return 0 end
         return val
 
     else if ntype == ND_ARRAY then
-        local elems = node[2]
-        local vals = {}
+        elems = node[2]
+        vals = {}
         for i = 1, #elems do
             vals[i] = evalNode(elems[i], env)
         end
@@ -963,15 +991,15 @@ function evalNode(node, env)
         return evalField(node, env)
 
     else if ntype == ND_INDEX then
-        local obj = evalNode(node[2], env)
-        local idx = evalNode(node[3], env)
+        obj = evalNode(node[2], env)
+        idx = evalNode(node[3], env)
         if type(obj) == "table" and obj._isArray then
             return arrayGet(obj, idx)
         end
         return 0
 
     else if ntype == ND_VARDECL then
-        local val = evalNode(node[3], env)
+        val = evalNode(node[3], env)
         envDeclare(env, node[2], val)
         return nil
 
@@ -982,16 +1010,16 @@ function evalNode(node, env)
         return evalBlock(node, env)
 
     else if ntype == ND_IF then
-        local cond = evalNode(node[2], env)
+        cond = evalNode(node[2], env)
         if isTruthy(cond) then
-            local result = evalNode(node[3], env)
+            result = evalNode(node[3], env)
             if type(result) == "table" then
                 if result[1] == RETURN_SENTINEL or result[1] == BREAK_SENTINEL then
                     return result
                 end
             end
         else if node[4] then
-            local result = evalNode(node[4], env)
+            result = evalNode(node[4], env)
             if type(result) == "table" then
                 if result[1] == RETURN_SENTINEL or result[1] == BREAK_SENTINEL then
                     return result
@@ -1002,9 +1030,9 @@ function evalNode(node, env)
 
     else if ntype == ND_WHILE then
         while true do
-            local cond = evalNode(node[2], env)
+            cond = evalNode(node[2], env)
             if not isTruthy(cond) then break end
-            local result = evalNode(node[3], env)
+            result = evalNode(node[3], env)
             if type(result) == "table" then
                 if result[1] == RETURN_SENTINEL then return result end
                 if result[1] == BREAK_SENTINEL then break end
@@ -1014,12 +1042,12 @@ function evalNode(node, env)
 
     else if ntype == ND_FOR then
         -- for (init; cond; step) { body }
-        local forEnv = newEnv(env)
+        forEnv = newEnv(env)
         evalNode(node[2], forEnv) -- init
         while true do
-            local cond = evalNode(node[3], forEnv)
+            cond = evalNode(node[3], forEnv)
             if not isTruthy(cond) then break end
-            local result = evalNode(node[5], forEnv)
+            result = evalNode(node[5], forEnv)
             if type(result) == "table" then
                 if result[1] == RETURN_SENTINEL then return result end
                 if result[1] == BREAK_SENTINEL then break end
@@ -1032,7 +1060,7 @@ function evalNode(node, env)
         return {BREAK_SENTINEL}
 
     else if ntype == ND_RETURN then
-        local val = nil
+        val = nil
         if node[2] then
             val = evalNode(node[2], env)
         end
@@ -1042,7 +1070,7 @@ function evalNode(node, env)
         return evalClassDecl(node, env)
 
     else if ntype == ND_PRINTLN then
-        local val = evalNode(node[2], env)
+        val = evalNode(node[2], env)
         appendOutput(toZefString(val))
         return nil
 
@@ -1052,9 +1080,9 @@ function evalNode(node, env)
 end
 
 function evalBlock(node, env)
-    local stmts = node[2]
+    stmts = node[2]
     for i = 1, #stmts do
-        local result = evalNode(stmts[i], env)
+        result = evalNode(stmts[i], env)
         if type(result) == "table" then
             if result[1] == RETURN_SENTINEL or result[1] == BREAK_SENTINEL then
                 return result
@@ -1065,34 +1093,34 @@ function evalBlock(node, env)
 end
 
 function evalBinary(node, env)
-    local op = node[2]
+    op = node[2]
 
     -- Short-circuit for && and ||
     if op == "&&" then
-        local left = evalNode(node[3], env)
+        left = evalNode(node[3], env)
         if not isTruthy(left) then return 0 end
-        local right = evalNode(node[4], env)
+        right = evalNode(node[4], env)
         if isTruthy(right) then return 1 else return 0 end
     else if op == "||" then
-        local left = evalNode(node[3], env)
+        left = evalNode(node[3], env)
         if isTruthy(left) then return 1 end
-        local right = evalNode(node[4], env)
+        right = evalNode(node[4], env)
         if isTruthy(right) then return 1 else return 0 end
     end
 
-    local left = evalNode(node[3], env)
-    local right = evalNode(node[4], env)
+    left = evalNode(node[3], env)
+    right = evalNode(node[4], env)
 
     -- Operator overloading for objects
     if type(left) == "table" and left._isInstance then
-        local methodName = nil
+        methodName = nil
         if op == "+" then methodName = "add"
         else if op == "-" then methodName = "sub"
         else if op == "*" then methodName = "mul"
         else if op == "/" then methodName = "div"
         end
         if methodName then
-            local m = lookupMethod(left, methodName)
+            m = lookupMethod(left, methodName)
             if m then
                 return callFunction(m, {left, right}, left)
             end
@@ -1118,14 +1146,14 @@ function evalBinary(node, env)
     else if op == "==" then
         if left == right then return 1 else return 0 end
     else if op == "!=" then
-        if left ~= right then return 1 else return 0 end
+        if left != right then return 1 else return 0 end
     end
     return 0
 end
 
 function evalUnary(node, env)
-    local op = node[2]
-    local val = evalNode(node[3], env)
+    op = node[2]
+    val = evalNode(node[3], env)
     if op == "!" then
         return isTruthy(val) and 0 or 1
     else if op == "-" then
@@ -1135,9 +1163,9 @@ function evalUnary(node, env)
 end
 
 function evalCall(node, env)
-    local callee = evalNode(node[2], env)
-    local argNodes = node[3]
-    local args = {}
+    callee = evalNode(node[2], env)
+    argNodes = node[3]
+    args = {}
     for i = 1, #argNodes do
         args[i] = evalNode(argNodes[i], env)
     end
@@ -1147,11 +1175,11 @@ function evalCall(node, env)
             return callFunction(callee, args, nil)
         else if callee._isClass then
             -- Instantiate
-            local inst = makeInstance(callee)
+            inst = makeInstance(callee)
             -- Initialize fields
-            local cls = callee
+            cls = callee
             while cls do
-                local fields = cls._fields
+                fields = cls._fields
                 for i = 1, #fields do
                     if inst._fields[fields[i]] == nil then
                         inst._fields[fields[i]] = 0
@@ -1161,14 +1189,14 @@ function evalCall(node, env)
             end
             -- Call constructor
             if callee._constructor then
-                local ctor = callee._constructor
-                local cenv = newEnv(ctor._closure)
-                local cparams = ctor._params
+                ctor = callee._constructor
+                cenv = newEnv(ctor._closure)
+                cparams = ctor._params
                 for i = 1, #cparams do
                     envDeclare(cenv, cparams[i], args[i])
                 end
                 envDeclare(cenv, "this", inst)
-                local result = evalNode(ctor._body, cenv)
+                result = evalNode(ctor._body, cenv)
                 -- ignore return from constructor
             end
             return inst
@@ -1178,10 +1206,10 @@ function evalCall(node, env)
 end
 
 function evalMethod(node, env)
-    local obj = evalNode(node[2], env)
-    local methodName = node[3]
-    local argNodes = node[4]
-    local args = {}
+    obj = evalNode(node[2], env)
+    methodName = node[3]
+    argNodes = node[4]
+    args = {}
     for i = 1, #argNodes do
         args[i] = evalNode(argNodes[i], env)
     end
@@ -1208,7 +1236,7 @@ function evalMethod(node, env)
         else if methodName == "toString" then
             return obj
         else if methodName == "charAt" then
-            local idx = args[1]
+            idx = args[1]
             return sub(obj, idx + 1, idx + 1)
         end
     end
@@ -1222,7 +1250,7 @@ function evalMethod(node, env)
 
     -- Instance methods
     if type(obj) == "table" and obj._isInstance then
-        local m = lookupMethod(obj, methodName)
+        m = lookupMethod(obj, methodName)
         if m then
             -- Prepend 'this' = obj
             return callFunction(m, {obj, unpack(args)}, obj)
@@ -1233,8 +1261,8 @@ function evalMethod(node, env)
 end
 
 function evalField(node, env)
-    local obj = evalNode(node[2], env)
-    local field = node[3]
+    obj = evalNode(node[2], env)
+    field = node[3]
 
     -- Array fields
     if type(obj) == "table" and obj._isArray then
@@ -1252,15 +1280,15 @@ function evalField(node, env)
 
     -- Instance fields
     if type(obj) == "table" and obj._isInstance then
-        local val = obj._fields[field]
-        if val ~= nil then
+        val = obj._fields[field]
+        if val != nil then
             return val
         end
         -- Check if it's a method (return bound method)
-        local m = lookupMethod(obj, field)
+        m = lookupMethod(obj, field)
         if m then
             -- Return a bound method
-            local bound = makeFunc(m._params, m._body, m._closure, m._name)
+            bound = makeFunc(m._params, m._body, m._closure, m._name)
             -- We'll handle 'this' binding at call site
             bound._boundThis = obj
             return bound
@@ -1272,19 +1300,19 @@ function evalField(node, env)
 end
 
 function evalAssign(node, env)
-    local target = node[2]
-    local val = evalNode(node[3], env)
+    target = node[2]
+    val = evalNode(node[3], env)
 
     if target[1] == ND_IDENT then
         envSet(env, target[2], val)
     else if target[1] == ND_FIELD then
-        local obj = evalNode(target[2], env)
+        obj = evalNode(target[2], env)
         if type(obj) == "table" and obj._isInstance then
             obj._fields[target[3]] = val
         end
     else if target[1] == ND_INDEX then
-        local obj = evalNode(target[2], env)
-        local idx = evalNode(target[3], env)
+        obj = evalNode(target[2], env)
+        idx = evalNode(target[3], env)
         if type(obj) == "table" and obj._isArray then
             arraySet(obj, idx, val)
         end
@@ -1293,37 +1321,37 @@ function evalAssign(node, env)
 end
 
 function evalClassDecl(node, env)
-    local name = node[2]
-    local parentName = node[3]
-    local fieldNames = node[4]
-    local methodDefs = node[5]
-    local ctorDef = node[6]
+    name = node[2]
+    parentName = node[3]
+    fieldNames = node[4]
+    methodDefs = node[5]
+    ctorDef = node[6]
 
-    local parentCls = nil
+    parentCls = nil
     if parentName then
         parentCls = envGet(env, parentName)
     end
 
-    local methods = {}
+    methods = {}
     for i = 1, #methodDefs do
-        local mdef = methodDefs[i]
-        local mname = mdef[1]
-        local mparams = mdef[2]
-        local mbody = mdef[3]
+        mdef = methodDefs[i]
+        mname = mdef[1]
+        mparams = mdef[2]
+        mbody = mdef[3]
         -- Method params include 'this' as first implicit param
-        local fullParams = {"this"}
+        fullParams = {"this"}
         for j = 1, #mparams do
             fullParams[j + 1] = mparams[j]
         end
         methods[mname] = makeFunc(fullParams, mbody, env, mname)
     end
 
-    local constructor = nil
+    constructor = nil
     if ctorDef then
         constructor = makeFunc(ctorDef[1], ctorDef[2], env, name)
     end
 
-    local cls = makeClass(name, parentCls, fieldNames, methods, constructor)
+    cls = makeClass(name, parentCls, fieldNames, methods, constructor)
     envDeclare(env, name, cls)
     return nil
 end
@@ -1333,10 +1361,10 @@ end
 -- ============================================================================
 
 function runProgram(source)
-    local tokens = tokenize(source)
-    local parser = createParser(tokens)
-    local ast = parseProgram(parser)
-    local env = newEnv(nil)
+    tokens = tokenize(source)
+    parser = createParser(tokens)
+    ast = parseProgram(parser)
+    env = newEnv(nil)
     resetOutput()
     evalNode(ast, env)
     return getOutput()
@@ -2108,7 +2136,7 @@ EXPECTED_STRINGS = "Hello World!\n4\n30\n30\n20\n10\n0\n1\n2\n3\n4\n5\n986115\n9
 -- ============================================================================
 
 function checksumString(s)
-    local h = 5381
+    h = 5381
     for i = 1, #s do
         h = h * 33 + byte(s, i)
         -- Keep it in reasonable range to avoid precision issues
@@ -2118,8 +2146,8 @@ function checksumString(s)
 end
 
 function runTest(name, source, expected)
-    local output = runProgram(source)
-    if output ~= expected then
+    output = runProgram(source)
+    if output != expected then
         print("FAIL: " .. name)
         print("Expected:")
         print(expected)
@@ -2131,7 +2159,7 @@ function runTest(name, source, expected)
 end
 
 function runAllTests()
-    local totalChecksum = 0
+    totalChecksum = 0
     totalChecksum = totalChecksum + runTest("LinkedList", PROG_LINKED_LIST, EXPECTED_LINKED_LIST)
     totalChecksum = totalChecksum + runTest("BinaryTree", PROG_BINARY_TREE, EXPECTED_BINARY_TREE)
     totalChecksum = totalChecksum + runTest("Shapes", PROG_SHAPES, EXPECTED_SHAPES)
@@ -2147,18 +2175,18 @@ end
 -- ============================================================================
 
 -- Run once to validate
-local expectedChecksum = 3067968536
+expectedChecksum = 3067968536
 
 -- Benchmark loop
-local iterations = 10
-local startTime = clock()
+iterations = 10
+startTime = clock()
 for iter = 1, iterations do
-    local cs = runAllTests()
-    if cs ~= expectedChecksum then
+    cs = runAllTests()
+    if cs != expectedChecksum then
         error("Checksum mismatch on iteration " .. iter)
     end
 end
-local elapsed = clock() - startTime
+elapsed = clock() - startTime
 
 print(format("Zef benchmark: all %d iterations passed. Time: %.3fs", iterations, elapsed))
 

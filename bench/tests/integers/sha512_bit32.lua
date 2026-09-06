@@ -1,9 +1,9 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-	local K_HI = {
+	K_HI = {
 		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
 		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -16,7 +16,7 @@ function test()
 		0x28db77f5, 0x32caab7b, 0x3c9ebe0a, 0x431d67c4, 0x4cc5d4be, 0x597f299c, 0x5fcb6fab, 0x6c44198c,
 	}
 
-	local K_LO = {
+	K_LO = {
 		0xd728ae22, 0x23ef65cd, 0xec4d3b2f, 0x8189dbbc, 0xf348b538, 0xb605d019, 0xaf194f9b, 0xda6d8118,
 		0xa3030242, 0x45706fbe, 0x4ee4b28c, 0xd5ffb4e2, 0xf27b896f, 0x3b1696b1, 0x25c71235, 0xcf692694,
 		0x9ef14ad2, 0x384f25e3, 0x8b8cd5b5, 0x77ac9c65, 0x592b0275, 0x6ea6e483, 0xbd41fbd4, 0x831153b5,
@@ -29,19 +29,19 @@ function test()
 		0x23047d84, 0x40c72493, 0x15c9bebc, 0x9c100d4c, 0xcb3e42b6, 0xfc657e2a, 0x3ad6faec, 0x4a475817,
 	}
 
-	local function preprocess(msg)
-		local msgLen = #msg
-		local extra = 128 - ((msgLen + 17) % 128)
+	function preprocess(msg)
+		msgLen = #msg
+		extra = 128 - ((msgLen + 17) % 128)
 
-		local padded = msg .. '\128' .. string.rep('\0', extra + 8)
-		local paddedLen = #padded + 8
+		padded = msg .. '\128' .. string.rep('\0', extra + 8)
+		paddedLen = #padded + 8
 
-		local buf = buffer.create(paddedLen)
+		buf = buffer.create(paddedLen)
 		buffer.writestring(buf, 0, padded)
 
-		local bitLen = msgLen * 8
+		bitLen = msgLen * 8
 		for i = 0, 7 do
-			local rem = bitLen % 256
+			rem = bitLen % 256
 			buffer.writeu8(buf, paddedLen - 1 - i, rem)
 			bitLen = (bitLen - rem) / 256
 		end
@@ -49,97 +49,97 @@ function test()
 		return buf, paddedLen
 	end
 
-	local function sha512(msg)
-		local buf, paddedLen = preprocess(msg)
+	function sha512(msg)
+		buf, paddedLen = preprocess(msg)
 
-		local WH, WL = table.create(80, 0), table.create(80, 0)
+		WH, WL = table.create(80, 0), table.create(80, 0)
 
-		local H1h, H2h, H3h, H4h = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a
-		local H5h, H6h, H7h, H8h = 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
-		local H1l, H2l, H3l, H4l = 0xf3bcc908, 0x84caa73b, 0xfe94f82b, 0x5f1d36f1
-		local H5l, H6l, H7l, H8l = 0xade682d1, 0x2b3e6c1f, 0xfb41bd6b, 0x137e2179
+		H1h, H2h, H3h, H4h = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a
+		H5h, H6h, H7h, H8h = 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+		H1l, H2l, H3l, H4l = 0xf3bcc908, 0x84caa73b, 0xfe94f82b, 0x5f1d36f1
+		H5l, H6l, H7l, H8l = 0xade682d1, 0x2b3e6c1f, 0xfb41bd6b, 0x137e2179
 
 		for offset = 0, paddedLen - 1, 128 do
 			for t = 1, 16 do
-				local bo = offset + (t - 1) * 8
+				bo = offset + (t - 1) * 8
 				WH[t] = bit32.byteswap(buffer.readu32(buf, bo))
 				WL[t] = bit32.byteswap(buffer.readu32(buf, bo + 4))
 			end
 
 			for t = 17, 80 do
-				local p15h, p15l = WH[t - 15], WL[t - 15]
-				local p2h, p2l = WH[t - 2], WL[t - 2]
+				p15h, p15l = WH[t - 15], WL[t - 15]
+				p2h, p2l = WH[t - 2], WL[t - 2]
 
 				-- s0 = rrotate(w[t-15], 1) XOR rrotate(w[t-15], 8) XOR bit32.rshift(w[t-15], 7)
 				-- Using + instead of bor because shifted halves never have overlapping bits
-				local s0l = bit32.bxor(
+				s0l = bit32.bxor(
 					bit32.rshift(p15l, 1) + bit32.lshift(p15h, 31),
 					bit32.rshift(p15l, 8) + bit32.lshift(p15h, 24),
 					bit32.rshift(p15l, 7) + bit32.lshift(p15h, 25))
-				local s0h = bit32.bxor(
+				s0h = bit32.bxor(
 					bit32.rshift(p15h, 1) + bit32.lshift(p15l, 31),
 					bit32.rshift(p15h, 8) + bit32.lshift(p15l, 24),
 					bit32.rshift(p15h, 7))
 
 				-- s1 = rrotate(w[t-2], 19) XOR rrotate(w[t-2], 61) XOR bit32.rshift(w[t-2], 6)
-				local s1l = bit32.bxor(
+				s1l = bit32.bxor(
 					bit32.rshift(p2l, 19) + bit32.lshift(p2h, 13),
 					bit32.lshift(p2l, 3) + bit32.rshift(p2h, 29),
 					bit32.rshift(p2l, 6) + bit32.lshift(p2h, 26))
-				local s1h = bit32.bxor(
+				s1h = bit32.bxor(
 					bit32.rshift(p2h, 19) + bit32.lshift(p2l, 13),
 					bit32.lshift(p2h, 3) + bit32.rshift(p2l, 29),
 					bit32.rshift(p2h, 6))
 
 				-- w[t] = w[t-16] + s0 + w[t-7] + s1  (64-bit wrapping add via carry)
-				local tmplo = WL[t - 16] + s0l + WL[t - 7] + s1l
+				tmplo = WL[t - 16] + s0l + WL[t - 7] + s1l
 				WL[t] = bit32.bor(tmplo, 0)
 				WH[t] = s0h + s1h + WH[t - 16] + WH[t - 7] + tmplo // 0x100000000
 			end
 
-			local ah, al = H1h, H1l
-			local bh, bl = H2h, H2l
-			local ch, cl = H3h, H3l
-			local dh, dl = H4h, H4l
-			local eh, el = H5h, H5l
-			local fh, fl = H6h, H6l
-			local gh, gl = H7h, H7l
-			local hh, hl = H8h, H8l
+			ah, al = H1h, H1l
+			bh, bl = H2h, H2l
+			ch, cl = H3h, H3l
+			dh, dl = H4h, H4l
+			eh, el = H5h, H5l
+			fh, fl = H6h, H6l
+			gh, gl = H7h, H7l
+			hh, hl = H8h, H8l
 
 			for t = 1, 80 do
 				-- Sigma1 = rrotate(e, 14) XOR rrotate(e, 18) XOR rrotate(e, 41)
-				local sig1l = bit32.bxor(
+				sig1l = bit32.bxor(
 					bit32.rshift(el, 14) + bit32.lshift(eh, 18),
 					bit32.rshift(el, 18) + bit32.lshift(eh, 14),
 					bit32.lshift(el, 23) + bit32.rshift(eh, 9))
-				local sig1h = bit32.bxor(
+				sig1h = bit32.bxor(
 					bit32.rshift(eh, 14) + bit32.lshift(el, 18),
 					bit32.rshift(eh, 18) + bit32.lshift(el, 14),
 					bit32.lshift(eh, 23) + bit32.rshift(el, 9))
 
 				-- Sigma0 = rrotate(a, 28) XOR rrotate(a, 34) XOR rrotate(a, 39)
-				local sig0l = bit32.bxor(
+				sig0l = bit32.bxor(
 					bit32.rshift(al, 28) + bit32.lshift(ah, 4),
 					bit32.lshift(al, 30) + bit32.rshift(ah, 2),
 					bit32.lshift(al, 25) + bit32.rshift(ah, 7))
-				local sig0h = bit32.bxor(
+				sig0h = bit32.bxor(
 					bit32.rshift(ah, 28) + bit32.lshift(al, 4),
 					bit32.lshift(ah, 30) + bit32.rshift(al, 2),
 					bit32.lshift(ah, 25) + bit32.rshift(al, 7))
 
 				-- Ch = (e AND f) XOR (NOT(e) AND g)
 				-- Using + because band results are complementary (no overlapping bits)
-				local chl = bit32.band(el, fl) + bit32.band(-1 - el, gl)
-				local chh = bit32.band(eh, fh) + bit32.band(-1 - eh, gh)
+				chl = bit32.band(el, fl) + bit32.band(-1 - el, gl)
+				chh = bit32.band(eh, fh) + bit32.band(-1 - eh, gh)
 
 				-- Maj = (a AND b) XOR (a AND c) XOR (b AND c)
 				-- Rewritten as: (b AND c) + (a AND (b XOR c))
-				local majl = bit32.band(cl, bl) + bit32.band(al, bit32.bxor(cl, bl))
-				local majh = bit32.band(ch, bh) + bit32.band(ah, bit32.bxor(ch, bh))
+				majl = bit32.band(cl, bl) + bit32.band(al, bit32.bxor(cl, bl))
+				majh = bit32.band(ch, bh) + bit32.band(ah, bit32.bxor(ch, bh))
 
 				-- T1 = h + Sigma1 + Ch + K[t] + W[t]
-				local t1l = hl + sig1l + chl + K_LO[t] + WL[t]
-				local t1h = hh + sig1h + chh + K_HI[t] + WH[t] + t1l // 0x100000000
+				t1l = hl + sig1l + chl + K_LO[t] + WL[t]
+				t1h = hh + sig1h + chh + K_HI[t] + WH[t] + t1l // 0x100000000
 				t1l = bit32.bor(t1l, 0)
 
 				-- Shift state and compute new e and a
@@ -147,7 +147,7 @@ function test()
 				gh, gl = fh, fl
 				fh, fl = eh, el
 
-				local enl = dl + t1l
+				enl = dl + t1l
 				eh = dh + t1h + enl // 0x100000000
 				el = bit32.bor(enl, 0)
 
@@ -155,7 +155,7 @@ function test()
 				ch, cl = bh, bl
 				bh, bl = ah, al
 
-				local anl = t1l + sig0l + majl
+				anl = t1l + sig0l + majl
 				ah = t1h + sig0h + majh + anl // 0x100000000
 				al = bit32.bor(anl, 0)
 			end
@@ -176,16 +176,16 @@ function test()
 			H5h, H5l, H6h, H6l, H7h, H7l, H8h, H8l)
 	end
 
-	local input = string.rep(".", 1e3)
+	input = string.rep(".", 1e3)
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = sha512(input)
+		res = sha512(input)
 		assert(res == "a17d627e7c3f79207e8ca630348c2e15b70206f88905167dbbc18fd8d2b2806f2ad757c781dfbdc6a0caf1c84a8615bfdbda58f0356543bd00e646a45ca83790")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

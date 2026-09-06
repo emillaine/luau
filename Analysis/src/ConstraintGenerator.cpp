@@ -1973,6 +1973,33 @@ static void bindFreeType(TypeId a, TypeId b)
 
 ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatAssign* assign)
 {
+    // Implicit locals: `a = ...` declares a fresh `AstLocal` when no in-scope
+    // binding exists (see Parser::resolveAssignTarget), but unlike AstStatLocal
+    // nothing has bound it yet. Bind fresh targets here, mirroring the
+    // unannotated half of visit(AstStatLocal), so visitLValue's scope lookup
+    // succeeds and inferred types are recorded. Targets that reuse an existing
+    // local already have a chain-visible binding and are left alone. (Symbol is
+    // keyed by AstLocal*, so shadowing outer bindings is automatic.)
+    for (size_t i = 0; i < assign->vars.size; ++i)
+    {
+        if (AstExprLocal* local = assign->vars.data[i]->as<AstExprLocal>())
+        {
+            if (!scope->lookup(local->local))
+            {
+                if (local->local->annotation)
+                {
+                    TypeId annotationTy = resolveType(scope, local->local->annotation, /* inTypeArguments */ false);
+                    scope->bindings[local->local] = Binding{annotationTy, local->location};
+                }
+                else
+                {
+                    scope->bindings[local->local] = Binding{builtinTypes->unknownType, local->location};
+                    inferredBindings[local->local] = {scope.get(), local->location, {}};
+                }
+            }
+        }
+    }
+
     TypePackId resultPack;
     if (FFlag::LuauThreadGeneralizeThroughConstraintGeneration)
     {

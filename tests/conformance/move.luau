@@ -1,14 +1,14 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
-local function checkerror (msg, f, ...)
-  local s, err = pcall(f, ...)
+function checkerror (msg, f, ...)
+  s, err = pcall(f, ...)
   assert(not s and string.find(err, msg))
 end
 
 print("testing move")
 
-local maxI = 2147483647
-local minI = -2147483648
+maxI = 2147483647
+minI = -2147483648
 
 -- testing move
 do
@@ -16,12 +16,12 @@ do
   checkerror("table expected", table.move, 1, 2, 3, 4)
   checkerror("table expected", table.move, {}, 2, 3, 4, "foo")
 
-  local function eqT (a, b)
+  function eqT (a, b)
     for k, v in pairs(a) do assert(b[k] == v) end 
     for k, v in pairs(b) do assert(a[k] == v) end 
   end
 
-  local a = table.move({10,20,30}, 1, 3, 2)  -- move forward
+  a = table.move({10,20,30}, 1, 3, 2)  -- move forward
   eqT(a, {10,10,20,30})
 
   -- move forward with overlap of 1

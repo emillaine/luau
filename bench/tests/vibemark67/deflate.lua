@@ -1,16 +1,16 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
-local deflate = require("./deflate-dir/deflate")
+deflate = require("./deflate-dir/deflate")
 
 function test()
 
 -- DEFLATE benchmark: compress and decompress procedurally generated text
 
-local function generateCorpus(size: number): {number}
-    local data: {number} = table.create(size, 0)
-    local seed = 73921
-    local words = {
+function generateCorpus(size: number): {number}
+    data = table.create(size, 0)
+    seed = 73921
+    words = {
         "the ", "quick ", "brown ", "fox ", "jumps ", "over ", "lazy ", "dog ",
         "and ", "then ", "runs ", "away ", "from ", "big ", "cat ", "who ",
         "was ", "sleeping ", "under ", "old ", "oak ", "tree ", "near ",
@@ -20,11 +20,11 @@ local function generateCorpus(size: number): {number}
         "entire ", "valley ", "below ", "mountain ", "peaks ",
         "covered ", "with ", "fresh ", "white ", "snow ",
     }
-    local pos = 1
+    pos = 1
     while pos <= size do
         seed = bit32.band(seed * 1103515245 + 12345, 0x7FFFFFFF)
-        local wordIdx = (seed % #words) + 1
-        local word = words[wordIdx]
+        wordIdx = (seed % #words) + 1
+        word = words[wordIdx]
         for i = 1, #word do
             if pos > size then break end
             data[pos] = string.byte(word, i)
@@ -39,26 +39,26 @@ local function generateCorpus(size: number): {number}
     return data
 end
 
-local CORPUS_SIZE = 65536
-local ITERATIONS = 5
+CORPUS_SIZE = 65536
+ITERATIONS = 5
 
-local corpus = generateCorpus(CORPUS_SIZE)
-local totalCompressed = 0
-local totalDecompressed = 0
-local verified = true
+corpus = generateCorpus(CORPUS_SIZE)
+totalCompressed = 0
+totalDecompressed = 0
+verified = true
 
 for iter = 1, ITERATIONS do
-    local compressed = deflate.compress(corpus)
+    compressed = deflate.compress(corpus)
     totalCompressed += #compressed
 
-    local decompressed = deflate.decompress(compressed, #corpus)
+    decompressed = deflate.decompress(compressed, #corpus)
     totalDecompressed += #decompressed
 
-    if #decompressed ~= #corpus then
+    if #decompressed != #corpus then
         verified = false
     else
         for i = 1, math.min(1000, #corpus) do
-            if decompressed[i] ~= corpus[i] then
+            if decompressed[i] != corpus[i] then
                 verified = false
                 break
             end
@@ -66,7 +66,7 @@ for iter = 1, ITERATIONS do
     end
 end
 
-local ratio = totalCompressed / (CORPUS_SIZE * ITERATIONS) * 100
+ratio = totalCompressed / (CORPUS_SIZE * ITERATIONS) * 100
 print(string.format("Deflate benchmark complete: %d iterations, ratio=%.1f%%, verified=%s",
     ITERATIONS, ratio, tostring(verified)))
 

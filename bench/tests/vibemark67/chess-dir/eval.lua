@@ -1,17 +1,17 @@
 -- Chess position evaluation with piece-square tables
 
-local boardMod = require("./board")
-local EMPTY = boardMod.EMPTY
-local PAWN = boardMod.PAWN
-local KNIGHT = boardMod.KNIGHT
-local BISHOP = boardMod.BISHOP
-local ROOK = boardMod.ROOK
-local QUEEN = boardMod.QUEEN
-local KING = boardMod.KING
-local WHITE = boardMod.WHITE
-local BLACK = boardMod.BLACK
+boardMod = require("./board")
+EMPTY = boardMod.EMPTY
+PAWN = boardMod.PAWN
+KNIGHT = boardMod.KNIGHT
+BISHOP = boardMod.BISHOP
+ROOK = boardMod.ROOK
+QUEEN = boardMod.QUEEN
+KING = boardMod.KING
+WHITE = boardMod.WHITE
+BLACK = boardMod.BLACK
 
-local pieceValues = {
+pieceValues = {
     [PAWN] = 100,
     [KNIGHT] = 320,
     [BISHOP] = 330,
@@ -20,7 +20,7 @@ local pieceValues = {
     [KING] = 20000,
 }
 
-local pawnTable = {
+pawnTable = {
      0,  0,  0,  0,  0,  0,  0,  0,
     50, 50, 50, 50, 50, 50, 50, 50,
     10, 10, 20, 30, 30, 20, 10, 10,
@@ -31,7 +31,7 @@ local pawnTable = {
      0,  0,  0,  0,  0,  0,  0,  0,
 }
 
-local knightTable = {
+knightTable = {
     -50,-40,-30,-30,-30,-30,-40,-50,
     -40,-20,  0,  0,  0,  0,-20,-40,
     -30,  0, 10, 15, 15, 10,  0,-30,
@@ -42,7 +42,7 @@ local knightTable = {
     -50,-40,-30,-30,-30,-30,-40,-50,
 }
 
-local bishopTable = {
+bishopTable = {
     -20,-10,-10,-10,-10,-10,-10,-20,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5, 10, 10,  5,  0,-10,
@@ -53,7 +53,7 @@ local bishopTable = {
     -20,-10,-10,-10,-10,-10,-10,-20,
 }
 
-local rookTable = {
+rookTable = {
      0,  0,  0,  0,  0,  0,  0,  0,
      5, 10, 10, 10, 10, 10, 10,  5,
     -5,  0,  0,  0,  0,  0,  0, -5,
@@ -64,7 +64,7 @@ local rookTable = {
      0,  0,  0,  5,  5,  0,  0,  0,
 }
 
-local queenTable = {
+queenTable = {
     -20,-10,-10, -5, -5,-10,-10,-20,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5,  5,  5,  5,  0,-10,
@@ -75,7 +75,7 @@ local queenTable = {
     -20,-10,-10, -5, -5,-10,-10,-20,
 }
 
-local kingMiddleTable = {
+kingMiddleTable = {
     -30,-40,-40,-50,-50,-40,-40,-30,
     -30,-40,-40,-50,-50,-40,-40,-30,
     -30,-40,-40,-50,-50,-40,-40,-30,
@@ -86,7 +86,7 @@ local kingMiddleTable = {
      20, 30, 10,  0,  0, 10, 30, 20,
 }
 
-local kingEndTable = {
+kingEndTable = {
     -50,-40,-30,-20,-20,-30,-40,-50,
     -30,-20,-10,  0,  0,-10,-20,-30,
     -30,-10, 20, 30, 30, 20,-10,-30,
@@ -97,7 +97,7 @@ local kingEndTable = {
     -50,-30,-30,-30,-30,-30,-30,-50,
 }
 
-local pstTables = {
+pstTables = {
     [PAWN] = pawnTable,
     [KNIGHT] = knightTable,
     [BISHOP] = bishopTable,
@@ -105,24 +105,24 @@ local pstTables = {
     [QUEEN] = queenTable,
 }
 
-local function mirror(sq: number): number
-    local file = ((sq - 1) % 8) + 1
-    local rank = math.floor((sq - 1) / 8) + 1
-    local mirrorRank = 9 - rank
+function mirror(sq: number): number
+    file = ((sq - 1) % 8) + 1
+    rank = math.floor((sq - 1) / 8) + 1
+    mirrorRank = 9 - rank
     return (mirrorRank - 1) * 8 + file
 end
 
-local function evaluate(board: boardMod.Board): number
-    local score = 0
-    local whiteMaterial = 0
-    local blackMaterial = 0
+function evaluate(board: boardMod.Board): number
+    score = 0
+    whiteMaterial = 0
+    blackMaterial = 0
 
     for sq = 1, 64 do
-        local piece = board.squares[sq]
-        if piece ~= EMPTY then
-            local color = bit32.band(piece, 24)
-            local ptype = bit32.band(piece, 7)
-            local value = pieceValues[ptype] or 0
+        piece = board.squares[sq]
+        if piece != EMPTY then
+            color = bit32.band(piece, 24)
+            ptype = bit32.band(piece, 7)
+            value = pieceValues[ptype] or 0
 
             if color == WHITE then
                 whiteMaterial += value
@@ -132,25 +132,25 @@ local function evaluate(board: boardMod.Board): number
         end
     end
 
-    local isEndgame = (whiteMaterial + blackMaterial - 40000) < 2600
+    isEndgame = (whiteMaterial + blackMaterial - 40000) < 2600
 
     for sq = 1, 64 do
-        local piece = board.squares[sq]
-        if piece ~= EMPTY then
-            local color = bit32.band(piece, 24)
-            local ptype = bit32.band(piece, 7)
-            local value = pieceValues[ptype] or 0
-            local pst = 0
+        piece = board.squares[sq]
+        if piece != EMPTY then
+            color = bit32.band(piece, 24)
+            ptype = bit32.band(piece, 7)
+            value = pieceValues[ptype] or 0
+            pst = 0
 
             if ptype == KING then
-                local tbl = if isEndgame then kingEndTable else kingMiddleTable
+                tbl = if isEndgame then kingEndTable else kingMiddleTable
                 if color == WHITE then
                     pst = tbl[mirror(sq)]
                 else
                     pst = tbl[sq]
                 end
             else
-                local tbl = pstTables[ptype]
+                tbl = pstTables[ptype]
                 if tbl then
                     if color == WHITE then
                         pst = tbl[mirror(sq)]

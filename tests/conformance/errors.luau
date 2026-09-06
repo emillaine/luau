@@ -3,9 +3,9 @@
 print("testing errors")
 
 function doit (s)
-  local f, msg = loadstring(s)
+  f, msg = loadstring(s)
   if f == nil then return msg end
-  local cond, msg = pcall(f)
+  cond, msg = pcall(f)
   return (not cond) and msg
 end
 
@@ -15,9 +15,9 @@ function checkmessage (prog, msg)
 end
 
 function checksyntax (prog, extra, token, line)
-  local msg = doit(prog)
+  msg = doit(prog)
   token = string.gsub(token, "(%p)", "%%%1")
-  local pt = string.format([[^%%[string ".*"%%]:]]) -- only check that an error happened - ignore token/line since Luau error messages differ from Lua substantially
+  pt = string.format([[^%%[string ".*"%%]:]]) -- only check that an error happened - ignore token/line since Luau error messages differ from Lua substantially
   assert(string.find(msg, pt))
   assert(string.find(msg, msg, 1, true))
 end
@@ -47,7 +47,7 @@ assert(doit("function a (... , ...) end"))
 assert(doit("function a (, ...) end"))
 
 checksyntax([[
-  local a = {4
+  a = {4
 
 ]], "'}' expected (to close '{' at line 1)", "<eof>", 3)
 
@@ -55,21 +55,21 @@ checksyntax([[
 -- tests for better error messages
 
 checkmessage("a=1; bbbb=2; a=math.sin(3)+bbbb(3)", "global 'bbbb'")
-checkmessage("a=1; local a,bbbb=2,3; a = math.sin(1) and bbbb(3)",
+checkmessage("a=1; a,bbbb=2,3; a = math.sin(1) and bbbb(3)",
        "local 'bbbb'")
-checkmessage("a={}; do local a=1 end a:bbbb(3)", "method 'bbbb'")
-checkmessage("local a={}; a.bbbb(3)", "field 'bbbb'")
-assert(not string.find(doit("a={13}; local bbbb=1; a[bbbb](3)"), "'bbbb'"))
-checkmessage("a={13}; local bbbb=1; a[bbbb](3)", "number")
+checkmessage("a={}; do a=1 end a:bbbb(3)", "method 'bbbb'")
+checkmessage("a={}; a.bbbb(3)", "field 'bbbb'")
+assert(not string.find(doit("a={13}; bbbb=1; a[bbbb](3)"), "'bbbb'"))
+checkmessage("a={13}; bbbb=1; a[bbbb](3)", "number")
 
 aaa = nil
 checkmessage("aaa.bbb:ddd(9)", "global 'aaa'")
-checkmessage("local aaa={bbb=1}; aaa.bbb:ddd(9)", "field 'bbb'")
-checkmessage("local aaa={bbb={}}; aaa.bbb:ddd(9)", "method 'ddd'")
-checkmessage("local a,b,c; (function () a = b+1 end)()", "upvalue 'b'")
-assert(not doit("local aaa={bbb={ddd=next}}; aaa.bbb:ddd(nil)"))
+checkmessage("aaa={bbb=1}; aaa.bbb:ddd(9)", "field 'bbb'")
+checkmessage("aaa={bbb={}}; aaa.bbb:ddd(9)", "method 'ddd'")
+checkmessage("a,b,c = nil,nil,nil; (function () a = b+1 end)()", "upvalue 'b'")
+assert(not doit("aaa={bbb={ddd=next}}; aaa.bbb:ddd(nil)"))
 
-checkmessage("b=1; local aaa='a'; x=aaa+b", "local 'aaa'")
+checkmessage("b=1; aaa='a'; x=aaa+b", "local 'aaa'")
 checkmessage("aaa={}; x=3/aaa", "global 'aaa'")
 checkmessage("aaa='2'; b=nil;x=aaa*b", "global 'b'")
 checkmessage("aaa={}; x=-aaa", "global 'aaa'")
@@ -78,9 +78,9 @@ assert(not string.find(doit("aaa={}; (aaa or aaa)()"), "'aaa'"))
 
 checkmessage([[aaa=9
 repeat until 3==3
-local x=math.sin(math.cos(3))
+x=math.sin(math.cos(3))
 if math.sin(1) == x then return math.sin(1) end   -- tail call
-local a,b = 1, {
+a,b = 1, {
   {x='a'..'b'..'c', y='b', z=x},
   {1,2,3,4,5} or 3+3<=3+3,
   3+1>3+1,
@@ -88,7 +88,7 @@ local a,b = 1, {
 ]], "global 'aaa'")
 
 checkmessage([[
-local x,y = {},1
+x,y = {},1
 if math.sin(1) == 0 then return 3 end    -- return
 x.a()]], "field 'a'")
 
@@ -96,7 +96,7 @@ checkmessage([[
 prefix = nil
 insert = nil
 while 1 do  
-  local a
+  a = nil
   if nil then break end
   insert(prefix, a)
 end]], "global 'insert'")
@@ -117,62 +117,62 @@ print'+'
 -- testing line error
 
 function lineerror (s)
-  local err,msg = pcall(loadstring(s))
-  local line = string.match(msg, ":(%d+):")
+  err,msg = pcall(loadstring(s))
+  line = string.match(msg, ":(%d+):")
   return line and line+0
 end
 
-assert(lineerror("local a\n for i=1,'a' do \n print(i) \n end") == 2)
--- assert(lineerror("\n local a \n for k,v in 3 \n do \n print(k) \n end") == 3)
+assert(lineerror("a = nil\n for i=1,'a' do \n print(i) \n end") == 2)
+-- assert(lineerror("\n a = nil \n for k,v in 3 \n do \n print(k) \n end") == 3)
 -- assert(lineerror("\n\n for k,v in \n 3 \n do \n print(k) \n end") == 4)
 assert(lineerror("function a.x.y ()\na=a+1\nend") == 1)
 
-local p = [[
-function g() f() end
-function f(x) error('a', X) end
-g()
+p = [[
+function _G.g() _G.f() end
+function _G.f(x) error('a', _G.X) end
+_G.g()
 ]]
-X=3;assert(lineerror(p) == 3)
-X=0;assert(lineerror(p) == nil)
-X=1;assert(lineerror(p) == 2)
-X=2;assert(lineerror(p) == 1)
+_G.X=3;assert(lineerror(p) == 3)
+_G.X=0;assert(lineerror(p) == nil)
+_G.X=1;assert(lineerror(p) == 2)
+_G.X=2;assert(lineerror(p) == 1)
 
 lineerror = nil
 
 do
   C = 0
-  -- local l = debug.getinfo(1, "l").currentline
-  function y () C=C+1; y() end
+  -- l = debug.getinfo(1, "l").currentline
+  function _G.y () C=C+1; _G.y() end
 
-  local function checkstackmessage (m)
+  function checkstackmessage (m)
     return (string.find(m, "^.-:%d+: stack overflow"))
   end
 
-  assert(checkstackmessage(doit('y()')))
-  assert(checkstackmessage(doit('y()')))
-  assert(checkstackmessage(doit('y()')))
+  assert(checkstackmessage(doit('_G.y()')))
+  assert(checkstackmessage(doit('_G.y()')))
+  assert(checkstackmessage(doit('_G.y()')))
 
   -- teste de linhas em erro
   C = 0
-  local l1
-  local function g()
+  l1 = nil
+  function g()
     -- l1 = debug.getinfo(1, "l").currentline
-    y()
+    _G.y()
   end
-  local _, stackmsg = xpcall(g, debug.traceback)
-  local stack = {}
+  _, stackmsg = xpcall(g, debug.traceback)
+  stack = {}
   for line in string.gmatch(stackmsg, "[^\n]*") do
-    local curr = string.match(line, ":(%d+):")
+    curr = string.match(line, ":(%d+):")
     if curr then table.insert(stack, tonumber(curr)) end
   end
 end
 
 -- C stack overflow
-local ehline
+ehline = nil
 
-local function cstackoverflows(triggerfunc)
-  local count = 1
-  local cso = setmetatable({}, {
+function cstackoverflows(triggerfunc)
+  count = 1
+  cso = setmetatable({}, {
     __index = function(self, i)
       count = count + 1
       return self[i]
@@ -187,14 +187,14 @@ local function cstackoverflows(triggerfunc)
     end
   })
 
-  local function ehassert(cond)
+  function ehassert(cond)
     if not cond then
       ehline = debug.info(2, "l")
       error()
     end
   end
 
-  local userdata = newproxy(true)
+  userdata = newproxy(true)
   getmetatable(userdata).__index = print
   assert(debug.info(print, "s") == "[C]")
 
@@ -203,7 +203,7 @@ local function cstackoverflows(triggerfunc)
     print("after __tostring C stack overflow", count) -- 198: 1 resume + 1 xpcall + 198 luaB_tostring calls (which runs our __tostring successfully 197 times, erroring on the last attempt)
     ehassert(count > 1)
 
-    local ps, pe
+    ps, pe = nil, nil
 
     -- __tostring overflow (lua_call)
     count = 1
@@ -232,7 +232,7 @@ local function cstackoverflows(triggerfunc)
     ehassert(pcall(function() return userdata.StringConstant end)) -- LOP_GETTABLEKS (luau_callTM)
 
     -- lua_resume test
-    local coro = coroutine.create(function() end)
+    coro = coroutine.create(function() end)
     ps, pe = coroutine.resume(coro)
     ehassert(not ps and string.find(pe, "C stack overflow"))
 
@@ -243,7 +243,7 @@ end
 if not limitedstack then
   -- xpcall error handler on immediate path
   do
-    local s, e = cstackoverflows(tostring)
+    s, e = cstackoverflows(tostring)
     
     assert(not s)
     assert(e == true, "error in xpcall eh, line " .. tostring(ehline))
@@ -251,7 +251,7 @@ if not limitedstack then
 
   -- xpcall error handler on a resume after yielded path
   do
-    local wrap = coroutine.wrap(function()
+    wrap = coroutine.wrap(function()
       return cstackoverflows(function(x)
         coroutine.yield()
         return tostring(x)
@@ -260,14 +260,14 @@ if not limitedstack then
 
     wrap()
 
-    local s, e = wrap()
+    s, e = wrap()
     assert(not s)
     assert(e == true, "error in xpcall eh, line " .. tostring(ehline))
   end
 end
 
 --[[
-local i=1
+i=1
 while stack[i] != l1 do
   assert(stack[i] == l)
   i = i+1
@@ -276,14 +276,14 @@ assert(i > 15)
 ]]--
 
 -- error in error handling
-local res, msg = xpcall(error, error)
+res, msg = xpcall(error, error)
 assert(not res and type(msg) == 'string')
 
-local function f (x)
+function f (x)
   if x==0 then error('a\n')
   else
-    local aux = function () return f(x-1) end
-    local a,b = xpcall(aux, aux)
+    aux = function () return f(x-1) end
+    a,b = xpcall(aux, aux)
     return a,b
   end
 end
@@ -306,8 +306,8 @@ checksyntax("'aa'", "", "'aa'", 1)
 -- test 255 as first char in a chunk
 checksyntax("\255a = 1", "", "\255", 1)
 
-doit('I = loadstring("a=9+"); a=3')
-assert(a==3 and I == nil)
+doit('_G.I = loadstring("a=9+"); _G.a=3')
+assert(_G.a==3 and _G.I == nil)
 print('+')
 
 lim = 1000
@@ -319,10 +319,10 @@ end
 
 
 -- testing syntax limits
-local syntaxdepth = if limitedstack then 200 else 500
-local function testrep (init, rep)
-  local s = "local a; "..init .. string.rep(rep, syntaxdepth)
-  local a,b = loadstring(s)
+syntaxdepth = if limitedstack then 200 else 500
+function testrep (init, rep)
+  s = "a = nil; "..init .. string.rep(rep, syntaxdepth)
+  a,b = loadstring(s)
   assert(not a) -- and string.find(b, "syntax levels"))
 end
 testrep("a=", "{")
@@ -338,25 +338,33 @@ testrep("a=", "a^")
 
 -- testing other limits
 -- upvalues
-local  s = "function foo ()\n  local "
+s = "function foo ()\n  "
 for j = 1,70 do
   s = s.."a"..j..", "
 end
-s = s.."b\n"
+s = s.."b = nil"
+for j = 1,70 do
+  s = s..",nil"
+end
+s = s.."\n"
 for j = 1,70 do
   s = s.."function foo"..j.." ()\n a"..j.."=3\n"
 end
-local a,b = loadstring(s)
+a,b = loadstring(s)
 assert(not a)
 -- assert(string.find(b, "line 3"))
 
 -- local variables
-s = "\nfunction foo ()\n  local "
+s = "\nfunction foo ()\n  "
 for j = 1,300 do
   s = s.."a"..j..", " 
 end
-s = s.."b\n"
-local a,b = loadstring(s)
+s = s.."b = nil"
+for j = 1,300 do
+  s = s..",nil"
+end
+s = s.."\n"
+a,b = loadstring(s)
 assert(not a)
 --assert(string.find(b, "line 2"))
 
@@ -381,20 +389,20 @@ coroutine.wrap(function()
 end)()
 
 -- loadstring chunk truncation
-local a,b = loadstring("nope", "@short")
+a,b = loadstring("nope", "@short")
 assert(not a and b:match('[^ ]+') == "short:1:")
 
-local a,b = loadstring("nope", "@" .. string.rep("thisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilities", 10))
+a,b = loadstring("nope", "@" .. string.rep("thisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilities", 10))
 assert(not a and b:match('[^ ]+') == "...wontfitintotheinternalbufferprovidedtovariousdebugfacilitiesthisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilitiesthisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilities:1:")
 
-local a,b = loadstring("nope", "=short")
+a,b = loadstring("nope", "=short")
 assert(not a and b:match('[^ ]+') == "short:1:")
 
-local a,b = loadstring("nope", "=" .. string.rep("thisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilities", 10))
+a,b = loadstring("nope", "=" .. string.rep("thisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilities", 10))
 assert(not a and b:match('[^ ]+') == "thisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilitiesthisisaverylongstringitssolongthatitwontfitintotheinternalbufferprovidedtovariousdebugfacilitiesthisisaverylongstringitssolongthatitwontfitintotheinternalbuffe:1:")
 
 function ecall(fn, ...)
-  local ok, err = pcall(fn, ...)
+  ok, err = pcall(fn, ...)
   assert(not ok)
   return err:sub((err:find(": ") or -1) + 2, err.count)
 end
@@ -406,17 +414,17 @@ assert(ecall(function() return 1 > nil end) == "attempt to compare nil < number"
 assert(ecall(function() return "a" <= 5 end) == "attempt to compare string <= number")
 
 -- table errors
-assert(ecall(function() local t = {} t[nil] = 2 end) == "table index is nil")
-assert(ecall(function() local t = {} t[0/0] = 2 end) == "table index is NaN")
+assert(ecall(function() t = {} t[nil] = 2 end) == "table index is nil")
+assert(ecall(function() t = {} t[0/0] = 2 end) == "table index is NaN")
 
-assert(ecall(function() local t = {} rawset(t, nil, 2) end) == "table index is nil")
-assert(ecall(function() local t = {} rawset(t, 0/0, 2) end) == "table index is NaN")
+assert(ecall(function() t = {} rawset(t, nil, 2) end) == "table index is nil")
+assert(ecall(function() t = {} rawset(t, 0/0, 2) end) == "table index is NaN")
 
-assert(ecall(function() local t = {} t[nil] = nil end) == "table index is nil")
-assert(ecall(function() local t = {} t[0/0] = nil end) == "table index is NaN")
+assert(ecall(function() t = {} t[nil] = nil end) == "table index is nil")
+assert(ecall(function() t = {} t[0/0] = nil end) == "table index is NaN")
 
-assert(ecall(function() local t = {} rawset(t, nil, nil) end) == "table index is nil")
-assert(ecall(function() local t = {} rawset(t, 0/0, nil) end) == "table index is NaN")
+assert(ecall(function() t = {} rawset(t, nil, nil) end) == "table index is nil")
+assert(ecall(function() t = {} rawset(t, 0/0, nil) end) == "table index is NaN")
 
 -- for loop type errors
 assert(ecall(function() for i='a',2 do end end) == "invalid 'for' initial value (number expected, got string)")
@@ -428,8 +436,8 @@ assert(ecall(function() ({}):foo() end) == "attempt to call missing method 'foo'
 assert(ecall(function() (""):foo() end) == "attempt to call missing method 'foo' of string")
 assert(ecall(function() (42):foo() end) == "attempt to index number with 'foo'")
 assert(ecall(function() ({foo=42}):foo() end) == "attempt to call a number value")
-assert(ecall(function() local ud = newproxy(true) getmetatable(ud).__index = {} ud:foo() end) == "attempt to call missing method 'foo' of userdata")
-assert(ecall(function() local ud = newproxy(true) getmetatable(ud).__index = function() end ud:foo() end) == "attempt to call missing method 'foo' of userdata")
-assert(ecall(function() local ud = newproxy(true) getmetatable(ud).__index = function() error("nope") end ud:foo() end) == "nope")
+assert(ecall(function() ud = newproxy(true) getmetatable(ud).__index = {} ud:foo() end) == "attempt to call missing method 'foo' of userdata")
+assert(ecall(function() ud = newproxy(true) getmetatable(ud).__index = function() end ud:foo() end) == "attempt to call missing method 'foo' of userdata")
+assert(ecall(function() ud = newproxy(true) getmetatable(ud).__index = function() error("nope") end ud:foo() end) == "nope")
 
 return('OK')

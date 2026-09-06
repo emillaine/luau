@@ -1,6 +1,6 @@
-local m = require("./export_multi_assign")
+m = require("./export_multi_assign")
 
-local ok, err = pcall(function()
+ok, err = pcall(function()
 	m.update()
 end)
 

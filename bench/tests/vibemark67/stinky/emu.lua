@@ -3,68 +3,68 @@
 -- ARM64 Linux Emulator - core run function.
 -- Takes an ELF binary (as a string), argv, and an output callback, then runs the program.
 
-local Int = require("./integer")
-local MemMod = require("./memory")
-local CPU = require("./cpu")
-local ELF = require("./elf")
-local Decode = require("./decode")
-local Syscall = require("./syscall")
+Int = require("./integer")
+MemMod = require("./memory")
+CPU = require("./cpu")
+ELF = require("./elf")
+Decode = require("./decode")
+Syscall = require("./syscall")
 
-local M = {}
+M = {}
 
 function M.run(elfData: string, argv: { string }, outputLine: (string) -> ()): number
     -- Parse ELF headers
-    local elfInfo = ELF.parse(elfData)
+    elfInfo = ELF.parse(elfData)
 
     -- Create memory and load segments
-    local mem = MemMod.new()
-    local highAddr = ELF.load(elfInfo, elfData, mem)
+    mem = MemMod.new()
+    highAddr = ELF.load(elfInfo, elfData, mem)
 
     -- Initialize syscall subsystem
     Syscall.init(highAddr, outputLine)
 
     -- Set up the initial stack (Linux kernel ABI).
-    local STACK_TOP = Int.fromHex("800000000")
-    local STACK_SIZE = 8 * 1024 * 1024
-    local stackBase = Int.sub(STACK_TOP, Int.from(STACK_SIZE))
+    STACK_TOP = Int.fromHex("800000000")
+    STACK_SIZE = 8 * 1024 * 1024
+    stackBase = Int.sub(STACK_TOP, Int.from(STACK_SIZE))
     mem:zeroFill(stackBase, STACK_SIZE)
 
-    local sp = STACK_TOP
+    sp = STACK_TOP
 
     -- Write strings to stack top area
-    local stringArea = Int.sub(STACK_TOP, Int.from(4096))
-    local stringPos = stringArea
+    stringArea = Int.sub(STACK_TOP, Int.from(4096))
+    stringPos = stringArea
 
-    local function pushString(s: string): integer
-        local addr = stringPos
+    function pushString(s: string): integer
+        addr = stringPos
         mem:writeString(stringPos, s .. "\0")
         stringPos = Int.add(stringPos, Int.from(#s + 1))
         return addr
     end
 
     -- argv
-    local argvAddrs: { integer } = {}
+    argvAddrs = {}
     for _, arg in argv do
         table.insert(argvAddrs, pushString(arg))
     end
 
     -- Environment
-    local envAddrs: { integer } = {}
+    envAddrs = {}
     table.insert(envAddrs, pushString("PATH=/usr/bin"))
     table.insert(envAddrs, pushString("STINKY=OOF"))
 
     -- Random bytes for AT_RANDOM
-    local randomAddr = stringPos
+    randomAddr = stringPos
     for idx = 0, 15 do
         mem:writeU8(Int.add(stringPos, Int.from(idx)), (idx * 17 + 42) % 256)
     end
     stringPos = Int.add(stringPos, Int.from(16))
 
     -- Platform string
-    local platformAddr = pushString("aarch64")
+    platformAddr = pushString("aarch64")
 
     -- Build stack frame
-    local stackEntries: { integer } = {}
+    stackEntries = {}
 
     table.insert(stackEntries, Int.from(#argvAddrs))
     for _, addr in argvAddrs do
@@ -77,7 +77,7 @@ function M.run(elfData: string, argv: { string }, outputLine: (string) -> ()): n
     table.insert(stackEntries, Int.ZERO)
 
     -- Auxiliary vector
-    local function auxv(atype: number, aval: integer)
+    function auxv(atype: number, aval: integer)
         table.insert(stackEntries, Int.from(atype))
         table.insert(stackEntries, aval)
     end
@@ -99,7 +99,7 @@ function M.run(elfData: string, argv: { string }, outputLine: (string) -> ()): n
     auxv(0, Int.ZERO)               -- AT_NULL
 
     -- Place stack entries in memory (16-byte aligned)
-    local totalBytes = #stackEntries * 8
+    totalBytes = #stackEntries * 8
     sp = Int.sub(stringArea, Int.from(totalBytes))
     sp = Int.band(sp, Int.bnot(Int.from(0xF)))
 
@@ -108,7 +108,7 @@ function M.run(elfData: string, argv: { string }, outputLine: (string) -> ()): n
     end
 
     -- Create CPU and run
-    local cpu = CPU.new(mem)
+    cpu = CPU.new(mem)
     cpu.SP = sp
     cpu.PC = elfInfo.entry
 

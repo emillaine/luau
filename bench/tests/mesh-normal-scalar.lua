@@ -1,6 +1,6 @@
 --!strict
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
@@ -13,25 +13,20 @@ function test()
         h: number
     }
 
-    local grid_size = 100
+    grid_size = 100
 
-    local mesh: {
-        vertices: {Vertex},
-        indices: {number},
-        triangle_cone_p: {{x: number, y: number, z: number}},
-        triangle_cone_n: {{x: number, y: number, z: number}}
-    } = {
+    mesh = {
         vertices = table.create(grid_size * grid_size),
         indices = table.create((grid_size - 1) * (grid_size - 1) * 6),
         triangle_cone_p = table.create((grid_size - 1) * (grid_size - 1) * 2),
         triangle_cone_n = table.create((grid_size - 1) * (grid_size - 1) * 2)
     }
 
-    local function init_vertices()
-        local i = 1
+    function init_vertices()
+        i = 1
         for y = 1,grid_size do
             for x = 1,grid_size do
-                local v: Vertex = {}
+                v = {}
 
                 v.pX = x
                 v.pY = y
@@ -61,8 +56,8 @@ function test()
         end
     end
 
-    local function init_indices()
-        local i = 1
+    function init_indices()
+        i = 1
         for y = 1,grid_size-1 do
             for x = 1,grid_size-1 do
                 mesh.indices[i] = x + (y-1)*grid_size
@@ -81,25 +76,25 @@ function test()
         end
     end
 
-    local function calculate_normals()
-        local norm_sum = 0
+    function calculate_normals()
+        norm_sum = 0
 
         for i = 1,#mesh.indices,3 do
-            local a = mesh.vertices[mesh.indices[i]]
-            local b = mesh.vertices[mesh.indices[i + 1]]
-            local c = mesh.vertices[mesh.indices[i + 2]]
+            a = mesh.vertices[mesh.indices[i]]
+            b = mesh.vertices[mesh.indices[i + 1]]
+            c = mesh.vertices[mesh.indices[i + 2]]
 
-            local abx = a.pX - b.pX
-            local aby = a.pY - b.pY
-            local abz = a.pZ - b.pZ
+            abx = a.pX - b.pX
+            aby = a.pY - b.pY
+            abz = a.pZ - b.pZ
 
-            local acx = a.pX - c.pX
-            local acy = a.pY - c.pY
-            local acz = a.pZ - c.pZ
+            acx = a.pX - c.pX
+            acy = a.pY - c.pY
+            acz = a.pZ - c.pZ
 
-            local nx = aby * acz - abz * acy;
-            local ny = abz * acx - abx * acz;
-            local nz = abx * acy - aby * acx;
+            nx = aby * acz - abz * acy;
+            ny = abz * acx - abx * acz;
+            nz = abx * acy - aby * acx;
 
             a.nX += nx
             a.nY += ny
@@ -115,7 +110,7 @@ function test()
         end
 
         for _,v in mesh.vertices do
-            local magnitude = math.sqrt(v.nX * v.nX + v.nY * v.nY + v.nZ * v.nZ)
+            magnitude = math.sqrt(v.nX * v.nX + v.nY * v.nY + v.nZ * v.nZ)
 
             v.nX /= magnitude
             v.nY /= magnitude
@@ -127,33 +122,33 @@ function test()
         return norm_sum
     end
 
-    local function compute_triangle_cones()
-        local mesh_area = 0
+    function compute_triangle_cones()
+        mesh_area = 0
 
-        local pos = 1
+        pos = 1
 
         for i = 1,#mesh.indices,3 do
-            local p0 = mesh.vertices[mesh.indices[i]]
-            local p1 = mesh.vertices[mesh.indices[i + 1]]
-            local p2 = mesh.vertices[mesh.indices[i + 2]]
+            p0 = mesh.vertices[mesh.indices[i]]
+            p1 = mesh.vertices[mesh.indices[i + 1]]
+            p2 = mesh.vertices[mesh.indices[i + 2]]
 
-            local p10x = p1.pX - p0.pX
-            local p10y = p1.pY - p0.pY
-            local p10z = p1.pZ - p0.pZ
-            local p20x = p2.pX - p0.pX
-            local p20y = p2.pY - p0.pY
-            local p20z = p2.pZ - p0.pZ
+            p10x = p1.pX - p0.pX
+            p10y = p1.pY - p0.pY
+            p10z = p1.pZ - p0.pZ
+            p20x = p2.pX - p0.pX
+            p20y = p2.pY - p0.pY
+            p20z = p2.pZ - p0.pZ
 
-            local normalx = p10y * p20z - p10z * p20y;
-            local normaly = p10z * p20x - p10x * p20z;
-            local normalz = p10x * p20y - p10y * p20x;
+            normalx = p10y * p20z - p10z * p20y;
+            normaly = p10z * p20x - p10x * p20z;
+            normalz = p10x * p20y - p10y * p20x;
 
-            local area = math.sqrt(normalx * normalx + normaly * normaly + normalz * normalz)
-            local invarea = if area == 0 then 0 else 1 / area;
+            area = math.sqrt(normalx * normalx + normaly * normaly + normalz * normalz)
+            invarea = if area == 0 then 0 else 1 / area;
 
-            local rx = (p0.pX + p1.pX + p2.pX) / 3
-            local ry = (p0.pY + p1.pY + p2.pY) / 3
-            local rz = (p0.pZ + p1.pZ + p2.pZ) / 3
+            rx = (p0.pX + p1.pX + p2.pX) / 3
+            ry = (p0.pY + p1.pY + p2.pY) / 3
+            rz = (p0.pZ + p1.pZ + p2.pZ) / 3
 
             mesh.triangle_cone_p[pos] = { x = rx, y = ry, z = rz }
             mesh.triangle_cone_n[pos] = { x = normalx * invarea, y = normaly * invarea, z = normalz * invarea}
@@ -165,33 +160,33 @@ function test()
         return mesh_area
     end
 
-    local function compute_tangent_space()
-        local checksum = 0
+    function compute_tangent_space()
+        checksum = 0
 
         for i = 1,#mesh.indices,3 do
-            local a = mesh.vertices[mesh.indices[i]]
-            local b = mesh.vertices[mesh.indices[i + 1]]
-            local c = mesh.vertices[mesh.indices[i + 2]]
+            a = mesh.vertices[mesh.indices[i]]
+            b = mesh.vertices[mesh.indices[i + 1]]
+            c = mesh.vertices[mesh.indices[i + 2]]
 
-            local x1 = b.pX - a.pX
-            local x2 = c.pX - a.pX
-            local y1 = b.pY - a.pY
-            local y2 = c.pY - a.pY
-            local z1 = b.pZ - a.pZ
-            local z2 = c.pZ - a.pZ
+            x1 = b.pX - a.pX
+            x2 = c.pX - a.pX
+            y1 = b.pY - a.pY
+            y2 = c.pY - a.pY
+            z1 = b.pZ - a.pZ
+            z2 = c.pZ - a.pZ
 
-            local s1 = b.uvX - a.uvX
-            local s2 = c.uvX - a.uvX
-            local t1 = b.uvY - a.uvY
-            local t2 = c.uvY - a.uvY
+            s1 = b.uvX - a.uvX
+            s2 = c.uvX - a.uvX
+            t1 = b.uvY - a.uvY
+            t2 = c.uvY - a.uvY
 
-            local r = 1.0 / (s1 * t2 - s2 * t1);
-            local sdirX = (t2 * x1 - t1 * x2) * r
-            local sdirY = (t2 * y1 - t1 * y2) * r
-            local sdirZ = (t2 * z1 - t1 * z2) * r
-            local tdirX = (s1 * x2 - s2 * x1) * r
-            local tdirY = (s1 * y2 - s2 * y1) * r
-            local tdirZ = (s1 * z2 - s2 * z1) * r
+            r = 1.0 / (s1 * t2 - s2 * t1);
+            sdirX = (t2 * x1 - t1 * x2) * r
+            sdirY = (t2 * y1 - t1 * y2) * r
+            sdirZ = (t2 * z1 - t1 * z2) * r
+            tdirX = (s1 * x2 - s2 * x1) * r
+            tdirY = (s1 * y2 - s2 * y1) * r
+            tdirZ = (s1 * z2 - s2 * z1) * r
 
             a.tX += sdirX
             a.tY += sdirY
@@ -215,27 +210,27 @@ function test()
         end
 
         for _,v in mesh.vertices do
-            local tX = v.tX
-            local tY = v.tY
-            local tZ = v.tZ
+            tX = v.tX
+            tY = v.tY
+            tZ = v.tZ
 
             -- Gram-Schmidt orthogonalize
-            local ndt = v.nX * tX + v.nY * tY + v.nZ * tZ
-            local tmnsX = tX - v.nX * ndt
-            local tmnsY = tY - v.nY * ndt
-            local tmnsZ = tZ - v.nZ * ndt
-            local l = math.sqrt(tmnsX * tmnsX + tmnsY * tmnsY + tmnsZ * tmnsZ)
+            ndt = v.nX * tX + v.nY * tY + v.nZ * tZ
+            tmnsX = tX - v.nX * ndt
+            tmnsY = tY - v.nY * ndt
+            tmnsZ = tZ - v.nZ * ndt
+            l = math.sqrt(tmnsX * tmnsX + tmnsY * tmnsY + tmnsZ * tmnsZ)
 
-            local invl = 1 / l
+            invl = 1 / l
             v.tX = tmnsX * invl
             v.tY = tmnsY * invl
             v.tZ = tmnsZ * invl
 
-            local normalx = v.nY * tZ - v.nZ * tY;
-            local normaly = v.nZ * tX - v.nX * tZ;
-            local normalz = v.nX * tY - v.nY * tX;
+            normalx = v.nY * tZ - v.nZ * tY;
+            normaly = v.nZ * tX - v.nX * tZ;
+            normalz = v.nX * tY - v.nY * tX;
 
-            local ht = normalx * v.bX + normaly * v.bY + normalz * v.bZ
+            ht = normalx * v.bX + normaly * v.bY + normalz * v.bZ
 
             v.h = ht < 0 and -1 or 1
 
@@ -249,7 +244,7 @@ function test()
     init_indices()
     calculate_normals()
     compute_triangle_cones()
-    local checksum = compute_tangent_space()
+    checksum = compute_tangent_space()
 
     assert(math.abs(checksum + 1323.4993) < 1e-2)
 end

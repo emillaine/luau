@@ -3,16 +3,16 @@
    http://shootout.alioth.debian.org/
    contributed by Isaac Gouy
 ]]
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-local function partial(n)
-    local a1, a2, a3, a4, a5, a6, a7, a8, a9 = 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    local twothirds = 2.0/3.0;
-    local alt = -1.0;
-    local k2, k3, sk, ck = 0, 0, 0, 0;
+function partial(n)
+    a1, a2, a3, a4, a5, a6, a7, a8, a9 = 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    twothirds = 2.0/3.0;
+    alt = -1.0;
+    k2, k3, sk, ck = 0, 0, 0, 0;
     
     for k = 1,n do
         k2 = k*k;
@@ -35,17 +35,17 @@ local function partial(n)
     return a6 + a7 + a8 + a9;
 end
 
-local total = 0;
-local i = 1024
+total = 0;
+i = 1024
 
 while i <= 16384 do
     total = total + partial(i);
     i = i * 2
 end
 
-local expected = 60.08994194659945;
+expected = 60.08994194659945;
 
-if (total ~= expected) then
+if (total != expected) then
     assert(false, "ERROR: bad result: expected " .. expected .. " but got " .. total);
 end
 

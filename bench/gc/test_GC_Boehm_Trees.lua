@@ -1,12 +1,12 @@
 --!nonstrict
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
-local stretchTreeDepth = 18 -- about 16Mb
-local longLivedTreeDepth = 16 -- about 4Mb
-local arraySize = 500000 --about 4Mb
-local minTreeDepth = 4
-local maxTreeDepth = 16
+stretchTreeDepth = 18 -- about 16Mb
+longLivedTreeDepth = 16 -- about 4Mb
+arraySize = 500000 --about 4Mb
+minTreeDepth = 4
+maxTreeDepth = 16
 
 -- Nodes used by a tree of a given size
 function treeSize(i)
@@ -40,8 +40,8 @@ function makeTree(depth)
 end
 
 function timeConstruction(depth)
-    local numIters = getNumIters(depth)
-    local tempTree = {}
+    numIters = getNumIters(depth)
+    tempTree = {}
 
     for i = 1, numIters do
         tempTree = {}
@@ -57,15 +57,15 @@ end
 
 function test()
     -- Stretch the memory space quickly
-    local _tempTree = makeTree(stretchTreeDepth)
+    _tempTree = makeTree(stretchTreeDepth)
     _tempTree = nil
 
     -- Create a long lived object
-    local longLivedTree = {}
+    longLivedTree = {}
     populate(longLivedTreeDepth, longLivedTree)
 
     -- Create long-lived array, filling half of it
-    local array = {}
+    array = {}
     for i = 1, arraySize/2 do
         array[i] = 1.0 / i
     end

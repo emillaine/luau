@@ -1,2 +1,2 @@
-local result = require("@self/init")
+result = require("@self/init")
 return result

@@ -1,6 +1,6 @@
 -- exported function referenced as upvalue from nested closure
 export function outer()
-    local function inner()
+    function inner()
         return outer()
     end
     return 42

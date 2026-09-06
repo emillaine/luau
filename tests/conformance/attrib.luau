@@ -2,9 +2,9 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print("testing assignments, logical operators, and constructors")
 
-local unpack = table.unpack
+unpack = table.unpack
 
-local res, res2 = 27
+res, res2 = 27
 
 a, b = 1, 2+3
 assert(a==1 and b==5)
@@ -16,17 +16,17 @@ a[f()], b, a[f()+3] = f(), a, 'x'
 assert(a[10] == 10 and b == a and a[13] == 'x')
 
 do
-  local f = function (n) local x = {}; for i=1,n do x[i]=i end;
+  const f_inner = function (n) x = {}; for i=1,n do x[i]=i end;
                          return unpack(x) end;
-  local a,b,c
-  a,b = 0, f(1)
-  assert(a == 0 and b == 1)
-  A,b = 0, f(1)
-  assert(A == 0 and b == 1)
-  a,b,c = 0,5,f(4)
-  assert(a==0 and b==5 and c==1)
-  a,b,c = 0,5,f(0)
-  assert(a==0 and b==5 and c==nil)
+  a_inner,b_inner,c_inner = nil, nil, nil
+  a_inner,b_inner = 0, f_inner(1)
+  assert(a_inner == 0 and b_inner == 1)
+  _G.A,b_inner = 0, f_inner(1)
+  assert(_G.A == 0 and b_inner == 1)
+  a_inner,b_inner,c_inner = 0,5,f_inner(4)
+  assert(a_inner==0 and b_inner==5 and c_inner==1)
+  a_inner,b_inner,c_inner = 0,5,f_inner(0)
+  assert(a_inner==0 and b_inner==5 and c_inner==nil)
 end
 
 
@@ -67,7 +67,7 @@ assert(a[1<2] == 20 and a[1>2] == 10)
 
 function f(a) return a end
 
-local a = {}
+a = {}
 for i=3000,-3000,-1 do a[i] = i; end
 a[10e30] = "alo"; a[true] = 10; a[false] = 20
 assert(a[10e30] == 'alo' and a[not 1] == 20 and a[10<20] == 10)
@@ -96,11 +96,11 @@ a = nil
 
 
 do
-  local a,i,j,b
-  a = {'a', 'b'}; i=1; j=2; b=a
-  i, a[i], a, j, a[j], a[i+j] = j, i, i, b, j, i
-  assert(i == 2 and b[1] == 1 and a == 1 and j == b and b[2] == 2 and
-         b[3] == 1)
+  a_inner2,i_inner,j_inner,b_inner2 = nil, nil, nil, nil
+  a_inner2 = {'a', 'b'}; i_inner=1; j_inner=2; b_inner2=a_inner2
+  i_inner, a_inner2[i_inner], a_inner2, j_inner, a_inner2[j_inner], a_inner2[i_inner+j_inner] = j_inner, i_inner, i_inner, b_inner2, j_inner, i_inner
+  assert(i_inner == 2 and b_inner2[1] == 1 and a_inner2 == 1 and j_inner == b_inner2 and b_inner2[2] == 2 and
+         b_inner2[3] == 1)
 end
 
 return('OK')

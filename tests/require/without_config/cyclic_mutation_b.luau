@@ -1,2 +1,2 @@
-local A = require("./cyclic_mutation_a")
-export local foo = "foo"
+A = require("./cyclic_mutation_a")
+export foo = "foo"

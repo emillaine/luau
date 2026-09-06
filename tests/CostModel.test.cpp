@@ -30,6 +30,9 @@ static uint64_t modelFunction(const char* source)
     ParseResult result = Parser::parse(source, strlen(source), names, allocator);
     REQUIRE(result.root != nullptr);
 
+    if (AstStatLocalFunction* localFunc = result.root->body.data[0]->as<AstStatLocalFunction>())
+        return Luau::Compile::modelCost(localFunc->func->body, localFunc->func->args.data, localFunc->func->args.size);
+
     AstStatFunction* func = result.root->body.data[0]->as<AstStatFunction>();
     REQUIRE(func);
 
@@ -55,7 +58,7 @@ TEST_CASE("PropagateVariable")
 {
     uint64_t model = modelFunction(R"(
 function test(a)
-    local b = a * a * a
+    b = a * a * a
     return b * b
 end
 )");
@@ -64,7 +67,7 @@ end
     const bool args2[] = {true};
 
     CHECK_EQ(3, Luau::Compile::computeCost(model, args1, 1));
-    CHECK_EQ(0, Luau::Compile::computeCost(model, args2, 1));
+    CHECK_EQ(1, Luau::Compile::computeCost(model, args2, 1));
 }
 
 TEST_CASE("LoopAssign")
@@ -89,7 +92,7 @@ TEST_CASE("MutableVariable")
 {
     uint64_t model = modelFunction(R"(
 function test(a, b)
-    local x = a * a
+    x = a * a
     x += b
     return x * x
 end
@@ -217,7 +220,7 @@ TEST_CASE("MultipleAssignments")
 {
     uint64_t model = modelFunction(R"(
 function test(a)
-    local x = 0
+    x = 0
     x = a
     x = a + 1
     x, x, x = a
@@ -228,8 +231,8 @@ end
     const bool args1[] = {false};
     const bool args2[] = {true};
 
-    CHECK_EQ(8, Luau::Compile::computeCost(model, args1, 1));
-    CHECK_EQ(7, Luau::Compile::computeCost(model, args2, 1));
+    CHECK_EQ(9, Luau::Compile::computeCost(model, args1, 1));
+    CHECK_EQ(8, Luau::Compile::computeCost(model, args2, 1));
 }
 
 TEST_CASE("IfLocal")
@@ -238,7 +241,7 @@ TEST_CASE("IfLocal")
 
     uint64_t model = modelFunction(R"(
 function test(a)
-    if local b = a * a * a then
+    if const b = a * a * a then
         return b * b
     end
     return 0

@@ -1,13 +1,13 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
-    local ts0 = os.clock()
+    ts0 = os.clock()
 
-    local iterations = 25000
+    iterations = 25000
 
-    local t = table.create(iterations, 100)
+    t = table.create(iterations, 100)
 
     for j=1,100 do
         table.remove(t, 1)
@@ -15,7 +15,7 @@ function test()
 
     assert(#t == (iterations - 100))
 
-    local ts1 = os.clock()
+    ts1 = os.clock()
 
     return ts1-ts0
 end

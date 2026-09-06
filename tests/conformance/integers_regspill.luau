@@ -1,32 +1,32 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing native integer register spills")
 
-local function test_many_locals(
+function test_many_locals(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
     assert(is_native())
 
     -- create many live values from various operations
-    local a: integer = integer.add(p0, p1)
-    local b: integer = integer.sub(p0, p1)
-    local c: integer = integer.bxor(p2, p3)
-    local d: integer = integer.band(p0, p3)
-    local e: integer = integer.bor(p1, p2)
-    local f: integer = integer.add(p2, p3)
-    local g: integer = integer.bxor(a, b)
-    local h: integer = integer.band(c, d)
-    local i: integer = integer.bor(e, f)
-    local j: integer = integer.add(a, c)
-    local k: integer = integer.sub(b, d)
-    local l: integer = integer.bxor(e, g)
-    local m: integer = integer.band(f, h)
-    local n: integer = integer.bor(g, i)
-    local o: integer = integer.add(h, j)
-    local p: integer = integer.sub(i, k)
-    local q: integer = integer.bxor(j, l)
-    local r: integer = integer.band(k, m)
-    local s: integer = integer.bor(l, n)
-    local t: integer = integer.add(m, o)
+    a = integer.add(p0, p1)
+    b = integer.sub(p0, p1)
+    c = integer.bxor(p2, p3)
+    d = integer.band(p0, p3)
+    e = integer.bor(p1, p2)
+    f = integer.add(p2, p3)
+    g = integer.bxor(a, b)
+    h = integer.band(c, d)
+    i = integer.bor(e, f)
+    j = integer.add(a, c)
+    k = integer.sub(b, d)
+    l = integer.bxor(e, g)
+    m = integer.band(f, h)
+    n = integer.bor(g, i)
+    o = integer.add(h, j)
+    p = integer.sub(i, k)
+    q = integer.bxor(j, l)
+    r = integer.band(k, m)
+    s = integer.bor(l, n)
+    t = integer.add(m, o)
 
     -- invalidates restore locations for old values.
     a = integer.add(a, t)
@@ -55,30 +55,30 @@ local function test_many_locals(
     )
 end
 
-local function test_division_pressure(
+function test_division_pressure(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
     assert(is_native())
 
-    local a: integer = integer.add(p0, p1)
-    local b: integer = integer.sub(p0, p1)
-    local c: integer = integer.bxor(p2, p3)
-    local d: integer = integer.band(p0, p3)
-    local e: integer = integer.bor(p1, p2)
-    local f: integer = integer.add(p2, p3)
-    local g: integer = integer.bxor(a, b)
-    local h: integer = integer.add(c, d)
-    local i: integer = integer.bor(e, f)
-    local j: integer = integer.bxor(g, h)
-    local k: integer = integer.add(i, a)
-    local l: integer = integer.bor(b, c)
+    a = integer.add(p0, p1)
+    b = integer.sub(p0, p1)
+    c = integer.bxor(p2, p3)
+    d = integer.band(p0, p3)
+    e = integer.bor(p1, p2)
+    f = integer.add(p2, p3)
+    g = integer.bxor(a, b)
+    h = integer.add(c, d)
+    i = integer.bor(e, f)
+    j = integer.bxor(g, h)
+    k = integer.add(i, a)
+    l = integer.bor(b, c)
 
     -- each div clobbers RAX+RDX, requiring spills of other live INT64 values
-    local d1: integer = integer.div(a, p1)
-    local d2: integer = integer.div(b, p2)
-    local d3: integer = integer.rem(c, p3)
-    local d4: integer = integer.mod(f, p0)
-    local d5: integer = integer.udiv(integer.bor(e, 1i), p1)
+    d1 = integer.div(a, p1)
+    d2 = integer.div(b, p2)
+    d3 = integer.rem(c, p3)
+    d4 = integer.mod(f, p0)
+    d5 = integer.udiv(integer.bor(e, 1i), p1)
 
     return integer.bxor(
         integer.bxor(integer.bxor(a, b), integer.bxor(c, d)),
@@ -90,37 +90,37 @@ local function test_division_pressure(
 end
 
 -- shifts require RCX
-local function test_shift_pressure(
+function test_shift_pressure(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
     assert(is_native())
 
-    local a: integer = integer.add(p0, p1)
-    local b: integer = integer.sub(p0, p1)
-    local c: integer = integer.bxor(p2, p3)
-    local d: integer = integer.band(p0, p3)
-    local e: integer = integer.bor(p1, p2)
-    local f: integer = integer.add(p2, p3)
-    local g: integer = integer.bxor(a, b)
-    local h: integer = integer.add(c, d)
-    local i: integer = integer.bor(e, f)
-    local j: integer = integer.bxor(g, h)
-    local k: integer = integer.add(i, a)
-    local l: integer = integer.bor(b, c)
+    a = integer.add(p0, p1)
+    b = integer.sub(p0, p1)
+    c = integer.bxor(p2, p3)
+    d = integer.band(p0, p3)
+    e = integer.bor(p1, p2)
+    f = integer.add(p2, p3)
+    g = integer.bxor(a, b)
+    h = integer.add(c, d)
+    i = integer.bor(e, f)
+    j = integer.bxor(g, h)
+    k = integer.add(i, a)
+    l = integer.bor(b, c)
 
-    local sh1: integer = integer.band(p0, 7i)  -- 0..7
-    local sh2: integer = integer.band(p1, 15i) -- 0..15
-    local sh3: integer = integer.band(p2, 31i) -- 0..31
-    local sh4: integer = integer.band(p3, 63i) -- 0..63
+    sh1 = integer.band(p0, 7i)  -- 0..7
+    sh2 = integer.band(p1, 15i) -- 0..15
+    sh3 = integer.band(p2, 31i) -- 0..31
+    sh4 = integer.band(p3, 63i) -- 0..63
 
-    local s1: integer = integer.lshift(a, sh1)
-    local s2: integer = integer.rshift(b, sh2)
-    local s3: integer = integer.arshift(c, sh3)
-    local s4: integer = integer.lrotate(d, sh4)
-    local s5: integer = integer.rrotate(e, sh1)
-    local s6: integer = integer.lshift(f, sh2)
-    local s7: integer = integer.rshift(g, sh3)
-    local s8: integer = integer.arshift(h, sh4)
+    s1 = integer.lshift(a, sh1)
+    s2 = integer.rshift(b, sh2)
+    s3 = integer.arshift(c, sh3)
+    s4 = integer.lrotate(d, sh4)
+    s5 = integer.rrotate(e, sh1)
+    s6 = integer.lshift(f, sh2)
+    s7 = integer.rshift(g, sh3)
+    s8 = integer.arshift(h, sh4)
 
     return integer.bxor(
         integer.bxor(integer.bxor(a, b), integer.bxor(c, d)),
@@ -132,24 +132,24 @@ local function test_shift_pressure(
 end
 
 -- regalloc may need to spill registers while in the loop
-local function test_loop_spill(
+function test_loop_spill(
     p0: integer, p1: integer, p2: integer, p3: integer,
     iters: number
 ): integer
     assert(is_native())
 
-    local a: integer = integer.add(p0, p1)
-    local b: integer = integer.sub(p0, p1)
-    local c: integer = integer.bxor(p2, p3)
-    local d: integer = integer.band(p0, p3)
-    local e: integer = integer.bor(p1, p2)
-    local f: integer = integer.add(p2, p3)
-    local g: integer = integer.bxor(a, b)
-    local h: integer = integer.add(c, d)
-    local i: integer = integer.bor(e, f)
-    local j: integer = integer.bxor(g, h)
-    local k: integer = integer.add(i, a)
-    local l: integer = integer.bor(b, c)
+    a = integer.add(p0, p1)
+    b = integer.sub(p0, p1)
+    c = integer.bxor(p2, p3)
+    d = integer.band(p0, p3)
+    e = integer.bor(p1, p2)
+    f = integer.add(p2, p3)
+    g = integer.bxor(a, b)
+    h = integer.add(c, d)
+    i = integer.bor(e, f)
+    j = integer.bxor(g, h)
+    k = integer.add(i, a)
+    l = integer.bor(b, c)
 
     for iter = 1, iters do
         -- create register pressure within the loop
@@ -174,38 +174,38 @@ local function test_loop_spill(
     )
 end
 
-local function test_mixed_pressure(
+function test_mixed_pressure(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
     assert(is_native())
 
-    local a: integer = integer.add(p0, p1)
-    local b: integer = integer.sub(p0, p1)
-    local c: integer = integer.bxor(p2, p3)
-    local d: integer = integer.band(p0, p3)
-    local e: integer = integer.bor(p1, p2)
-    local f: integer = integer.add(p2, p3)
-    local g: integer = integer.bxor(a, b)
-    local h: integer = integer.add(c, d)
-    local i: integer = integer.bor(e, f)
-    local j: integer = integer.bxor(g, h)
-    local k: integer = integer.add(i, a)
-    local l: integer = integer.bor(b, c)
+    a = integer.add(p0, p1)
+    b = integer.sub(p0, p1)
+    c = integer.bxor(p2, p3)
+    d = integer.band(p0, p3)
+    e = integer.bor(p1, p2)
+    f = integer.add(p2, p3)
+    g = integer.bxor(a, b)
+    h = integer.add(c, d)
+    i = integer.bor(e, f)
+    j = integer.bxor(g, h)
+    k = integer.add(i, a)
+    l = integer.bor(b, c)
 
-    local m: integer = integer.bxor(a, b, c, d, e)
-    local n: integer = integer.band(f, g, h, i, j)
-    local o: integer = integer.bor(k, l, a, b, c)
+    m = integer.bxor(a, b, c, d, e)
+    n = integer.band(f, g, h, i, j)
+    o = integer.bor(k, l, a, b, c)
 
-    local d1: integer = integer.div(integer.add(a, 100i), p1)
-    local d2: integer = integer.idiv(integer.add(b, 200i), p2)
+    d1 = integer.div(integer.add(a, 100i), p1)
+    d2 = integer.idiv(integer.add(b, 200i), p2)
 
-    local sh: integer = integer.band(p0, 7i)
-    local s1: integer = integer.lshift(m, sh)
-    local s2: integer = integer.rshift(n, sh)
+    sh = integer.band(p0, 7i)
+    s1 = integer.lshift(m, sh)
+    s2 = integer.rshift(n, sh)
 
-    local x: integer = integer.add(d1, s1)
-    local y: integer = integer.bxor(d2, s2)
-    local z: integer = integer.band(x, y)
+    x = integer.add(d1, s1)
+    y = integer.bxor(d2, s2)
+    z = integer.band(x, y)
 
     return integer.bxor(
         integer.bxor(integer.bxor(a, b), integer.bxor(c, d)),
@@ -217,59 +217,59 @@ local function test_mixed_pressure(
 end
 
 -- 30 live locals must require register spilling
-local function test_extreme_pressure(
+function test_extreme_pressure(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
     assert(is_native())
 
-    local a: integer = integer.add(p0, p1)
-    local b: integer = integer.sub(p0, p1)
-    local c: integer = integer.mul(p2, 3i)
-    local d: integer = integer.bxor(p0, p3)
-    local e: integer = integer.band(p1, p2)
-    local f: integer = integer.bor(p2, p3)
-    local g: integer = integer.bnot(p0)
-    local h: integer = integer.lshift(p1, 3i)
-    local i: integer = integer.rshift(p2, 2i)
-    local j: integer = integer.arshift(p3, 1i)
-    local k: integer = integer.lrotate(p0, 7i)
-    local l: integer = integer.rrotate(p1, 5i)
-    local m: integer = integer.add(a, b)
-    local n: integer = integer.bxor(c, d)
-    local o: integer = integer.band(e, f)
+    a = integer.add(p0, p1)
+    b = integer.sub(p0, p1)
+    c = integer.mul(p2, 3i)
+    d = integer.bxor(p0, p3)
+    e = integer.band(p1, p2)
+    f = integer.bor(p2, p3)
+    g = integer.bnot(p0)
+    h = integer.lshift(p1, 3i)
+    i = integer.rshift(p2, 2i)
+    j = integer.arshift(p3, 1i)
+    k = integer.lrotate(p0, 7i)
+    l = integer.rrotate(p1, 5i)
+    m = integer.add(a, b)
+    n = integer.bxor(c, d)
+    o = integer.band(e, f)
 
-    local p: integer = integer.bor(g, h)
-    local q: integer = integer.add(i, j)
-    local r: integer = integer.sub(k, l)
-    local s: integer = integer.bxor(m, n)
-    local t: integer = integer.band(o, p)
-    local u: integer = integer.bor(q, r)
-    local v: integer = integer.add(s, t)
-    local w: integer = integer.sub(u, a)
-    local x: integer = integer.bxor(v, b)
-    local y: integer = integer.band(w, c)
-    local z: integer = integer.bor(x, d)
-    local a2: integer = integer.add(y, e)
-    local b2: integer = integer.sub(z, f)
-    local c2: integer = integer.bxor(a2, g)
-    local d2: integer = integer.band(b2, h)
+    p = integer.bor(g, h)
+    q = integer.add(i, j)
+    r = integer.sub(k, l)
+    s = integer.bxor(m, n)
+    t = integer.band(o, p)
+    u = integer.bor(q, r)
+    v = integer.add(s, t)
+    w = integer.sub(u, a)
+    x = integer.bxor(v, b)
+    y = integer.band(w, c)
+    z = integer.bor(x, d)
+    a2 = integer.add(y, e)
+    b2 = integer.sub(z, f)
+    c2 = integer.bxor(a2, g)
+    d2 = integer.band(b2, h)
 
-    local div1: integer = integer.div(integer.bor(a, 100i), p1)
-    local div2: integer = integer.div(integer.bor(m, 200i), p2)
+    div1 = integer.div(integer.bor(a, 100i), p1)
+    div2 = integer.div(integer.bor(m, 200i), p2)
 
-    local sh: integer = integer.band(p0, 3i)
-    local sh1: integer = integer.lshift(n, sh)
-    local sh2: integer = integer.rshift(o, sh)
+    sh = integer.band(p0, 3i)
+    sh1 = integer.lshift(n, sh)
+    sh2 = integer.rshift(o, sh)
 
-    local t1: integer = integer.bxor(integer.bxor(a, b), integer.bxor(c, d))
-    local t2: integer = integer.bxor(integer.bxor(e, f), integer.bxor(g, h))
-    local t3: integer = integer.bxor(integer.bxor(i, j), integer.bxor(k, l))
-    local t4: integer = integer.bxor(integer.bxor(m, n), integer.bxor(o, p))
-    local t5: integer = integer.bxor(integer.bxor(q, r), integer.bxor(s, t))
-    local t6: integer = integer.bxor(integer.bxor(u, v), integer.bxor(w, x))
-    local t7: integer = integer.bxor(integer.bxor(y, z), integer.bxor(a2, b2))
-    local t8: integer = integer.bxor(integer.bxor(c2, d2), integer.bxor(div1, div2))
-    local t9: integer = integer.bxor(sh1, sh2)
+    t1 = integer.bxor(integer.bxor(a, b), integer.bxor(c, d))
+    t2 = integer.bxor(integer.bxor(e, f), integer.bxor(g, h))
+    t3 = integer.bxor(integer.bxor(i, j), integer.bxor(k, l))
+    t4 = integer.bxor(integer.bxor(m, n), integer.bxor(o, p))
+    t5 = integer.bxor(integer.bxor(q, r), integer.bxor(s, t))
+    t6 = integer.bxor(integer.bxor(u, v), integer.bxor(w, x))
+    t7 = integer.bxor(integer.bxor(y, z), integer.bxor(a2, b2))
+    t8 = integer.bxor(integer.bxor(c2, d2), integer.bxor(div1, div2))
+    t9 = integer.bxor(sh1, sh2)
     return integer.bxor(
         integer.bxor(t1, t2, t3, t4, t5),
         integer.bxor(t6, t7, t8, t9)
@@ -277,18 +277,18 @@ local function test_extreme_pressure(
 end
 
 -- values with significant upper 32 bits to detect truncation for incorrect spill widths
-local V0: integer = 0x1234567890ABCDEFi
-local V1: integer = 0xFEDCBA0987654321i
-local V2: integer = 0x0011223344556677i
-local V3: integer = 0x8899AABBCCDDEEFFi
-local V4: integer = 0xA5A5A5A5_5A5A5A5Ai
+V0 = 0x1234567890ABCDEFi
+V1 = 0xFEDCBA0987654321i
+V2 = 0x0011223344556677i
+V3 = 0x8899AABBCCDDEEFFi
+V4 = 0xA5A5A5A5_5A5A5A5Ai
 
-local r1 = test_many_locals(V0, V1, V2, V3)
-local r2 = test_division_pressure(V0, V1, V2, V3)
-local r3 = test_shift_pressure(V0, V1, V2, V3)
-local r4 = test_loop_spill(V0, V1, V2, V3, 2)
-local r5 = test_mixed_pressure(V0, V1, V2, V3)
-local r6 = test_extreme_pressure(V0, V1, V2, V3)
+r1 = test_many_locals(V0, V1, V2, V3)
+r2 = test_division_pressure(V0, V1, V2, V3)
+r3 = test_shift_pressure(V0, V1, V2, V3)
+r4 = test_loop_spill(V0, V1, V2, V3, 2)
+r5 = test_mixed_pressure(V0, V1, V2, V3)
+r6 = test_extreme_pressure(V0, V1, V2, V3)
 
 assert(type(r1) == "integer")
 assert(type(r2) == "integer")

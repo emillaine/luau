@@ -25,23 +25,23 @@ SOFTWARE.
 -- http://benchmarksgame.alioth.debian.org/
 -- contributed by Mike Pall
 
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-local function BottomUpTree(item, depth)
+function BottomUpTree(item, depth)
   if depth > 0 then
-    local i = item + item
+    i = item + item
     depth = depth - 1
-    local left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
+    left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
     return { item, left, right }
   else
     return { item }
   end
 end
 
-local function ItemCheck(tree)
+function ItemCheck(tree)
   if tree[2] then
     return tree[1] + ItemCheck(tree[2]) - ItemCheck(tree[3])
   else
@@ -49,25 +49,25 @@ local function ItemCheck(tree)
   end
 end
 
-local N = tonumber(arg and arg[1]) or 10
+N = tonumber(arg and arg[1]) or 10
 
-local mindepth = 4
-local maxdepth = mindepth + 2
+mindepth = 4
+maxdepth = mindepth + 2
 if maxdepth < N then maxdepth = N end
 
 do
-  local stretchdepth = maxdepth + 1
-  local stretchtree = BottomUpTree(0, stretchdepth)
-  local check = ItemCheck(stretchtree)
+  stretchdepth = maxdepth + 1
+  stretchtree = BottomUpTree(0, stretchdepth)
+  check = ItemCheck(stretchtree)
   print(string.format("stretch tree of depth %d\t check: %d\n", stretchdepth, check))
   assert(check == -1)
 end
 
-local longlivedtree = BottomUpTree(0, maxdepth)
+longlivedtree = BottomUpTree(0, maxdepth)
 
 for depth=mindepth,maxdepth,2 do
-  local iterations = 2 ^ (maxdepth - depth + mindepth)
-  local check = 0
+  iterations = 2 ^ (maxdepth - depth + mindepth)
+  check = 0
   for i=1,iterations do
     check = check + ItemCheck(BottomUpTree(1, depth)) +
             ItemCheck(BottomUpTree(-1, depth))
@@ -77,7 +77,7 @@ for depth=mindepth,maxdepth,2 do
   assert(check == -2 * iterations)
 end
 
-local longlivedcheck = ItemCheck(longlivedtree)
+longlivedcheck = ItemCheck(longlivedtree)
 print(string.format("long lived tree of depth %d\t check: %d\n",
   maxdepth, longlivedcheck))
 assert(longlivedcheck == -1)

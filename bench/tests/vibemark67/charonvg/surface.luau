@@ -1,18 +1,18 @@
 --!native
-local Color = require("./color")
+Color = require("./color")
 
-local Surface = {}
+Surface = {}
 Surface.__index = Surface
 
-local MAX_DIM = 32768
+MAX_DIM = 32768
 
 function Surface.create(width, height)
     assert(width > 0 and width <= MAX_DIM, "invalid width")
     assert(height > 0 and height <= MAX_DIM, "invalid height")
     width = math.floor(width)
     height = math.floor(height)
-    local stride = width * 4
-    local data = buffer.create(stride * height)
+    stride = width * 4
+    data = buffer.create(stride * height)
     return setmetatable({
         _width = width,
         _height = height,
@@ -38,27 +38,27 @@ function Surface:getData()
 end
 
 function Surface:clear(color)
-    local size = self._stride * self._height
+    size = self._stride * self._height
     if not color then
         buffer.fill(self._data, 0, 0, size)
         return
     end
-    local a = math.floor(color.a * 255 + 0.5)
-    local r = math.floor(color.r * a + 0.5)
-    local g = math.floor(color.g * a + 0.5)
-    local b = math.floor(color.b * a + 0.5)
+    a = math.floor(color.a * 255 + 0.5)
+    r = math.floor(color.r * a + 0.5)
+    g = math.floor(color.g * a + 0.5)
+    b = math.floor(color.b * a + 0.5)
     -- Fast path: if all bytes are the same value, use buffer.fill
     if a == r and r == g and g == b then
         buffer.fill(self._data, 0, a, size)
         return
     end
-    local pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
-    local data = self._data
+    pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
+    data = self._data
     -- Write first pixel, then copy in doubling chunks
     buffer.writeu32(data, 0, pixel)
-    local written = 4
+    written = 4
     while written < size do
-        local chunk = written
+        chunk = written
         if chunk > size - written then
             chunk = size - written
         end
@@ -71,12 +71,12 @@ function Surface:getPixel(x, y)
     if x < 0 or x >= self._width or y < 0 or y >= self._height then
         return 0, 0, 0, 0
     end
-    local offset = y * self._stride + x * 4
-    local pixel = buffer.readu32(self._data, offset)
-    local a = bit32.rshift(pixel, 24)
-    local r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
-    local g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
-    local b = bit32.band(pixel, 0xFF)
+    offset = y * self._stride + x * 4
+    pixel = buffer.readu32(self._data, offset)
+    a = bit32.rshift(pixel, 24)
+    r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
+    g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
+    b = bit32.band(pixel, 0xFF)
     -- Unpremultiply
     if a == 0 then
         return 0, 0, 0, 0
@@ -95,24 +95,24 @@ function Surface:setPixel(x, y, r, g, b, a)
         return
     end
     -- Premultiply
-    local pr = math.floor(r * a / 255 + 0.5)
-    local pg = math.floor(g * a / 255 + 0.5)
-    local pb = math.floor(b * a / 255 + 0.5)
-    local pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(pr, 16), bit32.lshift(pg, 8), pb)
-    local offset = y * self._stride + x * 4
+    pr = math.floor(r * a / 255 + 0.5)
+    pg = math.floor(g * a / 255 + 0.5)
+    pb = math.floor(b * a / 255 + 0.5)
+    pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(pr, 16), bit32.lshift(pg, 8), pb)
+    offset = y * self._stride + x * 4
     buffer.writeu32(self._data, offset, pixel)
 end
 
 function Surface.convertARGBtoRGBA(dst, src, width, height, stride)
     for y = 0, height - 1 do
-        local rowOff = y * stride
+        rowOff = y * stride
         for x = 0, width - 1 do
-            local off = rowOff + x * 4
-            local pixel = buffer.readu32(src, off)
-            local a = bit32.rshift(pixel, 24)
-            local r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
-            local g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
-            local b = bit32.band(pixel, 0xFF)
+            off = rowOff + x * 4
+            pixel = buffer.readu32(src, off)
+            a = bit32.rshift(pixel, 24)
+            r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
+            g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
+            b = bit32.band(pixel, 0xFF)
             -- Unpremultiply
             if a > 0 and a < 255 then
                 r = math.min(255, math.floor(r * 255 / a + 0.5))
@@ -129,31 +129,31 @@ function Surface.convertARGBtoRGBA(dst, src, width, height, stride)
 end
 
 function Surface:getRGBA()
-    local total = self._width * self._height
-    local src = self._data
-    local dst = buffer.create(total * 4)
-    local size = total * 4
+    total = self._width * self._height
+    src = self._data
+    dst = buffer.create(total * 4)
+    size = total * 4
 
-    local lastIn0 = -1
-    local lastIn1 = -2
-    local lastOut0 = 0
-    local lastOut1 = 0
+    lastIn0 = -1
+    lastIn1 = -2
+    lastOut0 = 0
+    lastOut1 = 0
 
-    local pairsEnd = size - 7
-    local i = 0
+    pairsEnd = size - 7
+    i = 0
     while i < pairsEnd do
-        local p0 = buffer.readu32(src, i)
-        local p1 = buffer.readu32(src, i + 4)
+        p0 = buffer.readu32(src, i)
+        p1 = buffer.readu32(src, i + 4)
         if p0 == lastIn0 and p1 == lastIn1 then
             buffer.writeu32(dst, i, lastOut0)
             buffer.writeu32(dst, i + 4, lastOut1)
         else
-            local a = bit32.rshift(p0, 24)
-            local r = bit32.band(bit32.rshift(p0, 16), 0xFF)
-            local g = bit32.band(bit32.rshift(p0, 8), 0xFF)
-            local b = bit32.band(p0, 0xFF)
+            a = bit32.rshift(p0, 24)
+            r = bit32.band(bit32.rshift(p0, 16), 0xFF)
+            g = bit32.band(bit32.rshift(p0, 8), 0xFF)
+            b = bit32.band(p0, 0xFF)
             if a > 0 and a < 255 then
-                local inv = 255 / a
+                inv = 255 / a
                 r = math.floor(r * inv + 0.5)
                 g = math.floor(g * inv + 0.5)
                 b = math.floor(b * inv + 0.5)
@@ -175,7 +175,7 @@ function Surface:getRGBA()
             g = bit32.band(bit32.rshift(p1, 8), 0xFF)
             b = bit32.band(p1, 0xFF)
             if a > 0 and a < 255 then
-                local inv = 255 / a
+                inv = 255 / a
                 r = math.floor(r * inv + 0.5)
                 g = math.floor(g * inv + 0.5)
                 b = math.floor(b * inv + 0.5)
@@ -200,13 +200,13 @@ function Surface:getRGBA()
 
     -- Handle remainder
     while i < size do
-        local pixel = buffer.readu32(src, i)
-        local a = bit32.rshift(pixel, 24)
-        local r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
-        local g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
-        local b = bit32.band(pixel, 0xFF)
+        pixel = buffer.readu32(src, i)
+        a = bit32.rshift(pixel, 24)
+        r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
+        g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
+        b = bit32.band(pixel, 0xFF)
         if a > 0 and a < 255 then
-            local inv = 255 / a
+            inv = 255 / a
             r = math.floor(r * inv + 0.5)
             g = math.floor(g * inv + 0.5)
             b = math.floor(b * inv + 0.5)
@@ -228,20 +228,20 @@ end
 
 function Surface.convertRGBAtoARGB(dst, src, width, height, stride)
     for y = 0, height - 1 do
-        local rowOff = y * stride
+        rowOff = y * stride
         for x = 0, width - 1 do
-            local off = rowOff + x * 4
-            local r = buffer.readu8(src, off)
-            local g = buffer.readu8(src, off + 1)
-            local b = buffer.readu8(src, off + 2)
-            local a = buffer.readu8(src, off + 3)
+            off = rowOff + x * 4
+            r = buffer.readu8(src, off)
+            g = buffer.readu8(src, off + 1)
+            b = buffer.readu8(src, off + 2)
+            a = buffer.readu8(src, off + 3)
             -- Premultiply
             if a < 255 then
                 r = math.floor(r * a / 255 + 0.5)
                 g = math.floor(g * a / 255 + 0.5)
                 b = math.floor(b * a / 255 + 0.5)
             end
-            local pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
+            pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
             buffer.writeu32(dst, off, pixel)
         end
     end

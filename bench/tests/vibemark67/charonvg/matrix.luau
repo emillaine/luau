@@ -1,11 +1,11 @@
 --!native
-local Matrix = {}
+Matrix = {}
 Matrix.__index = Matrix
 
-local PI = math.pi
-local DEG2RAD = PI / 180
+PI = math.pi
+DEG2RAD = PI / 180
 
-local function makeMatrix(a, b, c, d, e, f)
+function makeMatrix(a, b, c, d, e, f)
     return setmetatable({ a, b, c, d, e, f }, Matrix)
 end
 
@@ -26,8 +26,8 @@ function Matrix.scale(sx, sy)
 end
 
 function Matrix.rotate(angle)
-    local c = math.cos(angle)
-    local s = math.sin(angle)
+    c = math.cos(angle)
+    s = math.sin(angle)
     return makeMatrix(c, s, -s, c, 0, 0)
 end
 
@@ -36,8 +36,8 @@ function Matrix.shear(shx, shy)
 end
 
 function Matrix:multiply(other)
-    local la, lb, lc, ld, le, lf = self[1], self[2], self[3], self[4], self[5], self[6]
-    local ra, rb, rc, rd, re, rf = other[1], other[2], other[3], other[4], other[5], other[6]
+    la, lb, lc, ld, le, lf = self[1], self[2], self[3], self[4], self[5], self[6]
+    ra, rb, rc, rd, re, rf = other[1], other[2], other[3], other[4], other[5], other[6]
     return makeMatrix(
         la * ra + lb * rc,
         la * rb + lb * rd,
@@ -49,12 +49,12 @@ function Matrix:multiply(other)
 end
 
 function Matrix:invert()
-    local a, b, c, d, e, f = self[1], self[2], self[3], self[4], self[5], self[6]
-    local det = a * d - b * c
+    a, b, c, d, e, f = self[1], self[2], self[3], self[4], self[5], self[6]
+    det = a * d - b * c
     if det == 0 then
         return nil
     end
-    local inv_det = 1 / det
+    inv_det = 1 / det
     return makeMatrix(
         d * inv_det,
         -b * inv_det,
@@ -66,20 +66,20 @@ function Matrix:invert()
 end
 
 function Matrix:mapPoint(x, y)
-    local a, b, c, d, e, f = self[1], self[2], self[3], self[4], self[5], self[6]
+    a, b, c, d, e, f = self[1], self[2], self[3], self[4], self[5], self[6]
     return x * a + y * c + e, x * b + y * d + f
 end
 
 function Matrix:mapRect(x, y, w, h)
-    local x0, y0 = self:mapPoint(x, y)
-    local x1, y1 = self:mapPoint(x + w, y)
-    local x2, y2 = self:mapPoint(x + w, y + h)
-    local x3, y3 = self:mapPoint(x, y + h)
+    x0, y0 = self:mapPoint(x, y)
+    x1, y1 = self:mapPoint(x + w, y)
+    x2, y2 = self:mapPoint(x + w, y + h)
+    x3, y3 = self:mapPoint(x, y + h)
 
-    local minX = math.min(x0, x1, x2, x3)
-    local minY = math.min(y0, y1, y2, y3)
-    local maxX = math.max(x0, x1, x2, x3)
-    local maxY = math.max(y0, y1, y2, y3)
+    minX = math.min(x0, x1, x2, x3)
+    minY = math.min(y0, y1, y2, y3)
+    maxX = math.max(x0, x1, x2, x3)
+    maxY = math.max(y0, y1, y2, y3)
 
     return minX, minY, maxX - minX, maxY - minY
 end
@@ -102,23 +102,23 @@ end
 
 -- SVG transform string parsing
 
-local function isWs(c)
+function isWs(c)
     return c == 32 or c == 9 or c == 10 or c == 13
 end
 
-local function isNum(c)
+function isNum(c)
     return c >= 48 and c <= 57
 end
 
-local function skipWs(str, pos)
+function skipWs(str, pos)
     while pos <= #str and isWs(string.byte(str, pos)) do
         pos = pos + 1
     end
     return pos
 end
 
-local function skipWsOrComma(str, pos)
-    local hadComma = false
+function skipWsOrComma(str, pos)
+    hadComma = false
     pos = skipWs(str, pos)
     if pos <= #str and string.byte(str, pos) == 44 then
         hadComma = true
@@ -128,14 +128,14 @@ local function skipWsOrComma(str, pos)
     return pos, hadComma
 end
 
-local function parseNumber(str, pos)
-    local len = #str
-    local sign = 1
+function parseNumber(str, pos)
+    len = #str
+    sign = 1
 
     if pos > len then
         return nil
     end
-    local c = string.byte(str, pos)
+    c = string.byte(str, pos)
     if c == 43 then
         pos = pos + 1
     else if c == 45 then
@@ -147,11 +147,11 @@ local function parseNumber(str, pos)
         return nil
     end
     c = string.byte(str, pos)
-    if c ~= 46 and not isNum(c) then
+    if c != 46 and not isNum(c) then
         return nil
     end
 
-    local integer = 0
+    integer = 0
     while pos <= len do
         c = string.byte(str, pos)
         if not isNum(c) then
@@ -161,7 +161,7 @@ local function parseNumber(str, pos)
         pos = pos + 1
     end
 
-    local fraction = 0
+    fraction = 0
     if pos <= len and string.byte(str, pos) == 46 then
         pos = pos + 1
         if pos > len or not isNum(string.byte(str, pos)) then
@@ -170,7 +170,7 @@ local function parseNumber(str, pos)
             end
             return sign * integer, pos
         end
-        local divisor = 1
+        divisor = 1
         while pos <= len do
             c = string.byte(str, pos)
             if not isNum(c) then
@@ -183,8 +183,8 @@ local function parseNumber(str, pos)
         fraction = fraction / divisor
     end
 
-    local exponent = 0
-    local expsign = 1
+    exponent = 0
+    expsign = 1
     if pos <= len then
         c = string.byte(str, pos)
         if c == 101 or c == 69 then
@@ -212,26 +212,26 @@ local function parseNumber(str, pos)
         end
     end
 
-    local value = sign * (integer + fraction)
-    if exponent ~= 0 then
+    value = sign * (integer + fraction)
+    if exponent != 0 then
         value = value * (10 ^ (expsign * exponent))
     end
     return value, pos
 end
 
-local function parseMatrixParams(str, pos, required, optional)
+function parseMatrixParams(str, pos, required, optional)
     pos = skipWs(str, pos)
-    if pos > #str or string.byte(str, pos) ~= 40 then
+    if pos > #str or string.byte(str, pos) != 40 then
         return nil
     end
     pos = pos + 1
     pos = skipWs(str, pos)
 
-    local values = {}
-    local maxCount = required + optional
-    local hadComma = false
+    values = {}
+    maxCount = required + optional
+    hadComma = false
     for i = 1, maxCount do
-        local val, newPos = parseNumber(str, pos)
+        val, newPos = parseNumber(str, pos)
         if not val then
             break
         end
@@ -240,16 +240,16 @@ local function parseMatrixParams(str, pos, required, optional)
         pos, hadComma = skipWsOrComma(str, pos)
     end
 
-    local count = #values
+    count = #values
     if hadComma then
         return nil
     end
-    if count ~= required and count ~= required + optional then
+    if count != required and count != required + optional then
         return nil
     end
 
     pos = skipWs(str, pos)
-    if pos > #str or string.byte(str, pos) ~= 41 then
+    if pos > #str or string.byte(str, pos) != 41 then
         return nil
     end
     pos = pos + 1
@@ -257,8 +257,8 @@ local function parseMatrixParams(str, pos, required, optional)
     return values, pos, count
 end
 
-local function matchString(str, pos, target)
-    local tlen = #target
+function matchString(str, pos, target)
+    tlen = #target
     if pos + tlen - 1 > #str then
         return nil
     end
@@ -269,50 +269,50 @@ local function matchString(str, pos, target)
 end
 
 function Matrix.parse(str)
-    if type(str) ~= "string" or #str == 0 then
+    if type(str) != "string" or #str == 0 then
         return nil
     end
-    local result = Matrix.identity()
-    local pos = skipWs(str, 1)
-    local len = #str
-    local hadComma = false
+    result = Matrix.identity()
+    pos = skipWs(str, 1)
+    len = #str
+    hadComma = false
 
     while pos <= len do
-        local newPos
+        newPos = nil
         newPos = matchString(str, pos, "matrix")
         if newPos then
-            local values
+            values = nil
             values, pos = parseMatrixParams(str, newPos, 6, 0)
             if not values then
                 return nil
             end
-            local m = makeMatrix(values[1], values[2], values[3], values[4], values[5], values[6])
+            m = makeMatrix(values[1], values[2], values[3], values[4], values[5], values[6])
             result = m:multiply(result)
         else
             newPos = matchString(str, pos, "translate")
             if newPos then
-                local values, _, count
+                values, _, count = nil, nil, nil
                 values, pos, count = parseMatrixParams(str, newPos, 1, 1)
                 if not values then
                     return nil
                 end
-                local tx, ty = values[1], count == 2 and values[2] or 0
+                tx, ty = values[1], count == 2 and values[2] or 0
                 result = Matrix.translate(tx, ty):multiply(result)
             else
                 newPos = matchString(str, pos, "scale")
                 if newPos then
-                    local values, _, count
+                    values, _, count = nil, nil, nil
                     values, pos, count = parseMatrixParams(str, newPos, 1, 1)
                     if not values then
                         return nil
                     end
-                    local sx = values[1]
-                    local sy = count == 2 and values[2] or sx
+                    sx = values[1]
+                    sy = count == 2 and values[2] or sx
                     result = Matrix.scale(sx, sy):multiply(result)
                 else
                     newPos = matchString(str, pos, "rotate")
                     if newPos then
-                        local values, _, count
+                        values, _, count = nil, nil, nil
                         values, pos, count = parseMatrixParams(str, newPos, 1, 2)
                         if not values then
                             return nil
@@ -327,7 +327,7 @@ function Matrix.parse(str)
                     else
                         newPos = matchString(str, pos, "skewX")
                         if newPos then
-                            local values
+                            values = nil
                             values, pos = parseMatrixParams(str, newPos, 1, 0)
                             if not values then
                                 return nil
@@ -336,7 +336,7 @@ function Matrix.parse(str)
                         else
                             newPos = matchString(str, pos, "skewY")
                             if newPos then
-                                local values
+                                values = nil
                                 values, pos = parseMatrixParams(str, newPos, 1, 0)
                                 if not values then
                                     return nil

@@ -1,7 +1,7 @@
 -- Neural network layers: Dense and Conv1D
 
-local tensorMod = require("./tensor")
-local Tensor = tensorMod.Tensor
+tensorMod = require("./tensor")
+Tensor = tensorMod.Tensor
 
 export type DenseLayer = {
     weights: typeof(Tensor.new(1,1)),
@@ -32,10 +32,10 @@ export type Conv1DLayer = {
     inputChannels: number,
 }
 
-local function createDense(inputSize: number, outputSize: number, seed: number): (DenseLayer, number)
-    local scale = math.sqrt(2.0 / inputSize)
-    local weights, newSeed = Tensor.randomNormal(inputSize, outputSize, seed, scale)
-    local bias = Tensor.new(1, outputSize)
+function createDense(inputSize: number, outputSize: number, seed: number): (DenseLayer, number)
+    scale = math.sqrt(2.0 / inputSize)
+    weights, newSeed = Tensor.randomNormal(inputSize, outputSize, seed, scale)
+    bias = Tensor.new(1, outputSize)
     return {
         weights = weights,
         bias = bias,
@@ -51,23 +51,23 @@ local function createDense(inputSize: number, outputSize: number, seed: number):
     }, newSeed
 end
 
-local function createConv1D(inputChannels: number, numFilters: number, kernelSize: number, seed: number): (Conv1DLayer, number)
-    local scale = math.sqrt(2.0 / (inputChannels * kernelSize))
-    local filters = {}
-    local mF = {}
-    local vF = {}
+function createConv1D(inputChannels: number, numFilters: number, kernelSize: number, seed: number): (Conv1DLayer, number)
+    scale = math.sqrt(2.0 / (inputChannels * kernelSize))
+    filters = {}
+    mF = {}
+    vF = {}
     for f = 1, numFilters do
-        local w
+        w = nil
         w, seed = Tensor.randomNormal(inputChannels, kernelSize, seed, scale)
         filters[f] = w
         mF[f] = Tensor.new(inputChannels, kernelSize)
         vF[f] = Tensor.new(inputChannels, kernelSize)
     end
-    local biases = table.create(numFilters, 0)
-    local dBiases = table.create(numFilters, 0)
-    local mB = table.create(numFilters, 0)
-    local vB = table.create(numFilters, 0)
-    local dFilters = {}
+    biases = table.create(numFilters, 0)
+    dBiases = table.create(numFilters, 0)
+    mB = table.create(numFilters, 0)
+    vB = table.create(numFilters, 0)
+    dFilters = {}
     for f = 1, numFilters do
         dFilters[f] = Tensor.new(inputChannels, kernelSize)
     end
@@ -87,39 +87,39 @@ local function createConv1D(inputChannels: number, numFilters: number, kernelSiz
     }, seed
 end
 
-local function denseForward(layer: DenseLayer, input: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
+function denseForward(layer: DenseLayer, input: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
     layer.input = input
-    local output = Tensor.matmul(input, layer.weights)
+    output = Tensor.matmul(input, layer.weights)
     return output:addBias(layer.bias)
 end
 
-local function denseBackward(layer: DenseLayer, gradOutput: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
-    local input = layer.input as typeof(Tensor.new(1,1))
+function denseBackward(layer: DenseLayer, gradOutput: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
+    input = layer.input as typeof(Tensor.new(1,1))
     layer.dWeights = Tensor.matmul(input:transpose(), gradOutput)
     layer.dBias = gradOutput:sumRows()
     return Tensor.matmul(gradOutput, layer.weights:transpose())
 end
 
-local function conv1DForward(layer: Conv1DLayer, input: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
+function conv1DForward(layer: Conv1DLayer, input: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
     layer.input = input
-    local batchSize = input.rows
-    local inputLen = math.floor(input.cols / layer.inputChannels)
-    local outputLen = inputLen - layer.kernelSize + 1
-    local output = Tensor.new(batchSize, outputLen * layer.numFilters)
+    batchSize = input.rows
+    inputLen = math.floor(input.cols / layer.inputChannels)
+    outputLen = inputLen - layer.kernelSize + 1
+    output = Tensor.new(batchSize, outputLen * layer.numFilters)
 
     for b = 1, batchSize do
         for f = 1, layer.numFilters do
-            local filter = layer.filters[f]
+            filter = layer.filters[f]
             for i = 1, outputLen do
-                local sum = layer.biases[f]
+                sum = layer.biases[f]
                 for c = 1, layer.inputChannels do
                     for k = 1, layer.kernelSize do
-                        local inputIdx = (b - 1) * input.cols + (i + k - 2) * layer.inputChannels + c
-                        local filterIdx = (c - 1) * layer.kernelSize + k
+                        inputIdx = (b - 1) * input.cols + (i + k - 2) * layer.inputChannels + c
+                        filterIdx = (c - 1) * layer.kernelSize + k
                         sum += input.data[inputIdx] * filter.data[filterIdx]
                     end
                 end
-                local outIdx = (b - 1) * output.cols + (i - 1) * layer.numFilters + f
+                outIdx = (b - 1) * output.cols + (i - 1) * layer.numFilters + f
                 output.data[outIdx] = sum
             end
         end
@@ -127,12 +127,12 @@ local function conv1DForward(layer: Conv1DLayer, input: typeof(Tensor.new(1,1)))
     return output
 end
 
-local function conv1DBackward(layer: Conv1DLayer, gradOutput: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
-    local input = layer.input as typeof(Tensor.new(1,1))
-    local batchSize = input.rows
-    local inputLen = math.floor(input.cols / layer.inputChannels)
-    local outputLen = inputLen - layer.kernelSize + 1
-    local gradInput = Tensor.new(batchSize, input.cols)
+function conv1DBackward(layer: Conv1DLayer, gradOutput: typeof(Tensor.new(1,1))): typeof(Tensor.new(1,1))
+    input = layer.input as typeof(Tensor.new(1,1))
+    batchSize = input.rows
+    inputLen = math.floor(input.cols / layer.inputChannels)
+    outputLen = inputLen - layer.kernelSize + 1
+    gradInput = Tensor.new(batchSize, input.cols)
 
     for f = 1, layer.numFilters do
         layer.dFilters[f]:fill(0)
@@ -141,15 +141,15 @@ local function conv1DBackward(layer: Conv1DLayer, gradOutput: typeof(Tensor.new(
 
     for b = 1, batchSize do
         for f = 1, layer.numFilters do
-            local filter = layer.filters[f]
+            filter = layer.filters[f]
             for i = 1, outputLen do
-                local gradIdx = (b - 1) * gradOutput.cols + (i - 1) * layer.numFilters + f
-                local g = gradOutput.data[gradIdx]
+                gradIdx = (b - 1) * gradOutput.cols + (i - 1) * layer.numFilters + f
+                g = gradOutput.data[gradIdx]
                 layer.dBiases[f] += g
                 for c = 1, layer.inputChannels do
                     for k = 1, layer.kernelSize do
-                        local inputIdx = (b - 1) * input.cols + (i + k - 2) * layer.inputChannels + c
-                        local filterIdx = (c - 1) * layer.kernelSize + k
+                        inputIdx = (b - 1) * input.cols + (i + k - 2) * layer.inputChannels + c
+                        filterIdx = (c - 1) * layer.kernelSize + k
                         layer.dFilters[f].data[filterIdx] += g * input.data[inputIdx]
                         gradInput.data[inputIdx] += g * filter.data[filterIdx]
                     end

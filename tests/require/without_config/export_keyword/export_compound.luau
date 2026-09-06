@@ -1,8 +1,8 @@
-export local num = 5
+export num = 5
 num += 3
 
-export local str = "hi"
+export str = "hi"
 str ..= " there"
 
-export local tbl = { count = 0 }
+export tbl = { count = 0 }
 tbl.count += 1

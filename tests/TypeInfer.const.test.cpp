@@ -63,7 +63,7 @@ TEST_CASE_FIXTURE(Fixture, "const_extra_lvalues_are_nil_and_syntax_error_from_ca
     };
 
     CheckResult results = check(R"(
-        local function getparams(): (number, number)
+        function getparams(): (number, number)
             return 42, 13
         end
 
@@ -121,9 +121,9 @@ TEST_CASE_FIXTURE(Fixture, "assign_different_values_to_const_x")
 
     CheckResult result = check(R"(
         const x: string? = nil
-        local a = x
+        const a = x
         x = "hello!"
-        local b = x
+        const b = x
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -176,7 +176,7 @@ TEST_CASE_FIXTURE(Fixture, "const_shadowing")
         const X = "huh"
         const X = 3.14
 
-        local y = X
+        const y = X
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

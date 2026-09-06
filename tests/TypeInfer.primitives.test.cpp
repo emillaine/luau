@@ -13,7 +13,7 @@ TEST_SUITE_BEGIN("TypeInferPrimitives");
 
 TEST_CASE_FIXTURE(Fixture, "cannot_call_primitives")
 {
-    CheckResult result = check("local foo = 5    foo()");
+    CheckResult result = check("const foo = 5    foo()");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
     REQUIRE(get<CannotCallNonFunction>(result.errors[0]) != nullptr);
@@ -22,8 +22,8 @@ TEST_CASE_FIXTURE(Fixture, "cannot_call_primitives")
 TEST_CASE_FIXTURE(Fixture, "string_length")
 {
     CheckResult result = check(R"(
-        local s = "Hello, World!"
-        local t = s.count
+        const s = "Hello, World!"
+        const t = s.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -33,8 +33,8 @@ TEST_CASE_FIXTURE(Fixture, "string_length")
 TEST_CASE_FIXTURE(Fixture, "string_index")
 {
     CheckResult result = check(R"(
-        local s = "Hello, World!"
-        local t = s[4]
+        const s = "Hello, World!"
+        const t = s[4]
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -49,7 +49,7 @@ TEST_CASE_FIXTURE(Fixture, "string_index")
 TEST_CASE_FIXTURE(Fixture, "string_method")
 {
     CheckResult result = check(R"(
-        local p = ("tacos"):len()
+        const p = ("tacos"):len()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -59,9 +59,9 @@ TEST_CASE_FIXTURE(Fixture, "string_method")
 TEST_CASE_FIXTURE(Fixture, "string_function_indirect")
 {
     CheckResult result = check(R"(
-        local s:string
-        local l = s.lower
-        local p = l(s)
+        const s:string = ""
+        const l = s.lower
+        const p = l(s)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -71,9 +71,9 @@ TEST_CASE_FIXTURE(Fixture, "string_function_indirect")
 TEST_CASE_FIXTURE(Fixture, "check_methods_of_number")
 {
     CheckResult result = check(R"(
-        local x: number = 9999
+        const x: number = 9999
         function x:y(z: number)
-            local s: string = z
+            const s: string = z
         end
     )");
 
@@ -100,7 +100,7 @@ TEST_CASE("singleton_types")
     }
 
     // Check that Frontend 'a' environment wasn't modified by 'b'
-    CheckResult result = a.check("local s: string = 'hello' local t = s:lower()");
+    CheckResult result = a.check("const s: string = 'hello' const t = s:lower()");
 
     CHECK(result.errors.empty());
 }
@@ -108,7 +108,7 @@ TEST_CASE("singleton_types")
 TEST_CASE_FIXTURE(BuiltinsFixture, "property_of_buffers")
 {
     CheckResult result = check(R"(
-        local b = buffer.create(100)
+        const b = buffer.create(100)
         print(b.foo)
     )");
 
@@ -118,10 +118,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "property_of_buffers")
 TEST_CASE_FIXTURE(BuiltinsFixture, "properties_of_vectors")
 {
     CheckResult result = check(R"(
-        local a = vector.create(1, 2, 3)
-        local b = vector.create(4, 5, 6)
+        const a = vector.create(1, 2, 3)
+        const b = vector.create(4, 5, 6)
 
-        local t1 = {
+        const t1 = {
             a + b,
             a - b,
             a * 3,
@@ -135,7 +135,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "properties_of_vectors")
             4 // b,
             -a,
         }
-        local t2 = {
+        const t2 = {
             a.x,
             a.y,
             a.z,

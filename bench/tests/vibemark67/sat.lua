@@ -1,5 +1,13 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+-- forward declarations (implicit-local dialect has no hoisted globals)
+compute_lbd = nil
+get_clause = nil
+is_clause_locked = nil
+minimize_clause = nil
+remove_learned_clause = nil
+solver_add_clause = nil
+solver_enqueue = nil
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -8,22 +16,22 @@ function test()
 -- non-chronological backtracking, restarts, clause cleanup, and phase saving.
 -- Target runtimes: Luau (lute), Lua 5.5, LuaJIT.
 
-local math_floor = math.floor
-local math_abs = math.abs
-local math_max = math.max
-local math_min = math.min
-local string_sub = string.sub
-local string_find = string.find
-local string_match = string.match
-local table_insert = table.insert
-local table_remove = table.remove
-local os_clock = os.clock
+math_floor = math.floor
+math_abs = math.abs
+math_max = math.max
+math_min = math.min
+string_sub = string.sub
+string_find = string.find
+string_match = string.match
+table_insert = table.insert
+table_remove = table.remove
+os_clock = os.clock
 
 -- ============================================================================
 -- Deterministic PRNG
 -- ============================================================================
 
-local prng_state = 42
+prng_state = 42
 
 function prng_reset()
     prng_state = 42
@@ -47,17 +55,17 @@ end
 -- ============================================================================
 
 function parse_dimacs(text)
-    local num_vars = 0
-    local num_clauses = 0
-    local clauses = {}
-    local current_clause = {}
-    local pos = 1
-    local len = #text
+    num_vars = 0
+    num_clauses = 0
+    clauses = {}
+    current_clause = {}
+    pos = 1
+    len = #text
 
     while pos <= len do
         -- Skip whitespace
         while pos <= len do
-            local ch = string_sub(text, pos, pos)
+            ch = string_sub(text, pos, pos)
             if ch == " " or ch == "\t" or ch == "\r" then
                 pos = pos + 1
             else
@@ -66,20 +74,20 @@ function parse_dimacs(text)
         end
         if pos > len then break end
 
-        local ch = string_sub(text, pos, pos)
+        ch = string_sub(text, pos, pos)
         if ch == "\n" then
             pos = pos + 1
         else if ch == "c" then
             -- Comment line, skip to newline
-            while pos <= len and string_sub(text, pos, pos) ~= "\n" do
+            while pos <= len and string_sub(text, pos, pos) != "\n" do
                 pos = pos + 1
             end
             if pos <= len then pos = pos + 1 end
         else if ch == "p" then
             -- Problem line
-            local line_end = string_find(text, "\n", pos) or (len + 1)
-            local line = string_sub(text, pos, line_end - 1)
-            local nv, nc = string_match(line, "p%s+cnf%s+(%d+)%s+(%d+)")
+            line_end = string_find(text, "\n", pos) or (len + 1)
+            line = string_sub(text, pos, line_end - 1)
+            nv, nc = string_match(line, "p%s+cnf%s+(%d+)%s+(%d+)")
             if nv then
                 num_vars = tonumber(nv)
                 num_clauses = tonumber(nc)
@@ -90,14 +98,14 @@ function parse_dimacs(text)
             break
         else
             -- Clause data: read integers
-            local neg = false
+            neg = false
             if ch == "-" then
                 neg = true
                 pos = pos + 1
             end
-            local num_start = pos
+            num_start = pos
             while pos <= len do
-                local c = string_sub(text, pos, pos)
+                c = string_sub(text, pos, pos)
                 if c >= "0" and c <= "9" then
                     pos = pos + 1
                 else
@@ -105,7 +113,7 @@ function parse_dimacs(text)
                 end
             end
             if pos > num_start then
-                local val = tonumber(string_sub(text, num_start, pos - 1))
+                val = tonumber(string_sub(text, num_start, pos - 1))
                 if neg then val = -val end
                 if val == 0 then
                     if #current_clause > 0 then
@@ -132,16 +140,16 @@ end
 -- Constants
 -- ============================================================================
 
-local UNDEF = 0
-local TRUE_VAL = 1
-local FALSE_VAL = -1
+UNDEF = 0
+TRUE_VAL = 1
+FALSE_VAL = -1
 
 -- ============================================================================
 -- Solver State Creation
 -- ============================================================================
 
 function solver_new(num_vars, clauses)
-    local s = {}
+    s = {}
     s.num_vars = num_vars
     s.num_original_clauses = #clauses
 
@@ -224,7 +232,7 @@ function solver_new(num_vars, clauses)
 
     -- Add original clauses
     for i = 1, #clauses do
-        local ok = solver_add_clause(s, clauses[i], false)
+        ok = solver_add_clause(s, clauses[i], false)
         if not ok then
             s.conflict_at_root = true
             return s
@@ -256,8 +264,8 @@ function lit_neg(lit)
 end
 
 function lit_value(s, lit)
-    local v = lit_var(lit)
-    local a = s.assigns[v]
+    v = lit_var(lit)
+    a = s.assigns[v]
     if a == UNDEF then return UNDEF end
     if lit > 0 then return a else return -a end
 end
@@ -268,12 +276,12 @@ end
 
 function solver_add_clause(s, lits, is_learned)
     -- Remove false literals at level 0, detect tautologies
-    local cleaned = {}
-    local seen_lits = {}
+    cleaned = {}
+    seen_lits = {}
 
     for i = 1, #lits do
-        local l = lits[i]
-        local val = lit_value(s, l)
+        l = lits[i]
+        val = lit_value(s, l)
         -- At level 0, skip falsified literals
         if s.decision_level == 0 and val == FALSE_VAL then
             -- skip
@@ -296,7 +304,7 @@ function solver_add_clause(s, lits, is_learned)
     end
 
     -- Create clause record
-    local clause = {}
+    clause = {}
     clause.lits = cleaned
     clause.is_learned = is_learned
     clause.activity = 0.0
@@ -306,21 +314,21 @@ function solver_add_clause(s, lits, is_learned)
     -- (highest decision level or undefined)
     if is_learned then
         -- Put asserting literal first, highest level second
-        local max_level = -1
-        local max_idx = 2
+        max_level = -1
+        max_idx = 2
         for i = 2, #cleaned do
-            local v = lit_var(cleaned[i])
+            v = lit_var(cleaned[i])
             if s.level[v] > max_level then
                 max_level = s.level[v]
                 max_idx = i
             end
         end
-        if max_idx ~= 2 then
+        if max_idx != 2 then
             cleaned[2], cleaned[max_idx] = cleaned[max_idx], cleaned[2]
         end
     end
 
-    local ci
+    ci = nil
     if is_learned then
         table_insert(s.learned, clause)
         ci = { learned = true, idx = #s.learned }
@@ -332,8 +340,8 @@ function solver_add_clause(s, lits, is_learned)
     end
 
     -- Add watches on first two literals
-    local w1 = lit_index(cleaned[1])
-    local w2 = lit_index(cleaned[2])
+    w1 = lit_index(cleaned[1])
+    w2 = lit_index(cleaned[2])
     table_insert(s.watches[w1], ci)
     table_insert(s.watches[w2], ci)
 
@@ -345,11 +353,11 @@ end
 -- ============================================================================
 
 function compute_lbd(s, lits)
-    local levels = {}
-    local count = 0
+    levels = {}
+    count = 0
     for i = 1, #lits do
-        local v = lit_var(lits[i])
-        local lv = s.level[v]
+        v = lit_var(lits[i])
+        lv = s.level[v]
         if lv > 0 and not levels[lv] then
             levels[lv] = true
             count = count + 1
@@ -363,8 +371,8 @@ end
 -- ============================================================================
 
 function solver_enqueue(s, lit, reason_clause)
-    local v = lit_var(lit)
-    if s.assigns[v] ~= UNDEF then
+    v = lit_var(lit)
+    if s.assigns[v] != UNDEF then
         -- Already assigned; check consistency
         if lit_value(s, lit) == FALSE_VAL then
             return false
@@ -388,12 +396,12 @@ end
 function solver_backtrack(s, target_level)
     if s.decision_level <= target_level then return end
 
-    local backtrack_point = s.trail_lim[target_level + 1]
+    backtrack_point = s.trail_lim[target_level + 1]
     if not backtrack_point then backtrack_point = 1 end
 
     for i = #s.trail, backtrack_point, -1 do
-        local lit = s.trail[i]
-        local v = lit_var(lit)
+        lit = s.trail[i]
+        v = lit_var(lit)
         s.assigns[v] = UNDEF
         s.level[v] = -1
         s.reason[v] = nil
@@ -417,28 +425,28 @@ end
 
 function solver_propagate(s)
     while s.qhead <= #s.trail do
-        local p = s.trail[s.qhead]
+        p = s.trail[s.qhead]
         s.qhead = s.qhead + 1
         s.propagations = s.propagations + 1
 
         -- p was assigned true, so ~p is false => look at watches of ~p
-        local false_lit = lit_neg(p)
-        local wi = lit_index(false_lit)
-        local watch_list = s.watches[wi]
+        false_lit = lit_neg(p)
+        wi = lit_index(false_lit)
+        watch_list = s.watches[wi]
 
-        local new_watch_list = {}
-        local conflict_clause = nil
-        local j = 1
-        local wlen = #watch_list
+        new_watch_list = {}
+        conflict_clause = nil
+        j = 1
+        wlen = #watch_list
 
         while j <= wlen do
-            local ci = watch_list[j]
-            local clause = get_clause(s, ci)
+            ci = watch_list[j]
+            clause = get_clause(s, ci)
             if not clause then
                 -- Clause was removed
                 j = j + 1
             else
-                local lits = clause.lits
+                lits = clause.lits
 
                 -- Make sure false_lit is lits[2]
                 if lits[1] == false_lit then
@@ -446,20 +454,20 @@ function solver_propagate(s)
                 end
 
                 -- Check if first watched literal is already true
-                local first_val = lit_value(s, lits[1])
+                first_val = lit_value(s, lits[1])
                 if first_val == TRUE_VAL then
                     table_insert(new_watch_list, ci)
                     j = j + 1
                 else
                     -- Look for a new literal to watch
-                    local found_new = false
+                    found_new = false
                     for k = 3, #lits do
-                        local lk_val = lit_value(s, lits[k])
-                        if lk_val ~= FALSE_VAL then
+                        lk_val = lit_value(s, lits[k])
+                        if lk_val != FALSE_VAL then
                             -- Swap lits[2] and lits[k]
                             lits[2], lits[k] = lits[k], lits[2]
                             -- Add watch for new lits[2]
-                            local new_wi = lit_index(lits[2])
+                            new_wi = lit_index(lits[2])
                             table_insert(s.watches[new_wi], ci)
                             found_new = true
                             break
@@ -483,7 +491,7 @@ function solver_propagate(s)
                             end
                         else
                             -- Unit propagation
-                            local ok = solver_enqueue(s, lits[1], ci)
+                            ok = solver_enqueue(s, lits[1], ci)
                             if not ok then
                                 conflict_clause = ci
                                 j = j + 1
@@ -547,7 +555,7 @@ end
 
 function clause_bump_activity(s, ci)
     if ci.learned then
-        local old = s.clause_activity[ci.idx] or 0
+        old = s.clause_activity[ci.idx] or 0
         s.clause_activity[ci.idx] = old + s.clause_inc
         if s.clause_activity[ci.idx] > 1e20 then
             for i = 1, #s.learned do
@@ -567,8 +575,8 @@ end
 -- ============================================================================
 
 function solver_pick_decision(s)
-    local best_var = -1
-    local best_act = -1.0
+    best_var = -1
+    best_act = -1.0
 
     for v = 1, s.num_vars do
         if s.assigns[v] == UNDEF then
@@ -584,7 +592,7 @@ function solver_pick_decision(s)
     end
 
     -- Use phase saving
-    local pol = s.phase[best_var]
+    pol = s.phase[best_var]
     if pol == TRUE_VAL then
         return best_var
     else
@@ -597,30 +605,30 @@ end
 -- ============================================================================
 
 function solver_analyze(s, conflict_ci)
-    local learned_lits = {}
-    local counter = 0
-    local p = nil
-    local p_reason = conflict_ci
+    learned_lits = {}
+    counter = 0
+    p = nil
+    p_reason = conflict_ci
 
     -- Clear seen
     -- (already cleared from prior call)
 
-    local btlevel = 0
-    local trail_idx = #s.trail
+    btlevel = 0
+    trail_idx = #s.trail
 
     repeat
         -- Process reason clause
-        local clause = get_clause(s, p_reason)
+        clause = get_clause(s, p_reason)
         if clause then
             clause_bump_activity(s, p_reason)
-            local start_idx = 1
+            start_idx = 1
             if p then start_idx = 1 end
 
-            local lits = clause.lits
+            lits = clause.lits
             for i = 1, #lits do
-                local lit = lits[i]
-                local v = lit_var(lit)
-                if v ~= (p and lit_var(p) or 0) and not s.seen[v] then
+                lit = lits[i]
+                v = lit_var(lit)
+                if v != (p and lit_var(p) or 0) and not s.seen[v] then
                     if s.level[v] == 0 then
                         -- Level 0 literals are always false, skip
                     else if s.level[v] >= s.decision_level then
@@ -658,7 +666,7 @@ function solver_analyze(s, conflict_ci)
     until counter <= 0
 
     -- The 1-UIP literal
-    local uip_lit = lit_neg(p)
+    uip_lit = lit_neg(p)
     -- Insert at front
     table_insert(learned_lits, 1, uip_lit)
 
@@ -675,10 +683,10 @@ function solver_analyze(s, conflict_ci)
         btlevel = 0
     else
         -- Find second highest level
-        local max_i = 2
+        max_i = 2
         for i = 3, #learned_lits do
-            local v = lit_var(learned_lits[i])
-            local vi = lit_var(learned_lits[max_i])
+            v = lit_var(learned_lits[i])
+            vi = lit_var(learned_lits[max_i])
             if s.level[v] > s.level[vi] then
                 max_i = i
             end
@@ -701,18 +709,18 @@ end
 function minimize_clause(s, lits)
     if #lits <= 2 then return lits end
 
-    local dominated = {}
+    dominated = {}
     for i = 2, #lits do
-        local v = lit_var(lits[i])
-        local r = s.reason[v]
+        v = lit_var(lits[i])
+        r = s.reason[v]
         if r then
-            local rc = get_clause(s, r)
+            rc = get_clause(s, r)
             if rc then
-                local dominated_flag = true
-                local rlits = rc.lits
+                dominated_flag = true
+                rlits = rc.lits
                 for j = 1, #rlits do
-                    local rv = lit_var(rlits[j])
-                    if rv ~= v then
+                    rv = lit_var(rlits[j])
+                    if rv != v then
                         if not s.seen[rv] and s.level[rv] > 0 then
                             dominated_flag = false
                             break
@@ -726,7 +734,7 @@ function minimize_clause(s, lits)
         end
     end
 
-    local result = { lits[1] }
+    result = { lits[1] }
     for i = 2, #lits do
         if not dominated[i] then
             table_insert(result, lits[i])
@@ -740,31 +748,31 @@ end
 -- ============================================================================
 
 function solver_reduce_db(s)
-    local n = #s.learned
+    n = #s.learned
     if n < 10 then return end
 
     -- Sort learned clauses by activity (keep high activity)
-    local indices = {}
+    indices = {}
     for i = 1, n do
         indices[i] = i
     end
 
     -- Simple selection: remove bottom half by activity
-    local limit = math_floor(n / 2)
-    local threshold = 0.0
+    limit = math_floor(n / 2)
+    threshold = 0.0
     -- Find median activity approximately
-    local sum_act = 0.0
+    sum_act = 0.0
     for i = 1, n do
         sum_act = sum_act + (s.clause_activity[i] or 0)
     end
     threshold = sum_act / n
 
-    local to_remove = {}
-    local removed_count = 0
+    to_remove = {}
+    removed_count = 0
     for i = 1, n do
-        local clause = s.learned[i]
+        clause = s.learned[i]
         if clause then
-            local act = s.clause_activity[i] or 0
+            act = s.clause_activity[i] or 0
             -- Don't remove short clauses (LBD <= 2) or locked clauses
             if act < threshold and clause.lbd > 2 and not is_clause_locked(s, i) then
                 if removed_count < limit then
@@ -784,12 +792,12 @@ function solver_reduce_db(s)
 end
 
 function is_clause_locked(s, learned_idx)
-    local clause = s.learned[learned_idx]
+    clause = s.learned[learned_idx]
     if not clause then return false end
-    local lits = clause.lits
+    lits = clause.lits
     if #lits == 0 then return false end
-    local v = lit_var(lits[1])
-    local r = s.reason[v]
+    v = lit_var(lits[1])
+    r = s.reason[v]
     if r and r.learned and r.idx == learned_idx then
         return true
     end
@@ -826,7 +834,7 @@ function solver_solve(s)
     end
 
     -- Initial propagation
-    local conf = solver_propagate(s)
+    conf = solver_propagate(s)
     if conf then
         return "UNSAT", nil
     end
@@ -844,10 +852,10 @@ function solver_solve(s)
         end
 
         -- Decide
-        local lit = solver_pick_decision(s)
+        lit = solver_pick_decision(s)
         if lit == 0 then
             -- All variables assigned => SAT
-            local assignment = {}
+            assignment = {}
             for v = 1, s.num_vars do
                 assignment[v] = s.assigns[v]
             end
@@ -859,7 +867,7 @@ function solver_solve(s)
         solver_enqueue(s, lit, nil)
 
         -- Propagate
-        local conflict = solver_propagate(s)
+        conflict = solver_propagate(s)
 
         while conflict do
             s.conflicts = s.conflicts + 1
@@ -869,7 +877,7 @@ function solver_solve(s)
             end
 
             -- Analyze conflict
-            local learned_lits, btlevel = solver_analyze(s, conflict)
+            learned_lits, btlevel = solver_analyze(s, conflict)
 
             -- Backtrack
             solver_backtrack(s, btlevel)
@@ -880,19 +888,19 @@ function solver_solve(s)
                 solver_enqueue(s, learned_lits[1], nil)
             else
                 -- Create new clause
-                local clause = {}
+                clause = {}
                 clause.lits = learned_lits
                 clause.is_learned = true
                 clause.activity = s.clause_inc
                 clause.lbd = compute_lbd(s, learned_lits)
 
                 table_insert(s.learned, clause)
-                local ci = { learned = true, idx = #s.learned }
+                ci = { learned = true, idx = #s.learned }
                 s.clause_activity[#s.learned] = s.clause_inc
 
                 -- Watch first two literals
-                local w1 = lit_index(learned_lits[1])
-                local w2 = lit_index(learned_lits[2])
+                w1 = lit_index(learned_lits[1])
+                w2 = lit_index(learned_lits[2])
                 table_insert(s.watches[w1], ci)
                 table_insert(s.watches[w2], ci)
 
@@ -912,13 +920,13 @@ end
 
 function verify_sat(num_vars, clauses, assignment)
     for i = 1, #clauses do
-        local clause = clauses[i]
-        local satisfied = false
+        clause = clauses[i]
+        satisfied = false
         for j = 1, #clause do
-            local lit = clause[j]
-            local v = lit_var(lit)
+            lit = clause[j]
+            v = lit_var(lit)
             if v <= num_vars then
-                local a = assignment[v]
+                a = assignment[v]
                 if (lit > 0 and a == TRUE_VAL) or (lit < 0 and a == FALSE_VAL) then
                     satisfied = true
                     break
@@ -937,9 +945,9 @@ end
 -- ============================================================================
 
 function assignment_checksum(assignment, num_vars)
-    local sum = 0
+    sum = 0
     for i = 1, num_vars do
-        local val = assignment[i] or 0
+        val = assignment[i] or 0
         -- Mix bits
         if val == TRUE_VAL then
             sum = sum + i * 7919
@@ -956,13 +964,13 @@ end
 -- ============================================================================
 
 function generate_random_3sat(num_vars, num_clauses)
-    local clauses = {}
+    clauses = {}
     for i = 1, num_clauses do
-        local clause = {}
-        local vars_used = {}
-        local j = 0
+        clause = {}
+        vars_used = {}
+        j = 0
         while j < 3 do
-            local v = prng_range(1, num_vars)
+            v = prng_range(1, num_vars)
             if not vars_used[v] then
                 vars_used[v] = true
                 if prng_float() < 0.5 then
@@ -983,10 +991,10 @@ end
 -- ============================================================================
 
 function clauses_to_dimacs(num_vars, clauses)
-    local parts = {}
+    parts = {}
     table_insert(parts, "p cnf " .. num_vars .. " " .. #clauses .. "\n")
     for i = 1, #clauses do
-        local line = ""
+        line = ""
         for j = 1, #clauses[i] do
             if j > 1 then line = line .. " " end
             line = line .. clauses[i][j]
@@ -1001,7 +1009,7 @@ end
 -- Test instances: Trivially satisfiable (< 20 vars)
 -- ============================================================================
 
-local TRIVIAL_SAT_1 = [[
+TRIVIAL_SAT_1 = [[
 p cnf 5 6
 1 2 3 0
 -1 2 4 0
@@ -1011,7 +1019,7 @@ p cnf 5 6
 1 -2 -3 0
 ]]
 
-local TRIVIAL_SAT_2 = [[
+TRIVIAL_SAT_2 = [[
 p cnf 8 10
 1 2 0
 -1 3 0
@@ -1025,7 +1033,7 @@ p cnf 8 10
 -7 8 -1 0
 ]]
 
-local TRIVIAL_SAT_3 = [[
+TRIVIAL_SAT_3 = [[
 p cnf 10 15
 1 2 3 0
 -1 4 5 0
@@ -1048,7 +1056,7 @@ p cnf 10 15
 -- Test instances: Challenging satisfiable (50-100 vars, 200-400 clauses)
 -- ============================================================================
 
-local CHALLENGING_SAT_1 = [[
+CHALLENGING_SAT_1 = [[
 p cnf 50 213
 1 -2 3 0
 -4 5 -6 0
@@ -1264,7 +1272,7 @@ p cnf 50 213
 -13 -22 -32 0
 ]]
 
-local CHALLENGING_SAT_2 = [[
+CHALLENGING_SAT_2 = [[
 p cnf 75 320
 1 2 -3 0
 -4 5 6 0
@@ -1581,7 +1589,7 @@ p cnf 75 320
 -36 -55 -75 0
 ]]
 
-local CHALLENGING_SAT_3 = [[
+CHALLENGING_SAT_3 = [[
 p cnf 100 400
 1 -2 3 0
 -4 5 -6 0
@@ -1977,7 +1985,7 @@ p cnf 100 400
 -- ============================================================================
 
 -- Small UNSAT: contradictory unit clauses + implications
-local UNSAT_1 = [[
+UNSAT_1 = [[
 p cnf 4 8
 1 2 0
 1 -2 0
@@ -1990,7 +1998,7 @@ p cnf 4 8
 ]]
 
 -- UNSAT: parity-like constraints
-local UNSAT_2 = [[
+UNSAT_2 = [[
 p cnf 6 18
 1 2 3 0
 1 -2 -3 0
@@ -2020,7 +2028,7 @@ p cnf 6 18
 -- var(i,j) = (i-1)*3 + j for i=1..4, j=1..3  => 12 vars
 -- ============================================================================
 
-local PIGEONHOLE_4_3 = [[
+PIGEONHOLE_4_3 = [[
 p cnf 12 22
 c Pigeonhole: 4 pigeons, 3 holes
 c Variables: p(i,j) = (i-1)*3+j, pigeon i in hole j
@@ -2058,7 +2066,7 @@ c At-most-one pigeon per hole:
 -- Let's do 3-coloring of a 5-cycle (which IS 3-colorable)
 -- ============================================================================
 
-local GRAPH_COLORING_5CYCLE = [[
+GRAPH_COLORING_5CYCLE = [[
 p cnf 15 35
 c 3-coloring of 5-cycle (vertices 1-5)
 c var(v,c) = (v-1)*3 + c, v=1..5, c=1..3
@@ -2112,21 +2120,21 @@ c Edge 5-1:
 -- ============================================================================
 
 function run_instance(name, dimacs_text, expected_result)
-    local num_vars, clauses = parse_dimacs(dimacs_text)
-    local s = solver_new(num_vars, clauses)
-    local result, assignment = solver_solve(s)
+    num_vars, clauses = parse_dimacs(dimacs_text)
+    s = solver_new(num_vars, clauses)
+    result, assignment = solver_solve(s)
 
-    local checksum = 0
+    checksum = 0
     if result == "SAT" and assignment then
         -- Verify
-        local ok, bad_clause = verify_sat(num_vars, clauses, assignment)
+        ok, bad_clause = verify_sat(num_vars, clauses, assignment)
         if not ok then
             error(name .. ": SAT verification failed at clause " .. bad_clause)
         end
         checksum = assignment_checksum(assignment, num_vars)
     end
 
-    if expected_result and result ~= expected_result then
+    if expected_result and result != expected_result then
         error(name .. ": expected " .. expected_result .. " but got " .. result)
     end
 
@@ -2138,19 +2146,19 @@ end
 -- ============================================================================
 
 function run_random_instances()
-    local total_checksum = 0
+    total_checksum = 0
 
     -- Generate several random 3-SAT instances near phase transition
     -- ratio ~4.26, use 20 vars => ~85 clauses
     for trial = 1, 5 do
-        local nv = 20
-        local nc = math_floor(nv * 4.26)
-        local clauses = generate_random_3sat(nv, nc)
-        local s = solver_new(nv, clauses)
-        local result, assignment = solver_solve(s)
+        nv = 20
+        nc = math_floor(nv * 4.26)
+        clauses = generate_random_3sat(nv, nc)
+        s = solver_new(nv, clauses)
+        result, assignment = solver_solve(s)
 
         if result == "SAT" and assignment then
-            local ok, bad = verify_sat(nv, clauses, assignment)
+            ok, bad = verify_sat(nv, clauses, assignment)
             if not ok then
                 error("Random instance " .. trial .. ": verification failed at clause " .. bad)
             end
@@ -2163,14 +2171,14 @@ function run_random_instances()
 
     -- Larger random instances: 40 vars, ~170 clauses
     for trial = 1, 3 do
-        local nv = 40
-        local nc = math_floor(nv * 4.26)
-        local clauses = generate_random_3sat(nv, nc)
-        local s = solver_new(nv, clauses)
-        local result, assignment = solver_solve(s)
+        nv = 40
+        nc = math_floor(nv * 4.26)
+        clauses = generate_random_3sat(nv, nc)
+        s = solver_new(nv, clauses)
+        result, assignment = solver_solve(s)
 
         if result == "SAT" and assignment then
-            local ok, bad = verify_sat(nv, clauses, assignment)
+            ok, bad = verify_sat(nv, clauses, assignment)
             if not ok then
                 error("Random large instance " .. trial .. ": verification failed at clause " .. bad)
             end
@@ -2188,11 +2196,11 @@ end
 -- ============================================================================
 
 function run_one_iteration()
-    local total_checksum = 0
-    local instance_count = 0
+    total_checksum = 0
+    instance_count = 0
 
     -- Trivially satisfiable
-    local r, cs
+    r, cs = nil, nil
     r, cs = run_instance("trivial_sat_1", TRIVIAL_SAT_1, "SAT")
     total_checksum = (total_checksum + cs) % 1000000007
     instance_count = instance_count + 1
@@ -2236,7 +2244,7 @@ function run_one_iteration()
 
     -- Random instances
     prng_reset()
-    local rand_cs = run_random_instances()
+    rand_cs = run_random_instances()
     total_checksum = (total_checksum + rand_cs) % 1000000007
     instance_count = instance_count + 8
 
@@ -2249,11 +2257,11 @@ end
 
 function main()
     for i = 1, 20 do
-        local cs, count = run_one_iteration()
-        if cs ~= 656674380 then
+        cs, count = run_one_iteration()
+        if cs != 656674380 then
             error("Wrong checksum " .. cs)
         end
-        if count ~= 18 then
+        if count != 18 then
             error("Wrong number of iterations " .. count)
         end
     end

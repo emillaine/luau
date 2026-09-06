@@ -1,4 +1,4 @@
-local result = {}
+result = {}
 
 table.insert(result, require("@dep"))
 table.insert(result, require("@outerdep"))

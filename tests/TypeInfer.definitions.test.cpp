@@ -10,11 +10,13 @@
 using namespace Luau;
 
 LUAU_FASTINT(LuauTypeInferRecursionLimit)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 TEST_SUITE_BEGIN("DefinitionTests");
 
 TEST_CASE_FIXTURE(Fixture, "definition_file_simple")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     loadDefinition(R"(
         declare foo: number
         declare function bar(x: number): string
@@ -31,9 +33,9 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_simple")
     CHECK_EQ(toString(globalFoo2Ty), "number");
 
     CheckResult result = check(R"(
-        local x: number = foo - 1
-        local y: string = bar(x)
-        local z: number | string = x
+        const x: number = foo - 1
+        const y: string = bar(x)
+        export z: number | string = x
         z = y
     )");
 
@@ -42,6 +44,7 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_simple")
 
 TEST_CASE_FIXTURE(Fixture, "definition_file_loading")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     loadDefinition(R"(
         declare foo: number
         export type Asdf = number | string
@@ -68,9 +71,9 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_loading")
     CHECK_EQ(toString(globalVarTy), "(...any) -> string");
 
     CheckResult result = check(R"(
-        local x: number = foo + 1
-        local y: string = bar(x)
-        local z: Asdf = x
+        const x: number = foo + 1
+        const y: string = bar(x)
+        export z: Asdf = x
         z = y
     )");
 
@@ -99,7 +102,7 @@ TEST_CASE_FIXTURE(Fixture, "load_definition_file_errors_do_not_pollute_global_sc
         getFrontend().globals,
         getFrontend().globals.globalScope,
         R"(
-        local foo: string = 123
+        const foo: string = 123
         declare bar: typeof(foo)
     )",
         "@test",
@@ -131,13 +134,13 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_extern_types")
     )");
 
     CheckResult result = check(R"(
-        local x: Bar
-        local prop: number = x.Y
-        local inheritedProp: number = x.X
-        local method: number = x:foo(1)
-        local method2: string = x:foo("string")
-        local metamethod: Bar = x + x
-        local inheritedMethod: number = x:inheritance()
+        const x: Bar = nil as any
+        const prop: number = x.Y
+        const inheritedProp: number = x.X
+        const method: number = x:foo(1)
+        const method2: string = x:foo("string")
+        const metamethod: Bar = x + x
+        const inheritedMethod: number = x:inheritance()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -245,13 +248,13 @@ TEST_CASE_FIXTURE(Fixture, "declaring_generic_functions")
     )");
 
     CheckResult result = check(R"(
-        local x = f(1, true)
-        local y: number, z: string = g("foo", 123)
-        local w, u = h(1, true)
+        const x = f(1, true)
+        const y: number, z: string = g("foo", 123)
+        const w, u = h(1, true)
 
-        local f = f
-        local g = g
-        local h = h
+        const f = f
+        const g = g
+        const h = h
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -276,8 +279,8 @@ TEST_CASE_FIXTURE(Fixture, "class_definition_function_prop")
     )");
 
     CheckResult result = check(R"(
-        local x: Foo = Foo.new()
-        local prop = x.X
+        const x: Foo = Foo.new()
+        const prop = x.X
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -300,10 +303,10 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_class_function_args")
     )");
 
     CheckResult result = check(R"(
-        local x: Foo = Foo.new()
-        local methodRef1 = x.foo1
-        local methodRef2 = x.foo2
-        local prop = x.y
+        const x: Foo = Foo.new()
+        const methodRef1 = x.foo1
+        const methodRef2 = x.foo2
+        const prop = x.y
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -411,7 +414,7 @@ declare GetCls: () -> (Cls)
     )");
 
     CheckResult result = check(R"(
-local s : Cls = GetCls()
+const s : Cls = GetCls()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -433,9 +436,9 @@ TEST_CASE_FIXTURE(Fixture, "class_definition_overload_metamethods")
     )");
 
     CheckResult result = check(R"(
-        local base = newCFrame()
-        local shouldBeCFrame = base * newCFrame()
-        local shouldBeVector = base * newVector3()
+        const base = newCFrame()
+        const shouldBeCFrame = base * newCFrame()
+        const shouldBeVector = base * newVector3()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -452,8 +455,8 @@ TEST_CASE_FIXTURE(Fixture, "class_definition_string_props")
     )");
 
     CheckResult result = check(R"(
-        local x: Foo
-        local y = x["a property"]
+        const x: Foo = nil as any
+        const y = x["a property"]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -490,8 +493,8 @@ TEST_CASE_FIXTURE(Fixture, "class_definition_indexer")
     )");
 
     CheckResult result = check(R"(
-        local x: Foo
-        local y = x[1]
+        const x: Foo = nil as any
+        const y = x[1]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -522,9 +525,9 @@ TEST_CASE_FIXTURE(Fixture, "class_definitions_reference_other_extern_types")
     )");
 
     CheckResult result = check(R"(
-        local a: Channel
-        local b = a.Messages[1]
-        local c = b.Channel
+        const a: Channel = nil as any
+        const b = a.Messages[1]
+        const c = b.Channel
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -557,10 +560,11 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_has_source_module_name_set")
 
 TEST_CASE_FIXTURE(Fixture, "recursive_redefinition_reduces_rightfully")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local t: {[string]: string} = {}
+        export t: {[string]: string} = {}
 
-        local function f()
+        function f()
             t = t
         end
 
@@ -575,12 +579,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_142285_reduce_minted_union_func")
     };
 
     CheckResult result = check(R"(
-        local function middle(a: number, b: number): number
+        function middle(a: number, b: number): number
             return math.ceil((a + b) / 2 - 0.5)
         end
 
-        local function find<T>(array: {T}, item: T): number?
-            local l, m, r = 1, middle(1, array.count), array.count
+        function find<T>(array: {T}, item: T): number?
+            l, m, r = 1, middle(1, array.count), array.count
             while l <= r do
                 if item <= array[m] then
                     if item == array[m] then return m end
@@ -612,11 +616,11 @@ TEST_CASE_FIXTURE(Fixture, "vector3_overflow")
 
     CheckResult result = check(R"(
 --!strict
-local function graphPoint(t : number, points : { Vector3 }) : Vector3
-    local n : number = points.count - 1
-    local p : Vector3 = (nil as any)
+function graphPoint(t : number, points : { Vector3 }) : Vector3
+    const n : number = points.count - 1
+    p = (nil as any)
     for i = 0, n do
-        local x = points[i + 1]
+        const x = points[i + 1]
         p = p and p + x or x
     end
     return p
@@ -638,10 +642,10 @@ TEST_CASE_FIXTURE(Fixture, "vector_readonly")
 
     CheckResult result = check(R"(
 --!strict
-local function read(n: number | boolean)
+function read(n: number | boolean)
 end
 
-local function foo(vec: vector)
+function foo(vec: vector)
     read(vec.x)
     read(vec.x > 42)
     vec.x = 15
@@ -669,10 +673,10 @@ TEST_CASE_FIXTURE(Fixture, "extern_writeonly_props")
 
     CheckResult result = check(R"(
 --!strict
-local function read(v: buffer | boolean)
+function read(v: buffer | boolean)
 end
 
-local function foo(bar: noread)
+function foo(bar: noread)
     bar.value = 42
     bar.value += -15
     read(bar.value)
@@ -702,9 +706,9 @@ TEST_CASE_FIXTURE(Fixture, "extern_read_write_dual_attribute")
 
     CheckResult result = check(R"(
 --!strict
-local da: dual_attribute
-local x: boolean = da.value
-local y: number = da.value
+const da: dual_attribute = nil as any
+const x: boolean = da.value
+const y: number = da.value
 da.value = 5
 da.value = false
     )");

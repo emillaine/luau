@@ -13,6 +13,7 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 LUAU_DYNAMIC_FASTINT(LuauTypeFamilyApplicationCartesianProductLimit)
 LUAU_FASTFLAG(DebugLuauAssertOnForcedConstraint)
 LUAU_FASTFLAG(LuauCloneTypeFunctionFromForeignArena)
@@ -76,8 +77,8 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "basic_type_function")
         type B = Swap<string>
         type C = Swap<boolean>
 
-        local x = 123
-        local y: Swap<typeof(x)> = "foo"
+        const x = 123
+        const y: Swap<typeof(x)> = "foo"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -94,10 +95,10 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "function_as_fn_ret")
         return;
 
     CheckResult result = check(R"(
-        local swapper: <T>(T) -> Swap<T>
-        local a = swapper(123)
-        local b = swapper("foo")
-        local c = swapper(false)
+        const swapper: <T>(T) -> Swap<T> = nil as any
+        const a = swapper(123)
+        const b = swapper("foo")
+        const c = swapper(false)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -113,9 +114,9 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "function_as_fn_arg")
         return;
 
     CheckResult result = check(R"(
-        local swapper: <T>(Swap<T>) -> T
-        local a = swapper(123)
-        local b = swapper(false)
+        const swapper: <T>(Swap<T>) -> T = nil as any
+        const a = swapper(123)
+        const b = swapper(false)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -131,7 +132,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "resolve_deep_functions")
         return;
 
     CheckResult result = check(R"(
-        local x: Swap<Swap<Swap<string>>>
+        const x: Swap<Swap<Swap<string>>> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -144,9 +145,9 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "unsolvable_function")
         return;
 
     CheckResult result = check(R"(
-        local impossible: <T>(Swap<T>) -> Swap<Swap<T>>
-        local a = impossible(123)
-        local b = impossible(true)
+        const impossible: <T>(Swap<T>) -> Swap<Swap<T>> = nil as any
+        const a = impossible(123)
+        const b = impossible(true)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -160,10 +161,10 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "table_internal_functions")
         return;
 
     CheckResult result = check(R"(
-        local t: <T>({T}) -> {Swap<T>}
-        local a = t({1, 2, 3})
-        local b = t({"a", "b", "c"})
-        local c = t({true, false, true})
+        const t: <T>({T}) -> {Swap<T>} = nil as any
+        const a = t({1, 2, 3})
+        const b = t({"a", "b", "c"})
+        const c = t({true, false, true})
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -179,12 +180,12 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "function_internal_functions")
         return;
 
     CheckResult result = check(R"(
-        local f0: <T>(T) -> (() -> T)
-        local f: <T>(T) -> (() -> Swap<T>)
-        local a = f(1)
-        local b = f("a")
-        local c = f(true)
-        local d = f0(1)
+        const f0: <T>(T) -> (() -> T) = nil as any
+        const f: <T>(T) -> (() -> Swap<T>) = nil as any
+        const a = f(1)
+        const b = f("a")
+        const c = f(true)
+        const d = f0(1)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -200,13 +201,13 @@ TEST_CASE_FIXTURE(Fixture, "add_function_at_work")
         return;
 
     CheckResult result = check(R"(
-        local function add(a, b)
+        function add(a, b)
             return a + b
         end
 
-        local a = add(1, 2)
-        local b = add(1, "foo")
-        local c = add("foo", 1)
+        const a = add(1, 2)
+        const b = add(1, "foo")
+        const c = add("foo", 1)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -285,8 +286,8 @@ TEST_CASE_FIXTURE(Fixture, "internal_functions_raise_errors")
         return;
 
     CheckResult result = check(R"(
-        local function innerSum(a, b)
-            local _ = a + b
+        function innerSum(a, b)
+            const _ = a + b
         end
     )");
 
@@ -328,12 +329,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_inhabited_with_normalization"
         return;
 
     CheckResult result = check(R"(
-        local useGridConfig : any
-        local columns = useGridConfig("columns", {}) or 1
-        local gutter = useGridConfig('gutter', {}) or 0
-        local margin = useGridConfig('margin', {}) or 0
+        const useGridConfig : any = nil as any
+        const columns = useGridConfig("columns", {}) or 1
+        const gutter = useGridConfig('gutter', {}) or 0
+        const margin = useGridConfig('margin', {}) or 0
         return function(frameAbsoluteWidth: number)
-            local cellAbsoluteWidth = (frameAbsoluteWidth - 2 * margin + gutter) / columns - gutter
+            const cellAbsoluteWidth = (frameAbsoluteWidth - 2 * margin + gutter) / columns - gutter
         end
     )");
 
@@ -349,8 +350,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_works")
         type MyObject = { x: number, y: number, z: number }
         type KeysOfMyObject = keyof<MyObject>
 
-        local function ok(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
-        local function err(idx: KeysOfMyObject): "x" | "y" return idx end
+        function ok(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
+        function err(idx: KeysOfMyObject): "x" | "y" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -367,13 +368,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_works_with_metatables")
         return;
 
     CheckResult result = check(R"(
-        local metatable = { __index = {w = 1} }
-        local obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
+        const metatable = { __index = {w = 1} }
+        const obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
         type MyObject = typeof(obj)
         type KeysOfMyObject = keyof<MyObject>
 
-        local function ok(idx: KeysOfMyObject): "w" | "x" | "y" | "z" return idx end
-        local function err(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
+        function ok(idx: KeysOfMyObject): "w" | "x" | "y" | "z" return idx end
+        function err(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -390,8 +391,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_single_entry_no_uniontype")
         return;
 
     CheckResult result = check(R"(
-        local tbl_A = { abc = "value" }
-        local tbl_B = { a1 = nil, ["a2"] = nil }
+        const tbl_A = { abc = "value" }
+        const tbl_B = { a1 = nil, ["a2"] = nil }
 
         type keyof_A = keyof<typeof(tbl_A)>
         type keyof_B = keyof<typeof(tbl_B)>
@@ -412,7 +413,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_errors_if_it_has_nontabl
         type MyObject = { x: number, y: number, z: number }
         type KeysOfMyObject = keyof<MyObject | boolean>
 
-        local function err(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
+        function err(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
     )");
 
     // FIXME(CLI-95289): we should actually only report the type function being uninhabited error at its first use, I think?
@@ -432,8 +433,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_string_indexer")
         type KeysOfMyOtherObject = keyof<MyOtherObject>
         type KeysOfMyObjects = keyof<MyObject | MyOtherObject>
 
-        local function ok(idx: KeysOfMyOtherObject): "z" return idx end
-        local function err(idx: KeysOfMyObjects): "z" return idx end
+        function ok(idx: KeysOfMyOtherObject): "z" return idx end
+        function err(idx: KeysOfMyObjects): "z" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -459,7 +460,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_common_subset_if_union_o
         type MyOtherObject = { w: number, y: number, z: number }
         type KeysOfMyObject = keyof<MyObject | MyOtherObject>
 
-        local function err(idx: KeysOfMyObject): "z" return idx end
+        function err(idx: KeysOfMyObject): "z" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -478,7 +479,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_never_for_empty_table")
     CheckResult result = check(R"(
         type KeyofEmpty = keyof<{}>
 
-        local foo = ((nil as any) as KeyofEmpty)
+        const foo = ((nil as any) as KeyofEmpty)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -494,8 +495,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_works")
         type MyObject = { x: number, y: number, z: number }
         type KeysOfMyObject = rawkeyof<MyObject>
 
-        local function ok(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
-        local function err(idx: KeysOfMyObject): "x" | "y" return idx end
+        function ok(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
+        function err(idx: KeysOfMyObject): "x" | "y" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -512,13 +513,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_ignores_metatables")
         return;
 
     CheckResult result = check(R"(
-        local metatable = { __index = {w = 1} }
-        local obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
+        const metatable = { __index = {w = 1} }
+        const obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
         type MyObject = typeof(obj)
         type KeysOfMyObject = rawkeyof<MyObject>
 
-        local function ok(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
-        local function err(idx: KeysOfMyObject): "x" | "y" return idx end
+        function ok(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
+        function err(idx: KeysOfMyObject): "x" | "y" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -538,7 +539,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_errors_if_it_has_nont
         type MyObject = { x: number, y: number, z: number }
         type KeysOfMyObject = rawkeyof<MyObject | boolean>
 
-        local function err(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
+        function err(idx: KeysOfMyObject): "x" | "y" | "z" return idx end
     )");
 
     // FIXME(CLI-95289): we should actually only report the type function being uninhabited error at its first use, I think?
@@ -557,7 +558,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_common_subset_if_unio
         type MyOtherObject = { w: number, y: number, z: number }
         type KeysOfMyObject = rawkeyof<MyObject | MyOtherObject>
 
-        local function err(idx: KeysOfMyObject): "z" return idx end
+        function err(idx: KeysOfMyObject): "z" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -576,7 +577,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_never_for_empty_table
     CheckResult result = check(R"(
         type RawkeyofEmpty = rawkeyof<{}>
 
-        local foo = ((nil as any) as RawkeyofEmpty)
+        const foo = ((nil as any) as RawkeyofEmpty)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -591,8 +592,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "keyof_type_function_works_on_extern_types"
     CheckResult result = check(R"(
         type KeysOfMyObject = keyof<BaseClass>
 
-        local function ok(idx: KeysOfMyObject): "BaseMethod" | "BaseField" | "Touched" return idx end
-        local function err(idx: KeysOfMyObject): "BaseMethod" return idx end
+        function ok(idx: KeysOfMyObject): "BaseMethod" | "BaseField" | "Touched" return idx end
+        function err(idx: KeysOfMyObject): "BaseMethod" return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -611,7 +612,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "keyof_type_function_errors_if_it_has_noncl
     CheckResult result = check(R"(
         type KeysOfMyObject = keyof<BaseClass | boolean>
 
-        local function err(idx: KeysOfMyObject): "BaseMethod" | "BaseField" return idx end
+        function err(idx: KeysOfMyObject): "BaseMethod" | "BaseField" return idx end
     )");
 
     // FIXME(CLI-95289): we should actually only report the type function being uninhabited error at its first use, I think?
@@ -628,7 +629,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "keyof_type_function_common_subset_if_union
     CheckResult result = check(R"(
         type KeysOfMyObject = keyof<BaseClass | Vector2>
 
-        local function ok(idx: KeysOfMyObject): never return idx end
+        function ok(idx: KeysOfMyObject): never return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -642,7 +643,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "keyof_type_function_works_with_parent_exte
     CheckResult result = check(R"(
         type KeysOfMyObject = keyof<ChildClass>
 
-        local function ok(idx: KeysOfMyObject): "BaseField" | "BaseMethod" | "Method" | "Touched" return idx end
+        function ok(idx: KeysOfMyObject): "BaseField" | "BaseMethod" | "Method" | "Touched" return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -656,7 +657,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "binary_type_function_works_with_default_ar
     CheckResult result = check(R"(
         type result = mul<number>
 
-        local function thunk(): result return 5 * 4 end
+        function thunk(): result return 5 * 4 end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -669,11 +670,11 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "vector2_multiply_is_overloaded")
         return;
 
     CheckResult result = check(R"(
-        local v = Vector2.New(1, 2)
+        const v = Vector2.New(1, 2)
 
-        local v2 = v * 1.5
-        local v3 = v * v
-        local v4 = v * "Hello" -- line 5
+        const v2 = v * 1.5
+        const v3 = v * v
+        const v4 = v * "Hello" -- line 5
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -692,7 +693,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_rfc_example")
         return;
 
     CheckResult result = check(R"(
-        local animals = {
+        const animals = {
             cat = { speak = function() print "meow" end },
             dog = { speak = function() print "woof woof" end },
             monkey = { speak = function() print "oo oo" end },
@@ -723,7 +724,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_oss_crash_gh1161")
         return;
 
     CheckResult result = check(R"(
-        local EnumVariants = {
+        const EnumVariants = {
             ["a"] = 1, ["b"] = 2, ["c"] = 3
         }
 
@@ -733,7 +734,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_oss_crash_gh1161")
 
         function fnB(i: EnumKey) end
 
-        local result = fnA(EnumVariants)
+        const result = fnA(EnumVariants)
         fnB(result)
     )");
 
@@ -745,7 +746,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "fuzzer_numeric_binop_doesnt_assert_on_ge
 {
     CheckResult result = check(R"(
 Module 'l0':
-local _ = (67108864)(_ >= _).insert
+const _ = (67108864)(_ >= _).insert
 do end
 do end
 _(...,_(_,_(_()),_()))
@@ -874,12 +875,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "we_shouldnt_warn_that_a_reducible_type_funct
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
 
-local Debounce = false
-local Active = false
+export Debounce = false
+export Active = false
 
-local function Use(Mode)
+function Use(Mode)
 
 	if Mode != nil then
 
@@ -918,11 +920,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_should_not_crash_on_cyclic_stuff")
         return;
 
     CheckResult result = check(R"(
-        local PlayerData = {}
+        const PlayerData = {}
 
         type Keys = index<typeof(PlayerData), true>
 
-        local function UpdateData(key: Keys)
+        function UpdateData(key: Keys)
             PlayerData[key] = 4
         end
     )");
@@ -937,11 +939,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_should_not_crash_on_cyclic_stuff2")
         return;
 
     CheckResult result = check(R"(
-        local PlayerData = {}
+        const PlayerData = {}
 
         type Keys = index<typeof(PlayerData), number>
 
-        local function UpdateData(key: Keys)
+        function UpdateData(key: Keys)
             PlayerData[key] = 4
         end
     )");
@@ -958,7 +960,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_should_not_crash_on_cyclic_stuff3")
         return;
 
     CheckResult result = check(R"(
-        local PlayerData = {
+        const PlayerData = {
             Coins = 0,
             Level = 1,
             Exp = 0,
@@ -967,7 +969,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_should_not_crash_on_cyclic_stuff3")
 
         type Keys = index<typeof(PlayerData), true>
 
-        local function UpdateData(key: Keys, value)
+        function UpdateData(key: Keys, value)
             PlayerData[key] = value
         end
 
@@ -989,9 +991,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works")
         type IdxAType = index<MyObject, "a">
         type IdxBType = index<MyObject, keyof<MyObject>>
 
-        local function ok(idx: IdxAType): string return idx end
-        local function ok2(idx: IdxBType): string | number | boolean return idx end
-        local function err(idx: IdxAType): boolean return idx end
+        function ok(idx: IdxAType): string return idx end
+        function ok2(idx: IdxBType): string | number | boolean return idx end
+        function err(idx: IdxAType): boolean return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1008,7 +1010,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_wait_for_pending_no_crash")
         return;
 
     CheckResult result = check(R"(
-        local PlayerData = {
+        const PlayerData = {
             Coins = 0,
             Level = 1,
             Exp = 0,
@@ -1016,7 +1018,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_wait_for_pending_no_crash")
         }
         type Keys = index<typeof(PlayerData), keyof<typeof(PlayerData)>>
         -- This function makes it think that there's going to be a pending expansion
-        local function UpdateData(key: Keys, value)
+        function UpdateData(key: Keys, value)
             PlayerData[key] = value
         end
         UpdateData("Coins", 2)
@@ -1031,10 +1033,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_w_array")
         return;
 
     CheckResult result = check(R"(
-        local MyObject = {"hello", 1, true}
+        const MyObject = {"hello", 1, true}
         type IdxAType = index<typeof(MyObject), number>
 
-        local function ok(idx: IdxAType): string | number | boolean return idx end
+        function ok(idx: IdxAType): string | number | boolean return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1047,8 +1049,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cyclic_metatable_should_not_crash_index")
 
     // t as t1 where t1 = {metatable {__index: t1, __tostring: (t1) -> string}}
     CheckResult result = check(R"(
-        local mt = {}
-        local t = setmetatable({}, mt)
+        const mt = {}
+        const t = setmetatable({}, mt)
         mt.__index = t
 
         function mt:__tostring()
@@ -1069,17 +1071,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_w_generic_types")
         return;
 
     CheckResult result = check(R"(
-        local function access<T, K>(tbl: T & {}, key: K): index<T, K>
+        function access<T, K>(tbl: T & {}, key: K): index<T, K>
             return tbl[key]
         end
 
-        local subjects = {
+        const subjects = {
             english = "boring",
             math = "fun"
         }
 
-        local key: "english" = "english"
-        local a: string = access(subjects, key)
+        const key: "english" = "english"
+        const a: string = access(subjects, key)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1108,7 +1110,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_on_function_metame
 
     CheckResult result = check(R"(
         type Foo = {x: string}
-        local t = {}
+        const t = {}
         setmetatable(t, {
             __index = function(x: string): Foo
                 return {x = x}
@@ -1131,7 +1133,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_on_function_metame
 
     CheckResult result = check(R"(
         type Foo = {x: string}
-        local t = {}
+        const t = {}
         setmetatable(t, {
             __index = function(x: string): Foo
                 return {x = x}
@@ -1151,7 +1153,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_errors_w_var_indexer")
 
     CheckResult result = check(R"(
         type MyObject = {a: string, b: number, c: boolean}
-        local key = "a"
+        const key = "a"
 
         type errType1 = index<MyObject, key>
     )");
@@ -1169,7 +1171,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_w_union_type_index
         type MyObject = {a: string, b: number, c: boolean}
 
         type idxType = index<MyObject, "a" | "b">
-        local function ok(idx: idxType): string | number return idx end
+        function ok(idx: idxType): string | number return idx end
 
         type errType = index<MyObject, "a" | "d">
     )");
@@ -1188,7 +1190,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_w_union_type_index
         type MyObject2 = {a: number}
 
         type idxTypeA = index<MyObject | MyObject2, "a">
-        local function ok(idx: idxTypeA): string | number return idx end
+        function ok(idx: idxTypeA): string | number return idx end
 
         type errType = index<MyObject | MyObject2, "b">
     )");
@@ -1206,7 +1208,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_rfc_alternative_section"
         type MyObject = {a: string}
         type MyObject2 = {a: string, b: number}
 
-        local function edgeCase(param: MyObject)
+        function edgeCase(param: MyObject)
             type unknownType = index<typeof(param), "b">
         end
     )");
@@ -1223,7 +1225,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "index_type_function_works_on_extern_types"
     CheckResult result = check(R"(
         type KeysOfMyObject = index<BaseClass, "BaseField">
 
-        local function ok(idx: KeysOfMyObject): number return idx end
+        function ok(idx: KeysOfMyObject): number return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1237,7 +1239,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "index_type_function_works_on_extern_types_
     CheckResult result = check(R"(
         type KeysOfMyObject = index<ChildClass, "BaseField">
 
-        local function ok(idx: KeysOfMyObject): number return idx end
+        function ok(idx: KeysOfMyObject): number return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1249,18 +1251,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_type_function_works_w_index_metatables
         return;
 
     CheckResult result = check(R"(
-        local exampleClass = { Foo = "text", Bar = true }
+        const exampleClass = { Foo = "text", Bar = true }
 
-        local exampleClass2 = setmetatable({ Foo = 8 }, { __index = exampleClass })
+        const exampleClass2 = setmetatable({ Foo = 8 }, { __index = exampleClass })
         type exampleTy2 = index<typeof(exampleClass2), "Foo">
-        local function ok(idx: exampleTy2): number return idx end
+        function ok(idx: exampleTy2): number return idx end
 
-        local exampleClass3 = setmetatable({ Bar = 5 }, { __index = exampleClass })
+        const exampleClass3 = setmetatable({ Bar = 5 }, { __index = exampleClass })
         type exampleTy3 = index<typeof(exampleClass3), "Foo">
-        local function ok2(idx: exampleTy3): string return idx end
+        function ok2(idx: exampleTy3): string return idx end
 
         type exampleTy4 = index<typeof(exampleClass3), "Foo" | "Bar">
-        local function ok3(idx: exampleTy4): string | number return idx end
+        function ok3(idx: exampleTy4): string | number return idx end
 
         type errTy = index<typeof(exampleClass2), "Car">
     )");
@@ -1278,9 +1280,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works")
         type MyObject = {a: string, b: number, c: boolean}
         type RawAType = rawget<MyObject, "a">
         type RawBType = rawget<MyObject, keyof<MyObject>>
-        local function ok(idx: RawAType): string return idx end
-        local function ok2(idx: RawBType): string | number | boolean return idx end
-        local function err(idx: RawAType): boolean return idx end
+        function ok(idx: RawAType): string return idx end
+        function ok2(idx: RawBType): string | number | boolean return idx end
+        function err(idx: RawAType): boolean return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1297,9 +1299,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works_w_array")
         return;
 
     CheckResult result = check(R"(
-        local MyObject = {"hello", 1, true}
+        const MyObject = {"hello", 1, true}
         type RawAType = rawget<typeof(MyObject), number>
-        local function ok(idx: RawAType): string | number | boolean return idx end
+        function ok(idx: RawAType): string | number | boolean return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1312,7 +1314,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_errors_w_var_indexer")
 
     CheckResult result = check(R"(
         type MyObject = {a: string, b: number, c: boolean}
-        local key = "a"
+        const key = "a"
         type errType1 = rawget<MyObject, key>
     )");
 
@@ -1329,7 +1331,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works_w_union_type_inde
     CheckResult result = check(R"(
         type MyObject = {a: string, b: number, c: boolean}
         type rawType = rawget<MyObject, "a" | "b">
-        local function ok(idx: rawType): string | number return idx end
+        function ok(idx: rawType): string | number return idx end
         type stringType = rawget<MyObject, "a" | "d">
     )");
 
@@ -1346,7 +1348,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works_w_union_type_inde
         type MyObject = {a: string, b: number, c: boolean}
         type MyObject2 = {a: number}
         type rawTypeA = rawget<MyObject | MyObject2, "a">
-        local function ok(idx: rawTypeA): string | number return idx end
+        function ok(idx: rawTypeA): string | number return idx end
         type numberType = rawget<MyObject | MyObject2, "b">
     )");
 
@@ -1360,11 +1362,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works_w_index_metatable
         return;
 
     CheckResult result = check(R"(
-        local exampleClass = { Foo = "text", Bar = true }
-        local exampleClass2 = setmetatable({ Foo = 8 }, { __index = exampleClass })
+        const exampleClass = { Foo = "text", Bar = true }
+        const exampleClass2 = setmetatable({ Foo = 8 }, { __index = exampleClass })
         type exampleTy2 = rawget<typeof(exampleClass2), "Foo">
-        local function ok(idx: exampleTy2): number return idx end
-        local exampleClass3 = setmetatable({ Bar = 5 }, { __index = exampleClass })
+        function ok(idx: exampleTy2): number return idx end
+        const exampleClass3 = setmetatable({ Bar = 5 }, { __index = exampleClass })
         type nilType = rawget<typeof(exampleClass3), "Foo">
         type numberType = rawget<typeof(exampleClass3), "Bar" | "Foo">
     )");
@@ -1405,7 +1407,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzz_len_type_function_follow")
 {
     // Should not fail assertions
     check(R"(
-        local _
+        const _ = nil
         _ = true
         for l0=_,_,# _ do
         end
@@ -1536,8 +1538,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "getmetatable_returns_correct_metatable")
         return;
 
     CheckResult result = check(R"(
-        local metatable = { __index = { w = 4 } }
-        local obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
+        const metatable = { __index = { w = 4 } }
+        const obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
         type Metatable = getmetatable<typeof(obj)>
     )");
 
@@ -1598,8 +1600,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "getmetatable_respects_metatable_metamethod")
         return;
 
     CheckResult result = check(R"(
-        local metatable = { __metatable = "Test" }
-        local obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
+        const metatable = { __metatable = "Test" }
+        const obj = setmetatable({x = 1, y = 2, z = 3}, metatable)
         type Metatable = getmetatable<typeof(obj)>
     )");
 
@@ -1626,9 +1628,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "len_typefun_on_metatable")
         return;
 
     CheckResult result = check(R"(
-local t = setmetatable({}, { __mode = "v" })
+const t = setmetatable({}, { __mode = "v" })
 
-local function f()
+function f()
     table.insert(t, {})
     print(t.count * 100)
 end
@@ -1642,7 +1644,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "has_prop_on_irreducible_type_function")
     ScopedFastFlag newSolver{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-local test = "a" + "b"
+const test = "a" + "b"
 print(test.a)
     )");
 
@@ -1660,7 +1662,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "error_suppression_should_work_on_type_functi
         return;
 
     CheckResult result = check(R"(
-        local Colours = {
+        const Colours = {
             Red = 1,
             Blue = 2,
             Green = 3,
@@ -1687,11 +1689,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fully_dispatch_type_function_that_is_paramet
     CheckResult result = check(R"(
         --!strict
 
-        local function f()
-            local a
-            local b
+        function f()
+            const a = nil
+            const b = nil
 
-            local c = a + b
+            const c = a + b
 
             print(c + d)
         end
@@ -1714,7 +1716,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "undefined_add_application")
             return a + b
         end
 
-        local s = add(5, "hello")
+        const s = add(5, "hello")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1960,7 +1962,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184124_recursive_restraint_violation_from_devfor
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type TypeA<A... = ()> = { Func: (self: TypeA<A...>, func: (A...) -> ()) -> () }
         type TypeB<A = any> = { Value: TypeA<TypeB<A>> }
-        local value = {} as TypeB
+        const value = {} as TypeB
     )"));
 }
 
@@ -1970,8 +1972,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2106_wait_for_pending_types_in_setmetata
     ScopedFastFlag sffs[] = {{FFlag::DebugLuauForceOldSolver, false}, {FFlag::DebugLuauAssertOnForcedConstraint, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local MyClass = {}
-        local MyClassMetatable = table.freeze({  __index = MyClass })
+        const MyClass = {}
+        const MyClassMetatable = table.freeze({  __index = MyClass })
 
         type MyClass = setmetatable<{ name: string }, typeof(MyClassMetatable)>
 
@@ -1983,8 +1985,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2106_wait_for_pending_types_in_setmetata
             return `Hello, {self.name}!`
         end
 
-        local instance = MyClass.new("World")
-        local g = instance:hello()
+        const instance = MyClass.new("World")
+        const g = instance:hello()
     )"));
 
     CHECK_EQ("string", toString(requireType("g")));
@@ -1995,8 +1997,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2106_wait_for_pending_types_in_setmetata
     ScopedFastFlag sffs[] = {{FFlag::DebugLuauForceOldSolver, false}, {FFlag::DebugLuauAssertOnForcedConstraint, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local MyClass = {}
-        local MyClassMetatable = { __index = MyClass }
+        const MyClass = {}
+        const MyClassMetatable = { __index = MyClass }
         table.freeze(MyClassMetatable)
 
         type CommonFields<T> = { read name: T }
@@ -2010,8 +2012,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2106_wait_for_pending_types_in_setmetata
             return `Hello, {self.name}!`
         end
 
-        local instance = MyClass.new("World")
-        local g = instance:hello()
+        const instance = MyClass.new("World")
+        const g = instance:hello()
     )"));
 
     CHECK_EQ("string", toString(requireType("g")));
@@ -2030,11 +2032,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2114_type_instantiation_on_type_function
             return t
         end
 
-        local function fn<T>(): id<T>
+        function fn<T>(): id<T>
             return nil as any
         end
 
-        local y = fn<<number>>()
+        const y = fn<<number>>()
     )"));
 
     CHECK_EQ("number", toString(requireType("y")));
@@ -2054,12 +2056,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2144_type_instantiation_on_type_function
             Name: string
         }
 
-        local function access<T>(t, field: T): index<ST, T>
+        function access<T>(t, field: T): index<ST, T>
             return t[field]
         end
 
-        local t: any = {}
-        local _b = access<<"Member1">>(t, "Member1")
+        const t: any = {}
+        const _b = access<<"Member1">>(t, "Member1")
     )"));
 
     CHECK_EQ("number", toString(requireType("_b")));
@@ -2095,7 +2097,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exporting_erroneous_type_function_is_error_t
     ScopedFastFlag _{FFlag::LuauCloneTypeFunctionFromForeignArena, true};
 
     fileResolver.source["game/A"] = R"(
-        local function get(x: string, y: unknown)
+        function get(x: string, y: unknown)
             return x .. y
         end
 
@@ -2106,8 +2108,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exporting_erroneous_type_function_is_error_t
     LUAU_REQUIRE_ERROR_COUNT(3, aResult);
 
     CheckResult bResult = check(R"(
-        local Test = require(game.A);
-        local x = Test.get("hello", "world")
+        const Test = require(game.A);
+        const x = Test.get("hello", "world")
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -2125,10 +2127,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_negation_of_nontestable_type_doesnt_cras
 
     CheckResult result = check(R"(
         type function tf()
-            local dn = types.negationof(types.unionof(types.newfunction(), types.number))
+            const dn = types.negationof(types.unionof(types.newfunction(), types.number))
             return types.intersectionof(types.number, types.negationof(types.unionof(dn, types.string)))
         end
-        local x: tf<> = nil as any
+        const x: tf<> = nil as any
         print(x)
     )");
 
@@ -2146,7 +2148,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2634_negation_of_nontestable_type_doesnt
         type function mknot()
             return types.negationof(types.unionof(types.newfunction(), types.number))
         end
-        local function f(a: mknot<>)
+        function f(a: mknot<>)
             return (a == 5)
         end
         return f
@@ -2164,10 +2166,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2634_negation_of_nontestable_type_doesnt
 
     CheckResult result = check(R"(
         type function tf()
-            local dn = types.negationof(types.unionof(types.newfunction(), types.number))
+            const dn = types.negationof(types.unionof(types.newfunction(), types.number))
             return types.negationof(types.unionof(dn, types.string))
         end
-        local f: tf<> = nil as any
+        const f: tf<> = nil as any
         f()
     )");
 

@@ -1,5 +1,5 @@
-export local a = 0
-export local b = 0
+export a = 0
+export b = 0
 
 export function update()
 	a, b = 1, 2

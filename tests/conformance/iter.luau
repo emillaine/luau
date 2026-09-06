@@ -4,7 +4,7 @@ print('testing iteration')
 
 -- basic for loop tests
 do
-  local a
+  a = nil
   for a,b in pairs{} do error("not here") end
   for i=1,0 do error("not here") end
   for i=0,1,-1 do error("not here") end
@@ -15,7 +15,7 @@ end
 
 -- precision tests for for loops
 do
-  local a
+  a = nil
   --a = 0; for i=1, 0, -0.01 do a=a+1 end; assert(a==101)
   a = 0; for i=0, 0.999999999, 0.1 do a=a+1 end; assert(a==10)
   a = 0; for i=1, 1, 1 do a=a+1 end; assert(a==1)
@@ -28,15 +28,15 @@ end
 
 -- for loops do string->number coercion
 function testLoopWithCoercions()
-  local a = 0; for i="10","1","-2" do a=a+1 end; assert(a==5)
+  a = 0; for i="10","1","-2" do a=a+1 end; assert(a==5)
 end
 
 testLoopWithCoercions()
 
 -- generic for with function iterators
 do
-  local function f (n, p)
-    local t = {}; for i=1,p do t[i] = i*10 end
+  function f (n, p)
+    t = {}; for i=1,p do t[i] = i*10 end
     return function (_,n)
              if n > 0 then
                n = n-1
@@ -45,7 +45,7 @@ do
            end, nil, n
   end
 
-  local x = 0
+  x = 0
   for n,a,b,c,d in f(5,3) do
     x = x+1
     assert(a == 10 and b == 20 and c == 30 and d == nil)
@@ -55,10 +55,10 @@ end
 
 -- generic for with __call (tables)
 do
-  local f = {}
+  f = {}
   setmetatable(f, { __call = function(_, _, n) if n > 0 then return n - 1 end end })
 
-  local x = 0
+  x = 0
   for n in f, nil, 5 do
     x += n
   end
@@ -67,10 +67,10 @@ end
 
 -- generic for with __call (userdata)
 do
-  local f = newproxy(true)
+  f = newproxy(true)
   getmetatable(f).__call = function(_, _, n) if n > 0 then return n - 1 end end
 
-  local x = 0
+  x = 0
   for n in f, nil, 5 do
     x += n
   end
@@ -79,7 +79,7 @@ end
 
 -- generic for with pairs
 do
-  local x = 0
+  x = 0
   for k, v in pairs({a = 1, b = 2, c = 3}) do
     x += v
   end
@@ -88,7 +88,7 @@ end
 
 -- generic for with pairs with holes
 do
-  local x = 0
+  x = 0
   for k, v in pairs({1, 2, 3, nil, 5}) do
     x += v
   end
@@ -97,7 +97,7 @@ end
 
 -- generic for with ipairs
 do
-  local x = 0
+  x = 0
   for k, v in ipairs({1, 2, 3, nil, 5}) do
     x += v
   end
@@ -106,13 +106,13 @@ end
 
 -- generic for with __iter (tables)
 do
-  local f = {}
+  f = {}
   setmetatable(f, { __iter = function(x)
     assert(f == x)
     return next, {1, 2, 3, 4}
   end })
 
-  local x = 0
+  x = 0
   for n in f do
     x += n
   end
@@ -121,13 +121,13 @@ end
 
 -- generic for with __iter (userdata)
 do
-  local f = newproxy(true)
+  f = newproxy(true)
   getmetatable(f).__iter = function(x)
     assert(f == x)
     return next, {1, 2, 3, 4}
   end
 
-  local x = 0
+  x = 0
   for n in f do
     x += n
   end
@@ -136,7 +136,7 @@ end
 
 -- generic for with tables (dictionary)
 do
-  local x = 0
+  x = 0
   for k, v in {a = 1, b = 2, c = 3} do
     print(k, v)
     x += v
@@ -146,7 +146,7 @@ end
 
 -- generic for with tables (arrays)
 do
-  local x = ''
+  x = ''
   for k, v in {1, 2, 3, nil, 5} do
     x ..= tostring(v)
   end
@@ -155,7 +155,7 @@ end
 
 -- generic for with tables (mixed)
 do
-  local x = 0
+  x = 0
   for k, v in {1, 2, 3, nil, 5, a = 1, b = 2, c = 3} do
     x += v
   end
@@ -164,22 +164,22 @@ end
 
 -- generic for over a non-iterable object
 do
-  local ok, err = pcall(function() for x in 42 do end end)
+  ok, err = pcall(function() for x in 42 do end end)
   assert(not ok and err:match("attempt to iterate"))
 end
 
 -- generic for over an iterable object that doesn't return a function
 do
-  local obj = {}
+  obj = {}
   setmetatable(obj, { __iter = function() end })
 
-  local ok, err = pcall(function() for x in obj do end end)
+  ok, err = pcall(function() for x in obj do end end)
   assert(not ok and err:match("attempt to call a nil value"))
 end
 
 -- it's okay to iterate through a table with a single variable
 do
-  local x = 0
+  x = 0
   for k in {1, 2, 3, 4, 5} do
     x += k
   end
@@ -188,7 +188,7 @@ end
 
 -- all extra variables should be set to nil during builtin traversal
 do
-  local x = 0
+  x = 0
   for k,v,a,b,c,d,e in {1, 2, 3, 4, 5} do
     x += k
     assert(a == nil and b == nil and c == nil and d == nil and e == nil)
@@ -198,7 +198,7 @@ end
 
 -- yielding generalized iteration: basic iterator that yields
 do
-  local function yielding_iter(state, index)
+  function yielding_iter(state, index)
     if index >= state then
       return nil
     end
@@ -206,8 +206,8 @@ do
     return index + 1, index + 1
   end
 
-  local co = coroutine.create(function()
-    local sum = 0
+  co = coroutine.create(function()
+    sum = 0
     for i, v in yielding_iter, 4, 0 do
       sum += v
     end
@@ -215,23 +215,23 @@ do
   end)
 
   for i = 1, 4 do
-    local ok, val = coroutine.resume(co)
+    ok, val = coroutine.resume(co)
     assert(ok and val == nil) -- yield produces no values
   end
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == 10)
 end
 
 -- yielding generalized iteration: multiple return values
 do
-  local function yielding_pairs(t)
-    local keys = {}
+  function yielding_pairs(t)
+    keys = {}
     for k in pairs(t) do
       table.insert(keys, k)
     end
     table.sort(keys)
-    local i = 0
+    i = 0
     return function()
       i += 1
       if i > keys.count then return nil end
@@ -240,8 +240,8 @@ do
     end
   end
 
-  local co = coroutine.create(function()
-    local result = {}
+  co = coroutine.create(function()
+    result = {}
     for k, v in yielding_pairs({a = 1, b = 2, c = 3}) do
       result[k] = v
     end
@@ -249,25 +249,25 @@ do
   end)
 
   for i = 1, 3 do
-    local ok = coroutine.resume(co)
+    ok = coroutine.resume(co)
     assert(ok)
   end
 
-  local ok, a, b, c = coroutine.resume(co)
+  ok, a, b, c = coroutine.resume(co)
   assert(ok and a == 1 and b == 2 and c == 3)
 end
 
 -- yielding generalized iteration: iterator yields multiple times per call
 do
-  local function multi_yield_iter(max, index)
+  function multi_yield_iter(max, index)
     if index >= max then return nil end
     coroutine.yield("first")
     coroutine.yield("second")
     return index + 1
   end
 
-  local co = coroutine.create(function()
-    local sum = 0
+  co = coroutine.create(function()
+    sum = 0
     for v in multi_yield_iter, 3, 0 do
       sum += v
     end
@@ -275,9 +275,9 @@ do
   end)
 
   -- 3 successful iterations yield twice each; the 4th call returns nil without yielding
-  local yields = {}
+  yields = {}
   while coroutine.status(co) != "dead" do
-    local ok, val = coroutine.resume(co)
+    ok, val = coroutine.resume(co)
     assert(ok)
     table.insert(yields, val)
   end
@@ -290,31 +290,31 @@ end
 
 -- yielding generalized iteration: empty iteration (iterator returns nil immediately)
 do
-  local function empty_iter()
+  function empty_iter()
     coroutine.yield("before")
     return nil
   end
 
-  local co = coroutine.create(function()
-    local count = 0
+  co = coroutine.create(function()
+    count = 0
     for v in empty_iter do
       count += 1
     end
     return count
   end)
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "before")
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == 0)
 end
 
 -- yielding generalized iteration: __iter metamethod with yielding iterator
 do
-  local obj = setmetatable({}, {
+  obj = setmetatable({}, {
     __iter = function(self)
-      local i = 0
+      i = 0
       return function()
         i += 1
         if i > 3 then return nil end
@@ -324,8 +324,8 @@ do
     end
   })
 
-  local co = coroutine.create(function()
-    local result = {}
+  co = coroutine.create(function()
+    result = {}
     for k, v in obj do
       table.insert(result, v)
     end
@@ -333,20 +333,20 @@ do
   end)
 
   for i = 1, 3 do
-    local ok, val = coroutine.resume(co)
+    ok, val = coroutine.resume(co)
     assert(ok and val == i)
   end
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "10,20,30")
 end
 
 -- yielding generalized iteration: iterator function (not C)
 do
-  local co = coroutine.create(function()
-    local sum = 0
-    local function make_iter(n)
-      local i = 0
+  co = coroutine.create(function()
+    sum = 0
+    function make_iter(n)
+      i = 0
       return function()
         i += 1
         if i > n then return nil end
@@ -362,19 +362,19 @@ do
   end)
 
   for i = 1, 5 do
-    local ok = coroutine.resume(co)
+    ok = coroutine.resume(co)
     assert(ok)
   end
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == 15)
 end
 
 -- yielding generalized iteration: break exits loop correctly after yield
 do
-  local co = coroutine.create(function()
-    local last = 0
-    local function iter(max, index)
+  co = coroutine.create(function()
+    last = 0
+    function iter(max, index)
       if index >= max then return nil end
       coroutine.yield()
       return index + 1
@@ -388,24 +388,24 @@ do
   end)
 
   for i = 1, 3 do
-    local ok = coroutine.resume(co)
+    ok = coroutine.resume(co)
     assert(ok)
   end
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == 3)
 end
 
 -- yielding generalized iteration: nested yielding for-in loops
 do
-  local co = coroutine.create(function()
-    local function yiter(n, i)
+  co = coroutine.create(function()
+    function yiter(n, i)
       if i >= n then return nil end
       coroutine.yield()
       return i + 1
     end
 
-    local sum = 0
+    sum = 0
     for a in yiter, 3, 0 do
       for b in yiter, 2, 0 do
         sum += a * 10 + b
@@ -414,9 +414,9 @@ do
     return sum
   end)
 
-  local count = 0
+  count = 0
   while coroutine.status(co) != "dead" do
-    local ok, val = coroutine.resume(co)
+    ok, val = coroutine.resume(co)
     assert(ok)
     count += 1
   end
@@ -427,8 +427,8 @@ end
 
 -- yielding generalized iteration: C function iterator that yields via lua_yield
 do
-  local co = coroutine.create(function()
-    local sum = 0
+  co = coroutine.create(function()
+    sum = 0
     for v in cYieldingIterator, 4, 0 do
       sum += v
     end
@@ -436,20 +436,20 @@ do
   end)
 
   for i = 1, 4 do
-    local ok, val = coroutine.resume(co)
+    ok, val = coroutine.resume(co)
     assert(ok and val == i) -- yield passes index+1
   end
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == 10)
 end
 
 -- yielding generalized iteration: single function iterator that yields without the use of __iter
 do
-  local co = coroutine.create(function()
-    local results = {}
-    local i = 0
-    local function iter()
+  co = coroutine.create(function()
+    results = {}
+    i = 0
+    function iter()
       i += 1
       if i > 3 then return nil end
       coroutine.yield("yielded " .. i)
@@ -461,19 +461,19 @@ do
     return table.concat(results, ",")
   end)
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "yielded 1")
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "yielded 2")
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "yielded 3")
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "1,2,3")
 end
 
 -- yielding generalized iteration: error from yielding iterator propagates correctly
 do
-  local function err_iter(max, i)
+  function err_iter(max, i)
     if i >= max then return nil end
     coroutine.yield()
     if i == 1 then
@@ -482,17 +482,17 @@ do
     return i + 1
   end
 
-  local co = coroutine.create(function()
+  co = coroutine.create(function()
     for v in err_iter, 3, 0 do end
   end)
 
   -- first iteration: yields, then returns 1
-  local ok = coroutine.resume(co)
+  ok = coroutine.resume(co)
   assert(ok)
   -- second iteration: yields, then errors
-  local ok = coroutine.resume(co)
+  ok = coroutine.resume(co)
   assert(ok)
-  local ok, msg = coroutine.resume(co)
+  ok, msg = coroutine.resume(co)
   assert(not ok)
   assert(string.find(msg, "iterator broke"))
   assert(coroutine.status(co) == "dead")
@@ -500,14 +500,14 @@ end
 
 -- yielding generalized iteration: pcall catches error from yielding iterator
 do
-  local function err_iter(max, i)
+  function err_iter(max, i)
     if i >= max then return nil end
     coroutine.yield()
     error("pcall test error")
   end
 
-  local co = coroutine.create(function()
-    local ok, msg = pcall(function()
+  co = coroutine.create(function()
+    ok, msg = pcall(function()
       for v in err_iter, 3, 0 do end
     end)
     assert(not ok)
@@ -515,15 +515,15 @@ do
     return "survived"
   end)
 
-  local ok = coroutine.resume(co)
+  ok = coroutine.resume(co)
   assert(ok)
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "survived")
 end
 
 -- yielding generalized iteration: __call metamethod iterator that yields
 do
-  local callable = setmetatable({}, {
+  callable = setmetatable({}, {
     __call = function(self, state, index)
       if index >= state then return nil end
       coroutine.yield(index)
@@ -531,17 +531,17 @@ do
     end
   })
 
-  local co = coroutine.create(function()
-    local sum = 0
+  co = coroutine.create(function()
+    sum = 0
     for k, v in callable, 3, 0 do
       sum += v
     end
     return sum
   end)
 
-  local yields = {}
+  yields = {}
   while coroutine.status(co) != "dead" do
-    local ok, val = coroutine.resume(co)
+    ok, val = coroutine.resume(co)
     assert(ok)
     table.insert(yields, val)
   end
@@ -554,17 +554,17 @@ end
 
 -- yielding generalized iteration: check that C call limit is respected
 if not limitedstack then
-  local function recursive_iter(_, i)
+  function recursive_iter(_, i)
     if i >= 1 then return nil end
-    local sum = 0
+    sum = 0
     for v in recursive_iter, nil, 0 do
       sum += 1
     end
     return i + 1
   end
 
-  local co = coroutine.create(function()
-    local ok, msg = pcall(function()
+  co = coroutine.create(function()
+    ok, msg = pcall(function()
       for v in recursive_iter, nil, 0 do end
     end)
     assert(not ok)
@@ -572,15 +572,15 @@ if not limitedstack then
     return "caught"
   end)
 
-  local ok, val = coroutine.resume(co)
+  ok, val = coroutine.resume(co)
   assert(ok and val == "caught")
 end
 
 -- call stack relocation test
 do
-  local function iter() coroutine.yield() return nil end
-  local function recurse() for _ in iter do end recurse() end
-  local co = coroutine.create(function() pcall(recurse) end)
+  function iter() coroutine.yield() return nil end
+  function recurse() for _ in iter do end recurse() end
+  co = coroutine.create(function() pcall(recurse) end)
   while coroutine.status(co) != "dead" do coroutine.resume(co) end
 end
 

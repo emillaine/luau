@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
@@ -18,7 +18,7 @@ function test()
   --end
 
   function ARRAY2D(w,h)
-    local t = {w=w,h=h}
+    t = {w=w,h=h}
     for y=1,h do
       t[y] = {}
       for x=1,w do
@@ -41,11 +41,11 @@ function test()
 
   -- run the CA and produce the next generation
   function _CELLS:evolve(next)
-    local ym1,y,yp1,yi=self.h-1,self.h,1,self.h
+    ym1,y,yp1,yi=self.h-1,self.h,1,self.h
     while yi > 0 do
-      local xm1,x,xp1,xi=self.w-1,self.w,1,self.w
+      xm1,x,xp1,xi=self.w-1,self.w,1,self.w
       while xi > 0 do
-        local sum = self[ym1][xm1] + self[ym1][x] + self[ym1][xp1] +
+        sum = self[ym1][xm1] + self[ym1][x] + self[ym1][xp1] +
                     self[y][xm1] + self[y][xp1] +
                     self[yp1][xm1] + self[yp1][x] + self[yp1][xp1]
         next[y][x] = ((sum==2) and self[y][x]) or ((sum==3) and 1) or 0
@@ -69,7 +69,7 @@ function test()
 
   -- constructor
   function CELLS(w,h)
-    local c = ARRAY2D(w,h)
+    c = ARRAY2D(w,h)
     c.spawn = _CELLS.spawn
     c.evolve = _CELLS.evolve
     c.draw = _CELLS.draw
@@ -88,8 +88,8 @@ function test()
   -- the main routine
   function LIFE(w,h)
     -- create two arrays
-    local thisgen = CELLS(w,h)
-    local nextgen = CELLS(w,h)
+    thisgen = CELLS(w,h)
+    nextgen = CELLS(w,h)
 
     -- create some life
     -- about 1000 generations of fun, then a glider steady-state
@@ -98,7 +98,7 @@ function test()
     thisgen:spawn(FISH,4,12)
 
     -- run until break
-    local gen=1
+    gen=1
   --  write("\027[2J")	-- ANSI clear screen
     while 1 do
       thisgen:evolve(nextgen)
@@ -113,9 +113,9 @@ function test()
   end
 
 
-  local ts0 = os.clock()
+  ts0 = os.clock()
   LIFE(40,20)
-  local ts1 = os.clock()
+  ts1 = os.clock()
 
   return ts1 - ts0
 end

@@ -1,5 +1,5 @@
 --!native
-local charonvg = {}
+charonvg = {}
 
 charonvg.Surface = require("./surface")
 charonvg.Canvas = require("./canvas")

@@ -81,7 +81,7 @@ TEST_CASE("handler_setnumber_result")
     lua_setglobal(L, "createVec2");
 
     int status = runCode(L, R"(
-        local v = createVec2(3.5, 0)
+        const v = createVec2(3.5, 0)
         return v.X
     )");
     REQUIRE(status == LUA_OK);
@@ -112,7 +112,7 @@ TEST_CASE("handler_setboolean_result")
 
     {
         int status = runCode(L, R"(
-            local v = createVec2(1, 0)
+            const v = createVec2(1, 0)
             return v.NonZero
         )");
         REQUIRE(status == LUA_OK);
@@ -121,7 +121,7 @@ TEST_CASE("handler_setboolean_result")
     }
     {
         int status = runCode(L, R"(
-            local v = createVec2(0, 0)
+            const v = createVec2(0, 0)
             return v.NonZero
         )");
         REQUIRE(status == LUA_OK);
@@ -153,8 +153,8 @@ TEST_CASE("repeated_access_handler_called_every_iteration")
     lua_setglobal(L, "createVec2");
 
     int status = runCode(L, R"(
-        local v = createVec2(7, 0)
-        local sum = 0
+        const v = createVec2(7, 0)
+        sum = 0
         for i = 1, 5 do
             sum = sum + v.X
         end
@@ -207,8 +207,8 @@ TEST_CASE("unregistered_tag_falls_through_to_index_metamethod")
     lua_setglobal(L, "createOther");
 
     int status = runCode(L, R"(
-        local uds = {createVec2(1, 0), createOther()}
-        local results = {}
+        const uds = {createVec2(1, 0), createOther()}
+        const results = {}
         for _, v in uds do
             results[results.count + 1] = v.X
         end
@@ -253,7 +253,7 @@ TEST_CASE("multiple_fields_same_type_dispatch_independently")
     lua_setglobal(L, "createVec2");
 
     int status = runCode(L, R"(
-        local v = createVec2(1.5, 2.5)
+        const v = createVec2(1.5, 2.5)
         return v.X, v.Y
     )");
     REQUIRE(status == LUA_OK);

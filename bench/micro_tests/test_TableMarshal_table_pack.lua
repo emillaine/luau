@@ -1,19 +1,19 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
-    local function pack(...)
+    function pack(...)
         return table.pack(...)
     end
 
-    local ts0 = os.clock()
+    ts0 = os.clock()
 
     for i=1,100000 do
-        local t = pack(1,2,3,4,5,6,7,8,9,10)
+        t = pack(1,2,3,4,5,6,7,8,9,10)
     end
 
-    local ts1 = os.clock()
+    ts1 = os.clock()
 
     return ts1-ts0
 end

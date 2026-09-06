@@ -1,10 +1,10 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
     -- https://github.com/stefandd/Tic4
-    local negaMax = {maxdepth = 4, minsearchpos = 0, numsearchpos = 0}
+    negaMax = {maxdepth = 4, minsearchpos = 0, numsearchpos = 0}
     negaMax.__index = negaMax
 
     function negaMax:evaluate(board, depth)
@@ -39,8 +39,8 @@ function test()
         --
         -- test if the node is terminal (i.e. full board or win)
         --
-        local best_move = -1
-        local score, is_term_node = self:evaluate(board, depth)    
+        best_move = -1
+        score, is_term_node = self:evaluate(board, depth)    
         -- we abort the recursion if this is a terminal node, or if one of the search abort conditions are met
         -- 
         if is_term_node or depth == self.maxdepth then
@@ -49,13 +49,13 @@ function test()
         --
         -- if not terminal node, eval child nodes
         --
-        local moves = self:move_candidates(board, side_to_move)
+        moves = self:move_candidates(board, side_to_move)
         score = -math.huge    
 
         for _, analyzed_move in pairs(moves) do -- iterate over all boards
             self.numsearchpos = self.numsearchpos + 1
-            local b = self:make_move(board, side_to_move, analyzed_move)
-            local move_score, _, _ = -self:negaMax(b, -side_to_move, depth+1, -beta, -alpha)
+            b = self:make_move(board, side_to_move, analyzed_move)
+            move_score, _, _ = -self:negaMax(b, -side_to_move, depth+1, -beta, -alpha)
             if move_score > score then
                 score = move_score
                 best_move = analyzed_move
@@ -81,7 +81,7 @@ function test()
         return score, best_move, game_over
     end
 
-    local empty_board = {0,0,0,0,
+    empty_board = {0,0,0,0,
                         0,0,0,0,
                         0,0,0,0,
                         0,0,0,0} -- 16 empty positions
@@ -89,7 +89,7 @@ function test()
     ----------- helper methods
                         
     function copy_board(board)
-        local copy = {}
+        copy = {}
         for i = 1, #board do
             copy[i] = board[i]
         end
@@ -135,11 +135,11 @@ function test()
         
         Variations in negamax implementations may omit the color parameter. In this case, the heuristic evaluation function must return values from the point of view of the node's current player.
         --]]
-        local player_plus_score, player_minus_score = 0, 0
-        local game_won = false
+        player_plus_score, player_minus_score = 0, 0
+        game_won = false
         for _, curr_qdr in pairs(negaMax.index_quadruplets) do -- iterate over all index quadruplets
             -- count the empty positions and positions occupied by the side whos move it is
-            local player_plus_fields, player_minus_fields, empties = 0, 0, 0
+            player_plus_fields, player_minus_fields, empties = 0, 0, 0
             for _, index in next, curr_qdr do -- iterate over all indices
                 if board[index] == 0 then
                     empties = empties + 1
@@ -193,7 +193,7 @@ function test()
     end
 
     function negaMax:move_candidates(board, side_to_move)
-        local moves = {}
+        moves = {}
         for i = 1, #board do
             if board[i] == 0 then -- empty?
                 moves[#moves + 1] = i -- save move that was made
@@ -203,25 +203,25 @@ function test()
     end
 
     function negaMax:make_move(board, side_to_move, move)
-        local copy = copy_board(board)
+        copy = copy_board(board)
         copy[move] = side_to_move
         return copy
     end
 
-    local human_player = 1
-    local AI_player = -human_player
-    local game_board = copy_board(empty_board)
-    local curr_move = -1
-    local curr_player = human_player -- human player goes first
-    local score = 0
-    local stop_loop = false
-    local game_over = false
+    human_player = 1
+    AI_player = -human_player
+    game_board = copy_board(empty_board)
+    curr_move = -1
+    curr_player = human_player -- human player goes first
+    score = 0
+    stop_loop = false
+    game_over = false
 
     negaMax.maxdepth = 5
 
-    local t0 = os.clock()
+    t0 = os.clock()
     score, curr_move = negaMax:negaMax(game_board, curr_player)
-    local t1 = os.clock()
+    t1 = os.clock()
 
     return t1-t0
 end

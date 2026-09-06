@@ -1,5 +1,5 @@
-export local counter = 10
-export local text = "hello"
+export counter = 10
+export text = "hello"
 
 export function setCounter(v)
     counter = v

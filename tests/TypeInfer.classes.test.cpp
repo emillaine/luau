@@ -71,8 +71,8 @@ class Point
     end
 end
 
-local p = Point.new { x = 1, y = 2 }
-local _ = tostring(p)
+const p = Point.new { x = 1, y = 2 }
+const _ = tostring(p)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -93,10 +93,10 @@ class Point
     end
 end
 
-local p1 = Point.new { x = 1, y = 2 }
-local p2 = Point.new { x = 1, y = 2 }
-local _ = p1 == p2
-local _ = p1 != Point.zero()
+const p1 = Point.new { x = 1, y = 2 }
+const p2 = Point.new { x = 1, y = 2 }
+const _ = p1 == p2
+const _ = p1 != Point.zero()
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -115,14 +115,14 @@ class Box
     public x
 end
 
-local p1 = Point.new { x = 1, y = 2 }
-local p2 = Box.new { x = 1 }
-local _ = p1 == p1
+const p1 = Point.new { x = 1, y = 2 }
+const p2 = Box.new { x = 1 }
+const _ = p1 == p1
 -- This one too
-local _ = p1 != p2
-local _ = Box == Box
+const _ = p1 != p2
+const _ = Box == Box
 -- This line should error...
-local _ = Point != Box
+const _ = Point != Box
 )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -143,7 +143,7 @@ class Point
     end
 end
 
-local p = Point.new {}
+const p = Point.new {}
 p:__add()
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -170,7 +170,7 @@ class Point
 
 end
 
-local p = Point
+const p = Point
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -191,11 +191,11 @@ class Point
     public x
 end
 
-local function f(v: unknown)
+function f(v: unknown)
     if class.isinstance(v, Point) then
-        local s = v
+        const s = v
     else
-        local s = v
+        const s = v
     end
 end
 )");
@@ -214,11 +214,11 @@ class Point
     public x
 end
 
-local function f(v: Point | string)
+function f(v: Point | string)
     if class.isinstance(v, Point) then
-        local s = v
+        const s = v
     else
-        local s = v
+        const s = v
     end
 end
 )");
@@ -235,11 +235,11 @@ class Point
     public x
 end
 
-local function f(v: Point | string)
+function f(v: Point | string)
     if not class.isinstance(v, Point) then
-        local s = v
+        const s = v
     else
-        local s = v
+        const s = v
     end
 end
 )");
@@ -256,11 +256,11 @@ class Point
     public x
 end
 
-local function f(v: unknown)
+function f(v: unknown)
     if not class.isinstance(v, Point) then
-        local s = v
+        const s = v
     else
-        local s = v
+        const s = v
     end
 end
 )");
@@ -276,9 +276,9 @@ class Point
     public x
 end
 
-local function f(t: { x: Point? })
+function f(t: { x: Point? })
     if t.x and class.isinstance(t.x, Point) then
-        local s = t.x
+        const s = t.x
     end
 end
 )");
@@ -294,9 +294,9 @@ class Point
     public x
 end
 
-local function f(t: { x: Point })
+function f(t: { x: Point })
     if class.isinstance(t.x, Point) then
-        local s = t.x
+        const s = t.x
     end
 end
 )");
@@ -310,17 +310,19 @@ TEST_CASE_FIXTURE(ClassesFixture, "isinstance_refines_imported_class")
     ScopedFastFlag _[2]{{FFlag::LuauExportValueSyntax, true}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        export class Point
+        class Point
             public x: number
         end
+
+        return { Point = Point }
     )";
 
     fileResolver.source["game/B"] = R"(
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local x : unknown = (A.Point.new { x = 0 } ) as any
+        const x : unknown = (A.Point.new { x = 0 } ) as any
         if class.isinstance(x, A.Point) then
-            local y = x
+            const y = x
         end
     )";
     CheckResult modB = getFrontend().check("game/B");
@@ -333,19 +335,21 @@ TEST_CASE_FIXTURE(ClassesFixture, "isinstance_refines_imported_class_but_not_a_c
     ScopedFastFlag _[2]{{FFlag::LuauExportValueSyntax, true}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        export class Point
+        class Point
             public x: number
         end
 
-        export const notAPoint = nil
+        const notAPoint = nil
+
+        return { Point = Point, notAPoint = notAPoint }
     )";
 
     fileResolver.source["game/B"] = R"(
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local x : unknown = (A.Point.new { x = 0 } ) as any
+        const x : unknown = (A.Point.new { x = 0 } ) as any
         if class.isinstance(x, A.notAPoint) then
-            local y = x
+            const y = x
         end
     )";
     CheckResult modA = getFrontend().check("game/A");
@@ -382,7 +386,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "typed_self_parameter_after_class_declaration"
 TEST_CASE_FIXTURE(ClassesFixture, "typeof_class_prop_ice")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = 1
+        const x = 1
         class Foo
             public bar: typeof(x)
         end
@@ -392,7 +396,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "typeof_class_prop_ice")
 TEST_CASE_FIXTURE(ClassesFixture, "typeof_indexing_ice_in_class_prop_typeof")
 {
     CheckResult results = check(R"(
-local A = ""
+const A = ""
 class B
     public C: { _: typeof(A.D) }
 end
@@ -412,7 +416,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "class_refers_to_later_type_alias")
 
         type BarType = number | string
 
-        local function getbar(f: Foo)
+        function getbar(f: Foo)
             return f.bar
         end
     )"));
@@ -427,11 +431,11 @@ TEST_CASE_FIXTURE(ClassesFixture, "accept_read_only_tables")
             public bar: number | string
         end
 
-        local function ofnumbertbl(tbl: { bar: number })
+        function ofnumbertbl(tbl: { bar: number })
             return Foo.new(tbl)
         end
 
-        local function inference(tbl)
+        function inference(tbl)
             return Foo.new(tbl)
         end
     )"));
@@ -475,8 +479,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "constructors_must_accept_self")
 
 TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public x: number
@@ -495,8 +500,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field")
 
 TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field_index_string_expr")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public x: number
@@ -515,8 +521,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field_index_string_exp
 
 TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field_index_computed_index")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public xy: number
@@ -538,12 +545,13 @@ TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field_index_computed_i
 
 TEST_CASE_FIXTURE(ClassesFixture, "reference_to_shadowed_self_is_absurd_but_ok")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             function __init(self)
-                local self = {}
+                const self = {}
                 something = self
             end
         end
@@ -620,8 +628,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "ok_conditional_assignment")
 
 TEST_CASE_FIXTURE(ClassesFixture, "all_fields_initialized_before_use")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public x: number
@@ -638,7 +647,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "all_fields_initialized_before_use")
 TEST_CASE_FIXTURE(ClassesFixture, "pass_self_before_initialization")
 {
     CheckResult result = check(R"(
-        local function doSomething(x) end
+        function doSomething(x) end
 
         class Foo
             public x: number
@@ -658,7 +667,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "pass_self_before_initialization")
 TEST_CASE_FIXTURE(ClassesFixture, "pass_self_after_initialization")
 {
     CheckResult result = check(R"(
-        local function doSomething(x) end
+        function doSomething(x) end
 
         class Foo
             public x: number
@@ -674,8 +683,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "pass_self_after_initialization")
 
 TEST_CASE_FIXTURE(ClassesFixture, "read_nested_field_of_uninitialized")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public x: {y: number}
@@ -694,8 +704,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "read_nested_field_of_uninitialized")
 
 TEST_CASE_FIXTURE(ClassesFixture, "partial_initialization_order")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public x: number
@@ -723,7 +734,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "field_read_inside_closure")
         class Foo
             public x: number
             function __init(self)
-                local f = function() return self.x end
+                const f = function() return self.x end
                 self.x = 0
             end
         end
@@ -742,7 +753,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "shadowing_self_via_closure")
         class Foo
             public x: number
             function __init(self)
-                local f = function(self) return self.x end
+                const f = function(self) return self.x end
                 self.x = 0
             end
         end
@@ -754,7 +765,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "shadowing_self_via_closure")
 TEST_CASE_FIXTURE(ClassesFixture, "no_fields_no_errors")
 {
     CheckResult result = check(R"(
-        local function doSomething(x) end
+        function doSomething(x) end
 
         class Foo
             function __init(self)
@@ -769,7 +780,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "no_fields_no_errors")
 TEST_CASE_FIXTURE(ClassesFixture, "nilable_fields_dont_need_initialization")
 {
     CheckResult result = check(R"(
-        local function doSomething(...) end
+        function doSomething(...) end
 
         class Foo
             public x: number
@@ -808,7 +819,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "unannotated_field_doesnt_need_initialization"
 TEST_CASE_FIXTURE(ClassesFixture, "pass_self_with_nilable_fields_unassigned")
 {
     CheckResult result = check(R"(
-        local function doSomething(x) end
+        function doSomething(x) end
 
         class Foo
             public x: number
@@ -825,8 +836,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "pass_self_with_nilable_fields_unassigned")
 
 TEST_CASE_FIXTURE(ClassesFixture, "read_nilable_field_before_assign")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something
+        export something = nil
 
         class Foo
             public x: number?
@@ -843,7 +855,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "read_error_suppressing_field_before_assign")
 {
     // TODO: CLI-222651: This shouldn't error because the annotation on x is error suppressing
     CheckResult result = check(R"(
-        local something
+        const something = nil
 
         class Foo
             public x: string & any
@@ -858,8 +870,9 @@ TEST_CASE_FIXTURE(ClassesFixture, "read_error_suppressing_field_before_assign")
 
 TEST_CASE_FIXTURE(ClassesFixture, "type_assertion_loophole")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local something: any
+        export something: any = nil as any
 
         class Foo
             public x: number
@@ -923,8 +936,8 @@ TEST_CASE_FIXTURE(ClassesFixture, "variadic_constructor")
             end
         end
 
-        local f = Foo.new(3, 4, 5) -- OK
-        local g = Foo.new(3, 4, 5, "six") -- Error
+        const f = Foo.new(3, 4, 5) -- OK
+        const g = Foo.new(3, 4, 5, "six") -- Error
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -945,8 +958,8 @@ TEST_CASE_FIXTURE(ClassesFixture, "variadic_constructor_with_leading_positional_
             end
         end
 
-        local f = Foo.new(3, "four", 5) -- OK
-        local g = Foo.new(3, "four", 5, "six") -- Error
+        const f = Foo.new(3, "four", 5) -- OK
+        const g = Foo.new(3, "four", 5, "six") -- Error
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);

@@ -10,8 +10,8 @@ TEST_SUITE_BEGIN("ConstraintSolver");
 TEST_CASE_FIXTURE(Fixture, "constraint_basics")
 {
     check(R"(
-        local a = 55
-        local b = a
+        const a = 55
+        const b = a
     )");
 
     CHECK("number" == toString(requireType("b")));
@@ -20,7 +20,7 @@ TEST_CASE_FIXTURE(Fixture, "constraint_basics")
 TEST_CASE_FIXTURE(Fixture, "generic_function")
 {
     check(R"(
-        local function id(a)
+        function id(a)
             return a
         end
     )");
@@ -34,15 +34,15 @@ TEST_CASE_FIXTURE(Fixture, "proper_let_generalization")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     check(R"(
-        local function a(c)
-            local function d(e)
+        function a(c)
+            function d(e)
                 return c
             end
 
             return d
         end
 
-        local b = a(5)
+        const b = a(5)
     )");
 
     CHECK("(unknown) -> number" == toString(requireType("b")));
@@ -58,10 +58,10 @@ TEST_CASE_FIXTURE(Fixture, "table_prop_access_diamond")
 
         export type CatalogPage = { AssetDetails | BundleDetails }
 
-        local function isRestricted(item: number) end
+        function isRestricted(item: number) end
 
         -- Clear all item tiles and create new ones for the items in the specified page
-        local function displayPage(catalogPage: CatalogPage)
+        function displayPage(catalogPage: CatalogPage)
             for _, itemDetails in catalogPage do
                 if isRestricted(itemDetails.Id) then
                     continue

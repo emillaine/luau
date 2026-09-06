@@ -1,5 +1,5 @@
 -- verify multi-variable export works
-local m = require("./export_multi_var")
+m = require("./export_multi_var")
 
 assert(m.a == 10, "a should be exported")
 assert(m.b == 20, "b should be exported")

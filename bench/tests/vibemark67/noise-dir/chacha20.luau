@@ -7,25 +7,25 @@
 -- Everything operates on Luau `buffer`s. The internal state is a 16-word array
 -- of 32-bit unsigned integers held as Lua numbers (exact, since 2^32 < 2^53).
 
-local wordmath = require("./wordmath")
+wordmath = require("./wordmath")
 
-local chacha20 = {}
+chacha20 = {}
 
 -- The four little-endian words of the ASCII constant "expand 32-byte k".
-local CONST0 = 0x61707865
-local CONST1 = 0x3320646e
-local CONST2 = 0x79622d32
-local CONST3 = 0x6b206574
+CONST0 = 0x61707865
+CONST1 = 0x3320646e
+CONST2 = 0x79622d32
+CONST3 = 0x6b206574
 
-local TWO32 = wordmath.TWO32
-local addmod32 = wordmath.addmod32
-local rotl = wordmath.rotl32
+TWO32 = wordmath.TWO32
+addmod32 = wordmath.addmod32
+rotl = wordmath.rotl32
 
 -- The ChaCha quarter round, operating in place on four indices of state `s`.
 -- Indices are 1-based (Lua arrays); callers translate the RFC's 0-based
 -- positions by adding 1.
-local function quarterRound(s: { number }, ai: number, bi: number, ci: number, di: number)
-	local a, b, c, d = s[ai], s[bi], s[ci], s[di]
+function quarterRound(s: { number }, ai: number, bi: number, ci: number, di: number)
+	a, b, c, d = s[ai], s[bi], s[ci], s[di]
 
 	a = addmod32(a, b)
 	d = rotl(bit32.bxor(d, a), 16)
@@ -44,7 +44,7 @@ end
 
 -- One "double round": four column quarter rounds then four diagonal ones.
 -- (RFC indices shown in comments; code uses the +1 translation.)
-local function doubleRound(s: { number })
+function doubleRound(s: { number })
 	-- Column rounds: (0,4,8,12) (1,5,9,13) (2,6,10,14) (3,7,11,15)
 	quarterRound(s, 1, 5, 9, 13)
 	quarterRound(s, 2, 6, 10, 14)
@@ -59,11 +59,11 @@ end
 
 -- Build the initial 16-word ChaCha20 state from key/counter/nonce.
 -- `key` is 32 bytes, `nonce` is 12 bytes, `counter` is a 32-bit block counter.
-local function initialState(key: buffer, counter: number, nonce: buffer): { number }
+function initialState(key: buffer, counter: number, nonce: buffer): { number }
 	assert(buffer.len(key) == 32, "ChaCha20 key must be 32 bytes")
 	assert(buffer.len(nonce) == 12, "ChaCha20 nonce must be 12 bytes")
 
-	local s = table.create(16)
+	s = table.create(16)
 	s[1] = CONST0
 	s[2] = CONST1
 	s[3] = CONST2
@@ -83,11 +83,11 @@ end
 
 -- Compute one 64-byte keystream block for the given counter, writing it into
 -- `out` at byte offset `outOff`.
-local function block(key: buffer, counter: number, nonce: buffer, out: buffer, outOff: number)
-	local state = initialState(key, counter, nonce)
+function block(key: buffer, counter: number, nonce: buffer, out: buffer, outOff: number)
+	state = initialState(key, counter, nonce)
 
 	-- Working copy that the rounds mutate.
-	local work = table.create(16)
+	work = table.create(16)
 	for i = 1, 16 do
 		work[i] = state[i]
 	end
@@ -99,7 +99,7 @@ local function block(key: buffer, counter: number, nonce: buffer, out: buffer, o
 
 	-- Add the original input words and serialize little-endian.
 	for i = 0, 15 do
-		local word = addmod32(work[i + 1], state[i + 1])
+		word = addmod32(work[i + 1], state[i + 1])
 		buffer.writeu32(out, outOff + i * 4, word)
 	end
 end
@@ -110,7 +110,7 @@ chacha20.BLOCK_SIZE = 64
 -- key generation uses ChaCha20 with counter 0).
 -- Returns a fresh 64-byte buffer.
 function chacha20.block(key: buffer, counter: number, nonce: buffer): buffer
-	local out = buffer.create(64)
+	out = buffer.create(64)
 	block(key, counter, nonce, out, 0)
 	return out
 end
@@ -118,19 +118,19 @@ end
 -- Encrypt (or decrypt — the operation is symmetric) `input` into a new buffer
 -- using ChaCha20 with the given key, nonce and starting block counter.
 function chacha20.xor(key: buffer, counter: number, nonce: buffer, input: buffer): buffer
-	local n = buffer.len(input)
-	local out = buffer.create(n)
-	local ks = buffer.create(64)
+	n = buffer.len(input)
+	out = buffer.create(n)
+	ks = buffer.create(64)
 
-	local offset = 0
-	local blockCounter = counter
+	offset = 0
+	blockCounter = counter
 	while offset < n do
 		block(key, blockCounter, nonce, ks, 0)
 
-		local remaining = n - offset
-		local chunk = if remaining < 64 then remaining else 64
+		remaining = n - offset
+		chunk = if remaining < 64 then remaining else 64
 		for i = 0, chunk - 1 do
-			local x = bit32.bxor(buffer.readu8(input, offset + i), buffer.readu8(ks, i))
+			x = bit32.bxor(buffer.readu8(input, offset + i), buffer.readu8(ks, i))
 			buffer.writeu8(out, offset + i, x)
 		end
 

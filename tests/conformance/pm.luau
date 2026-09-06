@@ -3,7 +3,7 @@
 print('testing pattern matching')
 
 function f(s, p)
-  local i,e = string.find(s, p)
+  i,e = string.find(s, p)
   if i then return string.sub(s, i, e) end
 end
 
@@ -11,7 +11,7 @@ function f1(s, p)
   p = string.gsub(p, "%%([0-9])", function (s) return "%" .. (s+1) end)
   p = string.gsub(p, "^(^?)", "%1()", 1)
   p = string.gsub(p, "($?)$", "()%1", 1)
-  local t = {string.match(s, p)}
+  t = {string.match(s, p)}
   return string.sub(s, t[1], t[t.count] - 1)
 end
 
@@ -81,18 +81,18 @@ assert(f1('axz123= 4= 4 34', '(.+)=(.*)=%2 %1') == '3= 4= 4 3')
 assert(f1('=======', '^(=*)=%1$') == '=======')
 assert(string.match('==========', '^([=]*)=%1$') == nil)
 
-local function range (i, j)
+function range (i, j)
   if i <= j then
     return i, range(i+1, j)
   end
 end
 
-local abc = string.char(range(0, 255));
+abc = string.char(range(0, 255));
 
 assert(string.len(abc) == 256)
 
 function strset (p)
-  local res = {s=''}
+  res = {s=''}
   string.gsub(abc, p, function (c) res.s = res.s .. c end)
   return res.s
 end;
@@ -115,7 +115,7 @@ assert(string.match("254 K", "(%d*)K") == "")
 assert(string.match("alo ", "(%w*)$") == "")
 assert(string.match("alo ", "(%w+)$") == nil)
 assert(string.find("(álo)", "%(á") == 1)
-local a, b, c, d, e = string.match("âlo alo", "^(((.).).* (%w*))$")
+a, b, c, d, e = string.match("âlo alo", "^(((.).).* (%w*))$")
 assert(a == 'âlo alo' and b == 'âl' and c == 'â' and d == 'alo' and e == nil)
 a, b, c, d  = string.match('0123456789', '(.+(.?)())')
 assert(a == '0123456789' and b == '' and c == 11 and d == nil)
@@ -144,7 +144,7 @@ assert(string.gsub("um (dois) tres (quatro)", "(%(%w+%))", string.upper) ==
             "um (DOIS) tres (QUATRO)")
 
 do
-  local function setglobal (n,v) rawset(_G, n, v) end
+  function setglobal (n,v) rawset(_G, n, v) end
   string.gsub("a=roberto,roberto=a", "(%w+)=(%w%w*)", setglobal)
   assert(_G.a=="roberto" and _G.roberto=="a")
 end
@@ -153,11 +153,11 @@ function f(a,b) return string.gsub(a,'.',b) end
 assert(string.gsub("trocar tudo em |teste|b| é |beleza|al|", "|([^|]*)|([^|]*)|", f) ==
             "trocar tudo em bbbbb é alalalalalal")
 
-local function dostring (s) return loadstring(s)() or "" end
-assert(string.gsub("alo $a=1$ novamente $return a$", "$([^$]*)%$", dostring) ==
+function dostring (s) return loadstring(s)() or "" end
+assert(string.gsub("alo $_G.a=1$ novamente $return _G.a$", "$([^$]*)%$", dostring) ==
             "alo  novamente 1")
 
-x = string.gsub("$x=string.gsub('alo', '.', string.upper)$ assim vai para $return x$",
+x = string.gsub("$_G.x=string.gsub('alo', '.', string.upper)$ assim vai para $return _G.x$",
          "$([^$]*)%$", dostring)
 assert(x == ' assim vai para ALO')
 
@@ -179,7 +179,7 @@ assert(not isbalanced("(9 ((8) 7) a b (\0 c) a"))
 assert(string.gsub("alo 'oi' alo", "%b''", '"') == 'alo " alo')
 
 
-local t = {"apple", "orange", "lime"; n=0}
+t = {"apple", "orange", "lime"; n=0}
 assert(string.gsub("x and x and x", "x", function () t.n=t.n+1; return t[t.n] end)
         == "apple and orange and lime")
 
@@ -200,7 +200,7 @@ assert(not pcall(string.gsub, "alo", "(%1)", "a"))
 assert(not pcall(string.gsub, "alo", "(%0)", "a"))
 
 -- big strings
-local a = string.rep('a', 300000)
+a = string.rep('a', 300000)
 assert(string.find(a, '^a*.?$'))
 assert(not string.find(a, '^a*.?b$'))
 assert(string.find(a, '^a-.?$'))
@@ -210,7 +210,7 @@ function rev (s)
   return string.gsub(s, "(.)(.+)", function (c,s1) return rev(s1)..c end)
 end
 
-local x = string.rep('012345', 10)
+x = string.rep('012345', 10)
 assert(rev(rev(x)) == x)
 
 
@@ -228,7 +228,7 @@ assert(string.gsub("a alo b hi", "%w%w+", t) == "a ALO b HI")
 
 -- tests for gmatch
 -- assert(string.gfind == string.gmatch)
-local a = 0
+a = 0
 for i in string.gmatch('abcde', '()') do assert(i == a+1); a=i end
 assert(a==6)
 
@@ -270,12 +270,12 @@ assert(string.find("aba", "%f[%z]") == 4)
 assert(not string.find("aba", "%f[%l%z]"))
 assert(not string.find("aba", "%f[^%l%z]"))
 
-local i, e = string.find(" alo aalo allo", "%f[%S].-%f[%s].-%f[%S]")
+i, e = string.find(" alo aalo allo", "%f[%S].-%f[%s].-%f[%S]")
 assert(i == 2 and e == 5)
-local k = string.match(" alo aalo allo", "%f[%S](.-%f[%s].-%f[%S])")
+k = string.match(" alo aalo allo", "%f[%S](.-%f[%s].-%f[%S])")
 assert(k == 'alo ')
 
-local a = {1, 5, 9, 14, 17,}
+a = {1, 5, 9, 14, 17,}
 for k in string.gmatch("alo alo th02 is 1hat", "()%f[%w%d]") do
   assert(table.remove(a, 1) == k)
 end
@@ -283,9 +283,9 @@ assert(a.count == 0)
 
 
 -- malformed patterns
-local function malform (p, m)
+function malform (p, m)
   m = m or "malformed"
-  local r, msg = pcall(string.find, "a", p)
+  r, msg = pcall(string.find, "a", p)
   assert(not r and string.find(msg, m))
 end
 

@@ -107,7 +107,7 @@ TEST_CASE_FIXTURE(Fixture, "deepClone_non_persistent_primitive")
 TEST_CASE_FIXTURE(Fixture, "deepClone_cyclic_table")
 {
     CheckResult result = check(R"(
-        local Cyclic = {}
+        const Cyclic = {}
         function Cyclic.get()
             return Cyclic
         end
@@ -420,7 +420,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_clone_reexports")
     )";
 
     fileResolver.source["Module/B"] = R"(
-        local a = require(script.Parent.A)
+        const a = require(script.Parent.A)
         export type B = {q : a.A}
         return {}
     )";
@@ -446,13 +446,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_clone_reexports")
 TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_clone_types_of_reexported_values")
 {
     fileResolver.source["Module/A"] = R"(
-        local exports = {a={p=5}}
+        const exports = {a={p=5}}
         return exports
     )";
 
     fileResolver.source["Module/B"] = R"(
-        local a = require(script.Parent.A)
-        local exports = {b=a.a}
+        const a = require(script.Parent.A)
+        const exports = {b=a.a}
         return exports
     )";
 

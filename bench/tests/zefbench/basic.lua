@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -9,51 +9,51 @@ function test()
 -- This single file contains the lexer, parser, AST evaluator, and self-checking tests.
 
 -- ===== Bit operations (cross-VM) =====
-local band, bor, bxor, lshift, rshift
-local _bit32 = rawget(_G, "bit32")
-local _bit = rawget(_G, "bit")
+band, bor, bxor, lshift, rshift = nil, nil, nil, nil, nil
+_bit32 = rawget(_G, "bit32")
+_bit = rawget(_G, "bit")
 if type(_bit32) == "table" then
     band, bor, bxor, lshift, rshift =
         _bit32.band, _bit32.bor, _bit32.bxor, _bit32.lshift, _bit32.rshift
 else if type(_bit) == "table" then
     band, bor, bxor, lshift, rshift =
         _bit.band, _bit.bor, _bit.bxor, _bit.lshift, _bit.rshift
-else if bit32 ~= nil and type(bit32) == "table" then
+else if bit32 != nil and type(bit32) == "table" then
     band, bor, bxor, lshift, rshift =
         bit32.band, bit32.bor, bit32.bxor, bit32.lshift, bit32.rshift
 else
     -- Lua 5.3+ native bitwise operators, loaded dynamically so this file still
     -- parses in older Luas.
-    band = assert(load("local a,b = ... return (a & b) & 0xffffffff"))
-    bor = assert(load("local a,b = ... return (a | b) & 0xffffffff"))
-    bxor = assert(load("local a,b = ... return (a ~ b) & 0xffffffff"))
-    lshift = assert(load("local a,b = ... return (a << b) & 0xffffffff"))
-    rshift = assert(load("local a,b = ... return ((a & 0xffffffff) >> b) & 0xffffffff"))
+    band = assert(load("a,b = ... return (a & b) & 0xffffffff"))
+    bor = assert(load("a,b = ... return (a | b) & 0xffffffff"))
+    bxor = assert(load("a,b = ... return (a ~ b) & 0xffffffff"))
+    lshift = assert(load("a,b = ... return (a << b) & 0xffffffff"))
+    rshift = assert(load("a,b = ... return ((a & 0xffffffff) >> b) & 0xffffffff"))
 end
 
 -- ===== Utility =====
-local floor = math.floor
-local mabs = math.abs
-local msqrt = math.sqrt
-local mpow = math.pow or function(a, b) return a ^ b end
-local mlog = math.log
-local msin = math.sin
-local mcos = math.cos
-local mtan = math.tan
-local matan = math.atan
-local mexp = math.exp
-local mmax = math.max
-local unpack_ = table.unpack or unpack
+floor = math.floor
+mabs = math.abs
+msqrt = math.sqrt
+mpow = math.pow or function(a, b) return a ^ b end
+mlog = math.log
+msin = math.sin
+mcos = math.cos
+mtan = math.tan
+matan = math.atan
+mexp = math.exp
+mmax = math.max
+unpack_ = table.unpack or unpack
 
-local function msign(x)
+function msign(x)
     if x > 0 then return 1 else if x < 0 then return -1 else return 0 end
 end
 
 -- Emulate JS ""+number: integer-valued numbers render without a decimal point,
 -- to match the expected outputs that were produced by JS.
-local function formatNumber(n)
-    if type(n) ~= "number" then return tostring(n) end
-    if n ~= n then return "NaN" end
+function formatNumber(n)
+    if type(n) != "number" then return tostring(n) end
+    if n != n then return "NaN" end
     if n == math.huge then return "Infinity" end
     if n == -math.huge then return "-Infinity" end
     if n == floor(n) and mabs(n) < 1e16 then
@@ -62,14 +62,14 @@ local function formatNumber(n)
     return tostring(n)
 end
 
-local function strlower(s) return string.lower(s) end
+function strlower(s) return string.lower(s) end
 
 -- ===== CaselessMap =====
-local CaselessMap = {}
+CaselessMap = {}
 CaselessMap.__index = CaselessMap
 
 function CaselessMap.new(other)
-    local self = setmetatable({ _map = {} }, CaselessMap)
+    self = setmetatable({ _map = {} }, CaselessMap)
     if other then
         for k, v in pairs(other._map) do self._map[k] = v end
     end
@@ -81,7 +81,7 @@ function CaselessMap:set(key, value)
 end
 
 function CaselessMap:has(key)
-    return self._map[strlower(key)] ~= nil
+    return self._map[strlower(key)] != nil
 end
 
 function CaselessMap:get(key)
@@ -89,7 +89,7 @@ function CaselessMap:get(key)
 end
 
 -- ===== Number/Array/Function values =====
-local NumberValue = {}
+NumberValue = {}
 NumberValue.__index = NumberValue
 
 function NumberValue.new(value)
@@ -97,14 +97,14 @@ function NumberValue.new(value)
 end
 
 function NumberValue:apply(state, parameters)
-    if #parameters ~= 0 then
+    if #parameters != 0 then
         state:abort("Should not pass arguments to simple numeric variables")
     end
     return self.value
 end
 
 function NumberValue:leftApply(state, parameters)
-    if #parameters ~= 0 then
+    if #parameters != 0 then
         state:abort("Should not pass arguments to simple numeric variables")
     end
     return self
@@ -114,13 +114,13 @@ function NumberValue:assign(v)
     self.value = v
 end
 
-local NumberArray = {}
+NumberArray = {}
 NumberArray.__index = NumberArray
 
 function NumberArray.new(dim)
-    local function allocate(index)
-        local result = {}
-        local size = dim[index]
+    function allocate(index)
+        result = {}
+        size = dim[index]
         if index + 1 <= #dim then
             for i = 1, size do result[i] = allocate(index + 1) end
         else
@@ -136,14 +136,14 @@ function NumberArray:apply(state, parameters)
 end
 
 function NumberArray:leftApply(state, parameters)
-    if #self._dim ~= #parameters then
+    if #self._dim != #parameters then
         state:abort("Expected " .. #self._dim .. " arguments but " .. #parameters .. " were passed.")
     end
-    local result = self._array
-    local base = state.program.base
+    result = self._array
+    base = state.program.base
     for i = 1, #parameters do
-        local idx = floor(parameters[i])
-        local size = self._dim[i]
+        idx = floor(parameters[i])
+        size = self._dim[i]
         if not (idx >= base) or not (idx < size) then
             state:abort("Index out of bounds: " .. idx)
         end
@@ -152,7 +152,7 @@ function NumberArray:leftApply(state, parameters)
     return result
 end
 
-local NativeFunction = {}
+NativeFunction = {}
 NativeFunction.__index = NativeFunction
 
 function NativeFunction.new(nargs, callback)
@@ -160,7 +160,7 @@ function NativeFunction.new(nargs, callback)
 end
 
 function NativeFunction:apply(state, parameters)
-    if self._nargs ~= #parameters then
+    if self._nargs != #parameters then
         state:abort("Expected " .. self._nargs .. " arguments but " .. #parameters .. " were passed")
     end
     if self._nargs == 0 then return self._callback() end
@@ -173,7 +173,7 @@ function NativeFunction:leftApply(state, _)
 end
 
 -- ===== RNG (Robert Jenkins 32-bit, matching Octane/Apple ARES-6) =====
-local function createRNG(seed)
+function createRNG(seed)
     seed = seed % 0x100000000
     return function()
         seed = (seed + 0x7ed55d16 + lshift(seed, 12)) % 0x100000000
@@ -186,16 +186,16 @@ local function createRNG(seed)
     end
 end
 
-local function createRNGWithFixedSeed()
+function createRNGWithFixedSeed()
     return createRNG(49734321)
 end
 
 -- ===== State =====
-local State = {}
+State = {}
 State.__index = State
 
 function State.new(program)
-    local self = setmetatable({}, State)
+    self = setmetatable({}, State)
     self.values = CaselessMap.new()
     self.stringValues = CaselessMap.new()
     self.sideState = {}  -- keyed by AST node table
@@ -207,7 +207,7 @@ function State.new(program)
     self.rng = createRNGWithFixedSeed()
     self.output = ""
 
-    local rng = self.rng
+    rng = self.rng
     self.values:set("abs", NativeFunction.new(1, function(x) return mabs(x) end))
     self.values:set("atn", NativeFunction.new(1, function(x) return matan(x) end))
     self.values:set("cos", NativeFunction.new(1, function(x) return mcos(x) end))
@@ -224,11 +224,11 @@ end
 
 function State:getValue(name, numParameters)
     if self.values:has(name) then return self.values:get(name) end
-    local result
+    result = nil
     if numParameters == 0 then
         result = NumberValue.new()
     else
-        local dim = {}
+        dim = {}
         for i = 1, numParameters do dim[i] = 11 end
         result = NumberArray.new(dim)
     end
@@ -237,7 +237,7 @@ function State:getValue(name, numParameters)
 end
 
 function State:getSideState(key)
-    local s = self.sideState[key]
+    s = self.sideState[key]
     if not s then
         s = {}
         self.sideState[key] = s
@@ -257,16 +257,16 @@ function State:validate(predicate, text)
 end
 
 -- ===== AST evaluators =====
-local Basic = {}
+Basic = {}
 
 function Basic.NumberApply(self, state)
-    local params = {}
+    params = {}
     for i, v in ipairs(self.parameters) do params[i] = v:evaluate(state) end
     return state:getValue(self.name, #params):apply(state, params)
 end
 
 function Basic.Variable(self, state)
-    local params = {}
+    params = {}
     for i, v in ipairs(self.parameters) do params[i] = v:evaluate(state) end
     return state:getValue(self.name, #params):leftApply(state, params)
 end
@@ -300,7 +300,7 @@ function Basic.NumberSub(self, state)
 end
 
 function Basic.StringVar(self, state)
-    local value = state.stringValues:get(self.name)
+    value = state.stringValues:get(self.name)
     if value == nil then state:abort("Could not find string variable " .. self.name) end
     return value
 end
@@ -310,7 +310,7 @@ function Basic.Equals(self, state)
 end
 
 function Basic.NotEquals(self, state)
-    return self.left:evaluate(state) ~= self.right:evaluate(state)
+    return self.left:evaluate(state) != self.right:evaluate(state)
 end
 
 function Basic.LessThan(self, state)
@@ -362,7 +362,7 @@ function Basic.Stop(_, state)
 end
 
 function Basic.On(self, state)
-    local index = self.expression:evaluate(state)
+    index = self.expression:evaluate(state)
     if not (index >= 1) or not (index <= #self.targets) then
         state:abort("Index out of bounds: " .. index)
     end
@@ -370,14 +370,14 @@ function Basic.On(self, state)
 end
 
 function Basic.For(self, state)
-    local sideState = state:getSideState(self)
+    sideState = state:getSideState(self)
     sideState.variable = state:getValue(self.variable, 0):leftApply(state, {})
     sideState.initialValue = self.initial:evaluate(state)
     sideState.limitValue = self.limit:evaluate(state)
     sideState.stepValue = self.step:evaluate(state)
     sideState.variable:assign(sideState.initialValue)
-    local limit = sideState.limitValue
-    local signStep = msign(sideState.stepValue)
+    limit = sideState.limitValue
+    signStep = msign(sideState.stepValue)
     sideState.shouldStop = function()
         return (sideState.variable.value - limit) * signStep > 0
     end
@@ -387,22 +387,22 @@ function Basic.For(self, state)
 end
 
 function Basic.Next(self, state)
-    local sideState = state:getSideState(self.target)
+    sideState = state:getSideState(self.target)
     sideState.variable:assign(sideState.variable.value + sideState.stepValue)
     if sideState.shouldStop() then return end
     state.nextLineNumber = self.target.lineNumber + 1
 end
 
 function Basic.Print(self, state)
-    local s = ""
+    s = ""
     for _, item in ipairs(self.items) do
-        local kind = item.kind
+        kind = item.kind
         if kind == "comma" then
-            while #s % 14 ~= 0 do s = s .. " " end
+            while #s % 14 != 0 do s = s .. " " end
         else if kind == "tab" then
-            local v = item.value:evaluate(state)
+            v = item.value:evaluate(state)
             v = mmax(floor(v + 0.5), 1)
-            while #s % v ~= 0 do s = s .. " " end
+            while #s % v != 0 do s = s .. " " end
         else if kind == "string" then
             s = s .. item.value:evaluate(state)
         else if kind == "number" then
@@ -415,8 +415,8 @@ function Basic.Print(self, state)
 end
 
 function Basic.Input(self, state)
-    local results = state:consumeInput(#self.items)
-    state:validate(results ~= nil and #results == #self.items,
+    results = state:consumeInput(#self.items)
+    state:validate(results != nil and #results == #self.items,
         "Input did not get the right number of items")
     for i, item in ipairs(self.items) do
         item:evaluate(state):assign(results[i])
@@ -441,7 +441,7 @@ function Basic.Dim(self, state)
         state:validate(not state.values:has(item.name),
             "Variable " .. item.name .. " already exists")
         state:validate(#item.bounds > 0, "Dim statement is for arrays")
-        local dim = {}
+        dim = {}
         for i, b in ipairs(item.bounds) do dim[i] = b + 1 end
         state.values:set(item.name, NumberArray.new(dim))
     end
@@ -452,23 +452,23 @@ function Basic.End(_, state)
 end
 
 -- Mark statements that terminate a block (for parseStatements)
-local blockEndProcs = {}
+blockEndProcs = {}
 blockEndProcs[Basic.Next] = true
 blockEndProcs[Basic.End] = true
 
 function Basic.Program(self, state)
     state:validate(state.program == self, "State must match program")
-    local maxLineNumber = 0
+    maxLineNumber = 0
     for k, _ in pairs(self.statements) do
         if k > maxLineNumber then maxLineNumber = k end
     end
-    while state.nextLineNumber ~= nil do
+    while state.nextLineNumber != nil do
         state:validate(state.nextLineNumber <= maxLineNumber,
             "Went out of bounds of the program")
-        local lineNum = state.nextLineNumber
+        lineNum = state.nextLineNumber
         state.nextLineNumber = lineNum + 1
-        local statement = self.statements[lineNum]
-        if statement ~= nil and statement.process ~= nil then
+        statement = self.statements[lineNum]
+        if statement != nil and statement.process != nil then
             state.statement = statement
             statement:process(state)
         end
@@ -478,7 +478,7 @@ end
 -- ===== Lexer =====
 -- Pattern helpers: Lua patterns are simpler than JS regex. We match explicitly.
 
-local KEYWORDS = {
+KEYWORDS = {
     base=true, data=true, def=true, dim=true, ["end"]=true, ["for"]=true,
     go=true, gosub=true, ["goto"]=true, ["if"]=true, input=true, let=true,
     next=true, ["on"]=true, option=true, print=true, randomize=true,
@@ -486,24 +486,24 @@ local KEYWORDS = {
     sub=true, ["then"]=true, to=true
 }
 
-local function isDigit(c) return c >= "0" and c <= "9" end
-local function isAlpha(c)
+function isDigit(c) return c >= "0" and c <= "9" end
+function isAlpha(c)
     return (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or c == "_"
 end
-local function isAlnum(c) return isAlpha(c) or isDigit(c) end
+function isAlnum(c) return isAlpha(c) or isDigit(c) end
 
-local function lex(source)
-    local tokens = {}
-    local sourceLineNumber = 0
+function lex(source)
+    tokens = {}
+    sourceLineNumber = 0
     for rawLine in (source .. "\n"):gmatch("([^\n]*)\n") do
         sourceLineNumber = sourceLineNumber + 1
-        local line = rawLine
-        local pos = 1
-        local len = #line
+        line = rawLine
+        pos = 1
+        len = #line
 
-        local function skipWs()
+        function skipWs()
             while pos <= len do
-                local c = line:sub(pos, pos)
+                c = line:sub(pos, pos)
                 if c == " " or c == "\t" or c == "\r" then
                     pos = pos + 1
                 else
@@ -522,13 +522,13 @@ local function lex(source)
             -- number check. We accept blank lines quietly.
         else
             -- Consume the leading line number
-            local numStart = pos
+            numStart = pos
             while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
             if numStart == pos then
                 error("At line " .. sourceLineNumber .. ": Expect line number: " .. line:sub(numStart))
             end
-            local numStr = line:sub(numStart, pos - 1)
-            local userLineNumber = tonumber(numStr)
+            numStr = line:sub(numStart, pos - 1)
+            userLineNumber = tonumber(numStr)
             tokens[#tokens + 1] = {
                 kind = "userLineNumber", string = numStr,
                 sourceLineNumber = sourceLineNumber, userLineNumber = userLineNumber
@@ -537,16 +537,16 @@ local function lex(source)
             skipWs()
 
             while pos <= len do
-                local c = line:sub(pos, pos)
+                c = line:sub(pos, pos)
 
                 -- Remark: "rem " followed by anything
                 if (c == "r" or c == "R") and pos + 3 <= len then
-                    local c2 = line:sub(pos + 1, pos + 1)
-                    local c3 = line:sub(pos + 2, pos + 2)
-                    local c4 = line:sub(pos + 3, pos + 3)
+                    c2 = line:sub(pos + 1, pos + 1)
+                    c3 = line:sub(pos + 2, pos + 2)
+                    c4 = line:sub(pos + 3, pos + 3)
                     if (c2 == "e" or c2 == "E") and (c3 == "m" or c3 == "M")
                             and (c4 == " " or c4 == "\t") then
-                        local rest = line:sub(pos)
+                        rest = line:sub(pos)
                         tokens[#tokens + 1] = {
                             kind = "remark", string = rest,
                             sourceLineNumber = sourceLineNumber,
@@ -559,13 +559,13 @@ local function lex(source)
 
                 if isAlpha(c) then
                     -- identifier or keyword
-                    local start = pos
+                    start = pos
                     pos = pos + 1
                     while pos <= len and isAlnum(line:sub(pos, pos)) do
                         pos = pos + 1
                     end
-                    local word = line:sub(start, pos - 1)
-                    local kind
+                    word = line:sub(start, pos - 1)
+                    kind = nil
                     if KEYWORDS[strlower(word)] then
                         kind = "keyword"
                     else
@@ -578,27 +578,27 @@ local function lex(source)
                     }
                 else if isDigit(c) or (c == "." and pos + 1 <= len and isDigit(line:sub(pos + 1, pos + 1))) then
                     -- number: int, int.frac?, .frac, optional e[+-]?digits
-                    local start = pos
+                    start = pos
                     while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
                     if pos <= len and line:sub(pos, pos) == "." then
                         pos = pos + 1
                         while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
                     end
-                    local e = pos <= len and line:sub(pos, pos)
+                    e = pos <= len and line:sub(pos, pos)
                     if e == "e" or e == "E" then
                         pos = pos + 1
-                        local s = pos <= len and line:sub(pos, pos)
+                        s = pos <= len and line:sub(pos, pos)
                         if s == "+" or s == "-" then pos = pos + 1 end
                         while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
                     end
-                    local str = line:sub(start, pos - 1)
+                    str = line:sub(start, pos - 1)
                     tokens[#tokens + 1] = {
                         kind = "number", string = str, value = tonumber(str),
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
                     }
                 else if c == '"' then
-                    local start = pos
+                    start = pos
                     pos = pos + 1
                     while pos <= len do
                         if line:sub(pos, pos) == '"' then
@@ -612,11 +612,11 @@ local function lex(source)
                             pos = pos + 1
                         end
                     end
-                    local str = line:sub(start, pos - 1)
-                    local value = ""
-                    local i = 2
+                    str = line:sub(start, pos - 1)
+                    value = ""
+                    i = 2
                     while i <= #str - 1 do
-                        local ch = str:sub(i, i)
+                        ch = str:sub(i, i)
                         if ch == '"' then i = i + 1 end  -- skip the escape quote
                         value = value .. ch
                         i = i + 1
@@ -628,8 +628,8 @@ local function lex(source)
                     }
                 else
                     -- Operator
-                    local two = pos + 1 <= len and line:sub(pos, pos + 1) or nil
-                    local opStr
+                    two = pos + 1 <= len and line:sub(pos, pos + 1) or nil
+                    opStr = nil
                     if two == "<>" or two == "<=" or two == ">=" then
                         opStr = two
                         pos = pos + 2
@@ -662,89 +662,89 @@ local function lex(source)
 end
 
 -- ===== Parser =====
-local function parse(tokens)
-    local program
-    local idx = 1
-    local pushBack = {}
+function parse(tokens)
+    program = nil
+    idx = 1
+    pushBack = {}
 
-    local function nextToken()
+    function nextToken()
         if #pushBack > 0 then
             return table.remove(pushBack)
         end
         if idx > #tokens then
             return { kind = "endOfFile", string = "<end of file>" }
         end
-        local t = tokens[idx]
+        t = tokens[idx]
         idx = idx + 1
         return t
     end
 
-    local function pushToken(t) pushBack[#pushBack + 1] = t end
+    function pushToken(t) pushBack[#pushBack + 1] = t end
 
-    local function peekToken()
-        local t = nextToken()
+    function peekToken()
+        t = nextToken()
         pushToken(t)
         return t
     end
 
-    local function consumeKind(kind)
-        local t = nextToken()
-        if t.kind ~= kind then
+    function consumeKind(kind)
+        t = nextToken()
+        if t.kind != kind then
             error("At " .. tostring(t.sourceLineNumber) .. ": expected " .. kind .. " but got: " .. t.string)
         end
         return t
     end
 
-    local function consumeToken(str)
-        local t = nextToken()
-        if strlower(t.string) ~= strlower(str) then
+    function consumeToken(str)
+        t = nextToken()
+        if strlower(t.string) != strlower(str) then
             error("At " .. tostring(t.sourceLineNumber) .. ": expected " .. str .. " but got: " .. t.string)
         end
         return t
     end
 
-    local parseNumericExpression
-    local parseStringExpression
-    local isStringExpression
+    parseNumericExpression = nil
+    parseStringExpression = nil
+    isStringExpression = nil
 
-    local function parseVariable()
-        local name = consumeKind("identifier").string
-        local result = { evaluate = Basic.Variable, name = name, parameters = {} }
+    function parseVariable()
+        name = consumeKind("identifier").string
+        result = { evaluate = Basic.Variable, name = name, parameters = {} }
         if peekToken().string == "(" then
             repeat
                 nextToken()
                 result.parameters[#result.parameters + 1] = parseNumericExpression()
-            until peekToken().string ~= ","
+            until peekToken().string != ","
             consumeToken(")")
         end
         return result
     end
 
     parseNumericExpression = function()
-        local function parsePrimary()
-            local t = nextToken()
+        function parsePrimary()
+            t = nextToken()
             if t.kind == "identifier" then
-                local r = { evaluate = Basic.NumberApply, name = t.string, parameters = {} }
+                r = { evaluate = Basic.NumberApply, name = t.string, parameters = {} }
                 if peekToken().string == "(" then
                     repeat
                         nextToken()
                         r.parameters[#r.parameters + 1] = parseNumericExpression()
-                    until peekToken().string ~= ","
+                    until peekToken().string != ","
                     consumeToken(")")
                 end
                 return r
             else if t.kind == "number" then
                 return { evaluate = Basic.Const, value = t.value }
             else if t.kind == "operator" and t.string == "(" then
-                local r = parseNumericExpression()
+                r = parseNumericExpression()
                 consumeToken(")")
                 return r
             end
             error("At " .. tostring(t.sourceLineNumber) .. ": expected identifier, number, or (, but got: " .. t.string)
         end
 
-        local function parseFactor()
-            local primary = parsePrimary()
+        function parseFactor()
+            primary = parsePrimary()
             while true do
                 if peekToken().string == "^" then
                     nextToken()
@@ -754,10 +754,10 @@ local function parse(tokens)
             return primary
         end
 
-        local function parseTerm()
-            local factor = parseFactor()
+        function parseTerm()
+            factor = parseFactor()
             while true do
-                local s = peekToken().string
+                s = peekToken().string
                 if s == "*" then
                     nextToken()
                     factor = { evaluate = Basic.NumberMul, left = factor, right = parseFactor() }
@@ -769,16 +769,16 @@ local function parse(tokens)
             return factor
         end
 
-        local negate = false
-        local s = peekToken().string
+        negate = false
+        s = peekToken().string
         if s == "+" then nextToken()
         else if s == "-" then negate = true; nextToken() end
 
-        local term = parseTerm()
+        term = parseTerm()
         if negate then term = { evaluate = Basic.NumberNeg, term = term } end
 
         while true do
-            local s2 = peekToken().string
+            s2 = peekToken().string
             if s2 == "+" then
                 nextToken()
                 term = { evaluate = Basic.NumberAdd, left = term, right = parseTerm() }
@@ -791,12 +791,12 @@ local function parse(tokens)
     end
 
     isStringExpression = function()
-        local t = nextToken()
+        t = nextToken()
         if t.kind == "string" then
             pushToken(t); return true
         end
         if t.kind == "identifier" then
-            local result = peekToken().string == "$"
+            result = peekToken().string == "$"
             pushToken(t)
             return result
         end
@@ -805,7 +805,7 @@ local function parse(tokens)
     end
 
     parseStringExpression = function()
-        local t = nextToken()
+        t = nextToken()
         if t.kind == "string" then
             return { evaluate = Basic.Const, value = t.value }
         else if t.kind == "identifier" then
@@ -815,19 +815,19 @@ local function parse(tokens)
         error("At " .. tostring(t.sourceLineNumber) .. ": expected string expression but got " .. t.string)
     end
 
-    local function parseRelationalExpression()
+    function parseRelationalExpression()
         if isStringExpression() then
-            local left = parseStringExpression()
-            local op = nextToken()
-            local ev
+            left = parseStringExpression()
+            op = nextToken()
+            ev = nil
             if op.string == "=" then ev = Basic.Equals
             else if op.string == "<>" then ev = Basic.NotEquals
             else error("At " .. tostring(op.sourceLineNumber) .. ": expected a string comparison operator but got: " .. op.string) end
             return { evaluate = ev, left = left, right = parseStringExpression() }
         end
-        local left = parseNumericExpression()
-        local op = nextToken()
-        local ev
+        left = parseNumericExpression()
+        op = nextToken()
+        ev = nil
         if op.string == "=" then ev = Basic.Equals
         else if op.string == "<>" then ev = Basic.NotEquals
         else if op.string == "<" then ev = Basic.LessThan
@@ -838,19 +838,19 @@ local function parse(tokens)
         return { evaluate = ev, left = left, right = parseNumericExpression() }
     end
 
-    local function parseNonNegativeInteger()
-        local t = nextToken()
+    function parseNonNegativeInteger()
+        t = nextToken()
         if not t.string:match("^[0-9]+$") then
             error("At " .. tostring(t.sourceLineNumber) .. ": expected a line number but got: " .. t.string)
         end
         return t.value
     end
 
-    local parseStatement
-    local parseStatements
+    parseStatement = nil
+    parseStatements = nil
 
     parseStatements = function()
-        local statement
+        statement = nil
         repeat
             statement = parseStatement()
         until statement.process and blockEndProcs[statement.process]
@@ -858,15 +858,15 @@ local function parse(tokens)
     end
 
     parseStatement = function()
-        local statement = {}
+        statement = {}
         statement.lineNumber = consumeKind("userLineNumber").userLineNumber
         program.statements[statement.lineNumber] = statement
 
-        local command = nextToken()
+        command = nextToken()
         statement.sourceLineNumber = command.sourceLineNumber
 
         if command.kind == "keyword" then
-            local cmd = strlower(command.string)
+            cmd = strlower(command.string)
             if cmd == "def" then
                 statement.process = nil  -- not exercised by benchmark; keep minimal
                 statement.name = consumeKind("identifier")
@@ -875,7 +875,7 @@ local function parse(tokens)
                     repeat
                         nextToken()
                         statement.parameters[#statement.parameters + 1] = consumeKind("identifier")
-                    until peekToken().string ~= ","
+                    until peekToken().string != ","
                 end
                 statement.expression = parseNumericExpression()
             else if cmd == "let" then
@@ -884,7 +884,7 @@ local function parse(tokens)
                 consumeToken("=")
                 statement.expression = parseNumericExpression()
             else if cmd == "go" then
-                local nxt = nextToken()
+                nxt = nextToken()
                 if strlower(nxt.string) == "to" then
                     statement.process = Basic.GoTo
                     statement.target = parseNonNegativeInteger()
@@ -920,7 +920,7 @@ local function parse(tokens)
                 statement.targets = {}
                 while true do
                     statement.targets[#statement.targets + 1] = parseNonNegativeInteger()
-                    if peekToken().string ~= "," then break end
+                    if peekToken().string != "," then break end
                     nextToken()
                 end
             else if cmd == "for" then
@@ -937,11 +937,11 @@ local function parse(tokens)
                     statement.step = { evaluate = Basic.Const, value = 1 }
                 end
                 consumeKind("newLine")
-                local lastStatement = parseStatements()
-                if lastStatement.process ~= Basic.Next then
+                lastStatement = parseStatements()
+                if lastStatement.process != Basic.Next then
                     error("At " .. tostring(lastStatement.sourceLineNumber) .. ": expected next statement")
                 end
-                if lastStatement.variable ~= statement.variable then
+                if lastStatement.variable != statement.variable then
                     error("At " .. tostring(lastStatement.sourceLineNumber) .. ": expected next for " ..
                           statement.variable .. " but got " .. lastStatement.variable)
                 end
@@ -955,7 +955,7 @@ local function parse(tokens)
                 statement.process = Basic.Print
                 statement.items = {}
                 while true do
-                    local s = peekToken().string
+                    s = peekToken().string
                     if s == "," then
                         nextToken()
                         statement.items[#statement.items + 1] = { kind = "comma" }
@@ -983,7 +983,7 @@ local function parse(tokens)
                 statement.items = {}
                 while true do
                     statement.items[#statement.items + 1] = parseVariable()
-                    if peekToken().string ~= "," then break end
+                    if peekToken().string != "," then break end
                     nextToken()
                 end
             else if cmd == "read" then
@@ -991,7 +991,7 @@ local function parse(tokens)
                 statement.items = {}
                 while true do
                     statement.items[#statement.items + 1] = parseVariable()
-                    if peekToken().string ~= "," then break end
+                    if peekToken().string != "," then break end
                     nextToken()
                 end
             else if cmd == "restore" then
@@ -999,7 +999,7 @@ local function parse(tokens)
             else if cmd == "data" then
                 while true do
                     -- parseConstant, simplified: +n, -n, string, number
-                    local s = peekToken().string
+                    s = peekToken().string
                     if s == "+" then
                         nextToken()
                         program.data[#program.data + 1] = consumeKind("number").value
@@ -1013,16 +1013,16 @@ local function parse(tokens)
                             program.data[#program.data + 1] = consumeKind("number").value
                         end
                     end
-                    if peekToken().string ~= "," then break end
+                    if peekToken().string != "," then break end
                     nextToken()
                 end
             else if cmd == "dim" then
                 statement.process = Basic.Dim
                 statement.items = {}
                 while true do
-                    local name = consumeKind("identifier").string
+                    name = consumeKind("identifier").string
                     consumeToken("(")
-                    local bounds = {}
+                    bounds = {}
                     bounds[#bounds + 1] = parseNonNegativeInteger()
                     if peekToken().string == "," then
                         nextToken()
@@ -1030,13 +1030,13 @@ local function parse(tokens)
                     end
                     consumeToken(")")
                     statement.items[#statement.items + 1] = { name = name, bounds = bounds }
-                    if peekToken().string ~= "," then break end
+                    if peekToken().string != "," then break end
                     consumeToken(",")
                 end
             else if cmd == "option" then
                 consumeToken("base")
-                local base = parseNonNegativeInteger()
-                if base ~= 0 and base ~= 1 then
+                base = parseNonNegativeInteger()
+                if base != 0 and base != 1 then
                     error("At " .. tostring(command.sourceLineNumber) .. ": unexpected base: " .. base)
                 end
                 program.base = base
@@ -1061,15 +1061,15 @@ local function parse(tokens)
         return statement
     end
 
-    local function parseProgram()
+    function parseProgram()
         program = {
             process = Basic.Program,
             statements = {},
             data = {},
             base = 0,
         }
-        local lastStatement = parseStatements()
-        if lastStatement.process ~= Basic.End then
+        lastStatement = parseStatements()
+        if lastStatement.process != Basic.End then
             error("At " .. tostring(lastStatement.sourceLineNumber) .. ": expected end")
         end
         return program
@@ -1079,13 +1079,13 @@ local function parse(tokens)
 end
 
 -- ===== Driver =====
-local function prepare(source)
-    local tokens = lex(source)
-    local program = parse(tokens).program()
-    local state = State.new(program)
+function prepare(source)
+    tokens = lex(source)
+    program = parse(tokens).program()
+    state = State.new(program)
     function state:consumeInput(n)
-        local items = self.inputs or {}
-        local out = {}
+        items = self.inputs or {}
+        out = {}
         for i = 1, n do out[i] = items[i] end
         for i = 1, n do table.remove(items, 1) end
         return out
@@ -1094,16 +1094,16 @@ local function prepare(source)
     return state
 end
 
-local function simulate(source, inputs)
-    local tokens = lex(source)
-    local program = parse(tokens).program()
-    local state = State.new(program)
+function simulate(source, inputs)
+    tokens = lex(source)
+    program = parse(tokens).program()
+    state = State.new(program)
     state.inputs = {}
     if inputs then
         for i, v in ipairs(inputs) do state.inputs[i] = v end
     end
     function state:consumeInput(n)
-        local out = {}
+        out = {}
         for i = 1, n do out[i] = self.inputs[i] end
         for i = 1, n do table.remove(self.inputs, 1) end
         return out
@@ -1113,24 +1113,24 @@ local function simulate(source, inputs)
 end
 
 -- ===== Tests (self-check, matching benchmark.js) =====
-local function expect(program, expected, ...)
-    local inputs = { ... }
-    local result = simulate(program, inputs)
-    if result ~= expected then
+function expect(program, expected, ...)
+    inputs = { ... }
+    result = simulate(program, inputs)
+    if result != expected then
         error("Program " .. program .. " produced:\n" .. result ..
               "\nbut we expected:\n" .. expected)
     end
 end
 
-local EXPECTED_HELLO = "hello, world!\n"
+EXPECTED_HELLO = "hello, world!\n"
 
-local EXPECTED_COUNT = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n"
+EXPECTED_COUNT = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n"
 
-local EXPECTED_RND100 = "98\n"
+EXPECTED_RND100 = "98\n"
 
 -- Long expected outputs are stored in long-bracket strings below the function
 -- to keep things readable. Forward-declared here so runIteration can see them.
-local EXPECTED_RND2000 = [[
+EXPECTED_RND2000 = [[
 1974
 697
 1126
@@ -2203,7 +2203,7 @@ local EXPECTED_RND2000 = [[
 100
 ]]
 
-local EXPECTED_PRIMES = [[
+EXPECTED_PRIMES = [[
 2
 3
 5
@@ -2509,7 +2509,7 @@ local EXPECTED_PRIMES = [[
 1999
 ]]
 
-local function runIteration()
+function runIteration()
     expect("10 print \"hello, world!\"\n20 end", EXPECTED_HELLO)
     expect("10 let x = 0\n20 let x = x + 1\n30 print x\n40 if x < 10 then 20\n50 end",
            EXPECTED_COUNT)
@@ -2521,7 +2521,7 @@ local function runIteration()
 end
 
 -- Run
-local numIterations = 30
+numIterations = 30
 for i = 1, numIterations do
     runIteration()
 end

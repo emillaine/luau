@@ -1,5 +1,5 @@
-local a = require("./cyclic_a")
-local b = require("./cyclic_b")
+a = require("./cyclic_a")
+b = require("./cyclic_b")
 
 assert(type(a) == "table", "expected table from cyclic_a")
 assert(type(b) == "table", "expected table from cyclic_b")

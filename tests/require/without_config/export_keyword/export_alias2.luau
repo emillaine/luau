@@ -1,2 +1,2 @@
-export local a = 1
-export local b = a
+export a = 1
+export b = a

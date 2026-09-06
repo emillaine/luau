@@ -2,20 +2,20 @@
 print("testing byte buffer library")
 
 function call(fn, ...)
-  local ok, res = pcall(fn, ...)
+  ok, res = pcall(fn, ...)
   assert(ok)
   return res
 end
 
 function ecall(fn, ...)
-  local ok, err = pcall(fn, ...)
+  ok, err = pcall(fn, ...)
   assert(not ok)
   return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
-local function simple_byte_reads()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1024)
+function simple_byte_reads()
+  native_check = is_native_if_supported()
+  b = buffer.create(1024)
 
   assert(buffer.len(b) == 1024)
 
@@ -33,7 +33,7 @@ local function simple_byte_reads()
   assert(buffer.readi8(b, 14) == 4)
   assert(buffer.readi8(b, 15) == 5)
 
-  local x = buffer.readi8(b, 14) + buffer.readi8(b, 13)
+  x = buffer.readi8(b, 14) + buffer.readi8(b, 13)
   assert(x == 7)
 
   buffer.writei8(b, 16, x)
@@ -43,9 +43,9 @@ end
 
 simple_byte_reads()
 
-local function offset_byte_reads(start: number)
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1024)
+function offset_byte_reads(start: number)
+  native_check = is_native_if_supported()
+  b = buffer.create(1024)
 
   buffer.writei8(b, start, 32)
   assert(buffer.readi8(b, start) == 32)
@@ -60,7 +60,7 @@ local function offset_byte_reads(start: number)
   assert(buffer.readi8(b, start + 4) == 4)
   assert(buffer.readi8(b, start + 5) == 5)
 
-  local x = buffer.readi8(b, start + 4) + buffer.readi8(b, start + 3)
+  x = buffer.readi8(b, start + 4) + buffer.readi8(b, start + 3)
   assert(x == 7)
 
   assert(not native_check or is_native_if_supported())
@@ -69,20 +69,20 @@ end
 offset_byte_reads(5)
 offset_byte_reads(30)
 
-local function simple_float_reinterpret()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1024)
+function simple_float_reinterpret()
+  native_check = is_native_if_supported()
+  b = buffer.create(1024)
 
   buffer.writei32(b, 10, 0x3f800000)
-  local one = buffer.readf32(b, 10)
+  one = buffer.readf32(b, 10)
   assert(one == 1.0)
 
   buffer.writef32(b, 10, 2.75197)
-  local magic = buffer.readi32(b, 10)
+  magic = buffer.readi32(b, 10)
   assert(magic == 0x40302047)
 
   buffer.writef32(b, 10, one)
-  local magic2 = buffer.readi32(b, 10)
+  magic2 = buffer.readi32(b, 10)
 
   assert(magic2 == 0x3f800000)
 
@@ -91,25 +91,25 @@ end
 
 simple_float_reinterpret()
 
-local function simple_double_reinterpret()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1024)
+function simple_double_reinterpret()
+  native_check = is_native_if_supported()
+  b = buffer.create(1024)
 
   buffer.writei32(b, 10, 0x00000000)
   buffer.writei32(b, 14, 0x3ff00000)
-  local one = buffer.readf64(b, 10)
+  one = buffer.readf64(b, 10)
   assert(one == 1.0)
 
   buffer.writef64(b, 10, 1.437576533064206)
-  local magic1 = buffer.readi32(b, 10)
-  local magic2 = buffer.readi32(b, 14)
+  magic1 = buffer.readi32(b, 10)
+  magic2 = buffer.readi32(b, 14)
 
   assert(magic1 == 0x40302010)
   assert(magic2 == 0x3ff70050)
 
   buffer.writef64(b, 10, one)
-  local magic3 = buffer.readi32(b, 10)
-  local magic4 = buffer.readi32(b, 14)
+  magic3 = buffer.readi32(b, 10)
+  magic4 = buffer.readi32(b, 14)
 
   assert(magic3 == 0x00000000)
   assert(magic4 == 0x3ff00000)
@@ -119,9 +119,9 @@ end
 
 simple_double_reinterpret()
 
-local function simple_string_ops()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1024)
+function simple_string_ops()
+  native_check = is_native_if_supported()
+  b = buffer.create(1024)
 
   buffer.writestring(b, 15, " world")
   buffer.writestring(b, 10, "hello")
@@ -139,10 +139,10 @@ end
 
 simple_string_ops()
 
-local function simple_copy_ops()
-  local native_check = is_native_if_supported()
-  local b1 = buffer.create(1024)
-  local b2 = buffer.create(1024)
+function simple_copy_ops()
+  native_check = is_native_if_supported()
+  b1 = buffer.create(1024)
+  b2 = buffer.create(1024)
 
   buffer.writestring(b1, 200, "hello")
   buffer.writestring(b1, 100, "world")
@@ -157,12 +157,12 @@ local function simple_copy_ops()
 
   assert(buffer.readstring(b2, 30, 12) == "hello world!")
 
-  local b3 = buffer.create(9)
+  b3 = buffer.create(9)
   buffer.writestring(b3, 0, "say hello")
   buffer.copy(b2, 36, b3, 4)
   assert(buffer.readstring(b2, 30, 12) == "hello hello!")
 
-  local b4 = buffer.create(5)
+  b4 = buffer.create(5)
   buffer.writestring(b4, 0, "world")
   buffer.copy(b2, 36, b4)
   assert(buffer.readstring(b2, 30, 12) == "hello world!")
@@ -180,16 +180,16 @@ simple_copy_ops()
 
 -- bounds checking
 
-local function createchecks()
+function createchecks()
   assert(ecall(function() buffer.create(-1) end) == "invalid argument #1 to 'create' (size)")
   assert(ecall(function() buffer.create(-1000000) end) == "invalid argument #1 to 'create' (size)")
 end
 
 createchecks()
 
-local function boundchecks()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1024)
+function boundchecks()
+  native_check = is_native_if_supported()
+  b = buffer.create(1024)
 
   assert(call(function() return buffer.readi8(b, 1023) end) == 0)
   assert(ecall(function() buffer.readi8(b, 1024) end) == "buffer access out of bounds")
@@ -272,7 +272,7 @@ local function boundchecks()
   assert(ecall(function() buffer.copy(b, 30, b, -10, 10) end) == "buffer access out of bounds")
   assert(ecall(function() buffer.copy(b, 30, b, -100000, 10) end) == "buffer access out of bounds")
 
-  local b2 = buffer.create(1024)
+  b2 = buffer.create(1024)
   assert(ecall(function() buffer.copy(b, -200, b, 200, 200) end) == "buffer access out of bounds")
   assert(ecall(function() buffer.copy(b, 825, b, 200, 200) end) == "buffer access out of bounds")
 
@@ -281,9 +281,9 @@ end
 
 boundchecks()
 
-local function boundchecksnonconst(size, minus1, minusbig, intmax)
-  local native_check = is_native_if_supported()
-  local b = buffer.create(size)
+function boundchecksnonconst(size, minus1, minusbig, intmax)
+  native_check = is_native_if_supported()
+  b = buffer.create(size)
 
   assert(call(function() return buffer.readi8(b, size-1) end) == 0)
   assert(ecall(function() buffer.readi8(b, size) end) == "buffer access out of bounds")
@@ -359,9 +359,9 @@ end
 
 boundchecksnonconst(1024, -1, -100000, 0x7fffffff)
 
-local function boundcheckssmall()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1)
+function boundcheckssmall()
+  native_check = is_native_if_supported()
+  b = buffer.create(1)
 
   assert(call(function() return buffer.readi8(b, 0) end) == 0)
   assert(ecall(function() buffer.readi8(b, 1) end) == "buffer access out of bounds")
@@ -416,9 +416,9 @@ end
 
 boundcheckssmall()
 
-local function boundcheckssmallnonconst(zero, one, minus1, minus2, minus4, minus7, minus8)
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1)
+function boundcheckssmallnonconst(zero, one, minus1, minus2, minus4, minus7, minus8)
+  native_check = is_native_if_supported()
+  b = buffer.create(1)
 
   assert(call(function() return buffer.readi8(b, 0) end) == 0)
   assert(ecall(function() buffer.readi8(b, one) end) == "buffer access out of bounds")
@@ -473,9 +473,9 @@ end
 
 boundcheckssmallnonconst(0, 1, -1, -2, -4, -7, -8)
 
-local function boundchecksempty()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(0) -- useless, but probably more generic
+function boundchecksempty()
+  native_check = is_native_if_supported()
+  b = buffer.create(0) -- useless, but probably more generic
 
   assert(ecall(function() buffer.readi8(b, 1) end) == "buffer access out of bounds")
   assert(ecall(function() buffer.readi8(b, 0) end) == "buffer access out of bounds")
@@ -496,7 +496,7 @@ end
 
 boundchecksempty()
 
-local function boundchecksrangemerge1(buf: buffer, a: number)
+function boundchecksrangemerge1(buf: buffer, a: number)
   assert(ecall(function(buf: buffer, a: number)
     return buffer.readi32(buf, a + 8) + buffer.readi32(buf, a + 4) + buffer.readi32(buf, a + 0)
   end, buf, a) == "buffer access out of bounds")
@@ -504,7 +504,7 @@ end
 
 boundchecksrangemerge1(buffer.create(4), 0)
 
-local function boundchecksrangemerge2(buf: buffer, a: number)
+function boundchecksrangemerge2(buf: buffer, a: number)
   assert(ecall(function(buf: buffer, a: number)
     return buffer.readi32(buf, a) + buffer.readi32(buf, a - 8)
   end, buf, a) == "buffer access out of bounds")
@@ -512,9 +512,9 @@ end
 
 boundchecksrangemerge2(buffer.create(16), 4)
 
-local function intuint()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(32)
+function intuint()
+  native_check = is_native_if_supported()
+  b = buffer.create(32)
 
   buffer.writeu32(b, 0, 0xffffffff)
   assert(buffer.readi8(b, 0) == -1)
@@ -555,9 +555,9 @@ end
 
 intuint()
 
-local function intuinttricky()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(32)
+function intuinttricky()
+  native_check = is_native_if_supported()
+  b = buffer.create(32)
 
   buffer.writeu8(b, 0, 0xffffffff)
   assert(buffer.readi8(b, 0) == -1)
@@ -588,22 +588,22 @@ end
 
 intuinttricky()
 
-local function fromtostring()
-  local b = buffer.fromstring("1234567890")
+function fromtostring()
+  b = buffer.fromstring("1234567890")
   assert(buffer.tostring(b) == "1234567890")
 
   buffer.writestring(b, 4, "xyz")
   assert(buffer.tostring(b) == "1234xyz890")
 
-  local b2 = buffer.fromstring("abcd\0ef")
+  b2 = buffer.fromstring("abcd\0ef")
   assert(buffer.tostring(b2) == "abcd\0ef")
 end
 
 fromtostring()
 
-local function fill()
-  local native_check = is_native_if_supported()
-  local b = buffer.create(10)
+function fill()
+  native_check = is_native_if_supported()
+  b = buffer.create(10)
 
   buffer.fill(b, 0, 0x61)
   assert(buffer.tostring(b) == "aaaaaaaaaa")
@@ -632,9 +632,9 @@ end
 
 fill()
 
-local function misc(t16)
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1000)
+function misc(t16)
+  native_check = is_native_if_supported()
+  b = buffer.create(1000)
 
   assert(select('#', buffer.writei32(b, 10, 40)) == 0)
   assert(select('#', buffer.writef32(b, 20, 40.0)) == 0)
@@ -660,9 +660,9 @@ end
 
 misc(table.create(16, 0))
 
-local function storeloadpreserve(n, m, f, ...)
-  local native_check = is_native_if_supported()
-  local b = buffer.create(1000)
+function storeloadpreserve(n, m, f, ...)
+  native_check = is_native_if_supported()
+  b = buffer.create(1000)
 
   buffer.writei8(b, 0, n)
   buffer.writei8(b, 1, m)
@@ -735,9 +735,9 @@ end
 
 storeloadpreserve(0x1234567812, 0x12fedcba98, 1e100)
 
-local function bitops(size, base)
-  local native_check = is_native_if_supported()
-  local b = buffer.create(size)
+function bitops(size, base)
+  native_check = is_native_if_supported()
+  b = buffer.create(size)
 
   buffer.writeu32(b, base / 8, 0x12345678)
 
@@ -822,7 +822,7 @@ do
   bitops(1024 * 1024 * 1024, 6 * 1024 * 1024 * 1024)
 end
 
-local function testslowcalls()
+function testslowcalls()
   getfenv()
 
   simple_byte_reads()

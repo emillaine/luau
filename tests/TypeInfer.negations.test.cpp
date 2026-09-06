@@ -33,7 +33,7 @@ TEST_CASE_FIXTURE(NegationFixture, "negated_string_is_a_subtype_of_string")
 {
     CheckResult result = check(R"(
         function foo(arg: string) end
-        local a: string & Not<"Hello">
+        const a: string & Not<"Hello"> = nil as any
         foo(a)
     )");
 
@@ -44,7 +44,7 @@ TEST_CASE_FIXTURE(NegationFixture, "string_is_not_a_subtype_of_negated_string")
 {
     CheckResult result = check(R"(
         function foo(arg: string & Not<"hello">) end
-        local a: string
+        const a: string = nil as any
         foo(a)
     )");
 
@@ -72,8 +72,8 @@ TEST_CASE_FIXTURE(Fixture, "cofinite_strings_can_be_compared_for_equality")
 TEST_CASE_FIXTURE(NegationFixture, "compare_cofinite_strings")
 {
     CheckResult result = check(R"(
-local u : Not<"a">
-local v : "b"
+const u : Not<"a"> = nil as any
+const v : "b" = nil as any
 if u == v then
 end
 )");
@@ -89,7 +89,7 @@ TEST_CASE_FIXTURE(NegationFixture, "subtyping_path_is_valid_for_union")
     ScopedFastFlag fixTypePaths{FFlag::LuauFixSuperNegationTypePaths, true};
 
     CheckResult result = check(R"(
-        local a: Not<false?> = false
+        const a: Not<false?> = false
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -108,7 +108,7 @@ TEST_CASE_FIXTURE(NegationFixture, "subtype_path_is_valid_for_intersections")
 
     CheckResult result = check(R"(
         type T = Not<unknown & boolean>
-        local x: T = false
+        const x: T = false
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);

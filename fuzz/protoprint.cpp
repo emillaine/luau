@@ -981,8 +981,7 @@ struct ProtoToLuau
 
         if (stat.is_const())
             source += "const ";
-        else
-            source += "local ";
+        // else bare `a = ...` (no `local` keyword)
 
         if (stat.vars_size() == 0)
             source += '_';
@@ -1138,7 +1137,7 @@ struct ProtoToLuau
         else if (stat.is_const())
             source += "const function ";
         else
-            source += "local function ";
+            source += "function ";
 
         print(stat.var());
         function(stat.func());
@@ -1160,7 +1159,6 @@ struct ProtoToLuau
 
     void print(const luau::StatRequireIntoLocalHelper& stat)
     {
-        source += "local ";
         print(stat.var());
         source += " = require(module" + std::to_string(stat.modulenum() % 2) + ")\n";
     }

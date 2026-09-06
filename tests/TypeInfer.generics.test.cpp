@@ -11,6 +11,7 @@ LUAU_FASTFLAG(LuauInstantiateInSubtyping)
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
 LUAU_FASTFLAG(DebugLuauAssertOnForcedConstraint)
 LUAU_FASTFLAG(LuauStrictVisitInstantiatedType)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 using namespace Luau;
 
@@ -22,8 +23,8 @@ TEST_CASE_FIXTURE(Fixture, "check_generic_function")
         function id<a>(x:a): a
             return x
         end
-        local x: string = id("hi")
-        local y: number = id(37)
+        const x: string = id("hi")
+        const y: number = id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK_EQ(getBuiltins()->stringType, requireType("x"));
@@ -33,11 +34,11 @@ TEST_CASE_FIXTURE(Fixture, "check_generic_function")
 TEST_CASE_FIXTURE(Fixture, "check_generic_local_function")
 {
     CheckResult result = check(R"(
-        local function id<a>(x:a): a
+        function id<a>(x:a): a
             return x
         end
-        local x: string = id("hi")
-        local y: number = id(37)
+        const x: string = id("hi")
+        const y: number = id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK_EQ(getBuiltins()->stringType, requireType("x"));
@@ -47,11 +48,11 @@ TEST_CASE_FIXTURE(Fixture, "check_generic_local_function")
 TEST_CASE_FIXTURE(Fixture, "check_generic_local_function2")
 {
     CheckResult result = check(R"(
-        local function id<a>(x:a): a
+        function id<a>(x:a): a
             return x
         end
-        local x = id("hi")
-        local y = id(37)
+        const x = id("hi")
+        const y = id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK_EQ(getBuiltins()->stringType, requireType("x"));
@@ -62,10 +63,10 @@ TEST_CASE_FIXTURE(Fixture, "unions_and_generics")
 {
     CheckResult result = check(R"(
         type foo = <T>(T | {T}) -> T
-        local foo = (nil as any) as foo
+        const foo = (nil as any) as foo
 
         type Test = number | {number}
-        local res = foo(1 as Test)
+        const res = foo(1 as Test)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -80,8 +81,8 @@ TEST_CASE_FIXTURE(Fixture, "check_generic_typepack_function")
 {
     CheckResult result = check(R"(
         function id<a...>(...: a...): (a...) return ... end
-        local x: string, y: boolean = id("hi", true)
-        local z: number = id(37)
+        const x: string, y: boolean = id("hi", true)
+        const z: number = id(37)
         id()
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -98,10 +99,10 @@ TEST_CASE_FIXTURE(Fixture, "types_before_typepacks")
 TEST_CASE_FIXTURE(Fixture, "local_vars_can_be_polytypes")
 {
     CheckResult result = check(R"(
-        local function id<a>(x:a):a return x end
-        local f: <a>(a)->a = id
-        local x: string = f("hi")
-        local y: number = f(37)
+        function id<a>(x:a):a return x end
+        const f: <a>(a)->a = id
+        const x: string = f("hi")
+        const y: number = f(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -109,11 +110,11 @@ TEST_CASE_FIXTURE(Fixture, "local_vars_can_be_polytypes")
 TEST_CASE_FIXTURE(BuiltinsFixture, "inferred_local_vars_can_be_polytypes")
 {
     CheckResult result = check(R"(
-        local function id(x) return x end
+        function id(x) return x end
         print("This is bogus") -- TODO: CLI-39916
-        local f = id
-        local x: string = f("hi")
-        local y: number = f(37)
+        const f = id
+        const x: string = f("hi")
+        const y: number = f(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -121,10 +122,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "inferred_local_vars_can_be_polytypes")
 TEST_CASE_FIXTURE(BuiltinsFixture, "local_vars_can_be_instantiated_polytypes")
 {
     CheckResult result = check(R"(
-        local function id(x) return x end
+        function id(x) return x end
         print("This is bogus") -- TODO: CLI-39916
-        local f: (number)->number = id
-        local g: (string)->string = id
+        const f: (number)->number = id
+        const g: (string)->string = id
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -132,10 +133,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "local_vars_can_be_instantiated_polytypes")
 TEST_CASE_FIXTURE(Fixture, "properties_can_be_polytypes")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t.m = function<a>(x: a):a return x end
-        local x: string = t.m("hi")
-        local y: number = t.m(37)
+        const x: string = t.m("hi")
+        const y: number = t.m(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -143,8 +144,8 @@ TEST_CASE_FIXTURE(Fixture, "properties_can_be_polytypes")
 TEST_CASE_FIXTURE(Fixture, "properties_can_be_instantiated_polytypes")
 {
     CheckResult result = check(R"(
-        local t: { m: (number)->number } = { m = function(x:number) return x+1 end }
-        local function id<a>(x:a):a return x end
+        const t: { m: (number)->number } = { m = function(x:number) return x+1 end }
+        function id<a>(x:a):a return x end
         t.m = id
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -153,12 +154,12 @@ TEST_CASE_FIXTURE(Fixture, "properties_can_be_instantiated_polytypes")
 TEST_CASE_FIXTURE(Fixture, "check_nested_generic_function")
 {
     CheckResult result = check(R"(
-        local function f()
-            local function id<a>(x:a): a
+        function f()
+            function id<a>(x:a): a
                 return x
             end
-            local x: string = id("hi")
-            local y: number = id(37)
+            const x: string = id("hi")
+            const y: number = id(37)
         end
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -167,9 +168,9 @@ TEST_CASE_FIXTURE(Fixture, "check_nested_generic_function")
 TEST_CASE_FIXTURE(Fixture, "check_recursive_generic_function")
 {
     CheckResult result = check(R"(
-        local function id<a>(x:a):a
-            local y: string = id("hi")
-            local z: number = id(37)
+        function id<a>(x:a):a
+            const y: string = id("hi")
+            const z: number = id(37)
             return x
         end
     )");
@@ -178,16 +179,18 @@ TEST_CASE_FIXTURE(Fixture, "check_recursive_generic_function")
 
 TEST_CASE_FIXTURE(Fixture, "check_mutual_generic_functions")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
+        export id2
         function id1<a>(x:a):a
-            local y: string = id2("hi")
-            local z: number = id2(37)
+            const y: string = id2("hi")
+            const z: number = id2(37)
             return x
         end
 
         function id2<a>(x:a):a
-            local y: string = id1("hi")
-            local z: number = id1(37)
+            const y: string = id1("hi")
+            const z: number = id1(37)
             return x
         end
     )");
@@ -199,16 +202,18 @@ TEST_CASE_FIXTURE(Fixture, "check_mutual_generic_functions_unannotated")
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
+        export id2
         function id1(x)
-            local y: string = id2("hi")
-            local z: number = id2(37)
+            const y: string = id2("hi")
+            const z: number = id2(37)
             return x
         end
 
         function id2(x)
-            local y: string = id1("hi")
-            local z: number = id1(37)
+            const y: string = id1("hi")
+            const z: number = id1(37)
             return x
         end
     )");
@@ -221,16 +226,18 @@ TEST_CASE_FIXTURE(Fixture, "check_mutual_generic_functions_errors")
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
+        export id2
         function id1(x)
-            local y: string = id2(37) -- odd
-            local z: number = id2("hi") -- even
+            const y: string = id2(37) -- odd
+            const z: number = id2("hi") -- even
             return x
         end
 
         function id2(x)
-            local y: string = id1(37) -- odd
-            local z: number = id1("hi") -- even
+            const y: string = id1(37) -- odd
+            const z: number = id1("hi") -- even
             return x
         end
     )");
@@ -260,9 +267,9 @@ TEST_CASE_FIXTURE(Fixture, "generic_functions_in_types")
 {
     CheckResult result = check(R"(
         type T = { id: <a>(a) -> a }
-        local x: T = { id = function<a>(x:a):a return x end }
-        local y: string = x.id("hi")
-        local z: number = x.id(37)
+        const x: T = { id = function<a>(x:a):a return x end }
+        const y: string = x.id("hi")
+        const z: number = x.id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -275,7 +282,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_factories")
         type T<a> = { id: (a) -> a }
         type Factory = { build: <a>() -> T<a> }
 
-        local f: Factory = {
+        const f: Factory = {
             build = function<a>(): T<a>
                 return {
                     id = function(x:a):a
@@ -284,8 +291,8 @@ TEST_CASE_FIXTURE(Fixture, "generic_factories")
                 }
             end
         }
-        local y: string = f.build().id("hi")
-        local z: number = f.build().id(37)
+        const y: string = f.build().id("hi")
+        const z: number = f.build().id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -296,7 +303,7 @@ TEST_CASE_FIXTURE(Fixture, "factories_of_generics")
         type T = { id: <a>(a) -> a }
         type Factory = { build: () -> T }
 
-        local f: Factory = {
+        const f: Factory = {
             build = function(): T
                 return {
                     id = function<a>(x:a):a
@@ -305,9 +312,9 @@ TEST_CASE_FIXTURE(Fixture, "factories_of_generics")
                 }
             end
         }
-        local x: T = f.build()
-        local y: string = x.id("hi")
-        local z: number = x.id(37)
+        const x: T = f.build()
+        const y: string = x.id("hi")
+        const z: number = x.id(37)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -319,8 +326,8 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_function")
         function id(x)
             return x
         end
-        local x: string = id("hi")
-        local y: number = id(37)
+        const x: string = id("hi")
+        const y: number = id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -339,11 +346,11 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_function")
 TEST_CASE_FIXTURE(Fixture, "infer_generic_local_function")
 {
     CheckResult result = check(R"(
-        local function id(x)
+        function id(x)
             return x
         end
-        local x: string = id("hi")
-        local y: number = id(37)
+        const x: string = id("hi")
+        const y: number = id(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -362,12 +369,12 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_local_function")
 TEST_CASE_FIXTURE(Fixture, "infer_nested_generic_function")
 {
     CheckResult result = check(R"(
-        local function f()
-            local function id(x)
+        function f()
+            function id(x)
                 return x
             end
-            local x: string = id("hi")
-            local y: number = id(37)
+            const x: string = id("hi")
+            const y: number = id(37)
         end
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -376,11 +383,11 @@ TEST_CASE_FIXTURE(Fixture, "infer_nested_generic_function")
 TEST_CASE_FIXTURE(Fixture, "calling_self_generic_methods")
 {
     CheckResult result = check(R"(
-        local x = {}
+        const x = {}
         function x:id(x) return x end
         function x:f()
-            local x: string = self:id("hi")
-            local y: number = self:id(37)
+            const x: string = self:id("hi")
+            const y: number = self:id(37)
         end
     )");
 
@@ -390,10 +397,10 @@ TEST_CASE_FIXTURE(Fixture, "calling_self_generic_methods")
 TEST_CASE_FIXTURE(Fixture, "infer_generic_property")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t.m = function(x) return x end
-        local x: string = t.m("hi")
-        local y: number = t.m(37)
+        const x: string = t.m("hi")
+        const y: number = t.m(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -401,9 +408,9 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_property")
 TEST_CASE_FIXTURE(Fixture, "function_arguments_can_be_polytypes")
 {
     CheckResult result = check(R"(
-        local function f(g: <a>(a)->a)
-            local x: number = g(37)
-            local y: string = g("hi")
+        function f(g: <a>(a)->a)
+            const x: number = g(37)
+            const y: string = g("hi")
         end
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -412,8 +419,8 @@ TEST_CASE_FIXTURE(Fixture, "function_arguments_can_be_polytypes")
 TEST_CASE_FIXTURE(Fixture, "function_results_can_be_polytypes")
 {
     CheckResult result = check(R"(
-        local function f() : <a>(a)->a
-            local function id<a>(x:a):a return x end
+        function f() : <a>(a)->a
+            function id<a>(x:a):a return x end
             return id
         end
     )");
@@ -423,8 +430,8 @@ TEST_CASE_FIXTURE(Fixture, "function_results_can_be_polytypes")
 TEST_CASE_FIXTURE(Fixture, "type_parameters_can_be_polytypes")
 {
     CheckResult result = check(R"(
-        local function id<a>(x:a):a return x end
-        local f: <a>(a)->a = id(id)
+        function id<a>(x:a):a return x end
+        const f: <a>(a)->a = id(id)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -432,20 +439,20 @@ TEST_CASE_FIXTURE(Fixture, "type_parameters_can_be_polytypes")
 TEST_CASE_FIXTURE(Fixture, "dont_leak_generic_types")
 {
     CheckResult result = check(R"(
-        local function f(y)
+        function f(y)
             -- this will only typecheck if we infer z: any
             -- so f: (any)->(any)
-            local z = y
-            local function id(x)
+            z = y
+            function id(x)
                 z = x -- this assignment is what forces z: any
                 return x
             end
-            local x: string = id("hi")
-            local y: number = id(37)
+            const x: string = id("hi")
+            const y: number = id(37)
             return z
         end
         -- so this assignment should fail
-        local b: boolean = f(true)
+        const b: boolean = f(true)
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -461,14 +468,14 @@ TEST_CASE_FIXTURE(Fixture, "dont_leak_generic_types")
 TEST_CASE_FIXTURE(Fixture, "dont_leak_inferred_generic_types")
 {
     CheckResult result = check(R"(
-        local function f(y)
-            local z = y
-            local function id(x)
+        function f(y)
+            z = y
+            function id(x)
                 z = x
                 return x
             end
-            local x: string = id("hi")
-            local y: number = id(37)
+            const x: string = id("hi")
+            const y: number = id(37)
         end
     )");
     if (!FFlag::DebugLuauForceOldSolver)
@@ -486,7 +493,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_substitute_bound_types")
     CheckResult result = check(R"(
         type T = { m: <a>(a) -> T }
         function f(t : T)
-            local x: T = t.m(37)
+            const x: T = t.m(37)
         end
     )");
 
@@ -498,8 +505,8 @@ TEST_CASE_FIXTURE(Fixture, "dont_unify_bound_types")
     CheckResult result = check(R"(
         type F = <a>() -> <b>(a, b) -> a
         type G = <b>(b, b) -> b
-        local f: F = function<a>()
-          local x
+        const f: F = function<a>()
+          const x = nil
           return function<b>(y: a, z: b): a
             if not(x) then x = y end
             return x
@@ -508,10 +515,10 @@ TEST_CASE_FIXTURE(Fixture, "dont_unify_bound_types")
         -- This assignment shouldn't typecheck
         -- If it does, it means we instantiated
         -- f as () -> <b>(X, b) -> X, then unified X to be b
-        local g: G = f()
+        const g: G = f()
         -- Oh dear, if that works then the type system is unsound
-        local a : string = g("not a number", "hi")
-        local b : number = g(5, 37)
+        const a : string = g("not a number", "hi")
+        const b : number = g(5, 37)
     )");
     LUAU_REQUIRE_ERRORS(result);
 }
@@ -524,9 +531,9 @@ TEST_CASE_FIXTURE(Fixture, "mutable_state_polymorphism")
     CheckResult result = check(R"(
         --!strict
         -- Our old friend the polymorphic identity function
-        local function id(x) return x end
-        local a: string = id("hi")
-        local b: number = id(37)
+        function id(x) return x end
+        const a: string = id("hi")
+        const b: number = id(37)
 
         -- This allows <a>(a)->a to be expressed without generic function syntax
         type Id = typeof(id)
@@ -535,8 +542,8 @@ TEST_CASE_FIXTURE(Fixture, "mutable_state_polymorphism")
         -- <a>() -> (a) -> a
         -- not type
         -- () -> <a>(a) -> a
-        local function ohDear(): Id
-          local y
+        function ohDear(): Id
+          const y = nil
           function oh(x)
             -- Returns the same x every time it's called
             if not(y) then y = x end
@@ -546,12 +553,12 @@ TEST_CASE_FIXTURE(Fixture, "mutable_state_polymorphism")
         end
 
         -- oh dear, f claims to polymorphic which it shouldn't be
-        local f: Id = ohDear()
+        const f: Id = ohDear()
 
         -- the first call sets y
-        local a: string = f("not a number")
+        const a: string = f("not a number")
         -- so b has value "not a number" at run time
-        local b: number = f(37)
+        const b: number = f(37)
     )");
     LUAU_REQUIRE_ERRORS(result);
 }
@@ -560,20 +567,20 @@ TEST_CASE_FIXTURE(Fixture, "rank_N_types_via_typeof")
 {
     CheckResult result = check(R"(
         --!strict
-        local function id(x) return x end
-        local x: string = id("hi")
-        local y: number = id(37)
+        function id(x) return x end
+        const x: string = id("hi")
+        const y: number = id(37)
         -- This allows <a>(a)->a to be expressed without generic function syntax
         type Id = typeof(id)
         -- The rank 1 restriction causes this not to typecheck, since it's
         -- declared as returning a polytype.
-        local function returnsId(): Id
+        function returnsId(): Id
           return id
         end
         -- So this won't typecheck
-        local f: Id = returnsId()
-        local a: string = f("hi")
-        local b: number = f(37)
+        const f: Id = returnsId()
+        const a: string = f("hi")
+        const b: number = f(37)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -680,16 +687,16 @@ TEST_CASE_FIXTURE(Fixture, "instantiation_sharing_types")
 {
     CheckResult result = check(R"(
         function f(z)
-          local o = {}
+          const o = {}
           o.x = o
           o.y = {5}
           o.z = z
           return o
         end
-        local o1 = f(true)
-        local x1, y1, z1 = o1.x, o1.y, o1.z
-        local o2 = f("hi")
-        local x2, y2, z2 = o2.x, o2.y, o2.z
+        const o1 = f(true)
+        const x1, y1, z1 = o1.x, o1.y, o1.z
+        const o2 = f("hi")
+        const x2, y2, z2 = o2.x, o2.y, o2.z
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -703,8 +710,8 @@ TEST_CASE_FIXTURE(Fixture, "quantification_sharing_types")
     CheckResult result = check(R"(
         function f(x) return {5} end
         function g(x, y) return f(x) end
-        local z1 = f(5)
-        local z2 = g(true, "hi")
+        const z1 = f(5)
+        const z2 = g(true, "hi")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -715,10 +722,10 @@ TEST_CASE_FIXTURE(Fixture, "typefuns_sharing_types")
 {
     CheckResult result = check(R"(
         type T<a> = { x: {a}, y: {number} }
-        local o1: T<boolean> = { x = {true}, y = {5} }
-        local x1, y1 = o1.x, o1.y
-        local o2: T<string> = { x = {"hi"}, y = {37} }
-        local x2, y2 = o2.x, o2.y
+        const o1: T<boolean> = { x = {true}, y = {5} }
+        const x1, y1 = o1.x, o1.y
+        const o2: T<string> = { x = {"hi"}, y = {37} }
+        const x2, y2 = o2.x, o2.y
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -729,11 +736,11 @@ TEST_CASE_FIXTURE(Fixture, "typefuns_sharing_types")
 TEST_CASE_FIXTURE(BuiltinsFixture, "bound_tables_do_not_clone_original_fields")
 {
     CheckResult result = check(R"(
-local exports = {}
-local nested = {}
+const exports = {}
+const nested = {}
 
 nested.name = function(t, k)
-    local a = t.x.y
+    const a = t.x.y
     return rawget(t, k)
 end
 
@@ -749,7 +756,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiated_function_argument_names_old_solver")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function f<T, U...>(a: T, ...: U...) end
+        function f<T, U...>(a: T, ...: U...) end
 
         f(1, 2, 3)
     )");
@@ -769,8 +776,8 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_generic_types")
 type C = () -> ()
 type D = <T>() -> ()
 
-local c: C
-local d: D = c
+const c: C = nil as any
+const d: D = c
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -800,8 +807,8 @@ TEST_CASE_FIXTURE(Fixture, "generic_function_mismatch_with_argument")
 type C = (number) -> ()
 type D = <T>(number) -> ()
 
-local c: C
-local d: D = c
+const c: C = nil as any
+const d: D = c
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -832,8 +839,8 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_generic_pack")
 type C = () -> ()
 type D = <T...>() -> ()
 
-local c: C
-local d: D = c
+const c: C = nil as any
+const d: D = c
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -870,7 +877,7 @@ function id<X>(x : X) : X
 end
 
 function clone<X, Y>(dict: {[X]:Y}): {[X]:Y}
-  local copy = {}
+  const copy = {}
   for k, v in pairs(dict) do
     copy[k] = v
   end
@@ -888,9 +895,9 @@ TEST_CASE_FIXTURE(Fixture, "generic_functions_should_be_memory_safe")
 -- At one point this produced a UAF
 type T<a> = { a: U<a>, b: a }
 type U<a> = { c: T<a>?, d : a }
-local x: T<number> = { a = { c = nil, d = 5 }, b = 37 }
+const x: T<number> = { a = { c = nil, d = 5 }, b = 37 }
 x.a.c = x
-local y: T<string> = { a = { c = nil, d = 5 }, b = 37 }
+const y: T<string> = { a = { c = nil, d = 5 }, b = 37 }
 y.a.c = y
     )");
 
@@ -930,7 +937,7 @@ type Dispatcher = {
 	useMemo: <T...>(create: () -> T...) -> T...
 }
 
-local TheDispatcher: Dispatcher = {
+const TheDispatcher: Dispatcher = {
 	useMemo = function<U...>(create: () -> U...): U...
 		return create()
 	end
@@ -948,7 +955,7 @@ type Dispatcher = {
 	useMemo: <T...>(create: () -> T...) -> T...
 }
 
-local TheDispatcher: Dispatcher = {
+const TheDispatcher: Dispatcher = {
 	useMemo = function(create)
 		return create()
 	end
@@ -966,7 +973,7 @@ type Dispatcher = {
 	useMemo: <S,T...>(arg: S, create: (S) -> T...) -> T...
 }
 
-local TheDispatcher: Dispatcher = {
+const TheDispatcher: Dispatcher = {
 	useMemo = function<T,U...>(arg: T, create: (T) -> U...): U...
 		return create(arg)
 	end
@@ -1148,8 +1155,8 @@ TEST_CASE_FIXTURE(Fixture, "generic_function")
 {
     CheckResult result = check(R"(
         function id(x) return x end
-        local a = id(55)
-        local b = id(nil)
+        const a = id(55)
+        const b = id(nil)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1162,7 +1169,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_function")
 TEST_CASE_FIXTURE(Fixture, "generic_table_method")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
 
         function T:bar(i)
             return i
@@ -1195,7 +1202,7 @@ TEST_CASE_FIXTURE(Fixture, "correctly_instantiate_polymorphic_member_functions")
     ScopedFastFlag sff{FFlag::DebugLuauAssertOnForcedConstraint, true};
 
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
 
         function T:foo()
             return T:bar(5)
@@ -1280,10 +1287,9 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_generic_function_in_assignments")
             return a(b)
         end
 
-        function bar()
-            local c: ((number)->number, number)->number = foo -- no error
+        function bar(c: ((number)->number, number)->number)
             c = foo -- no error
-            local d: ((number)->number, string)->number = foo -- error from arg 2 (string) not being convertible to number from the call a(b)
+            const d: ((number)->number, string)->number = foo -- error from arg 2 (string) not being convertible to number from the call a(b)
         end
     )");
 
@@ -1310,7 +1316,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_generic_function_in_assignments2")
         end
 
         function bar()
-            local _: (string, string)->number = foo -- string cannot be converted to (string)->number
+            const _: (string, string)->number = foo -- string cannot be converted to (string)->number
         end
     )");
 
@@ -1335,7 +1341,7 @@ TEST_CASE_FIXTURE(Fixture, "self_recursive_instantiated_param")
     CheckResult result = check(R"(
 type Table = { a: number }
 type Self<T> = T
-local a: Self<Table>
+const a: Self<Table> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1379,7 +1385,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CheckResult result = check(R"(
-            local function sum<a>(x: a, y: a, f: (a, a) -> add<a>)
+            function sum<a>(x: a, y: a, f: (a, a) -> add<a>)
                 return f(x, y)
             end
             return sum(2, 3, function<T>(a: T, b: T): add<T> return a + b end)
@@ -1390,7 +1396,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument")
     else
     {
         CheckResult result = check(R"(
-            local function sum<a>(x: a, y: a, f: (a, a) -> a)
+            function sum<a>(x: a, y: a, f: (a, a) -> a)
                 return f(x, y)
             end
             return sum(2, 3, function(a, b) return a + b end)
@@ -1403,15 +1409,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument")
 TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument_2")
 {
     CheckResult result = check(R"(
-        local function map<a, b>(arr: {a}, f: (a) -> b): {b}
-            local r = {}
+        function map<a, b>(arr: {a}, f: (a) -> b): {b}
+            const r = {}
             for i,v in ipairs(arr) do
                 table.insert(r, f(v))
             end
             return r
         end
-        local a = {1, 2, 3}
-        local r = map(a, function(a: number) return a + a > 100 end)
+        const a = {1, 2, 3}
+        const r = map(a, function(a: number) return a + a > 100 end)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1421,15 +1427,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument_2")
 TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument_3")
 {
     CheckResult result = check(R"(
-        local function foldl<a, b>(arr: {a}, init: b, f: (b, a) -> b)
-            local r = init
+        function foldl<a, b>(arr: {a}, init: b, f: (b, a) -> b)
+            r = init
             for i,v in ipairs(arr) do
                 r = f(r, v)
             end
             return r
         end
-        local a = {1, 2, 3}
-        local r = foldl(a, {s=0,c=0}, function(a: {s: number, c: number}, b: number) return {s = a.s + b, c = a.c + 1} end)
+        const a = {1, 2, 3}
+        const r = foldl(a, {s=0,c=0}, function(a: {s: number, c: number}, b: number) return {s = a.s + b, c = a.c + 1} end)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1442,10 +1448,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument_3")
 TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_argument_overloaded_pt_1")
 {
     CheckResult result = check(R"(
-        local g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T)
+        const g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T) = nil as any
 
-        local a = g12(1, function(x) return x + x end)
-        local b = g12(1, 2, function(x, y) return x + y end)
+        const a = g12(1, function(x) return x + x end)
+        const b = g12(1, 2, function(x, y) return x + y end)
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -1466,10 +1472,10 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_argument_overloaded_
 TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_overloaded_pt_2")
 {
     CheckResult result = check(R"(
-        local g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T)
+        const g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T) = nil as any
 
-        local a = g12({x=1}, function(x) return {x=-x.x} end)
-        local b = g12({x=1}, {x=2}, function(x, y) return {x=x.x + y.x} end)
+        const a = g12({x=1}, function(x) return {x=-x.x} end)
+        const b = g12({x=1}, {x=2}, function(x, y) return {x=x.x + y.x} end)
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -1496,14 +1502,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         result = check(R"(
-            local function sum<T>(x: T, y: T, z: (T, T) -> T) return z(x, y) end
+            function sum<T>(x: T, y: T, z: (T, T) -> T) return z(x, y) end
 
-            local function sumrec(f: typeof(sum))
+            function sumrec(f: typeof(sum))
                 return sum(2, 3, function<X>(g: X, h: X): add<X, X> return g + h end)
             end
 
-            local b = sumrec(sum) -- ok
-            local c = sumrec(
+            const b = sumrec(sum) -- ok
+            const c = sumrec(
                 function(d, e, f)
                     return f(d, e)
                 end
@@ -1520,14 +1526,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions")
     else
     {
         result = check(R"(
-            local function sum<a>(x: a, y: a, f: (a, a) -> a) return f(x, y) end
+            function sum<a>(x: a, y: a, f: (a, a) -> a) return f(x, y) end
 
-            local function sumrec(f: typeof(sum))
+            function sumrec(f: typeof(sum))
                 return sum(2, 3, function(a, b) return a + b end)
             end
 
-            local b = sumrec(sum) -- ok
-            local c = sumrec(function(x, y, f) return f(x, y) end) -- type binders are not inferred
+            const b = sumrec(sum) -- ok
+            const c = sumrec(function(x, y, f) return f(x, y) end) -- type binders are not inferred
         )");
     }
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1541,8 +1547,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions_2")
         type t = <a>(a, a, (a, a) -> a) -> a
         type u = (number, number, <X>(X, X) -> X) -> number
 
-        local foo = (nil as any) as t
-        local bar : u = foo
+        const foo = (nil as any) as t
+        const bar : u = foo
         )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1552,11 +1558,11 @@ TEST_CASE_FIXTURE(Fixture, "substitution_with_bound_table")
 {
     CheckResult result = check(R"(
         type A = { x: number }
-        local a: A = { x = 1 }
-        local b = a
+        const a: A = { x = 1 }
+        const b = a
         type B = typeof(b)
         type X<T> = T
-        local c: X<B>
+        const c: X<B> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1570,7 +1576,7 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics1")
         type MyObject = {
             getReturnValue: <V>(cb: () -> V) -> V
         }
-        local object: MyObject = {
+        const object: MyObject = {
             getReturnValue = function<U>(cb: () -> U): U
                 return cb()
             end,
@@ -1581,7 +1587,7 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics1")
             nested: MyObject
         }
 
-        local complex: ComplexObject<string> = {
+        const complex: ComplexObject<string> = {
             id = "Foo",
             nested = object,
         }
@@ -1604,11 +1610,11 @@ type ComplexObject<T> = {
 }
 
 function f(complex: ComplexObject<string>)
-    local x = complex.nested.getReturnValue(function(): string
+    const x = complex.nested.getReturnValue(function(): string
         return ""
     end)
 
-    local y = complex.nested.getReturnValue(function()
+    const y = complex.nested.getReturnValue(function()
         return 3
     end)
 end
@@ -1623,9 +1629,9 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics3")
     // cyclic types under local type inference.
 
     CheckResult result = check(R"(
-        local getReturnValue: <V>(cb: () -> V) -> V = nil as any
+        const getReturnValue: <V>(cb: () -> V) -> V = nil as any
 
-        local y = getReturnValue(function() return nil as any end)
+        const y = getReturnValue(function() return nil as any end)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1676,7 +1682,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_always_instantiate_generic_intersection_types
             new: <T>() -> Array<T>,
         }
 
-        local _Arr : Array<any> & Array_Statics = {} as Array_Statics
+        const _Arr : Array<any> & Array_Statics = {} as Array_Statics
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -1686,7 +1692,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "hof_subtype_instantiation_regression")
     CheckResult result = check(R"(
 --!strict
 
-local function defaultSort<T>(a: T, b: T)
+function defaultSort<T>(a: T, b: T)
     return true
 end
 type A = any
@@ -1710,7 +1716,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "higher_rank_polymorphism_should_not_accept_i
     CheckResult result = check(R"(
 --!strict
 
-local function instantiate(f: <a>(a) -> a): (number) -> number
+function instantiate(f: <a>(a) -> a): (number) -> number
     return f
 end
 
@@ -1729,12 +1735,12 @@ instantiate(function(x: string) return "foo" end)
 TEST_CASE_FIXTURE(Fixture, "bidirectional_checking_and_generalization_play_nice")
 {
     CheckResult result = check(R"(
-        local foo = function(a)
+        const foo = function(a)
             return a()
         end
 
-        local a = foo(function() return 1 end)
-        local b = foo(function() return "bar" end)
+        const a = foo(function() return 1 end)
+        const b = foo(function() return "bar" end)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1746,8 +1752,8 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_checking_and_generalization_play_nice"
 TEST_CASE_FIXTURE(BuiltinsFixture, "generalization_no_cyclic_intersections")
 {
     CheckResult result = check(R"(
-        local f, t, n = pairs({"foo"})
-        local k, v = f(t)
+        const f, t, n = pairs({"foo"})
+        const k, v = f(t)
     )");
 
     CHECK("({string}, number?) -> (number?, string)" == toString(requireType("f")));
@@ -1789,9 +1795,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_type_functions_work_in_subtyping")
         return;
 
     CheckResult result = check(R"(
-        local function addOne<T>(x: T): add<T, number> return x + 1 end
+        function addOne<T>(x: T): add<T, number> return x + 1 end
 
-        local function six(): number
+        function six(): number
             return addOne(5)
         end
     )");
@@ -1847,15 +1853,15 @@ export type t3<T...> = {
     h: t1<(Player, T...)>
 }
 
-local t2 = {}
+const t2 = {}
 
 function t2.new<T...>(): t2<T...>
 end
 
-local function create_t3<T...>(): t3<T...>
-    local t2_1 = t2.new()
-    local t2_2 = t2.new()
-    local my_t3 = {
+function create_t3<T...>(): t3<T...>
+    const t2_1 = t2.new()
+    const t2_2 = t2.new()
+    const my_t3 = {
         f = function(_self: t3<T...>, ...: T...) end,
         g = t2_1:baz(),
         h = t2_2:baz()
@@ -1898,7 +1904,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_2")
     CheckResult result = check(R"(
 function f(foo: (number) -> (number)): () end
 type T = <A...>(A...) -> A...
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1910,7 +1916,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_3")
     CheckResult result = check(R"(
 function f(foo: <B...>(B...) -> B...): () end
 type T = <A...>(A...) -> A...
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1924,7 +1930,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_4")
     CheckResult result = check(R"(
 function f(foo: <A...>(A...) -> A...): () end
 type T = <B..., C...>(B...) -> C...
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1936,7 +1942,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_5")
     CheckResult result = check(R"(
 function f(foo: (number) -> number): () end
 type T = <A...>(A...) -> number
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1948,7 +1954,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_6")
     CheckResult result = check(R"(
 function f(foo: (...number) -> number): () end
 type T = <A...>(A...) -> number
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1960,7 +1966,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_7")
     CheckResult result = check(R"(
 function f(foo: () -> ()): () end
 type T = <A...>() -> A...
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1972,7 +1978,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_8")
     CheckResult result = check(R"(
 function f(foo: () -> ()): () end
 type T = <A...>(A...) -> A...
-local t: T
+const t: T = nil as any
 f(t)
     )");
 
@@ -1986,8 +1992,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nested_generic_packs")
     CheckResult result = check(R"(
 type T = <A...>(A...) -> (<A...>(A...) -> ())
 type U = (string) -> ((number) -> ())
-local t: T
-local u: U = t
+const t: T = nil as any
+const u: U = t
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1996,8 +2002,8 @@ local u: U = t
 TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error")
 {
     CheckResult res = check(R"(
-        local func: <T>(T, (T) -> ()) -> () = nil as any
-        local foobar: (number) -> () = nil as any
+        const func: <T>(T, (T) -> ()) -> () = nil as any
+        const foobar: (number) -> () = nil as any
         func({}, foobar)
     )");
 
@@ -2014,9 +2020,9 @@ TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error_1")
             return arr
         end
 
-        local a: {number} = {}
+        const a: {number} = {}
 
-        local b = insert(a, "five")
+        const b = insert(a, "five")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, res);
@@ -2027,9 +2033,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "xpcall_should_work_with_generics")
 {
     CheckResult result = check(R"(
 --!strict
-local v: (number) -> (number) = nil as any
+const v: (number) -> (number) = nil as any
 
-local x = 3
+const x = 3
 
 xpcall(v, print, x)
     )");
@@ -2040,8 +2046,8 @@ xpcall(v, print, x)
 TEST_CASE_FIXTURE(BuiltinsFixture, "gh1985_array_of_union_for_generic")
 {
     CheckResult res = check(R"(
-        local function clear<T>(arr: { T }) table.clear(arr) end
-        local a: { true | false }
+        function clear<T>(arr: { T }) table.clear(arr) end
+        const a: { true | false } = nil as any
         -- This obviously shouldn't error, '{ true | false }' should fit '{ T }'
         -- TypeError: The generic type parameter Twas found to have invalid bounds. Its lower bounds were [true, false], and its upper bounds were [true].
         clear(a)
@@ -2053,9 +2059,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1985_array_of_union_for_generic")
 TEST_CASE_FIXTURE(BuiltinsFixture, "gh1985_array_of_union_for_generic_2")
 {
     CheckResult res = check(R"(
-        local function id<T>(arr: { T }): { T } return arr end
-        local a: { true | false }
-        local b = id(a)
+        function id<T>(arr: { T }): { T } return arr end
+        const a: { true | false } = nil as any
+        const b = id(a)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(res);
@@ -2082,13 +2088,13 @@ TEST_CASE_FIXTURE(Fixture, "cli_179086_dont_ignore_explicit_variadics")
 
         type Example<T...> = { Method: (T...) -> () }
 
-        local function CreateExample<T...>(Method: (T...) -> ()): Example<T...>
-            local self = {}
+        function CreateExample<T...>(Method: (T...) -> ()): Example<T...>
+            const self = {}
             self.Method = Method
             return self
         end
 
-        local Object: Example<string> = CreateExample(function(a: string) end)
+        const Object: Example<string> = CreateExample(function(a: string) end)
 
         Object.Method("Hello World!")
     )"));
@@ -2097,22 +2103,22 @@ TEST_CASE_FIXTURE(Fixture, "cli_179086_dont_ignore_explicit_variadics")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2075_generic_packs_should_not_be_dropped")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function f<Return...>(callback: () -> Return...) end
+        function f<Return...>(callback: () -> Return...) end
 
         f(function()
             return 3
         end)
 
-        local function g<Rest...>(callback: (x: string, Rest...) -> any) end
+        function g<Rest...>(callback: (x: string, Rest...) -> any) end
         g(error)
 
         type X<T...> = {
             value: () -> T...,
         }
 
-        local function foo<T...>(x: X<T...>) end
+        function foo<T...>(x: X<T...>) end
 
-        local function bar(x: X<string, number>)
+        function bar(x: X<string, number>)
             foo(x)
         end
     )"));
@@ -2121,13 +2127,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2075_generic_packs_should_not_be_dropped
 TEST_CASE_FIXTURE(Fixture, "variadic_generics_dont_leak")
 {
     CheckResult res = check(R"(
-        local function makeApplier<A..., R...>(f: (A...) -> (R...))
+        function makeApplier<A..., R...>(f: (A...) -> (R...))
             return function (... : A...): R...
                 f(...)
             end
         end
-        local function add(x: number, y: number): number return x + y end
-        local f = makeApplier(add)
+        function add(x: number, y: number): number return x + y end
+        const f = makeApplier(add)
     )");
 
     CHECK_EQ("(number, number) -> number", toString(requireType("f")));
@@ -2138,8 +2144,8 @@ TEST_CASE_FIXTURE(Fixture, "id_function_do_not_leak_generic")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function id<T>(t: T) return t end
-        local function foo(x)
+        function id<T>(t: T) return t end
+        function foo(x)
             id(x)
         end
     )"));
@@ -2162,8 +2168,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_185450_instantiate_generics_prior_to_pus
             Func: (self: Child) -> (Child?),
         }
 
-        local Parent = {} as Parent
-        local Child = {} as Child
+        const Parent = {} as Parent
+        const Child = {} as Child
 
         function Parent:Func1(value, ...)
             if value then return self else return nil end

@@ -2,23 +2,23 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print "testing UTF-8 library"
 
-local function checkerror (msg, f, ...)
-  local s, err = pcall(f, ...)
+function checkerror (msg, f, ...)
+  s, err = pcall(f, ...)
   assert(not s and string.find(err, msg))
 end
 
 
-local function len (s)
+function len (s)
   return (string.gsub(s, "[\x80-\xBF]", "")).count
 end
 
 
-local justone = "^" .. utf8.charpattern .. "$"
+justone = "^" .. utf8.charpattern .. "$"
 
 -- 't' is the list of codepoints of 's'
-local function checksyntax (s, t)
+function checksyntax (s, t)
   -- creates a string "return '\u{t[1]}...\u{t[n]}'"
-  local ts = {"return '"}
+  ts = {"return '"}
   for i = 1, t.count do ts[i + 1] = string.format("\\u{%x}", t[i]) end
   ts[t.count + 2] = "'"
   ts = table.concat(ts)
@@ -31,8 +31,8 @@ assert(not utf8.offset("alo", -4))
 
 -- 'check' makes several tests over the validity of string 's'.
 -- 't' is the list of codepoints of 's'.
-local function check (s, t)
-  local l = utf8.len(s, 1, -1)
+function check (s, t)
+  l = utf8.len(s, 1, -1)
   assert(t.count == l and len(s) == l)
   assert(utf8.char(table.unpack(t)) == s)   -- 't' and 's' are equivalent
 
@@ -41,13 +41,13 @@ local function check (s, t)
   checksyntax(s, t)
 
   -- creates new table with all codepoints of 's'
-  local t1 = {utf8.codepoint(s, 1, -1)}
+  t1 = {utf8.codepoint(s, 1, -1)}
   assert(t.count == t1.count)
   for i = 1, t.count do assert(t[i] == t1[i]) end   -- 't' is equal to 't1'
 
   for i = 1, l do   -- for all codepoints
-    local pi = utf8.offset(s, i)        -- position of i-th char
-    local pi1 = utf8.offset(s, 2, pi)   -- position of next char
+    pi = utf8.offset(s, i)        -- position of i-th char
+    pi1 = utf8.offset(s, 2, pi)   -- position of next char
     assert(string.find(string.sub(s, pi, pi1 - 1), justone))
     assert(utf8.offset(s, -1, pi1) == pi)
     assert(utf8.offset(s, i - l - 1) == pi)
@@ -65,7 +65,7 @@ local function check (s, t)
    assert(utf8.len(s, 1, pi) == i)
   end
 
-  local i = 0
+  i = 0
   for p, c in utf8.codes(s) do
     i = i + 1
     assert(c == t[i] and p == utf8.offset(s, i))
@@ -88,8 +88,8 @@ end
 
 
 do    -- error indication in utf8.len
-  local function check (s, p)
-    local a, b = utf8.len(s)
+  const function check (s, p)
+    a, b = utf8.len(s)
     assert(not a and b == p)
   end
   check("abc\xE3def", 4)
@@ -106,7 +106,7 @@ end
 
 -- errors in utf8.codes
 do
-  local function errorcodes (s)
+  function errorcodes (s)
     checkerror("invalid UTF%-8 code",
       function ()
         for c in utf8.codes(s) do assert(c) end
@@ -119,7 +119,7 @@ do
   errorcodes("αλφ\xBFα")
 
   -- calling interation function with invalid arguments
-  local f = utf8.codes("")
+  f = utf8.codes("")
   assert(f("", 2) == nil)
   assert(f("", -1) == nil)
   assert(f("", math.mininteger) == nil)
@@ -140,16 +140,16 @@ checkerror("out of string", utf8.len, "abc", 0, 2)
 checkerror("out of string", utf8.len, "abc", 1, 4)
 
 
-local s = "hello World"
-local t = {string.byte(s, 1, -1)}
+s = "hello World"
+t = {string.byte(s, 1, -1)}
 for i = 1, utf8.len(s) do assert(t[i] == string.byte(s, i)) end
 check(s, t)
 
 check("汉字/漢字", {27721, 23383, 47, 28450, 23383,})
 
 do
-  local s = "áéí\128"
-  local t = {utf8.codepoint(s,1,s.count - 1)}
+  s = "áéí\128"
+  t = {utf8.codepoint(s,1,s.count - 1)}
   assert(t.count == 3 and t[1] == 225 and t[2] == 233 and t[3] == 237)
   checkerror("invalid UTF%-8 code", utf8.codepoint, s, 1, s.count)
   checkerror("out of range", utf8.codepoint, s, s.count + 1)
@@ -174,7 +174,7 @@ assert(pcall(utf8.char, 0x7FFFFFFF) == false) -- valid in Lua 5.4
 checkerror("value out of range", utf8.char, 0x7FFFFFFF + 1)
 checkerror("value out of range", utf8.char, -1)
 
-local function invalid (s)
+function invalid (s)
   checkerror("invalid UTF%-8 code", utf8.codepoint, s)
   assert(not utf8.len(s))
 end
@@ -211,7 +211,7 @@ s = "\0 \x7F\z
 s = string.gsub(s, " ", "")
 check(s, {0,0x7F, 0x80,0x7FF, 0x800,0xFFFF, 0x10000,0x10FFFF})
 
-local x = "日本語a-4\0éó"
+x = "日本語a-4\0éó"
 check(x, {26085, 26412, 35486, 97, 45, 52, 0, 233, 243})
 
 
@@ -223,7 +223,7 @@ check("𨳊𩶘𦧺𨳒𥄫𤓓\xF4\x8F\xBF\xBF",
       {0x28CCA, 0x29D98, 0x269FA, 0x28CD2, 0x2512B, 0x244D3, 0x10ffff})
 
 
-local i = 0
+i = 0
 for p, c in string.gmatch(x, "()(" .. utf8.charpattern .. ")") do
   i = i + 1
   assert(utf8.offset(x, i) == p)

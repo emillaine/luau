@@ -189,7 +189,7 @@ TEST_SUITE_BEGIN("ConfigLuauTest");
 TEST_CASE("extract_configuration")
 {
     std::string source = R"(
-        local config = {}
+        config = {}
         config.luau = {}
 
         config.luau.languagemode = "strict"
@@ -266,7 +266,7 @@ TEST_CASE("extract_configuration")
 TEST_CASE("extract_luau_configuration")
 {
     std::string source = R"(
-        local config = {}
+        config = {}
         config.luau = {}
 
         config.luau.languagemode = "strict"
@@ -367,7 +367,7 @@ TEST_CASE("validate_return_value")
 TEST_CASE("extract_luau_config_from_bytecode")
 {
     std::string source = R"(
-        local config = {}
+        config = {}
         config.luau = {}
 
         config.luau.languagemode = "strict"

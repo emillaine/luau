@@ -1,7 +1,7 @@
 --!native
-local Matrix = require("./matrix")
+Matrix = require("./matrix")
 
-local Path = {}
+Path = {}
 Path.__index = Path
 
 Path.MOVE_TO = 0
@@ -9,15 +9,15 @@ Path.LINE_TO = 1
 Path.CUBIC_TO = 2
 Path.CLOSE = 3
 
-local MOVE_TO = Path.MOVE_TO
-local LINE_TO = Path.LINE_TO
-local CUBIC_TO = Path.CUBIC_TO
-local CLOSE = Path.CLOSE
+MOVE_TO = Path.MOVE_TO
+LINE_TO = Path.LINE_TO
+CUBIC_TO = Path.CUBIC_TO
+CLOSE = Path.CLOSE
 
-local PI = math.pi
-local TWO_PI = PI * 2
-local HALF_PI = PI / 2
-local KAPPA = 0.55228474983079339840
+PI = math.pi
+TWO_PI = PI * 2
+HALF_PI = PI / 2
+KAPPA = 0.55228474983079339840
 
 function Path.create()
     return setmetatable({
@@ -31,7 +31,7 @@ function Path.create()
 end
 
 function Path:moveTo(x, y)
-    local cmds, data = self.cmds, self.data
+    cmds, data = self.cmds, self.data
     cmds[#cmds + 1] = MOVE_TO
     data[#data + 1] = x
     data[#data + 1] = y
@@ -41,7 +41,7 @@ function Path:moveTo(x, y)
 end
 
 function Path:lineTo(x, y)
-    local cmds, data = self.cmds, self.data
+    cmds, data = self.cmds, self.data
     if #cmds == 0 then
         self:moveTo(x, y)
         return
@@ -52,7 +52,7 @@ function Path:lineTo(x, y)
 end
 
 function Path:cubicTo(x1, y1, x2, y2, x3, y3)
-    local cmds, data = self.cmds, self.data
+    cmds, data = self.cmds, self.data
     if #cmds == 0 then
         self:moveTo(0, 0)
     end
@@ -67,16 +67,16 @@ function Path:cubicTo(x1, y1, x2, y2, x3, y3)
 end
 
 function Path:quadTo(x1, y1, x2, y2)
-    local cx, cy = self:getCurrentPoint()
-    local cp1x = cx + 2 / 3 * (x1 - cx)
-    local cp1y = cy + 2 / 3 * (y1 - cy)
-    local cp2x = x2 + 2 / 3 * (x1 - x2)
-    local cp2y = y2 + 2 / 3 * (y1 - y2)
+    cx, cy = self:getCurrentPoint()
+    cp1x = cx + 2 / 3 * (x1 - cx)
+    cp1y = cy + 2 / 3 * (y1 - cy)
+    cp2x = x2 + 2 / 3 * (x1 - x2)
+    cp2y = y2 + 2 / 3 * (y1 - y2)
     self:cubicTo(cp1x, cp1y, cp2x, cp2y, x2, y2)
 end
 
 function Path:close()
-    local cmds, data = self.cmds, self.data
+    cmds, data = self.cmds, self.data
     if #cmds == 0 then
         return
     end
@@ -86,8 +86,8 @@ function Path:close()
 end
 
 function Path:getCurrentPoint()
-    local data = self.data
-    local n = #data
+    data = self.data
+    n = #data
     if n < 2 then
         return 0, 0
     end
@@ -121,10 +121,10 @@ function Path:addRoundRect(x, y, w, h, rx, ry)
         return
     end
 
-    local right = x + w
-    local bottom = y + h
-    local cpx = rx * KAPPA
-    local cpy = ry * KAPPA
+    right = x + w
+    bottom = y + h
+    cpx = rx * KAPPA
+    cpy = ry * KAPPA
 
     self:moveTo(x + rx, y)
     self:lineTo(right - rx, y)
@@ -139,8 +139,8 @@ function Path:addRoundRect(x, y, w, h, rx, ry)
 end
 
 function Path:addEllipse(cx, cy, rx, ry)
-    local cpx = rx * KAPPA
-    local cpy = ry * KAPPA
+    cpx = rx * KAPPA
+    cpy = ry * KAPPA
 
     self:moveTo(cx, cy - ry)
     self:cubicTo(cx + cpx, cy - ry, cx + rx, cy - cpy, cx + rx, cy)
@@ -155,7 +155,7 @@ function Path:addCircle(cx, cy, r)
 end
 
 function Path:addArc(cx, cy, r, a0, a1, ccw)
-    local da = a1 - a0
+    da = a1 - a0
     if not ccw then
         if da < 0 then
             da = da % TWO_PI
@@ -172,11 +172,11 @@ function Path:addArc(cx, cy, r, a0, a1, ccw)
         end
     end
 
-    local nsegs = math.max(1, math.ceil(math.abs(da) / HALF_PI))
-    local segAngle = da / nsegs
+    nsegs = math.max(1, math.ceil(math.abs(da) / HALF_PI))
+    segAngle = da / nsegs
 
-    local startX = cx + r * math.cos(a0)
-    local startY = cy + r * math.sin(a0)
+    startX = cx + r * math.cos(a0)
+    startY = cy + r * math.sin(a0)
     if #self.cmds == 0 then
         self:moveTo(startX, startY)
     else
@@ -184,22 +184,22 @@ function Path:addArc(cx, cy, r, a0, a1, ccw)
     end
 
     for i = 1, nsegs do
-        local angle = a0 + segAngle * i
-        local prevAngle = a0 + segAngle * (i - 1)
-        local halfSeg = segAngle / 2
-        local t = (4 / 3) * math.tan(halfSeg / 2)
+        angle = a0 + segAngle * i
+        prevAngle = a0 + segAngle * (i - 1)
+        halfSeg = segAngle / 2
+        t = (4 / 3) * math.tan(halfSeg / 2)
 
-        local cos0 = math.cos(prevAngle)
-        local sin0 = math.sin(prevAngle)
-        local cos1 = math.cos(angle)
-        local sin1 = math.sin(angle)
+        cos0 = math.cos(prevAngle)
+        sin0 = math.sin(prevAngle)
+        cos1 = math.cos(angle)
+        sin1 = math.sin(angle)
 
-        local cp1x = cx + r * (cos0 - t * sin0)
-        local cp1y = cy + r * (sin0 + t * cos0)
-        local cp2x = cx + r * (cos1 + t * sin1)
-        local cp2y = cy + r * (sin1 - t * cos1)
-        local ex = cx + r * cos1
-        local ey = cy + r * sin1
+        cp1x = cx + r * (cos0 - t * sin0)
+        cp1y = cy + r * (sin0 + t * cos0)
+        cp2x = cx + r * (cos1 + t * sin1)
+        cp2y = cy + r * (sin1 - t * cos1)
+        ex = cx + r * cos1
+        ey = cy + r * sin1
 
         self:cubicTo(cp1x, cp1y, cp2x, cp2y, ex, ey)
     end
@@ -207,7 +207,7 @@ end
 
 -- SVG arc-to endpoint parameterization
 function Path:arcTo(rx, ry, angle, largeArc, sweep, x, y)
-    local cx, cy = self:getCurrentPoint()
+    cx, cy = self:getCurrentPoint()
 
     if rx == 0 or ry == 0 then
         self:lineTo(x, y)
@@ -221,63 +221,63 @@ function Path:arcTo(rx, ry, angle, largeArc, sweep, x, y)
     rx = math.abs(rx)
     ry = math.abs(ry)
 
-    local sinA = math.sin(angle)
-    local cosA = math.cos(angle)
+    sinA = math.sin(angle)
+    cosA = math.cos(angle)
 
-    local dx2 = (cx - x) / 2
-    local dy2 = (cy - y) / 2
+    dx2 = (cx - x) / 2
+    dy2 = (cy - y) / 2
 
-    local x1p = cosA * dx2 + sinA * dy2
-    local y1p = -sinA * dx2 + cosA * dy2
+    x1p = cosA * dx2 + sinA * dy2
+    y1p = -sinA * dx2 + cosA * dy2
 
-    local x1p2 = x1p * x1p
-    local y1p2 = y1p * y1p
-    local rx2 = rx * rx
-    local ry2 = ry * ry
+    x1p2 = x1p * x1p
+    y1p2 = y1p * y1p
+    rx2 = rx * rx
+    ry2 = ry * ry
 
-    local lambda = x1p2 / rx2 + y1p2 / ry2
+    lambda = x1p2 / rx2 + y1p2 / ry2
     if lambda > 1 then
-        local s = math.sqrt(lambda)
+        s = math.sqrt(lambda)
         rx = s * rx
         ry = s * ry
         rx2 = rx * rx
         ry2 = ry * ry
     end
 
-    local num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2
-    local den = rx2 * y1p2 + ry2 * x1p2
+    num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2
+    den = rx2 * y1p2 + ry2 * x1p2
     if den == 0 then
         self:lineTo(x, y)
         return
     end
-    local sq = math.sqrt(math.max(0, num / den))
+    sq = math.sqrt(math.max(0, num / den))
     if largeArc == sweep then
         sq = -sq
     end
 
-    local cxp = sq * rx * y1p / ry
-    local cyp = -sq * ry * x1p / rx
+    cxp = sq * rx * y1p / ry
+    cyp = -sq * ry * x1p / rx
 
-    local centerX = cosA * cxp - sinA * cyp + (cx + x) / 2
-    local centerY = sinA * cxp + cosA * cyp + (cy + y) / 2
+    centerX = cosA * cxp - sinA * cyp + (cx + x) / 2
+    centerY = sinA * cxp + cosA * cyp + (cy + y) / 2
 
-    local function vecAngle(ux, uy, vx, vy)
-        local dot = ux * vx + uy * vy
-        local len = math.sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy))
+    function vecAngle(ux, uy, vx, vy)
+        dot = ux * vx + uy * vy
+        len = math.sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy))
         if len == 0 then
             return 0
         end
-        local cos_val = dot / len
+        cos_val = dot / len
         cos_val = math.max(-1, math.min(1, cos_val))
-        local a = math.acos(cos_val)
+        a = math.acos(cos_val)
         if ux * vy - uy * vx < 0 then
             a = -a
         end
         return a
     end
 
-    local th1 = vecAngle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry)
-    local dth = vecAngle((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry)
+    th1 = vecAngle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry)
+    dth = vecAngle((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry)
 
     if not sweep and dth > 0 then
         dth = dth - TWO_PI
@@ -285,36 +285,36 @@ function Path:arcTo(rx, ry, angle, largeArc, sweep, x, y)
         dth = dth + TWO_PI
     end
 
-    local nsegs = math.ceil(math.abs(dth) / (HALF_PI + 0.001))
-    local segAngle = dth / nsegs
+    nsegs = math.ceil(math.abs(dth) / (HALF_PI + 0.001))
+    segAngle = dth / nsegs
 
     for i = 1, nsegs do
-        local ta = th1 + segAngle * (i - 1)
-        local tb = th1 + segAngle * i
-        local t = (4 / 3) * math.tan((tb - ta) / 4)
+        ta = th1 + segAngle * (i - 1)
+        tb = th1 + segAngle * i
+        t = (4 / 3) * math.tan((tb - ta) / 4)
 
-        local cos_a = math.cos(ta)
-        local sin_a = math.sin(ta)
-        local cos_b = math.cos(tb)
-        local sin_b = math.sin(tb)
+        cos_a = math.cos(ta)
+        sin_a = math.sin(ta)
+        cos_b = math.cos(tb)
+        sin_b = math.sin(tb)
 
-        local p1x = rx * cos_a
-        local p1y = ry * sin_a
-        local p2x = rx * cos_b
-        local p2y = ry * sin_b
+        p1x = rx * cos_a
+        p1y = ry * sin_a
+        p2x = rx * cos_b
+        p2y = ry * sin_b
 
-        local cp1x = p1x - t * rx * sin_a
-        local cp1y = p1y + t * ry * cos_a
-        local cp2x = p2x + t * rx * sin_b
-        local cp2y = p2y - t * ry * cos_b
+        cp1x = p1x - t * rx * sin_a
+        cp1y = p1y + t * ry * cos_a
+        cp2x = p2x + t * rx * sin_b
+        cp2y = p2y - t * ry * cos_b
 
-        local function transformBack(px, py)
+        function transformBack(px, py)
             return cosA * px - sinA * py + centerX, sinA * px + cosA * py + centerY
         end
 
-        local c1x, c1y = transformBack(cp1x, cp1y)
-        local c2x, c2y = transformBack(cp2x, cp2y)
-        local ex, ey = transformBack(p2x, p2y)
+        c1x, c1y = transformBack(cp1x, cp1y)
+        c2x, c2y = transformBack(cp2x, cp2y)
+        ex, ey = transformBack(p2x, p2y)
 
         self:cubicTo(c1x, c1y, c2x, c2y, ex, ey)
     end
@@ -322,9 +322,9 @@ end
 
 -- Transform all points in the path
 function Path:transform(matrix)
-    local data = self.data
+    data = self.data
     for i = 1, #data, 2 do
-        local x, y = data[i], data[i + 1]
+        x, y = data[i], data[i + 1]
         data[i], data[i + 1] = matrix:mapPoint(x, y)
     end
     self.startX, self.startY = matrix:mapPoint(self.startX, self.startY)
@@ -332,13 +332,13 @@ end
 
 -- Append another path with optional transform
 function Path:addPath(source, matrix)
-    local srcCmds = source.cmds
-    local srcData = source.data
-    local di = 1
+    srcCmds = source.cmds
+    srcData = source.data
+    di = 1
     for ci = 1, #srcCmds do
-        local cmd = srcCmds[ci]
+        cmd = srcCmds[ci]
         if cmd == MOVE_TO or cmd == LINE_TO or cmd == CLOSE then
-            local x, y = srcData[di], srcData[di + 1]
+            x, y = srcData[di], srcData[di + 1]
             if matrix then
                 x, y = matrix:mapPoint(x, y)
             end
@@ -351,9 +351,9 @@ function Path:addPath(source, matrix)
             end
             di = di + 2
         else if cmd == CUBIC_TO then
-            local x1, y1 = srcData[di], srcData[di + 1]
-            local x2, y2 = srcData[di + 2], srcData[di + 3]
-            local x3, y3 = srcData[di + 4], srcData[di + 5]
+            x1, y1 = srcData[di], srcData[di + 1]
+            x2, y2 = srcData[di + 2], srcData[di + 3]
+            x3, y3 = srcData[di + 4], srcData[di + 5]
             if matrix then
                 x1, y1 = matrix:mapPoint(x1, y1)
                 x2, y2 = matrix:mapPoint(x2, y2)
@@ -366,9 +366,9 @@ function Path:addPath(source, matrix)
 end
 
 function Path:clone()
-    local new = Path.create()
-    local cmds, data = self.cmds, self.data
-    local nc, nd = new.cmds, new.data
+    new = Path.create()
+    cmds, data = self.cmds, self.data
+    nc, nd = new.cmds, new.data
     for i = 1, #cmds do
         nc[i] = cmds[i]
     end
@@ -384,11 +384,11 @@ end
 
 -- Traverse the path, calling callback(cmd, x1, y1, ...) for each command
 function Path:traverse(callback)
-    local cmds = self.cmds
-    local data = self.data
-    local di = 1
+    cmds = self.cmds
+    data = self.data
+    di = 1
     for ci = 1, #cmds do
-        local cmd = cmds[ci]
+        cmd = cmds[ci]
         if cmd == MOVE_TO then
             callback(MOVE_TO, data[di], data[di + 1])
             di = di + 2
@@ -406,34 +406,34 @@ function Path:traverse(callback)
 end
 
 -- Adaptive de Casteljau flattening
-local FLATTEN_THRESHOLD = 0.25
+FLATTEN_THRESHOLD = 0.25
 
-local function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
+function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
     -- Stack-based iterative approach (max depth 32)
-    local stack = {}
-    local top = 0
+    stack = {}
+    top = 0
 
     top = top + 1
     stack[top] = { x1, y1, x2, y2, x3, y3, x4, y4 }
 
     while top > 0 do
-        local b = stack[top]
+        b = stack[top]
         top = top - 1
 
-        local bx1, by1, bx2, by2, bx3, by3, bx4, by4 = b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8]
+        bx1, by1, bx2, by2, bx3, by3, bx4, by4 = b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8]
 
-        local dx = bx4 - bx1
-        local dy = by4 - by1
-        local l = math.sqrt(dx * dx + dy * dy)
+        dx = bx4 - bx1
+        dy = by4 - by1
+        l = math.sqrt(dx * dx + dy * dy)
 
-        local flat
+        flat = nil
         if l > 1 then
-            local d1 = math.abs(dx * (by2 - by1) - dy * (bx2 - bx1))
-            local d2 = math.abs(dx * (by3 - by1) - dy * (bx3 - bx1))
+            d1 = math.abs(dx * (by2 - by1) - dy * (bx2 - bx1))
+            d2 = math.abs(dx * (by3 - by1) - dy * (bx3 - bx1))
             flat = (d1 + d2) < FLATTEN_THRESHOLD * l
         else
-            local d1 = math.abs(bx2 - bx1) + math.abs(by2 - by1)
-            local d2 = math.abs(bx3 - bx1) + math.abs(by3 - by1)
+            d1 = math.abs(bx2 - bx1) + math.abs(by2 - by1)
+            d2 = math.abs(bx3 - bx1) + math.abs(by3 - by1)
             flat = (d1 + d2) < FLATTEN_THRESHOLD
         end
 
@@ -441,18 +441,18 @@ local function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
             callback(LINE_TO, bx4, by4)
         else
             -- de Casteljau split
-            local mx12 = (bx1 + bx2) * 0.5
-            local my12 = (by1 + by2) * 0.5
-            local mx23 = (bx2 + bx3) * 0.5
-            local my23 = (by2 + by3) * 0.5
-            local mx34 = (bx3 + bx4) * 0.5
-            local my34 = (by3 + by4) * 0.5
-            local mx123 = (mx12 + mx23) * 0.5
-            local my123 = (my12 + my23) * 0.5
-            local mx234 = (mx23 + mx34) * 0.5
-            local my234 = (my23 + my34) * 0.5
-            local mx1234 = (mx123 + mx234) * 0.5
-            local my1234 = (my123 + my234) * 0.5
+            mx12 = (bx1 + bx2) * 0.5
+            my12 = (by1 + by2) * 0.5
+            mx23 = (bx2 + bx3) * 0.5
+            my23 = (by2 + by3) * 0.5
+            mx34 = (bx3 + bx4) * 0.5
+            my34 = (by3 + by4) * 0.5
+            mx123 = (mx12 + mx23) * 0.5
+            my123 = (my12 + my23) * 0.5
+            mx234 = (mx23 + mx34) * 0.5
+            my234 = (my23 + my34) * 0.5
+            mx1234 = (mx123 + mx234) * 0.5
+            my1234 = (my123 + my234) * 0.5
 
             -- Push right half first (so left is processed first)
             top = top + 1
@@ -469,13 +469,13 @@ function Path:traverseFlatten(callback)
         return
     end
 
-    local cmds = self.cmds
-    local data = self.data
-    local di = 1
-    local curX, curY = 0, 0
+    cmds = self.cmds
+    data = self.data
+    di = 1
+    curX, curY = 0, 0
 
     for ci = 1, #cmds do
-        local cmd = cmds[ci]
+        cmd = cmds[ci]
         if cmd == MOVE_TO then
             callback(MOVE_TO, data[di], data[di + 1])
             curX, curY = data[di], data[di + 1]
@@ -485,9 +485,9 @@ function Path:traverseFlatten(callback)
             curX, curY = data[di], data[di + 1]
             di = di + 2
         else if cmd == CUBIC_TO then
-            local x1, y1 = data[di], data[di + 1]
-            local x2, y2 = data[di + 2], data[di + 3]
-            local x3, y3 = data[di + 4], data[di + 5]
+            x1, y1 = data[di], data[di + 1]
+            x2, y2 = data[di + 2], data[di + 3]
+            x3, y3 = data[di + 4], data[di + 5]
             flattenCubic(callback, curX, curY, x1, y1, x2, y2, x3, y3)
             curX, curY = x3, y3
             di = di + 6
@@ -501,13 +501,13 @@ end
 
 -- Dashed path traversal
 function Path:traverseDashed(offset, dashes, callback)
-    local ndashes = #dashes
+    ndashes = #dashes
     if ndashes == 0 then
         self:traverseFlatten(callback)
         return
     end
 
-    local totalDash = 0
+    totalDash = 0
     for i = 1, ndashes do
         totalDash = totalDash + dashes[i]
     end
@@ -523,9 +523,9 @@ function Path:traverseDashed(offset, dashes, callback)
     end
 
     -- Find starting dash index and phase
-    local dashIndex = 1
-    local dashRemaining = dashes[1]
-    local drawing = true
+    dashIndex = 1
+    dashRemaining = dashes[1]
+    drawing = true
 
     while offset > 0 do
         if offset < dashRemaining then
@@ -539,13 +539,13 @@ function Path:traverseDashed(offset, dashes, callback)
         end
     end
 
-    local curX, curY = 0, 0
-    local needsMoveTo = true
+    curX, curY = 0, 0
+    needsMoveTo = true
 
-    local function dashSegment(x, y)
-        local dx = x - curX
-        local dy = y - curY
-        local dist = math.sqrt(dx * dx + dy * dy)
+    function dashSegment(x, y)
+        dx = x - curX
+        dy = y - curY
+        dist = math.sqrt(dx * dx + dy * dy)
 
         if dist == 0 then
             return
@@ -564,9 +564,9 @@ function Path:traverseDashed(offset, dashes, callback)
                 curX, curY = x, y
                 dist = 0
             else
-                local t = dashRemaining / dist
-                local splitX = curX + dx * t
-                local splitY = curY + dy * t
+                t = dashRemaining / dist
+                splitX = curX + dx * t
+                splitY = curY + dy * t
 
                 if drawing then
                     if needsMoveTo then
@@ -591,27 +591,27 @@ function Path:traverseDashed(offset, dashes, callback)
 
     self:traverseFlatten(function(cmd, ...)
         if cmd == MOVE_TO then
-            local mx, my = ...
+            mx, my = ...
             curX, curY = mx, my
             needsMoveTo = true
         else if cmd == LINE_TO then
-            local lx, ly = ...
+            lx, ly = ...
             dashSegment(lx, ly)
         else if cmd == CLOSE then
-            local clx, cly = ...
+            clx, cly = ...
             dashSegment(clx, cly)
         end
     end)
 end
 
 function Path:cloneFlatten()
-    local new = Path.create()
+    new = Path.create()
     self:traverseFlatten(function(cmd, ...)
         if cmd == MOVE_TO then
-            local x, y = ...
+            x, y = ...
             new:moveTo(x, y)
         else if cmd == LINE_TO then
-            local x, y = ...
+            x, y = ...
             new:lineTo(x, y)
         else if cmd == CLOSE then
             new:close()
@@ -621,13 +621,13 @@ function Path:cloneFlatten()
 end
 
 function Path:cloneDashed(offset, dashes)
-    local new = Path.create()
+    new = Path.create()
     self:traverseDashed(offset, dashes, function(cmd, ...)
         if cmd == MOVE_TO then
-            local x, y = ...
+            x, y = ...
             new:moveTo(x, y)
         else if cmd == LINE_TO then
-            local x, y = ...
+            x, y = ...
             new:lineTo(x, y)
         else if cmd == CLOSE then
             new:close()
@@ -638,12 +638,12 @@ end
 
 -- Bounding box and path length
 function Path:extents(tight)
-    local minX, minY = math.huge, math.huge
-    local maxX, maxY = -math.huge, -math.huge
-    local totalLength = 0
-    local prevX, prevY
+    minX, minY = math.huge, math.huge
+    maxX, maxY = -math.huge, -math.huge
+    totalLength = 0
+    prevX, prevY = nil, nil
 
-    local function processPoint(x, y)
+    function processPoint(x, y)
         if x < minX then
             minX = x
         end
@@ -658,16 +658,16 @@ function Path:extents(tight)
         end
     end
 
-    local function accumulateLength(x, y)
+    function accumulateLength(x, y)
         if prevX then
-            local dx = x - prevX
-            local dy = y - prevY
+            dx = x - prevX
+            dy = y - prevY
             totalLength = totalLength + math.sqrt(dx * dx + dy * dy)
         end
         prevX, prevY = x, y
     end
 
-    local function doTraverse(callback)
+    function doTraverse(callback)
         if tight then
             self:traverseFlatten(callback)
         else
@@ -677,21 +677,21 @@ function Path:extents(tight)
 
     doTraverse(function(cmd, ...)
         if cmd == MOVE_TO then
-            local x, y = ...
+            x, y = ...
             processPoint(x, y)
             prevX, prevY = x, y
         else if cmd == LINE_TO then
-            local x, y = ...
+            x, y = ...
             processPoint(x, y)
             accumulateLength(x, y)
         else if cmd == CUBIC_TO then
-            local x1, y1, x2, y2, x3, y3 = ...
+            x1, y1, x2, y2, x3, y3 = ...
             processPoint(x1, y1)
             processPoint(x2, y2)
             processPoint(x3, y3)
             prevX, prevY = x3, y3
         else if cmd == CLOSE then
-            local x, y = ...
+            x, y = ...
             accumulateLength(x, y)
         end
     end)
@@ -703,28 +703,28 @@ function Path:extents(tight)
 end
 
 function Path:length()
-    local _, len = self:extents(true)
+    _, len = self:extents(true)
     return len
 end
 
 -- SVG path string parsing
 
-local function isWs(c)
+function isWs(c)
     return c == 32 or c == 9 or c == 10 or c == 13
 end
 
-local function isNum(c)
+function isNum(c)
     return c >= 48 and c <= 57
 end
 
-local function skipWs(str, pos)
+function skipWs(str, pos)
     while pos <= #str and isWs(string.byte(str, pos)) do
         pos = pos + 1
     end
     return pos
 end
 
-local function skipWsOrComma(str, pos)
+function skipWsOrComma(str, pos)
     pos = skipWs(str, pos)
     if pos <= #str and string.byte(str, pos) == 44 then
         pos = pos + 1
@@ -733,14 +733,14 @@ local function skipWsOrComma(str, pos)
     return pos
 end
 
-local function parseNumber(str, pos)
-    local len = #str
-    local sign = 1
+function parseNumber(str, pos)
+    len = #str
+    sign = 1
 
     if pos > len then
         return nil
     end
-    local c = string.byte(str, pos)
+    c = string.byte(str, pos)
     if c == 43 then
         pos = pos + 1
     else if c == 45 then
@@ -752,11 +752,11 @@ local function parseNumber(str, pos)
         return nil
     end
     c = string.byte(str, pos)
-    if c ~= 46 and not isNum(c) then
+    if c != 46 and not isNum(c) then
         return nil
     end
 
-    local integer = 0
+    integer = 0
     while pos <= len do
         c = string.byte(str, pos)
         if not isNum(c) then
@@ -766,10 +766,10 @@ local function parseNumber(str, pos)
         pos = pos + 1
     end
 
-    local fraction = 0
+    fraction = 0
     if pos <= len and string.byte(str, pos) == 46 then
         pos = pos + 1
-        local divisor = 1
+        divisor = 1
         while pos <= len do
             c = string.byte(str, pos)
             if not isNum(c) then
@@ -782,8 +782,8 @@ local function parseNumber(str, pos)
         fraction = fraction / divisor
     end
 
-    local exponent = 0
-    local expsign = 1
+    exponent = 0
+    expsign = 1
     if pos <= len then
         c = string.byte(str, pos)
         if c == 101 or c == 69 then
@@ -811,19 +811,19 @@ local function parseNumber(str, pos)
         end
     end
 
-    local value = sign * (integer + fraction)
-    if exponent ~= 0 then
+    value = sign * (integer + fraction)
+    if exponent != 0 then
         value = value * (10 ^ (expsign * exponent))
     end
     return value, pos
 end
 
-local function parseFlag(str, pos)
+function parseFlag(str, pos)
     pos = skipWsOrComma(str, pos)
     if pos > #str then
         return nil
     end
-    local c = string.byte(str, pos)
+    c = string.byte(str, pos)
     if c == 48 then
         return false, pos + 1
     end
@@ -834,21 +834,21 @@ local function parseFlag(str, pos)
 end
 
 function Path.parse(str)
-    if type(str) ~= "string" or #str == 0 then
+    if type(str) != "string" or #str == 0 then
         return nil
     end
 
-    local p = Path.create()
-    local pos = skipWs(str, 1)
-    local len = #str
-    local curX, curY = 0, 0
-    local startX, startY = 0, 0
-    local lastCpX, lastCpY = 0, 0
-    local lastCmd = nil
+    p = Path.create()
+    pos = skipWs(str, 1)
+    len = #str
+    curX, curY = 0, 0
+    startX, startY = 0, 0
+    lastCpX, lastCpY = 0, 0
+    lastCmd = nil
 
     while pos <= len do
-        local c = string.byte(str, pos)
-        local cmd
+        c = string.byte(str, pos)
+        cmd = nil
 
         if (c >= 65 and c <= 90) or (c >= 97 and c <= 122) then
             cmd = string.char(c)
@@ -869,7 +869,7 @@ function Path.parse(str)
         pos = skipWsOrComma(str, pos)
 
         if cmd == "M" or cmd == "m" then
-            local x, y
+            x, y = nil, nil
             x, pos = parseNumber(str, pos)
             if not x then
                 return nil
@@ -887,7 +887,7 @@ function Path.parse(str)
             startX, startY = x, y
             lastCpX, lastCpY = curX, curY
         else if cmd == "L" or cmd == "l" then
-            local x, y
+            x, y = nil, nil
             x, pos = parseNumber(str, pos)
             if not x then
                 return nil
@@ -904,7 +904,7 @@ function Path.parse(str)
             curX, curY = x, y
             lastCpX, lastCpY = curX, curY
         else if cmd == "H" or cmd == "h" then
-            local x
+            x = nil
             x, pos = parseNumber(str, pos)
             if not x then
                 return nil
@@ -916,7 +916,7 @@ function Path.parse(str)
             curX = x
             lastCpX, lastCpY = curX, curY
         else if cmd == "V" or cmd == "v" then
-            local y
+            y = nil
             y, pos = parseNumber(str, pos)
             if not y then
                 return nil
@@ -928,7 +928,7 @@ function Path.parse(str)
             curY = y
             lastCpX, lastCpY = curX, curY
         else if cmd == "C" or cmd == "c" then
-            local x1, y1, x2, y2, x3, y3
+            x1, y1, x2, y2, x3, y3 = nil, nil, nil, nil, nil, nil
             x1, pos = parseNumber(str, pos)
             if not x1 then
                 return nil
@@ -967,7 +967,7 @@ function Path.parse(str)
             lastCpX, lastCpY = x2, y2
             curX, curY = x3, y3
         else if cmd == "S" or cmd == "s" then
-            local x2, y2, x3, y3
+            x2, y2, x3, y3 = nil, nil, nil, nil
             x2, pos = parseNumber(str, pos)
             if not x2 then
                 return nil
@@ -991,13 +991,13 @@ function Path.parse(str)
                 x2, y2 = curX + x2, curY + y2
                 x3, y3 = curX + x3, curY + y3
             end
-            local x1 = 2 * curX - lastCpX
-            local y1 = 2 * curY - lastCpY
+            x1 = 2 * curX - lastCpX
+            y1 = 2 * curY - lastCpY
             p:cubicTo(x1, y1, x2, y2, x3, y3)
             lastCpX, lastCpY = x2, y2
             curX, curY = x3, y3
         else if cmd == "Q" or cmd == "q" then
-            local x1, y1, x2, y2
+            x1, y1, x2, y2 = nil, nil, nil, nil
             x1, pos = parseNumber(str, pos)
             if not x1 then
                 return nil
@@ -1025,7 +1025,7 @@ function Path.parse(str)
             lastCpX, lastCpY = x1, y1
             curX, curY = x2, y2
         else if cmd == "T" or cmd == "t" then
-            local x2, y2
+            x2, y2 = nil, nil
             x2, pos = parseNumber(str, pos)
             if not x2 then
                 return nil
@@ -1038,13 +1038,13 @@ function Path.parse(str)
             if cmd == "t" then
                 x2, y2 = curX + x2, curY + y2
             end
-            local x1 = 2 * curX - lastCpX
-            local y1 = 2 * curY - lastCpY
+            x1 = 2 * curX - lastCpX
+            y1 = 2 * curY - lastCpY
             p:quadTo(x1, y1, x2, y2)
             lastCpX, lastCpY = x1, y1
             curX, curY = x2, y2
         else if cmd == "A" or cmd == "a" then
-            local rx, ry, angle, largeArc, sweep, x, y
+            rx, ry, angle, largeArc, sweep, x, y = nil, nil, nil, nil, nil, nil, nil
             rx, pos = parseNumber(str, pos)
             if not rx then
                 return nil

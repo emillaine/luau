@@ -1,5 +1,5 @@
-local m = require("./export_post_return_mutation_error")
-local ok, err = pcall(function()
+m = require("./export_post_return_mutation_error")
+ok, err = pcall(function()
     m.increment()
 end)
 assert(not ok, "expected increment to throw after module returns")

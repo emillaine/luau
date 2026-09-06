@@ -2,7 +2,7 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print("testing bitwise operations")
 
-local function noinline(x, ...) local s, r = pcall(function(y) return y end, x) return r end
+function noinline(x, ...) s, r = pcall(function(y) return y end, x) return r end
 
 assert(bit32.band() == bit32.bnot(0))
 assert(bit32.btest() == true)
@@ -94,7 +94,7 @@ assert(bit32.arshift(noinline(-1), -1) == (-1 * 2) % 2^32)
 
 print("+")
 -- some special cases
-local c = {0, 1, 2, 3, 10, 0x80000000, 0xaaaaaaaa, 0x55555555,
+c = {0, 1, 2, 3, 10, 0x80000000, 0xaaaaaaaa, 0x55555555,
            0xffffffff, 0x7fffffff}
 
 for _, b in pairs(c) do
@@ -160,7 +160,7 @@ assert(bit32.extract(noinline(0xa0001111), 16) == 0)
 assert(bit32.extract(noinline(0xa0001111), 31) == 1)
 assert(bit32.extract(noinline(42), 1, 3) == 5)
 
-local pos pos = 1
+pos = 1
 assert(bit32.extract(42, pos, 3) == 5) -- test bit32.extract builtin instead of bit32.extractk
 
 assert(not pcall(bit32.extract, 0, -1))

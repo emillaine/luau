@@ -1,9 +1,9 @@
 -- --bench-args: --fflags=DebugLuauUserDefinedClasses,DebugLuauUserDefinedClassesRuntime,LuauCallFeedback,LuauEmitCallFeedback
-local function prequire(name)
-    local success, result = pcall(require, name)
+function prequire(name)
+    success, result = pcall(require, name)
     return success and result
 end
-local bench = script and require(script.Parent.bench_support)
+bench = script and require(script.Parent.bench_support)
     or prequire("bench_support")
     or require("../bench_support")
 
@@ -11,7 +11,7 @@ class Number
     public value
 
     function Swap(self, other)
-        local tmp = other.value
+        tmp = other.value
         other.value = self.value
         self.value = tmp
     end
@@ -20,7 +20,7 @@ end
 
 bench.runCode(function()
 
-    local numbers = {}
+    numbers = {}
 
     for i = 1, 100 do
         numbers[i] = Number.new({ value = math.random() })

@@ -4,12 +4,12 @@
 -- Templates validated against the reference Fil-C clang x86_64 output (hash-filc-x86.s).
 -- Data layout is identical to ARM64 (only .xword->.quad, .word->.long).
 
-local glue_x86 = {}
+glue_x86 = {}
 
-local FUNCTION_UPPER_FLAGS = "36873221949095936" -- 0x83 << 48
+FUNCTION_UPPER_FLAGS = "36873221949095936" -- 0x83 << 48
 
 function glue_x86.getter(out, name)
-	local fo = "pizlonatedFO_" .. name
+	fo = "pizlonatedFO_" .. name
 	table.insert(out, "\t.text")
 	table.insert(out, "\t.globl\tpizlonated_" .. name)
 	table.insert(out, "\t.p2align\t4")
@@ -26,14 +26,14 @@ end
 -- generic (buffer) entrypoint pizlonated2ET<sig>.
 function glue_x86.genericThunk(out, signature, argWords, retWords, retIsPtr)
 	assert(argWords <= 3, "sarcasm: >3 register args not yet supported")
-	local sym = "pizlonated2ET" .. tostring(signature)
-	local argBytes = argWords * 8
-	local retBytes = retWords * 8
-	local L = ".LBB_2ET" .. signature
-	local function e(s) table.insert(out, s) end
+	sym = "pizlonated2ET" .. tostring(signature)
+	argBytes = argWords * 8
+	retBytes = retWords * 8
+	L = ".LBB_2ET" .. signature
+	function e(s) table.insert(out, s) end
 	-- CC iv/lo register for arg k (1-based): iv=rdx,r8,(r10?); lo=rcx,r9. Support up to 3.
-	local ivReg = { "%rdx", "%r8", "%r10" }
-	local loReg = { "%rcx", "%r9", "%r11" }
+	ivReg = { "%rdx", "%r8", "%r10" }
+	loReg = { "%rcx", "%r9", "%r11" }
 	e("\t.text")
 	e("\t.weak\t" .. sym)
 	e("\t.p2align\t4")
@@ -70,11 +70,11 @@ function glue_x86.genericThunk(out, signature, argWords, retWords, retIsPtr)
 end
 
 function glue_x86.foAndOrigins(out, name, signature, numRoots, dbg)
-	local fo = "pizlonatedFO_" .. name
-	local strSym = ".Lfilc_string_" .. name
-	local fileSym = ".Lfilc_filename_" .. name
-	local fnOrigin = ".Lfilc_function_origin_" .. name
-	local origin = ".Lfilc_origin_" .. name
+	fo = "pizlonatedFO_" .. name
+	strSym = ".Lfilc_string_" .. name
+	fileSym = ".Lfilc_filename_" .. name
+	fnOrigin = ".Lfilc_function_origin_" .. name
+	origin = ".Lfilc_origin_" .. name
 
 	table.insert(out, "\t.type\t" .. fo .. ",@object")
 	table.insert(out, "\t.section\t.data.rel.ro,\"aw\",@progbits")
@@ -132,7 +132,7 @@ function glue_x86.foAndOrigins(out, name, signature, numRoots, dbg)
 end
 
 function glue_x86.accessOrigin(out, sym, size, align, funcName, isWrite, dbg)
-	local origin = ".Lfilc_origin_" .. funcName
+	origin = ".Lfilc_origin_" .. funcName
 	if dbg then
 		origin = sym .. "_o"
 		table.insert(out, "\t.type\t" .. origin .. ",@object")
@@ -176,33 +176,33 @@ function glue_x86.originName(funcName) return ".Lfilc_origin_" .. funcName end
 -- intval and matching signature, then tail-calls the fast entrypoint; on a signature
 -- mismatch it marshals through the generic (buffer) CC.
 function glue_x86.callsiteThunk(out, callee, sigDesc)
-	local sig = sigDesc.signature
-	local sym = "pizlonatedFI" .. tostring(sig) .. "_" .. callee
-	local L = ".Lcsr_" .. callee .. "_" .. tostring(sig)
-	local ivReg = { "%rdx", "%r8", "%r10" }   -- incoming fast-call arg iv registers
-	local loReg = { "%rcx", "%r9", "%r11" }   -- incoming fast-call arg lo registers
-	local myth = "%rbx"
-	local pool = { "%r12", "%r13", "%r14", "%r15" }
-	local nextHold = 1
-	local args = {}
+	sig = sigDesc.signature
+	sym = "pizlonatedFI" .. tostring(sig) .. "_" .. callee
+	L = ".Lcsr_" .. callee .. "_" .. tostring(sig)
+	ivReg = { "%rdx", "%r8", "%r10" }   -- incoming fast-call arg iv registers
+	loReg = { "%rcx", "%r9", "%r11" }   -- incoming fast-call arg lo registers
+	myth = "%rbx"
+	pool = { "%r12", "%r13", "%r14", "%r15" }
+	nextHold = 1
+	args = {}
 	for k = 1, sigDesc.argWords do
-		local isPtr = sigDesc.argTypes[k] == 7
-		local ent = { iv = pool[nextHold], isPtr = isPtr }; nextHold += 1
+		isPtr = sigDesc.argTypes[k] == 7
+		ent = { iv = pool[nextHold], isPtr = isPtr }; nextHold += 1
 		if isPtr then ent.lo = pool[nextHold]; nextHold += 1 end
 		args[k] = ent
 	end
-	local argBytes = sigDesc.argWords * 8
-	local retBytes = sigDesc.retWords * 8
-	local function e(s) table.insert(out, s) end
+	argBytes = sigDesc.argWords * 8
+	retBytes = sigDesc.retWords * 8
+	function e(s) table.insert(out, s) end
 
 	-- push list (must leave rsp 16-byte aligned at the call: retaddr + N pushes, N odd).
-	local pushList = { myth }
+	pushList = { myth }
 	for k = 1, sigDesc.argWords do
 		table.insert(pushList, args[k].iv)
 		if args[k].lo then table.insert(pushList, args[k].lo) end
 	end
-	local filler = (#pushList % 2) == 0
-	local function restore()
+	filler = (#pushList % 2) == 0
+	function restore()
 		if filler then e("\taddq\t$8, %rsp") end
 		for i = #pushList, 1, -1 do e("\tpopq\t" .. pushList[i]) end
 	end

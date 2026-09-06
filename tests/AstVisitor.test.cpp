@@ -55,7 +55,7 @@ TEST_SUITE_BEGIN("AstVisitorTest");
 TEST_CASE_FIXTURE(Fixture, "TypeAnnotationsAreNotVisited")
 {
     AstStatBlock* block = parse(R"(
-        local a: A<number>
+        const a: A<number> = nil
     )");
 
     AstVisitorTracking v;
@@ -63,14 +63,15 @@ TEST_CASE_FIXTURE(Fixture, "TypeAnnotationsAreNotVisited")
 
     CHECK(v[0]->is<AstStatBlock>());
     CHECK(v[1]->is<AstStatLocal>());
-    // We should not have v[2] that points to the annotation
-    // We should not have v[3] that points to the type argument 'number' in A.
+    CHECK(v[2]->is<AstExprConstantNil>());
+    // We should not have nodes that point to the annotation
+    // (no AstTypeReference for 'A' or 'number' is visited).
 }
 
 TEST_CASE_FIXTURE(Fixture, "LocalTwoBindings")
 {
     AstStatBlock* block = parse(R"(
-        local a, b
+        const a, b = nil, nil
     )");
 
     AstVisitorTracking v;
@@ -78,12 +79,14 @@ TEST_CASE_FIXTURE(Fixture, "LocalTwoBindings")
 
     CHECK(v[0]->is<AstStatBlock>());
     CHECK(v[1]->is<AstStatLocal>());
+    CHECK(v[2]->is<AstExprConstantNil>());
+    CHECK(v[3]->is<AstExprConstantNil>());
 }
 
 TEST_CASE_FIXTURE(Fixture, "LocalTwoAnnotatedBindings")
 {
     AstStatBlock* block = parse(R"(
-        local a: A, b: B<number>
+        const a: A, b: B<number> = nil, nil
     )");
 
     AstTypeVisitorTrackingWiths v;
@@ -94,12 +97,14 @@ TEST_CASE_FIXTURE(Fixture, "LocalTwoAnnotatedBindings")
     CHECK(v[2]->is<AstTypeReference>());
     CHECK(v[3]->is<AstTypeReference>());
     CHECK(v[4]->is<AstTypeReference>());
+    CHECK(v[5]->is<AstExprConstantNil>());
+    CHECK(v[6]->is<AstExprConstantNil>());
 }
 
 TEST_CASE_FIXTURE(Fixture, "LocalTwoAnnotatedBindingsWithTwoValues")
 {
     AstStatBlock* block = parse(R"(
-        local a: A, b: B<number> = 1, 2
+        const a: A, b: B<number> = 1, 2
     )");
 
     AstTypeVisitorTrackingWiths v;

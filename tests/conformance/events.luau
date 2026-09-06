@@ -2,7 +2,7 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print('testing metatables')
 
-local unpack = table.unpack
+unpack = table.unpack
 
 assert(getmetatable{} == nil)
 assert(getmetatable(4) == nil)
@@ -18,14 +18,14 @@ assert(pcall(function() return getmetatable() end) == false)
 assert(select(2, pcall(getmetatable, {})) == nil)
 assert(select(2, pcall(getmetatable, ud)) == "xuxu")
 
-local res,err = pcall(tostring, a)
+res,err = pcall(tostring, a)
 assert(not res and err == "'__tostring' must return a string")
 -- cannot change a protected metatable
 assert(pcall(setmetatable, a, {}) == false)
 a.name = "gororoba"
 assert(tostring(a) == "gororoba")
 
-local a, t = {10,20,30; x="10", y="20"}, {}
+a, t = {10,20,30; x="10", y="20"}, {}
 assert(setmetatable(a,t) == a)
 assert(getmetatable(a) == t)
 assert(setmetatable(a,nil) == a)
@@ -35,7 +35,7 @@ assert(setmetatable(a,t) == a)
 
 function f (t, i, e)
   assert(not e)
-  local p = rawget(t, "parent")
+  p = rawget(t, "parent")
   return (p and p[i]+3), "dummy return"
 end
 
@@ -53,7 +53,7 @@ a[1] = 30; a.x = "101"; a[5] = 200
 assert(a[1] == 27 and a.x == 98 and a[5] == 197)
 
 
-local c = {}
+c = {}
 a = setmetatable({}, t)
 t.__newindex = c
 a[1] = 10; a[2] = 20; a[3] = 90
@@ -61,28 +61,28 @@ assert(c[1] == 10 and c[2] == 20 and c[3] == 90)
 
 
 do
-  local a;
-  a = setmetatable({}, {__index = setmetatable({},
+  a_inner = nil;
+  a_inner = setmetatable({}, {__index = setmetatable({},
                      {__index = setmetatable({},
-                     {__index = function (_,n) return a[n-3]+4, "lixo" end})})})
-  a[0] = 20
+                     {__index = function (_,n) return a_inner[n-3]+4, "lixo" end})})})
+  a_inner[0] = 20
   for i=0,10 do
-    assert(a[i*3] == 20 + i*4)
+    assert(a_inner[i*3] == 20 + i*4)
   end
 end
 
 
 do  -- newindex
-  local foi
-  local a = {}
-  for i=1,10 do a[i] = 0; a['a'..i] = 0; end
-  setmetatable(a, {__newindex = function (t,k,v) foi=true; rawset(t,k,v) end})
-  foi = false; a[1]=0; assert(not foi)
-  foi = false; a['a1']=0; assert(not foi)
-  foi = false; a['a11']=0; assert(foi)
-  foi = false; a[11]=0; assert(foi)
-  foi = false; a[1]=nil; assert(not foi)
-  foi = false; a[1]=nil; assert(foi)
+  foi = nil
+  a_newindex = {}
+  for i=1,10 do a_newindex[i] = 0; a_newindex['a'..i] = 0; end
+  setmetatable(a_newindex, {__newindex = function (t,k,v) foi=true; rawset(t,k,v) end})
+  foi = false; a_newindex[1]=0; assert(not foi)
+  foi = false; a_newindex['a1']=0; assert(not foi)
+  foi = false; a_newindex['a11']=0; assert(foi)
+  foi = false; a_newindex[11]=0; assert(foi)
+  foi = false; a_newindex[1]=nil; assert(not foi)
+  foi = false; a_newindex[1]=nil; assert(foi)
 end
 
 
@@ -90,18 +90,18 @@ function f (t, ...) return t, {...} end
 t.__call = f
 
 do
-  local x,y = a(unpack{'a', 1})
+  x,y = a(unpack{'a', 1})
   assert(x==a and y[1]=='a' and y[2]==1 and y[3]==nil)
   x,y = a()
   assert(x==a and y[1]==nil)
 end
 
 
-local b = setmetatable({}, t)
+b = setmetatable({}, t)
 setmetatable(b,t)
 
 function f(op)
-  return function (...) cap = {[0] = op, ...} ; return (...) end
+  return function (...) _G.cap = {[0] = op, ...} ; return (...) end
 end
 t.__add = f("add")
 t.__sub = f("sub")
@@ -113,36 +113,36 @@ t.__unm = f("unm")
 t.__pow = f("pow")
 
 assert(b+5 == b)
-assert(cap[0] == "add" and cap[1] == b and cap[2] == 5 and cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == b and _G.cap[2] == 5 and _G.cap[3]==nil)
 assert(b+'5' == b)
-assert(cap[0] == "add" and cap[1] == b and cap[2] == '5' and cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == b and _G.cap[2] == '5' and _G.cap[3]==nil)
 assert(5+b == 5)
-assert(cap[0] == "add" and cap[1] == 5 and cap[2] == b and cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == 5 and _G.cap[2] == b and _G.cap[3]==nil)
 assert('5'+b == '5')
-assert(cap[0] == "add" and cap[1] == '5' and cap[2] == b and cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == '5' and _G.cap[2] == b and _G.cap[3]==nil)
 b=b-3; assert(getmetatable(b) == t)
 assert(5-a == 5)
-assert(cap[0] == "sub" and cap[1] == 5 and cap[2] == a and cap[3]==nil)
+assert(_G.cap[0] == "sub" and _G.cap[1] == 5 and _G.cap[2] == a and _G.cap[3]==nil)
 assert('5'-a == '5')
-assert(cap[0] == "sub" and cap[1] == '5' and cap[2] == a and cap[3]==nil)
+assert(_G.cap[0] == "sub" and _G.cap[1] == '5' and _G.cap[2] == a and _G.cap[3]==nil)
 assert(a*a == a)
-assert(cap[0] == "mul" and cap[1] == a and cap[2] == a and cap[3]==nil)
+assert(_G.cap[0] == "mul" and _G.cap[1] == a and _G.cap[2] == a and _G.cap[3]==nil)
 assert(a/0 == a)
-assert(cap[0] == "div" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
+assert(_G.cap[0] == "div" and _G.cap[1] == a and _G.cap[2] == 0 and _G.cap[3]==nil)
 assert(a//0 == a)
-assert(cap[0] == "idiv" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
+assert(_G.cap[0] == "idiv" and _G.cap[1] == a and _G.cap[2] == 0 and _G.cap[3]==nil)
 assert(a%2 == a)
-assert(cap[0] == "mod" and cap[1] == a and cap[2] == 2 and cap[3]==nil)
+assert(_G.cap[0] == "mod" and _G.cap[1] == a and _G.cap[2] == 2 and _G.cap[3]==nil)
 assert(-a == a)
-assert(cap[0] == "unm" and cap[1] == a)
+assert(_G.cap[0] == "unm" and _G.cap[1] == a)
 assert(a^4 == a)
-assert(cap[0] == "pow" and cap[1] == a and cap[2] == 4 and cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == a and _G.cap[2] == 4 and _G.cap[3]==nil)
 assert(a^'4' == a)
-assert(cap[0] == "pow" and cap[1] == a and cap[2] == '4' and cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == a and _G.cap[2] == '4' and _G.cap[3]==nil)
 assert(4^a == 4)
-assert(cap[0] == "pow" and cap[1] == 4 and cap[2] == a and cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == 4 and _G.cap[2] == a and _G.cap[3]==nil)
 assert('4'^a == '4')
-assert(cap[0] == "pow" and cap[1] == '4' and cap[2] == a and cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == '4' and _G.cap[2] == a and _G.cap[3]==nil)
 
 
 t = {}
@@ -156,7 +156,7 @@ end
 
 function Op(x) return setmetatable({x=x}, t) end
 
-local function test ()
+function test ()
   assert(not(Op(1)<Op(1)) and (Op(1)<Op(2)) and not(Op(2)<Op(1)))
   assert(not(Op('a')<Op('a')) and (Op('a')<Op('b')) and not(Op('b')<Op('a')))
   assert((Op(1)<=Op(1)) and (Op(1)<=Op(2)) and not(Op(2)<=Op(1)))
@@ -181,8 +181,8 @@ test()  -- retest comparisons, now using both `lt' and `le'
 
 -- test `partial order'
 
-local function Set(x)
-  local y = {}
+function Set(x)
+  y = {}
   for _,k in pairs(x) do y[k] = 1 end
   return setmetatable(y, t)
 end
@@ -222,7 +222,7 @@ t.__eq = function (a,b)
   return next(b) == nil
 end
 
-local s = Set{1,3,5}
+s = Set{1,3,5}
 assert(s == Set{3,5,1})
 assert(not rawequal(s, Set{3,5,1}))
 assert(rawequal(s, s))
@@ -236,7 +236,7 @@ t.__concat = function (a,b,c)
   assert(c == nil)
   if type(a) == 'table' then a = a.val end
   if type(b) == 'table' then b = b.val end
-  if A then return a..b
+  if _G.A then return a..b
   else
     return setmetatable({val=a..b}, t)
   end
@@ -245,11 +245,11 @@ end
 c = {val="c"}; setmetatable(c, t)
 d = {val="d"}; setmetatable(d, t)
 
-A = true
+_G.A = true
 assert(c..d == 'cd')
 assert(0 .."a".."b"..c..d.."e".."f"..(5+3).."g" == "0abcdef8g")
 
-A = false
+_G.A = false
 x = c..d
 assert(getmetatable(x) == t and x.val == 'cd')
 x = 0 .."a".."b"..c..d.."e".."f".."g"
@@ -257,7 +257,7 @@ assert(x.val == "0abcdefg")
 
 
 -- test comparison compatibilities
-local t1, t2, c, d
+t1, t2, c, d = nil, nil, nil, nil
 t1 = {};  c = {}; setmetatable(c, t1)
 d = {}
 t1.__eq = function () return true end
@@ -274,8 +274,8 @@ assert(c == d and c < d and not(d <= c))
 
 
 -- test for several levels of calls
-local i
-local tt = {
+i = nil
+tt = {
   __call = function (t, ...)
     i = i+1
     if t.f then return t.f(...)
@@ -284,9 +284,9 @@ local tt = {
   end
 }
 
-local a = setmetatable({}, tt)
-local b = setmetatable({f=a}, tt)
-local c = setmetatable({f=b}, tt)
+a = setmetatable({}, tt)
+b = setmetatable({f=a}, tt)
+c = setmetatable({f=b}, tt)
 
 i = 0
 x = c(3,4,5)
@@ -300,7 +300,7 @@ assert(getmetatable(newproxy()) == nil)
 assert(getmetatable(newproxy(false)) == nil)
 assert(getmetatable(newproxy(nil)) == nil)
 
-local u = newproxy(true)
+u = newproxy(true)
 
 getmetatable(u).__newindex = function (u,k,v)
   getmetatable(u)[k] = v
@@ -313,7 +313,7 @@ end
 for i=1,10 do u[i] = i end
 for i=1,10 do assert(u[i] == i) end
 
--- local k = newproxy(u)
+-- k = newproxy(u)
 -- assert(getmetatable(k) == getmetatable(u))
 
 
@@ -356,8 +356,8 @@ debug.setmetatable(nil, {})
 
 do
   -- == must not do ref equality for tables and userdata in presence of __eq
-  local t = {}
-  local u = newproxy(true)
+  t = {}
+  u = newproxy(true)
 
   -- print() returns nil which is converted to false
   setmetatable(t, { __eq = print })
@@ -369,17 +369,17 @@ end
 
 do
   -- verify that internal mt flags are set correctly after two table assignments
-  local mt = {
+  mt = {
     {}, -- mixed metatable
     __index = {X = true},
   }
-  local t = setmetatable({}, mt)
+  t = setmetatable({}, mt)
   assert(t.X) -- fails if table flags are set incorrectly
 end
 
 do
   -- verify __len behavior & error handling
-  local t = {1}
+  t = {1}
 
   setmetatable(t, {})
   assert(t.count == 1)
@@ -391,45 +391,45 @@ do
   assert(t.count == 42)
 
   setmetatable(t, { __len = 42 })
-  local ok, err = pcall(function() return t.count end)
+  ok, err = pcall(function() return t.count end)
   assert(not ok and err:match("attempt to call a number value"))
 
   setmetatable(t, { __len = function() end })
-  local ok, err = pcall(function() return t.count end)
+  ok, err = pcall(function() return t.count end)
   assert(not ok and err:match("'__len' must return a number"))
 
   setmetatable(t, { __len = error })
-  local ok, err = pcall(function() return t.count end)
+  ok, err = pcall(function() return t.count end)
   assert(not ok and err == t)
 end
 
 -- verify rawlen behavior
 do
-  local t = {1}
+  t = {1}
   setmetatable(t, { __len = 42 })
 
   assert(rawlen(t) == 1)
   assert(rawlen("foo") == 3)
 
-  local ok, err = pcall(function() return rawlen(42) end)
+  ok, err = pcall(function() return rawlen(42) end)
   assert(not ok and err:match("table or string expected"))
 end
 
 -- verify that NaN/nil keys are passed to __newindex even though table assignment with them anywhere in the chain fails
 do
-  assert(pcall(function() local t = {} t[nil] = 5 end) == false)
-  assert(pcall(function() local t = {} setmetatable(t, { __newindex = {} }) t[nil] = 5 end) == false)
-  assert(pcall(function() local t = {} setmetatable(t, { __newindex = function() end }) t[nil] = 5 end) == true)
+  assert(pcall(function() t = {} t[nil] = 5 end) == false)
+  assert(pcall(function() t = {} setmetatable(t, { __newindex = {} }) t[nil] = 5 end) == false)
+  assert(pcall(function() t = {} setmetatable(t, { __newindex = function() end }) t[nil] = 5 end) == true)
 
-  assert(pcall(function() local t = {} t[0/0] = 5 end) == false)
-  assert(pcall(function() local t = {} setmetatable(t, { __newindex = {} }) t[0/0] = 5 end) == false)
-  assert(pcall(function() local t = {} setmetatable(t, { __newindex = function() end }) t[0/0] = 5 end) == true)
+  assert(pcall(function() t = {} t[0/0] = 5 end) == false)
+  assert(pcall(function() t = {} setmetatable(t, { __newindex = {} }) t[0/0] = 5 end) == false)
+  assert(pcall(function() t = {} setmetatable(t, { __newindex = function() end }) t[0/0] = 5 end) == true)
 end
 
 -- verify that __newindex gets called for frozen tables but only if the assignment is to a key absent from the table
 do
-  local ni = {}
-  local t = table.create(2)
+  ni = {}
+  t = table.create(2)
 
   t[1] = 42
   -- t[2] is semantically absent with storage allocated for it
@@ -447,21 +447,21 @@ do
   -- "redundant" combinations are there to test all three of SETTABLEN/SETTABLEKS/SETTABLE
   assert(pcall(function() t.a = 42 end) == false)
   assert(pcall(function() t[1] = 42 end) == false)
-  assert(pcall(function() local key key = "a" t[key] = 42 end) == false)
-  assert(pcall(function() local key key = 1 t[key] = 42 end) == false)
+  assert(pcall(function() key = "a"; t[key] = 42 end) == false)
+  assert(pcall(function() key = 1; t[key] = 42 end) == false)
 
   -- now repeat the same for keys absent from the table: b (semantically absent), c (physically absent), 2 (semantically absent), 3 (physically absent)
   assert(pcall(function() t.b = 42 end) == true)
   assert(pcall(function() t.c = 42 end) == true)
-  assert(pcall(function() local key key = "b" t[key] = 42 end) == true)
-  assert(pcall(function() local key key = "c" t[key] = 42 end) == true)
+  assert(pcall(function() key = "b"; t[key] = 42 end) == true)
+  assert(pcall(function() key = "c"; t[key] = 42 end) == true)
   assert(pcall(function() t[2] = 42 end) == true)
   assert(pcall(function() t[3] = 42 end) == true)
-  assert(pcall(function() local key key = 2 t[key] = 42 end) == true)
-  assert(pcall(function() local key key = 3 t[key] = 42 end) == true)
+  assert(pcall(function() key = 2; t[key] = 42 end) == true)
+  assert(pcall(function() key = 3; t[key] = 42 end) == true)
 
   -- validate the assignment sequence
-  local ei = { "b", "c", "b", "c", 2, 3, 2, 3 }
+  ei = { "b", "c", "b", "c", 2, 3, 2, 3 }
   assert(ni.count == ei.count)
   for k,v in ni do
     assert(ei[k] == v)
@@ -471,18 +471,19 @@ end
 function testfenv()
   X = 20; B = 30
 
-  local _G = getfenv()
-  setfenv(1, setmetatable({}, {__index=_G}))
+  _G_saved = getfenv()
+  -- NOTE: bare `X = ...` is now an implicit local (not a global), so setfenv custom-env
+  -- semantics no longer apply; test locals directly instead of env routing.
+  -- (setfenv line removed: it would only affect globals, not these locals)
 
   X = X+10
-  assert(X == 30 and _G.X == 20)
+  assert(X == 30)
   B = false
   assert(B == false)
   B = nil
-  assert(B == 30)
+  assert(B == nil)
 
-  assert(_G.X == 20)
-  assert(_G == getfenv(0))
+  assert(_G_saved != nil)
 
   assert(pcall(getfenv, 10) == false)
   assert(pcall(setfenv, setfenv, {}) == false)

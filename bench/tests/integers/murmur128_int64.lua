@@ -1,33 +1,33 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-	local C1 = 0x87c37b91114253d5i
-	local C2 = 0x4cf5ad432745937fi
-	local M5 = 5i
-	local K1 = 0x52dce729i
-	local K2 = 0x38495ab5i
-	local FMIX1 = 0xff51afd7ed558ccdi
-	local FMIX2 = 0xc4ceb9fe1a85ec53i
+	C1 = 0x87c37b91114253d5i
+	C2 = 0x4cf5ad432745937fi
+	M5 = 5i
+	K1 = 0x52dce729i
+	K2 = 0x38495ab5i
+	FMIX1 = 0xff51afd7ed558ccdi
+	FMIX2 = 0xc4ceb9fe1a85ec53i
 
-	local function fmix64(k)
+	function fmix64(k)
 		k = integer.mul(integer.bxor(k, integer.rshift(k, 33i)), FMIX1)
 		k = integer.mul(integer.bxor(k, integer.rshift(k, 33i)), FMIX2)
 		return integer.bxor(k, integer.rshift(k, 33i))
 	end
 
-	local function murmur3_x64_128(buf, seed)
-		local len = buffer.len(buf)
-		local nblocks = len // 16
+	function murmur3_x64_128(buf, seed)
+		len = buffer.len(buf)
+		nblocks = len // 16
 
-		local h1 = seed
-		local h2 = seed
+		h1 = seed
+		h2 = seed
 
 		for i = 0, nblocks - 1 do
-			local off = i * 16
-			local k1 = buffer.readinteger(buf, off)
-			local k2 = buffer.readinteger(buf, off + 8)
+			off = i * 16
+			k1 = buffer.readinteger(buf, off)
+			k2 = buffer.readinteger(buf, off + 8)
 
 			k1 = integer.mul(integer.lrotate(integer.mul(k1, C1), 31i), C2)
 			h1 = integer.bxor(h1, k1)
@@ -39,11 +39,11 @@ function test()
 		end
 
 		-- tail (0..15 bytes)
-		local tailStart = nblocks * 16
-		local rem = len - tailStart
+		tailStart = nblocks * 16
+		rem = len - tailStart
 		if rem > 0 then
-			local k1 = 0i
-			local k2 = 0i
+			k1 = 0i
+			k2 = 0i
 
 			if rem >= 9 then
 				k1 = buffer.readinteger(buf, tailStart)
@@ -80,16 +80,16 @@ function test()
 		return string.format("%016x%016x", integer.bswap(h1), integer.bswap(h2))
 	end
 
-	local input = buffer.fromstring(string.rep(".", 1e3))
+	input = buffer.fromstring(string.rep(".", 1e3))
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 1500 do
-		local res = murmur3_x64_128(input, 0i)
+		res = murmur3_x64_128(input, 0i)
 		assert(res == "d092966966d88531ef6a373f8fbb714f")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

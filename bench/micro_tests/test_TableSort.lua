@@ -1,16 +1,16 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
-local arr_months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+arr_months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 
-local arr_num = {}
+arr_num = {}
 for i=1,100 do table.insert(arr_num, math.sin(i)) end
 
-local arr_numk = {}
+arr_numk = {}
 for i=1,10000 do table.insert(arr_numk, math.sin(i)) end
 
 function test(arr)
-    local t = table.create(#arr)
+    t = table.create(#arr)
 
     for i=1,1e6/#arr do
         table.move(arr, 1, #arr, 1, t)

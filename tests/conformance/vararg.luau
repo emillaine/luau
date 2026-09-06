@@ -2,12 +2,12 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print('testing vararg')
 
-local unpack = table.unpack
+unpack = table.unpack
 
 _G.arg = nil
 
 function f(a, ...)
-  local arg = { n=select('#',...), ... }
+  arg = { n=select('#',...), ... }
   if a then
     assert(arg.count == a.count)
   else
@@ -18,15 +18,15 @@ function f(a, ...)
 end
 
 function c12 (...)
-  local x = {...}; x.n = table.getn(x)
-  local res = (x.n==2 and x[1] == 1 and x[2] == 2)
+  x = {...}; x.n = table.getn(x)
+  res = (x.n==2 and x[1] == 1 and x[2] == 2)
   if res then res = 55 end
   return res, 2
 end
 
 function vararg (...) return { n=select('#',...), ... } end
 
-local call = function (f, args) return f(unpack(args, 1, args.n)) end
+call = function (f, args) return f(unpack(args, 1, args.n)) end
 
 assert(f() == 0)
 assert(f({1,2,3}, 1, 2, 3) == 3)
@@ -40,29 +40,29 @@ assert(a == 55 and b == 2)
 a = call(c12, {1,2;n=1})
 assert(not a)
 assert(c12(1,2,3) == false)
-local G = {foo=1,bar=2,foobar=3}
-local a = vararg(call(next, {G,nil;n=2}))
-local b,c = next(G)
+G = {foo=1,bar=2,foobar=3}
+a = vararg(call(next, {G,nil;n=2}))
+b,c = next(G)
 assert(a[1] == b and a[2] == c and a.n == 2)
 a = vararg(call(call, {c12, {1,2}}))
 assert(a.n == 2 and a[1] == 55 and a[2] == 2)
 a = call(print, {'+'})
 assert(a == nil)
 
-local t = {1, 10}
+t = {1, 10}
 function t:f (...)
-  local arg = { n=select('#',...), ... }
+  arg = { n=select('#',...), ... }
   return self[arg[1]]+arg.n
 end
 assert(t:f(1,4) == 3 and t:f(2) == 11)
 print('+')
 
 lim = 20
-local i, a = 1, {}
+i, a = 1, {}
 while i <= lim do a[i] = i+0.3; i=i+1 end
 
 function f(a, b, c, d, ...)
-  local more = {...}
+  more = {...}
   assert(a == 1.3 and more[1] == 5.3 and
          more[lim-4] == lim+0.3 and not more[lim-3])
 end
@@ -87,14 +87,14 @@ print("+")
 function oneless (a, ...) return ... end
 
 function f (n, a, ...)
-  local b
+  b_inner = nil
   assert(arg == nil)
   if n == 0 then
-    local b, c, d = ...
-    return a, b, c, d, oneless(oneless(oneless(...)))
+    b_inner, c, d = ...
+    return a, b_inner, c, d, oneless(oneless(oneless(...)))
   else
-    n, b, a = n-1, ..., a
-    assert(b == ...)
+    n, b_inner, a = n-1, ..., a
+    assert(b_inner == ...)
     return f(n, a, ...)
   end
 end
@@ -119,7 +119,7 @@ pcall(select, -10000)
 
 -- select(_, ...) has special optimizations so it needs extra testing
 function selectone(n, ...)
-    local e = select(n, ...)
+    e = select(n, ...)
     return e
 end
 
@@ -158,7 +158,7 @@ assert(x[1] == 2 and x[2] == 3 and x[3] == nil)
 
 
 f = loadstring[[
-  local x = {...}
+  x = {...}
   for i=1,select('#', ...) do assert(x[i] == select(i, ...)) end
   assert(x[select('#', ...)+1] == nil)
   return true

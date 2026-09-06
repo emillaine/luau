@@ -270,7 +270,7 @@ RETURN R0 2
 
 TEST_CASE("CompileError")
 {
-    std::string source = "local " + rep("a,", 300) + "a = ...";
+    std::string source = rep("a,", 300) + "a = ...";
 
     // fails to parse
     std::string bc1 = Luau::compile(source + " !#*$!#$^&!*#&$^*");
@@ -285,7 +285,7 @@ TEST_CASE("CompileError")
 
 TEST_CASE("LocalsDirectReference")
 {
-    CHECK_EQ("\n" + compileFunction0("local a return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = nil return a"), R"(
 LOADNIL R0
 RETURN R0 1
 )");
@@ -295,7 +295,7 @@ TEST_CASE("BasicFunction")
 {
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code);
-    Luau::compileOrThrow(bcb, "local function foo(a, b) return b end");
+    Luau::compileOrThrow(bcb, "function foo(a, b) return b end");
 
     CHECK_EQ("\n" + bcb.dumpFunction(1), R"(
 DUPCLOSURE R0 K0 ['foo']
@@ -313,7 +313,7 @@ TEST_CASE("BasicFunctionCall")
 
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code);
-    Luau::compileOrThrow(bcb, "local function foo(a, b) return b end function test() return foo(2) end");
+    Luau::compileOrThrow(bcb, "function foo(a, b) return b end function test() return foo(2) end");
 
     CHECK_EQ("\n" + bcb.dumpFunction(1), R"(
 GETUPVAL R0 0
@@ -326,14 +326,14 @@ RETURN R0 -1
 TEST_CASE("FunctionCallOptimization")
 {
     // direct call into local
-    CHECK_EQ("\n" + compileFunction0("local foo = math.foo()"), R"(
+    CHECK_EQ("\n" + compileFunction0("const foo = math.foo()"), R"(
 GETIMPORT R0 2 [math.foo]
 CALL R0 0 1
 RETURN R0 0
 )");
 
     // direct call into temp
-    CHECK_EQ("\n" + compileFunction0("local foo = math.foo(math.bar())"), R"(
+    CHECK_EQ("\n" + compileFunction0("const foo = math.foo(math.bar())"), R"(
 GETIMPORT R0 2 [math.foo]
 GETIMPORT R1 4 [math.bar]
 CALL R1 0 -1
@@ -342,7 +342,7 @@ RETURN R0 0
 )");
 
     // can't directly call into local since foo might be used as arguments of caller
-    CHECK_EQ("\n" + compileFunction0("local foo foo = math.foo(foo)"), R"(
+    CHECK_EQ("\n" + compileFunction0("foo = nil foo = math.foo(foo)"), R"(
 LOADNIL R0
 GETIMPORT R1 2 [math.foo]
 MOVE R2 R0
@@ -356,7 +356,7 @@ TEST_CASE("ReflectionBytecode")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local part = Instance.new('Part', workspace)
+const part = Instance.new('Part', workspace)
 part.Size = Vector3.new(1, 2, 3)
 return part.Size.Z * part:GetMass()
 )"),
@@ -397,7 +397,7 @@ TEST_CASE("ImportCallRedirectLocal")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local math = math
+const math = math
 return math.max(1, 2)
 )"),
         R"(
@@ -416,7 +416,7 @@ TEST_CASE("ImportCallRedirectLocalPolyfill")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local math = math or require("math-polyfill")
+const math = math or require("math-polyfill")
 return math.max(1, 2)
 )"),
         R"(
@@ -442,8 +442,8 @@ TEST_CASE("FakeImportCall")
     const char* source = "math = {} function math.max() return 0 end function test() return math.max(1, 2) end";
 
     CHECK_EQ("\n" + compileFunction(source, 1), R"(
-GETGLOBAL R0 K0 ['math']
-GETTABLEKS R0 R0 K1 ['max']
+GETUPVAL R0 0
+GETTABLEKS R0 R0 K0 ['max']
 LOADN R1 1
 LOADN R2 2
 CALL R0 2 -1
@@ -453,7 +453,7 @@ RETURN R0 -1
 
 TEST_CASE("AssignmentLocal")
 {
-    CHECK_EQ("\n" + compileFunction0("local a a = 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a = 2"), R"(
 LOADNIL R0
 LOADN R0 2
 RETURN R0 0
@@ -464,14 +464,13 @@ TEST_CASE("AssignmentGlobal")
 {
     CHECK_EQ("\n" + compileFunction0("a = 2"), R"(
 LOADN R0 2
-SETGLOBAL R0 K0 ['a']
 RETURN R0 0
 )");
 }
 
 TEST_CASE("AssignmentTable")
 {
-    const char* source = "local c = ... local a = {} a.b = 2 a.b = c";
+    const char* source = "const c = ... const a = {} a.b = 2 a.b = c";
 
     CHECK_EQ("\n" + compileFunction0(source), R"(
 GETVARARGS R0 1
@@ -487,7 +486,7 @@ TEST_CASE("ConcatChainOptimization")
 {
     ScopedFastFlag luauCompileConcatTargetTop{FFlag::LuauCompileConcatTargetTop, true};
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ...; return a .. b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ...; return a .. b"), R"(
 GETVARARGS R0 2
 MOVE R3 R0
 MOVE R4 R1
@@ -495,7 +494,7 @@ CONCAT R2 R3 R4
 RETURN R2 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b, c = ...; return a .. b .. c"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b, c = ...; return a .. b .. c"), R"(
 GETVARARGS R0 3
 MOVE R4 R0
 MOVE R5 R1
@@ -504,7 +503,7 @@ CONCAT R3 R4 R6
 RETURN R3 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b, c = ...; return (a .. b) .. c"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b, c = ...; return (a .. b) .. c"), R"(
 GETVARARGS R0 3
 MOVE R5 R0
 MOVE R6 R1
@@ -519,8 +518,10 @@ TEST_CASE("ConcatTopRegisterUse")
 {
     ScopedFastFlag luauCompileConcatTargetTop{FFlag::LuauCompileConcatTargetTop, true};
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ...; return '{a=' .. tostring(a) .. ' b=' .. tostring(b) .. '}'"), R"(
-GETVARARGS R0 2
+    CHECK_EQ("\n" + compileFunction0("a, b = ...; return '{a=' .. tostring(a) .. ' b=' .. tostring(b) .. '}'"), R"(
+GETVARARGS R2 2
+MOVE R0 R2
+MOVE R1 R3
 LOADK R3 K0 ['{a=']
 FASTCALL1 63 R0 L0
 MOVE R5 R0
@@ -541,7 +542,7 @@ TEST_CASE("ConcatTopRegisterUseShorthand")
 {
     ScopedFastFlag luauCompileConcatTargetTop{FFlag::LuauCompileConcatTargetTop, true};
 
-    CHECK_EQ("\n" + compileFunction0("local a = \"hello \" local b, c = ...; a ..= tostring(a) .. tostring(b) return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = \"hello \" const b, c = ...; a ..= tostring(a) .. tostring(b) return a"), R"(
 LOADK R0 K0 ['hello ']
 GETVARARGS R1 2
 MOVE R3 R0
@@ -560,7 +561,7 @@ RETURN R0 1
 
 TEST_CASE("RepeatLocals")
 {
-    CHECK_EQ("\n" + compileFunction0("repeat local a a = 5 until a - 4 < 0 or a - 4 >= 0"), R"(
+    CHECK_EQ("\n" + compileFunction0("repeat a = nil a = 5 until a - 4 < 0 or a - 4 >= 0"), R"(
 L0: LOADNIL R0
 LOADN R0 5
 SUBK R1 R0 K0 [4]
@@ -675,7 +676,7 @@ RETURN R0 0
 )");
 
     // ... even if they are using a local variable
-    CHECK_EQ("\n" + compileFunction0("local ip = ipairs for k,v in ip({}) do end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const ip = ipairs for k,v in ip({}) do end"), R"(
 GETIMPORT R0 1 [ipairs]
 MOVE R1 R0
 NEWTABLE R2 0 0
@@ -686,7 +687,7 @@ RETURN R0 0
 )");
 
     // ... even when it's an upvalue
-    CHECK_EQ("\n" + compileFunction0("local ip = ipairs function foo() for k,v in ip({}) do end end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const ip = ipairs function foo() for k,v in ip({}) do end end"), R"(
 GETUPVAL R0 0
 NEWTABLE R1 0 0
 CALLFB R0 1 3 [0]
@@ -696,7 +697,7 @@ RETURN R0 0
 )");
 
     // but if it's reassigned then all bets are off
-    CHECK_EQ("\n" + compileFunction0("local ip = ipairs ip = pairs for k,v in ip({}) do end"), R"(
+    CHECK_EQ("\n" + compileFunction0("ip = ipairs ip = pairs for k,v in ip({}) do end"), R"(
 GETIMPORT R0 1 [ipairs]
 GETIMPORT R0 3 [pairs]
 MOVE R1 R0
@@ -710,12 +711,11 @@ RETURN R0 0
     // or if the global is hijacked
     CHECK_EQ("\n" + compileFunction0("ipairs = pairs for k,v in ipairs({}) do end"), R"(
 GETIMPORT R0 1 [pairs]
-SETGLOBAL R0 K2 ['ipairs']
-GETGLOBAL R0 K2 ['ipairs']
-NEWTABLE R1 0 0
-CALL R0 1 3
-FORGPREP R0 L0
-L0: FORGLOOP R0 L0 2
+MOVE R1 R0
+NEWTABLE R2 0 0
+CALL R1 1 3
+FORGPREP R1 L0
+L0: FORGLOOP R1 L0 2
 RETURN R0 0
 )");
 
@@ -739,7 +739,7 @@ RETURN R0 1
 )");
 
     // we can't compute directly to target since that'd overwrite the local
-    CHECK_EQ("\n" + compileFunction0("local a a = {a} return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a = {a} return a"), R"(
 LOADNIL R0
 NEWTABLE R1 0 1
 MOVE R2 R0
@@ -824,12 +824,10 @@ RETURN R0 1
     // expression assignment
     CHECK_EQ("\n" + compileFunction0("a = 7 return {[a]=42}"), R"(
 LOADN R0 7
-SETGLOBAL R0 K0 ['a']
-NEWTABLE R0 1 0
-GETGLOBAL R1 K0 ['a']
+NEWTABLE R1 1 0
 LOADN R2 42
-SETTABLE R2 R0 R1
-RETURN R0 1
+SETTABLE R2 R1 R0
+RETURN R1 1
 )");
 
     // table template caching; two DUPTABLES out of three use the same slot. Note that caching is order dependent
@@ -1033,32 +1031,36 @@ TEST_CASE("TableLiteralsIndexConstant")
     // validate that we use SETTTABLEKS for constant variable keys
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = "key", "value"
+        a, b = "key", "value"
         return {[a] = 42, [b] = 0}
 )"),
         R"(
-NEWTABLE R0 2 0
-LOADN R1 42
-SETTABLEKS R1 R0 K0 ['key']
-LOADN R1 0
-SETTABLEKS R1 R0 K1 ['value']
-RETURN R0 1
+LOADK R0 K0 ['key']
+LOADK R1 K1 ['value']
+NEWTABLE R2 2 0
+LOADN R3 42
+SETTABLE R3 R2 R0
+LOADN R3 0
+SETTABLE R3 R2 R1
+RETURN R2 1
 )"
     );
 
     // validate that we use SETTABLEN for constant variable keys *and* that we predict array size
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = 1, 2
+        a, b = 1, 2
         return {[a] = 42, [b] = 0}
 )"),
         R"(
-NEWTABLE R0 0 2
-LOADN R1 42
-SETTABLEN R1 R0 1
-LOADN R1 0
-SETTABLEN R1 R0 2
-RETURN R0 1
+LOADN R0 1
+LOADN R1 2
+NEWTABLE R2 2 0
+LOADN R3 42
+SETTABLE R3 R2 R0
+LOADN R3 0
+SETTABLE R3 R2 R1
+RETURN R2 1
 )"
     );
 }
@@ -1067,7 +1069,7 @@ TEST_CASE("TableSizePredictionBasic")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {}
+const t = {}
 t.a = 1
 t.b = 1
 t.c = 1
@@ -1104,7 +1106,7 @@ RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {}
+const t = {}
 t.x = 1
 t.x = 2
 t.x = 3
@@ -1141,7 +1143,7 @@ RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {}
+const t = {}
 t[1] = 1
 t[2] = 1
 t[3] = 1
@@ -1185,7 +1187,7 @@ TEST_CASE("TableSizePredictionObject")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+t = {}
 t.field = 1
 function t:getfield()
     return self.field
@@ -1195,7 +1197,7 @@ return t
                    1
                ),
         R"(
-NEWTABLE R0 2 0
+NEWTABLE R0 0 0
 LOADN R1 1
 SETTABLEKS R1 R0 K0 ['field']
 DUPCLOSURE R1 K1 ['getfield']
@@ -1209,7 +1211,7 @@ TEST_CASE("TableSizePredictionSetMetatable")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = setmetatable({}, nil)
+const t = setmetatable({}, nil)
 t.field1 = 1
 t.field2 = 2
 return t
@@ -1233,7 +1235,7 @@ TEST_CASE("TableSizePredictionLoop")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {}
+const t = {}
 for i=1,4 do
     t[i] = 0
 end
@@ -1268,10 +1270,10 @@ TEST_CASE("CaptureSelf")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code);
     Luau::compileOrThrow(bcb, R"(
-local MaterialsListClass = {}
+MaterialsListClass = {}
 
 function MaterialsListClass:_MakeToolTip(guiElement, text)
-    local function updateTooltipPosition()
+    function updateTooltipPosition()
         self._tweakingTooltipFrame = 5
     end
 
@@ -1299,7 +1301,7 @@ RETURN R0 0
 
 TEST_CASE("ConditionalBasic")
 {
-    CHECK_EQ("\n" + compileFunction0("local a = ... if a then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... if a then return 5 end"), R"(
 GETVARARGS R0 1
 JUMPIFNOT R0 L0
 LOADN R1 5
@@ -1307,7 +1309,7 @@ RETURN R1 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... if not a then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... if not a then return 5 end"), R"(
 GETVARARGS R0 1
 JUMPIF R0 L0
 LOADN R1 5
@@ -1318,7 +1320,7 @@ L0: RETURN R0 0
 
 TEST_CASE("ConditionalCompare")
 {
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a < b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if a < b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFNOTLT R0 R1 L0
 LOADN R2 5
@@ -1326,7 +1328,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a <= b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if a <= b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFNOTLE R0 R1 L0
 LOADN R2 5
@@ -1334,7 +1336,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a > b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if a > b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFNOTLT R1 R0 L0
 LOADN R2 5
@@ -1342,7 +1344,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a >= b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if a >= b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFNOTLE R1 R0 L0
 LOADN R2 5
@@ -1350,7 +1352,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a == b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if a == b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFNOTEQ R0 R1 L0
 LOADN R2 5
@@ -1358,7 +1360,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if a != b then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if a != b then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFEQ R0 R1 L0
 LOADN R2 5
@@ -1369,7 +1371,7 @@ L0: RETURN R0 0
 
 TEST_CASE("ConditionalNot")
 {
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if not (not (a < b)) then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if not (not (a < b)) then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFNOTLT R0 R1 L0
 LOADN R2 5
@@ -1377,7 +1379,7 @@ RETURN R2 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... if not (not (not (a < b))) then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... if not (not (not (a < b))) then return 5 end"), R"(
 GETVARARGS R0 2
 JUMPIFLT R0 R1 L0
 LOADN R2 5
@@ -1388,7 +1390,7 @@ L0: RETURN R0 0
 
 TEST_CASE("ConditionalAndOr")
 {
-    CHECK_EQ("\n" + compileFunction0("local a, b, c = ... if a < b and b < c then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b, c = ... if a < b and b < c then return 5 end"), R"(
 GETVARARGS R0 3
 JUMPIFNOTLT R0 R1 L0
 JUMPIFNOTLT R1 R2 L0
@@ -1397,7 +1399,7 @@ RETURN R3 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b, c = ... if a < b or b < c then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b, c = ... if a < b or b < c then return 5 end"), R"(
 GETVARARGS R0 3
 JUMPIFLT R0 R1 L0
 JUMPIFNOTLT R1 R2 L1
@@ -1406,7 +1408,7 @@ RETURN R3 1
 L1: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a,b,c,d = ... if (a or b) and not (c and d) then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a,b,c,d = ... if (a or b) and not (c and d) then return 5 end"), R"(
 GETVARARGS R0 4
 JUMPIF R0 L0
 JUMPIFNOT R1 L2
@@ -1417,7 +1419,7 @@ RETURN R4 1
 L2: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a,b,c = ... if a or not b or c then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a,b,c = ... if a or not b or c then return 5 end"), R"(
 GETVARARGS R0 3
 JUMPIF R0 L0
 JUMPIFNOT R1 L0
@@ -1427,7 +1429,7 @@ RETURN R3 1
 L1: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a,b,c = ... if a and not b and c then return 5 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a,b,c = ... if a and not b and c then return 5 end"), R"(
 GETVARARGS R0 3
 JUMPIFNOT R0 L0
 JUMPIF R1 L0
@@ -1441,99 +1443,85 @@ L0: RETURN R0 0
 TEST_CASE("AndOr")
 {
     // codegen for constant, local, global for and
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a = a and 2 return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a = a and 2 return a"), R"(
 LOADN R0 1
 ANDK R0 R0 K0 [2]
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = 1 local b = ... a = a and b return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 const b = ... a = a and b return a"), R"(
 LOADN R0 1
 GETVARARGS R1 1
 AND R0 R0 R1
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = 1 b = 2 a = a and b return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 b = 2 a = a and b return a"), R"(
 LOADN R0 1
 LOADN R1 2
-SETGLOBAL R1 K0 ['b']
-MOVE R1 R0
-JUMPIFNOT R1 L0
-GETGLOBAL R1 K0 ['b']
-L0: MOVE R0 R1
+AND R0 R0 R1
 RETURN R0 1
 )");
 
     // codegen for constant, local, global for or
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a = a or 2 return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a = a or 2 return a"), R"(
 LOADN R0 1
 ORK R0 R0 K0 [2]
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = 1 local b = ... a = a or b return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 const b = ... a = a or b return a"), R"(
 LOADN R0 1
 GETVARARGS R1 1
 OR R0 R0 R1
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = 1 b = 2 a = a or b return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 b = 2 a = a or b return a"), R"(
 LOADN R0 1
 LOADN R1 2
-SETGLOBAL R1 K0 ['b']
-MOVE R1 R0
-JUMPIF R1 L0
-GETGLOBAL R1 K0 ['b']
-L0: MOVE R0 R1
+OR R0 R0 R1
 RETURN R0 1
 )");
 
     // codegen without a temp variable for and/or when we know we can assign directly into the target register
     // note: `a = a` assignment is to disable constant folding for testing purposes
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a = a b = 2 local c = a and b return c"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a = a b = 2 const c = a and b return c"), R"(
 LOADN R0 1
 LOADN R1 2
-SETGLOBAL R1 K0 ['b']
-MOVE R1 R0
-JUMPIFNOT R1 L0
-GETGLOBAL R1 K0 ['b']
-L0: RETURN R1 1
+AND R2 R0 R1
+RETURN R2 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a = a b = 2 local c = a or b return c"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a = a b = 2 const c = a or b return c"), R"(
 LOADN R0 1
 LOADN R1 2
-SETGLOBAL R1 K0 ['b']
-MOVE R1 R0
-JUMPIF R1 L0
-GETGLOBAL R1 K0 ['b']
-L0: RETURN R1 1
+OR R2 R0 R1
+RETURN R2 1
 )");
 }
 
 TEST_CASE("AndOrFoldLeft")
 {
     // constant folding and/or expression is possible even if just the left hand is constant
-    CHECK_EQ("\n" + compileFunction0("local a = false return a and b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false return a and b"), R"(
 LOADB R0 0
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = true return a or b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = true return a or b"), R"(
 LOADB R0 1
 RETURN R0 1
 )");
 
     // if right hand side is constant we can't constant fold the entire expression
-    CHECK_EQ("\n" + compileFunction0("local a = false return b and a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false return b and a"), R"(
 GETIMPORT R1 2 [b]
 ANDK R0 R1 K0 [false]
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = true return b or a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = true return b or a"), R"(
 GETIMPORT R1 2 [b]
 ORK R0 R1 K0 [true]
 RETURN R0 1
@@ -1624,14 +1612,13 @@ RETURN R0 1
 GETIMPORT R1 1 [condition]
 JUMPIFNOT R1 L0
 LOADN R0 10
-JUMP L1
+RETURN R0 0
 L0: LOADN R0 20
-L1: SETGLOBAL R0 K2 ['result']
 RETURN R0 0
 )");
 
     // codegen for a non-constant condition using an assignment to a local variable
-    CHECK_EQ("\n" + compileFunction0("local result = if condition then 10 else 20"), R"(
+    CHECK_EQ("\n" + compileFunction0("const result = if condition then 10 else 20"), R"(
 GETIMPORT R1 1 [condition]
 JUMPIFNOT R1 L0
 LOADN R0 10
@@ -1645,36 +1632,35 @@ RETURN R0 0
 GETIMPORT R1 1 [condition1]
 JUMPIFNOT R1 L0
 LOADN R0 10
-JUMP L3
+RETURN R0 0
 L0: GETIMPORT R1 3 [condition2]
 JUMPIFNOT R1 L1
 LOADN R0 20
-JUMP L3
+RETURN R0 0
 L1: GETIMPORT R1 5 [condition3]
 JUMPIFNOT R1 L2
 LOADN R0 30
-JUMP L3
+RETURN R0 0
 L2: LOADN R0 40
-L3: SETGLOBAL R0 K6 ['result']
 RETURN R0 0
 )");
 }
 
 TEST_CASE("UnaryBasic")
 {
-    CHECK_EQ("\n" + compileFunction0("local a = ... return not a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... return not a"), R"(
 GETVARARGS R0 1
 NOT R1 R0
 RETURN R1 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... return -a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... return -a"), R"(
 GETVARARGS R0 1
 MINUS R1 R0
 RETURN R1 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... return a.count"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... return a.count"), R"(
 GETVARARGS R0 1
 GETTABLEKS R1 R0 K0 ['count']
 RETURN R1 1
@@ -1689,7 +1675,7 @@ TEST_CASE("InterpStringWithNoExpressions")
 TEST_CASE("InterpStringZeroCost")
 {
     CHECK_EQ(
-        "\n" + compileFunction0(R"(local _ = `hello, {42}!`)"),
+        "\n" + compileFunction0(R"(const _ = `hello, {42}!`)"),
         R"(
 LOADK R0 K0 ['hello, %*!']
 LOADN R2 42
@@ -1704,7 +1690,7 @@ TEST_CASE("InterpStringRegisterCleanup")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            local a, b, c = nil, "um", "uh oh"
+            a, b, c = nil, "um", "uh oh"
             a = `foo{42}`
             print(a)
         )"),
@@ -1728,15 +1714,15 @@ RETURN R0 0
 
 TEST_CASE("InterpStringRegisterLimit")
 {
-    CHECK_THROWS_AS(compileFunction0(("local a = `" + rep("{1}", 254) + "`").c_str()), std::exception);
-    CHECK_NOTHROW(compileFunction0(("local a = `" + rep("{1}", 253) + "`").c_str())); // This check can be removed once the fflag is removed
+    CHECK_THROWS_AS(compileFunction0(("const a = `" + rep("{1}", 254) + "`").c_str()), std::exception);
+    CHECK_NOTHROW(compileFunction0(("const a = `" + rep("{1}", 253) + "`").c_str())); // This check can be removed once the fflag is removed
 }
 
 TEST_CASE("InterpStringConstFold")
 {
 
     CHECK_EQ(
-        "\n" + compileFunction0(R"(local empty = ""; return `{empty}`)"),
+        "\n" + compileFunction0(R"(const empty = ""; return `{empty}`)"),
         R"(
 LOADK R0 K0 ['']
 RETURN R0 1
@@ -1744,7 +1730,7 @@ RETURN R0 1
     );
 
     CHECK_EQ(
-        "\n" + compileFunction0(R"(local world = "world"; return `hello, {world}!`)"),
+        "\n" + compileFunction0(R"(const world = "world"; return `hello, {world}!`)"),
         R"(
 LOADK R0 K0 ['hello, world!']
 RETURN R0 1
@@ -1752,7 +1738,7 @@ RETURN R0 1
     );
 
     CHECK_EQ(
-        "\n" + compileFunction0(R"(local not_string = 42; local world = "world"; return `hello, {world} {not_string}!`)"),
+        "\n" + compileFunction0(R"(const not_string = 42; const world = "world"; return `hello, {world} {not_string}!`)"),
         R"(
 LOADK R0 K0 ['hello, world %*!']
 LOADN R2 42
@@ -1763,7 +1749,7 @@ RETURN R0 1
     );
 
     CHECK_EQ(
-        "\n" + compileFunction0(R"(local not_string = 42; local str = "%s%s%s"; return `hello, {str} {not_string}!`)"),
+        "\n" + compileFunction0(R"(const not_string = 42; const str = "%s%s%s"; return `hello, {str} {not_string}!`)"),
         R"(
 LOADK R0 K0 ['hello, %%s%%s%%s %*!']
 LOADN R2 42
@@ -1820,12 +1806,12 @@ RETURN R0 1
 
 TEST_CASE("ConstantFoldVectorArith")
 {
-    CHECK_EQ("\n" + compileFunction("local n = 2; local a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a + b", 0, 2), R"(
+    CHECK_EQ("\n" + compileFunction("const n = 2; const a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a + b", 0, 2), R"(
 LOADK R0 K0 [3, 6, 11]
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction("local n = 2; local a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a - b", 0, 2), R"(
+    CHECK_EQ("\n" + compileFunction("const n = 2; const a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a - b", 0, 2), R"(
 LOADK R0 K0 [-1, -2, -5]
 RETURN R0 1
 )");
@@ -1833,7 +1819,7 @@ RETURN R0 1
     // Multiplication by infinity cannot be folded as it creates a non-zero value in W
     CHECK_EQ(
         "\n" + compileFunction(
-                   "local n = 2; local a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a * n, a * b, n * b, a * math.huge", 0, 2
+                   "const n = 2; const a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a * n, a * b, n * b, a * math.huge", 0, 2
                ),
         R"(
 LOADK R0 K0 [2, 4, 6]
@@ -1848,7 +1834,7 @@ RETURN R0 4
     // Divisions creating an infinity in W cannot be constant-folded
     CHECK_EQ(
         "\n" + compileFunction(
-                   "local n = 2; local a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a / n, a / b, n / b, a / math.huge", 0, 2
+                   "const n = 2; const a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a / n, a / b, n / b, a / math.huge", 0, 2
                ),
         R"(
 LOADK R0 K0 [0.5, 1, 1.5]
@@ -1864,7 +1850,7 @@ RETURN R0 4
 
     // Divisions creating an infinity in W cannot be constant-folded
     CHECK_EQ(
-        "\n" + compileFunction("local n = 2; local a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a // n, a // b, n // b", 0, 2),
+        "\n" + compileFunction("const n = 2; const a, b = vector.create(1, 2, 3), vector.create(2, 4, 8); return a // n, a // b, n // b", 0, 2),
         R"(
 LOADK R0 K0 [0, 1, 1]
 LOADK R2 K1 [1, 2, 3]
@@ -1877,7 +1863,7 @@ RETURN R0 3
 )"
     );
 
-    CHECK_EQ("\n" + compileFunction("local a = vector.create(1, 2, 3); return -a", 0, 2), R"(
+    CHECK_EQ("\n" + compileFunction("const a = vector.create(1, 2, 3); return -a", 0, 2), R"(
 LOADK R0 K0 [-1, -2, -3]
 RETURN R0 1
 )");
@@ -1885,19 +1871,19 @@ RETURN R0 1
 
 TEST_CASE("ConstantFoldVectorArith4Wide")
 {
-    CHECK_EQ("\n" + compileFunction("local n = 2; local a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a + b", 0, 2), R"(
+    CHECK_EQ("\n" + compileFunction("const n = 2; const a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a + b", 0, 2), R"(
 LOADK R0 K0 [3, 6, 11, 5]
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction("local n = 2; local a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a - b", 0, 2), R"(
+    CHECK_EQ("\n" + compileFunction("const n = 2; const a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a - b", 0, 2), R"(
 LOADK R0 K0 [-1, -2, -5, 3]
 RETURN R0 1
 )");
 
     CHECK_EQ(
         "\n" + compileFunction(
-                   "local n = 2; local a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a * n, a * b, n * b, a * math.huge", 0, 2
+                   "const n = 2; const a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a * n, a * b, n * b, a * math.huge", 0, 2
                ),
         R"(
 LOADK R0 K0 [2, 4, 6, 8]
@@ -1910,7 +1896,7 @@ RETURN R0 4
 
     CHECK_EQ(
         "\n" + compileFunction(
-                   "local n = 2; local a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a / n, a / b, n / b, a / math.huge", 0, 2
+                   "const n = 2; const a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a / n, a / b, n / b, a / math.huge", 0, 2
                ),
         R"(
 LOADK R0 K0 [0.5, 1, 1.5, 2]
@@ -1922,7 +1908,7 @@ RETURN R0 4
     );
 
     CHECK_EQ(
-        "\n" + compileFunction("local n = 2; local a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a // n, a // b, n // b", 0, 2),
+        "\n" + compileFunction("const n = 2; const a, b = vector.create(1, 2, 3, 4), vector.create(2, 4, 8, 1); return a // n, a // b, n // b", 0, 2),
         R"(
 LOADK R0 K0 [0, 1, 1, 2]
 LOADK R1 K1 [0, 0, 0, 4]
@@ -1931,7 +1917,7 @@ RETURN R0 3
 )"
     );
 
-    CHECK_EQ("\n" + compileFunction("local a = vector.create(1, 2, 3, 4); return -a", 0, 2), R"(
+    CHECK_EQ("\n" + compileFunction("const a = vector.create(1, 2, 3, 4); return -a", 0, 2), R"(
 LOADK R0 K0 [-1, -2, -3, -4]
 RETURN R0 1
 )");
@@ -1942,7 +1928,7 @@ TEST_CASE("ConstantFoldVectorComponents")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = vector.create(1, 2, 3, 4)
+const a = vector.create(1, 2, 3, 4)
 return a.x + a.y + a.z + a.w
 )",
                    0,
@@ -1960,7 +1946,7 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = vector.create(1, 2, 3, 4)
+const a = vector.create(1, 2, 3, 4)
 return a.X + a.Y + a.Z + a.W
 )",
                    0,
@@ -2050,23 +2036,23 @@ RETURN R0 4
 TEST_CASE("ConstantFoldLocal")
 {
     // local constant propagation, including upvalues, and no propagation for mutated locals
-    CHECK_EQ("\n" + compileFunction0("local a = 1 return a + a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = 1 return a + a"), R"(
 LOADN R0 2
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a = a + a return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a = a + a return a"), R"(
 LOADN R0 1
 ADD R0 R0 R0
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction("local a = 1 function foo() return a + a end", 0), R"(
+    CHECK_EQ("\n" + compileFunction("const a = 1 function foo() return a + a end", 0), R"(
 LOADN R0 2
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction("local a = 1 function foo() return a + a end function bar() a = 5 end", 0), R"(
+    CHECK_EQ("\n" + compileFunction("a = 1 function foo() return a + a end function bar() a = 5 end", 0), R"(
 GETUPVAL R1 0
 GETUPVAL R2 0
 ADD R0 R1 R2
@@ -2074,32 +2060,36 @@ RETURN R0 1
 )");
 
     // local values for multiple assignments
-    CHECK_EQ("\n" + compileFunction0("local a return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = nil return a"), R"(
 LOADNIL R0
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = 1, 3 return a + 1, b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = 1, 3 return a + 1, b"), R"(
 LOADN R0 2
 LOADN R1 3
 RETURN R0 2
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = 1 return a + 1, b"), R"(
-LOADN R0 2
-LOADNIL R1
-RETURN R0 2
+    CHECK_EQ("\n" + compileFunction0("a, b = 1 return a + 1, b"), R"(
+LOADN R2 1
+LOADNIL R3
+MOVE R0 R2
+MOVE R1 R3
+ADDK R2 R0 K0 [1]
+MOVE R3 R1
+RETURN R2 2
 )");
 
     // local values for multiple assignments w/multret
-    CHECK_EQ("\n" + compileFunction0("local a, b = ... return a + 1, b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = ... return a + 1, b"), R"(
 GETVARARGS R0 2
 ADDK R2 R0 K0 [1]
 MOVE R3 R1
 RETURN R2 2
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a, b = 1, ... return a + 1, b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a, b = 1, ... return a + 1, b"), R"(
 LOADN R0 1
 GETVARARGS R1 1
 LOADN R2 2
@@ -2180,7 +2170,7 @@ L0: RETURN R0 1
 
 TEST_CASE("ConstantFoldConditionalAndOr")
 {
-    CHECK_EQ("\n" + compileFunction0("local a = ... if false or a then print(1) end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... if false or a then print(1) end"), R"(
 GETVARARGS R0 1
 JUMPIFNOT R0 L0
 GETIMPORT R1 1 [print]
@@ -2189,7 +2179,7 @@ CALL R1 1 0
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... if not (false or a) then print(1) end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... if not (false or a) then print(1) end"), R"(
 GETVARARGS R0 1
 JUMPIF R0 L0
 GETIMPORT R1 1 [print]
@@ -2198,7 +2188,7 @@ CALL R1 1 0
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... if true and a then print(1) end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... if true and a then print(1) end"), R"(
 GETVARARGS R0 1
 JUMPIFNOT R0 L0
 GETIMPORT R1 1 [print]
@@ -2207,7 +2197,7 @@ CALL R1 1 0
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = ... if not (true and a) then print(1) end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = ... if not (true and a) then print(1) end"), R"(
 GETVARARGS R0 1
 JUMPIF R0 L0
 GETIMPORT R1 1 [print]
@@ -2455,9 +2445,10 @@ TEST_CASE("LoopContinueUntil")
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
 
     // it's valid to use locals defined inside the loop in until expression if they're defined before continue
-    CHECK_EQ("\n" + compileFunction0("repeat local r = math.random() if r > 0.5 then continue end r = r + 0.3 until r < 0.5"), R"(
-L0: GETIMPORT R0 2 [math.random]
-CALL R0 0 1
+    CHECK_EQ("\n" + compileFunction0("repeat r = math.random() if r > 0.5 then continue end r = r + 0.3 until r < 0.5"), R"(
+L0: GETIMPORT R1 2 [math.random]
+CALL R1 0 1
+MOVE R0 R1
 LOADK R1 K3 [0.5]
 JUMPIFLT R1 R0 L1
 ADDK R0 R0 K4 [0.29999999999999999]
@@ -2473,11 +2464,11 @@ L2: RETURN R0 0
         Luau::BytecodeBuilder bcb;
         Luau::compileOrThrow(bcb, R"(
 repeat
-    local r = math.random()
+    const r = math.random()
     if r > 0.5 then
         continue
     end
-    local rr = r + 0.3
+    const rr = r + 0.3
 until rr < 0.5
 )");
 
@@ -2495,10 +2486,11 @@ until rr < 0.5
     // inner loop)
     CHECK_EQ(
         "\n" +
-            compileFunction0("repeat local r = math.random() repeat if r > 0.5 then continue end r = r - 0.1 until true r = r + 0.3 until r < 0.5"),
+            compileFunction0("repeat r = math.random() repeat if r > 0.5 then continue end r = r - 0.1 until true r = r + 0.3 until r < 0.5"),
         R"(
-L0: GETIMPORT R0 2 [math.random]
-CALL R0 0 1
+L0: GETIMPORT R1 2 [math.random]
+CALL R1 0 1
+MOVE R0 R1
 LOADK R1 K3 [0.5]
 JUMPIFLT R1 R0 L1
 SUBK R0 R0 K4 [0.10000000000000001]
@@ -2513,11 +2505,12 @@ L2: RETURN R0 0
     // and it's also okay to use a local defined in the until expression as long as it's inside a function!
     CHECK_EQ(
         "\n" + compileFunction(
-                   "repeat local r = math.random() if r > 0.5 then continue end r = r + 0.3 until (function() local a = r return a < 0.5 end)()", 1
+                   "repeat r = math.random() if r > 0.5 then continue end r = r + 0.3 until (function() const a = r return a < 0.5 end)()", 1
                ),
         R"(
-L0: GETIMPORT R0 2 [math.random]
-CALL R0 0 1
+L0: GETIMPORT R1 2 [math.random]
+CALL R1 0 1
+MOVE R0 R1
 LOADK R1 K3 [0.5]
 JUMPIFLT R1 R0 L1
 ADDK R0 R0 K4 [0.29999999999999999]
@@ -2538,11 +2531,11 @@ RETURN R0 0
         Luau::BytecodeBuilder bcb;
         Luau::compileOrThrow(bcb, R"(
 repeat
-    local r = math.random()
+    const r = math.random()
     if r > 0.5 then
         continue
     end
-    local rr = r + 0.3
+    const rr = r + 0.3
 until (function() return rr end)() < 0.5
 )");
 
@@ -2559,12 +2552,13 @@ until (function() return rr end)() < 0.5
     // unless that upvalue is from an outer scope
     CHECK_EQ(
         "\n" + compileFunction0(
-                   "local stop = false stop = true function test() repeat local r = math.random() if r > 0.5 then "
+                   "stop = false stop = true function test() repeat r = math.random() if r > 0.5 then "
                    "continue end r = r + 0.3 until stop or r < 0.5 end"
                ),
         R"(
-L0: GETIMPORT R0 2 [math.random]
-CALLFB R0 0 1 [0]
+L0: GETIMPORT R1 2 [math.random]
+CALLFB R1 0 1 [0]
+MOVE R0 R1
 LOADK R1 K3 [0.5]
 JUMPIFLT R1 R0 L1
 ADDK R0 R0 K4 [0.29999999999999999]
@@ -2580,13 +2574,14 @@ L2: RETURN R0 0
     // including upvalue references from a function expression
     CHECK_EQ(
         "\n" + compileFunction(
-                   "local stop = false stop = true function test() repeat local r = math.random() if r > 0.5 then continue "
+                   "stop = false stop = true function test() repeat r = math.random() if r > 0.5 then continue "
                    "end r = r + 0.3 until (function() return stop or r < 0.5 end)() end",
                    1
                ),
         R"(
-L0: GETIMPORT R0 2 [math.random]
-CALLFB R0 0 1 [0]
+L0: GETIMPORT R1 2 [math.random]
+CALLFB R1 0 1 [0]
+MOVE R0 R1
 LOADK R1 K3 [0.5]
 JUMPIFLT R1 R0 L1
 ADDK R0 R0 K4 [0.29999999999999999]
@@ -2608,7 +2603,7 @@ TEST_CASE("LoopContinueIgnoresImplicitConstant")
     // this used to crash the compiler :(
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local _
+const _ = nil
 repeat
 continue
 until not _
@@ -2625,7 +2620,7 @@ TEST_CASE("LoopContinueIgnoresExplicitConstant")
     // Constants do not allocate locals and 'continue' validation should skip them if their lifetime already started
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local c = true
+const c = true
 repeat
     continue
 until c
@@ -2647,7 +2642,7 @@ TEST_CASE("LoopContinueRespectsExplicitConstant")
 repeat
     do continue end
 
-    local c = true
+    const c = true
 until c
 )");
 
@@ -2668,13 +2663,13 @@ TEST_CASE("LoopContinueIgnoresImplicitConstantAfterInline")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function inline(f)
+function inline(f)
     repeat
         continue
     until f
 end
 
-local function test(...)
+function test(...)
     inline(true)
 end
 
@@ -2705,7 +2700,7 @@ for i = 1, 2 do
         if i == 2 then
             continue
         end
-        local x = i == 1 or a
+        const x = i == 1 or a
     until f(x)
 end
 )",
@@ -2732,12 +2727,12 @@ TEST_CASE("ValidateCapturesTrailingDeadCode")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function outer(x)
+function outer(x)
     if x then
         return
     else
-        local y
-        local _ = function() y = 1 end
+        y = nil
+        const _ = function() y = 1 end
         return
     end
 end
@@ -2759,7 +2754,7 @@ RETURN R0 0
         "\n" + compileFunction(
                    R"(
 do
-    local _
+    _ = nil
     function _(...) _ += _ end
     return
 end
@@ -2784,11 +2779,11 @@ TEST_CASE("LoopContinueUntilCapture")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a a = 0
+a = nil a = 0
 repeat
-    local b b = 0
+    b = nil b = 0
     if a then
-        local c
+        c = nil
         print(function() c = 0 end)
         if a then
             continue -- must close c but not a/b
@@ -2833,9 +2828,9 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a a = 0
+a = nil a = 0
 repeat
-    local b b = 0
+    b = nil b = 0
     if a then
         continue -- must not close a/b
     end
@@ -2869,14 +2864,14 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
+const x, y, z = ...
 repeat
     if x then
     else
         continue -- does not close anything
     end
 
-    local b = y
+    b = y
     function _(...)
         function b()
         end
@@ -2898,15 +2893,14 @@ JUMP L4
 L1: MOVE R3 R1
 NEWCLOSURE R4 P0
 CAPTURE REF R3
-SETGLOBAL R4 K0 ['_']
 JUMPIFNOT R3 L2
 JUMP L3
 L2: CLOSEUPVALS R3
 JUMP L4
 L3: CLOSEUPVALS R3
-L4: MOVE R4 R2
-CALL R4 0 1
-JUMPIF R4 L5
+L4: MOVE R5 R2
+CALL R5 0 1
+JUMPIF R5 L5
 JUMPBACK L0
 L5: RETURN R0 0
 )"
@@ -2919,12 +2913,12 @@ TEST_CASE("LoopContinueEarlyCleanup")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local y
+y = nil
 repeat
-    local a, b
+    a, b = nil, nil
     do continue end
-    local c, d
-    local function x()
+    c, d = nil, nil
+    function x()
         return a + b + c + d
     end
 
@@ -2945,7 +2939,9 @@ LOADNIL R3
 LOADNIL R4
 NEWCLOSURE R5 P0
 CAPTURE REF R1
+CAPTURE REF R2
 CAPTURE REF R3
+CAPTURE REF R4
 LOADN R3 2
 LOADN R1 4
 MOVE R0 R5
@@ -2965,8 +2961,8 @@ TEST_CASE("AndOrOptimizations")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function advancedRidgedFilter(value, cutoff)
-    local cutoff = cutoff or .5
+function advancedRidgedFilter(value, cutoff)
+    const cutoff = cutoff or .5
     value = value - cutoff
     return 1 - (value < 0 and -value or value) * 1 / (1 - cutoff)
 end
@@ -3130,9 +3126,9 @@ L0: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function getPerlin(x, y, z, seed, scale, raw)
-local seed = seed or 0
-local scale = scale or 1
+function getPerlin(x, y, z, seed, scale, raw)
+const seed = seed or 0
+const scale = scale or 1
 if not raw then
 return math.noise(x / scale + (seed * 17) + masterSeed, y / scale - masterSeed, z / scale - seed*seed)*.5 + .5 --accounts for bleeding from interpolated line
 else
@@ -3275,7 +3271,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationGroup")
     // NOTE(2025-11-25) Limit of 1650 on VS2022 optimized build
 
     checkLimit(
-        "local f: " + rep("(", reps) + "nil" + rep(")", reps),
+        "f = nil: " + rep("(", reps) + "nil" + rep(")", reps),
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -3284,7 +3280,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationFunction")
 {
     // NOTE(2025-11-25) Limit of 2810 on VS2022 optimized build
 
-    checkLimit("local f: () " + rep("-> ()", reps), "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
+    checkLimit("f = nil: () " + rep("-> ()", reps), "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
 }
 
 TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationTable")
@@ -3292,7 +3288,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationTable")
     // NOTE(2025-11-25) Limit of 2000 on VS2022 optimized build
 
     checkLimit(
-        "local f: " + rep("{x:", reps) + "nil" + rep("}", reps),
+        "f = nil: " + rep("{x:", reps) + "nil" + rep("}", reps),
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -3302,14 +3298,14 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationIntersecti
     // NOTE(2025-11-25) Limit of 1990 on VS2022 optimized build
 
     checkLimit(
-        "local f: " + rep("(nil & ", reps) + "nil" + rep(")", reps),
+        "f = nil: " + rep("(nil & ", reps) + "nil" + rep(")", reps),
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
 
 TEST_CASE("ArrayIndexLiteral")
 {
-    CHECK_EQ("\n" + compileFunction0("local arr = {} return arr[0], arr[1], arr[256], arr[257]"), R"(
+    CHECK_EQ("\n" + compileFunction0("const arr = {} return arr[0], arr[1], arr[256], arr[257]"), R"(
 NEWTABLE R0 0 0
 LOADN R2 0
 GETTABLE R1 R0 R2
@@ -3320,7 +3316,7 @@ GETTABLE R4 R0 R5
 RETURN R1 4
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local arr = {} local b = ... arr[0] = b arr[1] = b arr[256] = b arr[257] = b"), R"(
+    CHECK_EQ("\n" + compileFunction0("const arr = {} b = ... arr[0] = b arr[1] = b arr[256] = b arr[257] = b"), R"(
 NEWTABLE R0 0 1
 GETVARARGS R1 1
 LOADN R2 0
@@ -3430,9 +3426,9 @@ RETURN R0 1
         "\n" + compileFunction(
                    R"(
 function test()
-    local i = 0
+    i = 0
     while i < 5 do
-        local j
+        j = nil
         j = i
         foo(function() return j end)
         i = i + 1
@@ -3471,9 +3467,9 @@ RETURN R1 1
         "\n" + compileFunction(
                    R"(
 function test()
-    local i = 0
+    i = 0
     repeat
-        local j
+        j = nil
         j = i
         foo(function() return j end)
         i = i + 1
@@ -3515,7 +3511,7 @@ TEST_CASE("TypeAliasing")
     Luau::BytecodeBuilder bcb;
     Luau::CompileOptions options;
     Luau::ParseOptions parseOptions;
-    CHECK_NOTHROW(Luau::compileOrThrow(bcb, "type A = number local a: A = 1", options, parseOptions));
+    CHECK_NOTHROW(Luau::compileOrThrow(bcb, "type A = number const a: A = 1", options, parseOptions));
 }
 
 TEST_CASE("TypeFunction")
@@ -3543,10 +3539,9 @@ RETURN R0 1
 
 Function 1 (??):
 DUPCLOSURE R0 K0 ['b']
-SETGLOBAL R0 K1 ['b']
-GETGLOBAL R0 K1 ['b']
-CALL R0 0 -1
-RETURN R0 -1
+MOVE R1 R0
+CALL R1 0 -1
+RETURN R1 -1
 
 )");
 }
@@ -3556,7 +3551,7 @@ TEST_CASE("DebugLineInfo")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-local kSelectedBiomes = {
+const kSelectedBiomes = {
     ['Mountains'] = true,
     ['Canyons'] = true,
     ['Dunes'] = true,
@@ -3567,7 +3562,7 @@ local kSelectedBiomes = {
     ['Marsh'] = true,
     ['Water'] = true,
 }
-local result = ""
+result = ""
 for k in pairs(kSelectedBiomes) do
     result = result .. k
 end
@@ -3643,7 +3638,7 @@ TEST_CASE("DebugLineInfoWhile")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-local count = 0
+count = 0
 while true do
     count += 1
     if count > 1 then
@@ -3672,7 +3667,7 @@ TEST_CASE("DebugLineInfoRepeatUntil")
     CHECK_EQ(
         "\n" + compileFunction0Coverage(
                    R"(
-local f = 0
+f = 0
 repeat
     f += 1
     if f == 1 then
@@ -3705,8 +3700,8 @@ TEST_CASE("DebugLineInfoSubTable")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-local Value1, Value2, Value3 = ...
-local Table = {}
+const Value1, Value2, Value3 = ...
+const Table = {}
 
 Table.SubTable["Key"] = {
     Key1 = Value1,
@@ -3734,7 +3729,7 @@ TEST_CASE("DebugLineInfoCall")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-local Foo = ...
+const Foo = ...
 
 Foo:Bar(
     1,
@@ -3758,7 +3753,7 @@ TEST_CASE("DebugLineInfoCallChain")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-local Foo = ...
+const Foo = ...
 
 Foo
 :Bar(1)
@@ -3786,7 +3781,7 @@ TEST_CASE("DebugLineInfoFastCall")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-local Foo, Bar = ...
+const Foo, Bar = ...
 
 return
     math.max(
@@ -3810,7 +3805,7 @@ TEST_CASE("DebugLineInfoAssignment")
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code | Luau::BytecodeBuilder::Dump_Lines);
     Luau::compileOrThrow(bcb, R"(
-   local a = { b = { c = { d = 3 } } }
+   const a = { b = { c = { d = 3 } } }
 
 a
 ["b"]
@@ -3835,7 +3830,7 @@ a
 TEST_CASE("DebugSource")
 {
     const char* source = R"(
-local kSelectedBiomes = {
+const kSelectedBiomes = {
     ['Mountains'] = true,
     ['Canyons'] = true,
     ['Dunes'] = true,
@@ -3846,7 +3841,7 @@ local kSelectedBiomes = {
     ['Marsh'] = true,
     ['Water'] = true,
 }
-local result = ""
+result = ""
 for k in pairs(kSelectedBiomes) do
     result = result .. k
 end
@@ -3860,7 +3855,7 @@ return result
     Luau::compileOrThrow(bcb, source);
 
     CHECK_EQ("\n" + bcb.dumpFunction(0), R"(
-    2: local kSelectedBiomes = {
+    2: const kSelectedBiomes = {
 NEWTABLE R0 16 0
     3:     ['Mountains'] = true,
 LOADB R1 1
@@ -3889,7 +3884,7 @@ SETTABLEKS R1 R0 K7 ['Marsh']
    11:     ['Water'] = true,
 LOADB R1 1
 SETTABLEKS R1 R0 K8 ['Water']
-   13: local result = ""
+   13: result = ""
 LOADK R1 K9 ['']
    14: for k in pairs(kSelectedBiomes) do
 GETIMPORT R2 11 [pairs]
@@ -3913,7 +3908,7 @@ TEST_CASE("DebugLocals")
 
     const char* source = R"(
 function foo(e, f)
-    local a = 1
+    const a = 1
     for i=1,3 do
         print(i)
     end
@@ -3921,14 +3916,14 @@ function foo(e, f)
         print(k, v)
     end
     do
-        local b = 2
+        const b = 2
         print(b)
     end
     do
-        local c = 2
+        const c = 2
         print(b)
     end
-    local function inner()
+    function inner()
         return inner, a
     end
     return a
@@ -3991,7 +3986,7 @@ TEST_CASE("DebugLocals2")
     const char* source = R"(
 function foo(x)
     repeat
-        local a, b
+        const a, b = nil, nil
     until true
 end
 )";
@@ -4020,9 +4015,9 @@ TEST_CASE("DebugLocals3")
     const char* source = R"(
 function foo(x)
     repeat
-        local a, b
+        const a, b = nil, nil
         do continue end
-        local c, d = 2
+        const c, d = 2, nil
     until true
 end
 )";
@@ -4083,10 +4078,10 @@ TEST_CASE("DebugTypes")
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
 
     const char* source = R"(
-local up: number = 2
+up = 2
 
 function foo(e: vector, f: mat3, g: sequence)
-    local h = e * e
+    const h = e * e
 
     for i=1,3 do
         print(i)
@@ -4096,7 +4091,7 @@ function foo(e: vector, f: mat3, g: sequence)
     print(g)
     print(h)
 
-    up += a
+    up += 1
     return a
 end
 )";
@@ -4120,9 +4115,9 @@ end
 R0: vector [argument]
 R1: mat3 [argument]
 R2: userdata [argument]
-U0: number
+U0: any
 R6: number from 1 to 10
-R3: vector from 0 to 34
+R3: vector from 0 to 32
 MUL R3 R0 R0
 LOADN R6 1
 LOADN R4 3
@@ -4142,10 +4137,9 @@ GETIMPORT R4 1 [print]
 MOVE R5 R3
 CALLFB R4 1 0 [3]
 GETUPVAL R4 0
-GETIMPORT R5 3 [a]
-ADD R4 R4 R5
+ADDK R4 R4 K2 [1]
 SETUPVAL R4 0
-GETIMPORT R4 3 [a]
+GETIMPORT R4 4 [a]
 RETURN R4 1
 )");
 }
@@ -4154,18 +4148,18 @@ TEST_CASE("CostModelRemarks")
 {
     CHECK_EQ(
         compileWithRemarks(R"(
-local a, b = ...
+const a, b = ...
 
-local function foo(x)
+function foo(x)
     return(math.abs(x))
 end
 
 return foo(a) + foo(assert(b))
 )"),
         R"(
-local a, b = ...
+const a, b = ...
 
-local function foo(x)
+function foo(x)
     -- remark: builtin math.abs/1
     return(math.abs(x))
 end
@@ -4178,18 +4172,18 @@ return foo(a) + foo(assert(b))
 
     CHECK_EQ(
         compileWithRemarks(R"(
-local value = true
+const value = true
 
-local function foo()
+function foo()
     return value
 end
 
 return foo()
 )"),
         R"(
-local value = true
+const value = true
 
-local function foo()
+function foo()
     return value
 end
 
@@ -4200,18 +4194,18 @@ return foo()
 
     CHECK_EQ(
         compileWithRemarks(R"(
-local value = true
+const value = true
 
-local function foo()
+function foo()
     return not value
 end
 
 return foo()
 )"),
         R"(
-local value = true
+const value = true
 
-local function foo()
+function foo()
     return not value
 end
 
@@ -4222,8 +4216,8 @@ return foo()
 
     CHECK_EQ(
         compileWithRemarks(R"(
-local function foo()
-    local s = 0
+function foo()
+    s = 0
     for i = 1, 100 do s += i end
     return s
 end
@@ -4231,8 +4225,8 @@ end
 return foo()
 )"),
         R"(
-local function foo()
-    local s = 0
+function foo()
+    s = 0
     -- remark: loop unroll failed: too many iterations (100)
     for i = 1, 100 do s += i end
     return s
@@ -4245,8 +4239,8 @@ return foo()
 
     CHECK_EQ(
         compileWithRemarks(R"(
-local function foo()
-    local s = 0
+function foo()
+    s = 0
     for i = 1, 4 * 25 do s += i end
     return s
 end
@@ -4254,8 +4248,8 @@ end
 return foo()
 )"),
         R"(
-local function foo()
-    local s = 0
+function foo()
+    s = 0
     -- remark: loop unroll failed: too many iterations (100)
     for i = 1, 4 * 25 do s += i end
     return s
@@ -4268,8 +4262,8 @@ return foo()
 
     CHECK_EQ(
         compileWithRemarks(R"(
-local x = ...
-local function test(a)
+const x = ...
+function test(a)
     while a < 0 do
         a += 1
     end
@@ -4286,12 +4280,12 @@ local function test(a)
     until a > 10
     return a
 end
-local a = test(x)
-local b = test(2)
+const a = test(x)
+const b = test(2)
 )"),
         R"(
-local x = ...
-local function test(a)
+const x = ...
+function test(a)
     while a < 0 do
         a += 1
     end
@@ -4311,18 +4305,18 @@ local function test(a)
     return a
 end
 -- remark: inlining failed: too expensive (cost 76, profit 1.03x)
-local a = test(x)
+const a = test(x)
 -- remark: inlining failed: too expensive (cost 73, profit 1.08x)
-local b = test(2)
+const b = test(2)
 )"
     );
 
     CHECK_EQ(
         compileWithRemarks(R"(
-local b = buffer.create(128)
-local x, y, z, w, u, v = ...
+const b = buffer.create(128)
+const x, y, z, w, u, v = ...
 
-local function writeMany(buf, offset, x, y, z, w, u, v)
+function writeMany(buf, offset, x, y, z, w, u, v)
     buffer.writef32(buf, offset, x)
     buffer.writef32(buf, offset + 4, y)
     buffer.writef32(buf, offset + 8, z)
@@ -4335,10 +4329,10 @@ writeMany(b, 0, x, y, z, w, u, v)
 return b
 )"),
         R"(
-local b = buffer.create(128)
-local x, y, z, w, u, v = ...
+const b = buffer.create(128)
+const x, y, z, w, u, v = ...
 
-local function writeMany(buf, offset, x, y, z, w, u, v)
+function writeMany(buf, offset, x, y, z, w, u, v)
     -- remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset, x)
     -- remark: builtin buffer.writef32/3
@@ -4363,7 +4357,7 @@ return b
 TEST_CASE("AssignmentConflict")
 {
     // assignments are left to right
-    CHECK_EQ("\n" + compileFunction0("local a, b a, b = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a, b = nil, nil a, b = 1, 2"), R"(
 LOADNIL R0
 LOADNIL R1
 LOADN R0 1
@@ -4372,7 +4366,7 @@ RETURN R0 0
 )");
 
     // if assignment of a local invalidates a direct register reference in later assignments, the value is assigned to a temp register first
-    CHECK_EQ("\n" + compileFunction0("local a a, a[1] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a, a[1] = 1, 2"), R"(
 LOADNIL R0
 LOADN R1 1
 LOADN R2 2
@@ -4382,7 +4376,7 @@ RETURN R0 0
 )");
 
     // note that this doesn't happen if the local assignment happens last naturally
-    CHECK_EQ("\n" + compileFunction0("local a a[1], a = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a[1], a = 1, 2"), R"(
 LOADNIL R0
 LOADN R2 1
 LOADN R1 2
@@ -4392,7 +4386,7 @@ RETURN R0 0
 )");
 
     // this will happen if assigned register is used in any table expression, including as an object...
-    CHECK_EQ("\n" + compileFunction0("local a a, a.foo = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a, a.foo = 1, 2"), R"(
 LOADNIL R0
 LOADN R1 1
 LOADN R2 2
@@ -4402,7 +4396,7 @@ RETURN R0 0
 )");
 
     // ... or a table index ...
-    CHECK_EQ("\n" + compileFunction0("local a a, foo[a] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a, foo[a] = 1, 2"), R"(
 LOADNIL R0
 GETIMPORT R1 1 [foo]
 LOADN R2 1
@@ -4413,7 +4407,7 @@ RETURN R0 0
 )");
 
     // ... or both ...
-    CHECK_EQ("\n" + compileFunction0("local a a, a[a] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a, a[a] = 1, 2"), R"(
 LOADNIL R0
 LOADN R1 1
 LOADN R2 2
@@ -4423,7 +4417,7 @@ RETURN R0 0
 )");
 
     // ... or both with two different locals ...
-    CHECK_EQ("\n" + compileFunction0("local a, b a, b, a[b] = 1, 2, 3"), R"(
+    CHECK_EQ("\n" + compileFunction0("a, b = nil, nil a, b, a[b] = 1, 2, 3"), R"(
 LOADNIL R0
 LOADNIL R1
 LOADN R2 1
@@ -4437,7 +4431,7 @@ RETURN R0 0
 
     // however note that if it participates in an expression on the left hand side, there's no point reassigning it since we'd compute the expr value
     // into a temp register
-    CHECK_EQ("\n" + compileFunction0("local a a, foo[a + 1] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a, foo[a + 1] = 1, 2"), R"(
 LOADNIL R0
 GETIMPORT R1 1 [foo]
 ADDK R2 R0 K2 [1]
@@ -4460,7 +4454,7 @@ L0: RETURN R0 -1
 )");
 
     // call through a local variable
-    CHECK_EQ("\n" + compileFunction0("local abs = math.abs return abs(-5)"), R"(
+    CHECK_EQ("\n" + compileFunction0("const abs = math.abs return abs(-5)"), R"(
 GETIMPORT R0 2 [math.abs]
 LOADN R2 -5
 FASTCALL1 2 R2 L0
@@ -4470,7 +4464,7 @@ L0: RETURN R1 -1
 )");
 
     // call through an upvalue
-    CHECK_EQ("\n" + compileFunction0("local abs = math.abs function foo() return abs(-5) end return foo()"), R"(
+    CHECK_EQ("\n" + compileFunction0("const abs = math.abs function foo() return abs(-5) end return foo()"), R"(
 LOADN R1 -5
 FASTCALL1 2 R1 L0
 GETUPVAL R0 0
@@ -4481,16 +4475,14 @@ L0: RETURN R0 -1
     // mutating the global in the script breaks the optimization
     CHECK_EQ("\n" + compileFunction0("math = {} return math.abs(-5)"), R"(
 NEWTABLE R0 0 0
-SETGLOBAL R0 K0 ['math']
-GETGLOBAL R0 K0 ['math']
-GETTABLEKS R0 R0 K1 ['abs']
-LOADN R1 -5
-CALL R0 1 -1
-RETURN R0 -1
+GETTABLEKS R1 R0 K0 ['abs']
+LOADN R2 -5
+CALL R1 1 -1
+RETURN R1 -1
 )");
 
     // mutating the local in the script breaks the optimization
-    CHECK_EQ("\n" + compileFunction0("local abs = math.abs abs = nil return abs(-5)"), R"(
+    CHECK_EQ("\n" + compileFunction0("abs = math.abs abs = nil return abs(-5)"), R"(
 GETIMPORT R0 2 [math.abs]
 LOADNIL R0
 MOVE R1 R0
@@ -4500,15 +4492,13 @@ RETURN R1 -1
 )");
 
     // mutating the global in the script breaks the optimization, even if you do this after computing the local (for simplicity)
-    CHECK_EQ("\n" + compileFunction0("local abs = math.abs math = {} return abs(-5)"), R"(
-GETGLOBAL R0 K0 ['math']
-GETTABLEKS R0 R0 K1 ['abs']
+    CHECK_EQ("\n" + compileFunction0("abs = math.abs math = {} return abs(-5)"), R"(
+GETIMPORT R0 2 [math.abs]
 NEWTABLE R1 0 0
-SETGLOBAL R1 K0 ['math']
-MOVE R1 R0
-LOADN R2 -5
-CALL R1 1 -1
-RETURN R1 -1
+MOVE R2 R0
+LOADN R3 -5
+CALL R2 1 -1
+RETURN R2 -1
 )");
 }
 
@@ -4516,7 +4506,7 @@ TEST_CASE("Fastcall3")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a, b, c = ...
+const a, b, c = ...
 return math.min(a, b, c) + math.clamp(a, b, c)
 )"),
         R"(
@@ -4554,7 +4544,7 @@ L0: RETURN R0 1
     // more complex example: select inside a for loop bound + select from a iterator
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local sum = 0
+sum = 0
 for i=1, select('#', ...) do
     sum += select(i, ...)
 end
@@ -4661,7 +4651,8 @@ g01,g02,g03,g04,g05,g06,g07,g08,g09,g0a,g0b,g0c,g0d,g0e,g0f,g10,g11,g12,g13,g14,
     }
     catch (std::exception& e)
     {
-        CHECK_EQ(std::string(e.what()), "Exceeded result count limit; simplify the code to compile");
+        // Implicit locals (`gXX = ...` declares) hit the local limit before the result-count limit.
+        CHECK_EQ(std::string(e.what()), "Out of local registers when trying to allocate gc9: exceeded limit 200");
     }
 }
 
@@ -4679,7 +4670,8 @@ g01,g02,g03,g04,g05,g06,g07,g08,g09,g0a,g0b,g0c,g0d,g0e,g0f,g10,g11,g12,g13,g14,
     }
     catch (std::exception& e)
     {
-        CHECK_EQ(std::string(e.what()), "Out of registers when trying to allocate 256 registers: exceeded limit 255");
+        // Implicit locals hit the local limit first (same as LotsOfAssignments1).
+        CHECK_EQ(std::string(e.what()), "Out of local registers when trying to allocate gc9: exceeded limit 200");
     }
 }
 
@@ -4779,7 +4771,7 @@ RETURN R3 1
 )");
 
     // capture upvalue: one mutable, one immutable
-    CHECK_EQ("\n" + compileFunction("local a, b = math.rand() a = 42 function foo() return function() return a + b end end", 1), R"(
+    CHECK_EQ("\n" + compileFunction("a, b = math.rand() a = 42 function foo() return function() return a + b end end", 1), R"(
 NEWCLOSURE R0 P0
 CAPTURE UPVAL U0
 CAPTURE UPVAL U1
@@ -4787,14 +4779,14 @@ RETURN R0 1
 )");
 
     // recursive capture
-    CHECK_EQ("\n" + compileFunction("local function foo() return foo() end", 1), R"(
+    CHECK_EQ("\n" + compileFunction("function foo() return foo() end", 1), R"(
 DUPCLOSURE R0 K0 ['foo']
 CAPTURE VAL R0
 RETURN R0 0
 )");
 
     // multi-level recursive capture
-    CHECK_EQ("\n" + compileFunction("local function foo() return function() return foo() end end", 1), R"(
+    CHECK_EQ("\n" + compileFunction("function foo() return function() return foo() end end", 1), R"(
 DUPCLOSURE R0 K0 []
 CAPTURE UPVAL U0
 RETURN R0 1
@@ -4805,8 +4797,8 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
-    local function bar()
+function foo()
+    function bar()
         return function() return bar() end
     end
 end
@@ -4824,8 +4816,8 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
-    local t = {}
+function foo()
+    const t = {}
     t[1] = 42
     return function() return t end
 end
@@ -4849,10 +4841,10 @@ TEST_CASE("OutOfLocals")
 
     for (int i = 0; i < 200; ++i)
     {
-        formatAppend(source, "local foo%d\n", i);
+        formatAppend(source, "const foo%d = nil\n", i);
     }
 
-    source += "local bar\n";
+    source += "const bar = nil\n";
 
     Luau::CompileOptions options;
     options.debugLevel = 2; // make sure locals aren't elided by requesting their debug info
@@ -4877,7 +4869,7 @@ TEST_CASE("OutOfUpvalues")
 
     for (int i = 0; i < 150; ++i)
     {
-        formatAppend(source, "local foo%d\n", i);
+        formatAppend(source, "foo%d = nil\n", i);
         formatAppend(source, "foo%d = 42\n", i);
     }
 
@@ -4885,7 +4877,7 @@ TEST_CASE("OutOfUpvalues")
 
     for (int i = 0; i < 150; ++i)
     {
-        formatAppend(source, "local bar%d\n", i);
+        formatAppend(source, "bar%d = nil\n", i);
         formatAppend(source, "bar%d = 42\n", i);
     }
 
@@ -4948,7 +4940,7 @@ TEST_CASE("OutOfRegisters")
 
 TEST_CASE("FastCallImportFallback")
 {
-    std::string source = "local t = {}\n";
+    std::string source = "const t = {}\n";
 
     // we need to exhaust the 10-bit constant space to block GETIMPORT from being emitted
     for (int i = 1; i <= 1024; ++i)
@@ -4988,9 +4980,9 @@ TEST_CASE("FastCallUpvalueFallback")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local string = string
+const string = string
 
-local function foo(t)
+function foo(t)
     return string.char(table.unpack(t))
 end
 )",
@@ -5014,38 +5006,35 @@ L1: RETURN R1 1
 TEST_CASE("CompoundAssignment")
 {
     // globals vs constants
-    CHECK_EQ("\n" + compileFunction0("a += 1"), R"(
-GETGLOBAL R0 K0 ['a']
-ADDK R0 R0 K1 [1]
-SETGLOBAL R0 K0 ['a']
+    CHECK_EQ("\n" + compileFunction0("a = 0 a += 1"), R"(
+LOADN R0 0
+ADDK R0 R0 K0 [1]
 RETURN R0 0
 )");
 
     // globals vs expressions
-    CHECK_EQ("\n" + compileFunction0("a -= a"), R"(
-GETGLOBAL R0 K0 ['a']
-GETGLOBAL R1 K0 ['a']
-SUB R0 R0 R1
-SETGLOBAL R0 K0 ['a']
+    CHECK_EQ("\n" + compileFunction0("a = 0 a -= a"), R"(
+LOADN R0 0
+SUB R0 R0 R0
 RETURN R0 0
 )");
 
     // locals vs constants
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a *= 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a *= 2"), R"(
 LOADN R0 1
 MULK R0 R0 K0 [2]
 RETURN R0 0
 )");
 
     // locals vs locals
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a /= a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a /= a"), R"(
 LOADN R0 1
 DIV R0 R0 R0
 RETURN R0 0
 )");
 
     // locals vs expressions
-    CHECK_EQ("\n" + compileFunction0("local a = 1 a /= a + 1"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 a /= a + 1"), R"(
 LOADN R0 1
 ADDK R1 R0 K0 [1]
 DIV R0 R0 R1
@@ -5053,7 +5042,7 @@ RETURN R0 0
 )");
 
     // upvalues
-    CHECK_EQ("\n" + compileFunction0("local a = 1 function foo() a += 4 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = 1 function foo() a += 4 end"), R"(
 GETUPVAL R0 0
 ADDK R0 R0 K0 [4]
 SETUPVAL R0 0
@@ -5061,7 +5050,7 @@ RETURN R0 0
 )");
 
     // table variants (indexed by string, number, variable)
-    CHECK_EQ("\n" + compileFunction0("local a = {} a.foo += 5"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = {} a.foo += 5"), R"(
 NEWTABLE R0 0 0
 GETTABLEKS R1 R0 K0 ['foo']
 ADDK R1 R1 K1 [5]
@@ -5069,7 +5058,7 @@ SETTABLEKS R1 R0 K0 ['foo']
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = {} a[1] += 5"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = {} a[1] += 5"), R"(
 NEWTABLE R0 0 0
 GETTABLEN R1 R0 1
 ADDK R1 R1 K0 [5]
@@ -5077,7 +5066,7 @@ SETTABLEN R1 R0 1
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = {} a[a] += 5"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = {} a[a] += 5"), R"(
 NEWTABLE R0 0 0
 GETTABLE R1 R0 R0
 ADDK R1 R1 K0 [5]
@@ -5101,7 +5090,7 @@ RETURN R0 0
 TEST_CASE("CompoundAssignmentConcat")
 {
     // basic concat
-    CHECK_EQ("\n" + compileFunction0("local a = '' a ..= 'a'"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = '' a ..= 'a'"), R"(
 LOADK R0 K0 ['']
 MOVE R1 R0
 LOADK R2 K1 ['a']
@@ -5110,7 +5099,7 @@ RETURN R0 0
 )");
 
     // concat chains
-    CHECK_EQ("\n" + compileFunction0("local a = '' a ..= 'a' .. 'b'"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = '' a ..= 'a' .. 'b'"), R"(
 LOADK R0 K0 ['']
 MOVE R1 R0
 LOADK R2 K1 ['a']
@@ -5119,7 +5108,7 @@ CONCAT R0 R1 R3
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = '' a ..= 'a' .. 'b' .. 'c'"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = '' a ..= 'a' .. 'b' .. 'c'"), R"(
 LOADK R0 K0 ['']
 MOVE R1 R0
 LOADK R2 K1 ['a']
@@ -5130,12 +5119,12 @@ RETURN R0 0
 )");
 
     // concat on non-local
-    CHECK_EQ("\n" + compileFunction0("_VERSION ..= 'a' .. 'b'"), R"(
-GETGLOBAL R1 K0 ['_VERSION']
+    CHECK_EQ("\n" + compileFunction0("_VERSION = '' _VERSION ..= 'a' .. 'b'"), R"(
+LOADK R0 K0 ['']
+MOVE R1 R0
 LOADK R2 K1 ['a']
 LOADK R3 K2 ['b']
 CONCAT R0 R1 R3
-SETGLOBAL R0 K0 ['_VERSION']
 RETURN R0 0
 )");
 }
@@ -5143,7 +5132,7 @@ RETURN R0 0
 TEST_CASE("JumpTrampoline")
 {
     std::string source;
-    source += "local sum: number = 0\n";
+    source += "sum = 0\n";
     source += "for i=1,3 do\n";
     for (int i = 0; i < 10000; ++i)
     {
@@ -5175,9 +5164,9 @@ TEST_CASE("JumpTrampoline")
 
     CHECK_EQ("\n" + head, R"(
 local 0: reg 3, start pc 8 line 3, end pc 54545 line 20002
-local 1: reg 0, start pc 2 line 2, end pc 54549 line 20004
+local 1: reg 0, start pc 1 line 1, end pc 54549 line 20004
 R3: number from 2 to 54546
-R0: number from 1 to 54550
+R0: any from 1 to 54550
 LOADN R0 0
 LOADN R3 1
 LOADN R1 3
@@ -5229,7 +5218,7 @@ TEST_CASE("NestedNamecall")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
+const obj = ...
 return obj:Method(1):Method(2):Method(3)
 )"),
         R"(
@@ -5253,7 +5242,7 @@ TEST_CASE("ElideLocals")
     // simple local elision: all locals are constant
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a, b = 1, 2
+const a, b = 1, 2
 return a + b
 )"),
         R"(
@@ -5265,7 +5254,7 @@ RETURN R0 1
     // side effecting expressions block local elision
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = g()
+const a = g()
 return a
 )"),
         R"(
@@ -5278,7 +5267,7 @@ RETURN R0 1
     // ... even if they are not used
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = 1, g()
+const a = 1, g()
 return a
 )"),
         R"(
@@ -5294,8 +5283,8 @@ TEST_CASE("ConstantJumpCompare")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = obj == 1
+const obj = ...
+const b = obj == 1
 )"),
         R"(
 GETVARARGS R0 1
@@ -5308,8 +5297,8 @@ L1: RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = 1 == obj
+const obj = ...
+const b = 1 == obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5322,8 +5311,8 @@ L1: RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = "Hello, Sailor!" == obj
+const obj = ...
+const b = "Hello, Sailor!" == obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5336,8 +5325,8 @@ L1: RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = nil == obj
+const obj = ...
+const b = nil == obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5350,8 +5339,8 @@ L1: RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = true == obj
+const obj = ...
+const b = true == obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5364,8 +5353,8 @@ L1: RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = nil != obj
+const obj = ...
+const b = nil != obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5379,8 +5368,8 @@ L1: RETURN R0 0
     // table literals should not generate IFEQK variants
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local obj = ...
-local b = obj == {}
+const obj = ...
+const b = obj == {}
 )"),
         R"(
 GETVARARGS R0 1
@@ -5397,7 +5386,7 @@ TEST_CASE("TableConstantStringIndex")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = 2 }
+const t = { a = 2 }
 return t['a']
 )"),
         R"(
@@ -5409,7 +5398,7 @@ RETURN R1 1
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {}
+const t = {}
 t['a'] = 2
 )"),
         R"(
@@ -5427,7 +5416,7 @@ TEST_CASE("DuptableNoConstantPack")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = { a = 2, a = function() end, a = 3 }
+const t = { a = 2, a = function() end, a = 3 }
 return t['a']
 )",
                    1
@@ -5536,8 +5525,8 @@ end
     CHECK_EQ(
         "\n" + compileFunction0Coverage(
                    R"(
-local c = ...
-local t = {
+c = ...
+const t = {
     a = 1,
     b = 2,
     c = c
@@ -5594,7 +5583,7 @@ RETURN R0 1
         "\n" + compileFunction(
                    R"(
 function test()
-    local print = print
+    const print = print
     return function() print("hi") end
 end
 )",
@@ -5649,9 +5638,9 @@ TEST_CASE("SharedClosure")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local val = ...
+const val = ...
 
-local function foo()
+function foo()
     return function() return val end
 end
 )",
@@ -5668,9 +5657,9 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local val = ...
+val = ...
 
-local function foo()
+function foo()
     return function() return val end
 end
 
@@ -5689,7 +5678,7 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(val)
+function foo(val)
     return function() return val end
 end
 )",
@@ -5706,10 +5695,10 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local val = ...
+const val = ...
 
-local function foo()
-    local function bar()
+function foo()
+    function bar()
         return val
     end
 
@@ -5731,8 +5720,8 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(val)
-    local function bar()
+function foo(val)
+    function bar()
         return val
     end
 
@@ -5751,7 +5740,7 @@ RETURN R2 1
     );
 
     // we also allow recursive function captures to share the object, even when it's not top-level
-    CHECK_EQ("\n" + compileFunction("function test() local function foo() return foo() end end", 1), R"(
+    CHECK_EQ("\n" + compileFunction("function test() function foo() return foo() end end", 1), R"(
 DUPCLOSURE R0 K0 ['foo']
 CAPTURE VAL R0
 RETURN R0 0
@@ -5762,8 +5751,8 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
-    local function bar()
+function foo()
+    function bar()
         return function() return bar() end
     end
 end
@@ -5790,7 +5779,7 @@ for k,v in pairs(...) do
 end
 
 for i=1,10 do
-    local j = i
+    const j = i
     print(function() return j end)
 end
 )",
@@ -5950,7 +5939,7 @@ L0: RETURN R0 -1
 TEST_CASE("VectorFastCall3")
 {
     const char* source = R"(
-local a, b, c = ...
+const a, b, c = ...
 return Vector3.new(a, b, c)
 )";
 
@@ -6084,7 +6073,7 @@ TEST_CASE("Arithmetics")
     // basic arithmetic codegen with non-constants
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a, b = ...
+const a, b = ...
 return a + b, a - b, a / b, a * b, a % b, a ^ b
 )"),
         R"(
@@ -6103,7 +6092,7 @@ RETURN R2 6
     // note that we don't simplify these expressions as we don't know the type of a
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = ...
+const a = ...
 return a + 1, a - 1, a / 1, a * 1, a % 1, a ^ 1
 )"),
         R"(
@@ -6125,7 +6114,7 @@ TEST_CASE("LoopUnrollBasic")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=1,2 do
     t[i] = i
 end
@@ -6148,7 +6137,7 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=2,1,-1 do
     t[i] = i
 end
@@ -6171,7 +6160,7 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=1,4,2 do
     t[i] = i
 end
@@ -6212,7 +6201,7 @@ TEST_CASE("LoopUnrollNested")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=0,1 do
     for j=0,1 do
         t[i*2+(j+1)] = 0
@@ -6240,7 +6229,7 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=0,3 do
     for j=0,3 do
         t[i*4+(j+1)] = 0
@@ -6281,7 +6270,7 @@ L1: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=0,1 do
     for j=0,i do
         t[i*2+(j+1)] = 0
@@ -6469,7 +6458,7 @@ L2: RETURN R0 0
         "\n" + compileFunction(
                    R"(
 for i=1,1 do
-    local j = global(i)
+    j = global(i)
     print(function() return j end)
     if math.random() < 0.5 then
         continue
@@ -6481,9 +6470,10 @@ end
                    2
                ),
         R"(
-GETIMPORT R0 1 [global]
-LOADN R1 1
-CALL R0 1 1
+GETIMPORT R1 1 [global]
+LOADN R2 1
+CALL R1 1 1
+MOVE R0 R1
 GETIMPORT R1 3 [print]
 NEWCLOSURE R2 P0
 CAPTURE REF R0
@@ -6531,7 +6521,7 @@ TEST_CASE("LoopUnrollNestedClosure")
         "\n" + compileFunction(
                    R"(
 for i=1,2 do
-    local x = function() return i end
+    const x = function() return i end
 end
 )",
                    1,
@@ -6560,7 +6550,7 @@ TEST_CASE("LoopUnrollCost")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=1,10 do
     t[i] = i
 end
@@ -6599,7 +6589,7 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=1,100 do
     t[i] = i
 end
@@ -6624,7 +6614,7 @@ L1: RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=1,25 do
     t[i] = i * i * i
 end
@@ -6693,7 +6683,7 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {}
+const t = {}
 for i=1,10 do
     t[i] = math.abs(math.sin(i))
 end
@@ -6839,12 +6829,12 @@ LOADN R2 3
 LOADN R3 1
 FORNPREP R2 L1
 L0: ADDK R5 R4 K0 [1]
-GETGLOBAL R6 K1 ['bit32']
-GETTABLEKS R6 R6 K2 ['band']
-GETGLOBAL R7 K1 ['bit32']
-GETTABLEKS R7 R7 K3 ['rshift']
+GETUPVAL R6 0
+GETTABLEKS R6 R6 K1 ['band']
+GETUPVAL R7 0
+GETTABLEKS R7 R7 K2 ['rshift']
 MOVE R8 R1
-MULK R9 R4 K4 [8]
+MULK R9 R4 K3 [8]
 CALLFB R7 2 1 [0]
 LOADN R8 255
 CALLFB R6 2 1 [1]
@@ -6899,11 +6889,11 @@ TEST_CASE("InlineBasic")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
+function foo()
     return 42
 end
 
-local x = foo()
+const x = foo()
 return x
 )",
                    1,
@@ -6920,11 +6910,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local x = foo(42)
+const x = foo(42)
 return x
 )",
                    1,
@@ -6941,7 +6931,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b, c)
+function foo(a, b, c)
     if a then
         return b
     else
@@ -6949,7 +6939,7 @@ local function foo(a, b, c)
     end
 end
 
-local x = foo(true, math.random(), 5)
+const x = foo(true, math.random(), 5)
 return x
 )",
                    1,
@@ -6968,7 +6958,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b, c)
+function foo(a, b, c)
     if a then
         return b
     else
@@ -6976,7 +6966,7 @@ local function foo(a, b, c)
     end
 end
 
-local x = foo(true, 5, math.random())
+const x = foo(true, 5, math.random())
 return x
 )",
                    1,
@@ -6998,11 +6988,11 @@ TEST_CASE("InlineProhibited")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(...)
+function foo(...)
     return 42
 end
 
-local x = foo()
+const x = foo()
 return x
 )",
                    1,
@@ -7020,11 +7010,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
+function foo()
     return 42
 end
 
-local x = foo()
+const x = foo()
 getfenv()
 return x
 )",
@@ -7052,7 +7042,7 @@ TEST_CASE("InlineProhibitedRecursion")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function fact(n)
+function fact(n)
     return if n <= 1 then 1 else fact(n-1)*n
 end
 
@@ -7078,11 +7068,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function fact(n)
+function fact(n)
     return if n <= 1 then 1 else fact(n-1)*n
 end
 
-local function factsafe(n)
+function factsafe(n)
     assert(n >= 1)
     return fact(n)
 end
@@ -7121,14 +7111,14 @@ TEST_CASE("InlineNestedLoops")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(t)
+function foo(t)
     for i=1,3 do
         t[i] = i
     end
     return t
 end
 
-local x = foo({})
+const x = foo({})
 return x
 )",
                    1,
@@ -7151,14 +7141,14 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(t, n)
+function foo(t, n)
     for i=1, n do
         t[i] = i
     end
     return t
 end
 
-local x = foo({}, 3)
+const x = foo({}, 3)
 return x
 )",
                    1,
@@ -7184,11 +7174,11 @@ TEST_CASE("InlineNestedClosures")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(x)
+function foo(x)
     return function(y) return x + y end
 end
 
-local x = foo(1)(2)
+const x = foo(1)(2)
 return x
 )",
                    2,
@@ -7214,12 +7204,12 @@ TEST_CASE("InlineMutate")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     a = a or 5
     return a
 end
 
-local x = foo(42)
+const x = foo(42)
 return x
 )",
                    1,
@@ -7237,12 +7227,12 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local x = ...
-local y = foo(x)
+const x = ...
+const y = foo(x)
 return y
 )",
                    1,
@@ -7260,13 +7250,13 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local x = ...
+x = ...
 x = nil
-local y = foo(x)
+const y = foo(x)
 return y
 )",
                    1,
@@ -7285,13 +7275,13 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
 foo = foo
 
-local x = foo(42)
+const x = foo(42)
 return x
 )",
                    1,
@@ -7315,14 +7305,14 @@ TEST_CASE("InlineUpval")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local b = ...
+const b = ...
 
 function bar()
-    local x = foo(b)
+    const x = foo(b)
     return x
 end
 )",
@@ -7339,13 +7329,13 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local b = ...
+const b = ...
 
-local function foo(a)
+function foo(a)
     return a + b
 end
 
-local x = foo(42)
+const x = foo(42)
 return x
 )",
                    1,
@@ -7365,14 +7355,14 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local b = ...
+const b = ...
 
 function bar()
-    local function foo(a)
+    function foo(a)
         return a + b
     end
 
-    local x = foo(42)
+    const x = foo(42)
     return x
 end
 )",
@@ -7398,12 +7388,12 @@ TEST_CASE("InlineCapture")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return function() return a end
 end
 
-local x = ...
-local y = foo(x)
+const x = ...
+const y = foo(x)
 return y
 )",
                    2,
@@ -7422,11 +7412,11 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return function() return a end
 end
 
-local y = foo(42)
+const y = foo(42)
 return y
 )",
                    2,
@@ -7445,12 +7435,12 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return function() return a end
 end
 
-local x x = 42
-local y = foo(x)
+x = nil x = 42
+const y = foo(x)
 return y
 )",
                    2,
@@ -7470,12 +7460,12 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     a = a or 42
     return function() return a end
 end
 
-local y = foo()
+const y = foo()
 return y
 )",
                    2,
@@ -7496,13 +7486,13 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     a = a or 42
     print(function() return a end)
 end
 
-local x = ...
-local y = foo(x)
+const x = ...
+const y = foo(x)
 return y
 )",
                    2,
@@ -7529,15 +7519,15 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     if not a then
-        local b b = 42
+        b = nil b = 42
         return function() return b end
     end
 end
 
-local x = ...
-local y = foo(x)
+const x = ...
+const y = foo(x)
 return y, x
 )",
                    2,
@@ -7567,10 +7557,10 @@ TEST_CASE("InlineFallthrough")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
+function foo()
 end
 
-local a, b = foo()
+const a, b = foo()
 return a, b
 )",
                    1,
@@ -7588,11 +7578,11 @@ RETURN R1 2
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     if a then return 42 end
 end
 
-local a, b = foo(false)
+const a, b = foo(false)
 return a, b
 )",
                    1,
@@ -7611,7 +7601,7 @@ RETURN R1 2
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
+function foo()
 end
 
 return foo()
@@ -7638,11 +7628,11 @@ TEST_CASE("InlineArgMismatch")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local x = foo()
+const x = foo()
 return x
 )",
                    1,
@@ -7659,11 +7649,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local x = foo(math.modf(1.5))
+const x = foo(math.modf(1.5))
 return x
 )",
                    1,
@@ -7684,11 +7674,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local x = foo(...)
+const x = foo(...)
 return x
 )",
                    1,
@@ -7706,11 +7696,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local x = foo(42, print())
+const x = foo(42, print())
 return x
 )",
                    1,
@@ -7729,12 +7719,12 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     a = 42
     return a
 end
 
-local x = foo()
+const x = foo()
 return x
 )",
                    1,
@@ -7755,15 +7745,15 @@ TEST_CASE("InlineMultiple")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local x, y = ...
-local a = foo(x, 1)
-local b = foo(1, x)
-local c = foo(1, 2)
-local d = foo(x, y)
+const x, y = ...
+const a = foo(x, 1)
+const b = foo(1, x)
+const c = foo(1, 2)
+const d = foo(x, y)
 return a, b, c, d
 )",
                    1,
@@ -7788,15 +7778,15 @@ TEST_CASE("InlineChain")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local function bar(x)
+function bar(x)
     return foo(x, 1) * foo(x, -1)
 end
 
-local function baz()
+function baz()
     return (bar(42))
 end
 
@@ -7829,7 +7819,7 @@ TEST_CASE("InlineThresholds")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
+function foo()
     return {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
 end
 
@@ -7850,7 +7840,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo()
+function foo()
     return {},{},{},{},{}
 end
 
@@ -7871,15 +7861,15 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local function bar(x)
+function bar(x)
     return foo(x, 1) * foo(x, -1)
 end
 
-local function baz()
+function baz()
     return (bar(42))
 end
 
@@ -7955,8 +7945,8 @@ RETURN R3 1
         "\n" + compileFunction(
                    R"(
 function test(x)
-    local a, b, c = x + 1, x + 2, x + 3
-    local r = (function()
+    const a, b, c = x + 1, x + 2, x + 3
+    const r = (function()
         for i in 0, a do
             for j in 0, b do
                 if i + j >= c then return 42 end
@@ -8001,7 +7991,7 @@ TEST_CASE("InlineRecurseArguments")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
 end
 foo(foo(foo,foo(foo,foo))[foo])
 )",
@@ -8021,11 +8011,11 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local x, y, z = ...
+const x, y, z = ...
 
 return foo(foo(x, y), foo(z, 1))
 )",
@@ -8047,11 +8037,11 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     return a + b
 end
 
-local x, y, z = ...
+const x, y, z = ...
 
 return
     foo(foo(1, 2), 3),
@@ -8105,7 +8095,7 @@ TEST_CASE("InlineFastCallK")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function set(l0)
+function set(l0)
     rawset({}, l0)
 end
 
@@ -8138,12 +8128,12 @@ TEST_CASE("InlineExprIndexK")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local _ = function(l0)
-local _ = nil
+_ = function(l0)
+_ = nil
 while _(_)[_] do
 end
 end
-local _ = _(0)[""]
+_ = _(0)[""]
 if _ then
 do
 for l0=0,8 do
@@ -8163,38 +8153,33 @@ end
                ),
         R"(
 DUPCLOSURE R0 K0 []
-L0: LOADNIL R4
-LOADNIL R5
-CALL R4 1 1
-LOADNIL R5
-GETTABLE R3 R4 R5
-JUMPIFNOT R3 L1
-JUMPBACK L0
-L1: LOADNIL R2
-GETTABLEKS R1 R2 K1 ['']
-JUMPIFNOT R1 L2
+MOVE R1 R0
+LOADN R2 0
+CALL R1 1 1
+GETTABLEKS R0 R1 K1 ['']
+JUMPIFNOT R0 L0
 RETURN R0 0
-L2: JUMPIFNOT R1 L3
-LOADNIL R1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-LOADB R2 1
-RETURN R2 1
-L3: RETURN R0 0
+L0: JUMPIFNOT R0 L1
+LOADNIL R0
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+LOADB R1 1
+RETURN R1 1
+L1: RETURN R0 0
 )"
     );
 }
@@ -8207,13 +8192,13 @@ TEST_CASE("InlineHiddenMutation")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     a = 42
     return a
 end
 
-local x = ...
-local y = foo(x as number)
+const x = ...
+const y = foo(x as number)
 return y
 )",
                    1,
@@ -8232,15 +8217,15 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     mutator()
     return a
 end
 
-local x = ...
+x = ...
 mutator = function() x = 42 end
 
-local y = foo(x as number)
+const y = foo(x as number)
 return y
 )",
                    2,
@@ -8251,12 +8236,11 @@ DUPCLOSURE R0 K0 ['foo']
 GETVARARGS R1 1
 NEWCLOSURE R2 P1
 CAPTURE REF R1
-SETGLOBAL R2 K1 ['mutator']
-MOVE R2 R1
-GETGLOBAL R3 K1 ['mutator']
-CALL R3 0 0
+MOVE R3 R1
+GETIMPORT R4 2 [mutator]
+CALL R4 0 0
 CLOSEUPVALS R1
-RETURN R2 1
+RETURN R3 1
 )"
     );
 }
@@ -8267,7 +8251,7 @@ TEST_CASE("InlineMultret")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a()
 end
 
@@ -8289,7 +8273,7 @@ RETURN R1 -1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
@@ -8309,11 +8293,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
-local function bar(a)
+function bar(a)
     return foo(a)
 end
 
@@ -8334,7 +8318,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return foo(a)
 end
 
@@ -8357,7 +8341,7 @@ RETURN R1 -1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return math.abs(a)
 end
 
@@ -8381,11 +8365,11 @@ TEST_CASE("InlineNonConstInitializers")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function caller(f)
+function caller(f)
     f(1)
 end
 
-local function callback(n)
+function callback(n)
     print(n + 5)
 end
 
@@ -8407,12 +8391,12 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function test(a, b, c, comp)
+const x, y, z = ...
+function test(a, b, c, comp)
     return comp(a, b) and comp(b, c)
 end
 
-local function greater(a, b)
+function greater(a, b)
     return a > b
 end
 
@@ -8440,8 +8424,8 @@ L3: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function test(a, b, c, comp)
+const x, y, z = ...
+function test(a, b, c, comp)
     return comp(a, b) and comp(b, c)
 end
 
@@ -8469,15 +8453,15 @@ L3: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function test(a, b, c, comp)
+function test(a, b, c, comp)
     return comp(a, b) and comp(b, c)
 end
 
-local function greater(a, b)
+function greater(a, b)
     return a > b
 end
 
-local function bar(x, y, z)
+function bar(x, y, z)
     return test(x, y, z, greater)
 end
 )",
@@ -8501,15 +8485,15 @@ L3: RETURN R3 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function test(a, b, c, comp)
+function test(a, b, c, comp)
     return comp(a, b) and comp(b, c)
 end
 
-local function greater(a, b)
+function greater(a, b)
     return a > b
 end
 
-local function bar(x, y, z)
+function bar(x, y, z)
     return test(x, y, z, greater)
 end
 
@@ -8539,8 +8523,8 @@ L0: RETURN R3 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z, debug = ...
-local function test(a, b, c, comp)
+x, y, z, debug = ...
+function test(a, b, c, comp)
     if debug then comp = function(a, b) return a >= b end end
 
     return comp(a, b) and comp(b, c)
@@ -8552,22 +8536,30 @@ test(x, y, z, function(a, b) return a > b end)
                    2
                ),
         R"(
-GETVARARGS R0 4
-DUPCLOSURE R4 K0 ['test']
-CAPTURE VAL R3
-DUPCLOSURE R5 K1 []
+GETVARARGS R4 4
+MOVE R0 R4
+MOVE R1 R5
+MOVE R2 R6
+MOVE R3 R7
+NEWCLOSURE R4 P0
+CAPTURE REF R3
+MOVE R5 R0
+MOVE R6 R1
+MOVE R7 R2
+DUPCLOSURE R8 K0 []
 JUMPIFNOT R3 L0
-DUPCLOSURE R5 K2 []
-L0: MOVE R6 R5
-MOVE R7 R0
-MOVE R8 R1
-CALL R6 2 1
-JUMPIFNOT R6 L1
-MOVE R6 R5
-MOVE R7 R1
-MOVE R8 R2
-CALL R6 2 1
-L1: RETURN R0 0
+DUPCLOSURE R8 K1 []
+L0: MOVE R9 R8
+MOVE R10 R5
+MOVE R11 R6
+CALL R9 2 1
+JUMPIFNOT R9 L1
+MOVE R9 R8
+MOVE R10 R6
+MOVE R11 R7
+CALL R9 2 1
+L1: CLOSEUPVALS R3
+RETURN R0 0
 )"
     );
 
@@ -8575,16 +8567,16 @@ L1: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function test(a, b, c, d, op)
+const x, y, z = ...
+function test(a, b, c, d, op)
     return op(a, b) * op(c, d)
 end
 
-local min = math.min
+const min = math.min
 
-local r1 = test(x, y, 2, 4, math.max)
-local r2 = test(x, y, 2, 4, min)
-local r3 = test(x, y, 2, 4, z)
+const r1 = test(x, y, 2, 4, math.max)
+const r2 = test(x, y, 2, 4, min)
+const r3 = test(x, y, 2, 4, z)
 
 return r1, r2, r3
 )",
@@ -8627,9 +8619,9 @@ TEST_CASE("InlineNonArgumentConstConditionals")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local test = false
+const test = false
 
-local function foo(a)
+function foo(a)
     if test then
         for i = 1,10 do
             print(table.unpack(table.create(100, i)))
@@ -8638,7 +8630,7 @@ local function foo(a)
     return a + 42
 end
 
-local x = foo(1)
+const x = foo(1)
 return x
 )",
                    1,
@@ -8654,9 +8646,9 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local test = true
+const test = true
 
-local function foo(a)
+function foo(a)
     if not test then
         for i = 1,10 do
             print(table.unpack(table.create(100, i)))
@@ -8665,7 +8657,7 @@ local function foo(a)
     return a + 42
 end
 
-local x = foo(1)
+const x = foo(1)
 return x
 )",
                    1,
@@ -8681,9 +8673,9 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local test = false
+const test = false
 
-local function foo(a)
+function foo(a)
     if not test then
         return a + 42
     end
@@ -8693,7 +8685,7 @@ local function foo(a)
     end
 end
 
-local x = foo(1)
+const x = foo(1)
 return x
 )",
                    1,
@@ -8715,7 +8707,7 @@ TEST_CASE("InlineConstConditionals")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     if a == 1 then
         return 42
     else if a == 2 then
@@ -8727,8 +8719,8 @@ local function foo(a)
     end
 end
 
-local x = foo(1)
-local y = foo(2)
+const x = foo(1)
+const y = foo(2)
 return x, y
 )",
                    1,
@@ -8746,8 +8738,8 @@ RETURN R1 2
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
-    local s = 0
+function foo(a)
+    s = 0
     for i = 1,5 do
         if a == 1 then
             s += i
@@ -8760,8 +8752,8 @@ local function foo(a)
     return s
 end
 
-local x = foo(1)
-local y = foo(2)
+const x = foo(1)
+const y = foo(2)
 return x, y
 )",
                    1,
@@ -8769,18 +8761,20 @@ return x, y
                ),
         R"(
 DUPCLOSURE R0 K0 ['foo']
-LOADN R1 0
-ADDK R1 R1 K1 [1]
-ADDK R1 R1 K2 [2]
-ADDK R1 R1 K3 [3]
-ADDK R1 R1 K4 [4]
-ADDK R1 R1 K5 [5]
 LOADN R2 0
-SUBK R2 R2 K1 [1]
-SUBK R2 R2 K2 [2]
-SUBK R2 R2 K3 [3]
-SUBK R2 R2 K4 [4]
-SUBK R2 R2 K5 [5]
+ADDK R2 R2 K1 [1]
+ADDK R2 R2 K2 [2]
+ADDK R2 R2 K3 [3]
+ADDK R2 R2 K4 [4]
+ADDK R2 R2 K5 [5]
+MOVE R1 R2
+LOADN R3 0
+SUBK R3 R3 K1 [1]
+SUBK R3 R3 K2 [2]
+SUBK R3 R3 K3 [3]
+SUBK R3 R3 K4 [4]
+SUBK R3 R3 K5 [5]
+MOVE R2 R3
 RETURN R1 2
 )"
     );
@@ -8789,11 +8783,11 @@ RETURN R1 2
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a, b, c, d)
+function foo(a, b, c, d)
     return if a > 10 then a + b else magic({a, b, c}, {d})
 end
 
-local x = foo(20, 1, 2, 3, 4, 5)
+const x = foo(20, 1, 2, 3, 4, 5)
 return x
 )",
                    1,
@@ -8810,9 +8804,9 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function funnyhex(a)
-    local z = string.byte('0')
-    local set = "0123456789abcdef"
+function funnyhex(a)
+    const z = string.byte('0')
+    const set = "0123456789abcdef"
     if a < 10 then return string.sub(set, a+1, a+1)
     else if a < 100 then return `{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
     else if a < 1000 then return `{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}`
@@ -8821,11 +8815,11 @@ local function funnyhex(a)
     else return tostring(a) end
 end
 
-local a = funnyhex(1)
-local b = funnyhex(24)
-local c = funnyhex(560)
-local d = funnyhex(8943)
-local e = funnyhex(46825)
+const a = funnyhex(1)
+const b = funnyhex(24)
+const c = funnyhex(560)
+const d = funnyhex(8943)
+const e = funnyhex(46825)
 return a, b, c, d, e
 )",
                    1,
@@ -8845,9 +8839,9 @@ RETURN R1 5
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function funnyhex(a)
-    local z = string.byte('0')
-    local set = "0123456789abcdef"
+function funnyhex(a)
+    const z = string.byte('0')
+    const set = "0123456789abcdef"
     if a < 10 then return string.sub(set, a+1, a+1) end
     if a < 100 then return `{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}` end
     if a < 1000 then return `{string.sub(set, (a/100)%10+1, (a/100)%10+1)}{string.sub(set, (a/10)%10+1, (a/10)%10+1)}{string.sub(set, a%10+1, a%10+1)}` end
@@ -8856,11 +8850,11 @@ local function funnyhex(a)
     return tostring(a)
 end
 
-local a = funnyhex(1)
-local b = funnyhex(24)
-local c = funnyhex(560)
-local d = funnyhex(8943)
-local e = funnyhex(46825)
+const a = funnyhex(1)
+const b = funnyhex(24)
+const c = funnyhex(560)
+const d = funnyhex(8943)
+const e = funnyhex(46825)
 return a, b, c, d, e
 )",
                    1,
@@ -8885,16 +8879,16 @@ TEST_CASE("InlineLoopIteration")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
-    local s = 0
+function foo(a)
+    s = 0
     for i = 1,a do
         s += i
     end
     return s
 end
 
-local x = foo(3)
-local y = foo(100)
+const x = foo(3)
+const y = foo(100)
 return x, y
 )",
                    1,
@@ -8902,10 +8896,11 @@ return x, y
                ),
         R"(
 DUPCLOSURE R0 K0 ['foo']
-LOADN R1 0
-ADDK R1 R1 K1 [1]
-ADDK R1 R1 K2 [2]
-ADDK R1 R1 K3 [3]
+LOADN R2 0
+ADDK R2 R2 K1 [1]
+ADDK R2 R2 K2 [2]
+ADDK R2 R2 K3 [3]
+MOVE R1 R2
 MOVE R2 R0
 LOADN R3 100
 CALL R2 1 1
@@ -8921,11 +8916,11 @@ TEST_CASE("InlineOnlyRemoveTerminatingJump")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local props = {}
-local changes = {}
+const props = {}
+const changes = {}
 
-local function perform(name, valueType, updateFunction)
-    local valueObj = script:FindFirstChild(name)
+function perform(name, valueType, updateFunction)
+    const valueObj = script:FindFirstChild(name)
 
     if valueObj then
         props[name] = valueObj.Value
@@ -8941,7 +8936,7 @@ local function perform(name, valueType, updateFunction)
     end
 end
 
-local function performAll()
+function performAll()
     perform("InitialElevation", "NumberValue", nil)
     perform("InitialDistance", "NumberValue", nil)
 
@@ -8985,7 +8980,7 @@ TEST_CASE("InlineTableFunction")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end
 }
 return t.f(100)
@@ -9005,7 +9000,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end
 } as any
 return t.f(100)
@@ -9025,10 +9020,10 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end
 }
-local g = t.f
+const g = t.f
 return g(100)
 )",
                    1,
@@ -9047,7 +9042,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end
 }
 return (t).f(100)
@@ -9067,7 +9062,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end
 }
 return t.f<<number>>(100)
@@ -9088,8 +9083,8 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local t = {
+function id(x) return x end
+const t = {
     f = function(x) return x + 1 end
 }
 id(t)
@@ -9114,7 +9109,7 @@ RETURN R2 -1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = { f = function(x) return x + 1 end }
+const t = { f = function(x) return x + 1 end }
 t.g = print
 return t.f(1)
 )",
@@ -9138,7 +9133,7 @@ RETURN R1 -1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     [""] = "anything",
     f = function(x) return x + 1 end
 }
@@ -9162,7 +9157,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end,
     ["f"] = function() return 2 end
 }
@@ -9185,7 +9180,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = {
+const t = {
     f = function(x) return x + 1 end,
     f = function() return 2 end
 }
@@ -9208,8 +9203,8 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local k = "f"
-local t = {
+k = "f"
+const t = {
     f = function(x) return x + 1 end,
     [k] = function() return 2 end
 }
@@ -9219,21 +9214,24 @@ return t.f(100)
                    2
                ),
         R"(
-NEWTABLE R0 2 0
-DUPCLOSURE R1 K0 ['f']
-SETTABLEKS R1 R0 K1 ['f']
-DUPCLOSURE R1 K2 []
-SETTABLEKS R1 R0 K1 ['f']
-LOADN R1 2
-RETURN R1 1
+LOADK R0 K0 ['f']
+NEWTABLE R1 2 0
+DUPCLOSURE R2 K1 ['f']
+SETTABLEKS R2 R1 K0 ['f']
+DUPCLOSURE R2 K2 []
+SETTABLE R2 R1 R0
+GETTABLEKS R2 R1 K0 ['f']
+LOADN R3 100
+CALL R2 1 -1
+RETURN R2 -1
 )"
     );
 
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local k = ...
-local t = {
+k = ...
+const t = {
     f = function(x) return x + 1 end,
     [k] = function() return 2 end
 }
@@ -9259,8 +9257,8 @@ RETURN R2 -1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local k = ...
-local t = {
+k = ...
+const t = {
     [k] = function() return 2 end,
     f = function(x) return x + 1 end
 }
@@ -9290,15 +9288,15 @@ TEST_CASE("InlineElideTemporaries")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
+function id(x) return x end
 
-local function accum(n: number)
-  local s = 0
+function accum(n: number)
+  s = 0
   for i = 1,n do s += i end
   return s
 end
 
-local b = id(accum(4))
+const b = id(accum(4))
 return b
 )",
                    2,
@@ -9307,11 +9305,12 @@ return b
         R"(
 DUPCLOSURE R0 K0 ['id']
 DUPCLOSURE R1 K1 ['accum']
-LOADN R2 0
-ADDK R2 R2 K2 [1]
-ADDK R2 R2 K3 [2]
-ADDK R2 R2 K4 [3]
-ADDK R2 R2 K5 [4]
+LOADN R3 0
+ADDK R3 R3 K2 [1]
+ADDK R3 R3 K3 [2]
+ADDK R3 R3 K4 [3]
+ADDK R3 R3 K5 [4]
+MOVE R2 R3
 RETURN R2 1
 )"
     );
@@ -9320,13 +9319,13 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function accum(n: number)
-local s = 0
+function accum(n: number)
+s = 0
 for i = 1,n do s += i end
 return s
 end
 
-local b = accum(3) + accum(5)
+const b = accum(3) + accum(5)
 return b
 )",
                    1,
@@ -9334,16 +9333,18 @@ return b
                ),
         R"(
 DUPCLOSURE R0 K0 ['accum']
-LOADN R2 0
-ADDK R2 R2 K1 [1]
-ADDK R2 R2 K2 [2]
-ADDK R2 R2 K3 [3]
 LOADN R3 0
 ADDK R3 R3 K1 [1]
 ADDK R3 R3 K2 [2]
 ADDK R3 R3 K3 [3]
-ADDK R3 R3 K4 [4]
-ADDK R3 R3 K5 [5]
+MOVE R2 R3
+LOADN R4 0
+ADDK R4 R4 K1 [1]
+ADDK R4 R4 K2 [2]
+ADDK R4 R4 K3 [3]
+ADDK R4 R4 K4 [4]
+ADDK R4 R4 K5 [5]
+MOVE R3 R4
 ADD R1 R2 R3
 RETURN R1 1
 )"
@@ -9353,10 +9354,10 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = ...
-local function id(x) return x end
+const a = ...
+function id(x) return x end
 
-local b = id(a)
+const b = id(a)
 return b
 )",
                    1,
@@ -9374,8 +9375,8 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = ...
-local function id(x) return x end
+const a = ...
+function id(x) return x end
 return id(a)
 )",
                    1,
@@ -9392,11 +9393,11 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = ...
+const a = ...
 
-local function id(x) return x end
+function id(x) return x end
 
-local b = id(id(id(id(a))))
+const b = id(id(id(id(a))))
 return b
 )",
                    1,
@@ -9414,11 +9415,11 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = ...
+const a = ...
 
-local function id(x) return x end
+function id(x) return x end
 
-local b = id(a) + 2
+const b = id(a) + 2
 return b
 )",
                    1,
@@ -9436,10 +9437,10 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(x) return x end
+const x, y, z = ...
+function id(x) return x end
 
-local b = id(x) + id(y)
+const b = id(x) + id(y)
 return b
 )",
                    1,
@@ -9457,10 +9458,10 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(x) return x end
+const x, y, z = ...
+function id(x) return x end
 
-local b = id(x + 1)
+const b = id(x + 1)
 return b
 )",
                    1,
@@ -9478,9 +9479,9 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
+function id(x) return x end
 
-local b = id(...)
+const b = id(...)
 return b
 )",
                    1,
@@ -9497,8 +9498,8 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(x) return x end
+x, y, z = ...
+function id(x) return x end
 y = id(x)
 return y
 )",
@@ -9506,7 +9507,10 @@ return y
                    2
                ),
         R"(
-GETVARARGS R0 3
+GETVARARGS R3 3
+MOVE R0 R3
+MOVE R1 R4
+MOVE R2 R5
 DUPCLOSURE R3 K0 ['id']
 MOVE R1 R0
 RETURN R1 1
@@ -9517,9 +9521,9 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(x) return x end
-local t = {id(x), id(y)}
+const x, y, z = ...
+function id(x) return x end
+const t = {id(x), id(y)}
 return t
 )",
                    1,
@@ -9540,9 +9544,9 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(x) return x end
-local b = math.max(id(x), id(y))
+const x, y, z = ...
+function id(x) return x end
+const b = math.max(id(x), id(y))
 return b
 )",
                    1,
@@ -9564,12 +9568,12 @@ L0: RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function inc(n)
+const x, y, z = ...
+function inc(n)
     n += 1
     return n
 end
-local b = inc(x)
+const b = inc(x)
 return b
 )",
                    1,
@@ -9588,13 +9592,13 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function choose(cond)
-    local r = 0
+const x, y, z = ...
+function choose(cond)
+    r = 0
     if cond then r = 1; return r end
     r = 2; return r
 end
-local b = choose(x)
+const b = choose(x)
 return b
 )",
                    1,
@@ -9603,11 +9607,13 @@ return b
         R"(
 GETVARARGS R0 3
 DUPCLOSURE R3 K0 ['choose']
-LOADN R4 0
+LOADN R5 0
 JUMPIFNOT R0 L0
-LOADN R4 1
+LOADN R5 1
+MOVE R4 R5
 RETURN R4 1
-L0: LOADN R4 2
+L0: LOADN R5 2
+MOVE R4 R5
 RETURN R4 1
 )"
     );
@@ -9616,8 +9622,8 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(v) return v end
+const x, y, z = ...
+function id(v) return v end
 return id(x).name
 )",
                    1,
@@ -9635,10 +9641,10 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x, y, z = ...
-local function id(v) return v end
-local function pick(a, b) return a + b end
-local r = pick(id(x), id(y))
+const x, y, z = ...
+function id(v) return v end
+function pick(a, b) return a + b end
+const r = pick(id(x), id(y))
 return r
 )",
                    2,
@@ -9662,10 +9668,10 @@ TEST_CASE("InlineElideCaptured")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = ...
+a = ...
 
-local function inc(x)
-    local capx = function() return x end
+function inc(x)
+    const capx = function() return x end
     x = x + 1
     return x
 end
@@ -9693,10 +9699,10 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = ...
+a = ...
 
-local function id(x)
-    local snap = function() return x end
+function id(x)
+    const snap = function() return x end
     return x
 end
 
@@ -9719,10 +9725,10 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a = 5
-local m = function() a = 42 end
+a = 5
+const m = function() a = 42 end
 
-local function id(x)
+function id(x)
     m()
     return x
 end
@@ -9751,9 +9757,9 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x = ...
+x = ...
 function evil() x = 42; return -100 end
-local function id(v) return v end
+function id(v) return v end
 return id(x) + evil()
 )",
                    2,
@@ -9763,14 +9769,13 @@ return id(x) + evil()
 GETVARARGS R0 1
 NEWCLOSURE R1 P0
 CAPTURE REF R0
-SETGLOBAL R1 K0 ['evil']
-DUPCLOSURE R1 K1 ['id']
-MOVE R3 R0
-GETGLOBAL R4 K0 ['evil']
-CALL R4 0 1
-ADD R2 R3 R4
+DUPCLOSURE R2 K0 ['id']
+MOVE R4 R0
+LOADN R0 42
+LOADN R5 -100
+ADD R3 R4 R5
 CLOSEUPVALS R0
-RETURN R2 1
+RETURN R3 1
 )"
     );
 
@@ -9778,9 +9783,9 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x = ...
+x = ...
 function evil() x = 42; return -100 end
-local function id(v) return v end
+function id(v) return v end
 return math.max(id(x), (evil()))
 )",
                    2,
@@ -9790,16 +9795,15 @@ return math.max(id(x), (evil()))
 GETVARARGS R0 1
 NEWCLOSURE R1 P0
 CAPTURE REF R0
-SETGLOBAL R1 K0 ['evil']
-DUPCLOSURE R1 K1 ['id']
-MOVE R3 R0
-GETGLOBAL R4 K0 ['evil']
-CALL R4 0 1
-FASTCALL2 18 R3 R4 L0
-GETIMPORT R2 4 [math.max]
-CALL R2 2 1
+DUPCLOSURE R2 K0 ['id']
+MOVE R4 R0
+LOADN R0 42
+LOADN R5 -100
+FASTCALL2 18 R4 R5 L0
+GETIMPORT R3 3 [math.max]
+CALL R3 2 1
 L0: CLOSEUPVALS R0
-RETURN R2 1
+RETURN R3 1
 )"
     );
 
@@ -9807,8 +9811,8 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x = ...
-local function id(v) return v end
+const x = ...
+function id(v) return v end
 function ext() return -100 end
 return id(x) + ext()
 )",
@@ -9819,11 +9823,9 @@ return id(x) + ext()
 GETVARARGS R0 1
 DUPCLOSURE R1 K0 ['id']
 DUPCLOSURE R2 K1 ['ext']
-SETGLOBAL R2 K2 ['ext']
-GETGLOBAL R4 K2 ['ext']
-CALL R4 0 1
-ADD R2 R0 R4
-RETURN R2 1
+LOADN R5 -100
+ADD R3 R0 R5
+RETURN R3 1
 )"
     );
 
@@ -9831,14 +9833,14 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function outer(x)
-    local function evil()
+function outer(x)
+    function evil()
         x = 42
         return -100
     end
 
-    local function id(v) return v end
-    local function add(a, b) return a + b end
+    function id(v) return v end
+    function add(a, b) return a + b end
 
     return add(id(x), evil())
 end
@@ -9869,11 +9871,11 @@ TEST_CASE("InlineElideAliased")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function copy(v)
+function copy(v)
     return {v[1]}
 end
 
-local x = {42}
+x = {42}
 x = copy(x)
 return x
 )",
@@ -9882,9 +9884,10 @@ return x
                ),
         R"(
 DUPCLOSURE R0 K0 ['copy']
-NEWTABLE R1 0 1
-LOADN R2 42
-SETLIST R1 R2 1 [1]
+NEWTABLE R2 0 1
+LOADN R3 42
+SETLIST R2 R3 1 [1]
+MOVE R1 R2
 MOVE R2 R1
 NEWTABLE R1 0 1
 GETTABLEN R3 R2 1
@@ -9897,12 +9900,12 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function copy(v)
-    local alias = v
+function copy(v)
+    const alias = v
     return {alias[1]}
 end
 
-local x = {42}
+x = {42}
 x = copy(x)
 return x
 )",
@@ -9911,9 +9914,10 @@ return x
                ),
         R"(
 DUPCLOSURE R0 K0 ['copy']
-NEWTABLE R1 0 1
-LOADN R2 42
-SETLIST R1 R2 1 [1]
+NEWTABLE R2 0 1
+LOADN R3 42
+SETLIST R2 R3 1 [1]
+MOVE R1 R2
 MOVE R2 R1
 NEWTABLE R1 0 1
 GETTABLEN R3 R2 1
@@ -9926,10 +9930,10 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function outer(a)
-    local seen = 0
+function outer(a)
+    seen = 0
 
-    local function first(x, y)
+    function first(x, y)
         seen = y
         return x
     end
@@ -9963,8 +9967,8 @@ TEST_CASE("InlineNoElideWhenNoTarget")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function make()
-    local result = {}
+function make()
+    const result = {}
     result.V = {1, 2, 3}
     return result
 end
@@ -9993,7 +9997,7 @@ TEST_CASE("ReturnConsecutive")
     // we can return a single local directly
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x = ...
+const x = ...
 return x
 )"),
         R"(
@@ -10005,7 +10009,7 @@ RETURN R0 1
     // or multiple, when they are allocated in consecutive registers
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return x, y
 )"),
         R"(
@@ -10017,7 +10021,7 @@ RETURN R0 2
     // but not if it's an expression
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return x, y + 1
 )"),
         R"(
@@ -10031,7 +10035,7 @@ RETURN R2 2
     // or a local with wrong register number
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return y, x
 )"),
         R"(
@@ -10055,7 +10059,7 @@ RETURN R0 0
     // this optimization also works in presence of group / type casts
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return (x), y as number
 )"),
         R"(
@@ -10071,7 +10075,7 @@ TEST_CASE("OptimizationLevel")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
@@ -10094,7 +10098,7 @@ RETURN R1 -1
         "\n" + compileFunction(
                    R"(
 --!optimize 2
-local function foo(a)
+function foo(a)
     return a
 end
 
@@ -10114,7 +10118,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function foo(a)
+function foo(a)
     return a
 end
 
@@ -10135,7 +10139,7 @@ RETURN R1 1
         "\n" + compileFunction(
                    R"(
 --!optimize 1
-local function foo(a)
+function foo(a)
     return a
 end
 
@@ -10395,11 +10399,11 @@ TEST_CASE("BuiltinFoldingMultret")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local NoLanes: Lanes = --[[                             ]] 0b0000000000000000000000000000000
-local OffscreenLane: Lane = --[[                        ]] 0b1000000000000000000000000000000
+const NoLanes: Lanes = --[[                             ]] 0b0000000000000000000000000000000
+const OffscreenLane: Lane = --[[                        ]] 0b1000000000000000000000000000000
 
-local function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes
-    local everythingButOffscreen = bit32.band(root.pendingLanes, bit32.bnot(OffscreenLane))
+function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes
+    const everythingButOffscreen = bit32.band(root.pendingLanes, bit32.bnot(OffscreenLane))
     if everythingButOffscreen != NoLanes then
         return everythingButOffscreen
     end
@@ -10487,8 +10491,8 @@ TEST_CASE("LocalReassign")
     // locals can be re-assigned and the register gets reused
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local function test(a, b)
-    local c = a
+function test(a, b)
+    const c = a
     return c + b
 end
 )"),
@@ -10501,8 +10505,8 @@ RETURN R2 1
     // this works if the expression is using type casts or grouping
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local function test(a, b)
-    local c = (a as number)
+function test(a, b)
+    const c = (a as number)
     return c + b
 end
 )"),
@@ -10515,10 +10519,10 @@ RETURN R2 1
     // the optimization requires that neither local is mutated
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local function test(a, b)
-    local c = a
+function test(a, b)
+    c = a
     c += 0
-    local d = b
+    const d = b
     b += 0
     return c + d
 end
@@ -10536,9 +10540,9 @@ RETURN R4 1
     // sanity check for two values
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local function test(a, b)
-    local c = a
-    local d = b
+function test(a, b)
+    const c = a
+    const d = b
     return c + d
 end
 )"),
@@ -10551,8 +10555,8 @@ RETURN R2 1
     // note: we currently only support this for single assignments
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local function test(a, b)
-    local c, d = a, b
+function test(a, b)
+    const c, d = a, b
     return c + d
 end
 )"),
@@ -10568,9 +10572,9 @@ RETURN R4 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function test(a, b)
-    local c = a
-    local d = b
+function test(a, b)
+    const c = a
+    const d = b
     return function() return c + d end
 end
 )",
@@ -10590,7 +10594,7 @@ TEST_CASE("MultipleAssignments")
     // order of assignments is left to right
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b
+        a, b = nil, nil
         a, b = f(1), f(2)
     )"),
         R"(
@@ -10611,7 +10615,7 @@ RETURN R0 0
     // this includes table assignments
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local t
+        const t = nil
         t[1], t[2] = 3, 4
     )"),
         R"(
@@ -10628,7 +10632,7 @@ RETURN R0 0
     // semantically, we evaluate the right hand side first; this allows us to e.g swap elements in a table easily
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local t = ...
+        const t = ...
         t[1], t[2] = t[2], t[1]
     )"),
         R"(
@@ -10648,12 +10652,16 @@ RETURN R0 0
     // assignments
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local xm1, x, xp1, xi = ...
+        xm1, x, xp1, xi = ...
 
         xm1,x,xp1,xi = x,xp1,xp1+1,xi-1
     )"),
         R"(
-GETVARARGS R0 4
+GETVARARGS R4 4
+MOVE R0 R4
+MOVE R1 R5
+MOVE R2 R6
+MOVE R3 R7
 MOVE R0 R1
 MOVE R1 R2
 ADDK R2 R2 K0 [1]
@@ -10665,12 +10673,22 @@ RETURN R0 0
     // similar example to above from a more complex case
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b, c, d, e, f, g, h, t1, t2 = ...
+        a, b, c, d, e, f, g, h, t1, t2 = ...
 
         h, g, f, e, d, c, b, a = g, f, e, d + t1, c, b, a, t1 + t2
     )"),
         R"(
-GETVARARGS R0 10
+GETVARARGS R10 10
+MOVE R0 R10
+MOVE R1 R11
+MOVE R2 R12
+MOVE R3 R13
+MOVE R4 R14
+MOVE R5 R15
+MOVE R6 R16
+MOVE R7 R17
+MOVE R8 R18
+MOVE R9 R19
 MOVE R7 R6
 MOVE R6 R5
 MOVE R5 R4
@@ -10687,11 +10705,13 @@ RETURN R0 0
     // the basic example of this is a swap/rotate
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = ...
+        a, b = ...
         a, b = b, a
     )"),
         R"(
-GETVARARGS R0 2
+GETVARARGS R2 2
+MOVE R0 R2
+MOVE R1 R3
 MOVE R2 R1
 MOVE R1 R0
 MOVE R0 R2
@@ -10701,11 +10721,14 @@ RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b, c = ...
+        a, b, c = ...
         a, b, c = c, a, b
     )"),
         R"(
-GETVARARGS R0 3
+GETVARARGS R3 3
+MOVE R0 R3
+MOVE R1 R4
+MOVE R2 R5
 MOVE R3 R2
 MOVE R4 R0
 MOVE R2 R1
@@ -10717,11 +10740,14 @@ RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b, c = ...
+        a, b, c = ...
         a, b, c = b, c, a
     )"),
         R"(
-GETVARARGS R0 3
+GETVARARGS R3 3
+MOVE R0 R3
+MOVE R1 R4
+MOVE R2 R5
 MOVE R3 R1
 MOVE R1 R2
 MOVE R2 R0
@@ -10733,11 +10759,15 @@ RETURN R0 0
     // multiple assignments with multcall handling - foo() evaluates to temporary registers and they are copied out to target
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b, c, d = ...
+        a, b, c, d = ...
         a, b, c, d = 1, foo()
     )"),
         R"(
-GETVARARGS R0 4
+GETVARARGS R4 4
+MOVE R0 R4
+MOVE R1 R5
+MOVE R2 R6
+MOVE R3 R7
 LOADN R0 1
 GETIMPORT R4 1 [foo]
 CALL R4 0 3
@@ -10751,11 +10781,15 @@ RETURN R0 0
     // note that during this we still need to handle local reassignment, eg when table assignments are performed
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b, c, d = ...
+        a, b, c, d = ...
         a, b[a], c[d], d = 1, foo()
     )"),
         R"(
-GETVARARGS R0 4
+GETVARARGS R4 4
+MOVE R0 R4
+MOVE R1 R5
+MOVE R2 R6
+MOVE R3 R7
 LOADN R4 1
 GETIMPORT R6 1 [foo]
 CALL R6 0 3
@@ -10771,11 +10805,15 @@ RETURN R0 0
     // note that here we don't assign the locals directly, as this case is very rare so we use the similar code path as above
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b, c, d = ...
+        a, b, c, d = ...
         a, b, c, d = 1, foo
     )"),
         R"(
-GETVARARGS R0 4
+GETVARARGS R4 4
+MOVE R0 R4
+MOVE R1 R5
+MOVE R2 R6
+MOVE R3 R7
 LOADN R0 1
 GETIMPORT R4 1 [foo]
 LOADNIL R5
@@ -10790,7 +10828,7 @@ RETURN R0 0
     // note that we also try to use locals as a source of assignment directly when assigning fields; this works using old local value when possible
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = ...
+        const a, b = ...
         a[1], a[2] = b, b + 1
     )"),
         R"(
@@ -10805,11 +10843,13 @@ RETURN R0 0
     // ... of course if the local is reassigned, we defer the assignment until later
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = ...
+        a, b = ...
         b, a[1] = 42, b
     )"),
         R"(
-GETVARARGS R0 2
+GETVARARGS R2 2
+MOVE R0 R2
+MOVE R1 R3
 LOADN R2 42
 SETTABLEN R1 R0 1
 MOVE R1 R2
@@ -10820,11 +10860,13 @@ RETURN R0 0
     // when there are more expressions when values, we evaluate them for side effects, but they also participate in conflict handling
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = ...
+        a, b = ...
         a, b = 1, 2, a + b
     )"),
         R"(
-GETVARARGS R0 2
+GETVARARGS R2 2
+MOVE R0 R2
+MOVE R1 R3
 LOADN R2 1
 LOADN R3 2
 ADD R4 R0 R1
@@ -10837,11 +10879,13 @@ RETURN R0 0
     // because we perform assignments to complex l-values after assignments to locals, we make sure register conflicts are tracked accordingly
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        local a, b = ...
+        a, b = ...
         a[1], b = b, b + 1
     )"),
         R"(
-GETVARARGS R0 2
+GETVARARGS R2 2
+MOVE R0 R2
+MOVE R1 R3
 ADDK R2 R1 K0 [1]
 SETTABLEN R1 R0 1
 MOVE R1 R2
@@ -10856,7 +10900,7 @@ TEST_CASE("BuiltinExtractK")
     // K1 and K2 refer to 1 and 3 and are only used during fallback path
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local v = ...
+const v = ...
 
 return bit32.extract(v, 1, 3)
 )"),
@@ -10875,23 +10919,23 @@ L0: RETURN R1 -1
 
 TEST_CASE("SkipSelfAssignment")
 {
-    CHECK_EQ("\n" + compileFunction0("local a a = a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a = a"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a a = a as number"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a = a as number"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a a = (((a)))"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = nil a = (((a)))"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
 
     // Keep it on optimization level 0
-    CHECK_EQ("\n" + compileFunction("local a a = a", 0, 0), R"(
+    CHECK_EQ("\n" + compileFunction("a = nil a = a", 0, 0), R"(
 LOADNIL R0
 MOVE R0 R0
 RETURN R0 0
@@ -10903,7 +10947,7 @@ TEST_CASE("ElideJumpAfterIf")
     // break refers to outer loop => we can elide unconditional branches
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local foo, bar = ...
+const foo, bar = ...
 repeat
     if foo then break
     else if bar then break
@@ -10928,7 +10972,7 @@ L2: RETURN R0 0
     // break refers to inner loop => branches remain
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local foo, bar = ...
+const foo, bar = ...
 repeat
     if foo then while true do break end
     else if bar then while true do break end
@@ -11062,7 +11106,7 @@ L0: RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function new()
+function new()
     return setmetatable({}, MT)
 end
 
@@ -11087,8 +11131,8 @@ L0: RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x = ...
-local y, z = type(x)
+const x = ...
+const y, z = type(x)
 return type(y, z)
 )",
                    0,
@@ -11156,7 +11200,7 @@ myfunc('test')
 
     CHECK_EQ(
         "\n" + compileTypeTable(R"(
-local Str = {
+Str = {
     a = 1
 }
 
@@ -11417,11 +11461,9 @@ TEST_CASE("BuiltinFoldMathK")
             "math." + constant
         );
         std::string expectedBytecodeWithAssignment = replaceAtSymbolWithText(
-            "GETGLOBAL R1 K1 ['math']\n"
-            "GETTABLEKS R1 R1 K2 ['@']\n"
-            "MULK R0 R1 K0 [2]\n"
+            "LOADK R0 K0 [@]\n"
             "RETURN R0 1\n",
-            constant
+            folded
         );
 
         CHECK_EQ(compileFunction(sourceCodeWithAssignment.c_str(), 0, 2), expectedBytecodeWithAssignment);
@@ -11459,7 +11501,7 @@ TEST_CASE("IfThenElseAndOr")
     // if v then v else k can be optimized to ORK
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x = ...
+const x = ...
 return if x then x else 0
 )"),
         R"(
@@ -11472,7 +11514,7 @@ RETURN R1 1
     // if v then v else l can be optimized to OR
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return if x then x else y
 )"),
         R"(
@@ -11485,7 +11527,7 @@ RETURN R2 1
     // this also works in presence of type casts
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return if x then x as number else 0
 )"),
         R"(
@@ -11498,7 +11540,7 @@ RETURN R2 1
     // if v then k else v can be optimized to ANDK
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x = ...
+const x = ...
 return if x then 0 else x
 )"),
         R"(
@@ -11511,7 +11553,7 @@ RETURN R1 1
     // if v then l else v can be optimized to AND
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return if x then y else x
 )"),
         R"(
@@ -11524,7 +11566,7 @@ RETURN R2 1
     // this also works in presence of type casts
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+const x, y = ...
 return if x then y else x as number
 )"),
         R"(
@@ -11537,12 +11579,14 @@ RETURN R2 1
     // all of the above work when the target is a temporary register, which is safe because the value is only mutated once
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x, y = ...
+x, y = ...
 x = if x then x else y
 x = if x then y else x
 )"),
         R"(
-GETVARARGS R0 2
+GETVARARGS R2 2
+MOVE R0 R2
+MOVE R1 R3
 OR R0 R0 R1
 AND R0 R0 R1
 RETURN R0 0
@@ -11552,7 +11596,7 @@ RETURN R0 0
     // note that we can't do this transformation if the expression has possible side effects
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x = ...
+const x = ...
 return if x.data then x.data else 0
 )"),
         R"(
@@ -11572,9 +11616,9 @@ TEST_CASE("SideEffects")
     // we do not evaluate expressions in some cases when we know they can't carry side effects
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x = 5, print
-local y = 5, 42
-local z = 5, table.find -- considered side effecting because of metamethods
+x = 5, print
+y = 5, 42
+z = 5, table.find -- considered side effecting because of metamethods
 )"),
         R"(
 LOADN R0 5
@@ -11589,19 +11633,19 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function test1()
+function test1()
     return 42
 end
 
-local function test2()
+function test2()
     return print
 end
 
-local function test3()
+function test3()
     return function() print(test3) end
 end
 
-local function test4()
+function test4()
     return table.find -- considered side effecting because of metamethods
 end
 
@@ -11628,40 +11672,40 @@ RETURN R0 0
 TEST_CASE("IfElimination")
 {
     // if the left hand side of a condition is constant, it constant folds and we don't emit the branch
-    CHECK_EQ("\n" + compileFunction0("local a = false if a and b then b() end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false if a and b then b() end"), R"(
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = true if a or b then b() end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = true if a or b then b() end"), R"(
 GETIMPORT R0 1 [b]
 CALL R0 0 0
 RETURN R0 0
 )");
 
     // of course this keeps the other branch if present
-    CHECK_EQ("\n" + compileFunction0("local a = false if a and b then b() else return 42 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false if a and b then b() else return 42 end"), R"(
 LOADN R0 42
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = true if a or b then b() else return 42 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = true if a or b then b() else return 42 end"), R"(
 GETIMPORT R0 1 [b]
 CALL R0 0 0
 RETURN R0 0
 )");
 
     // if the right hand side is constant, the condition doesn't constant fold but we still could eliminate one of the branches for 'a and K'
-    CHECK_EQ("\n" + compileFunction0("local a = false if b and a then return 1 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false if b and a then return 1 end"), R"(
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = false if b and a then return 1 else return 2 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false if b and a then return 1 else return 2 end"), R"(
 LOADN R0 2
 RETURN R0 1
 )");
 
     // of course if the right hand side of 'and' is 'true', we still need to actually evaluate the left hand side
-    CHECK_EQ("\n" + compileFunction0("local a = true if b and a then return 1 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = true if b and a then return 1 end"), R"(
 GETIMPORT R0 1 [b]
 JUMPIFNOT R0 L0
 LOADN R0 1
@@ -11669,7 +11713,7 @@ RETURN R0 1
 L0: RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = true if b and a then return 1 else return 2 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = true if b and a then return 1 else return 2 end"), R"(
 GETIMPORT R0 1 [b]
 JUMPIFNOT R0 L0
 LOADN R0 1
@@ -11679,12 +11723,12 @@ RETURN R0 1
 )");
 
     // also even if we eliminate the branch, we still need to compute side effects
-    CHECK_EQ("\n" + compileFunction0("local a = false if b.test and a then return 1 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false if b.test and a then return 1 end"), R"(
 GETIMPORT R0 2 [b.test]
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("local a = false if b.test and a then return 1 else return 2 end"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = false if b.test and a then return 1 else return 2 end"), R"(
 GETIMPORT R0 2 [b.test]
 LOADN R0 2
 RETURN R0 1
@@ -11696,7 +11740,7 @@ TEST_CASE("ArithRevK")
     // - and / have special optimized form for reverse constants; in absence of type information, we can't optimize other ops
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x: number = unknown
+const x: number = unknown
 return 2 + x, 2 - x, 2 * x, 2 / x, 2 % x, 2 // x, 2 ^ x
 )"),
         R"(
@@ -11722,7 +11766,7 @@ RETURN R1 7
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x: number = unknown
+const x: number = unknown
 return 2 + x, 2 - x, 2 * x, 2 / x, 2 % x, 2 // x, 2 ^ x
 )",
                    0,
@@ -11751,7 +11795,7 @@ TEST_CASE("VectorArithRevK")
     // / has special optimized form for reverse constants; in absence of type information, we can't optimize other ops
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local x: vector = ...
+const x: vector = ...
 return 2 * x, 2 / x, 2 // x
 )"),
         R"(
@@ -11770,7 +11814,7 @@ RETURN R1 3
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x: vector = ...
+const x: vector = ...
 return 2 * x, 2 / x, 2 // x
 )",
                    0,
@@ -11791,7 +11835,7 @@ RETURN R1 3
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local x: vector = ...
+const x: vector = ...
 return 2 + x.x, 2 - x.x, 2 * x.x, 2 / x.x, 2 + x.Y, 2 - x.Y, 2 * x.Y, 2 / x.Y
 )",
                    0,
@@ -11827,10 +11871,10 @@ TEST_CASE("NumericLoopTypeRevk")
         "\n" + compileFunction(
                    R"(
 for i = 1,10 do
-    local a = i * 2
-    local b = 3 * i
-    local c = i + 2
-    local d = 3 + i
+    const a = i * 2
+    const b = 3 * i
+    const c = i + 2
+    const d = 3 + i
     print(a, b, c, d)
 end
 )",
@@ -11888,21 +11932,25 @@ RETURN R0 1
     );
 
     CHECK_EQ(
-        "\n" + compileFunction(R"(local hello = "hello"; local world = "world"; return hello .. " " .. world)", 0, 2),
+        "\n" + compileFunction(R"(hello = "hello"; const world = "world"; return hello .. " " .. world)", 0, 2),
         R"(
-LOADK R0 K0 ['hello world']
-RETURN R0 1
+LOADK R0 K0 ['hello']
+MOVE R2 R0
+LOADK R3 K1 [' ']
+LOADK R4 K2 ['world']
+CONCAT R1 R2 R4
+RETURN R1 1
 )"
     );
 
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a1 = "0123456789012345678901234567890123456789"
-local a2 = a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1
-local a3 = a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2
-local a4 = a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3
-local a5 = a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4
+const a1 = "0123456789012345678901234567890123456789"
+const a2 = a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1 .. a1
+const a3 = a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2 .. a2
+const a4 = a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3 .. a3
+const a5 = a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4 .. a4
 return a5
 )",
                    0,
@@ -11938,11 +11986,11 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a1 = "0123456789012345678901234567890123456789"
-local a2 = `{a1}{a1}{a1}{a1}{a1}{a1}{a1}{a1}{a1}{a1}`
-local a3 = `{a2}{a2}{a2}{a2}{a2}{a2}{a2}{a2}{a2}{a2}`
-local a4 = `{a3}{a3}{a3}{a3}{a3}{a3}{a3}{a3}{a3}{a3}`
-local a5 = `{a4}{a4}{a4}{a4}{a4}{a4}{a4}{a4}{a4}{a4}`
+const a1 = "0123456789012345678901234567890123456789"
+const a2 = `{a1}{a1}{a1}{a1}{a1}{a1}{a1}{a1}{a1}{a1}`
+const a3 = `{a2}{a2}{a2}{a2}{a2}{a2}{a2}{a2}{a2}{a2}`
+const a4 = `{a3}{a3}{a3}{a3}{a3}{a3}{a3}{a3}{a3}{a3}`
+const a5 = `{a4}{a4}{a4}{a4}{a4}{a4}{a4}{a4}{a4}{a4}`
 return a5
 )",
                    0,
@@ -11975,10 +12023,10 @@ TEST_CASE("StringCharFolding")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local s1 = string.char(49, 50, 51, 52, 53, 54)
-local s2 = string.char()
-local s3 = string.char(0, 0, 0)
-local s4 = string.char(49, 50, 0, 52, 53, 0)
+const s1 = string.char(49, 50, 51, 52, 53, 54)
+const s2 = string.char()
+const s3 = string.char(0, 0, 0)
+const s4 = string.char(49, 50, 0, 52, 53, 0)
 return s1, s2, s3, s4
 )",
                    0,
@@ -11999,7 +12047,7 @@ TEST_CASE("StringSubFolding")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local s = "123456789"
+const s = "123456789"
 
 return
     string.sub(s, 2, 4),
@@ -12177,7 +12225,7 @@ TEST_CASE("ClassDeclHoistingForwardReference")
     ScopedFastFlag _{FFlag::DebugLuauUserDefinedClasses, true};
 
     std::string source = R"(
-        local ref = Point
+        const ref = Point
         class Point
             public x
         end
@@ -12200,7 +12248,7 @@ TEST_CASE("ClassDeclHoistingNestedFunctionUpvalCapture")
         class Point
             public x
         end
-        local function usePoint()
+        function usePoint()
             return Point
         end
     )";
@@ -12224,12 +12272,13 @@ RETURN R0 0
 TEST_CASE("ClassDeclHoistingForwardWriteProducesError")
 {
     ScopedFastFlag _{FFlag::DebugLuauUserDefinedClasses, true};
+    ScopedFastFlag sff{FFlag::LuauExportValueSyntax, true};
 
     std::string source = R"(
-        Point = nil
         class Point
         public x
         end
+        Point = nil
     )";
 
     try
@@ -12240,7 +12289,7 @@ TEST_CASE("ClassDeclHoistingForwardWriteProducesError")
     catch (const std::exception& e)
     {
         std::string msg = e.what();
-        CHECK(msg == "'Point' refers to a class and cannot be used as a variable name (defined on line 3)");
+        CHECK(msg == "'Point' refers to a class and cannot be used as a variable name (defined on line 2)");
     }
 }
 
@@ -12252,7 +12301,7 @@ TEST_CASE("IntegerType")
     // i suffix
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = 123i
+const a = 123i
 return a
 )"),
         R"(
@@ -12264,7 +12313,7 @@ RETURN R0 1
     // separators
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = 1_000_000i
+const a = 1_000_000i
 return a
 )"),
         R"(
@@ -12276,7 +12325,7 @@ RETURN R0 1
     // hex
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = 0xABABi
+const a = 0xABABi
 return a
 )"),
         R"(
@@ -12288,7 +12337,7 @@ RETURN R0 1
     // binary
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a = 0b100101i
+const a = 0b100101i
 return a
 )"),
         R"(
@@ -12299,8 +12348,8 @@ RETURN R0 1
 
     // Has to be exactly representable; overflow is a parse error
 
-    std::string source1 = "local a = 9999999999999999999999999i";
-    std::string source2 = "local a = 2.37i";
+    std::string source1 = "const a = 9999999999999999999999999i";
+    std::string source2 = "const a = 2.37i";
 
     std::string bc1 = Luau::compile(source1);
     std::string bc2 = Luau::compile(source2);
@@ -12316,7 +12365,7 @@ TEST_CASE("IntegerBcb")
 
     const char* source = R"(
 function foo()
-local a = 123i
+const a = 123i
 return a
 end)";
 
@@ -12347,11 +12396,11 @@ TEST_CASE("DebugNoInline")
         "\n" + compileFunction(
                    R"(
 @debugnoinline
-local function foo()
+function foo()
     return 42
 end
 
-local x = foo()
+const x = foo()
 return x
 )",
                    1,
@@ -12369,7 +12418,7 @@ RETURN R1 1
         "\n" + compileFunction(
                    R"(
 @debugnoinline
-local function foo(a, b, c)
+function foo(a, b, c)
     if a then
         return b
     else
@@ -12377,7 +12426,7 @@ local function foo(a, b, c)
     end
 end
 
-local x = foo(true, 5, math.random())
+const x = foo(true, 5, math.random())
 return x
 )",
                    1,
@@ -12401,7 +12450,7 @@ TEST_CASE("FoldConstTableProps")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = { hello = "world" }
+const t = { hello = "world" }
 return t.hello
     )",
                    0,
@@ -12417,7 +12466,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = { hello = "world" }
+const t = { hello = "world" }
 return t["hello"]
 )",
                    0,
@@ -12433,7 +12482,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1, green = 2, blue = 3}
+const color = {red = 1, green = 2, blue = 3}
 
 return color.red, color["green"], color.blue
 )",
@@ -12452,7 +12501,7 @@ RETURN R1 3
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1, green = 2, blue = 3}
+const color = {red = 1, green = 2, blue = 3}
 
 return color.red + color.green + color.blue
 )",
@@ -12470,7 +12519,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1}
+const color = {red = 1}
 color.blue = 3
 return color.red
 )",
@@ -12490,7 +12539,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1}
+const color = {red = 1}
 color["red"] = 3
 return color.red
 )",
@@ -12510,7 +12559,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1, blue = {}}
+const color = {red = 1, blue = {}}
 color["blue"]["red"] = 3
 return color.red
 )",
@@ -12533,7 +12582,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1}
+const color = {red = 1}
 color[color.red] = 3
 return color.red
 )",
@@ -12554,8 +12603,8 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local color = {red = 1}
+function id(x) return x end
+const color = {red = 1}
 id(color)
 return color.red
 )",
@@ -12577,8 +12626,8 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local color = {red = 1}
+function id(x) return x end
+const color = {red = 1}
 id(color.red)
 return color.red
 )",
@@ -12600,8 +12649,8 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local t = { inner = { x = 1 } }
+function id(x) return x end
+const t = { inner = { x = 1 } }
 id(t.inner)
 return t.inner.x
 )",
@@ -12625,7 +12674,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local color = {red = 1}
+const color = {red = 1}
 color:test()
 return color.red
 )",
@@ -12645,9 +12694,9 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local t = { x = 1 }
-local u = { [t] = true }
+function id(x) return x end
+const t = { x = 1 }
+const u = { [t] = true }
 id(u)
 return t.x
 )",
@@ -12670,8 +12719,8 @@ RETURN R3 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local t = { x = 1 }
+function id(x) return x end
+t = { x = 1 }
 u[t] = 100
 id(u)
 return t.x
@@ -12680,7 +12729,8 @@ return t.x
                ),
         R"(
 DUPCLOSURE R0 K0 ['id']
-DUPTABLE R1 3
+DUPTABLE R2 3
+MOVE R1 R2
 GETIMPORT R2 5 [u]
 LOADN R3 100
 SETTABLE R3 R2 R1
@@ -12695,8 +12745,8 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function id(x) return x end
-local t = { x = 1 }
+function id(x) return x end
+const t = { x = 1 }
 u[t] += 100
 id(u)
 return t.x
@@ -12722,7 +12772,7 @@ RETURN R2 1
     CHECK_EQ(
         "\n" + compileFunction0(
                    R"(
-local t = {[""] = 1}
+const t = {[""] = 1}
 return t[""]
 )"
                ),
@@ -12737,7 +12787,7 @@ RETURN R1 1
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {a = 1, ["a"] = 2}
+const t = {a = 1, ["a"] = 2}
 return t.a
 )"),
         R"(
@@ -12753,7 +12803,7 @@ RETURN R1 1
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = {["a"] = 5, ["a\0"] = 2}
+const t = {["a"] = 5, ["a\0"] = 2}
 return t.a - t["a\0"]
 )"),
         R"(
@@ -12773,7 +12823,7 @@ TEST_CASE("FoldConstTablePropsOrAnd")
     // handle 'or'
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = 1, b = 2 }
+const t = { a = 1, b = 2 }
 return t.a or t.b
 )"),
         R"(
@@ -12786,7 +12836,7 @@ RETURN R1 1
     // handle 'and'
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = 1, b = 2 }
+const t = { a = 1, b = 2 }
 return t.a and t.b
 )"),
         R"(
@@ -12799,7 +12849,7 @@ RETURN R1 1
     // or with falsy left
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = false, b = 42 }
+const t = { a = false, b = 42 }
 return t.a or t.b
 )"),
         R"(
@@ -12812,7 +12862,7 @@ RETURN R1 1
     // and with falsy left
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = nil, b = 42 }
+const t = { a = nil, b = 42 }
 return t.a and t.b
 )"),
         R"(
@@ -12825,7 +12875,7 @@ RETURN R1 1
     // nested
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = nil, b = false, c = 99 }
+const t = { a = nil, b = false, c = 99 }
 return t.a or t.b or t.c
 )"),
         R"(
@@ -12843,7 +12893,7 @@ TEST_CASE("FoldConstTablePropsReturnLocal")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local t = { a = 1, b = 2 }
+const t = { a = 1, b = 2 }
 print(t.a + t.b)
 return t
 )"),
@@ -12860,8 +12910,8 @@ RETURN R0 1
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local function foo()
-    local t = { a = 1, b = 2 }
+function foo()
+    const t = { a = 1, b = 2 }
     print(t.a + t.b)
     return t
 end
@@ -12885,8 +12935,8 @@ TEST_CASE("FoldConstTablePropsReturnUpvalue")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local t = { x = 1 }
-local function get() return t.x end
+const t = { x = 1 }
+function get() return t.x end
 return t, get
 )",
                    0
@@ -12902,9 +12952,9 @@ RETURN R0 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local function make()
-    local t = { x = 1 }
-    local function get() return t.x end
+function make()
+    const t = { x = 1 }
+    function get() return t.x end
     return t, get
 end
 return make()
@@ -12926,7 +12976,7 @@ TEST_CASE("BufferIntegerFastcall")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local b = buffer.create(16)
+const b = buffer.create(16)
 return buffer.readinteger(b, 0)
 )"),
         R"(
@@ -12944,7 +12994,7 @@ L0: RETURN R1 -1
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local b, v = ...
+const b, v = ...
 buffer.writeinteger(b, 0, v)
 )"),
         R"(
@@ -12966,7 +13016,7 @@ TEST_CASE("ExportLocalBytecode")
 
     // basic exported local: value is stored into the export table, then table is frozen and returned
     CHECK_EQ(
-        "\n" + compileFunction0("export local x = 5"),
+        "\n" + compileFunction0("export x = 5"),
         R"(
 DUPTABLE R0 2
 GETIMPORT R1 5 [table.freeze]
@@ -12978,7 +13028,7 @@ RETURN R1 1
 
     // multiple exported locals are all stored into the same export table
     CHECK_EQ(
-        "\n" + compileFunction0("export local x = 5\nexport local y = 10"),
+        "\n" + compileFunction0("export x = 5\nexport const y = 10"),
         R"(
 DUPTABLE R0 4
 GETIMPORT R1 7 [table.freeze]
@@ -12990,7 +13040,7 @@ RETURN R1 1
 
     // reassigning an exported local updates the export table
     CHECK_EQ(
-        "\n" + compileFunction0("export local x = 5\nx = 10"),
+        "\n" + compileFunction0("export x = 5\nx = 10"),
         R"(
 LOADN R0 5
 DUPTABLE R1 1
@@ -13028,7 +13078,7 @@ TEST_CASE("ExportLocalBytecodeManyExports")
     // All 33 constant-exported locals must still be written via SETTABLEKS
     std::string source;
     for (int i = 0; i < 33; i++)
-        source += "export local v" + std::to_string(i) + " = " + std::to_string(i) + "\n";
+        source += "export v" + std::to_string(i) + " = " + std::to_string(i) + "\n";
 
     std::string result = compileFunction0(source.c_str());
     CHECK(result.find("NEWTABLE") != std::string::npos);
@@ -13061,7 +13111,7 @@ TEST_CASE("ExportSyntaxRegression")
             end
         end
 
-        export local test3 = function()
+        export test3 = function()
            for _ in _, test3 do
            end
         end
@@ -13189,7 +13239,7 @@ export class Point
     public y: number
 end
 
-local p = Point.new({x = 1, y = 2})
+const p = Point.new({x = 1, y = 2})
 )",
                    0,
                    2
@@ -13461,7 +13511,7 @@ TEST_CASE("ExtendShadowedClass")
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 class _ end
-local _
+const _ = nil
 class l0 extends _
 end
 )"),
@@ -13482,8 +13532,8 @@ TEST_CASE("ProtectedCalls")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-local a, b = ...
-local s, value = pcall(rawequal, a, b)
+const a, b = ...
+const s, value = pcall(rawequal, a, b)
 return s, value
 )"),
         R"(
@@ -13501,8 +13551,8 @@ L0: RETURN R2 2
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-local a, b = ...
-local s, value = xpcall(rawequal, function(err) return err .. '!' end, a, b)
+const a, b = ...
+const s, value = xpcall(rawequal, function(err) return err .. '!' end, a, b)
 return s, value
 )",
                    1
@@ -13527,7 +13577,7 @@ TEST_CASE("IfLocal")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
+            if const x = getValue() then
                 print(x)
             end
         )"),
@@ -13549,7 +13599,7 @@ TEST_CASE("IfLocalElse")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
+            if const x = getValue() then
                 print(x)
             else
                 print("nil")
@@ -13577,9 +13627,9 @@ TEST_CASE("IfLocalElseif")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
+            if const x = getValue() then
                 print(x)
-            else if local x = getValue2() then
+            else if const x = getValue2() then
                 print(-x)
             else
                 print("nil")
@@ -13613,7 +13663,7 @@ TEST_CASE("IfLocalNoElseTrailingCode")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
+            if const x = getValue() then
                 print(x)
             end
             print("after")
@@ -13639,7 +13689,7 @@ TEST_CASE("IfLocalElseTrailingCode")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
+            if const x = getValue() then
                 print(x)
             else
                 print("nil")
@@ -13671,7 +13721,7 @@ TEST_CASE("IfLocalThenReturns")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
+            if const x = getValue() then
                 return x
             else
                 print("nil")
@@ -13696,8 +13746,8 @@ TEST_CASE("IfLocalNested")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            if local x = getValue() then
-                if local y = getOther() then
+            if const x = getValue() then
+                if const y = getOther() then
                     print(x, y)
                 end
                 print(x)
@@ -13732,9 +13782,9 @@ TEST_CASE("IfLocalConstantPropagation")
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            local y = 10
+            const y = 10
 
-            if local x = 123 then
+            if const x = 123 then
                 print(x * y)
             else
                 print(5)
@@ -13751,9 +13801,9 @@ RETURN R0 0
 
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            local y = 10
+            const y = 10
 
-            if local x = false then
+            if const x = false then
                 print(if x then 12 else y)
             else
                 print(5)
@@ -13774,7 +13824,7 @@ TEST_CASE("IfLocalTypePropagation")
 
     const char* source = R"(
 function foo(a: number)
-    if local b = a then
+    if const b = a then
         return b + b
     end
     return 0
@@ -13807,9 +13857,11 @@ TEST_CASE("IfLocalEarlyTerminateNoClose")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-            local f
+            f = nil
+            x = nil
             for i = 1, 10 do
-                if local x = foo() then
+                if const y = foo() then
+                    x = y
                     f = function() x *= 2 end
                     break
                 end
@@ -13820,20 +13872,22 @@ TEST_CASE("IfLocalEarlyTerminateNoClose")
                ),
         R"(
 LOADNIL R0
+LOADNIL R1
+LOADN R4 1
+LOADN R2 10
 LOADN R3 1
-LOADN R1 10
-LOADN R2 1
-FORNPREP R1 L2
-L0: GETIMPORT R4 1 [foo]
-CALL R4 0 1
-JUMPIFNOT R4 L1
+FORNPREP R2 L2
+L0: GETIMPORT R5 1 [foo]
+CALL R5 0 1
+JUMPIFNOT R5 L1
+MOVE R1 R5
 NEWCLOSURE R0 P0
-CAPTURE REF R4
-CLOSEUPVALS R4
+CAPTURE REF R1
 JUMP L2
-L1: FORNLOOP R1 L0
-L2: MOVE R1 R0
-CALL R1 0 0
+L1: FORNLOOP R2 L0
+L2: MOVE R2 R0
+CALL R2 0 0
+CLOSEUPVALS R1
 RETURN R0 0
 )"
     );

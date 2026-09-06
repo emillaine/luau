@@ -74,7 +74,6 @@ struct Lexeme
         ReservedFunction,
         ReservedIf,
         ReservedIn,
-        ReservedLocal,
         ReservedNil,
         ReservedNot,
         ReservedOr,

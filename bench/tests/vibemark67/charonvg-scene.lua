@@ -1,14 +1,14 @@
 --!native
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
-local cvg = require("./charonvg/main")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+cvg = require("./charonvg/main")
 
-local W, H = 800, 600
+W, H = 800, 600
 
-local function renderDemo()
-    local surface = cvg.Surface.create(W, H)
+function renderDemo()
+    surface = cvg.Surface.create(W, H)
     surface:clear(cvg.Color.WHITE)
-    local ctx = cvg.Canvas.create(surface)
+    ctx = cvg.Canvas.create(surface)
 
     ctx:setLinearGradient(40, 40, 200, 160, "pad", {
         { offset = 0, color = cvg.Color.rgb(1, 0.2, 0) },
@@ -47,14 +47,14 @@ local function renderDemo()
     ctx:ellipse(200, 200, 120, 70)
     ctx:stroke()
 
-    local star = cvg.Path.create()
-    local cx, cy = 100, 110
-    local outerR, innerR = 70, 28
+    star = cvg.Path.create()
+    cx, cy = 100, 110
+    outerR, innerR = 70, 28
     for i = 0, 9 do
-        local angle = math.pi / 2 + i * math.pi / 5
-        local r = (i % 2 == 0) and outerR or innerR
-        local px = cx + r * math.cos(angle)
-        local py = cy - r * math.sin(angle)
+        angle = math.pi / 2 + i * math.pi / 5
+        r = (i % 2 == 0) and outerR or innerR
+        px = cx + r * math.cos(angle)
+        py = cy - r * math.sin(angle)
         if i == 0 then
             star:moveTo(px, py)
         else

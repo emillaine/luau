@@ -1,20 +1,20 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-	local IV1 = 0x6a09e667f3bcc908i
-	local IV2 = 0xbb67ae8584caa73bi
-	local IV3 = 0x3c6ef372fe94f82bi
-	local IV4 = 0xa54ff53a5f1d36f1i
-	local IV5 = 0x510e527fade682d1i
-	local IV6 = 0x9b05688c2b3e6c1fi
-	local IV7 = 0x1f83d9abfb41bd6bi
-	local IV8 = 0x5be0cd19137e2179i
+	IV1 = 0x6a09e667f3bcc908i
+	IV2 = 0xbb67ae8584caa73bi
+	IV3 = 0x3c6ef372fe94f82bi
+	IV4 = 0xa54ff53a5f1d36f1i
+	IV5 = 0x510e527fade682d1i
+	IV6 = 0x9b05688c2b3e6c1fi
+	IV7 = 0x1f83d9abfb41bd6bi
+	IV8 = 0x5be0cd19137e2179i
 
-	local INV_MASK = 0xffffffffffffffffi
+	INV_MASK = 0xffffffffffffffffi
 
-	local SIGMA =
+	SIGMA =
 	{
 		{  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16 },
 		{ 15, 11,  5,  9, 10, 16, 14,  7,  2, 13,  1,  3, 12,  8,  6,  4 },
@@ -30,17 +30,17 @@ function test()
 		{ 15, 11,  5,  9, 10, 16, 14,  7,  2, 13,  1,  3, 12,  8,  6,  4 },
 	}
 
-	local function compress(h, M, t, isLast)
-		local V0, V1, V2, V3 = h[1], h[2], h[3], h[4]
-		local V4, V5, V6, V7 = h[5], h[6], h[7], h[8]
-		local V8, V9, V10, V11 = IV1, IV2, IV3, IV4
-		local V12 = integer.bxor(IV5, t)
-		local V13 = IV6
-		local V14 = if isLast then integer.bxor(IV7, INV_MASK) else IV7
-		local V15 = IV8
+	function compress(h, M, t, isLast)
+		V0, V1, V2, V3 = h[1], h[2], h[3], h[4]
+		V4, V5, V6, V7 = h[5], h[6], h[7], h[8]
+		V8, V9, V10, V11 = IV1, IV2, IV3, IV4
+		V12 = integer.bxor(IV5, t)
+		V13 = IV6
+		V14 = if isLast then integer.bxor(IV7, INV_MASK) else IV7
+		V15 = IV8
 
 		for r = 1, 12 do
-			local s = SIGMA[r]
+			s = SIGMA[r]
 
 			-- column step
 			V0 = integer.add(integer.add(V0, V4), M[s[1]])
@@ -127,21 +127,21 @@ function test()
 		h[8] = integer.bxor(integer.bxor(h[8], V7), V15)
 	end
 
-	local function blake2b(buf)
-		local len = buffer.len(buf)
+	function blake2b(buf)
+		len = buffer.len(buf)
 
-		local h =
+		h =
 		{
 			integer.bxor(IV1, 0x01010040i),
 			IV2, IV3, IV4, IV5, IV6, IV7, IV8,
 		}
 
-		local M = table.create(16, 0i)
+		M = table.create(16, 0i)
 
 		-- process all full 128-byte blocks except the last
-		local fullBlocks = (len - 1) // 128
+		fullBlocks = (len - 1) // 128
 		for blockIdx = 0, fullBlocks - 1 do
-			local off = blockIdx * 128
+			off = blockIdx * 128
 			for j = 1, 16 do
 				M[j] = buffer.readinteger(buf, off + (j - 1) * 8)
 			end
@@ -149,9 +149,9 @@ function test()
 		end
 
 		-- final block: copy remaining + pad with zeros to 128 bytes
-		local lastBlockStart = fullBlocks * 128
-		local lastBlockLen = len - lastBlockStart
-		local lastBuf = buffer.create(128)
+		lastBlockStart = fullBlocks * 128
+		lastBlockLen = len - lastBlockStart
+		lastBuf = buffer.create(128)
 		if lastBlockLen > 0 then
 			buffer.copy(lastBuf, 0, buf, lastBlockStart, lastBlockLen)
 		end
@@ -167,16 +167,16 @@ function test()
 		)
 	end
 
-	local input = buffer.fromstring(string.rep(".", 1e3))
+	input = buffer.fromstring(string.rep(".", 1e3))
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = blake2b(input)
+		res = blake2b(input)
 		assert(res == "b9ac083b18cd6518abaed42698bbb673e9786c877a6ee89efa1c3a6508a54a20ef76f53cbcc19a18a670ea3ac668836300337c51abafca35efaac59f4396c833")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

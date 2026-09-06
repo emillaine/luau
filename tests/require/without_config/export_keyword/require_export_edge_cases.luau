@@ -1,4 +1,4 @@
-local m = require("./export_edge_cases")
+m = require("./export_edge_cases")
 
 assert(m.x == 6, `x should be 6, got {m.x}`)
 assert(m.s == "ab", `s should be ab, got {m.s}`)

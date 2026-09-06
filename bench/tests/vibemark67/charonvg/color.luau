@@ -1,8 +1,8 @@
 --!native
-local Color = {}
+Color = {}
 Color.__index = Color
 
-local function clamp(v, lo, hi)
+function clamp(v, lo, hi)
     if v < lo then
         return lo
     end
@@ -12,11 +12,11 @@ local function clamp(v, lo, hi)
     return v
 end
 
-local function round(v)
+function round(v)
     return math.floor(v + 0.5)
 end
 
-local function makeColor(r, g, b, a)
+function makeColor(r, g, b, a)
     return setmetatable({ r = r, g = g, b = b, a = a }, Color)
 end
 
@@ -37,24 +37,24 @@ function Color.rgba8(r, g, b, a)
 end
 
 function Color.fromRGBA32(value)
-    local r = bit32.rshift(bit32.band(value, 0xFF000000), 24)
-    local g = bit32.rshift(bit32.band(value, 0x00FF0000), 16)
-    local b = bit32.rshift(bit32.band(value, 0x0000FF00), 8)
-    local a = bit32.band(value, 0x000000FF)
+    r = bit32.rshift(bit32.band(value, 0xFF000000), 24)
+    g = bit32.rshift(bit32.band(value, 0x00FF0000), 16)
+    b = bit32.rshift(bit32.band(value, 0x0000FF00), 8)
+    a = bit32.band(value, 0x000000FF)
     return Color.rgba8(r, g, b, a)
 end
 
 function Color.fromARGB32(value)
-    local a = bit32.rshift(bit32.band(value, 0xFF000000), 24)
-    local r = bit32.rshift(bit32.band(value, 0x00FF0000), 16)
-    local g = bit32.rshift(bit32.band(value, 0x0000FF00), 8)
-    local b = bit32.band(value, 0x000000FF)
+    a = bit32.rshift(bit32.band(value, 0xFF000000), 24)
+    r = bit32.rshift(bit32.band(value, 0x00FF0000), 16)
+    g = bit32.rshift(bit32.band(value, 0x0000FF00), 8)
+    b = bit32.band(value, 0x000000FF)
     return Color.rgba8(r, g, b, a)
 end
 
-local function hslComponent(h, s, l, n)
-    local k = (n + h / 30) % 12
-    local a = s * math.min(l, 1 - l)
+function hslComponent(h, s, l, n)
+    k = (n + h / 30) % 12
+    a = s * math.min(l, 1 - l)
     return l - a * math.max(-1, math.min(1, math.min(k - 3, 9 - k)))
 end
 
@@ -69,31 +69,31 @@ function Color.hsla(h, s, l, a)
     end
     s = clamp(s, 0, 1)
     l = clamp(l, 0, 1)
-    local r = hslComponent(h, s, l, 0)
-    local g = hslComponent(h, s, l, 8)
-    local b = hslComponent(h, s, l, 4)
+    r = hslComponent(h, s, l, 0)
+    g = hslComponent(h, s, l, 8)
+    b = hslComponent(h, s, l, 4)
     return Color.rgba(r, g, b, a)
 end
 
 function Color:toRGBA32()
-    local r = round(self.r * 255)
-    local g = round(self.g * 255)
-    local b = round(self.b * 255)
-    local a = round(self.a * 255)
+    r = round(self.r * 255)
+    g = round(self.g * 255)
+    b = round(self.b * 255)
+    a = round(self.a * 255)
     return bit32.bor(bit32.lshift(r, 24), bit32.lshift(g, 16), bit32.lshift(b, 8), a)
 end
 
 function Color:toARGB32()
-    local a = round(self.a * 255)
-    local r = round(self.r * 255)
-    local g = round(self.g * 255)
-    local b = round(self.b * 255)
+    a = round(self.a * 255)
+    r = round(self.r * 255)
+    g = round(self.g * 255)
+    b = round(self.b * 255)
     return bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
 end
 
 -- CSS color string parsing
 
-local NAMED_COLORS = {
+NAMED_COLORS = {
     aliceblue = 0xF0F8FF,
     antiquewhite = 0xFAEBD7,
     aqua = 0x00FFFF,
@@ -244,11 +244,11 @@ local NAMED_COLORS = {
     yellowgreen = 0x9ACD32,
 }
 
-local function isHexDigit(c)
+function isHexDigit(c)
     return (c >= 48 and c <= 57) or (c >= 65 and c <= 70) or (c >= 97 and c <= 102)
 end
 
-local function hexDigit(c)
+function hexDigit(c)
     if c >= 48 and c <= 57 then
         return c - 48
     end
@@ -261,28 +261,28 @@ local function hexDigit(c)
     return 0
 end
 
-local function isAlpha(c)
+function isAlpha(c)
     return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
 end
 
-local function isWs(c)
+function isWs(c)
     return c == 32 or c == 9 or c == 10 or c == 13
 end
 
-local function skipWs(str, pos)
+function skipWs(str, pos)
     while pos <= #str and isWs(string.byte(str, pos)) do
         pos = pos + 1
     end
     return pos
 end
 
-local function parseNumber(str, pos)
-    local startPos = pos
-    local sign = 1
-    local len = #str
+function parseNumber(str, pos)
+    startPos = pos
+    sign = 1
+    len = #str
 
     if pos <= len then
-        local c = string.byte(str, pos)
+        c = string.byte(str, pos)
         if c == 43 then
             pos = pos + 1
         else if c == 45 then
@@ -294,12 +294,12 @@ local function parseNumber(str, pos)
     if pos > len then
         return nil
     end
-    local c = string.byte(str, pos)
-    if c ~= 46 and not (c >= 48 and c <= 57) then
+    c = string.byte(str, pos)
+    if c != 46 and not (c >= 48 and c <= 57) then
         return nil
     end
 
-    local integer = 0
+    integer = 0
     while pos <= len do
         c = string.byte(str, pos)
         if c < 48 or c > 57 then
@@ -309,13 +309,13 @@ local function parseNumber(str, pos)
         pos = pos + 1
     end
 
-    local fraction = 0
+    fraction = 0
     if pos <= len and string.byte(str, pos) == 46 then
         pos = pos + 1
         if pos > len or string.byte(str, pos) < 48 or string.byte(str, pos) > 57 then
             return nil
         end
-        local divisor = 1
+        divisor = 1
         while pos <= len do
             c = string.byte(str, pos)
             if c < 48 or c > 57 then
@@ -328,8 +328,8 @@ local function parseNumber(str, pos)
         fraction = fraction / divisor
     end
 
-    local exponent = 0
-    local expsign = 1
+    exponent = 0
+    expsign = 1
     if pos <= len then
         c = string.byte(str, pos)
         if c == 101 or c == 69 then
@@ -361,14 +361,14 @@ local function parseNumber(str, pos)
         return nil
     end
 
-    local value = sign * (integer + fraction)
-    if exponent ~= 0 then
+    value = sign * (integer + fraction)
+    if exponent != 0 then
         value = value * (10 ^ (expsign * exponent))
     end
     return value, pos
 end
 
-local function skipWsAndComma(str, pos)
+function skipWsAndComma(str, pos)
     pos = skipWs(str, pos)
     if pos <= #str and string.byte(str, pos) == 44 then
         pos = pos + 1
@@ -377,8 +377,8 @@ local function skipWsAndComma(str, pos)
     return pos
 end
 
-local function parseRgbComponent(str, pos)
-    local value, newPos = parseNumber(str, pos)
+function parseRgbComponent(str, pos)
+    value, newPos = parseNumber(str, pos)
     if not value then
         return nil
     end
@@ -390,8 +390,8 @@ local function parseRgbComponent(str, pos)
     return clamp(value, 0, 255) / 255, pos
 end
 
-local function parseAlphaComponent(str, pos)
-    local value, newPos = parseNumber(str, pos)
+function parseAlphaComponent(str, pos)
+    value, newPos = parseNumber(str, pos)
     if not value then
         return nil
     end
@@ -404,30 +404,30 @@ local function parseAlphaComponent(str, pos)
 end
 
 function Color.parse(str)
-    if type(str) ~= "string" or #str == 0 then
+    if type(str) != "string" or #str == 0 then
         return nil
     end
-    local pos = skipWs(str, 1)
-    local len = #str
+    pos = skipWs(str, 1)
+    len = #str
 
     if pos <= len and string.byte(str, pos) == 35 then
         pos = pos + 1
-        local hexStart = pos
+        hexStart = pos
         while pos <= len and isHexDigit(string.byte(str, pos)) do
             pos = pos + 1
         end
-        local count = pos - hexStart
-        local r, g, b, a
+        count = pos - hexStart
+        r, g, b, a = nil, nil, nil, nil
         if count == 3 or count == 4 then
-            local c1 = hexDigit(string.byte(str, hexStart))
-            local c2 = hexDigit(string.byte(str, hexStart + 1))
-            local c3 = hexDigit(string.byte(str, hexStart + 2))
+            c1 = hexDigit(string.byte(str, hexStart))
+            c2 = hexDigit(string.byte(str, hexStart + 1))
+            c3 = hexDigit(string.byte(str, hexStart + 2))
             r = c1 * 16 + c1
             g = c2 * 16 + c2
             b = c3 * 16 + c3
             a = 255
             if count == 4 then
-                local c4 = hexDigit(string.byte(str, hexStart + 3))
+                c4 = hexDigit(string.byte(str, hexStart + 3))
                 a = c4 * 16 + c4
             end
         else if count == 6 or count == 8 then
@@ -444,23 +444,23 @@ function Color.parse(str)
         return Color.rgba8(r, g, b, a)
     end
 
-    local nameStart = pos
+    nameStart = pos
     while pos <= len and isAlpha(string.byte(str, pos)) do
         pos = pos + 1
     end
-    local name = string.lower(string.sub(str, nameStart, pos - 1))
+    name = string.lower(string.sub(str, nameStart, pos - 1))
 
     if name == "transparent" then
         return makeColor(0, 0, 0, 0)
     else if name == "rgb" or name == "rgba" then
         pos = skipWs(str, pos)
-        if pos > len or string.byte(str, pos) ~= 40 then
+        if pos > len or string.byte(str, pos) != 40 then
             return nil
         end
         pos = pos + 1
         pos = skipWs(str, pos)
 
-        local r, g, b, a
+        r, g, b, a = nil, nil, nil, nil
         r, pos = parseRgbComponent(str, pos)
         if not r then
             return nil
@@ -477,10 +477,10 @@ function Color.parse(str)
         end
 
         a = 1
-        local savedPos = pos
+        savedPos = pos
         pos = skipWsAndComma(str, pos)
-        if pos ~= savedPos then
-            local newA, newPos = parseAlphaComponent(str, pos)
+        if pos != savedPos then
+            newA, newPos = parseAlphaComponent(str, pos)
             if newA then
                 a = newA
                 pos = newPos
@@ -490,19 +490,19 @@ function Color.parse(str)
         end
 
         pos = skipWs(str, pos)
-        if pos > len or string.byte(str, pos) ~= 41 then
+        if pos > len or string.byte(str, pos) != 41 then
             return nil
         end
         return Color.rgba(r, g, b, a)
     else if name == "hsl" or name == "hsla" then
         pos = skipWs(str, pos)
-        if pos > len or string.byte(str, pos) ~= 40 then
+        if pos > len or string.byte(str, pos) != 40 then
             return nil
         end
         pos = pos + 1
         pos = skipWs(str, pos)
 
-        local h, s, l, a
+        h, s, l, a = nil, nil, nil, nil
         h, pos = parseNumber(str, pos)
         if not h then
             return nil
@@ -519,10 +519,10 @@ function Color.parse(str)
         end
 
         a = 1
-        local savedPos = pos
+        savedPos = pos
         pos = skipWsAndComma(str, pos)
-        if pos ~= savedPos then
-            local newA, newPos = parseAlphaComponent(str, pos)
+        if pos != savedPos then
+            newA, newPos = parseAlphaComponent(str, pos)
             if newA then
                 a = newA
                 pos = newPos
@@ -532,18 +532,18 @@ function Color.parse(str)
         end
 
         pos = skipWs(str, pos)
-        if pos > len or string.byte(str, pos) ~= 41 then
+        if pos > len or string.byte(str, pos) != 41 then
             return nil
         end
         return Color.hsla(h, s, l, a)
     else
-        local value = NAMED_COLORS[name]
+        value = NAMED_COLORS[name]
         if not value then
             return nil
         end
-        local r = bit32.rshift(bit32.band(value, 0xFF0000), 16)
-        local g = bit32.rshift(bit32.band(value, 0x00FF00), 8)
-        local b = bit32.band(value, 0x0000FF)
+        r = bit32.rshift(bit32.band(value, 0xFF0000), 16)
+        g = bit32.rshift(bit32.band(value, 0x00FF00), 8)
+        b = bit32.band(value, 0x0000FF)
         return Color.rgba8(r, g, b, 255)
     end
 end

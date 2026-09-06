@@ -1,5 +1,5 @@
 -- mixed exports: values, functions, and types together
-export local version = "2.0.0"
+export version = "2.0.0"
 
 export type Config = {
     debug: boolean,

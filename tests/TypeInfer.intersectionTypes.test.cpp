@@ -21,7 +21,7 @@ TEST_CASE_FIXTURE(Fixture, "select_correct_union_fn")
         type A = (number) -> (string)
         type B = (string) -> (number)
 
-        local function foo(f: A & B)
+        function foo(f: A & B)
             return f(10), f("a")
         end
     )");
@@ -37,7 +37,7 @@ TEST_CASE_FIXTURE(Fixture, "table_combines")
         type A={a:number}
         type B={b:string}
 
-        local c:A & B = {a=10, b="s"}
+        const c:A & B = {a=10, b="s"}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -49,7 +49,7 @@ TEST_CASE_FIXTURE(Fixture, "table_combines_missing")
         type A={a:number}
         type B={b:string}
 
-        local c:A & B = {a=10}
+        const c:A & B = {a=10}
     )");
 
     REQUIRE(result.errors.size() == 1);
@@ -58,7 +58,7 @@ TEST_CASE_FIXTURE(Fixture, "table_combines_missing")
 TEST_CASE_FIXTURE(Fixture, "impossible_type")
 {
     CheckResult result = check(R"(
-        local c:number&string = 10
+        const c:number&string = 10
     )");
 
     REQUIRE(result.errors.size() == 1);
@@ -70,7 +70,7 @@ TEST_CASE_FIXTURE(Fixture, "table_extra_ok")
         type A={a:number}
         type B={b:string}
 
-        local function f(t: A & B): A
+        function f(t: A & B): A
             return t
         end
     )");
@@ -85,7 +85,7 @@ TEST_CASE_FIXTURE(Fixture, "fx_intersection_as_argument")
         type B = (string) -> (number)
         type C = (A) -> (number)
 
-        local function foo(f: A & B, g: C)
+        function foo(f: A & B, g: C)
             return g(f)
         end
     )");
@@ -100,7 +100,7 @@ TEST_CASE_FIXTURE(Fixture, "fx_union_as_argument_fails")
         type B = (string) -> (number)
         type C = (A) -> (number)
 
-        local function foo(f: A | B, g: C)
+        function foo(f: A | B, g: C)
             return g(f)
         end
     )");
@@ -113,7 +113,7 @@ TEST_CASE_FIXTURE(Fixture, "argument_is_intersection")
     CheckResult result = check(R"(
         type A = (number | boolean) -> number
 
-        local function foo(f: A)
+        function foo(f: A)
             f(5)
             f(true)
         end
@@ -128,7 +128,7 @@ TEST_CASE_FIXTURE(Fixture, "should_still_pick_an_overload_whose_arguments_are_un
         type A = (number) -> string
         type B = (string) -> number
 
-        local function foo(f: A & B)
+        function foo(f: A & B)
             return f(1), f("five")
         end
     )");
@@ -144,7 +144,7 @@ TEST_CASE_FIXTURE(Fixture, "propagates_name")
         type A={a:number}
         type B={b:string}
 
-        local function f(t: A & B)
+        function f(t: A & B)
             return t
         end
     )";
@@ -153,7 +153,7 @@ TEST_CASE_FIXTURE(Fixture, "propagates_name")
         type A={a:number}
         type B={b:string}
 
-        local function f(t: A & B): A&B
+        function f(t: A & B): A&B
             return t
         end
     )";
@@ -167,7 +167,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_an_intersection_type_with_property_guarante
         type A = {x: {y: number}}
         type B = {x: {y: number}}
 
-        local function f(t: A & B)
+        function f(t: A & B)
             return t.x
         end
     )");
@@ -186,7 +186,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_an_intersection_type_works_at_arbitrary_dep
         type A = {x: {y: {z: {thing: string}}}}
         type B = {x: {y: {z: {thing: string}}}}
 
-        local function f(t: A & B)
+        function f(t: A & B)
             return t.x.y.z.thing
         end
     )");
@@ -205,7 +205,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_an_intersection_type_with_mixed_types")
         type A = {x: number}
         type B = {x: string}
 
-        local function f(t: A & B)
+        function f(t: A & B)
             return t.x
         end
     )");
@@ -224,7 +224,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_an_intersection_type_with_one_part_missing_
         type A = {x: number}
         type B = {}
 
-        local function f(t: A & B)
+        function f(t: A & B)
             return t.x
         end
     )");
@@ -239,7 +239,7 @@ TEST_CASE_FIXTURE(Fixture, "index_on_an_intersection_type_with_one_property_of_t
         type A = {y: number}
         type B = {x: any}
 
-        local function f(t: A & B)
+        function f(t: A & B)
             return t.x
         end
     )");
@@ -254,8 +254,8 @@ TEST_CASE_FIXTURE(Fixture, "index_on_an_intersection_type_with_all_parts_missing
         type A = {}
         type B = {}
 
-        local function f(t: A & B)
-            local x = t.x
+        function f(t: A & B)
+            const x = t.x
         end
     )");
 
@@ -386,7 +386,7 @@ TEST_CASE_FIXTURE(Fixture, "table_write_sealed_indirect")
     CheckResult result = check(R"(
     type XY = { x: (number) -> number, y: (string) -> string }
 
-    local xy : XY = {
+    const xy : XY = {
         x = function(a: number) return -a end,
         y = function(a: string) return a .. "b" end
     }
@@ -427,7 +427,7 @@ type X = { x: number }
 type Y = { y: number }
 type Z = { z: number }
 type XYZ = X & Y & Z
-local a: XYZ = 3
+const a: XYZ = 3
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -507,7 +507,7 @@ _(...)(...,setfenv,_):_G()
 TEST_CASE_FIXTURE(Fixture, "no_stack_overflow_from_flattenintersection")
 {
     CheckResult result = check(R"(
-        local l0,l0
+        const l0,l0 = nil, nil
         repeat
         type t0 = ((any)|((any)&((any)|((any)&((any)|(any))))))&(t0)
         function _(l0):(t0)&(t0)
@@ -524,8 +524,8 @@ TEST_CASE_FIXTURE(Fixture, "intersect_bool_and_false")
 {
     CheckResult result = check(R"(
         function f(x: boolean & false)
-            local y : false = x -- OK
-            local z : true = x  -- Not OK
+            const y : false = x -- OK
+            const z : true = x  -- Not OK
         end
     )");
 
@@ -552,8 +552,8 @@ TEST_CASE_FIXTURE(Fixture, "intersect_false_and_bool_and_false")
 {
     CheckResult result = check(R"(
         function f(x: false & (boolean & false))
-            local y : false = x -- OK
-            local z : true = x  -- Not OK
+            const y : false = x -- OK
+            const z : true = x  -- Not OK
         end
     )");
 
@@ -584,8 +584,8 @@ TEST_CASE_FIXTURE(Fixture, "intersect_saturate_overloaded_functions")
 {
     CheckResult result = check(R"(
         function foo(x: ((number?) -> number?) & ((string?) -> string?))
-            local y : (nil) -> nil = x -- Not OK (fixed in DCR)
-            local z : (number) -> number = x -- Not OK
+            const y : (nil) -> nil = x -- Not OK (fixed in DCR)
+            const z : (number) -> number = x -- Not OK
         end
     )");
 
@@ -654,8 +654,8 @@ TEST_CASE_FIXTURE(Fixture, "union_saturate_overloaded_functions")
 
     CheckResult result = check(R"(
         function f(x: ((number) -> number) & ((string) -> string))
-            local y : ((number | string) -> (number | string)) = x -- OK
-            local z : ((number | boolean) -> (number | boolean)) = x -- Not OK
+            const y : ((number | string) -> (number | string)) = x -- OK
+            const z : ((number | boolean) -> (number | boolean)) = x -- Not OK
         end
     )");
 
@@ -673,8 +673,8 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_tables")
 {
     CheckResult result = check(R"(
         function f(x: { p : number?, q : string? } & { p : number?, q : number?, r : number? })
-            local y : { p : number?, q : nil, r : number? } = x -- OK
-            local z : { p : nil } = x -- Not OK
+            const y : { p : number?, q : nil, r : number? } = x -- OK
+            const z : { p : nil } = x -- Not OK
         end
     )");
 
@@ -707,8 +707,8 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_tables_with_top_properties")
 {
     CheckResult result = check(R"(
         function f(x : { p : number?, q : any } & { p : unknown, q : string? })
-            local y : { p : number?, q : string? } = x -- OK
-            local z : { p : string?, q : number? } = x -- Not OK
+            const y : { p : number?, q : string? } = x -- OK
+            const z : { p : string?, q : number? } = x -- Not OK
         end
     )");
 
@@ -760,8 +760,8 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_tables_with_never_properties")
 {
     CheckResult result = check(R"(
         function f(x : { p : number?, q : never } & { p : never, q : string? })
-            local y : { p : never, q : never } = x -- OK
-            local z : never = x -- OK
+            const y : { p : never, q : never } = x -- OK
+            const z : never = x -- OK
         end
     )");
 
@@ -772,8 +772,8 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_returning_intersections")
 {
     CheckResult result = check(R"(
         function f(x : ((number?) -> ({ p : number } & { q : number })) & ((string?) -> ({ p : number } & { r : number })))
-            local y : (nil) -> { p : number, q : number, r : number} = x -- OK
-            local z : (number?) -> { p : number, q : number, r : number} = x -- Not OK
+            const y : (nil) -> { p : number, q : number, r : number} = x -- OK
+            const z : (number?) -> { p : number, q : number, r : number} = x -- Not OK
         end
     )");
 
@@ -859,8 +859,8 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_mentioning_generic")
     CheckResult result = check(R"(
         function f<a>()
             function g(x : ((number?) -> (a | number)) & ((string?) -> (a | string)))
-                local y : (nil) -> a = x -- OK
-                local z : (number?) -> a = x -- Not OK
+                const y : (nil) -> a = x -- OK
+                const z : (number?) -> a = x -- Not OK
             end
         end
     )");
@@ -884,8 +884,8 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_mentioning_generics")
     CheckResult result = check(R"(
         function f<a,b,c>()
             function g(x : ((a?) -> (a | b)) & ((c?) -> (b | c)))
-                local y : (nil) -> ((a & c) | b) = x -- OK
-                local z : (a?) -> ((a & c) | b) = x -- Not OK
+                const y : (nil) -> ((a & c) | b) = x -- OK
+                const z : (a?) -> ((a & c) | b) = x -- Not OK
             end
         end
     )");
@@ -911,9 +911,9 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_mentioning_generic_packs")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number?, a...) -> (number?, b...)) & ((string?, a...) -> (string?, b...)))
-                local y : ((nil, a...) -> (nil, b...)) = x -- OK in the old solver, not OK in the new
-                local z : ((nil, b...) -> (nil, a...)) = x -- Not OK
-                local w : ((number?, a...) -> (number?, b...)) = x -- OK in both solvers
+                const y : ((nil, a...) -> (nil, b...)) = x -- OK in the old solver, not OK in the new
+                const z : ((nil, b...) -> (nil, a...)) = x -- Not OK
+                const w : ((number?, a...) -> (number?, b...)) = x -- OK in both solvers
             end
         end
     )");
@@ -1006,8 +1006,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_unknown_result")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number) -> number) & ((nil) -> unknown))
-                local y : (number?) -> unknown = x -- OK
-                local z : (number?) -> number? = x -- Not OK
+                const y : (number?) -> unknown = x -- OK
+                const z : (number?) -> number? = x -- Not OK
             end
         end
     )");
@@ -1030,8 +1030,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_unknown_arguments")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number) -> number?) & ((unknown) -> string?))
-                local y : (number) -> nil = x -- OK
-                local z : (number?) -> nil = x -- Not OK
+                const y : (number) -> nil = x -- OK
+                const z : (number?) -> nil = x -- Not OK
             end
         end
     )");
@@ -1051,8 +1051,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_never_result")
     CheckResult result = check(R"(
     function f<a...,b...>()
         function g(x : ((number) -> number) & ((nil) -> never))
-            local y : (number?) -> number = x -- OK
-            local z : (number?) -> never = x -- Not OK
+            const y : (number?) -> number = x -- OK
+            const z : (number?) -> never = x -- Not OK
         end
     end
     )");
@@ -1123,8 +1123,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_never_arguments")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number) -> number?) & ((never) -> string?))
-                local y : (never) -> nil = x -- OK
-                local z : (number?) -> nil = x -- Not OK
+                const y : (never) -> nil = x -- OK
+                const z : (number?) -> nil = x -- Not OK
             end
         end
     )");
@@ -1205,8 +1205,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_overlapping_results_and_
 
     CheckResult result = check(R"(
         function f(x : ((string?) -> (string | number)) & ((number?) -> ...number))
-            local y : ((nil) -> (number, number?)) = x -- OK
-            local z : ((string | number) -> (number, number?)) = x -- Not OK
+            const y : ((nil) -> (number, number?)) = x -- OK
+            const z : ((string | number) -> (number, number?)) = x -- Not OK
         end
     )");
 
@@ -1225,8 +1225,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_1")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : (() -> a...) & (() -> b...))
-                local y : (() -> b...) & (() -> a...) = x -- OK
-                local z : () -> () = x -- Not OK
+                const y : (() -> b...) & (() -> a...) = x -- OK
+                const z : () -> () = x -- Not OK
             end
         end
     )");
@@ -1250,8 +1250,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_2")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((a...) -> ()) & ((b...) -> ()))
-                local y : ((b...) -> ()) & ((a...) -> ()) = x -- OK
-                local z : () -> () = x -- Not OK
+                const y : ((b...) -> ()) & ((a...) -> ()) = x -- OK
+                const z : () -> () = x -- Not OK
             end
         end
     )");
@@ -1279,8 +1279,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_3")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : (() -> a...) & (() -> (number?,a...)))
-                local y : (() -> (number?,a...)) & (() -> a...) = x -- OK
-                local z : () -> (number) = x -- Not OK
+                const y : (() -> (number?,a...)) & (() -> a...) = x -- OK
+                const z : () -> (number) = x -- Not OK
             end
         end
     )");
@@ -1309,8 +1309,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_4")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : ((a...) -> ()) & ((number,a...) -> number))
-                local y : ((number,a...) -> number) & ((a...) -> ()) = x -- OK
-                local z : (number?) -> () = x -- Not OK
+                const y : ((number,a...) -> number) & ((a...) -> ()) = x -- OK
+                const z : (number?) -> () = x -- Not OK
             end
         end
     )");
@@ -1377,9 +1377,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatables")
     {
         CheckResult result = check(R"(
             function f(a: string?, b: string?)
-                local x = setmetatable({}, { p = 5, q = a })
-                local y = setmetatable({}, { q = b, r = "hi" })
-                local z = setmetatable({}, { p = 5, q = nil, r = "hi" })
+                const x = setmetatable({}, { p = 5, q = a })
+                const y = setmetatable({}, { q = b, r = "hi" })
+                const z = setmetatable({}, { p = 5, q = nil, r = "hi" })
 
                 type X = typeof(x)
                 type Y = typeof(y)
@@ -1398,19 +1398,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatables")
     else
     {
         CheckResult result = check(R"(
-            local a : string? = nil
-            local b : number? = nil
+            const a : string? = nil
+            const b : number? = nil
 
-            local x = setmetatable({}, { p = 5, q = a });
-            local y = setmetatable({}, { q = b, r = "hi" });
-            local z = setmetatable({}, { p = 5, q = nil, r = "hi" });
+            const x = setmetatable({}, { p = 5, q = a });
+            const y = setmetatable({}, { q = b, r = "hi" });
+            const z = setmetatable({}, { p = 5, q = nil, r = "hi" });
 
             type X = typeof(x)
             type Y = typeof(y)
             type Z = typeof(z)
 
-            local xy : X&Y = z;
-            local yx : Y&X = z;
+            const xy : X&Y = z;
+            const yx : Y&X = z;
             z = xy;
             z = yx;
         )");
@@ -1422,9 +1422,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatables")
 TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatable_subtypes")
 {
     CheckResult result = check(R"(
-        local x = setmetatable({ a = 5 }, { p = 5 })
-        local y = setmetatable({ b = "hi" }, { p = 5, q = "hi" })
-        local z = setmetatable({ a = 5, b = "hi" }, { p = 5, q = "hi" })
+        const x = setmetatable({ a = 5 }, { p = 5 })
+        const y = setmetatable({ b = "hi" }, { p = 5, q = "hi" })
+        const z = setmetatable({ a = 5, b = "hi" }, { p = 5, q = "hi" })
 
         type X = typeof(x)
         type Y = typeof(y)
@@ -1443,9 +1443,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatable_subtypes")
 TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatables_with_properties")
 {
     CheckResult result = check(R"(
-        local x = setmetatable({ a = 5 }, { p = 5 })
-        local y = setmetatable({ b = "hi" }, { q = "hi" })
-        local z = setmetatable({ a = 5, b = "hi" }, { p = 5, q = "hi" })
+        const x = setmetatable({ a = 5 }, { p = 5 })
+        const y = setmetatable({ b = "hi" }, { q = "hi" })
+        const z = setmetatable({ a = 5, b = "hi" }, { p = 5, q = "hi" })
 
         type X = typeof(x)
         type Y = typeof(y)
@@ -1466,8 +1466,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatable_with_table")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CheckResult result = check(R"(
-            local x = setmetatable({ a = 5 }, { p = 5 })
-            local z = setmetatable({ a = 5, b = "hi" }, { p = 5 })
+            const x = setmetatable({ a = 5 }, { p = 5 })
+            const z = setmetatable({ a = 5, b = "hi" }, { p = 5 })
 
             type X = typeof(x)
             type Y = { b : string }
@@ -1485,16 +1485,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatable_with_table")
     else
     {
         CheckResult result = check(R"(
-            local x = setmetatable({ a = 5 }, { p = 5 });
-            local z = setmetatable({ a = 5, b = "hi" }, { p = 5 });
+            const x = setmetatable({ a = 5 }, { p = 5 });
+            const z = setmetatable({ a = 5, b = "hi" }, { p = 5 });
 
             type X = typeof(x)
             type Y = { b : string }
             type Z = typeof(z)
 
             -- TODO: once we have shape types, we should be able to initialize these with z
-            local xy : X&Y;
-            local yx : Y&X;
+            const xy : X&Y;
+            const yx : Y&X;
             z = xy;
             z = yx;
         )");
@@ -1517,11 +1517,11 @@ TEST_CASE_FIXTURE(Fixture, "CLI-44817")
             return xy, xyz
         end
 
-        local xNy, xNyNz = f({x = 0, y = 0}, {x = 0, y = 0, z = 0})
+        const xNy, xNyNz = f({x = 0, y = 0}, {x = 0, y = 0, z = 0})
 
-        local t1: XY = xNy -- Type 'X & Y' could not be converted into 'XY'
-        local t2: XY = xNyNz -- Type 'X & Y & Z' could not be converted into 'XY'
-        local t3: XYZ = xNyNz -- Type 'X & Y & Z' could not be converted into 'XYZ'
+        const t1: XY = xNy -- Type 'X & Y' could not be converted into 'XY'
+        const t2: XY = xNyNz -- Type 'X & Y & Z' could not be converted into 'XY'
+        const t3: XYZ = xNyNz -- Type 'X & Y & Z' could not be converted into 'XYZ'
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1533,8 +1533,8 @@ TEST_CASE_FIXTURE(Fixture, "less_greedy_unification_with_intersection_types")
         return;
 
     CheckResult result = check(R"(
-        local function f(t): { x: number } & { x: string }
-            local x = t.x
+        function f(t): { x: number } & { x: string }
+            const x = t.x
             return t
         end
     )");
@@ -1554,7 +1554,7 @@ TEST_CASE_FIXTURE(Fixture, "less_greedy_unification_with_intersection_types_2")
         return;
 
     CheckResult result = check(R"(
-        local function f(t: { x: number } & { x: string })
+        function f(t: { x: number } & { x: string })
             return t.x
         end
     )");
@@ -1652,7 +1652,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "narrow_intersection_nevers")
         end
     )");
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function foo(player: Player?)
+        function foo(player: Player?)
             if player and player.Character then
                 print(player.Character)
             end
@@ -1668,12 +1668,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bounds_propagate_into_free_intersection_boun
      * When unifying 'a <: T & C in a context where T is substituted for 't, we must constrain the lower bound of 't by 'a.
      */
     CheckResult result = check(R"(
-        local function f<T>(a: T & string): T
+        function f<T>(a: T & string): T
             return a
         end
 
-        local b = f("hello")
-        local c = f(("world" as string))
+        const b = f("hello")
+        const c = f(("world" as string))
     )");
 
     LUAU_CHECK_NO_ERRORS(result);

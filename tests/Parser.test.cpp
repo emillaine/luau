@@ -144,14 +144,14 @@ TEST_CASE_FIXTURE(Fixture, "basic_parse")
 
 TEST_CASE_FIXTURE(Fixture, "can_haz_annotations")
 {
-    AstStatBlock* block = parse("local foo: string = \"Hello Types!\"");
+    AstStatBlock* block = parse("const foo: string = \"Hello Types!\"");
     REQUIRE(block != nullptr);
 }
 
 TEST_CASE_FIXTURE(Fixture, "local_with_annotation")
 {
     std::string code = R"(
-        local foo: string = "Hello Types!"
+        const foo: string = "Hello Types!"
     )";
 
     AstStatBlock* block = parse(code);
@@ -176,7 +176,7 @@ TEST_CASE_FIXTURE(Fixture, "local_with_annotation")
 TEST_CASE_FIXTURE(Fixture, "type_names_can_contain_dots")
 {
     AstStatBlock* block = parse(R"(
-        local foo: SomeModule.CoolType
+        const foo: SomeModule.CoolType = nil
     )");
 
     REQUIRE(block != nullptr);
@@ -191,7 +191,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_have_return_annotations")
     REQUIRE(block != nullptr);
     REQUIRE(block->body.size > 0);
 
-    AstStatFunction* statFunction = block->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* statFunction = block->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(statFunction != nullptr);
 
     REQUIRE(statFunction->func->returnAnnotation);
@@ -210,7 +210,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_have_a_function_type_annotation")
     REQUIRE(block != nullptr);
     REQUIRE(block->body.size > 0);
 
-    AstStatFunction* statFunc = block->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* statFunc = block->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(statFunc != nullptr);
 
     REQUIRE(statFunc->func->returnAnnotation);
@@ -233,7 +233,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_type_should_disambiguate_from_functi
     REQUIRE(block != nullptr);
     REQUIRE(block->body.size > 0);
 
-    AstStatFunction* statFunc = block->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* statFunc = block->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(statFunc != nullptr);
 
     REQUIRE(statFunc->func->returnAnnotation);
@@ -261,7 +261,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_type_should_parse_as_function_type_a
     REQUIRE(block != nullptr);
     REQUIRE(block->body.size > 0);
 
-    AstStatFunction* statFunc = block->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* statFunc = block->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(statFunc != nullptr);
 
     REQUIRE(statFunc->func->returnAnnotation);
@@ -288,8 +288,8 @@ TEST_CASE_FIXTURE(Fixture, "function_return_type_should_parse_as_function_type_a
 TEST_CASE_FIXTURE(Fixture, "annotations_can_be_tables")
 {
     AstStatBlock* stat = parse(R"(
-        local zero: number
-        local one: {x: number, y: string}
+        const zero: number = nil
+        const one: {x: number, y: string} = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -298,10 +298,10 @@ TEST_CASE_FIXTURE(Fixture, "annotations_can_be_tables")
 TEST_CASE_FIXTURE(Fixture, "tables_should_have_an_indexer_and_keys")
 {
     AstStatBlock* stat = parse(R"(
-        local t: {
+        const t: {
             [string]: number,
             f: () -> nil
-        }
+        } = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -310,8 +310,8 @@ TEST_CASE_FIXTURE(Fixture, "tables_should_have_an_indexer_and_keys")
 TEST_CASE_FIXTURE(Fixture, "tables_can_have_trailing_separator")
 {
     AstStatBlock* stat = parse(R"(
-        local zero: number
-        local one: {x: number, y: string, }
+        const zero: number = nil
+        const one: {x: number, y: string, } = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -320,8 +320,8 @@ TEST_CASE_FIXTURE(Fixture, "tables_can_have_trailing_separator")
 TEST_CASE_FIXTURE(Fixture, "tables_can_use_semicolons")
 {
     AstStatBlock* stat = parse(R"(
-        local zero: number
-        local one: {x: number; y: string; }
+        const zero: number = nil
+        const one: {x: number; y: string; } = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -340,7 +340,7 @@ TEST_CASE_FIXTURE(Fixture, "other_places_where_type_annotations_are_allowed")
 TEST_CASE_FIXTURE(Fixture, "nil_is_a_valid_type_name")
 {
     AstStatBlock* stat = parse(R"(
-        local n: nil
+        const n: nil = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -349,7 +349,7 @@ TEST_CASE_FIXTURE(Fixture, "nil_is_a_valid_type_name")
 TEST_CASE_FIXTURE(Fixture, "function_type_annotation")
 {
     AstStatBlock* stat = parse(R"(
-        local f: (number, string) -> nil
+        const f: (number, string) -> nil = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -358,7 +358,7 @@ TEST_CASE_FIXTURE(Fixture, "function_type_annotation")
 TEST_CASE_FIXTURE(Fixture, "functions_can_return_multiple_values")
 {
     AstStatBlock* stat = parse(R"(
-        local f: (number) -> (number, number)
+        const f: (number) -> (number, number) = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -367,7 +367,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_return_multiple_values")
 TEST_CASE_FIXTURE(Fixture, "functions_can_have_0_arguments")
 {
     AstStatBlock* stat = parse(R"(
-        local f: () -> number
+        const f: () -> number = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -376,7 +376,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_have_0_arguments")
 TEST_CASE_FIXTURE(Fixture, "functions_can_return_0_values")
 {
     AstStatBlock* block = parse(R"(
-        local f: (number) -> ()
+        const f: (number) -> () = nil
     )");
 
     REQUIRE(block != nullptr);
@@ -385,7 +385,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_return_0_values")
 TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_no_returns")
 {
     AstStatBlock* block = parse(R"(
-        local f: (string) -> () & (number) -> ()
+        const f: (string) -> () & (number) -> () = nil
     )");
 
     REQUIRE(block != nullptr);
@@ -400,7 +400,7 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_no_returns")
 TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_two_or_more_returns")
 {
     AstStatBlock* block = parse(R"(
-        local f: (string) -> (string, number) & (number) -> (number, string)
+        const f: (string) -> (string, number) & (number) -> (number, string) = nil
     )");
 
     REQUIRE(block != nullptr);
@@ -415,7 +415,7 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_two_or_more_re
 TEST_CASE_FIXTURE(Fixture, "return_type_is_an_intersection_type_if_led_with_one_parenthesized_type")
 {
     AstStatBlock* block = parse(R"(
-        local f: (string) -> (string) & (number) -> (number)
+        const f: (string) -> (string) & (number) -> (number) = nil
     )");
 
     REQUIRE(block != nullptr);
@@ -477,13 +477,13 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_should_not_interfere_with_type_function_c
 TEST_CASE_FIXTURE(Fixture, "type_alias_should_work_when_name_is_also_local")
 {
     AstStatBlock* block = parse(R"(
-        local A = nil
+        A = nil
         type A = string
     )");
 
     REQUIRE(block != nullptr);
     REQUIRE(block->body.size == 2);
-    REQUIRE(block->body.data[0]->is<AstStatLocal>());
+    REQUIRE(block->body.data[0]->is<AstStatAssign>());
     REQUIRE(block->body.data[1]->is<AstStatTypeAlias>());
 }
 
@@ -510,7 +510,7 @@ TEST_CASE_FIXTURE(Fixture, "prefixed_type_reference_links_to_local")
     ScopedFastFlag sff{FFlag::LuauTrackPrefixLocal, true};
 
     AstStatBlock* block = parse(R"(
-        local Types = nil
+        const Types = nil
         type Foo = Types.Bar
     )");
 
@@ -559,9 +559,9 @@ TEST_CASE_FIXTURE(Fixture, "prefixed_type_reference_shadowing")
     ScopedFastFlag sff{FFlag::LuauTrackPrefixLocal, true};
 
     AstStatBlock* block = parse(R"(
-        local Types = nil
+        const Types = nil
         do
-            local Types = nil
+            const Types = nil
             type Foo = Types.Bar
         end
         type Bar = Types.Baz
@@ -603,14 +603,14 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_messages")
 {
     matchParseError(
         R"(
-        local a: (number, number) -> (string
+        const a: (number, number) -> (string
     )",
         "Expected ')' (to close '(' at line 2), got <eof>"
     );
 
     matchParseError(
         R"(
-        local a: (number, number) -> (
+        const a: (number, number) -> (
             string
     )",
         "Expected ')' (to close '(' at line 2), got <eof>"
@@ -618,35 +618,35 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_messages")
 
     matchParseError(
         R"(
-        local a: (number, number)
+        const a: (number, number)
     )",
         "Expected '->' when parsing function type, got <eof>"
     );
 
     matchParseError(
         R"(
-        local a: (number, number
+        const a: (number, number
     )",
         "Expected ')' (to close '(' at line 2), got <eof>"
     );
 
     matchParseError(
         R"(
-        local a: {foo: string,
+        const a: {foo: string,
     )",
         "Expected identifier when parsing table field, got <eof>"
     );
 
     matchParseError(
         R"(
-        local a: {foo: string
+        const a: {foo: string
     )",
         "Expected '}' (to close '{' at line 2), got <eof>"
     );
 
     matchParseError(
         R"(
-        local a: { [string]: number, [number]: string }
+        const a: { [string]: number, [number]: string } = nil
     )",
         "Cannot have more than one table indexer"
     );
@@ -693,7 +693,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_error_messages")
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expression")
 {
     (void)parse(R"(
-        local a = something() as any
+        const a = something() as any
     )");
 }
 
@@ -707,7 +707,7 @@ TEST_CASE_FIXTURE(Fixture, "last_line_does_not_have_to_be_blank")
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expression_binds_tightly")
 {
     AstStatBlock* stat = parse(R"(
-        local a = one as any + two as any
+        const a = one as any + two as any
     )");
 
     REQUIRE(stat != nullptr);
@@ -793,7 +793,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_type_name")
 {
     matchParseError(
         R"(
-        local a: Foo.=
+        const a: Foo.= = nil
     )",
         "Expected identifier when parsing field name, got '='"
     );
@@ -925,7 +925,7 @@ TEST_CASE_FIXTURE(Fixture, "error_on_unicode")
 {
     matchParseError(
         R"(
-            local ☃ = 10
+            const ☃ = 10
         )",
         "Expected identifier when parsing variable name, got Unicode character U+2603"
     );
@@ -933,7 +933,7 @@ TEST_CASE_FIXTURE(Fixture, "error_on_unicode")
 
 TEST_CASE_FIXTURE(Fixture, "allow_unicode_in_string")
 {
-    ParseResult result = parseEx("local snowman = \"☃\"");
+    ParseResult result = parseEx("const snowman = \"☃\"");
     CHECK(result.errors.empty());
 }
 
@@ -941,7 +941,7 @@ TEST_CASE_FIXTURE(Fixture, "error_on_confusable")
 {
     matchParseError(
         R"(
-        local pi = 3․13
+        const pi = 3․13
     )",
         "Expected identifier when parsing expression, got Unicode character U+2024 (did you mean '.'?)"
     );
@@ -951,8 +951,8 @@ TEST_CASE_FIXTURE(Fixture, "error_on_non_utf8_sequence")
 {
     const char* expected = "Expected identifier when parsing expression, got invalid UTF-8 sequence";
 
-    matchParseError("local pi = \xFF!", expected);
-    matchParseError("local pi = \xE2!", expected);
+    matchParseError("const pi = \xFF!", expected);
+    matchParseError("const pi = \xE2!", expected);
 }
 
 TEST_CASE_FIXTURE(Fixture, "lex_broken_unicode")
@@ -1071,13 +1071,14 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_statement_error")
 TEST_CASE_FIXTURE(Fixture, "parse_compound_assignment")
 {
     AstStatBlock* block = parse(R"(
+        a = 0
         a += 5
     )");
 
     REQUIRE(block != nullptr);
-    REQUIRE(block->body.size == 1);
-    REQUIRE(block->body.data[0]->is<AstStatCompoundAssign>());
-    REQUIRE(block->body.data[0]->as<AstStatCompoundAssign>()->op == AstExprBinary::Add);
+    REQUIRE(block->body.size == 2);
+    REQUIRE(block->body.data[1]->is<AstStatCompoundAssign>());
+    REQUIRE(block->body.data[1]->as<AstStatCompoundAssign>()->op == AstExprBinary::Add);
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_compound_assignment_error_call")
@@ -1222,9 +1223,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_interpolated_string_as_type_fail")
     try
     {
         parse(R"(
-            local a: `what` = `???`
-            local b: `what {"the"}` = `???`
-            local c: `what {"the"} heck` = `???`
+            const a: `what` = `???`
+            const b: `what {"the"}` = `???`
+            const c: `what {"the"} heck` = `???`
         )");
         FAIL("Expected ParseErrors to be thrown");
     }
@@ -1284,7 +1285,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_interpolated_string_malformed_escape")
     try
     {
         parse(R"(
-            local a = `???\xQQ {1}`
+            const a = `???\xQQ {1}`
         )");
         FAIL("Expected ParseErrors to be thrown");
     }
@@ -1299,7 +1300,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_interpolated_string_weird_token")
     try
     {
         parse(R"(
-            local a = `??? {42 !!}`
+            const a = `??? {42 !!}`
         )");
         FAIL("Expected ParseErrors to be thrown");
     }
@@ -1316,9 +1317,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection")
         parse(R"(-- i am line 1
 function BottomUpTree(item, depth)
   if depth > 0 then
-    local i = item + item
+    const i = item + item
     depth = depth - 1
-    local left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
+    const left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
     return { item, left, right }
   else
     return { item }
@@ -1353,9 +1354,9 @@ end
 
 function BottomUpTree(item, depth)
   if depth > 0 then
-    local i = item + item
+    const i = item + item
     depth = depth - 1
-    local left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
+    const left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
     return { item, left, right }
   else
     return { item }
@@ -1400,17 +1401,17 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_local_function")
     try
     {
         parse(R"(-- i am line 1
-local function BottomUpTree(item, depth)
+function BottomUpTree(item, depth)
   if depth > 0 then
-    local i = item + item
+    const i = item + item
     depth = depth - 1
-    local left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
+    const left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
     return { item, left, right }
   else
     return { item }
 end
 
-local function ItemCheck(tree)
+function ItemCheck(tree)
   if tree[2] then
     return tree[1] + ItemCheck(tree[2]) - ItemCheck(tree[3])
   else
@@ -1433,7 +1434,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_failsafe_earlier")
     try
     {
         parse(R"(-- i am line 1
-local function ItemCheck(tree)
+function ItemCheck(tree)
   if tree[2] then
     return tree[1] + ItemCheck(tree[2]) - ItemCheck(tree[3])
   else
@@ -1441,11 +1442,11 @@ local function ItemCheck(tree)
       end
 end
 
-local function BottomUpTree(item, depth)
+function BottomUpTree(item, depth)
   if depth > 0 then
-    local i = item + item
+    const i = item + item
     depth = depth - 1
-    local left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
+    const left, right = BottomUpTree(i-1, depth), BottomUpTree(i, depth)
     return { item, left, right }
   else
     return { item }
@@ -1465,7 +1466,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_nested")
     {
         parse(R"(-- i am line 1
 function stringifyTable(t)
-    local entries = {}
+    entries = {}
     for k, v in pairs(t) do
         -- if we find a nested table, convert that recursively
         if type(v) == "table" then
@@ -1479,7 +1480,7 @@ function stringifyTable(t)
     end
 
     -- the memory location of the table
-    local id = tostring(t):sub(8)
+    const id = tostring(t):sub(8)
 
     return ("{s}@s"):format(table.concat(entries, ", "), id)
 end
@@ -1500,7 +1501,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_table_literal")
     {
         parse(R"(
 function stringifyTable(t)
-    local foo = (name = t)
+    const foo = (name = t)
     return foo
 end
         )");
@@ -1520,7 +1521,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_function_call")
     {
         parse(R"(
 function stringifyTable(t)
-    local foo = t:Parse 2
+    const foo = t:Parse 2
     return foo
 end
         )");
@@ -1539,7 +1540,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_function_call_newline")
     {
         parse(R"(
 function stringifyTable(t)
-    local foo = t:Parse
+    const foo = t:Parse
     return foo
 end
         )");
@@ -1566,14 +1567,14 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_with_too_many_nested_type_group")
     );
 
     matchParseError(
-        "local t: {a: {b: {c: {d: {e: {f: {g: {h: {i: {j: {}}}}}}}}}}}",
+        "const t: {a: {b: {c: {d: {e: {f: {g: {h: {i: {j: {}}}}}}}}}}}",
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 
-    matchParseError("local f: ((((((((((Fail))))))))))", "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
+    matchParseError("const f: ((((((((((Fail))))))))))", "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
 
     matchParseError(
-        "local t: a & (b & (c & (d & (e & (f & (g & (h & (i & (j & nil)))))))))",
+        "const t: a & (b & (c & (d & (e & (f & (g & (h & (i & (j & nil)))))))))",
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -1583,7 +1584,7 @@ TEST_CASE_FIXTURE(Fixture, "can_parse_complex_unions_successfully")
     ScopedFastInt sfis[] = {{FInt::LuauRecursionLimit, 10}, {FInt::LuauTypeLengthLimit, 10}};
 
     parse(R"(
-local f:
+const f:
 () -> ()
 |
 () -> ()
@@ -1598,15 +1599,15 @@ local f:
 |
 (a & (b & nil))
 |
-(a & (b & nil))
+(a & (b & nil)) = nil
 )");
 
     parse(R"(
-local f: a? | b? | c? | d? | e? | f? | g? | h?
+const f: a? | b? | c? | d? | e? | f? | g? | h? = nil
 )");
 
     matchParseError(
-        "local t: a & b & c & d & e & f & g & h & i & j & nil", "Exceeded allowed type length; simplify your type annotation to make the code compile"
+        "const t: a & b & c & d & e & f & g & h & i & j & nil", "Exceeded allowed type length; simplify your type annotation to make the code compile"
     );
 }
 
@@ -1676,7 +1677,7 @@ TEST_CASE_FIXTURE(Fixture, "unparenthesized_function_return_type_list")
 TEST_CASE_FIXTURE(Fixture, "short_array_types")
 {
     AstStatBlock* stat = parse(R"(
-        local n: {string}
+        const n: {string} = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -1693,16 +1694,16 @@ TEST_CASE_FIXTURE(Fixture, "short_array_types")
 
 TEST_CASE_FIXTURE(Fixture, "short_array_types_must_be_alone")
 {
-    matchParseError("local n: {string, number}", "Expected '}' (to close '{' at column 10), got ','");
-    matchParseError("local n: {[number]: string, number}", "Expected ':' when parsing table field, got '}'");
-    matchParseError("local n: {x: string, number}", "Expected ':' when parsing table field, got '}'");
-    matchParseError("local n: {x: string, nil}", "Expected identifier when parsing table field, got 'nil'");
+    matchParseError("const n: {string, number}", "Expected '}' (to close '{' at column 10), got ','");
+    matchParseError("const n: {[number]: string, number}", "Expected ':' when parsing table field, got '}'");
+    matchParseError("const n: {x: string, number}", "Expected ':' when parsing table field, got '}'");
+    matchParseError("const n: {x: string, nil}", "Expected identifier when parsing table field, got 'nil'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "short_array_types_do_not_break_field_names")
 {
     AstStatBlock* stat = parse(R"(
-        local n: {string: number}
+        const n: {string: number} = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -1718,12 +1719,12 @@ TEST_CASE_FIXTURE(Fixture, "short_array_types_do_not_break_field_names")
 
 TEST_CASE_FIXTURE(Fixture, "short_array_types_are_not_field_names_when_complex")
 {
-    matchParseError("local n: {string | number: number}", "Expected '}' (to close '{' at column 10), got ':'");
+    matchParseError("const n: {string | number: number}", "Expected '}' (to close '{' at column 10), got ':'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "nil_can_not_be_a_field_name")
 {
-    matchParseError("local n: {nil: number}", "Expected '}' (to close '{' at column 10), got ':'");
+    matchParseError("const n: {nil: number}", "Expected '}' (to close '{' at column 10), got ':'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "string_literal_call")
@@ -1869,7 +1870,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_broken_comment")
 
     matchParseError("--[[unfinished work", expected);
     matchParseError("--!strict\n--[[unfinished work", expected);
-    matchParseError("local x = 1 --[[unfinished work", expected);
+    matchParseError("const x = 1 --[[unfinished work", expected);
 }
 
 TEST_CASE_FIXTURE(Fixture, "string_literals_escapes_broken")
@@ -1986,9 +1987,9 @@ TEST_CASE_FIXTURE(Fixture, "end_extent_doesnt_consume_comments_even_with_capture
 TEST_CASE_FIXTURE(Fixture, "parse_error_loop_control")
 {
     matchParseError("break", "break statement must be inside a loop");
-    matchParseError("repeat local function a() break end until false", "break statement must be inside a loop");
+    matchParseError("repeat function a() break end until false", "break statement must be inside a loop");
     matchParseError("continue", "continue statement must be inside a loop");
-    matchParseError("repeat local function a() continue end until false", "continue statement must be inside a loop");
+    matchParseError("repeat function a() continue end until false", "continue statement must be inside a loop");
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_error_confusing_function_call")
@@ -2008,7 +2009,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_confusing_function_call")
     auto result2 = matchParseError(
         R"(
         function add(x, y) return x + y end
-        local f = add
+        f = add
         (f as any)['x'] = 2
     )",
         "Ambiguous syntax: this looks like an argument list for a function call, but could also be a start of new statement; use ';' to separate "
@@ -2019,7 +2020,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_confusing_function_call")
 
     auto result3 = matchParseError(
         R"(
-        local x = {}
+        x = {}
         function x:add(a, b) return a + b end
         x:add
         (1, 2)
@@ -2032,7 +2033,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_confusing_function_call")
 
     auto result4 = matchParseError(
         R"(
-        local t = {}
+        const t = {}
         function f() return t end
         t.x, (f)
         ().y = 5, 6
@@ -2053,7 +2054,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_assignment_lvalue")
 {
     matchParseError(
         R"(
-        local a, b
+        a, b = nil, nil
         (2), b = b, a
     )",
         "Assigned expression must be a variable or a field"
@@ -2061,7 +2062,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_assignment_lvalue")
 
     matchParseError(
         R"(
-        local a, b
+        a, b = nil, nil
         a, (3) = b, a
     )",
         "Assigned expression must be a variable or a field"
@@ -2070,14 +2071,14 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_assignment_lvalue")
 
 TEST_CASE_FIXTURE(Fixture, "parse_error_type_annotation")
 {
-    matchParseError("local a : 2 = 2", "Expected type, got '2'");
+    matchParseError("const a : 2 = 2", "Expected type, got '2'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_error_missing_type_annotation")
 {
     {
-        ParseResult result = tryParse("local x:");
-        CHECK(result.errors.size() == 1);
+        ParseResult result = tryParse("const x:");
+        CHECK(result.errors.size() == 2);
         Position begin = result.errors[0].getLocation().begin;
         Position end = result.errors[0].getLocation().end;
         CHECK(begin.line == end.line);
@@ -2088,7 +2089,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_missing_type_annotation")
 
     {
         ParseResult result = tryParse(R"(
-local x:=42
+const x:=42
     )");
         CHECK(result.errors.size() == 1);
         Position begin = result.errors[0].getLocation().begin;
@@ -2555,7 +2556,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_variadics")
     REQUIRE(stat);
     REQUIRE_EQ(stat->body.size, 3);
 
-    AstStatFunction* fn = stat->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* fn = stat->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(fn);
     CHECK(fn->func->vararg);
     CHECK(fn->func->varargAnnotation);
@@ -2626,7 +2627,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_pack_parsing")
     AstStatBlock* stat = result.root;
     REQUIRE(stat != nullptr);
 
-    AstStatFunction* fn = stat->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* fn = stat->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(fn != nullptr);
     REQUIRE(fn->func->varargAnnotation != nullptr);
 
@@ -2745,7 +2746,7 @@ TEST_CASE_FIXTURE(Fixture, "function_type_named_arguments")
 
 TEST_CASE_FIXTURE(Fixture, "function_type_matching_parenthesis")
 {
-    matchParseError("local a: <T>(number -> string", "Expected ')' (to close '(' at column 13), got '->'");
+    matchParseError("const a: <T>(number -> string", "Expected ')' (to close '(' at column 13), got '->'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_type_alias_default_type")
@@ -2875,19 +2876,19 @@ TEST_CASE_FIXTURE(Fixture, "parse_user_defined_type_functions")
 TEST_CASE_FIXTURE(Fixture, "parse_nested_type_function")
 {
     AstStat* stat = parse(R"(
-        local v1 = 1
+        v1 = 1
         type function foo()
-            local v2 = 2
-            local function bar()
+            v2 = 2
+            function bar()
                 v2 += 1
                 type function inner() end
                 v2 += 2
             end
-            local function bar2()
+            function bar2()
                 v2 += 3
             end
         end
-        local function bar() v1 += 1 end
+        function bar() v1 += 1 end
     )");
 
     REQUIRE(stat != nullptr);
@@ -2895,8 +2896,8 @@ TEST_CASE_FIXTURE(Fixture, "parse_nested_type_function")
 
 TEST_CASE_FIXTURE(Fixture, "invalid_user_defined_type_functions")
 {
-    matchParseError("local foo = 1; type function bar() print(foo) end", "Type function cannot reference outer local 'foo'");
-    matchParseError("type function foo() local v1 = 1; type function bar() print(v1) end end", "Type function cannot reference outer local 'v1'");
+    matchParseError("const foo = 1; type function bar() print(foo) end", "Type function cannot reference outer local 'foo'");
+    matchParseError("type function foo() const v1 = 1; type function bar() print(v1) end end", "Type function cannot reference outer local 'v1'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "leading_union_intersection_with_single_type_preserves_the_union_intersection_ast_node")
@@ -2985,8 +2986,8 @@ TEST_CASE_FIXTURE(Fixture, "inner_and_outer_scope_of_functions_have_correct_end_
 {
 
     AstStatBlock* stat = parse(R"(
-        local function foo()
-            local x = 1
+        function foo()
+            const x = 1
         end
     )");
     REQUIRE(stat);
@@ -2994,7 +2995,7 @@ TEST_CASE_FIXTURE(Fixture, "inner_and_outer_scope_of_functions_have_correct_end_
 
     auto func = stat->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(func);
-    CHECK_EQ(func->func->body->location, Location{{1, 28}, {3, 8}});
+    CHECK_EQ(func->func->body->location, Location{{1, 22}, {3, 8}});
     CHECK_EQ(func->location, Location{{1, 8}, {3, 11}});
 }
 
@@ -3002,7 +3003,7 @@ TEST_CASE_FIXTURE(Fixture, "do_block_end_location_is_after_end_token")
 {
     AstStatBlock* stat = parse(R"(
         do
-            local x = 1
+            const x = 1
         end
     )");
     REQUIRE(stat);
@@ -3021,16 +3022,16 @@ TEST_CASE_FIXTURE(Fixture, "function_start_locations_are_before_attributes")
         end
 
         @native
-        local function localFunction()
+        function localFunction()
         end
 
-        local _ = @native function()
+        const _ = @native function()
         end
     )");
     REQUIRE(stat);
     REQUIRE_EQ(3, stat->body.size);
 
-    auto globalFunction = stat->body.data[0]->as<AstStatFunction>();
+    auto globalFunction = stat->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(globalFunction);
     CHECK_EQ(globalFunction->location, Location({1, 8}, {3, 11}));
 
@@ -3070,7 +3071,7 @@ TEST_CASE_FIXTURE(Fixture, "for_loop_with_single_var_has_comma_positions_of_size
 
 TEST_CASE_FIXTURE(Fixture, "explicit_type_instantiation_expression_call")
 {
-    std::string source = "local x = f<<T, U>>()";
+    std::string source = "const x = f<<T, U>>()";
 
     ParseResult result = parseEx(source);
     REQUIRE(result.root);
@@ -3094,7 +3095,7 @@ TEST_CASE_FIXTURE(Fixture, "explicit_type_instantiation_expression_call")
 
 TEST_CASE_FIXTURE(Fixture, "explicit_type_instantiation_expression")
 {
-    AstStat* stat = parse("local x = f<<T, U>>");
+    AstStat* stat = parse("const x = f<<T, U>>");
     REQUIRE(stat != nullptr);
 }
 
@@ -3133,7 +3134,7 @@ TEST_CASE_FIXTURE(Fixture, "two_left_and_right_arrows_but_no_explicit_type_insta
 TEST_CASE_FIXTURE(Fixture, "basic_less_than_check_no_explicit_type_instantiaton")
 {
     AstStat* stat = parse(R"(
-        local a = b.c < d
+        const a = b.c < d
     )");
     REQUIRE(stat != nullptr);
 }
@@ -3146,7 +3147,7 @@ TEST_CASE_FIXTURE(Fixture, "do_end_block_with_cst")
     ParseResult result = parseEx(
         R"(
         do
-            local hello = "world"
+            const hello = "world"
         end
     )",
         parseOptions
@@ -3222,7 +3223,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_const_function_with_attr")
 TEST_CASE_FIXTURE(Fixture, "parse_local_const")
 {
     AstStatBlock* stat = parse(R"(
-        local const
+        const const = nil
     )");
 
     REQUIRE(stat != nullptr);
@@ -3231,7 +3232,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_local_const")
 TEST_CASE_FIXTURE(Fixture, "parse_const_call")
 {
     AstStatBlock* stat = parse(R"(
-        local const = function(t) return t end
+        const const = function(t) return t end
         const { a = "a" }
     )");
 
@@ -3256,11 +3257,11 @@ TEST_CASE_FIXTURE(Fixture, "error_const_reassignment")
 
     matchParseError("const a = 42; a = 43", "Variable 'a' is constant and may not be reassigned");
 
-    matchParseError("local b; const a = 42; a, b = 43", "Variable 'a' is constant and may not be reassigned");
+    matchParseError("b = nil; const a = 42; a, b = 43", "Variable 'a' is constant and may not be reassigned");
 
-    matchParseError("local b; const a = 42; b, a = 43", "Variable 'a' is constant and may not be reassigned");
+    matchParseError("b = nil; const a = 42; b, a = 43", "Variable 'a' is constant and may not be reassigned");
 
-    matchParseError("local b; const a = 42; b, a = ...", "Variable 'a' is constant and may not be reassigned");
+    matchParseError("b = nil; const a = 42; b, a = ...", "Variable 'a' is constant and may not be reassigned");
 
     matchParseError("const a = 42; function a() end", "Variable 'a' is constant and may not be reassigned");
 }
@@ -3281,18 +3282,18 @@ TEST_CASE_FIXTURE(Fixture, "const_shadow")
         do
             const a = 44
             do
-                local a = 44.1
+                b = 44.1
                 do
                     const a = 44.2
                 end
-                a = 44.3
+                b = 44.3
             end
         end
 
         function f()
             const a = 45
-            local a = 46
-            return function(x) a = x end
+            b = 46
+            return function(x) b = x end
         end
     )");
 
@@ -3570,7 +3571,7 @@ TEST_CASE_FIXTURE(Fixture, "class_extends_imported_class")
     ScopedFastFlag _{FFlag::DebugLuauUserDefinedClasses, true};
 
     ParseResult result = tryParse(R"(
-local m = require("module")
+const m = require("module")
 
 class Cat extends m.Animal
     public meowMult: number
@@ -3755,7 +3756,7 @@ TEST_CASE_FIXTURE(Fixture, "class_method_missing_end_error")
         R"(
         class Foo
             function bar()
-                local x = 1
+                const x = 1
     )",
         "Expected 'end' (to close 'function' at line 3), got <eof>"
     );
@@ -3907,7 +3908,7 @@ TEST_CASE_FIXTURE(Fixture, "large_classes_example")
             end
         end
 
-        local player = PlayerStats.new("John Doe")
+        const player = PlayerStats.new("John Doe")
         print(player.name)
         player:heal(20)
         print(player.name)
@@ -3971,7 +3972,7 @@ TEST_CASE_FIXTURE(Fixture, "class_is_still_contextual")
     ScopedFastFlag _{FFlag::DebugLuauUserDefinedClasses, true};
 
     ParseResult res = tryParse(R"(
-        local class = 42
+        const class = 42
         print(class)
     )");
     REQUIRE(res.errors.empty());
@@ -4021,7 +4022,7 @@ TEST_CASE_FIXTURE(Fixture, "classes_cannot_be_shadowed_by_classes_with_local_bet
         class Foobar
         end
 
-        local Foobar
+        const Foobar = nil
 
         class Foobar
         end
@@ -4040,7 +4041,7 @@ TEST_CASE_FIXTURE(Fixture, "classes_can_be_shadowed_by_locals")
 
         -- This is legal: the rule is that there is exactly one class with a
         -- given name, but we can shadow it with a local.
-        local Foobar
+        const Foobar = nil
     )");
 
     CHECK(result.errors.empty());
@@ -4127,7 +4128,7 @@ TEST_CASE_FIXTURE(Fixture, "expr_group_with_cst")
 
     ParseResult result = parseEx(
         R"(
-        local a = (1 + 2)
+        const a = (1 + 2)
     )",
         parseOptions
     );
@@ -4252,7 +4253,7 @@ TEST_CASE_FIXTURE(Fixture, "multiple_parse_errors")
     try
     {
         parse(R"(
-local a = 3 * (
+const a = 3 * (
 return a +
 )");
         FAIL("Expected ParseErrors to be thrown");
@@ -4352,7 +4353,7 @@ TEST_CASE_FIXTURE(Fixture, "extra_table_indexer_recovery")
     try
     {
         parse(R"(
-local a : { [string] : number, [number] : string, count: number }
+const a : { [string] : number, [number] : string, count: number } = nil
 )");
         FAIL("Expected ParseErrors to be thrown");
     }
@@ -4368,7 +4369,7 @@ TEST_CASE_FIXTURE(Fixture, "recovery_error_limit_1")
 
     try
     {
-        parse("local a = ");
+        parse("const a = ");
         FAIL("Expected ParseErrors to be thrown");
     }
     catch (const Luau::ParseErrors& e)
@@ -4455,14 +4456,14 @@ TEST_CASE_FIXTURE(Fixture, "recovery_of_parenthesized_expressions")
     checkRecovery("function foo(a, b): (number; number) -> number return a + b end", "function foo(a, b): (number) -> number return a + b end", 1);
 
     checkRecovery("function foo(a, b): (number, number return a + b end", "function foo(a, b): (number, number) end", 1);
-    checkRecovery("local function foo(a, b): (number, number return a + b end", "local function foo(a, b): (number, number) end", 1);
+    checkRecovery("function foo(a, b): (number, number return a + b end", "function foo(a, b): (number, number) end", 1);
 
     // These tests correctly recovered before the changes and we test that new recovery didn't make them worse
     // (by skipping more tokens necessary)
     checkRecovery("type F = (number, number -> number", "type F = (number, number) -> number", 1);
     checkRecovery("function foo(a, b: { a: number, b: number) return a + b end", "function foo(a, b: { a: number, b: number }) return a + b end", 1);
     checkRecovery("function foo(a, b: { [number: number}) return a + b end", "function foo(a, b: { [number]: number}) return a + b end", 1);
-    checkRecovery("local n: (string | number = 2", "local n: (string | number) = 2", 1);
+    checkRecovery("const n: (string | number = 2", "const n: (string | number) = 2", 1);
 
     // Check that we correctly stop at the end of a line
     checkRecovery(
@@ -4489,7 +4490,7 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_method_call")
 
     REQUIRE_EQ(1, result.root->body.size);
 
-    AstStatFunction* howdyFunction = result.root->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* howdyFunction = result.root->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(howdyFunction != nullptr);
 
     AstStatBlock* body = howdyFunction->func->body;
@@ -4504,7 +4505,7 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_method_call")
 TEST_CASE_FIXTURE(Fixture, "incomplete_method_call_2")
 {
     const std::string_view source = R"(
-        local game = { GetService=function(s) return 'hello' end }
+        const game = { GetService=function(s) return 'hello' end }
 
         function a()
             game:a
@@ -4516,7 +4517,7 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_method_call_2")
 
     REQUIRE_EQ(2, result.root->body.size);
 
-    AstStatFunction* howdyFunction = result.root->body.data[1]->as<AstStatFunction>();
+    AstStatLocalFunction* howdyFunction = result.root->body.data[1]->as<AstStatLocalFunction>();
     REQUIRE(howdyFunction != nullptr);
 
     AstStatBlock* body = howdyFunction->func->body;
@@ -4549,20 +4550,20 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_method_call_still_yields_an_AstExprIndexN
 TEST_CASE_FIXTURE(Fixture, "recover_confusables")
 {
     // Binary
-    matchParseError("local a = 4 ~= 10", "Unexpected '~='; did you mean '!='?");
-    matchParseError("local a = true && false", "Unexpected '&&'; did you mean 'and'?");
-    matchParseError("local a = false || true", "Unexpected '||'; did you mean 'or'?");
+    matchParseError("const a = 4 ~= 10", "Unexpected '~='; did you mean '!='?");
+    matchParseError("const a = true && false", "Unexpected '&&'; did you mean 'and'?");
+    matchParseError("const a = false || true", "Unexpected '||'; did you mean 'or'?");
 
-    ParseResult result = tryParse("local a = 4 != 10");
+    ParseResult result = tryParse("const a = 4 != 10");
     CHECK(result.errors.empty());
 
     // Unary
-    matchParseError("local a = !false", "Unexpected '!'; did you mean 'not'?");
+    matchParseError("const a = !false", "Unexpected '!'; did you mean 'not'?");
 
     // Check that separate tokens are not considered as a single one
-    matchParseError("local a = 4 ~ = 10", "Expected identifier when parsing expression, got '~'");
-    matchParseError("local a = true & & false", "Expected identifier when parsing expression, got '&'");
-    matchParseError("local a = false | | true", "Expected identifier when parsing expression, got '|'");
+    matchParseError("const a = 4 ~ = 10", "Expected identifier when parsing expression, got '~'");
+    matchParseError("const a = true & & false", "Expected identifier when parsing expression, got '&'");
+    matchParseError("const a = false | | true", "Expected identifier when parsing expression, got '|'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "capture_comments")
@@ -4574,12 +4575,12 @@ TEST_CASE_FIXTURE(Fixture, "capture_comments")
         R"(
         --!strict
 
-        local a = 5 -- comment one
-        local b = 8 -- comment two
+        const a = 5 -- comment one
+        const b = 8 -- comment two
         --[[
             Multi line comment
         ]]
-        local c = 'see'
+        const c = 'see'
     )",
         options
     );
@@ -4616,7 +4617,7 @@ TEST_CASE_FIXTURE(Fixture, "capture_broken_comment")
 
     ParseResult result = tryParse(
         R"(
-        local a = "test"
+        const a = "test"
 
         --[[broken!
     )",
@@ -4691,7 +4692,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_type_list_recovery")
     try
     {
         parse(R"(
-local function foo<T..., U>(a: U, ...: T...): (U, ...T) return a, ... end
+function foo<T..., U>(a: U, ...: T...): (U, ...T) return a, ... end
 return foo(1, 2 -- to check for a second error after recovery
 )");
         FAIL("Expected ParseErrors to be thrown");
@@ -4706,14 +4707,14 @@ return foo(1, 2 -- to check for a second error after recovery
 TEST_CASE_FIXTURE(Fixture, "recover_index_name_keyword")
 {
     ParseResult result = tryParse(R"(
-local b
-local a = b.do
+const b = nil
+const a = b.do
     )");
     CHECK_EQ(1, result.errors.size());
 
     result = tryParse(R"(
-local b
-local a = b.
+const b = nil
+const a = b.
 do end
     )");
     CHECK_EQ(1, result.errors.size());
@@ -4722,14 +4723,14 @@ do end
 TEST_CASE_FIXTURE(Fixture, "recover_self_call_keyword")
 {
     ParseResult result = tryParse(R"(
-local b
-local a = b:do
+const b = nil
+const a = b:do
     )");
     CHECK_EQ(2, result.errors.size());
 
     result = tryParse(R"(
-local b
-local a = b:
+const b = nil
+const a = b:
 do end
     )");
     CHECK_EQ(2, result.errors.size());
@@ -4738,14 +4739,14 @@ do end
 TEST_CASE_FIXTURE(Fixture, "recover_type_index_name_keyword")
 {
     ParseResult result = tryParse(R"(
-local A
-local b : A.do
+const A = nil
+const b : A.do = nil
     )");
     CHECK_EQ(1, result.errors.size());
 
     result = tryParse(R"(
-local A
-local b : A.do
+const A = nil
+const b : A.do = nil
 do end
     )");
     CHECK_EQ(1, result.errors.size());
@@ -4776,7 +4777,7 @@ type Custom<A, B, C> = { x: A, y: B, z: C }
 type Packed<A...> = { x: (A...) -> () }
 type F = (number): Custom<boolean, number, string>
 type G = Packed<(number): (string, number, boolean)>
-local function f(x: number) -> Custom<string, boolean, number>
+function f(x: number) -> Custom<string, boolean, number>
 end
     )");
     REQUIRE_EQ(3, result.errors.size());
@@ -4849,7 +4850,7 @@ TEST_CASE_FIXTURE(Fixture, "get_a_nice_error_when_there_is_an_extra_comma_at_the
 TEST_CASE_FIXTURE(Fixture, "get_a_nice_error_when_there_is_no_comma_between_table_members")
 {
     ParseResult result = tryParse(R"(
-        local t = {
+        const t = {
             first = 1
             second = 2,
             third = 3,
@@ -4872,17 +4873,17 @@ TEST_CASE_FIXTURE(Fixture, "get_a_nice_error_when_there_is_no_comma_between_tabl
 TEST_CASE_FIXTURE(Fixture, "get_a_nice_error_when_there_is_no_comma_after_last_table_member")
 {
     ParseResult result = tryParse(R"(
-        local t = {
+        const t = {
             first = 1
 
-        local ok = true
-        local good = ok == true
+        do end
+        do end
     )");
 
     REQUIRE(1 == result.errors.size());
 
-    CHECK(Location({4, 8}, {4, 13}) == result.errors[0].getLocation());
-    CHECK("Expected '}' (to close '{' at line 2), got 'local'" == result.errors[0].getMessage());
+    CHECK(Location({4, 8}, {4, 10}) == result.errors[0].getLocation());
+    CHECK("Expected '}' (to close '{' at line 2), got 'do'" == result.errors[0].getMessage());
 
     REQUIRE(3 == result.root->body.size);
 
@@ -4921,7 +4922,7 @@ TEST_CASE_FIXTURE(Fixture, "table_type_keys_cant_contain_nul")
 TEST_CASE_FIXTURE(Fixture, "invalid_escape_literals_get_reported_but_parsing_continues")
 {
     ParseResult result = tryParse(R"(
-        local foo = "\xQQ"
+        const foo = "\xQQ"
         print(foo)
     )");
 
@@ -4937,7 +4938,7 @@ TEST_CASE_FIXTURE(Fixture, "invalid_escape_literals_get_reported_but_parsing_con
 TEST_CASE_FIXTURE(Fixture, "unfinished_string_literals_get_reported_but_parsing_continues")
 {
     ParseResult result = tryParse(R"(
-        local foo = "hi
+        const foo = "hi
         print(foo)
     )");
 
@@ -4983,7 +4984,7 @@ TEST_CASE_FIXTURE(Fixture, "do_block_with_no_end")
 TEST_CASE_FIXTURE(Fixture, "parse_interpolated_string_with_lookahead_involved")
 {
     ParseResult result = tryParse(R"(
-        local x = `{ {y} }`
+        const x = `{ {y} }`
     )");
 
     REQUIRE_MESSAGE(result.errors.empty(), result.errors[0].getMessage());
@@ -4992,7 +4993,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_interpolated_string_with_lookahead_involved")
 TEST_CASE_FIXTURE(Fixture, "parse_interpolated_string_with_lookahead_involved2")
 {
     ParseResult result = tryParse(R"(
-        local x = `{ { y{} } }`
+        const x = `{ { y{} } }`
     )");
 
     REQUIRE_MESSAGE(result.errors.empty(), result.errors[0].getMessage());
@@ -5153,7 +5154,7 @@ end)");
 
     LUAU_ASSERT(stat != nullptr);
 
-    AstStatFunction* statFun = stat->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* statFun = stat->body.data[0]->as<AstStatLocalFunction>();
     LUAU_ASSERT(statFun != nullptr);
 
     AstArray<AstAttr*> attributes = statFun->func->attributes;
@@ -5173,7 +5174,7 @@ end)");
 
     LUAU_ASSERT(stat != nullptr);
 
-    AstStatFunction* statFun = stat->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* statFun = stat->body.data[0]->as<AstStatLocalFunction>();
     LUAU_ASSERT(statFun != nullptr);
 
     AstArray<AstAttr*> attributes = statFun->func->attributes;
@@ -5260,16 +5261,16 @@ end)");
     );
 
     result = tryParse(R"(@[deprecated
-        local function foo() end
+        function foo() end
     )");
 
-    checkFirstErrorForAttributes(result.errors, 1, Location(Position(1, 8), Position(1, 13)), "Expected ']' (to close '@[' at line 1), got 'local'");
+    checkFirstErrorForAttributes(result.errors, 1, Location(Position(1, 8), Position(1, 16)), "Expected ']' (to close '@[' at line 1), got 'function'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_attribute_for_function_expression")
 {
     AstStatBlock* stat1 = parse(R"(
-local function invoker(f)
+function invoker(f)
     return f(1)
 end
 
@@ -5288,7 +5289,7 @@ invoker(@checked function(x) return (x + 2) end)
     checkAttribute(attributes1.data[0], AstAttr::Type::Checked, Location(Position(5, 8), Position(5, 16)));
 
     AstStatBlock* stat2 = parse(R"(
-local f = @checked function(x) return (x + 2) end
+const f = @checked function(x) return (x + 2) end
 )");
 
     LUAU_ASSERT(stat2 != nullptr);
@@ -5307,7 +5308,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_attribute_on_local_function_stat")
 {
     AstStatBlock* stat = parse(R"(
     @checked
-local function hello(x, y)
+function hello(x, y)
     return x + y
 end)");
 
@@ -5354,7 +5355,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_debugnoinline_on_local_function")
     ScopedFastFlag noInline{FFlag::DebugLuauNoInline, true};
     AstStatBlock* stat = parse(R"(
     @debugnoinline
-local function hello(x, y)
+function hello(x, y)
     return x + y
 end)");
 
@@ -5374,7 +5375,7 @@ TEST_CASE_FIXTURE(Fixture, "debugnoinline_not_allowed_without_flag")
 {
     ParseResult result = tryParse(R"(
 @debugnoinline
-local function hello(x, y)
+function hello(x, y)
     return x + y
 end)");
 
@@ -5401,12 +5402,12 @@ if a<0 then a = 0 end)");
         pr1.errors,
         1,
         Location(Position(2, 0), Position(2, 2)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'if' instead"
     );
 
     ParseResult pr2 = tryParse(R"(
-local i = 1
+i = 1
 @checked
 while a[i] do
     print(a[i])
@@ -5416,15 +5417,15 @@ end)");
         pr2.errors,
         1,
         Location(Position(3, 0), Position(3, 5)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'while' instead"
     );
 
     ParseResult pr3 = tryParse(R"(
 @checked
 do
-    local a2 = 2*a
-    local d = sqrt(b^2 - 4*a*c)
+    const a2 = 2*a
+    const d = sqrt(b^2 - 4*a*c)
     x1 = (-b + d)/a2
     x2 = (-b - d)/a2
 end)");
@@ -5432,7 +5433,7 @@ end)");
         pr3.errors,
         1,
         Location(Position(2, 0), Position(2, 2)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'do' instead"
     );
 
@@ -5444,7 +5445,7 @@ for i=1,10 do print(i) end
         pr4.errors,
         1,
         Location(Position(2, 0), Position(2, 3)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'for' instead"
     );
 
@@ -5458,34 +5459,34 @@ until line != ""
         pr5.errors,
         1,
         Location(Position(2, 0), Position(2, 6)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'repeat' instead"
     );
 
 
     ParseResult pr6 = tryParse(R"(
 @checked
-local x = 10
+const x = 10
 )");
     checkFirstErrorForAttributes(
-        pr6.errors, 1, Location(Position(2, 6), Position(2, 7)), "Expected 'function' after local declaration with attribute, but got 'x' instead"
+        pr6.errors, 1, Location(Position(2, 6), Position(2, 7)), "Expected 'function' after const declaration with attribute, but got 'x' instead"
     );
 
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     ParseResult pr7 = tryParse(R"(
 @checked
-export local x = 10
+export x = 10
 )");
     checkFirstErrorForAttributes(
         pr7.errors,
         1,
-        Location(Position(2, 7), Position(2, 12)),
-        "Expected 'function' after export declaration with attribute, but got 'local' instead"
+        Location(Position(2, 7), Position(2, 8)),
+        "Expected 'function' after export declaration with attribute, but got 'x' instead"
     );
 
     ParseResult pr8 = tryParse(R"(
-local i = 1
+i = 1
 while a[i] do
     if a[i] == v then @checked break end
     i = i + 1
@@ -5495,7 +5496,7 @@ end
         pr8.errors,
         1,
         Location(Position(3, 31), Position(3, 36)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'break' instead"
     );
 
@@ -5507,7 +5508,7 @@ function foo1 () @checked return 'a' end
         pr9.errors,
         1,
         Location(Position(1, 26), Position(1, 32)),
-        "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+        "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
         "'return' instead"
     );
 }
@@ -5515,7 +5516,7 @@ function foo1 () @checked return 'a' end
 TEST_CASE_FIXTURE(Fixture, "dont_parse_attribute_on_argument_non_function")
 {
     ParseResult pr = tryParse(R"(
-local function invoker(f, y)
+function invoker(f, y)
     return f(y)
 end
 
@@ -5674,14 +5675,14 @@ TEST_CASE_FIXTURE(Fixture, "grouped_function_type")
 {
     const auto root = parse(R"(
         type X<T> = T
-        local x: X<(() -> ())?>
+        const x: X<(() -> ())?> = nil
     )");
     LUAU_ASSERT(root);
     CHECK_EQ(root->body.size, 2);
     auto assignment = root->body.data[1]->as<AstStatLocal>();
     LUAU_ASSERT(assignment);
     CHECK_EQ(assignment->vars.size, 1);
-    CHECK_EQ(assignment->values.size, 0);
+    CHECK_EQ(assignment->values.size, 1);
     auto binding = assignment->vars.data[0];
     CHECK_EQ(binding->name, "x");
     auto genericTy = binding->annotation->as<AstTypeReference>();
@@ -5702,18 +5703,18 @@ TEST_CASE_FIXTURE(Fixture, "complex_union_in_generic_ty")
 {
     const auto root = parse(R"(
         type X<T> = T
-        local x: X<
+        const x: X<
             | number
             | boolean
             | string
-        >
+        > = nil
     )");
     LUAU_ASSERT(root);
     CHECK_EQ(root->body.size, 2);
     auto assignment = root->body.data[1]->as<AstStatLocal>();
     LUAU_ASSERT(assignment);
     CHECK_EQ(assignment->vars.size, 1);
-    CHECK_EQ(assignment->values.size, 0);
+    CHECK_EQ(assignment->values.size, 1);
     auto binding = assignment->vars.data[0];
     CHECK_EQ(binding->name, "x");
     auto genericTy = binding->annotation->as<AstTypeReference>();
@@ -5761,7 +5762,7 @@ TEST_CASE_FIXTURE(Fixture, "function_name_has_correct_start_location")
 
     REQUIRE_EQ(2, block->body.size);
 
-    const auto function1 = block->body.data[0]->as<AstStatFunction>();
+    const auto function1 = block->body.data[0]->as<AstStatLocalFunction>();
     LUAU_ASSERT(function1);
     CHECK_EQ(Position{1, 17}, function1->name->location.begin);
 
@@ -5773,9 +5774,9 @@ TEST_CASE_FIXTURE(Fixture, "function_name_has_correct_start_location")
 TEST_CASE_FIXTURE(Fixture, "stat_end_includes_semicolon_position")
 {
     AstStatBlock* block = parse(R"(
-        local x = 1
-        local y = 2;
-        local z = 3  ;
+        const x = 1
+        const y = 2;
+        const z = 3  ;
     )");
 
     REQUIRE_EQ(3, block->body.size);
@@ -5961,7 +5962,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_type_name")
 
 TEST_CASE_FIXTURE(Fixture, "explicit_type_instantiation_errors")
 {
-    matchParseError("local a = x:a<<T>>", "Expected '(', '{' or <string> when parsing function call, got <eof>");
+    matchParseError("const a = x:a<<T>>", "Expected '(', '{' or <string> when parsing function call, got <eof>");
 }
 
 TEST_CASE_FIXTURE(Fixture, "export_value_rfc")
@@ -5969,17 +5970,17 @@ TEST_CASE_FIXTURE(Fixture, "export_value_rfc")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     AstStatBlock* block = parse(R"(
-export local version = "1.0.0"
+export version = "1.0.0"
 export const TAU = math.pi * 2
-export local settings: Settings = getSettings()
-export local a, b, c = 1, 2, 3
-export local d
+export settings: Settings = getSettings()
+export a, b, c = 1, 2, 3
+export d
 
 export function add(a: number, b: number): number
     return a + b
 end
 
-export local f, g
+export f, g
 function f()
     return g()
 end
@@ -5988,10 +5989,10 @@ function g()
     return 42
 end
 
-local function ret(): (string, number, boolean)
+function ret(): (string, number, boolean)
     return "heh", 42, false
 end
-export local x, y, z = ret()
+export x, y, z = ret()
     )");
 
     REQUIRE(block != nullptr);
@@ -6095,6 +6096,7 @@ TEST_CASE_FIXTURE(Fixture, "export_value_parse_failures")
         return result;
     };
 
+    // Bare `export foo = 5` etc. are now valid (implicit-local exported declaration)
     for (const std::string source : {
              R"(
 export foo = 5
@@ -6108,23 +6110,25 @@ end
 export foo
     )",
              R"(
-export local function foo()
+export function foo()
 end
     )",
          })
     {
-        expectParseError(source);
+        INFO(source);
+        ParseResult result = tryParse(source);
+        CHECK(result.errors.empty());
     }
 
     ParseResult duplicateExport = expectParseError(R"(
-export local foo = 1
-export local foo = 2
+export foo = 1
+export foo = 2
     )");
     CHECK_NE(duplicateExport.errors.front().getMessage().find("foo"), std::string::npos);
 
     matchParseError(
         R"(
-export local answer = 42
+export answer = 42
 return {answer = answer}
     )",
         "Exporting values is not compatible with top-level return (export/return conflict)"
@@ -6136,7 +6140,7 @@ if skip then
     return
 end
 
-export local answer = 42
+export answer = 42
     )",
         "Exporting values is not compatible with top-level return (export/return conflict)"
     );
@@ -6164,7 +6168,7 @@ return Player {health = 100}
     for (const std::string source : {
              R"(
 if true then
-    export local insideIf = 1
+    export insideIf = 1
 end
     )",
              R"(
@@ -6174,22 +6178,22 @@ end
     )",
              R"(
 while true do
-    export local insideWhile = 1
+    export insideWhile = 1
 end
     )",
              R"(
 repeat
-    export local insideRepeat = 1
+    export insideRepeat = 1
 until true
     )",
              R"(
 for i = 1, 1 do
-    export local insideFor = i
+    export insideFor = i
 end
     )",
              R"(
-local function test()
-    export local insideFunction = 1
+function test()
+    export insideFunction = 1
 end
     )",
          })
@@ -6213,7 +6217,7 @@ export()
     CHECK(contextualKeywordUses->body.data[1]->is<AstStatCompoundAssign>());
     CHECK(contextualKeywordUses->body.data[2]->is<AstStatExpr>());
 
-    parse("export local x = 5");
+    parse("export x = 5");
     parse("export const x = 5");
     parse(R"(
 export function foo()
@@ -6260,7 +6264,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local")
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};
 
     AstStatBlock* block = parse(R"(
-        if local x = getValue() then
+        if const x = getValue() then
             print(x)
         end
     )");
@@ -6271,7 +6275,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local")
     REQUIRE(ifStat != nullptr);
     CHECK(ifStat->conditionLocal != nullptr);
     CHECK(ifStat->conditionLocal->name == "x");
-    CHECK_FALSE(ifStat->conditionIsConst);
+    CHECK(ifStat->conditionIsConst);
     CHECK(ifStat->condition != nullptr);
 }
 
@@ -6317,7 +6321,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_then_and_do_after_newline")
 TEST_CASE_FIXTURE(Fixture, "optional_then_after_newline_in_if_else_expression")
 {
     AstStatBlock* block = parse(R"(
-        local value = if true
+        const value = if true
             1
         else
             2
@@ -6364,7 +6368,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local_with_annotation")
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};
 
     AstStatBlock* block = parse(R"(
-        if local x: number = getValue() then
+        if const x: number = getValue() then
             print(x)
         end
     )");
@@ -6382,9 +6386,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_elseif_local")
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};
 
     AstStatBlock* block = parse(R"(
-        if local x = a() then
+        if const x = a() then
             print(x)
-        else if local y = b() then
+        else if const y = b() then
             print(y)
         end
     )");
@@ -6406,7 +6410,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local_error_missing_equals")
 {
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};
 
-    matchParseError("if local x then end", "Expected '=' when parsing if local declaration, got 'then'");
+    matchParseError("if const x then end", "Expected '=' when parsing if const declaration, got 'then'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_if_local_error_multiple_bindings")
@@ -6414,7 +6418,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local_error_multiple_bindings")
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};
 
     matchParseError(
-        "if local x, y = getValue() then end", "Expected '=' after variable name in 'if local', got ','; only a single binding is allowed"
+        "if const x, y = getValue() then end", "Expected '=' after variable name in 'if const', got ','; only a single binding is allowed"
     );
 }
 
@@ -6422,8 +6426,8 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local_disabled_flag")
 {
     ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, false};
 
-    // With flag disabled, `if local` should fail to parse
-    matchParseError("if local x = getValue() then end", "Expected identifier when parsing expression, got 'local'");
+    // With flag disabled, `if const` should fail to parse as a condition local
+    matchParseError("if const x = getValue() then end", "Expected 'then' when parsing if statement, got 'x'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_if_local_interleaved_with_non_initializers")
@@ -6433,7 +6437,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_if_local_interleaved_with_non_initializers")
     AstStatBlock* block = parse(R"(
         if a() then
             print(1)
-        else if local y = b() then
+        else if const y = b() then
             print(y)
         else if c() then
             print(3)
@@ -6463,9 +6467,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_deeply_nested_if_local")
 
     constexpr int depth = 64;
 
-    std::string src = "if local v0 = f() then\n";
+    std::string src = "if const v0 = f() then\n";
     for (int i = 1; i < depth; ++i)
-        src += "else if local v" + std::to_string(i) + " = f() then\n";
+        src += "else if const v" + std::to_string(i) + " = f() then\n";
     src += "end\n";
 
     AstStatBlock* block = parse(src);

@@ -9,6 +9,7 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 LUAU_FASTFLAG(LuauNewTypePathErrorMessages)
 
 TEST_SUITE_BEGIN("UnionTypes");
@@ -16,7 +17,7 @@ TEST_SUITE_BEGIN("UnionTypes");
 TEST_CASE_FIXTURE(Fixture, "fuzzer_union_with_one_part_assertion")
 {
     CheckResult result = check(R"(
-local _ = {},nil
+const _ = {},nil
 repeat
 
 _,_ = if _.number == "" or _.number or _._ then
@@ -34,8 +35,9 @@ until _._
 
 TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local count = 0
+        export count = 0
         function most_of_the_natural_numbers(): number?
             if count < 10 then
                 count = count + 1
@@ -54,8 +56,9 @@ TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint")
 
 TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint_using_compound_assignment")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local count = 0
+        export count = 0
         function most_of_the_natural_numbers(): number?
             if count < 10 then
                 -- count = count + 1
@@ -76,7 +79,7 @@ TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint_using_compound_assignme
 TEST_CASE_FIXTURE(Fixture, "allow_specific_assign")
 {
     CheckResult result = check(R"(
-        local a:number|string = 22
+        const a:number|string = 22
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -117,8 +120,9 @@ TEST_CASE_FIXTURE(Fixture, "optional_arguments")
 
 TEST_CASE_FIXTURE(Fixture, "optional_arguments_table")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a:{a:string, b:string?}
+        export a:{a:string, b:string?} = nil as any
         a = {a="ok"}
     )");
 
@@ -128,7 +132,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_arguments_table")
 TEST_CASE_FIXTURE(Fixture, "optional_arguments_table2")
 {
     CheckResult result = check(R"(
-        local a:{a:string, b:string}
+        const a:{a:string, b:string}
         a = {a=""}
     )");
     REQUIRE(!result.errors.empty());
@@ -259,11 +263,11 @@ TEST_CASE_FIXTURE(Fixture, "union_equality_comparisons")
         type C = number | boolean
 
         function f(a: A, b: B, c: C)
-            local n = 1
+            const n = 1
 
-            local x = a == b
-            local y = a == n
-            local z = a == c
+            const x = a == b
+            const y = a == n
+            const z = a == c
         end
     )");
 
@@ -273,7 +277,7 @@ TEST_CASE_FIXTURE(Fixture, "union_equality_comparisons")
 TEST_CASE_FIXTURE(Fixture, "optional_union_members")
 {
     CheckResult result = check(R"(
-        local a = { a = { x = 1, y = 2 }, b = 3 }
+        const a = { a = { x = 1, y = 2 }, b = 3 }
         type A = typeof(a)
         function f(b: A?)
             return b.a.y
@@ -289,7 +293,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_union_members")
 TEST_CASE_FIXTURE(Fixture, "optional_union_functions")
 {
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         function a.foo(x:number, y:number) return x + y end
         type A = typeof(a)
         function f(b: A?)
@@ -306,7 +310,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_union_functions")
 TEST_CASE_FIXTURE(Fixture, "optional_union_methods")
 {
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         function a:foo(x:number, y:number) return x + y end
         type A = typeof(a)
         function f(b: A?)
@@ -323,8 +327,8 @@ TEST_CASE_FIXTURE(Fixture, "optional_union_methods")
 TEST_CASE_FIXTURE(Fixture, "optional_union_follow")
 {
     CheckResult result = check(R"(
-        local y: number? = 2
-        local x = y
+        const y: number? = 2
+        const x = y
         function f(a: number, b: number?, c: number?) return -a end
         return f()
     )");
@@ -343,8 +347,8 @@ TEST_CASE_FIXTURE(Fixture, "optional_field_access_error")
     CheckResult result = check(R"(
         type A = { x: number }
         function f(b: A?)
-            local c = b.x
-            local d = b.y
+            const c = b.x
+            const d = b.y
         end
     )");
 
@@ -359,7 +363,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_index_error")
     CheckResult result = check(R"(
         type A = {number}
         function f(a: A?)
-            local b = a[1]
+            const b = a[1]
         end
     )");
 
@@ -372,7 +376,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_call_error")
     CheckResult result = check(R"(
         type A = (number) -> number
         function f(a: A?)
-            local b = a(4)
+            const b = a(4)
         end
     )");
 
@@ -415,7 +419,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_length_error")
     CheckResult result = check(R"(
         type A = {number}
         function f(a: A?)
-            local b = a.count
+            const b = a.count
         end
     )");
 
@@ -431,12 +435,12 @@ TEST_CASE_FIXTURE(Fixture, "optional_missing_key_error_details")
         type D = { x: number }
 
         function f(a: A | B | C | D)
-            local y = a.y
-            local z = a.z
+            const y = a.y
+            const z = a.z
         end
 
         function g(c: A | B | C | D | nil)
-            local d = c.y
+            const d = c.y
         end
     )");
 
@@ -452,7 +456,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_iteration")
 {
     CheckResult result = check(R"(
 function foo(values: {number}?)
-    local s = 0
+    s = 0
     for _, value in values do
         s += value
     end
@@ -466,22 +470,23 @@ end
 TEST_CASE_FIXTURE(Fixture, "unify_unsealed_table_union_check")
 {
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-local x = { x = 3 }
+const x = { x = 3 }
 type A = number?
 type B = string?
-local y: { x: number, y: A | B }
+export y: { x: number, y: A | B } = nil as any
 y = x
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
     result = check(R"(
-local x = { x = 3 }
+const x = { x = 3 }
 
-local a: number? = 2
-local y = {}
+const a: number? = 2
+export y = {}
 y.x = 2
 y.y = a
 
@@ -495,16 +500,16 @@ TEST_CASE_FIXTURE(Fixture, "unify_sealed_table_union_check")
 {
     CheckResult result = check(R"(
  -- the difference between this and unify_unsealed_table_union_check is the type annotation on x
-local t = { x = 3, y = true }
-local x: { x: number } = t
+const t = { x = 3, y = true }
+const x: { x: number } = t
 type A = number?
 type B = string?
-local y: { x: number, y: A | B }
+const y: { x: number, y: A | B }
 -- Shouldn't typecheck!
 y = x
 -- If it does, we can convert any type to any other type
 y.y = 5
-local oh : boolean = t.y
+const oh : boolean = t.y
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -520,7 +525,7 @@ type Z = { z: number }
 type XYZ = X | Y | Z
 
 function f(a: XYZ)
-    local b: { w: number } = a
+    const b: { w: number } = a
 end
     )");
 
@@ -565,7 +570,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_union_all")
 
         type XYZ = X | Y | Z
 
-        local a: XYZ = { w = 4 }
+        const a: XYZ = { w = 4 }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -580,7 +585,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_optional")
     CheckResult result = check(R"(
 type X = { x: number }
 
-local a: X? = { w = 4 }
+const a: X? = { w = 4 }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -685,10 +690,10 @@ TEST_CASE_FIXTURE(Fixture, "union_true_and_false")
 {
     CheckResult result = check(R"(
         function f(x : boolean)
-            local y1 : (true | false) = x -- OK
-            local y2 : (true | false | (string & number)) = x -- OK
-            local y3 : (true | (string & number) | false) = x -- OK
-            local y4 : (true | (boolean & true) | false) = x -- OK
+            const y1 : (true | false) = x -- OK
+            const y2 : (true | false | (string & number)) = x -- OK
+            const y3 : (true | (string & number) | false) = x -- OK
+            const y4 : (true | (boolean & true) | false) = x -- OK
         end
     )");
 
@@ -699,7 +704,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions")
 {
     CheckResult result = check(R"(
         function f(x : (number) -> number?)
-            local y : ((number?) -> number?) | ((number) -> number) = x -- OK
+            const y : ((number?) -> number?) | ((number) -> number) = x -- OK
         end
      )");
 
@@ -710,7 +715,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_generic_functions")
 {
     CheckResult result = check(R"(
         function f(x : <a>(a) -> a?)
-            local y : (<a>(a?) -> a?) | (<b>(b) -> b) = x -- Not OK
+            const y : (<a>(a?) -> a?) | (<b>(b) -> b) = x -- Not OK
         end
      )");
 
@@ -722,7 +727,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_generic_typepack_functions")
 {
     CheckResult result = check(R"(
         function f(x : <a...>(number, a...) -> (number?, a...))
-            local y : (<a...>(number?, a...) -> (number?, a...)) | (<b...>(number, b...) -> (number, b...)) = x -- Not OK
+            const y : (<a...>(number?, a...) -> (number?, a...)) | (<b...>(number, b...) -> (number, b...)) = x -- Not OK
         end
      )");
 
@@ -737,8 +742,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generics")
     CheckResult result = check(R"(
         function f<a,b>()
             function g(x : (a) -> a?)
-                local y : ((a?) -> nil) | ((a) -> a) = x -- OK
-                local z : ((b?) -> nil) | ((b) -> b) = x -- Not OK
+                const y : ((a?) -> nil) | ((a) -> a) = x -- OK
+                const z : ((b?) -> nil) | ((b) -> b) = x -- Not OK
             end
         end
     )");
@@ -757,8 +762,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generic_typepacks")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : (number, a...) -> (number?, a...))
-                local y : ((number | string, a...) -> (number, a...)) | ((number?, a...) -> (nil, a...)) = x -- OK
-                local z : ((number) -> number) | ((number?, a...) -> (number?, a...)) = x -- Not OK
+                const y : ((number | string, a...) -> (number, a...)) | ((number?, a...) -> (nil, a...)) = x -- OK
+                const z : ((number) -> number) | ((number?, a...) -> (number?, a...)) = x -- Not OK
             end
         end
     )");
@@ -779,8 +784,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_arg_arities")
 
     CheckResult result = check(R"(
         function f(x : (number) -> number?)
-            local y : ((number?) -> number) | ((number | string) -> nil) = x -- OK
-            local z : ((number, string?) -> number) | ((number) -> nil) = x -- Not OK
+            const y : ((number?) -> number) | ((number | string) -> nil) = x -- OK
+            const z : ((number, string?) -> number) | ((number) -> nil) = x -- Not OK
         end
      )");
 
@@ -800,8 +805,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_result_arities")
 
     CheckResult result = check(R"(
         function f(x : () -> (number | string))
-            local y : (() -> number) | (() -> string) = x -- OK
-            local z : (() -> number) | (() -> (string, string)) = x -- Not OK
+            const y : (() -> number) | (() -> string) = x -- OK
+            const z : (() -> number) | (() -> (string, string)) = x -- Not OK
         end
      )");
 
@@ -821,8 +826,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_variadics")
 
     CheckResult result = check(R"(
         function f(x : (...nil) -> (...number?))
-            local y : ((...string?) -> (...number)) | ((...number?) -> nil) = x -- OK
-            local z : ((...string?) -> (...number)) | ((...string?) -> nil) = x -- OK
+            const y : ((...string?) -> (...number)) | ((...number?) -> nil) = x -- OK
+            const z : ((...string?) -> (...number)) | ((...string?) -> nil) = x -- OK
         end
      )");
 
@@ -840,8 +845,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_arg_variadics")
 {
     CheckResult result = check(R"(
         function f(x : (number) -> ())
-            local y : ((number?) -> ()) | ((...number) -> ()) = x -- OK
-            local z : ((number?) -> ()) | ((...number?) -> ()) = x -- Not OK
+            const y : ((number?) -> ()) | ((...number) -> ()) = x -- OK
+            const z : ((number?) -> ()) | ((...number?) -> ()) = x -- Not OK
         end
      )");
 
@@ -874,8 +879,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_result_variadics
 
     CheckResult result = check(R"(
         function f(x : () -> (number?, ...number))
-            local y : (() -> (...number)) | (() -> nil) = x -- OK
-            local z : (() -> (...number)) | (() -> number) = x -- OK
+            const y : (() -> (...number)) | (() -> nil) = x -- OK
+            const z : (() -> (...number)) | (() -> number) = x -- OK
         end
      )");
 
@@ -895,8 +900,8 @@ TEST_CASE_FIXTURE(Fixture, "less_greedy_unification_with_union_types")
         return;
 
     CheckResult result = check(R"(
-        local function f(t): { x: number } | { x: string }
-            local x = t.x
+        function f(t): { x: number } | { x: string }
+            const x = t.x
             return t
         end
     )");
@@ -912,7 +917,7 @@ TEST_CASE_FIXTURE(Fixture, "less_greedy_unification_with_union_types_2")
         return;
 
     CheckResult result = check(R"(
-        local function f(t: { x: number } | { x: string })
+        function f(t: { x: number } | { x: string })
             return t.x
         end
     )");
@@ -928,8 +933,8 @@ TEST_CASE_FIXTURE(Fixture, "union_table_any_property")
         function f(x)
             -- x : X
             -- sup : { p : { q : X } }?
-            local sup = if true then { p = { q = x } } else nil
-            local sub : { p : any }
+            sup = if true then { p = { q = x } } else nil
+            const sub : { p : any } = nil as any
             sup = nil
             sup = sub
         end
@@ -968,13 +973,13 @@ TEST_CASE_FIXTURE(Fixture, "generic_function_with_optional_arg")
 
     CheckResult result = check(R"(
         function f<T>(x : T?) : {T}
-            local result = {}
+            const result = {}
             if x then
                 result[1] = x
             end
             return result
         end
-        local t : {string} = f(nil)
+        const t : {string} = f(nil)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -983,7 +988,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_function_with_optional_arg")
 TEST_CASE_FIXTURE(Fixture, "lookup_prop_of_intersection_containing_unions")
 {
     CheckResult result = check(R"(
-        local function mergeOptions<T>(options: T & ({} | {}))
+        function mergeOptions<T>(options: T & ({} | {}))
             return options.variables
         end
     )");
@@ -1004,7 +1009,7 @@ TEST_CASE_FIXTURE(Fixture, "suppress_errors_for_prop_lookup_of_a_union_that_incl
 
     CheckResult result = check(R"(
         function f(a: err | Not<nil>)
-            local b = a.foo
+            const b = a.foo
         end
     )");
 
@@ -1031,15 +1036,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bounds_propagate_into_free_union_bounds")
      * When unifying 'a <: T | nil in a context where T substituted for 't, we must constrain the lower bound of 't by 'a.
      */
     CheckResult result = check(R"(
-        local function unwrap<T>(a: T?): T
+        function unwrap<T>(a: T?): T
             if a == nil then
                 error("Unexpected nil!")
             end
             return a
         end
 
-        local b = unwrap(42)
-        local c = unwrap(true)
+        const b = unwrap(42)
+        const c = unwrap(true)
     )");
 
     LUAU_CHECK_NO_ERRORS(result);
@@ -1051,35 +1056,35 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bounds_propagate_into_free_union_bounds")
 TEST_CASE_FIXTURE(Fixture, "oss_2134")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function addIndex <A, B, C> (op: ((value: A) -> B, array: {A}) -> {C})
+        function addIndex <A, B, C> (op: ((value: A) -> B, array: {A}) -> {C})
             return function <K> (idxOp: (key: K, value: A) -> B, tbl: { [K]: A })
                 return {} as { [K]: C }
             end
         end
 
-        local function filter <A, K> (predicate: (value: A) -> boolean, tbl: {[K]: A })
+        function filter <A, K> (predicate: (value: A) -> boolean, tbl: {[K]: A })
             return {} as { A }
         end
 
-        local function map <A, B, K> (mapper: (value: A) -> B, tbl: {[K]: A })
+        function map <A, B, K> (mapper: (value: A) -> B, tbl: {[K]: A })
             return {} as { B }
         end
 
-        local function filterWithIndex(index: string, value: string): boolean
+        function filterWithIndex(index: string, value: string): boolean
             return true as boolean
         end
 
-        local function mapWithIndex(index: string, value: string): string
+        function mapWithIndex(index: string, value: string): string
             return "" as string
         end
 
-        local myArr = {first = "hi", second = "there", third = "what"}
+        const myArr = {first = "hi", second = "there", third = "what"}
 
-        local filterTest = addIndex(filter)
-        local filterResult = filterTest(filterWithIndex, myArr)
+        const filterTest = addIndex(filter)
+        const filterResult = filterTest(filterWithIndex, myArr)
 
-        local mapTest = addIndex(map)
-        local mapResult = mapTest(mapWithIndex, myArr)
+        const mapTest = addIndex(map)
+        const mapResult = mapTest(mapWithIndex, myArr)
     )"));
 }
 
@@ -1093,9 +1098,9 @@ TEST_CASE_FIXTURE(Fixture, "oss_2393")
             bar: (T?) -> ()
         }
 
-        local ex = {} as Example<string>
+        const ex = {} as Example<string>
 
-        local function process<T>(ref: Example<T>)
+        function process<T>(ref: Example<T>)
             return ref
         end
 
@@ -1108,10 +1113,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2025")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type a = { property: string }
 
-        local foo: {a} = {}
-        local bar: any = {}
+        const foo: {a} = {}
+        const bar: any = {}
 
-        local baz: a? = bar.test
+        const baz: a? = bar.test
 
         table.insert(foo, bar) 
     )"));

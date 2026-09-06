@@ -1,7 +1,7 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print "testing builtin types"
 
-local ignore =
+ignore =
 {
 	-- these are permanently ignored, as they are only exposed in tests
 	"_G.limitedstack",
@@ -21,7 +21,7 @@ function verify(real, rtti, path)
 		if type(real) == "table" then
 			assert(type(rtti) == "table", path .. " is not a table in type information")
 
-			local keys = {}
+			keys = {}
 
 			for k, v in pairs(real) do
 				keys[k] = 1

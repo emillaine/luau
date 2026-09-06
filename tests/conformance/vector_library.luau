@@ -1,14 +1,14 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print('testing vector library')
 
-local function noinline(x, ...) local s, r = pcall(function(y) return y end, x) return r end
-local function noinlinevector(a, b, c) return noinline(vector.create(a, b, c)) end
+function noinline(x, ...) s, r = pcall(function(y) return y end, x) return r end
+function noinlinevector(a, b, c) return noinline(vector.create(a, b, c)) end
 
 -- detect vector size
-local vector_size = if pcall(function() return vector.create(0, 0, 0).w end) then 4 else 3
+vector_size = if pcall(function() return vector.create(0, 0, 0).w end) then 4 else 3
 
 function ecall(fn, ...)
-    local ok, err = pcall(fn, ...)
+    ok, err = pcall(fn, ...)
     assert(not ok)
     return err:sub((err:find(": ") or -1) + 2, err.count)
 end
@@ -22,8 +22,8 @@ pcall(function()
 end)
 
 -- 'create'
-local v12 = vector.create(1, 2)
-local v123 = vector.create(1, 2, 3)
+v12 = vector.create(1, 2)
+v123 = vector.create(1, 2, 3)
 assert(v12.x == 1 and v12.y == 2 and v12.z == 0)
 assert(v123.x == 1 and v123.y == 2 and v123.z == 3)
 
@@ -32,15 +32,15 @@ assert(vector.dot(vector.create(1, 2, 4), vector.create(5, 6, 7)) == 45)
 assert(ecall(function() vector.dot(vector.create(1, 2, 4)) end) == "missing argument #2 to 'dot' (vector expected)")
 assert(ecall(function() vector.dot(vector.create(1, 2, 4), 2) end) == "invalid argument #2 to 'dot' (vector expected, got number)")
 
-local function doDot1(a: vector, b)
+function doDot1(a: vector, b)
     return vector.dot(a, b)
 end
 
-local function doDot2(a: vector, b)
+function doDot2(a: vector, b)
     return (vector.dot(a, b))
 end
 
-local v124 = vector.create(1, 2, 4)
+v124 = vector.create(1, 2, 4)
 
 assert(doDot1(v124, vector.create(5, 6, 7)) == 45)
 assert(doDot2(v124, vector.create(5, 6, 7)) == 45)
@@ -117,7 +117,7 @@ assert(select("#", vector.angle(vector.one, -vector.one, vector.zero)) == 1)
 
 do
     -- random (non-unit) vectors
-    local rand = {
+    rand = {
         vector.create(-1.05, -0.04, 1.06),
         vector.create(-0.75, 1.71, 1.29),
         vector.create(1.94, 0.76, -0.93),
@@ -131,7 +131,7 @@ do
     }
 
     -- numeric answers to the tests below (in degrees)
-    local ans = {
+    ans = {
         -105.1702,
         -69.49491,
         0.0,
@@ -148,7 +148,7 @@ do
         ans[i] = math.rad(ans[i])
     end
     
-    local function fuzzyeq(x, y, eps) return x == y or math.abs(x - y) < (eps or 1e-6) end
+    function fuzzyeq(x, y, eps) return x == y or math.abs(x - y) < (eps or 1e-6) end
 
     assert(fuzzyeq(vector.angle(rand[10], rand[1]), math.abs(ans[10])))
     assert(fuzzyeq(vector.angle(rand[2], rand[3]), math.abs(ans[1])))
@@ -261,7 +261,7 @@ assert(noinlinevector(1, 2, 3).z == 3)
 assert(noinlinevector(1, 2, 3).Z == 3)
 assert(noinlinevector(1, 2, 3)['Z'] == 3)
 
-local function getcomp(v: vector, field: string)
+function getcomp(v: vector, field: string)
     return v[field]
 end
 

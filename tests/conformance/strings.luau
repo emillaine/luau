@@ -149,10 +149,10 @@ assert(pcall(string.format, "%?", 1) == false)
 -- longest number that can be formated
 assert(string.len(string.format('%99.99f', -1e308)) >= 100)
 
-local function return_one_thing()
+function return_one_thing()
 	return "hi"
 end
-local function return_two_nils()
+function return_two_nils()
 	return nil, nil
 end
 
@@ -169,14 +169,14 @@ assert(string.format("%*", true) == "true")
 
 assert(string.format("%*", setmetatable({}, { __tostring = function() return "ok" end })) == "ok")
 
-local ud = newproxy(true)
+ud = newproxy(true)
 getmetatable(ud).__tostring = function() return "good" end
 assert(string.format("%*", ud) == "good")
 
 assert(string.format(string.rep("%*", 100), table.unpack(table.create(100, 1))) == string.rep("1", 100))
 
 do
-	local a = "1234567890"
+	a = "1234567890"
 	a = string.format("%*%*%*%*%*", a, a, a, a, a)
 	a = string.format("%*%*%*%*%*", a, a, a, a, a)
 	a = string.format("%*%*%*%*%*", a, a, a, a, a)
@@ -193,7 +193,7 @@ assert(loadstring("return 1\n--comentário sem EOL no final")() == 1)
 assert(table.concat{} == "")
 assert(table.concat({}, 'x') == "")
 assert(table.concat({'\0', '\0\1', '\0\1\2'}, '.\0.') == "\0.\0.\0\1.\0.\0\1\2")
-local a = {}; for i=1,3000 do a[i] = "xuxu" end
+a = {}; for i=1,3000 do a[i] = "xuxu" end
 assert(table.concat(a, "123").."123" == string.rep("xuxu123", 3000))
 assert(table.concat(a, "b", 20, 20) == "xuxu")
 assert(table.concat(a, "", 20, 21) == "xuxuxuxu")
@@ -210,7 +210,7 @@ assert(table.concat(a, ",", 4) == "")
 
 -- string.split
 do
-  local function eq(a, b)
+  function eq(a, b)
     if a.count != b.count then
       return false
     end
@@ -229,15 +229,15 @@ do
 end
 
 -- validate that variadic string fast calls get correct number of arguments
-local function chr1(c)
+function chr1(c)
   return string.char(tonumber(c));
 end
 
 assert(chr1("0") == "\0")
 
 --[[
-local locales = { "ptb", "ISO-8859-1", "pt_BR" }
-local function trylocale (w)
+locales = { "ptb", "ISO-8859-1", "pt_BR" }
+function trylocale (w)
   for _, l in ipairs(locales) do
     if os.setlocale(l, w) then return true end
   end

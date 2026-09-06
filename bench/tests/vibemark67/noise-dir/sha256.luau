@@ -4,16 +4,16 @@
 -- Words are 32-bit. Logical operations use `bit32`; additions accumulate a few
 -- 32-bit terms (sum < 2^35, exact as a double) and are masked back to 32 bits.
 
-local wordmath = require("./wordmath")
+wordmath = require("./wordmath")
 
-local sha256 = {}
+sha256 = {}
 
-local TWO32 = 0x100000000
-local rotr = wordmath.rotr32
+TWO32 = 0x100000000
+rotr = wordmath.rotr32
 
 -- Round constants (first 32 bits of the fractional parts of the cube roots of
 -- the first 64 primes).
-local K = {
+K = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 	0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
 	0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -26,10 +26,10 @@ local K = {
 
 -- Initial hash value (first 32 bits of the fractional parts of the square roots
 -- of the first 8 primes).
-local H0 = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 }
+H0 = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 }
 
 -- Read a big-endian 32-bit word from a buffer.
-local function readBE32(buf: buffer, off: number): number
+function readBE32(buf: buffer, off: number): number
 	return buffer.readu8(buf, off) * 0x1000000
 		+ buffer.readu8(buf, off + 1) * 0x10000
 		+ buffer.readu8(buf, off + 2) * 0x100
@@ -37,7 +37,7 @@ local function readBE32(buf: buffer, off: number): number
 end
 
 -- Write a big-endian 32-bit word into a buffer.
-local function writeBE32(buf: buffer, off: number, value: number)
+function writeBE32(buf: buffer, off: number, value: number)
 	buffer.writeu8(buf, off, bit32.band(bit32.rshift(value, 24), 0xff))
 	buffer.writeu8(buf, off + 1, bit32.band(bit32.rshift(value, 16), 0xff))
 	buffer.writeu8(buf, off + 2, bit32.band(bit32.rshift(value, 8), 0xff))
@@ -46,12 +46,12 @@ end
 
 -- Pad a message per FIPS 180-4 and return a new buffer whose length is a
 -- multiple of 64 bytes.
-local function pad(msg: buffer): buffer
-	local len = buffer.len(msg)
-	local bitLen = len * 8
+function pad(msg: buffer): buffer
+	len = buffer.len(msg)
+	bitLen = len * 8
 	-- 1 byte 0x80, then k zero bytes, then 8 bytes length: total multiple of 64.
-	local padded = ((len + 1 + 8 + 63) // 64) * 64
-	local out = buffer.create(padded)
+	padded = ((len + 1 + 8 + 63) // 64) * 64
+	out = buffer.create(padded)
 	buffer.copy(out, 0, msg, 0, len)
 	buffer.writeu8(out, len, 0x80)
 	-- 64-bit big-endian bit length (split into high/low 32-bit words).
@@ -65,9 +65,9 @@ sha256.BLOCK_SIZE = 64
 
 -- Compute the SHA-256 digest of `msg`, returning a 32-byte buffer.
 function sha256.hash(msg: buffer): buffer
-	local data = pad(msg)
-	local h = table.clone(H0)
-	local w = table.create(64)
+	data = pad(msg)
+	h = table.clone(H0)
+	w = table.create(64)
 
 	for base = 0, buffer.len(data) - 1, 64 do
 		-- Message schedule.
@@ -75,22 +75,22 @@ function sha256.hash(msg: buffer): buffer
 			w[t + 1] = readBE32(data, base + t * 4)
 		end
 		for t = 16, 63 do
-			local w15 = w[t - 15 + 1]
-			local w2 = w[t - 2 + 1]
-			local s0 = bit32.bxor(rotr(w15, 7), rotr(w15, 18), bit32.rshift(w15, 3))
-			local s1 = bit32.bxor(rotr(w2, 17), rotr(w2, 19), bit32.rshift(w2, 10))
+			w15 = w[t - 15 + 1]
+			w2 = w[t - 2 + 1]
+			s0 = bit32.bxor(rotr(w15, 7), rotr(w15, 18), bit32.rshift(w15, 3))
+			s1 = bit32.bxor(rotr(w2, 17), rotr(w2, 19), bit32.rshift(w2, 10))
 			w[t + 1] = (w[t - 16 + 1] + s0 + w[t - 7 + 1] + s1) % TWO32
 		end
 
-		local a, b, c, d, e, f, g, hh = h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]
+		a, b, c, d, e, f, g, hh = h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]
 
 		for t = 1, 64 do
-			local S1 = bit32.bxor(rotr(e, 6), rotr(e, 11), rotr(e, 25))
-			local ch = bit32.bxor(bit32.band(e, f), bit32.band(bit32.bnot(e), g))
-			local temp1 = (hh + S1 + ch + K[t] + w[t]) % TWO32
-			local S0 = bit32.bxor(rotr(a, 2), rotr(a, 13), rotr(a, 22))
-			local maj = bit32.bxor(bit32.band(a, b), bit32.band(a, c), bit32.band(b, c))
-			local temp2 = (S0 + maj) % TWO32
+			S1 = bit32.bxor(rotr(e, 6), rotr(e, 11), rotr(e, 25))
+			ch = bit32.bxor(bit32.band(e, f), bit32.band(bit32.bnot(e), g))
+			temp1 = (hh + S1 + ch + K[t] + w[t]) % TWO32
+			S0 = bit32.bxor(rotr(a, 2), rotr(a, 13), rotr(a, 22))
+			maj = bit32.bxor(bit32.band(a, b), bit32.band(a, c), bit32.band(b, c))
+			temp2 = (S0 + maj) % TWO32
 
 			hh = g
 			g = f
@@ -112,7 +112,7 @@ function sha256.hash(msg: buffer): buffer
 		h[8] = (h[8] + hh) % TWO32
 	end
 
-	local out = buffer.create(32)
+	out = buffer.create(32)
 	for i = 1, 8 do
 		writeBE32(out, (i - 1) * 4, h[i])
 	end
@@ -121,26 +121,26 @@ end
 
 -- HMAC-SHA256 (RFC 2104) over `msg` with `key`. Returns a 32-byte tag.
 function sha256.hmac(key: buffer, msg: buffer): buffer
-	local blockSize = 64
+	blockSize = 64
 	-- Keys longer than the block size are hashed first.
-	local k = buffer.create(blockSize)
+	k = buffer.create(blockSize)
 	if buffer.len(key) > blockSize then
-		local hk = sha256.hash(key)
+		hk = sha256.hash(key)
 		buffer.copy(k, 0, hk, 0, buffer.len(hk))
 	else
 		buffer.copy(k, 0, key, 0, buffer.len(key))
 	end
 
-	local ipad = buffer.create(blockSize + buffer.len(msg))
-	local opad = buffer.create(blockSize + 32)
+	ipad = buffer.create(blockSize + buffer.len(msg))
+	opad = buffer.create(blockSize + 32)
 	for i = 0, blockSize - 1 do
-		local kb = buffer.readu8(k, i)
+		kb = buffer.readu8(k, i)
 		buffer.writeu8(ipad, i, bit32.bxor(kb, 0x36))
 		buffer.writeu8(opad, i, bit32.bxor(kb, 0x5c))
 	end
 	buffer.copy(ipad, blockSize, msg, 0, buffer.len(msg))
 
-	local inner = sha256.hash(ipad)
+	inner = sha256.hash(ipad)
 	buffer.copy(opad, blockSize, inner, 0, 32)
 	return sha256.hash(opad)
 end

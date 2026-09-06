@@ -1,5 +1,9 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+-- forward declarations (implicit-local dialect has no hoisted globals)
+buildReplacement = nil
+findMatchEnd = nil
+parseAlternation = nil
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -10,14 +14,14 @@ function test()
 --   - NFA simulation with epsilon closure and capture tracking
 -- Target runtimes: Luau (lute), Lua 5.5, LuaJIT.
 
-local floor = math.floor
-local clock = os.clock
-local sbyte = string.byte
-local ssub = string.sub
-local slen = string.len
-local schar = string.char
-local srep = string.rep
-local sformat = string.format
+floor = math.floor
+clock = os.clock
+sbyte = string.byte
+ssub = string.sub
+slen = string.len
+schar = string.char
+srep = string.rep
+sformat = string.format
 
 -- ============================================================
 -- SECTION 1: Regex Parser
@@ -35,7 +39,7 @@ local sformat = string.format
 --   anchor_end: {type="anchor_end"}
 
 -- Forward declarations (global functions)
-local nextStateId = 0
+nextStateId = 0
 
 function makeStateId()
     nextStateId = nextStateId + 1
@@ -75,7 +79,7 @@ function parserPeek(p)
 end
 
 function parserAdvance(p)
-    local ch = sbyte(p.pattern, p.pos)
+    ch = sbyte(p.pattern, p.pos)
     p.pos = p.pos + 1
     return ch
 end
@@ -86,7 +90,7 @@ end
 
 -- Parse an escape sequence, returning an AST node
 function parseEscape(p)
-    local ch = parserAdvance(p)
+    ch = parserAdvance(p)
     if ch == nil then
         error("Unexpected end of pattern after backslash")
     end
@@ -120,10 +124,10 @@ end
 
 -- Parse character class [...]
 function parseCharClass(p)
-    local negated = false
-    local ranges = {}
+    negated = false
+    ranges = {}
     -- Check for negation
-    local ch = parserPeek(p)
+    ch = parserPeek(p)
     if ch == 94 then -- '^'
         negated = true
         parserAdvance(p)
@@ -138,10 +142,10 @@ function parseCharClass(p)
             parserAdvance(p)
             break
         end
-        local startCh
+        startCh = nil
         if ch == 92 then -- '\'
             parserAdvance(p)
-            local esc = parserAdvance(p)
+            esc = parserAdvance(p)
             if esc == 100 then -- 'd'
                 ranges[#ranges+1] = {48, 57}
                 startCh = nil
@@ -161,13 +165,13 @@ function parseCharClass(p)
         else
             startCh = parserAdvance(p)
         end
-        if startCh ~= nil then
+        if startCh != nil then
             -- Check for range: a-z
-            local next = parserPeek(p)
+            next = parserPeek(p)
             if next == 45 then -- '-'
                 parserAdvance(p)
-                local endCh
-                local afterDash = parserPeek(p)
+                endCh = nil
+                afterDash = parserPeek(p)
                 if afterDash == 93 then -- ']' right after dash means literal dash
                     -- treat dash as literal, put back
                     ranges[#ranges+1] = {startCh, startCh}
@@ -190,17 +194,17 @@ end
 
 -- Parse atom: literal, dot, group, class, anchor, escape
 function parseAtom(p)
-    local ch = parserPeek(p)
+    ch = parserPeek(p)
     if ch == nil then return nil end
 
     -- '(' grouping
     if ch == 40 then
         parserAdvance(p)
         p.groupCount = p.groupCount + 1
-        local idx = p.groupCount
-        local child = parseAlternation(p)
-        local closing = parserPeek(p)
-        if closing ~= 41 then -- ')'
+        idx = p.groupCount
+        child = parseAlternation(p)
+        closing = parserPeek(p)
+        if closing != 41 then -- ')'
             error("Expected closing parenthesis at pos " .. p.pos)
         end
         parserAdvance(p)
@@ -249,9 +253,9 @@ end
 
 -- Parse quantifier suffix on atom
 function parseQuantified(p)
-    local atom = parseAtom(p)
+    atom = parseAtom(p)
     if atom == nil then return nil end
-    local ch = parserPeek(p)
+    ch = parserPeek(p)
     if ch == 42 then -- '*'
         parserAdvance(p)
         return {type="quantifier", child=atom, kind="*"}
@@ -267,9 +271,9 @@ end
 
 -- Parse concatenation
 function parseConcat(p)
-    local children = {}
+    children = {}
     while true do
-        local node = parseQuantified(p)
+        node = parseQuantified(p)
         if node == nil then break end
         children[#children+1] = node
     end
@@ -285,11 +289,11 @@ end
 
 -- Parse alternation (lowest precedence)
 function parseAlternation(p)
-    local left = parseConcat(p)
-    local ch = parserPeek(p)
+    left = parseConcat(p)
+    ch = parserPeek(p)
     if ch == 124 then -- '|'
         parserAdvance(p)
-        local right = parseAlternation(p)
+        right = parseAlternation(p)
         return {type="alternation", left=left, right=right}
     end
     return left
@@ -297,8 +301,8 @@ end
 
 -- Top-level parse
 function parseRegex(pattern)
-    local p = createParser(pattern)
-    local ast = parseAlternation(p)
+    p = createParser(pattern)
+    ast = parseAlternation(p)
     if not parserAtEnd(p) then
         error("Unexpected character at position " .. p.pos .. " in pattern: " .. pattern)
     end
@@ -314,7 +318,7 @@ end
 -- NFA fragment: {start=<state>, accept=<state>}
 
 function newState()
-    local s = {
+    s = {
         id = makeStateId(),
         transitions = {},
         epsilon = {},
@@ -324,12 +328,12 @@ function newState()
 end
 
 function addEpsilon(fromState, toState)
-    local eps = fromState.epsilon
+    eps = fromState.epsilon
     eps[#eps+1] = toState
 end
 
 function addTransition(fromState, byte, toState)
-    local t = fromState.transitions[byte]
+    t = fromState.transitions[byte]
     if t == nil then
         fromState.transitions[byte] = {toState}
     else
@@ -339,8 +343,8 @@ end
 
 -- Build NFA fragment for character class match
 function buildClassFragment(ranges, negated)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     -- We use a special "class" transition: store the class info on the state
     -- Actually, for Thompson's, we enumerate all matching bytes and add transitions
     -- For efficiency, store class check as a special transition key
@@ -351,24 +355,24 @@ end
 
 -- Build NFA fragment for dot (any char)
 function buildDotFragment()
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     start.dotTransition = accept
     return {start=start, accept=accept}
 end
 
 -- Build NFA fragment for literal byte
 function buildLiteralFragment(byte)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     addTransition(start, byte, accept)
     return {start=start, accept=accept}
 end
 
 -- Build NFA fragment for epsilon (empty match)
 function buildEpsilonFragment()
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     addEpsilon(start, accept)
     return {start=start, accept=accept}
 end
@@ -381,8 +385,8 @@ end
 
 -- Alternation of two NFA fragments
 function alternateFragments(f1, f2)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     addEpsilon(start, f1.start)
     addEpsilon(start, f2.start)
     addEpsilon(f1.accept, accept)
@@ -392,8 +396,8 @@ end
 
 -- Kleene star (zero or more, greedy)
 function starFragment(f)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     addEpsilon(start, f.start)
     addEpsilon(start, accept)
     addEpsilon(f.accept, f.start)
@@ -403,8 +407,8 @@ end
 
 -- Plus (one or more, greedy)
 function plusFragment(f)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     addEpsilon(start, f.start)
     addEpsilon(f.accept, f.start)
     addEpsilon(f.accept, accept)
@@ -413,8 +417,8 @@ end
 
 -- Optional (zero or one, greedy)
 function optionalFragment(f)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     addEpsilon(start, f.start)
     addEpsilon(start, accept)
     addEpsilon(f.accept, accept)
@@ -423,16 +427,16 @@ end
 
 -- Build anchor fragments - these use special epsilon with conditions
 function buildAnchorStartFragment()
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     start.anchorStart = true
     addEpsilon(start, accept)
     return {start=start, accept=accept}
 end
 
 function buildAnchorEndFragment()
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     start.anchorEnd = true
     addEpsilon(start, accept)
     return {start=start, accept=accept}
@@ -440,8 +444,8 @@ end
 
 -- Build group fragment with capture markers
 function buildGroupFragment(childFragment, groupIndex)
-    local start = newState()
-    local accept = newState()
+    start = newState()
+    accept = newState()
     start.groupStart = groupIndex
     accept.groupEnd = groupIndex
     addEpsilon(start, childFragment.start)
@@ -455,7 +459,7 @@ function buildNFA(ast)
         return buildEpsilonFragment()
     end
 
-    local t = ast.type
+    t = ast.type
 
     if t == "literal" then
         return buildLiteralFragment(ast.char)
@@ -478,26 +482,26 @@ function buildNFA(ast)
     end
 
     if t == "concat" then
-        local children = ast.children
+        children = ast.children
         if #children == 0 then
             return buildEpsilonFragment()
         end
-        local result = buildNFA(children[1])
+        result = buildNFA(children[1])
         for i = 2, #children do
-            local next = buildNFA(children[i])
+            next = buildNFA(children[i])
             result = concatFragments(result, next)
         end
         return result
     end
 
     if t == "alternation" then
-        local leftFrag = buildNFA(ast.left)
-        local rightFrag = buildNFA(ast.right)
+        leftFrag = buildNFA(ast.left)
+        rightFrag = buildNFA(ast.right)
         return alternateFragments(leftFrag, rightFrag)
     end
 
     if t == "quantifier" then
-        local childFrag = buildNFA(ast.child)
+        childFrag = buildNFA(ast.child)
         if ast.kind == "*" then
             return starFragment(childFrag)
         else if ast.kind == "+" then
@@ -508,7 +512,7 @@ function buildNFA(ast)
     end
 
     if t == "group" then
-        local childFrag = buildNFA(ast.child)
+        childFrag = buildNFA(ast.child)
         return buildGroupFragment(childFrag, ast.index)
     end
 
@@ -528,11 +532,11 @@ end
 -- Also handles anchor checking and capture group tracking
 
 function classMatches(classInfo, ch)
-    local ranges = classInfo.ranges
-    local negated = classInfo.negated
-    local found = false
+    ranges = classInfo.ranges
+    negated = classInfo.negated
+    found = false
     for i = 1, #ranges do
-        local r = ranges[i]
+        r = ranges[i]
         if ch >= r[1] and ch <= r[2] then
             found = true
             break
@@ -550,15 +554,15 @@ end
 function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
     -- Each "thread" is {state, captures}
     -- captures is an array: captures[groupIndex*2-1] = start, captures[groupIndex*2] = end
-    local captureSize = numGroups * 2
+    captureSize = numGroups * 2
 
     -- Use state IDs to avoid visiting same state twice in epsilon closure
-    local visitedGen = 0
-    local visited = {}
+    visitedGen = 0
+    visited = {}
 
     -- Copy captures array
-    local function copyCaptures(caps)
-        local c = {}
+    function copyCaptures(caps)
+        c = {}
         for i = 1, captureSize do
             c[i] = caps[i]
         end
@@ -566,24 +570,24 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
     end
 
     -- Compute epsilon closure, respecting anchors and capture groups
-    local function epsilonClosure(threads, pos)
+    function epsilonClosure(threads, pos)
         visitedGen = visitedGen + 1
-        local result = {}
-        local resultCount = 0
+        result = {}
+        resultCount = 0
         -- Use a stack for DFS
-        local stack = {}
-        local stackTop = 0
+        stack = {}
+        stackTop = 0
         for i = 1, #threads do
             stackTop = stackTop + 1
             stack[stackTop] = threads[i]
         end
 
         while stackTop > 0 do
-            local thread = stack[stackTop]
+            thread = stack[stackTop]
             stackTop = stackTop - 1
-            local state = thread[1]
-            local caps = thread[2]
-            local sid = state.id
+            state = thread[1]
+            caps = thread[2]
+            sid = state.id
 
             if visited[sid] == visitedGen then
                 -- Already visited this state in this closure computation
@@ -592,14 +596,14 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
                 visited[sid] = visitedGen
 
                 -- Handle anchor conditions
-                local blocked = false
+                blocked = false
                 if state.anchorStart then
-                    if pos ~= 1 then
+                    if pos != 1 then
                         blocked = true
                     end
                 end
                 if state.anchorEnd then
-                    if pos ~= textLen + 1 then
+                    if pos != textLen + 1 then
                         blocked = true
                     end
                 end
@@ -607,12 +611,12 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
                 if not blocked then
                     -- Handle capture group markers
                     if state.groupStart then
-                        local gi = state.groupStart
+                        gi = state.groupStart
                         caps = copyCaptures(caps)
                         caps[gi * 2 - 1] = pos
                     end
                     if state.groupEnd then
-                        local gi = state.groupEnd
+                        gi = state.groupEnd
                         caps = copyCaptures(caps)
                         caps[gi * 2] = pos
                     end
@@ -622,7 +626,7 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
                     result[resultCount] = {state, caps}
 
                     -- Follow epsilon transitions
-                    local eps = state.epsilon
+                    eps = state.epsilon
                     for i = 1, #eps do
                         stackTop = stackTop + 1
                         stack[stackTop] = {eps[i], caps}
@@ -634,14 +638,14 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
     end
 
     -- Initialize: epsilon closure from start state
-    local emptyCaps = {}
+    emptyCaps = {}
     for ci = 1, captureSize do emptyCaps[ci] = 0 end
 
-    local currentThreads = epsilonClosure({{nfaStart, emptyCaps}}, startPos)
+    currentThreads = epsilonClosure({{nfaStart, emptyCaps}}, startPos)
 
     -- Check if any current state is accepting (for zero-length match)
-    local matched = false
-    local bestCaptures = nil
+    matched = false
+    bestCaptures = nil
     for i = 1, #currentThreads do
         if currentThreads[i][1].accepting then
             matched = true
@@ -651,19 +655,19 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
     end
 
     -- Process each character
-    local pos = startPos
+    pos = startPos
     while pos <= textLen do
-        local ch = sbyte(text, pos)
-        local nextThreads = {}
-        local nextCount = 0
+        ch = sbyte(text, pos)
+        nextThreads = {}
+        nextCount = 0
 
         for i = 1, #currentThreads do
-            local thread = currentThreads[i]
-            local state = thread[1]
-            local caps = thread[2]
+            thread = currentThreads[i]
+            state = thread[1]
+            caps = thread[2]
 
             -- Check literal transitions
-            local targets = state.transitions[ch]
+            targets = state.transitions[ch]
             if targets then
                 for j = 1, #targets do
                     nextCount = nextCount + 1
@@ -673,7 +677,7 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
 
             -- Check dot transition (matches any char except newline for standard regex)
             if state.dotTransition then
-                if ch ~= 10 then -- not newline
+                if ch != 10 then -- not newline
                     nextCount = nextCount + 1
                     nextThreads[nextCount] = {state.dotTransition, caps}
                 end
@@ -681,7 +685,7 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
 
             -- Check class transition
             if state.classTransition then
-                local ct = state.classTransition
+                ct = state.classTransition
                 if classMatches(ct, ch) then
                     nextCount = nextCount + 1
                     nextThreads[nextCount] = {ct.target, caps}
@@ -721,8 +725,8 @@ end
 -- Compile a pattern to NFA (returns {nfa=<start state>, numGroups=<int>})
 function compileRegex(pattern)
     resetStateId()
-    local ast, numGroups = parseRegex(pattern)
-    local fragment = buildNFA(ast)
+    ast, numGroups = parseRegex(pattern)
+    fragment = buildNFA(ast)
     fragment.accept.accepting = true
     return {nfa=fragment.start, numGroups=numGroups}
 end
@@ -730,20 +734,20 @@ end
 -- Match: try to find a match anywhere in the text
 -- Returns {matched=true/false, captures={...}} where captures are substrings
 function match(pattern, text)
-    local compiled = compileRegex(pattern)
-    local nfaStart = compiled.nfa
-    local numGroups = compiled.numGroups
-    local textLen = slen(text)
+    compiled = compileRegex(pattern)
+    nfaStart = compiled.nfa
+    numGroups = compiled.numGroups
+    textLen = slen(text)
 
     -- Try matching starting at each position
     for startPos = 1, textLen + 1 do
-        local caps = simulateNFA(nfaStart, text, textLen, startPos, numGroups)
-        if caps ~= nil then
+        caps = simulateNFA(nfaStart, text, textLen, startPos, numGroups)
+        if caps != nil then
             -- Extract capture substrings
-            local captures = {}
+            captures = {}
             for g = 1, numGroups do
-                local s = caps[g * 2 - 1]
-                local e = caps[g * 2]
+                s = caps[g * 2 - 1]
+                e = caps[g * 2]
                 if s and e and s > 0 and e > 0 and e >= s then
                     captures[g] = ssub(text, s, e - 1)
                 else
@@ -760,17 +764,17 @@ end
 
 -- matchAnchored: match must start at beginning and consume to end
 function matchFull(pattern, text)
-    local compiled = compileRegex(pattern)
-    local nfaStart = compiled.nfa
-    local numGroups = compiled.numGroups
-    local textLen = slen(text)
+    compiled = compileRegex(pattern)
+    nfaStart = compiled.nfa
+    numGroups = compiled.numGroups
+    textLen = slen(text)
 
-    local caps = simulateNFA(nfaStart, text, textLen, 1, numGroups)
-    if caps ~= nil then
-        local captures = {}
+    caps = simulateNFA(nfaStart, text, textLen, 1, numGroups)
+    if caps != nil then
+        captures = {}
         for g = 1, numGroups do
-            local s = caps[g * 2 - 1]
-            local e = caps[g * 2]
+            s = caps[g * 2 - 1]
+            e = caps[g * 2]
             if s and e and s > 0 and e > 0 and e >= s then
                 captures[g] = ssub(text, s, e - 1)
             else
@@ -788,13 +792,13 @@ end
 -- ============================================================
 
 function assertEquals(desc, got, expected)
-    if got ~= expected then
+    if got != expected then
         error("FAIL [" .. desc .. "]: expected " .. tostring(expected) .. " got " .. tostring(got))
     end
 end
 
 function assertMatches(desc, pattern, text)
-    local result = match(pattern, text)
+    result = match(pattern, text)
     if not result.matched then
         error("FAIL [" .. desc .. "]: pattern '" .. pattern .. "' should match '" .. text .. "'")
     end
@@ -802,7 +806,7 @@ function assertMatches(desc, pattern, text)
 end
 
 function assertNotMatches(desc, pattern, text)
-    local result = match(pattern, text)
+    result = match(pattern, text)
     if result.matched then
         error("FAIL [" .. desc .. "]: pattern '" .. pattern .. "' should NOT match '" .. text .. "'")
     end
@@ -810,12 +814,12 @@ function assertNotMatches(desc, pattern, text)
 end
 
 function assertCapture(desc, pattern, text, expectedCaptures)
-    local result = match(pattern, text)
+    result = match(pattern, text)
     if not result.matched then
         error("FAIL [" .. desc .. "]: pattern '" .. pattern .. "' should match '" .. text .. "'")
     end
     for i = 1, #expectedCaptures do
-        if result.captures[i] ~= expectedCaptures[i] then
+        if result.captures[i] != expectedCaptures[i] then
             error("FAIL [" .. desc .. "]: capture " .. i .. " expected '" ..
                   tostring(expectedCaptures[i]) .. "' got '" .. tostring(result.captures[i]) .. "'")
         end
@@ -825,7 +829,7 @@ end
 
 -- Checksum helper: accumulate results into a numeric checksum
 function checksumString(s, acc)
-    local len = slen(s)
+    len = slen(s)
     for i = 1, len do
         acc = (acc * 31 + sbyte(s, i)) % 1000000007
     end
@@ -838,7 +842,7 @@ function checksumResult(result, acc)
     else
         acc = (acc * 31 + 0) % 1000000007
     end
-    local caps = result.captures
+    caps = result.captures
     if caps then
         for i = 1, #caps do
             acc = checksumString(caps[i], acc)
@@ -852,7 +856,7 @@ end
 -- ============================================================
 
 function buildTestCases()
-    local tests = {}
+    tests = {}
 
     -- Group 1: Basic literal matching
     tests[#tests+1] = {pattern="abc", text="abc", shouldMatch=true, captures={}}
@@ -951,31 +955,31 @@ function buildTestCases()
     tests[#tests+1] = {pattern="(a*)", text="aaa", shouldMatch=true, captures={"aaa"}}
 
     -- Group 12: Longer text inputs
-    local longText = srep("ab", 250) -- 500 chars
+    longText = srep("ab", 250) -- 500 chars
     tests[#tests+1] = {pattern="ab", text=longText, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="(ab)+", text=longText, shouldMatch=true, captures={"ab"}}
     tests[#tests+1] = {pattern="^(ab)+$", text=longText, shouldMatch=true, captures={"ab"}}
     tests[#tests+1] = {pattern="cd", text=longText, shouldMatch=false, captures={}}
 
-    local longDigits = srep("1234567890", 60) -- 600 chars
+    longDigits = srep("1234567890", 60) -- 600 chars
     tests[#tests+1] = {pattern="\\d+", text=longDigits, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="^\\d+$", text=longDigits, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="[a-z]", text=longDigits, shouldMatch=false, captures={}}
 
     -- Mixed long text
-    local mixedLong = srep("abc123", 100) -- 600 chars
+    mixedLong = srep("abc123", 100) -- 600 chars
     tests[#tests+1] = {pattern="(\\w+)", text=mixedLong, shouldMatch=true, captures={mixedLong}}
     tests[#tests+1] = {pattern="[^\\w]", text=mixedLong, shouldMatch=false, captures={}}
 
     -- Group 13: Pathological cases (Thompson's should handle these in linear time)
     -- Pattern: a?^n a^n should match a^n in O(n) with Thompson's
-    local n = 20
-    local patParts = {}
+    n = 20
+    patParts = {}
     for i = 1, n do
         patParts[i] = "a?"
     end
-    local textA = srep("a", n)
-    local pathPattern = table.concat(patParts) .. textA
+    textA = srep("a", n)
+    pathPattern = table.concat(patParts) .. textA
     tests[#tests+1] = {pattern=pathPattern, text=textA, shouldMatch=true, captures={}}
 
     -- Slightly larger pathological
@@ -1085,13 +1089,13 @@ function buildTestCases()
     tests[#tests+1] = {pattern="((\\w+)@(\\w+))", text="user@host", shouldMatch=true, captures={"user@host","user","host"}}
 
     -- Group 29: Stress tests with repeated patterns
-    local rep50 = srep("a", 50)
+    rep50 = srep("a", 50)
     tests[#tests+1] = {pattern="a+", text=rep50, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="(a+)", text=rep50, shouldMatch=true, captures={rep50}}
     tests[#tests+1] = {pattern="a*b", text=rep50 .. "b", shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="(a*)b", text=rep50 .. "b", shouldMatch=true, captures={rep50}}
 
-    local rep100 = srep("ab", 50)
+    rep100 = srep("ab", 50)
     tests[#tests+1] = {pattern="(ab)+", text=rep100, shouldMatch=true, captures={"ab"}}
     tests[#tests+1] = {pattern="[ab]+", text=rep100, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="^[ab]+$", text=rep100, shouldMatch=true, captures={}}
@@ -1147,13 +1151,13 @@ function buildTestCases()
     tests[#tests+1] = {pattern="\\d\\d\\d\\d\\d", text="pin is 1234", shouldMatch=false, captures={}}
 
     -- Group 35: More large input tests
-    local bigAlpha = srep("abcdefghijklmnopqrstuvwxyz", 25) -- 650 chars
+    bigAlpha = srep("abcdefghijklmnopqrstuvwxyz", 25) -- 650 chars
     tests[#tests+1] = {pattern="[a-z]+", text=bigAlpha, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="^[a-z]+$", text=bigAlpha, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="xyz", text=bigAlpha, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="zzz", text=bigAlpha, shouldMatch=false, captures={}}
 
-    local bigNum = srep("9876543210", 55) -- 550 chars
+    bigNum = srep("9876543210", 55) -- 550 chars
     tests[#tests+1] = {pattern="\\d+", text=bigNum, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="^\\d+$", text=bigNum, shouldMatch=true, captures={}}
     tests[#tests+1] = {pattern="0+", text=bigNum, shouldMatch=true, captures={}}
@@ -1211,24 +1215,24 @@ end
 -- findAll: find all non-overlapping matches of pattern in text
 -- Returns list of {matched=true, captures={...}, matchStart=<pos>}
 function findAll(pattern, text)
-    local compiled = compileRegex(pattern)
-    local nfaStart = compiled.nfa
-    local numGroups = compiled.numGroups
-    local textLen = slen(text)
-    local results = {}
-    local resultCount = 0
-    local pos = 1
+    compiled = compileRegex(pattern)
+    nfaStart = compiled.nfa
+    numGroups = compiled.numGroups
+    textLen = slen(text)
+    results = {}
+    resultCount = 0
+    pos = 1
 
     while pos <= textLen + 1 do
-        local caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
-        if caps ~= nil then
+        caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
+        if caps != nil then
             -- Determine match end from the overall match
             -- For findAll, we need the match length. Without explicit match bounds,
             -- advance by at least 1 to avoid infinite loops on zero-length matches.
-            local captures = {}
+            captures = {}
             for g = 1, numGroups do
-                local s = caps[g * 2 - 1]
-                local e = caps[g * 2]
+                s = caps[g * 2 - 1]
+                e = caps[g * 2]
                 if s and e and s > 0 and e > 0 and e >= s then
                     captures[g] = ssub(text, s, e - 1)
                 else
@@ -1249,24 +1253,24 @@ end
 -- replace: replace first occurrence of pattern in text with replacement
 -- Replacement can reference captures with \1, \2, etc.
 function replace(pattern, text, replacement)
-    local compiled = compileRegex(pattern)
-    local nfaStart = compiled.nfa
-    local numGroups = compiled.numGroups
-    local textLen = slen(text)
+    compiled = compileRegex(pattern)
+    nfaStart = compiled.nfa
+    numGroups = compiled.numGroups
+    textLen = slen(text)
 
     -- Find first match
     for startPos = 1, textLen + 1 do
-        local caps = simulateNFA(nfaStart, text, textLen, startPos, numGroups)
-        if caps ~= nil then
+        caps = simulateNFA(nfaStart, text, textLen, startPos, numGroups)
+        if caps != nil then
             -- We found a match starting at startPos
             -- We need to know where the match ends. For simple replacement,
             -- we'll simulate forward to find the longest match from startPos
-            local matchEnd = startPos -- at minimum, empty match
+            matchEnd = startPos -- at minimum, empty match
             -- To find match end, we re-run but track position
-            local captures = {}
+            captures = {}
             for g = 1, numGroups do
-                local s = caps[g * 2 - 1]
-                local e = caps[g * 2]
+                s = caps[g * 2 - 1]
+                e = caps[g * 2]
                 if s and e and s > 0 and e > 0 and e >= s then
                     captures[g] = ssub(text, s, e - 1)
                     if e > matchEnd then matchEnd = e end
@@ -1280,10 +1284,10 @@ function replace(pattern, text, replacement)
             end
 
             -- Build replacement string
-            local rep = buildReplacement(replacement, captures)
+            rep = buildReplacement(replacement, captures)
             -- Construct result
-            local before = ssub(text, 1, startPos - 1)
-            local after = ssub(text, matchEnd)
+            before = ssub(text, 1, startPos - 1)
+            after = ssub(text, matchEnd)
             return before .. rep .. after
         end
     end
@@ -1293,32 +1297,32 @@ end
 -- Helper: find end position of match starting at startPos
 function findMatchEnd(nfaStart, text, textLen, startPos)
     -- Re-simulate to find where the match ends
-    local visitedGen = 0
-    local visited = {}
+    visitedGen = 0
+    visited = {}
 
-    local function epsClosure(states, pos)
+    function epsClosure(states, pos)
         visitedGen = visitedGen + 1
-        local result = {}
-        local resultCount = 0
-        local stack = {}
-        local stackTop = 0
+        result = {}
+        resultCount = 0
+        stack = {}
+        stackTop = 0
         for i = 1, #states do
             stackTop = stackTop + 1
             stack[stackTop] = states[i]
         end
         while stackTop > 0 do
-            local state = stack[stackTop]
+            state = stack[stackTop]
             stackTop = stackTop - 1
-            local sid = state.id
-            if visited[sid] ~= visitedGen then
+            sid = state.id
+            if visited[sid] != visitedGen then
                 visited[sid] = visitedGen
-                local blocked = false
-                if state.anchorStart and pos ~= 1 then blocked = true end
-                if state.anchorEnd and pos ~= textLen + 1 then blocked = true end
+                blocked = false
+                if state.anchorStart and pos != 1 then blocked = true end
+                if state.anchorEnd and pos != textLen + 1 then blocked = true end
                 if not blocked then
                     resultCount = resultCount + 1
                     result[resultCount] = state
-                    local eps = state.epsilon
+                    eps = state.epsilon
                     for i = 1, #eps do
                         stackTop = stackTop + 1
                         stack[stackTop] = eps[i]
@@ -1329,8 +1333,8 @@ function findMatchEnd(nfaStart, text, textLen, startPos)
         return result
     end
 
-    local current = epsClosure({nfaStart}, startPos)
-    local lastAcceptPos = startPos
+    current = epsClosure({nfaStart}, startPos)
+    lastAcceptPos = startPos
 
     -- Check initial states for accepting
     for i = 1, #current do
@@ -1340,21 +1344,21 @@ function findMatchEnd(nfaStart, text, textLen, startPos)
         end
     end
 
-    local pos = startPos
+    pos = startPos
     while pos <= textLen do
-        local ch = sbyte(text, pos)
-        local nextStates = {}
-        local nextCount = 0
+        ch = sbyte(text, pos)
+        nextStates = {}
+        nextCount = 0
         for i = 1, #current do
-            local state = current[i]
-            local targets = state.transitions[ch]
+            state = current[i]
+            targets = state.transitions[ch]
             if targets then
                 for j = 1, #targets do
                     nextCount = nextCount + 1
                     nextStates[nextCount] = targets[j]
                 end
             end
-            if state.dotTransition and ch ~= 10 then
+            if state.dotTransition and ch != 10 then
                 nextCount = nextCount + 1
                 nextStates[nextCount] = state.dotTransition
             end
@@ -1380,18 +1384,18 @@ end
 
 -- Build replacement string from template with \1, \2 references
 function buildReplacement(template, captures)
-    local result = {}
-    local resultCount = 0
-    local tlen = slen(template)
-    local i = 1
+    result = {}
+    resultCount = 0
+    tlen = slen(template)
+    i = 1
     while i <= tlen do
-        local ch = sbyte(template, i)
+        ch = sbyte(template, i)
         if ch == 92 then -- backslash
             i = i + 1
             if i <= tlen then
-                local next = sbyte(template, i)
+                next = sbyte(template, i)
                 if next >= 48 and next <= 57 then -- digit
-                    local groupIdx = next - 48
+                    groupIdx = next - 48
                     if groupIdx >= 1 and captures[groupIdx] then
                         resultCount = resultCount + 1
                         result[resultCount] = captures[groupIdx]
@@ -1426,10 +1430,10 @@ end
 -- ============================================================
 
 function buildExtendedTests()
-    local tests = {}
+    tests = {}
 
     -- Test findAll
-    local allMatches = findAll("\\d+", "abc 123 def 456 ghi 789")
+    allMatches = findAll("\\d+", "abc 123 def 456 ghi 789")
     if #allMatches < 3 then
         error("findAll should find at least 3 digit sequences")
     end
@@ -1445,8 +1449,8 @@ function buildExtendedTests()
     end
 
     -- Test replace
-    local replaced = replace("\\d+", "hello 123 world", "NUM")
-    if replaced ~= "hello NUM world" then
+    replaced = replace("\\d+", "hello 123 world", "NUM")
+    if replaced != "hello NUM world" then
         -- Due to how our replace works (no match-end tracking for non-group patterns),
         -- this may differ slightly. We just test it doesn't crash.
     end
@@ -1467,16 +1471,16 @@ function buildExtendedTests()
 end
 
 function runExtendedTests()
-    local tests = buildExtendedTests()
+    tests = buildExtendedTests()
     for i = 1, #tests do
-        local tc = tests[i]
-        local result
+        tc = tests[i]
+        result = nil
         if tc.fn == "isMatch" then
             result = isMatch(tc.pat, tc.txt)
         else if tc.fn == "fullMatch" then
             result = fullMatch(tc.pat, tc.txt)
         end
-        if result ~= tc.expect then
+        if result != tc.expect then
             error("Extended test FAIL: " .. tc.fn .. "('" .. tc.pat .. "', '" .. tc.txt ..
                   "') expected " .. tostring(tc.expect) .. " got " .. tostring(result))
         end
@@ -1494,19 +1498,19 @@ function runPathologicalTests()
     -- With Thompson's NFA, this should be O(n^2) at worst, not exponential
 
     -- n=10
-    local function buildPathological(n)
-        local patParts = {}
+    function buildPathological(n)
+        patParts = {}
         for i = 1, n do patParts[i] = "a?" end
         for i = 1, n do patParts[n + i] = "a" end
         return table.concat(patParts)
     end
 
-    local sizes = {10, 15, 20, 25}
+    sizes = {10, 15, 20, 25}
     for idx = 1, #sizes do
-        local n = sizes[idx]
-        local pat = buildPathological(n)
-        local txt = srep("a", n)
-        local result = match(pat, txt)
+        n = sizes[idx]
+        pat = buildPathological(n)
+        txt = srep("a", n)
+        result = match(pat, txt)
         if not result.matched then
             error("Pathological test failed for n=" .. n)
         end
@@ -1515,17 +1519,17 @@ function runPathologicalTests()
     -- Another pathological: (a|a)*b on "aaa...a" (no trailing b = no match)
     -- This should complete quickly with Thompson's
     for idx = 1, #sizes do
-        local n = sizes[idx]
-        local txt = srep("a", n * 2)
-        local result = match("(a|a)*b", txt)
+        n = sizes[idx]
+        txt = srep("a", n * 2)
+        result = match("(a|a)*b", txt)
         if result.matched then
             error("Pathological no-match test should not match for n=" .. n)
         end
     end
 
     -- (a*)(a*)(a*)(a*)b on "aaa...a" (no trailing b)
-    local txt40 = srep("a", 40)
-    local result = match("(a*)(a*)(a*)(a*)b", txt40)
+    txt40 = srep("a", 40)
+    result = match("(a*)(a*)(a*)(a*)b", txt40)
     if result.matched then
         error("Should not match (a*)(a*)(a*)(a*)b on all-a string")
     end
@@ -1534,24 +1538,24 @@ end
 -- Stress test: many compilations and matches
 function runCompilationStress()
     -- Compile and match many different patterns
-    local patterns = {
+    patterns = {
         "\\d+", "\\w+", "\\s+", "[a-z]+", "[A-Z]+",
         "[0-9]+", "a*b", "a+b", "a?b", ".*",
         "^hello$", "^\\d+$", "(\\w+)", "([a-z]+)([0-9]+)",
         "a|b|c", "cat|dog|bird", "\\d+\\.\\d+",
         "^.+$", "[^abc]+", "(a+)(b+)(c+)"
     }
-    local texts = {
+    texts = {
         "hello123world", "testing 456 regex", "ABCDEF",
         "12345", "   spaces   ", "a.b.c.d",
         "cat and dog", "aaabbbccc", "xyz",
         "hello", "100.5", "no match here!"
     }
 
-    local checksum = 0
+    checksum = 0
     for pi = 1, #patterns do
         for ti = 1, #texts do
-            local result = match(patterns[pi], texts[ti])
+            result = match(patterns[pi], texts[ti])
             checksum = checksumResult(result, checksum)
         end
     end
@@ -1561,16 +1565,16 @@ end
 -- Stress test: large text scanning
 function runLargeTextStress()
     -- Build a large text with scattered patterns
-    local segments = {}
+    segments = {}
     for i = 1, 100 do
         segments[i] = "word" .. tostring(i) .. " "
     end
-    local largeText = table.concat(segments) -- ~800+ chars
+    largeText = table.concat(segments) -- ~800+ chars
 
-    local checksum = 0
+    checksum = 0
 
     -- Search for various patterns in the large text
-    local result = match("word50", largeText)
+    result = match("word50", largeText)
     checksum = checksumResult(result, checksum)
 
     result = match("word99", largeText)
@@ -1602,11 +1606,11 @@ end
 
 -- Escape a literal string for use in a regex pattern
 function escapeRegex(s)
-    local result = {}
-    local resultCount = 0
-    local len = slen(s)
+    result = {}
+    resultCount = 0
+    len = slen(s)
     for i = 1, len do
-        local ch = sbyte(s, i)
+        ch = sbyte(s, i)
         -- Special chars that need escaping: . * + ? | ( ) [ ] ^ $ \
         if ch == 46 or ch == 42 or ch == 43 or ch == 63 or ch == 124 or
            ch == 40 or ch == 41 or ch == 91 or ch == 93 or ch == 94 or
@@ -1625,20 +1629,20 @@ end
 
 -- Split a string by a regex pattern
 function splitByRegex(pattern, text)
-    local compiled = compileRegex(pattern)
-    local nfaStart = compiled.nfa
-    local numGroups = compiled.numGroups
-    local textLen = slen(text)
-    local parts = {}
-    local partCount = 0
-    local lastEnd = 1
+    compiled = compileRegex(pattern)
+    nfaStart = compiled.nfa
+    numGroups = compiled.numGroups
+    textLen = slen(text)
+    parts = {}
+    partCount = 0
+    lastEnd = 1
 
-    local pos = 1
+    pos = 1
     while pos <= textLen do
-        local caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
-        if caps ~= nil then
+        caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
+        if caps != nil then
             -- Found a match at pos, get match end
-            local matchEnd = findMatchEnd(nfaStart, text, textLen, pos)
+            matchEnd = findMatchEnd(nfaStart, text, textLen, pos)
             if matchEnd > pos then
                 -- Add text before match
                 partCount = partCount + 1
@@ -1660,16 +1664,16 @@ end
 
 -- Count occurrences of a pattern in text
 function countMatches(pattern, text)
-    local compiled = compileRegex(pattern)
-    local nfaStart = compiled.nfa
-    local numGroups = compiled.numGroups
-    local textLen = slen(text)
-    local count = 0
-    local pos = 1
+    compiled = compileRegex(pattern)
+    nfaStart = compiled.nfa
+    numGroups = compiled.numGroups
+    textLen = slen(text)
+    count = 0
+    pos = 1
 
     while pos <= textLen + 1 do
-        local caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
-        if caps ~= nil then
+        caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
+        if caps != nil then
             count = count + 1
             pos = pos + 1
         else
@@ -1681,7 +1685,7 @@ end
 
 -- Validate that a string matches a pattern completely
 function validateFull(pattern, text)
-    local fullPat = "^" .. pattern .. "$"
+    fullPat = "^" .. pattern .. "$"
     return match(fullPat, text).matched
 end
 
@@ -1693,8 +1697,8 @@ end
 function astToString(ast, depth)
     if ast == nil then return "nil" end
     depth = depth or 0
-    local indent = srep("  ", depth)
-    local t = ast.type
+    indent = srep("  ", depth)
+    t = ast.type
 
     if t == "literal" then
         return indent .. "Literal(" .. schar(ast.char) .. ")"
@@ -1703,10 +1707,10 @@ function astToString(ast, depth)
         return indent .. "Dot"
     end
     if t == "class" then
-        local desc = indent .. "Class("
+        desc = indent .. "Class("
         if ast.negated then desc = desc .. "^" end
         for i = 1, #ast.ranges do
-            local r = ast.ranges[i]
+            r = ast.ranges[i]
             if r[1] == r[2] then
                 desc = desc .. schar(r[1])
             else
@@ -1727,7 +1731,7 @@ function astToString(ast, depth)
         return indent .. "Quantifier(" .. ast.kind .. ")\n" .. astToString(ast.child, depth + 1)
     end
     if t == "concat" then
-        local parts = {indent .. "Concat"}
+        parts = {indent .. "Concat"}
         for i = 1, #ast.children do
             parts[#parts+1] = astToString(ast.children[i], depth + 1)
         end
@@ -1745,7 +1749,7 @@ end
 -- Verify AST construction for various patterns
 function verifyASTConstruction()
     -- Just verify parsing doesn't crash and produces expected types
-    local testPatterns = {
+    testPatterns = {
         "abc",
         "a.b",
         "a*b+c?",
@@ -1763,12 +1767,12 @@ function verifyASTConstruction()
     }
 
     for i = 1, #testPatterns do
-        local ast, numGroups = parseRegex(testPatterns[i])
+        ast, numGroups = parseRegex(testPatterns[i])
         if ast == nil then
             error("AST should not be nil for pattern: " .. testPatterns[i])
         end
         -- Generate string representation to exercise the code
-        local s = astToString(ast)
+        s = astToString(ast)
         if slen(s) == 0 then
             error("AST string should not be empty for pattern: " .. testPatterns[i])
         end
@@ -1782,15 +1786,15 @@ end
 
 -- Count total states in an NFA (via BFS from start)
 function countNFAStates(startState)
-    local seen = {}
-    local queue = {startState}
-    local front = 1
-    local count = 0
+    seen = {}
+    queue = {startState}
+    front = 1
+    count = 0
 
     while front <= #queue do
-        local state = queue[front]
+        state = queue[front]
         front = front + 1
-        local sid = state.id
+        sid = state.id
         if not seen[sid] then
             seen[sid] = true
             count = count + 1
@@ -1824,11 +1828,11 @@ end
 -- Verify NFA state counts for various patterns
 function verifyNFAStateCount()
     -- Simple patterns should have predictable state counts
-    local compiled
+    compiled = nil
 
     -- "a" -> 2 states (start, accept)
     compiled = compileRegex("a")
-    local n = countNFAStates(compiled.nfa)
+    n = countNFAStates(compiled.nfa)
     if n < 2 then error("Expected at least 2 states for 'a', got " .. n) end
 
     -- "abc" -> 6 states (2 per literal, connected by epsilon)
@@ -1859,14 +1863,14 @@ end
 
 -- Check if a pattern string is valid (parseable without error)
 function isValidPattern(pattern)
-    local ok, _ = pcall(parseRegex, pattern)
+    ok, _ = pcall(parseRegex, pattern)
     return ok
 end
 
 -- Run validation tests
 function runValidationTests()
     -- Valid patterns
-    local validPatterns = {
+    validPatterns = {
         "abc", "a.b", "a*", "a+", "a?",
         "[abc]", "[a-z]", "[^0-9]",
         "a|b", "(abc)", "^hello$",
@@ -1881,7 +1885,7 @@ function runValidationTests()
     end
 
     -- Invalid patterns
-    local invalidPatterns = {
+    invalidPatterns = {
         "[abc",    -- unterminated class
         "(abc",    -- unterminated group
         "\\",      -- trailing backslash
@@ -1900,29 +1904,29 @@ end
 
 function runUtilityTests()
     -- Test escapeRegex
-    local escaped = escapeRegex("hello.world")
-    if escaped ~= "hello\\.world" then
+    escaped = escapeRegex("hello.world")
+    if escaped != "hello\\.world" then
         error("escapeRegex failed: " .. escaped)
     end
     escaped = escapeRegex("a*b+c?")
-    if escaped ~= "a\\*b\\+c\\?" then
+    if escaped != "a\\*b\\+c\\?" then
         error("escapeRegex failed: " .. escaped)
     end
     escaped = escapeRegex("(foo)|[bar]")
-    if escaped ~= "\\(foo\\)\\|\\[bar\\]" then
+    if escaped != "\\(foo\\)\\|\\[bar\\]" then
         error("escapeRegex failed: " .. escaped)
     end
 
     -- Test that escaped patterns match literally
-    local specialChars = ".*+?|()[]^$\\"
-    local escapedPat = escapeRegex(specialChars)
-    local result = match(escapedPat, specialChars)
+    specialChars = ".*+?|()[]^$\\"
+    escapedPat = escapeRegex(specialChars)
+    result = match(escapedPat, specialChars)
     if not result.matched then
         error("Escaped pattern should match the literal string")
     end
 
     -- Test countMatches
-    local count = countMatches("ab", "ababab")
+    count = countMatches("ab", "ababab")
     if count < 3 then
         error("Should find at least 3 occurrences of 'ab' in 'ababab', got " .. count)
     end
@@ -1933,7 +1937,7 @@ function runUtilityTests()
     end
 
     count = countMatches("x", "yyy")
-    if count ~= 0 then
+    if count != 0 then
         error("Should find 0 occurrences of 'x' in 'yyy', got " .. count)
     end
 
@@ -1949,11 +1953,11 @@ function runUtilityTests()
     end
 
     -- Test splitByRegex
-    local parts = splitByRegex("\\s+", "hello world foo bar")
+    parts = splitByRegex("\\s+", "hello world foo bar")
     if #parts < 4 then
         error("Split should produce at least 4 parts, got " .. #parts)
     end
-    if parts[1] ~= "hello" then
+    if parts[1] != "hello" then
         error("First split part should be 'hello', got '" .. parts[1] .. "'")
     end
 end
@@ -1964,14 +1968,14 @@ end
 -- ============================================================
 
 function runTests(tests)
-    local checksum = 0
-    local numTests = #tests
+    checksum = 0
+    numTests = #tests
     for i = 1, numTests do
-        local tc = tests[i]
-        local result = match(tc.pattern, tc.text)
+        tc = tests[i]
+        result = match(tc.pattern, tc.text)
 
         -- Verify correctness
-        if result.matched ~= tc.shouldMatch then
+        if result.matched != tc.shouldMatch then
             error("FAIL test " .. i .. ": pattern='" .. tc.pattern .. "' text='" .. tc.text ..
                   "' expected matched=" .. tostring(tc.shouldMatch) .. " got=" .. tostring(result.matched))
         end
@@ -1979,9 +1983,9 @@ function runTests(tests)
         -- Verify captures if expected
         if tc.shouldMatch and tc.captures and #tc.captures > 0 then
             for j = 1, #tc.captures do
-                local expected = tc.captures[j]
-                local got = result.captures[j] or ""
-                if got ~= expected then
+                expected = tc.captures[j]
+                got = result.captures[j] or ""
+                if got != expected then
                     error("FAIL test " .. i .. ": pattern='" .. tc.pattern .. "' text='" .. tc.text ..
                           "' capture " .. j .. " expected '" .. expected .. "' got '" .. got .. "'")
                 end
@@ -2004,25 +2008,25 @@ function runAllVerifications()
 end
 
 function runBenchmark()
-    local tests = buildTestCases()
-    local numIterations = 10
+    tests = buildTestCases()
+    numIterations = 10
 
     -- Run verifications once
     runAllVerifications()
 
     for iter = 1, numIterations do
-        local checksum = runTests(tests)
+        checksum = runTests(tests)
 
         -- Also run stress tests and accumulate
-        local stressChecksum = runCompilationStress()
+        stressChecksum = runCompilationStress()
         checksum = (checksum + stressChecksum) % 1000000007
 
-        local largeChecksum = runLargeTextStress()
+        largeChecksum = runLargeTextStress()
         checksum = (checksum + largeChecksum) % 1000000007
 
-        local correctChecksum = 468932651
+        correctChecksum = 468932651
 
-        if checksum ~= correctChecksum then
+        if checksum != correctChecksum then
             error("Checksum mismatch on iteration " .. iter .. ": expected " ..
                   correctChecksum .. " got " .. checksum)
         end

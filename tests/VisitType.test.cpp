@@ -20,7 +20,7 @@ TEST_CASE_FIXTURE(Fixture, "throw_when_limit_is_exceeded")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CheckResult result = check(R"(
-            local t : {a: {b: {c: {d: {e: boolean}}}}}
+            const t : {a: {b: {c: {d: {e: boolean}}}}}
         )");
         ScopedFastInt sfi{FInt::LuauVisitRecursionLimit, 3};
         TypeId tType = requireType("t");
@@ -32,7 +32,7 @@ TEST_CASE_FIXTURE(Fixture, "throw_when_limit_is_exceeded")
         ScopedFastInt sfi{FInt::LuauVisitRecursionLimit, 3};
 
         CheckResult result = check(R"(
-            local t : {a: {b: {c: {d: {e: boolean}}}}}
+            const t : {a: {b: {c: {d: {e: boolean}}}}}
         )");
 
         TypeId tType = requireType("t");
@@ -46,7 +46,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_throw_when_limit_is_high_enough")
     ScopedFastInt sfi{FInt::LuauVisitRecursionLimit, 8};
 
     CheckResult result = check(R"(
-        local t : {a: {b: {c: {d: {e: boolean}}}}}
+        const t : {a: {b: {c: {d: {e: boolean}}}}}
     )");
 
     TypeId tType = requireType("t");

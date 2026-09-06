@@ -22,13 +22,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_names_show_instead_of_tables")
 
     CheckResult result = check(R"(
 --!strict
-local Account = {}
+Account = {}
 Account.__index = Account
 function Account.deposit(self: Account, x: number)
 	self.balance += x
 end
 type Account = typeof(setmetatable({} as { balance: number }, Account))
-local x: Account = 5
+const x: Account = 5
 )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -42,7 +42,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "binary_op_type_function_errors")
 
     CheckResult result = check(R"(
         --!strict
-        local x = 1 + "foo"
+        x = 1 + "foo"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -62,7 +62,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unary_op_type_function_errors")
 
     CheckResult result = check(R"(
         --!strict
-        local x = -"foo"
+        x = -"foo"
     )");
 
 

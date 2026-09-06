@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
@@ -11,13 +11,13 @@ function test()
         end
     end
 
-    local ts0 = os.clock()
+    ts0 = os.clock()
     for loops=1,500 do
         for i=1,100 do
             fact(i)
         end
     end
-    local ts1 = os.clock()
+    ts1 = os.clock()
 
     return ts1 - ts0
 end

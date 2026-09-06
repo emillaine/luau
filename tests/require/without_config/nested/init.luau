@@ -1,2 +1,2 @@
-local result = require("@self/submodule")
+result = require("@self/submodule")
 return result

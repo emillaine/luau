@@ -21,11 +21,11 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_correct")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>(): T
+        function f<T>(): T
             return nil as any
         end
 
-        local correct = f<<number>>() + 5
+        const correct = f<<number>>() + 5
         )");
 
         LUAU_REQUIRE_NO_ERRORS(result);
@@ -38,11 +38,11 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_incorrect")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>(): T
+        function f<T>(): T
             return nil as any
         end
 
-        local incorrect = f<<string>>() + 5
+        const incorrect = f<<string>>() + 5
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -67,7 +67,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_correct")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>(a: T, b: T)
+        function f<T>(a: T, b: T)
             return nil as any
         end
 
@@ -84,7 +84,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_incorrect")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>(a: T, b: T)
+        function f<T>(a: T, b: T)
             return nil as any
         end
 
@@ -112,12 +112,12 @@ TEST_CASE_FIXTURE(Fixture, "multiple_calls")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>(): T
+        function f<T>(): T
             return nil as any
         end
 
-        local a: number = f<<number>>()
-        local b: string = f<<string>>()
+        const a: number = f<<number>>()
+        const b: string = f<<string>>()
         )");
 
         LUAU_REQUIRE_NO_ERRORS(result);
@@ -130,12 +130,12 @@ TEST_CASE_FIXTURE(Fixture, "anonymous_type_inferred")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T, U>(): { a: T, b: U }
+        function f<T, U>(): { a: T, b: U }
             return nil as any
         end
 
-        local correct: { a: number, b: string } = f<<number>>()
-        local incorrect: { a: number, b: string } = f<<string>>()
+        const correct: { a: number, b: string } = f<<number>>()
+        const incorrect: { a: number, b: string } = f<<string>>()
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -153,9 +153,9 @@ TEST_CASE_FIXTURE(Fixture, "type_packs")
 
     CheckResult result = check(R"(
     --!strict
-    local function f<T..., U...>(...: T...): U... end
+    function f<T..., U...>(...: T...): U... end
 
-    local a: number, b: string = f<<(boolean, {}), (number, string)>>(true, {})
+    const a: number, b: string = f<<(boolean, {}), (number, string)>>(true, {})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -169,11 +169,11 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_method")
 
     CheckResult result = check(R"(
     --!strict
-    local t: {
+    const t: {
         f: <T..., U...>(self: any, T...) -> U...,
     } = nil as any
 
-    local a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, {})
+    const a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, {})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -187,9 +187,9 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_incorrect")
 
     CheckResult result = check(R"(
     --!strict
-    local function f<T..., U...>(...: T...): U... end
+    function f<T..., U...>(...: T...): U... end
 
-    local a: number, b: string = f<<(boolean, {}), (number, string)>>(true, "uh oh")
+    const a: number, b: string = f<<(boolean, {}), (number, string)>>(true, "uh oh")
     )");
 
     LUAU_REQUIRE_ERROR(result, TypeMismatch);
@@ -203,11 +203,11 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_incorrect_method")
 
     CheckResult result = check(R"(
     --!strict
-    local t: {
+    const t: {
         f: <T..., U...>(self: any, T...) -> U...,
     } = nil as any
 
-    local a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, "uh oh")
+    const a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, "uh oh")
     )");
 
     LUAU_REQUIRE_ERROR(result, TypeMismatch);
@@ -219,14 +219,14 @@ TEST_CASE_FIXTURE(Fixture, "dot_index_call")
     {
         CheckResult result = check(R"(
         --!strict
-        local t = {
+        const t = {
             f = function<T>(): T
                 return nil as any
             end,
         }
 
-        local correct: number = t.f<<number>>()
-        local incorrect: number = t.f<<string>>()
+        const correct: number = t.f<<number>>()
+        const incorrect: number = t.f<<string>>()
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -240,14 +240,14 @@ TEST_CASE_FIXTURE(Fixture, "method_index_call")
     {
         CheckResult result = check(R"(
         --!strict
-        local t = {
+        const t = {
             f = function<T>(self: any): T
                 return nil as any
             end,
         }
 
-        local correct: number = t:f<<number>>()
-        local incorrect: number = t:f<<string>>()
+        const correct: number = t:f<<number>>()
+        const incorrect: number = t:f<<string>>()
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -262,14 +262,14 @@ TEST_CASE_FIXTURE(Fixture, "stored_as_variable")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>(): T
+        function f<T>(): T
             return nil as any
         end
 
-        local fNumber = f<<number>>
+        const fNumber = f<<number>>
 
-        local correct: number = fNumber()
-        local incorrect: string = fNumber()
+        const correct: number = fNumber()
+        const incorrect: string = fNumber()
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -284,8 +284,8 @@ TEST_CASE_FIXTURE(Fixture, "not_a_function")
     {
         CheckResult result = check(R"(
         --!strict
-        local oops = 3
-        local stub = oops<<number>>
+        const oops = 3
+        const stub = oops<<number>>
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -301,7 +301,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_call")
     {
         CheckResult result = check(R"(
         --!strict
-        local t = setmetatable({}, {
+        const t = setmetatable({}, {
             __call = function<T>(self): T
                 return nil as any
             end,
@@ -323,14 +323,14 @@ TEST_CASE_FIXTURE(Fixture, "method_call_incomplete")
     {
         CheckResult result = check(R"(
         --!strict
-        local t = {
+        const t = {
             f = function<T, U>(self: any): T | U
                 return nil as any
             end,
         }
 
-        local correct: number | string = t:f<<number>>()
-        local incorrect: number | string = t:f<<boolean>>()
+        const correct: number | string = t:f<<number>>()
+        const incorrect: number | string = t:f<<boolean>>()
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -345,7 +345,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_provided")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T>() end
+        function f<T>() end
 
         f<<number, string>>()
         )");
@@ -376,7 +376,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_provided_type_packs")
     {
         CheckResult result = check(R"(
         --!strict
-        local function f<T...>(): (T...) end
+        function f<T...>(): (T...) end
 
         f<<(string, number), (true, false)>>()
         )");
@@ -407,7 +407,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_provided_method")
     {
         CheckResult result = check(R"(
         --!strict
-        local t = {
+        const t = {
             f = function<T>(self: any) end,
         }
 
@@ -441,7 +441,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_type_packs_provided_method")
     {
         CheckResult result = check(R"(
         --!strict
-        local t = {
+        const t = {
             f = function<T...>(self: any): (T...) end,
         }
 
@@ -475,7 +475,7 @@ TEST_CASE_FIXTURE(Fixture, "function_intersections")
     {
         CheckResult result = check(R"(
         --!strict
-        local f: (<T>(T) -> T) & (<T>(T?) -> T) = nil as any
+        const f: (<T>(T) -> T) & (<T>(T?) -> T) = nil as any
         f<<number>>()
         )");
 
@@ -491,9 +491,9 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_type_packs")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-            local f: <A, T...>() -> (A, T...) = nil as any
-            local correct: string, b: number, c: boolean = f<<string>>()
-            local incorrect: number, b: number, c: boolean = f<<string>>()
+            const f: <A, T...>() -> (A, T...) = nil as any
+            const correct: string, b: number, c: boolean = f<<string>>()
+            const incorrect: number, b: number, c: boolean = f<<string>>()
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -510,13 +510,13 @@ TEST_CASE_FIXTURE(Fixture, "replacing_generic_with_generic")
     };
 
     CheckResult result = check(R"(
-        local foo: <A, B>() -> (A, B) = nil as any
+        const foo: <A, B>() -> (A, B) = nil as any
 
-        local function bar<T>()
+        function bar<T>()
             return foo<<T, number>>()
         end
 
-        local baz, quxx = bar<<string>>()
+        const baz, quxx = bar<<string>>()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -529,7 +529,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_type_in_explicit_type_instantiation")
     ScopedFastFlag sff{FFlag::LuauStrictVisitInstantiatedType, true};
 
     CheckResult result = check(R"(
-        local function f<T>() end
+        function f<T>() end
         f<<Typo>>()
     )");
 
@@ -542,7 +542,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_type_pack_in_explicit_type_instantiation")
     ScopedFastFlag sff{FFlag::LuauStrictVisitInstantiatedType, true};
 
     CheckResult result = check(R"(
-        local function f<T...>() end
+        function f<T...>() end
         f<<(Typo)>>()
     )");
 
@@ -553,11 +553,11 @@ TEST_CASE_FIXTURE(Fixture, "unknown_type_pack_in_explicit_type_instantiation")
 TEST_CASE_FIXTURE(Fixture, "typeof_in_method_call_type_args_no_crash")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         function t:f<T, U>() end
 
-        local x = 5
-        globl = 42
+        const x = 5
+        const _ = globl
 
         t:f<<typeof(x), string>>()
         t:f<<number, typeof(x)>>()
@@ -566,7 +566,7 @@ TEST_CASE_FIXTURE(Fixture, "typeof_in_method_call_type_args_no_crash")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    // We assign to an unknown global.
+    // `globl` is an unknown global.
     CHECK(get<UnknownSymbol>(result.errors[0]));
 }
 
@@ -574,10 +574,10 @@ TEST_CASE_FIXTURE(Fixture, "typeof_local_in_type_pack_no_crash")
 {
 
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         function t:f<T...>() end
 
-        local x = 5
+        const x = 5
 
         t:f<<(string, typeof(x))>>()
     )");

@@ -1,6 +1,6 @@
 -- Perlin/Simplex noise and fractal octaves for terrain generation
 
-local permutation = {
+permutation = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,
     140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,
     247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,
@@ -19,52 +19,52 @@ local permutation = {
     222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
 }
 
-local p = table.create(512, 0)
+p = table.create(512, 0)
 for i = 0, 255 do
     p[i + 1] = permutation[i + 1]
     p[i + 257] = permutation[i + 1]
 end
 
-local function fade(t: number): number
+function fade(t: number): number
     return t * t * t * (t * (t * 6 - 15) + 10)
 end
 
-local function lerp(t: number, a: number, b: number): number
+function lerp(t: number, a: number, b: number): number
     return a + t * (b - a)
 end
 
-local function grad2(hash: number, x: number, y: number): number
-    local h = bit32.band(hash, 7)
-    local u = if h < 4 then x else y
-    local v = if h < 4 then y else x
+function grad2(hash: number, x: number, y: number): number
+    h = bit32.band(hash, 7)
+    u = if h < 4 then x else y
+    v = if h < 4 then y else x
     return (if bit32.band(h, 1) == 0 then u else -u) + (if bit32.band(h, 2) == 0 then v else -v)
 end
 
-local function perlin2D(x: number, y: number): number
-    local xi = bit32.band(math.floor(x), 255)
-    local yi = bit32.band(math.floor(y), 255)
-    local xf = x - math.floor(x)
-    local yf = y - math.floor(y)
+function perlin2D(x: number, y: number): number
+    xi = bit32.band(math.floor(x), 255)
+    yi = bit32.band(math.floor(y), 255)
+    xf = x - math.floor(x)
+    yf = y - math.floor(y)
 
-    local u = fade(xf)
-    local v = fade(yf)
+    u = fade(xf)
+    v = fade(yf)
 
-    local aa = p[p[xi + 1] + yi + 1]
-    local ab = p[p[xi + 1] + yi + 2]
-    local ba = p[p[xi + 2] + yi + 1]
-    local bb = p[p[xi + 2] + yi + 2]
+    aa = p[p[xi + 1] + yi + 1]
+    ab = p[p[xi + 1] + yi + 2]
+    ba = p[p[xi + 2] + yi + 1]
+    bb = p[p[xi + 2] + yi + 2]
 
-    local x1 = lerp(u, grad2(aa, xf, yf), grad2(ba, xf - 1, yf))
-    local x2 = lerp(u, grad2(ab, xf, yf - 1), grad2(bb, xf - 1, yf - 1))
+    x1 = lerp(u, grad2(aa, xf, yf), grad2(ba, xf - 1, yf))
+    x2 = lerp(u, grad2(ab, xf, yf - 1), grad2(bb, xf - 1, yf - 1))
 
     return lerp(v, x1, x2)
 end
 
-local function fractalNoise(x: number, y: number, octaves: number, lacunarity: number, persistence: number): number
-    local value = 0
-    local amplitude = 1
-    local frequency = 1
-    local maxAmplitude = 0
+function fractalNoise(x: number, y: number, octaves: number, lacunarity: number, persistence: number): number
+    value = 0
+    amplitude = 1
+    frequency = 1
+    maxAmplitude = 0
 
     for i = 1, octaves do
         value += perlin2D(x * frequency, y * frequency) * amplitude
@@ -76,13 +76,13 @@ local function fractalNoise(x: number, y: number, octaves: number, lacunarity: n
     return value / maxAmplitude
 end
 
-local function generateHeightmap(size: number, scale: number, octaves: number): {number}
-    local heightmap = table.create(size * size, 0)
+function generateHeightmap(size: number, scale: number, octaves: number): {number}
+    heightmap = table.create(size * size, 0)
     for y = 0, size - 1 do
         for x = 0, size - 1 do
-            local nx = x / size * scale
-            local ny = y / size * scale
-            local h = fractalNoise(nx, ny, octaves, 2.0, 0.5)
+            nx = x / size * scale
+            ny = y / size * scale
+            h = fractalNoise(nx, ny, octaves, 2.0, 0.5)
             h = (h + 1) * 0.5
             heightmap[y * size + x + 1] = h
         end

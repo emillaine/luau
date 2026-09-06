@@ -124,7 +124,7 @@ TEST_CASE_FIXTURE(TypePathFixture, "empty_traversal")
 TEST_CASE_FIXTURE(TypePathFixture, "table_property")
 {
     TYPESOLVE_CODE(R"(
-        local x = { y = 123 }
+        const x = { y = 123 }
     )");
 
     CHECK(traverseForType(requireType("x"), Path(TypePath::Property{"y", true}), getBuiltins(), NotNull{&arena}) == getBuiltins()->numberType);
@@ -143,7 +143,7 @@ TEST_CASE_FIXTURE(TypePathBuiltinsFixture, "metatable_property")
     SUBCASE("meta_does_not_contribute")
     {
         TYPESOLVE_CODE(R"(
-            local x = setmetatable({ x = 123 }, {})
+            const x = setmetatable({ x = 123 }, {})
         )");
     }
 
@@ -151,14 +151,14 @@ TEST_CASE_FIXTURE(TypePathBuiltinsFixture, "metatable_property")
     {
         // since the table takes priority, the __index property won't matter
         TYPESOLVE_CODE(R"(
-            local x = setmetatable({ x = 123 }, { __index = { x = 'foo' } })
+            const x = setmetatable({ x = 123 }, { __index = { x = 'foo' } })
         )");
     }
 
     SUBCASE("only_meta_supplies_property")
     {
         TYPESOLVE_CODE(R"(
-            local x = setmetatable({}, { __index = { x = 123 } })
+            const x = setmetatable({}, { __index = { x = 123 } })
         )");
     }
 
@@ -255,9 +255,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "metatables")
         TYPESOLVE_CODE(R"(
             type Table = { foo: number }
             type Metatable = { bar: number }
-            local tbl: Table = { foo = 123 }
-            local mt: Metatable = { bar = 456 }
-            local res = setmetatable(tbl, mt)
+            const tbl: Table = { foo = 123 }
+            const mt: Metatable = { bar = 456 }
+            const res = setmetatable(tbl, mt)
         )");
 
         // Tricky test setup because 'setmetatable' mutates the argument 'tbl' type
@@ -270,8 +270,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "metatables")
     SUBCASE("metatable")
     {
         TYPESOLVE_CODE(R"(
-            local mt = { foo = 123 }
-            local tbl = setmetatable({}, mt)
+            const mt = { foo = 123 }
+            const tbl = setmetatable({}, mt)
         )");
 
         auto result = traverseForType(requireType("tbl"), Path(TypeField::Metatable), getBuiltins(), NotNull{&arena});

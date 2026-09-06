@@ -1,102 +1,102 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing that native code does not hit spill limit in complex integer code")
 
-local function bit32_add(lhs, rhs)
+function bit32_add(lhs, rhs)
 	return bit32.bor(lhs + rhs, 0)
 end
 
-local mem
+mem = nil
 
-local FUNC_LIST = {}
-local GLOBAL_LIST = {}
+FUNC_LIST = {}
+GLOBAL_LIST = {}
 
 GLOBAL_LIST[0] = { value = 4666048 }
 
 FUNC_LIST[1] = function(loc_0, loc_1)
-	local loc_2 = 0
-	local loc_3 = 0
-	local loc_4 = 0
-	local loc_5 = 0
-	local loc_6 = 0
-	local loc_7 = 0
-	local loc_8 = 0
-	local loc_9 = 0
-	local loc_10 = 0
-	local loc_11 = 0
-	local loc_12 = 0
-	local loc_13 = 0
-	local loc_14 = 0
-	local loc_15 = 0
-	local loc_16 = 0
-	local loc_17 = 0
-	local loc_18 = 0
-	local loc_19 = 0
-	local loc_20 = 0
-	local loc_21 = 0
-	local loc_22 = 0
-	local loc_23 = 0
-	local loc_24 = 0
-	local loc_25 = 0
-	local loc_26 = 0
-	local loc_27 = 0
-	local loc_28 = 0
-	local loc_29 = 0
-	local loc_30 = 0
-	local loc_31 = 0
-	local loc_32 = 0
-	local loc_33 = 0
-	local loc_34 = 0
-	local loc_35 = 0
-	local loc_36 = 0
-	local loc_37 = 0
-	local loc_38 = 0
-	local loc_39 = 0
-	local loc_40 = 0
-	local loc_41 = 0
-	local loc_42 = 0
-	local loc_43 = 0
-	local loc_44 = 0
-	local loc_45 = 0
-	local loc_46 = 0
-	local loc_47 = 0
-	local loc_48 = 0
-	local loc_49 = 0
-	local loc_50 = 0
-	local loc_51 = 0
-	local loc_52 = 0
-	local loc_53 = 0
-	local loc_54 = 0
-	local loc_55 = 0
-	local loc_56 = 0
-	local loc_57 = 0
-	local loc_58 = 0
-	local loc_59 = 0
-	local loc_60 = 0
-	local loc_61 = 0
-	local loc_62 = 0
-	local loc_63 = 0
-	local loc_64 = 0
-	local loc_65 = 0
-	local loc_66 = 0
-	local loc_67 = 0
-	local loc_68 = 0
-	local loc_69 = 0
-	local loc_70 = 0
-	local loc_71 = 0
-	local loc_72 = 0
-	local loc_73 = 0
-	local loc_74 = 0
-	local loc_75 = 0
-	local loc_76 = 0
-	local loc_77 = 0
-	local loc_78 = 0
-	local reg_7
-	local reg_8
-	local reg_12
-	local reg_13
-	local reg_14
-	local reg_15
-	local reg_16
+	loc_2 = 0
+	loc_3 = 0
+	loc_4 = 0
+	loc_5 = 0
+	loc_6 = 0
+	loc_7 = 0
+	loc_8 = 0
+	loc_9 = 0
+	loc_10 = 0
+	loc_11 = 0
+	loc_12 = 0
+	loc_13 = 0
+	loc_14 = 0
+	loc_15 = 0
+	loc_16 = 0
+	loc_17 = 0
+	loc_18 = 0
+	loc_19 = 0
+	loc_20 = 0
+	loc_21 = 0
+	loc_22 = 0
+	loc_23 = 0
+	loc_24 = 0
+	loc_25 = 0
+	loc_26 = 0
+	loc_27 = 0
+	loc_28 = 0
+	loc_29 = 0
+	loc_30 = 0
+	loc_31 = 0
+	loc_32 = 0
+	loc_33 = 0
+	loc_34 = 0
+	loc_35 = 0
+	loc_36 = 0
+	loc_37 = 0
+	loc_38 = 0
+	loc_39 = 0
+	loc_40 = 0
+	loc_41 = 0
+	loc_42 = 0
+	loc_43 = 0
+	loc_44 = 0
+	loc_45 = 0
+	loc_46 = 0
+	loc_47 = 0
+	loc_48 = 0
+	loc_49 = 0
+	loc_50 = 0
+	loc_51 = 0
+	loc_52 = 0
+	loc_53 = 0
+	loc_54 = 0
+	loc_55 = 0
+	loc_56 = 0
+	loc_57 = 0
+	loc_58 = 0
+	loc_59 = 0
+	loc_60 = 0
+	loc_61 = 0
+	loc_62 = 0
+	loc_63 = 0
+	loc_64 = 0
+	loc_65 = 0
+	loc_66 = 0
+	loc_67 = 0
+	loc_68 = 0
+	loc_69 = 0
+	loc_70 = 0
+	loc_71 = 0
+	loc_72 = 0
+	loc_73 = 0
+	loc_74 = 0
+	loc_75 = 0
+	loc_76 = 0
+	loc_77 = 0
+	loc_78 = 0
+	reg_7 = nil
+	reg_8 = nil
+	reg_12 = nil
+	reg_13 = nil
+	reg_14 = nil
+	reg_15 = nil
+	reg_16 = nil
 	while true do
 		loc_2 = bit32.bor(GLOBAL_LIST[0].value - 64, 0)
 		loc_3 = buffer.readu32(mem, loc_0 + 16)
@@ -373,14 +373,14 @@ FUNC_LIST[1] = function(loc_0, loc_1)
 end
 
 FUNC_LIST[2] = function(hashtable: buffer, entries: buffer, px: buffer, py: buffer, N: number, mult: number, size: number)
-    local function hash(x: number, y: number, mult: number, size: number)
-        local cx, cy = math.floor(x * mult), math.floor(y * mult)
-        local h = bit32.bxor((cx * 92837111), (cy * 689287499))
+    function hash(x: number, y: number, mult: number, size: number)
+        cx, cy = math.floor(x * mult), math.floor(y * mult)
+        h = bit32.bxor((cx * 92837111), (cy * 689287499))
         return math.abs(h) % size;
     end
 
     for i = 0, N-1, 8 do
-        local x0, x1, x2, x3, x4, x5, x6, x7 = 
+        x0, x1, x2, x3, x4, x5, x6, x7 = 
             buffer.readf32(px, (i) * 4), 
             buffer.readf32(px, (i+1) * 4), 
             buffer.readf32(px, (i+2) * 4), 
@@ -390,7 +390,7 @@ FUNC_LIST[2] = function(hashtable: buffer, entries: buffer, px: buffer, py: buff
             buffer.readf32(px, (i+6) * 4), 
             buffer.readf32(px, (i+7) * 4)
 
-        local y0, y1, y2, y3, y4, y5, y6, y7 = 
+        y0, y1, y2, y3, y4, y5, y6, y7 = 
             buffer.readf32(py, (i) * 4), 
             buffer.readf32(py, (i+1) * 4),
             buffer.readf32(py, (i+2) * 4), 
@@ -400,7 +400,7 @@ FUNC_LIST[2] = function(hashtable: buffer, entries: buffer, px: buffer, py: buff
             buffer.readf32(py, (i+6) * 4), 
             buffer.readf32(py, (i+7) * 4)
         
-        local h0, h1, h2, h3, h4, h5, h6, h7 = 
+        h0, h1, h2, h3, h4, h5, h6, h7 = 
             hash(x0, y0, mult, size),
             hash(x1, y1, mult, size),
             hash(x2, y2, mult, size),
@@ -410,7 +410,7 @@ FUNC_LIST[2] = function(hashtable: buffer, entries: buffer, px: buffer, py: buff
             hash(x6, y6, mult, size),
             hash(x7, y7, mult, size)
         
-        local vdecr0, vdecr1, vdecr2, vdecr3, vdecr4, vdecr5, vdecr6, vdecr7 =
+        vdecr0, vdecr1, vdecr2, vdecr3, vdecr4, vdecr5, vdecr6, vdecr7 =
             buffer.readu32(hashtable, h0 * 4) - 1,
             buffer.readu32(hashtable, h1 * 4) - 1,
             buffer.readu32(hashtable, h2 * 4) - 1,
@@ -441,21 +441,21 @@ FUNC_LIST[2] = function(hashtable: buffer, entries: buffer, px: buffer, py: buff
 end
 
 FUNC_LIST[3] = function(buf: buffer): ()
-	local l01, l02, l03, l04, l05 = buffer.readinteger(buf, 0), buffer.readinteger(buf, 8), buffer.readinteger(buf, 16), buffer.readinteger(buf, 24), buffer.readinteger(buf, 32)
-	local l06, l07, l08, l09, l10 = buffer.readinteger(buf, 40), buffer.readinteger(buf, 48), buffer.readinteger(buf, 56), buffer.readinteger(buf, 64), buffer.readinteger(buf, 72)
-	local l11, l12, l13, l14, l15 = buffer.readinteger(buf, 80), buffer.readinteger(buf, 88), buffer.readinteger(buf, 96), buffer.readinteger(buf, 104), buffer.readinteger(buf, 112)
-	local l16, l17, l18, l19, l20 = buffer.readinteger(buf, 120), buffer.readinteger(buf, 128), buffer.readinteger(buf, 136), buffer.readinteger(buf, 144), buffer.readinteger(buf, 152)
-	local l21, l22, l23, l24, l25 = buffer.readinteger(buf, 160), buffer.readinteger(buf, 168), buffer.readinteger(buf, 176), buffer.readinteger(buf, 184), buffer.readinteger(buf, 192)
+	l01, l02, l03, l04, l05 = buffer.readinteger(buf, 0), buffer.readinteger(buf, 8), buffer.readinteger(buf, 16), buffer.readinteger(buf, 24), buffer.readinteger(buf, 32)
+	l06, l07, l08, l09, l10 = buffer.readinteger(buf, 40), buffer.readinteger(buf, 48), buffer.readinteger(buf, 56), buffer.readinteger(buf, 64), buffer.readinteger(buf, 72)
+	l11, l12, l13, l14, l15 = buffer.readinteger(buf, 80), buffer.readinteger(buf, 88), buffer.readinteger(buf, 96), buffer.readinteger(buf, 104), buffer.readinteger(buf, 112)
+	l16, l17, l18, l19, l20 = buffer.readinteger(buf, 120), buffer.readinteger(buf, 128), buffer.readinteger(buf, 136), buffer.readinteger(buf, 144), buffer.readinteger(buf, 152)
+	l21, l22, l23, l24, l25 = buffer.readinteger(buf, 160), buffer.readinteger(buf, 168), buffer.readinteger(buf, 176), buffer.readinteger(buf, 184), buffer.readinteger(buf, 192)
 
 	for r = 0, 8, 8 do
-		local c1 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l01, l06), l11), l16), l21)
-		local c2 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l02, l07), l12), l17), l22)
-		local c3 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l03, l08), l13), l18), l23)
-		local c4 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l04, l09), l14), l19), l24)
-		local c5 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l05, l10), l15), l20), l25)
+		c1 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l01, l06), l11), l16), l21)
+		c2 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l02, l07), l12), l17), l22)
+		c3 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l03, l08), l13), l18), l23)
+		c4 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l04, l09), l14), l19), l24)
+		c5 = integer.bxor(integer.bxor(integer.bxor(integer.bxor(l05, l10), l15), l20), l25)
 
-		local d = integer.bxor(c1, integer.lrotate(c3, 1i))
-		local t0, t1, t2, t3, t4 = integer.bxor(d, l02), integer.bxor(d, l07), integer.bxor(d, l12), integer.bxor(d, l17), integer.bxor(d, l22)
+		d = integer.bxor(c1, integer.lrotate(c3, 1i))
+		t0, t1, t2, t3, t4 = integer.bxor(d, l02), integer.bxor(d, l07), integer.bxor(d, l12), integer.bxor(d, l17), integer.bxor(d, l22)
 		l02, l07, l12, l17, l22 = integer.rrotate(t1, 20i), integer.rrotate(t3, 19i), integer.rrotate(t0, 63i), integer.rrotate(t2, 54i), integer.rrotate(t4, 62i)
 		d = integer.bxor(c2, integer.rrotate(c4, 63i))
 

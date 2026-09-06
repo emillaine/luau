@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
@@ -23,7 +23,7 @@ function test()
   end
 
   function Toggle:new (start_state)
-    local o = {state = start_state}
+    o = {state = start_state}
     self.__index =self
     setmetatable(o, self)
     return o
@@ -46,7 +46,7 @@ function test()
   end
 
   function NthToggle:new (start_state, max_counter)
-    local o = Toggle.new(self, start_state)
+    o = Toggle.new(self, start_state)
     o.count_max = max_counter
     o.counter = 0
     return o
@@ -58,11 +58,11 @@ function test()
   -----------------------------------------------------------
 
   function main ()
-    local start = os.clock()
-    local N = 30000
+    start = os.clock()
+    N = 30000
 
-    local val = 1
-    local toggle = Toggle:new(val)
+    val = 1
+    toggle = Toggle:new(val)
     for i=1,N do
       val = toggle:activate():value()
       val = toggle:activate():value()
@@ -78,7 +78,7 @@ function test()
     print(val and "true" or "false")
 
     val = 1
-    local ntoggle = NthToggle:new(val, 3)
+    ntoggle = NthToggle:new(val, 3)
     for i=1,N do
       val = ntoggle:activate():value()
       val = ntoggle:activate():value()

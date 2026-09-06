@@ -59,7 +59,7 @@ unsigned int Lexeme::getLength() const
 }
 
 static const char* kReserved[] = {"and",   "as",    "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
-                                  "local", "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
+                                   "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 std::string Lexeme::toString() const
 {

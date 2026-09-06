@@ -17,17 +17,18 @@ using std::nullopt;
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
 LUAU_FASTFLAG(LuauNewTypePathErrorMessages)
 LUAU_FASTFLAG(LuauAllowIntersectionOfOneTableWithExtern)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 TEST_SUITE_BEGIN("TypeInferExternTypes");
 
 TEST_CASE_FIXTURE(ExternTypeFixture, "Luau.Analyze.CLI_crashes_on_this_test")
 {
     CheckResult result = check(R"(
-        local CircularQueue = {}
+        const CircularQueue = {}
 CircularQueue.__index = CircularQueue
 
 function CircularQueue:new()
-	local newCircularQueue = {
+	const newCircularQueue = {
 		head = nil,
 	}
 	setmetatable(newCircularQueue, CircularQueue)
@@ -36,7 +37,7 @@ function CircularQueue:new()
 end
 
 function CircularQueue:push()
-	local newListNode
+	const newListNode = nil
 
 	if self.head then
 		newListNode = {
@@ -56,7 +57,7 @@ return CircularQueue
 TEST_CASE_FIXTURE(ExternTypeFixture, "call_method_of_a_class")
 {
     CheckResult result = check(R"(
-        local m = BaseClass.StaticMethod()
+        const m = BaseClass.StaticMethod()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -67,7 +68,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "call_method_of_a_class")
 TEST_CASE_FIXTURE(ExternTypeFixture, "call_method_of_a_child_class")
 {
     CheckResult result = check(R"(
-        local m = ChildClass.StaticMethod()
+        const m = ChildClass.StaticMethod()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -78,8 +79,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "call_method_of_a_child_class")
 TEST_CASE_FIXTURE(ExternTypeFixture, "call_instance_method")
 {
     CheckResult result = check(R"(
-        local i = ChildClass.New()
-        local result = i:Method()
+        const i = ChildClass.New()
+        const result = i:Method()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -90,7 +91,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "call_instance_method")
 TEST_CASE_FIXTURE(ExternTypeFixture, "call_base_method")
 {
     CheckResult result = check(R"(
-        local i = ChildClass.New()
+        const i = ChildClass.New()
         i:BaseMethod(41)
     )");
 
@@ -100,7 +101,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "call_base_method")
 TEST_CASE_FIXTURE(ExternTypeFixture, "cannot_call_unknown_method_of_a_class")
 {
     CheckResult result = check(R"(
-        local m = BaseClass.Nope()
+        const m = BaseClass.Nope()
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -109,7 +110,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "cannot_call_unknown_method_of_a_class")
 TEST_CASE_FIXTURE(ExternTypeFixture, "cannot_call_method_of_child_on_base_instance")
 {
     CheckResult result = check(R"(
-        local i = BaseClass.New()
+        const i = BaseClass.New()
         i:Method()
     )");
 
@@ -123,7 +124,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "we_can_infer_that_a_parameter_must_be_a_pa
             return BaseClass.Clone(o)
         end
 
-        local a = makeClone(ChildClass.New())
+        const a = makeClone(ChildClass.New())
     )");
 
     CHECK_EQ("BaseClass", toString(requireType("a")));
@@ -138,7 +139,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "we_can_report_when_someone_is_trying_to_us
 
         type Oopsies = { BaseMethod: (Oopsies, number) -> ()}
 
-        local oopsies: Oopsies = {
+        const oopsies: Oopsies = {
             BaseMethod = function (self: Oopsies, i: number)
                 print('gadzooks!')
             end
@@ -166,7 +167,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "we_can_report_when_someone_is_trying_to_us
 
         type Oopsies = { read BaseMethod: (Oopsies, number) -> ()}
 
-        local oopsies: Oopsies = {
+        const oopsies: Oopsies = {
             BaseMethod = function (self: Oopsies, i: number)
                 print('gadzooks!')
             end
@@ -186,7 +187,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "we_can_report_when_someone_is_trying_to_us
 TEST_CASE_FIXTURE(ExternTypeFixture, "assign_to_prop_of_class")
 {
     CheckResult result = check(R"(
-        local v = Vector2.New(0, 5)
+        const v = Vector2.New(0, 5)
         v.X = 55
     )");
 
@@ -196,8 +197,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "assign_to_prop_of_class")
 TEST_CASE_FIXTURE(ExternTypeFixture, "can_read_prop_of_base_class")
 {
     CheckResult result = check(R"(
-        local c = ChildClass.New()
-        local x = 1 + c.BaseField
+        const c = ChildClass.New()
+        const x = 1 + c.BaseField
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -206,7 +207,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "can_read_prop_of_base_class")
 TEST_CASE_FIXTURE(ExternTypeFixture, "can_assign_to_prop_of_base_class")
 {
     CheckResult result = check(R"(
-        local c = ChildClass.New()
+        const c = ChildClass.New()
         c.BaseField = 444
     )");
 
@@ -216,8 +217,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "can_assign_to_prop_of_base_class")
 TEST_CASE_FIXTURE(ExternTypeFixture, "can_read_prop_of_base_class_using_string")
 {
     CheckResult result = check(R"(
-        local c = ChildClass.New()
-        local x = 1 + c["BaseField"]
+        const c = ChildClass.New()
+        const x = 1 + c["BaseField"]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -226,7 +227,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "can_read_prop_of_base_class_using_string")
 TEST_CASE_FIXTURE(ExternTypeFixture, "can_assign_to_prop_of_base_class_using_string")
 {
     CheckResult result = check(R"(
-        local c = ChildClass.New()
+        const c = ChildClass.New()
         c["BaseField"] = 444
     )");
 
@@ -239,7 +240,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "cannot_unify_class_instance_with_primitive
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local v = Vector2.New(0, 5)
+        const v = Vector2.New(0, 5)
         v = 444
     )");
 
@@ -264,9 +265,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "warn_when_prop_almost_matches")
 TEST_CASE_FIXTURE(ExternTypeFixture, "extern_types_can_have_overloaded_operators")
 {
     CheckResult result = check(R"(
-        local a = Vector2.New(1, 2)
-        local b = Vector2.New(3, 4)
-        local c = a + b
+        const a = Vector2.New(1, 2)
+        const b = Vector2.New(3, 4)
+        const c = a + b
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -277,9 +278,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "extern_types_can_have_overloaded_operators
 TEST_CASE_FIXTURE(ExternTypeFixture, "extern_types_without_overloaded_operators_cannot_be_added")
 {
     CheckResult result = check(R"(
-        local a = BaseClass.New()
-        local b = BaseClass.New()
-        local c = a + b
+        const a = BaseClass.New()
+        const b = BaseClass.New()
+        const c = a + b
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -346,13 +347,13 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_properties_are_invariant")
             a.foo = AnotherChild.New()
         end
 
-        local t: {foo: ChildClass}
+        const t: {foo: ChildClass} = nil as any
         f(t) -- line 6.  Breaks soundness.
 
         function g(t: {foo: ChildClass})
         end
 
-        local t2: {foo: BaseClass} = {foo=BaseClass.New()}
+        const t2: {foo: BaseClass} = {foo=BaseClass.New()}
         t2.foo = AnotherChild.New()
         g(t2) -- line 13.  Breaks soundness
     )");
@@ -369,13 +370,13 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_indexers_are_invariant")
             a[1] = AnotherChild.New()
         end
 
-        local t: {[number]: ChildClass}
+        const t: {[number]: ChildClass} = nil as any
         f(t) -- line 6.  Breaks soundness.
 
         function g(t: {[number]: ChildClass})
         end
 
-        local t2: {[number]: BaseClass} = {BaseClass.New()}
+        const t2: {[number]: BaseClass} = {BaseClass.New()}
         t2[1] = AnotherChild.New()
         g(t2) -- line 13.  Breaks soundness
     )");
@@ -394,7 +395,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_class_unification_reports_sane_error
             bar.w = 2 -- invalid
         end
 
-        local a: Vector2
+        const a: Vector2 = nil as any
         foo(a)
     )");
 
@@ -414,9 +415,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_class_unification_reports_sane_error
 TEST_CASE_FIXTURE(ExternTypeFixture, "class_unification_type_mismatch_is_correct_order")
 {
     CheckResult result = check(R"(
-        local p: BaseClass
-        local foo: number = p
-        local foo2: BaseClass = 1
+        const p: BaseClass = nil as any
+        const foo: number = p
+        const foo2: BaseClass = 1
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -428,8 +429,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "class_unification_type_mismatch_is_correct
 TEST_CASE_FIXTURE(ExternTypeFixture, "optional_class_field_access_error")
 {
     CheckResult result = check(R"(
-local b: Vector2? = nil
-local a = b.X + b.Z
+const b: Vector2? = nil
+const a = b.X + b.Z
 
 b.X = 2 -- real Vector2.X is also read-only
     )");
@@ -444,12 +445,12 @@ b.X = 2 -- real Vector2.X is also read-only
 TEST_CASE_FIXTURE(ExternTypeFixture, "detailed_class_unification_error")
 {
     CheckResult result = check(R"(
-local function foo(v)
+function foo(v)
     return v.X as number + string.len(v.Y)
 end
 
-local a: Vector2
-local b = foo
+const a: Vector2 = nil as any
+const b = foo
 b(a)
     )");
 
@@ -481,9 +482,9 @@ Expected this to be 'string', but got 'number')";
 TEST_CASE_FIXTURE(ExternTypeFixture, "class_type_mismatch_with_name_conflict")
 {
     CheckResult result = check(R"(
-local i = ChildClass.New()
+const i = ChildClass.New()
 type ChildClass = { x: number }
-local a: ChildClass = i
+const a: ChildClass = i
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -492,9 +493,10 @@ local a: ChildClass = i
 
 TEST_CASE_FIXTURE(ExternTypeFixture, "intersections_of_unions_of_extern_types")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local x : (BaseClass | Vector2) & (ChildClass | AnotherChild)
-        local y : (ChildClass | AnotherChild)
+        export x : (BaseClass | Vector2) & (ChildClass | AnotherChild) = nil as any
+        export y : (ChildClass | AnotherChild) = nil as any
         x = y
         y = x
     )");
@@ -504,9 +506,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "intersections_of_unions_of_extern_types")
 
 TEST_CASE_FIXTURE(ExternTypeFixture, "unions_of_intersections_of_extern_types")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local x : (BaseClass & ChildClass) | (BaseClass & AnotherChild) | (BaseClass & Vector2)
-        local y : (ChildClass | AnotherChild)
+        export x : (BaseClass & ChildClass) | (BaseClass & AnotherChild) | (BaseClass & Vector2) = nil as any
+        export y : (ChildClass | AnotherChild) = nil as any
         x = y
         y = x
     )");
@@ -517,7 +520,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "unions_of_intersections_of_extern_types")
 TEST_CASE_FIXTURE(ExternTypeFixture, "index_instance_property")
 {
     CheckResult result = check(R"(
-        local function execute(object: BaseClass, name: string)
+        function execute(object: BaseClass, name: string)
             print(object[name])
         end
     )");
@@ -531,7 +534,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "index_instance_property_nonstrict")
     CheckResult result = check(R"(
         --!nonstrict
 
-        local function execute(object: BaseClass, name: string)
+        function execute(object: BaseClass, name: string)
             print(object[name])
         end
     )");
@@ -545,8 +548,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "type_mismatch_invariance_required_for_erro
 type A = { x: ChildClass }
 type B = { x: BaseClass }
 
-local a: A = { x = ChildClass.New() }
-local b: B = a
+const a: A = { x = ChildClass.New() }
+const b: B = a
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -584,18 +587,18 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "optional_class_casts_work_in_new_solver")
         type A = { x: ChildClass }
         type B = { x: BaseClass }
 
-        local a = { x = ChildClass.New() } as A
-        local opt_a = a as A?
-        local b = { x = BaseClass.New() } as B
-        local opt_b = b as B?
-        local b_from_a = a as B
-        local b_from_opt_a = opt_a as B
-        local opt_b_from_a = a as B?
-        local opt_b_from_opt_a = opt_a as B?
-        local a_from_b = b as A
-        local a_from_opt_b = opt_b as A
-        local opt_a_from_b = b as A?
-        local opt_a_from_opt_b = opt_b as A?
+        const a = { x = ChildClass.New() } as A
+        const opt_a = a as A?
+        const b = { x = BaseClass.New() } as B
+        const opt_b = b as B?
+        const b_from_a = a as B
+        const b_from_opt_a = opt_a as B
+        const opt_b_from_a = a as B?
+        const opt_b_from_opt_a = opt_a as B?
+        const a_from_b = b as A
+        const a_from_opt_b = opt_b as A
+        const opt_a_from_b = b as A?
+        const opt_a_from_opt_b = opt_b as A?
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -604,8 +607,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "optional_class_casts_work_in_new_solver")
 TEST_CASE_FIXTURE(ExternTypeFixture, "callable_extern_types")
 {
     CheckResult result = check(R"(
-        local x : CallableClass
-        local y = x("testing")
+        const x : CallableClass = nil as any
+        const y = x("testing")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -617,30 +620,30 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     // Test reading from an index
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local y = x.stringKey
+            const x : IndexableClass = nil as any
+            const y = x.stringKey
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local y = x["stringKey"]
+            const x : IndexableClass = nil as any
+            const y = x["stringKey"]
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local str : string
-            local y = x[str]            -- Index with a non-const string
+            const x : IndexableClass = nil as any
+            const str : string = nil as any
+            const y = x[str]            -- Index with a non-const string
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local y = x[7]              -- Index with a numeric key
+            const x : IndexableClass = nil as any
+            const y = x[7]              -- Index with a numeric key
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
@@ -648,29 +651,29 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     // Test writing to an index
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
+            const x : IndexableClass = nil as any
             x.stringKey = 42
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
+            const x : IndexableClass = nil as any
             x["stringKey"] = 42
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local str : string
+            const x : IndexableClass = nil as any
+            const str : string = nil as any
             x[str] = 42                 -- Index with a non-const string
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
+            const x : IndexableClass = nil as any
             x[1] = 42                   -- Index with a numeric key
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
@@ -679,8 +682,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     // Try to index the class using an invalid type for the key (key type is 'number | string'.)
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local y = x[true]
+            const x : IndexableClass = nil as any
+            const y = x[true]
         )");
 
         if (!FFlag::DebugLuauForceOldSolver)
@@ -695,7 +698,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
+            const x : IndexableClass = nil as any
             x[true] = 42
         )");
 
@@ -713,7 +716,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     // Test type checking for the return type of the indexer (i.e. a number)
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
+            const x : IndexableClass = nil as any
             x.key = "string value"
         )");
 
@@ -726,8 +729,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableClass
-            local str : string = x.key
+            const x : IndexableClass = nil as any
+            const str : string = x.key
         )");
 
         CHECK_EQ(toString(result.errors.at(0)), "Expected this to be 'string', but got 'number'");
@@ -736,14 +739,14 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     // Check that we string key are rejected if the indexer's key type is not compatible with string
     {
         CheckResult result = check(R"(
-            local x : IndexableNumericKeyClass
+            const x : IndexableNumericKeyClass = nil as any
             x.key = 1
         )");
         CHECK_EQ(toString(result.errors.at(0)), "Key 'key' not found in external type 'IndexableNumericKeyClass'");
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableNumericKeyClass
+            const x : IndexableNumericKeyClass = nil as any
             x["key"] = 1
         )");
         if (!FFlag::DebugLuauForceOldSolver)
@@ -753,8 +756,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableNumericKeyClass
-            local str : string
+            const x : IndexableNumericKeyClass = nil as any
+            const str : string = nil as any
             x[str] = 1                  -- Index with a non-const string
         )");
 
@@ -762,15 +765,15 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableNumericKeyClass
-            local y = x.key
+            const x : IndexableNumericKeyClass = nil as any
+            const y = x.key
         )");
         CHECK_EQ(toString(result.errors.at(0)), "Key 'key' not found in external type 'IndexableNumericKeyClass'");
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableNumericKeyClass
-            local y = x["key"]
+            const x : IndexableNumericKeyClass = nil as any
+            const y = x["key"]
         )");
         if (!FFlag::DebugLuauForceOldSolver)
             CHECK(toString(result.errors.at(0)) == "Key 'key' not found in external type 'IndexableNumericKeyClass'");
@@ -779,9 +782,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
     }
     {
         CheckResult result = check(R"(
-            local x : IndexableNumericKeyClass
-            local str : string
-            local y = x[str]            -- Index with a non-const string
+            const x : IndexableNumericKeyClass = nil as any
+            const str : string = nil as any
+            const y = x[str]            -- Index with a non-const string
         )");
 
         CHECK_EQ(toString(result.errors.at(0)), "Expected this to be 'number', but got 'string'");
@@ -842,9 +845,9 @@ TEST_CASE_FIXTURE(Fixture, "read_write_class_properties")
 TEST_CASE_FIXTURE(ExternTypeFixture, "cannot_index_a_class_with_no_indexer")
 {
     CheckResult result = check(R"(
-        local a = BaseClass.New()
+        const a = BaseClass.New()
 
-        local c = a[1]
+        const c = a[1]
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -901,7 +904,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "cyclic_tables_are_assumed_to_be_compatible
      */
 
     CheckResult result = check(R"(
-        local c = BaseClass.New()
+        const c = BaseClass.New()
 
         function requiresNothing() end
 
@@ -925,15 +928,15 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "ice_while_checking_script_due_to_scopes_no
     getFrontend().setLuauSolverMode(SolverMode::New);
 
     auto result = check(R"(
-local function ExitSeat(player, character, seat, weld)
+function ExitSeat(player, character, seat, weld)
     --Find vehicle model
-    local model
-    local newParent = seat
+    const model = nil
+    const newParent = seat
     repeat
         model = newParent
         newParent = model.Parent
     until newParent.ClassName != "Model"
-    local part, _ = Raycast(seat.Position, dir, dist, {character, model})
+    const part, _ = Raycast(seat.Position, dir, dist, {character, model})
 end
 )");
     LUAU_REQUIRE_ERRORS(result);
@@ -951,11 +954,11 @@ TEST_CASE_FIXTURE(Fixture, "extern_type_check_missing_key")
     )");
 
     CheckResult results = check(R"(
-        local isUsingGamepad = false
-        local isModalVisible = false
+        const isUsingGamepad = false
+        const isModalVisible = false
 
-        local function updateGamepadCursor(foo: Foobar)
-            local shouldEnableCursor = isUsingGamepad and isModalVisible
+        function updateGamepadCursor(foo: Foobar)
+            const shouldEnableCursor = isUsingGamepad and isModalVisible
 
             if foo.IsEnabled == shouldEnableCursor then
                 return
@@ -986,11 +989,11 @@ TEST_CASE_FIXTURE(Fixture, "extern_type_check_present_key_in_superclass")
     )");
 
     CheckResult results = check(R"(
-        local isUsingGamepad = false
-        local isModalVisible = false
+        const isUsingGamepad = false
+        const isModalVisible = false
 
-        local function updateGamepadCursor(foo: Foobar)
-            local shouldEnableCursor = isUsingGamepad and isModalVisible
+        function updateGamepadCursor(foo: Foobar)
+            const shouldEnableCursor = isUsingGamepad and isModalVisible
 
             if foo.IsEnabled == shouldEnableCursor then
                 return
@@ -1020,7 +1023,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_check_key_becomes_never")
     )");
 
     CheckResult results = check(R"(
-        local function update(foo: Foobar | Bing)
+        function update(foo: Foobar | Bing)
             assert(type(foo.IsEnabled) == "number")
             return foo
         end
@@ -1041,7 +1044,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_check_key_becomes_intersection")
     )");
 
     CheckResult results = check(R"(
-        local function update(foo: Foobar)
+        function update(foo: Foobar)
             assert(type(foo.IsEnabled) == "string")
             return foo
         end
@@ -1062,7 +1065,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_check_key_superset")
     )");
 
     CheckResult results = check(R"(
-        local function update(foo: Foobar)
+        function update(foo: Foobar)
             assert(type(foo.IsEnabled) == "string" or type(foo.IsEnabled) == "number")
             return foo
         end
@@ -1083,7 +1086,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_check_key_idempotent")
     )");
 
     CheckResult results = check(R"(
-        local function update(foo: Foobar)
+        function update(foo: Foobar)
             assert(type(foo.IsEnabled) == "string")
             return foo
         end
@@ -1098,9 +1101,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_intersect_with_table_indexer")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function f(obj: { [any]: any }, functionName: string)
+        function f(obj: { [any]: any }, functionName: string)
             if typeof(obj) == "userdata" then
-                local _ = obj[functionName]
+                const _ = obj[functionName]
             end
         end
     )"));
@@ -1119,7 +1122,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_with_indexer_intersect_table")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function update(obj: Foobar)
+        function update(obj: Foobar)
             assert(typeof(obj.Baz) == "number")
             return obj
         end
@@ -1136,7 +1139,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_is_not_subtype_of_table")
     )");
 
     CheckResult result = check(R"(
-        local function f(c: Color3): { Color3 }
+        function f(c: Color3): { Color3 }
             return c
         end
     )");
@@ -1154,8 +1157,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_overload")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local f : ((Color3) -> ()) & (({Color3}) -> ())
-        local c: Color3
+        const f : ((Color3) -> ()) & (({Color3}) -> ()) = nil as any
+        const c: Color3 = nil as any
         f(c)
     )"));
 }
@@ -1176,12 +1179,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_indexer_interactions")
     )");
 
     CheckResult result = check(R"(
-        local c: Container
-        local p: Point
-        local _: { [ string | number ]: boolean | string } = c -- OK
-        local _: { [string]: boolean | string } = c -- not OK
-        local _: { [ string | number ]: boolean } = c -- not OK
-        local _: { [string]: number } = p -- not OK
+        const c: Container = nil as any
+        const p: Point = nil as any
+        const _: { [ string | number ]: boolean | string } = c -- OK
+        const _: { [string]: boolean | string } = c -- not OK
+        const _: { [ string | number ]: boolean } = c -- not OK
+        const _: { [string]: number } = p -- not OK
     )");
     LUAU_REQUIRE_ERROR_COUNT(3, result);
     for (const auto& err : result.errors)
@@ -1259,9 +1262,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_intersected_against_extern_type_1")
         type BIG_FRAME = {something: Frame} & Frame
         type context<O> = {_object: O}
 
-        local big_context: context<BIG_FRAME>
+        const big_context: context<BIG_FRAME> = nil as any
 
-        local function fn<O>(p: context<O>)
+        function fn<O>(p: context<O>)
         end
 
         fn(big_context)
@@ -1278,10 +1281,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_intersected_against_extern_type_2")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local World : { [number]: { PlayerData: { Settings: { Audio: {} & Folder } } } }
+        const World : { [number]: { PlayerData: { Settings: { Audio: {} & Folder } } } } = nil as any
 
-        local function Spread(Id: number)
-            local Ownership = World[Id]
+        function Spread(Id: number)
+            const Ownership = World[Id]
             assert(Ownership)
             return Ownership
         end

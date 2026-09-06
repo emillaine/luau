@@ -14,7 +14,7 @@ export type Node = {
     label: string,
 }
 
-local function createNode(nodeType: string): Node
+function createNode(nodeType: string): Node
     return {
         type = nodeType,
         children = {},
@@ -30,97 +30,97 @@ local function createNode(nodeType: string): Node
     }
 end
 
-local function addChild(parent: Node, child: Node)
+function addChild(parent: Node, child: Node)
     table.insert(parent.children, child)
 end
 
-local function createDocument(): Node
+function createDocument(): Node
     return createNode("document")
 end
 
-local function createParagraph(content: string): Node
-    local n = createNode("paragraph")
+function createParagraph(content: string): Node
+    n = createNode("paragraph")
     n.content = content
     return n
 end
 
-local function createHeading(level: number, content: string): Node
-    local n = createNode("heading")
+function createHeading(level: number, content: string): Node
+    n = createNode("heading")
     n.level = level
     n.content = content
     return n
 end
 
-local function createCodeBlock(content: string, info: string): Node
-    local n = createNode("code_block")
+function createCodeBlock(content: string, info: string): Node
+    n = createNode("code_block")
     n.content = content
     n.info = info
     return n
 end
 
-local function createBlockquote(): Node
+function createBlockquote(): Node
     return createNode("blockquote")
 end
 
-local function createList(ordered: boolean, start: number): Node
-    local n = createNode(if ordered then "ordered_list" else "bullet_list")
+function createList(ordered: boolean, start: number): Node
+    n = createNode(if ordered then "ordered_list" else "bullet_list")
     n.start = start
     return n
 end
 
-local function createListItem(): Node
+function createListItem(): Node
     return createNode("list_item")
 end
 
-local function createThematicBreak(): Node
+function createThematicBreak(): Node
     return createNode("thematic_break")
 end
 
-local function createText(text: string): Node
-    local n = createNode("text")
+function createText(text: string): Node
+    n = createNode("text")
     n.content = text
     return n
 end
 
-local function createEmphasis(): Node
+function createEmphasis(): Node
     return createNode("emphasis")
 end
 
-local function createStrong(): Node
+function createStrong(): Node
     return createNode("strong")
 end
 
-local function createCode(content: string): Node
-    local n = createNode("code")
+function createCode(content: string): Node
+    n = createNode("code")
     n.content = content
     return n
 end
 
-local function createLink(dest: string, title: string): Node
-    local n = createNode("link")
+function createLink(dest: string, title: string): Node
+    n = createNode("link")
     n.destination = dest
     n.title = title
     return n
 end
 
-local function createImage(dest: string, title: string): Node
-    local n = createNode("image")
+function createImage(dest: string, title: string): Node
+    n = createNode("image")
     n.destination = dest
     n.title = title
     return n
 end
 
-local function createHtmlBlock(content: string): Node
-    local n = createNode("html_block")
+function createHtmlBlock(content: string): Node
+    n = createNode("html_block")
     n.content = content
     return n
 end
 
-local function createSoftBreak(): Node
+function createSoftBreak(): Node
     return createNode("softbreak")
 end
 
-local function createHardBreak(): Node
+function createHardBreak(): Node
     return createNode("hardbreak")
 end
 

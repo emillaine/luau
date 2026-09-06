@@ -13,25 +13,25 @@
 --   * Every partial product limb_i * limb_j is < 2^26, and each output column
 --     sums at most ten of them (< 2^30), staying far below 2^53.
 
-local poly1305 = {}
+poly1305 = {}
 
-local LIMBS = 10
-local LIMB_BITS = 13
-local LIMB_BASE = 8192 -- 2^13
-local LIMB_MASK = 8191 -- 2^13 - 1
+LIMBS = 10
+LIMB_BITS = 13
+LIMB_BASE = 8192 -- 2^13
+LIMB_MASK = 8191 -- 2^13 - 1
 
 -- Convert the first `n` bytes of `buf` (a little-endian integer) into ten
 -- base-2^13 limbs. Bits beyond 130 are dropped, but callers never supply that
 -- many. A bit accumulator shifts whole bytes in and emits 13-bit limbs.
-local function bytesToLimbs(buf: buffer, n: number): { number }
-	local limbs = table.create(LIMBS)
+function bytesToLimbs(buf: buffer, n: number): { number }
+	limbs = table.create(LIMBS)
 	for i = 1, LIMBS do
 		limbs[i] = 0
 	end
 
-	local acc = 0
-	local accBits = 0
-	local li = 1
+	acc = 0
+	accBits = 0
+	li = 1
 	for i = 0, n - 1 do
 		acc += buffer.readu8(buf, i) * (2 ^ accBits)
 		accBits += 8
@@ -49,10 +49,10 @@ local function bytesToLimbs(buf: buffer, n: number): { number }
 end
 
 -- Convert ten base-2^13 limbs into `n` little-endian bytes written to `out`.
-local function limbsToBytes(limbs: { number }, out: buffer, n: number)
-	local acc = 0
-	local accBits = 0
-	local oi = 0
+function limbsToBytes(limbs: { number }, out: buffer, n: number)
+	acc = 0
+	accBits = 0
+	oi = 0
 	for i = 1, LIMBS do
 		acc += limbs[i] * (2 ^ accBits)
 		accBits += LIMB_BITS
@@ -72,10 +72,10 @@ end
 
 -- Propagate carries through ten limbs, folding any overflow past bit 130 back
 -- in as `carry * 5` (since 2^130 ≡ 5 mod p). Operates in place.
-local function carryReduce(limbs: { number })
-	local c = 0
+function carryReduce(limbs: { number })
+	c = 0
 	for i = 1, LIMBS do
-		local v = limbs[i] + c
+		v = limbs[i] + c
 		limbs[i] = v % LIMB_BASE
 		c = math.floor(v / LIMB_BASE)
 	end
@@ -83,7 +83,7 @@ local function carryReduce(limbs: { number })
 	while c > 0 do
 		c = c * 5
 		for i = 1, LIMBS do
-			local v = limbs[i] + c
+			v = limbs[i] + c
 			limbs[i] = v % LIMB_BASE
 			c = math.floor(v / LIMB_BASE)
 			if c == 0 then
@@ -95,16 +95,16 @@ end
 
 -- Multiply two reduced numbers modulo p = 2^130 - 5. Schoolbook 10x10 with the
 -- high limbs folded via 2^130 ≡ 5, then a carry pass.
-local function mulmod(a: { number }, b: { number }): { number }
+function mulmod(a: { number }, b: { number }): { number }
 	-- Product limbs d[1..19] (indices 1..19 correspond to limb positions 0..18).
-	local d = table.create(2 * LIMBS - 1)
+	d = table.create(2 * LIMBS - 1)
 	for k = 1, 2 * LIMBS - 1 do
 		d[k] = 0
 	end
 
 	for i = 1, LIMBS do
-		local ai = a[i]
-		if ai ~= 0 then
+		ai = a[i]
+		if ai != 0 then
 			for j = 1, LIMBS do
 				d[i + j - 1] += ai * b[j]
 			end
@@ -116,7 +116,7 @@ local function mulmod(a: { number }, b: { number }): { number }
 		d[k - LIMBS] += 5 * d[k]
 	end
 
-	local out = table.create(LIMBS)
+	out = table.create(LIMBS)
 	for i = 1, LIMBS do
 		out[i] = d[i]
 	end
@@ -125,15 +125,15 @@ local function mulmod(a: { number }, b: { number }): { number }
 end
 
 -- Add `b` into `a` limb-wise (no reduction; caller reduces via mulmod).
-local function addInto(a: { number }, b: { number })
+function addInto(a: { number }, b: { number })
 	for i = 1, LIMBS do
 		a[i] += b[i]
 	end
 end
 
 -- Read and clamp the 16-byte `r` half of the key per RFC 8439.
-local function clampedR(key: buffer): { number }
-	local r = buffer.create(16)
+function clampedR(key: buffer): { number }
+	r = buffer.create(16)
 	buffer.copy(r, 0, key, 0, 16)
 	-- Clear the top 4 bits of bytes 3, 7, 11, 15.
 	buffer.writeu8(r, 3, bit32.band(buffer.readu8(r, 3), 15))
@@ -150,11 +150,11 @@ end
 -- Conditionally subtract p so the accumulator lands in [0, p). Computes
 -- h + 5; if that carries past bit 130 then h >= p, so the wrapped value
 -- (h + 5 - 2^130) is the reduced result.
-local function freeze(h: { number })
-	local g = table.create(LIMBS)
-	local c = 5
+function freeze(h: { number })
+	g = table.create(LIMBS)
+	c = 5
 	for i = 1, LIMBS do
-		local v = h[i] + c
+		v = h[i] + c
 		g[i] = v % LIMB_BASE
 		c = math.floor(v / LIMB_BASE)
 	end
@@ -172,23 +172,23 @@ poly1305.KEY_SIZE = 32
 function poly1305.mac(key: buffer, msg: buffer): buffer
 	assert(buffer.len(key) == 32, "Poly1305 key must be 32 bytes")
 
-	local r = clampedR(key)
-	local h = table.create(LIMBS)
+	r = clampedR(key)
+	h = table.create(LIMBS)
 	for i = 1, LIMBS do
 		h[i] = 0
 	end
 
-	local n = buffer.len(msg)
-	local off = 0
+	n = buffer.len(msg)
+	off = 0
 	while off < n do
-		local len = if n - off < 16 then n - off else 16
+		len = if n - off < 16 then n - off else 16
 		-- Build the block padded with the high "1" bit: for a full block that
 		-- is 2^128; for a short final block it is 2^(8*len).
-		local blk = buffer.create(len + 1)
+		blk = buffer.create(len + 1)
 		buffer.copy(blk, 0, msg, off, len)
 		buffer.writeu8(blk, len, 1)
 
-		local m = bytesToLimbs(blk, len + 1)
+		m = bytesToLimbs(blk, len + 1)
 		addInto(h, m)
 		h = mulmod(h, r)
 		off += len
@@ -197,11 +197,11 @@ function poly1305.mac(key: buffer, msg: buffer): buffer
 	freeze(h)
 
 	-- tag = (h + s) mod 2^128, where s is the second half of the key.
-	local out = buffer.create(16)
+	out = buffer.create(16)
 	limbsToBytes(h, out, 16)
-	local carry = 0
+	carry = 0
 	for i = 0, 15 do
-		local v = buffer.readu8(out, i) + buffer.readu8(key, 16 + i) + carry
+		v = buffer.readu8(out, i) + buffer.readu8(key, 16 + i) + carry
 		buffer.writeu8(out, i, v % 256)
 		carry = math.floor(v / 256)
 	end
@@ -210,10 +210,10 @@ end
 
 -- Constant-time-ish tag comparison (length is public). Returns true on match.
 function poly1305.verify(tagA: buffer, tagB: buffer): boolean
-	if buffer.len(tagA) ~= 16 or buffer.len(tagB) ~= 16 then
+	if buffer.len(tagA) != 16 or buffer.len(tagB) != 16 then
 		return false
 	end
-	local diff = 0
+	diff = 0
 	for i = 0, 15 do
 		diff = bit32.bor(diff, bit32.bxor(buffer.readu8(tagA, i), buffer.readu8(tagB, i)))
 	end

@@ -8,6 +8,7 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 TEST_SUITE_BEGIN("TypeSingletons");
 
@@ -16,10 +17,10 @@ TEST_CASE_FIXTURE(Fixture, "function_args_infer_singletons")
     CheckResult result = check(R"(
 --!strict
 type Phase = "A" | "B" | "C"
-local function f(e : Phase) : number
+function f(e : Phase) : number
     return 0
 end
-local e = f("B")
+const e = f("B")
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -28,8 +29,8 @@ local e = f("B")
 TEST_CASE_FIXTURE(Fixture, "bool_singletons")
 {
     CheckResult result = check(R"(
-        local a: true = true
-        local b: false = false
+        const a: true = true
+        const b: false = false
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -38,8 +39,8 @@ TEST_CASE_FIXTURE(Fixture, "bool_singletons")
 TEST_CASE_FIXTURE(Fixture, "string_singletons")
 {
     CheckResult result = check(R"(
-        local a: "foo" = "foo"
-        local b: "bar" = "bar"
+        const a: "foo" = "foo"
+        const b: "bar" = "bar"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -51,7 +52,7 @@ TEST_CASE_FIXTURE(Fixture, "string_singleton_function_call")
         return;
 
     CheckResult result = check(R"(
-        local x = "a"
+        const x = "a"
         function f(x: "a") end
         f(x)
     )");
@@ -62,7 +63,7 @@ TEST_CASE_FIXTURE(Fixture, "string_singleton_function_call")
 TEST_CASE_FIXTURE(Fixture, "bool_singletons_mismatch")
 {
     CheckResult result = check(R"(
-        local a: true = false
+        const a: true = false
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -72,7 +73,7 @@ TEST_CASE_FIXTURE(Fixture, "bool_singletons_mismatch")
 TEST_CASE_FIXTURE(Fixture, "string_singletons_mismatch")
 {
     CheckResult result = check(R"(
-        local a: "foo" = "bar"
+        const a: "foo" = "bar"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -82,7 +83,7 @@ TEST_CASE_FIXTURE(Fixture, "string_singletons_mismatch")
 TEST_CASE_FIXTURE(Fixture, "string_singletons_escape_chars")
 {
     CheckResult result = check(R"(
-        local a: "\n" = "\000\r"
+        const a: "\n" = "\000\r"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -92,8 +93,8 @@ TEST_CASE_FIXTURE(Fixture, "string_singletons_escape_chars")
 TEST_CASE_FIXTURE(Fixture, "bool_singleton_subtype")
 {
     CheckResult result = check(R"(
-        local a: true = true
-        local b: boolean = a
+        const a: true = true
+        const b: boolean = a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -102,8 +103,8 @@ TEST_CASE_FIXTURE(Fixture, "bool_singleton_subtype")
 TEST_CASE_FIXTURE(Fixture, "string_singleton_subtype")
 {
     CheckResult result = check(R"(
-        local a: "foo" = "foo"
-        local b: string = a
+        const a: "foo" = "foo"
+        const b: string = a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -112,8 +113,8 @@ TEST_CASE_FIXTURE(Fixture, "string_singleton_subtype")
 TEST_CASE_FIXTURE(Fixture, "string_singleton_subtype_multi_assignment")
 {
     CheckResult result = check(R"(
-        local a: "foo" = "foo"
-        local b: string, c: number = a, 10
+        const a: "foo" = "foo"
+        const b: string, c: number = a, 10
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -144,7 +145,7 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_function_call_with_singletons")
 {
     CheckResult result = check(R"(
         function f(a, b) end
-        local g : ((true, string) -> ()) & ((false, number) -> ()) = (f as any)
+        const g : ((true, string) -> ()) & ((false, number) -> ()) = (f as any)
         g(true, "foo")
         g(false, 37)
     )");
@@ -158,7 +159,7 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_function_resolution_singleton_parameters"
         type A = ("A") -> string
         type B = ("B") -> number
 
-        local function foo(f: A & B)
+        function foo(f: A & B)
             return f("A"), f("B")
         end
     )");
@@ -195,9 +196,9 @@ TEST_CASE_FIXTURE(Fixture, "enums_using_singletons")
 {
     CheckResult result = check(R"(
         type MyEnum = "foo" | "bar" | "baz"
-        local a : MyEnum = "foo"
-        local b : MyEnum = "bar"
-        local c : MyEnum = "baz"
+        const a : MyEnum = "foo"
+        const b : MyEnum = "bar"
+        const c : MyEnum = "baz"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -207,7 +208,7 @@ TEST_CASE_FIXTURE(Fixture, "enums_using_singletons_mismatch")
 {
     CheckResult result = check(R"(
         type MyEnum = "foo" | "bar" | "baz"
-        local a : MyEnum = "bang"
+        const a : MyEnum = "bang"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -226,9 +227,9 @@ TEST_CASE_FIXTURE(Fixture, "enums_using_singletons_subtyping")
     CheckResult result = check(R"(
         type MyEnum1 = "foo" | "bar"
         type MyEnum2 = MyEnum1 | "baz"
-        local a : MyEnum1 = "foo"
-        local b : MyEnum2 = a
-        local c : string = b
+        const a : MyEnum1 = "foo"
+        const b : MyEnum2 = a
+        const c : string = b
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -236,13 +237,14 @@ TEST_CASE_FIXTURE(Fixture, "enums_using_singletons_subtyping")
 
 TEST_CASE_FIXTURE(Fixture, "tagged_unions_using_singletons")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         type Dog = { tag: "Dog", howls: boolean }
         type Cat = { tag: "Cat", meows: boolean }
         type Animal = Dog | Cat
-        local a : Dog = { tag = "Dog", howls = true }
-        local b : Animal = { tag = "Cat", meows = true }
-        local c : Animal = a
+        const a : Dog = { tag = "Dog", howls = true }
+        const b : Animal = { tag = "Cat", meows = true }
+        export c : Animal = a
         c = b
     )");
 
@@ -255,7 +257,7 @@ TEST_CASE_FIXTURE(Fixture, "tagged_unions_using_singletons_mismatch")
         type Dog = { tag: "Dog", howls: boolean }
         type Cat = { tag: "Cat", meows: boolean }
         type Animal = Dog | Cat
-        local a : Animal = { tag = "Cat", howls = true }
+        const a : Animal = { tag = "Cat", howls = true }
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -267,7 +269,7 @@ TEST_CASE_FIXTURE(Fixture, "tagged_unions_immutable_tag")
         type Dog = { tag: "Dog", howls: boolean }
         type Cat = { tag: "Cat", meows: boolean }
         type Animal = Dog | Cat
-        local a: Animal = { tag = "Cat", meows = true }
+        const a: Animal = { tag = "Cat", meows = true }
         a.tag = "Dog"
     )");
 
@@ -289,7 +291,7 @@ TEST_CASE_FIXTURE(Fixture, "tagged_unions_immutable_tag")
 TEST_CASE_FIXTURE(Fixture, "table_has_a_boolean")
 {
     CheckResult result = check(R"(
-        local t={a=1,b=false}
+        const t={a=1,b=false}
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -307,14 +309,14 @@ TEST_CASE_FIXTURE(Fixture, "table_properties_singleton_strings")
             ["$$bar"] : string,
             baz : boolean
         }
-        local t: T =  {
+        const t: T =  {
             ["foo"] = 37,
             ["$$bar"] = "hi",
             baz = true
         }
-        local a: number = t.foo
-        local b: string = t["$$bar"]
-        local c: boolean = t.baz
+        const a: number = t.foo
+        const b: string = t["$$bar"]
+        const c: boolean = t.baz
         t.foo = 5
         t["$$bar"] = "lo"
         t.baz = false
@@ -329,7 +331,7 @@ TEST_CASE_FIXTURE(Fixture, "table_properties_singleton_strings_mismatch")
         type T = {
             ["$$bar"] : string,
         }
-        local t: T =  {
+        const t: T =  {
             ["$$bar"] = "hi",
         }
         t["$$bar"] = 5
@@ -364,7 +366,7 @@ TEST_CASE_FIXTURE(Fixture, "indexer_can_be_union_of_singletons")
 
         type Test = {[Target]: number}
 
-        local test: Test = {}
+        const test: Test = {}
 
         test.A = 2
         test.C = 4
@@ -378,10 +380,11 @@ TEST_CASE_FIXTURE(Fixture, "indexer_can_be_union_of_singletons")
 TEST_CASE_FIXTURE(Fixture, "table_properties_type_error_escapes")
 {
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
         --!strict
-        local x: { ["<>"] : number }
+        export x: { ["<>"] : number } = nil as any
         x = { ["\n"] = 5 }
     )");
 
@@ -399,7 +402,7 @@ type Cat = { tag: 'cat', catfood: string }
 type Dog = { tag: 'dog', dogfood: string }
 type Animal = Cat | Dog
 
-local a: Animal = { tag = 'cat', cafood = 'something' }
+const a: Animal = { tag = 'cat', cafood = 'something' }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -425,7 +428,7 @@ type Good = { success: true, result: string }
 type Bad = { success: false, error: string }
 type Result = Good | Bad
 
-local a: Result = { success = false, result = 'something' }
+const a: Result = { success = false, result = 'something' }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -455,7 +458,7 @@ TEST_CASE_FIXTURE(Fixture, "parametric_tagged_union_alias")
         type Err<T> = {success: false, error: T}
         type Result<O, E> = Ok<O> | Err<E>
 
-        local a : Result<string, number> = {success = false, result = "hotdogs"}
+        const a : Result<string, number> = {success = false, result = "hotdogs"}
         -- local b : Result<string, number> = {success = true, result = "hotdogs"}
     )");
 
@@ -474,7 +477,7 @@ type Cat = { tag: 'cat', catfood: string }
 type Dog = { tag: 'dog', dogfood: string }
 type Animal = Cat | Dog
 
-local a: Animal = if true then { tag = 'cat', catfood = 'something' } else { tag = 'dog', dogfood = 'other' }
+const a: Animal = if true then { tag = 'cat', catfood = 'something' } else { tag = 'dog', dogfood = 'other' }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -485,7 +488,7 @@ TEST_CASE_FIXTURE(Fixture, "widen_the_supertype_if_it_is_free_and_subtype_has_si
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function foo(f, x)
+        function foo(f, x)
             if x == "hi" then
                 f(x)
                 f("foo")
@@ -505,7 +508,7 @@ TEST_CASE_FIXTURE(Fixture, "return_type_of_f_is_not_widened")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function foo(f, x): "hello"? -- anyone there?
+        function foo(f, x): "hello"? -- anyone there?
             return if x == "hi"
                 then f(x)
                 else nil
@@ -522,8 +525,8 @@ TEST_CASE_FIXTURE(Fixture, "return_type_of_f_is_not_widened")
 TEST_CASE_FIXTURE(Fixture, "widening_happens_almost_everywhere")
 {
     CheckResult result = check(R"(
-        local foo: "foo" = "foo"
-        local copy = foo
+        const foo: "foo" = "foo"
+        const copy = foo
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -541,12 +544,12 @@ TEST_CASE_FIXTURE(Fixture, "widening_happens_almost_everywhere_except_for_tables
         type Dog = {tag: "Dog", barks: boolean}
         type Animal = Cat | Dog
 
-        local function f(tag: "Cat" | "Dog"): Animal?
+        function f(tag: "Cat" | "Dog"): Animal?
             if tag == "Cat" then
-                local result = {tag = tag, meows = true}
+                const result = {tag = tag, meows = true}
                 return result
             else if tag == "Dog" then
-                local result = {tag = tag, barks = true}
+                const result = {tag = tag, barks = true}
                 return result
             else
                 return nil
@@ -560,7 +563,7 @@ TEST_CASE_FIXTURE(Fixture, "widening_happens_almost_everywhere_except_for_tables
 TEST_CASE_FIXTURE(Fixture, "functions_are_not_to_be_widened")
 {
     CheckResult result = check(R"(
-        local function foo(my_enum: "A" | "B") end
+        function foo(my_enum: "A" | "B") end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -571,9 +574,9 @@ TEST_CASE_FIXTURE(Fixture, "functions_are_not_to_be_widened")
 TEST_CASE_FIXTURE(Fixture, "indexing_on_string_singletons")
 {
     CheckResult result = check(R"(
-        local a: string = "hi"
+        const a: string = "hi"
         if a == "hi" then
-            local x = a:byte()
+            const x = a:byte()
         end
     )");
 
@@ -585,9 +588,9 @@ TEST_CASE_FIXTURE(Fixture, "indexing_on_string_singletons")
 TEST_CASE_FIXTURE(Fixture, "indexing_on_union_of_string_singletons")
 {
     CheckResult result = check(R"(
-        local a: string = "hi"
+        const a: string = "hi"
         if a == "hi" or a == "bye" then
-            local x = a:byte()
+            const x = a:byte()
         end
     )");
 
@@ -599,9 +602,9 @@ TEST_CASE_FIXTURE(Fixture, "indexing_on_union_of_string_singletons")
 TEST_CASE_FIXTURE(Fixture, "taking_the_length_of_string_singleton")
 {
     CheckResult result = check(R"(
-        local a: string = "hi"
+        const a: string = "hi"
         if a == "hi" then
-            local x = (a).count
+            const x = (a).count
         end
     )");
 
@@ -613,9 +616,9 @@ TEST_CASE_FIXTURE(Fixture, "taking_the_length_of_string_singleton")
 TEST_CASE_FIXTURE(Fixture, "taking_the_length_of_union_of_string_singleton")
 {
     CheckResult result = check(R"(
-        local a: string = "hi"
+        const a: string = "hi"
         if a == "hi" or a == "bye" then
-            local x = (a).count
+            const x = (a).count
         end
     )");
 
@@ -629,11 +632,11 @@ TEST_CASE_FIXTURE(Fixture, "no_widening_from_callsites")
     CheckResult result = check(R"(
         type Direction = "North" | "East" | "West" | "South"
 
-        local function direction(): Direction
+        function direction(): Direction
             return "North"
         end
 
-        local d: Direction = direction()
+        const d: Direction = direction()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -646,10 +649,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "singletons_stick_around_under_assignment")
             kind: "Foo",
         }
 
-        local foo = (nil as any) as Foo
+        const foo = (nil as any) as Foo
 
         print(foo.kind == "Bar") -- type of equality refines to `false`
-        local kind = foo.kind
+        const kind = foo.kind
         print(kind == "Bar") -- type of equality refines to `false`
     )");
 
@@ -664,9 +667,9 @@ TEST_CASE_FIXTURE(Fixture, "tagged_union_in_ternary")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type Result = { type: "ok", value: unknown } | { type: "error" }
 
-        local function coinflip(): boolean return true end
+        function coinflip(): boolean return true end
 
-        local function readFromDB(): Result
+        function readFromDB(): Result
             return if coinflip() then { type = "ok", value = 42 } else { type = "error" }
         end
     )"));
@@ -675,9 +678,9 @@ TEST_CASE_FIXTURE(Fixture, "tagged_union_in_ternary")
 TEST_CASE_FIXTURE(Fixture, "table_literal_with_singleton_union_values")
 {
     CheckResult result = check(R"(
-        local t1: {[string]: "a" | "b"} = { a = "a", b = "b" }
-        local t2: {[string]: "a" | true} = { a = "a", b = true }
-        local t3: {[string]: "a" | nil} = { a = "a" }
+        const t1: {[string]: "a" | "b"} = { a = "a", b = "b" }
+        const t2: {[string]: "a" | true} = { a = "a", b = true }
+        const t3: {[string]: "a" | nil} = { a = "a" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -686,11 +689,11 @@ TEST_CASE_FIXTURE(Fixture, "table_literal_with_singleton_union_values")
 TEST_CASE_FIXTURE(Fixture, "singleton_type_mismatch_via_variable")
 {
     CheckResult result = check(R"(
-        local c = "c"
-        local x: "a" = c
-        local y: "a" | "b" = c
-        local z: "a"? = c
-        local w: "a" | "b" = "c"
+        const c = "c"
+        const x: "a" = c
+        const y: "a" | "b" = c
+        const z: "a"? = c
+        const w: "a" | "b" = "c"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(4, result);
@@ -709,9 +712,9 @@ TEST_CASE_FIXTURE(Fixture, "cli_163481_any_indexer_pushes_type")
         type test = "A"
         type test2 = "A"|"B"|"C"
 
-        local t: { [any]: test } = { A = "A" }
+        const t: { [any]: test } = { A = "A" }
 
-        local t2: { [any]: test2 } = {
+        const t2: { [any]: test2 } = {
             A = "A",
             B = "B",
             C = "C"
@@ -724,11 +727,11 @@ TEST_CASE_FIXTURE(Fixture, "oss_2010")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function foo<T>(my_enum: "" | T): T
+        function foo<T>(my_enum: "" | T): T
             return my_enum as T
         end
 
-        local var = foo("meow")
+        const var = foo("meow")
     )"));
 
     CHECK_EQ("\"meow\"", toString(requireType("var")));
@@ -737,22 +740,23 @@ TEST_CASE_FIXTURE(Fixture, "oss_2010")
 TEST_CASE_FIXTURE(Fixture, "oss_1773")
 {
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
 
         export type T = "foo" | "bar" | "toto"
 
-        local object: T = "foo"
+        export object: T = "foo"
 
-        local getOpposite: {[T]: T} = {
+        const getOpposite: {[T]: T} = {
             ["foo"] = "bar",
             ["bar"] = "toto",
             ["toto"] = "foo"
         }
 
-        local function hello()
-            local x = getOpposite[object]
+        function hello()
+            const x = getOpposite[object]
 
             if x then
                 object = x
@@ -770,7 +774,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectionally_infer_indexers_errored")
 
         export type T = "foo" | "bar" | "toto"
 
-        local getOpposite: { [number]: T } = {
+        const getOpposite: { [number]: T } = {
             ["foo"] = "bar",
             ["bar"] = "toto",
             ["toto"] = "foo"
@@ -786,7 +790,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectionally_infer_indexers_errored")
 TEST_CASE_FIXTURE(Fixture, "oss_2018")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local rule: { rule: "AppendTextComment" } | { rule: "Other" } = { rule = "AppendTextComment" }
+        const rule: { rule: "AppendTextComment" } | { rule: "Other" } = { rule = "AppendTextComment" }
     )"));
 }
 
@@ -795,19 +799,19 @@ TEST_CASE_FIXTURE(Fixture, "oss_2010_but_with_booleans")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local function foo<T>(my_enum: true | T): T
+        function foo<T>(my_enum: true | T): T
             return my_enum as T
         end
 
-        local function bar<T>(my_enum: true & T): T
+        function bar<T>(my_enum: true & T): T
             return my_enum as T
         end
 
-        local var1 = foo(true)
-        local var2 = foo(false)
+        const var1 = foo(true)
+        const var2 = foo(false)
 
-        local var3 = bar(true)
-        local var4 = bar(false)
+        const var3 = bar(true)
+        const var4 = bar(false)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -834,7 +838,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184125")
         type MyTypeA = {Value: true}
         type MyTypeB = {Value: false}
 
-        local function Func(input: number) : (MyTypeA | MyTypeB)
+        function Func(input: number) : (MyTypeA | MyTypeB)
             if input == 1 then
                 return {Value = true}
             else
@@ -849,9 +853,9 @@ TEST_CASE_FIXTURE(Fixture, "pass_singleton_through_to_identity")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function id(x) return x end
+        function id(x) return x end
 
-        local function foobar(): "hello"
+        function foobar(): "hello"
             return id("hello")
         end
     )"));
@@ -860,9 +864,9 @@ TEST_CASE_FIXTURE(Fixture, "pass_singleton_through_to_identity")
 TEST_CASE_FIXTURE(BuiltinsFixture, "singleton_when_type_is_blocked")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function id(x: typeof("hello")) return x end
+        function id(x: typeof("hello")) return x end
 
-        local function foobar()
+        function foobar()
             return id("hello")
         end
     )"));

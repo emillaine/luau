@@ -1,5 +1,18 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+-- forward declarations (implicit-local dialect has no hoisted globals)
+btreeCollectKeys = nil
+btreeCount = nil
+btreeHeight = nil
+btreeInsertNonFull = nil
+btreeKeyLess = nil
+btreeRangeScan = nil
+btreeSearch = nil
+btreeSplitChild = nil
+compareValues = nil
+evalComparison = nil
+evalLike = nil
+resolveColumn = nil
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -8,29 +21,29 @@ function test()
 -- Target runtimes: Luau (lute)
 
 -- ===== Utility aliases (local) =====
-local floor = math.floor
-local mabs = math.abs
-local msqrt = math.sqrt
-local mmin = math.min
-local mmax = math.max
-local sfmt = string.format
-local ssub = string.sub
-local sbyte = string.byte
-local schar = string.char
-local sfind = string.find
-local slower = string.lower
-local supper = string.upper
-local slen = string.len
-local srep = string.rep
-local tinsert = table.insert
-local tremove = table.remove
-local tsort = table.sort
-local tconcat = table.concat
-local clock = os.clock
+floor = math.floor
+mabs = math.abs
+msqrt = math.sqrt
+mmin = math.min
+mmax = math.max
+sfmt = string.format
+ssub = string.sub
+sbyte = string.byte
+schar = string.char
+sfind = string.find
+slower = string.lower
+supper = string.upper
+slen = string.len
+srep = string.rep
+tinsert = table.insert
+tremove = table.remove
+tsort = table.sort
+tconcat = table.concat
+clock = os.clock
 
-local bxor = bit32.bxor
-local blshift = bit32.lshift
-local brshift = bit32.rshift
+bxor = bit32.bxor
+blshift = bit32.lshift
+brshift = bit32.rshift
 
 -- ===== Seeded PRNG =====
 PRNG = {}
@@ -42,7 +55,7 @@ end
 
 function PRNG:next()
     -- xorshift32
-    local x = self.state
+    x = self.state
     x = bxor(x, blshift(x, 13))
     x = bxor(x, brshift(x, 17))
     x = bxor(x, blshift(x, 5))
@@ -51,13 +64,13 @@ function PRNG:next()
 end
 
 function PRNG:nextInt(lo, hi)
-    local x = self:next()
+    x = self:next()
     -- bit32 returns unsigned 32-bit values (0 to 4294967295)
     return lo + (x % (hi - lo + 1))
 end
 
 function PRNG:nextFloat()
-    local x = self:next()
+    x = self:next()
     return x / 4294967296
 end
 
@@ -94,7 +107,7 @@ end
 -- ===== SQL Keywords =====
 SQL_KEYWORDS = {}
 function initKeywords()
-    local kws = {
+    kws = {
         "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "CREATE", "TABLE",
         "DROP", "DELETE", "UPDATE", "SET", "AND", "OR", "NOT", "IN", "LIKE",
         "ORDER", "BY", "ASC", "DESC", "LIMIT", "OFFSET", "GROUP", "HAVING",
@@ -128,20 +141,20 @@ function Tokenizer:peek()
 end
 
 function Tokenizer:advance()
-    local c = sbyte(self.src, self.pos)
+    c = sbyte(self.src, self.pos)
     self.pos = self.pos + 1
     return c
 end
 
 function Tokenizer:skipWhitespace()
     while self.pos <= self.len do
-        local c = sbyte(self.src, self.pos)
+        c = sbyte(self.src, self.pos)
         if c == 32 or c == 9 or c == 10 or c == 13 then
             self.pos = self.pos + 1
         else if c == 45 and self.pos + 1 <= self.len and sbyte(self.src, self.pos + 1) == 45 then
             -- line comment
             self.pos = self.pos + 2
-            while self.pos <= self.len and sbyte(self.src, self.pos) ~= 10 do
+            while self.pos <= self.len and sbyte(self.src, self.pos) != 10 do
                 self.pos = self.pos + 1
             end
         else
@@ -163,7 +176,7 @@ function Tokenizer:isAlnum(c)
 end
 
 function Tokenizer:readIdent()
-    local start = self.pos
+    start = self.pos
     while self.pos <= self.len and self:isAlnum(sbyte(self.src, self.pos)) do
         self.pos = self.pos + 1
     end
@@ -171,10 +184,10 @@ function Tokenizer:readIdent()
 end
 
 function Tokenizer:readNumber()
-    local start = self.pos
-    local hasDot = false
+    start = self.pos
+    hasDot = false
     while self.pos <= self.len do
-        local c = sbyte(self.src, self.pos)
+        c = sbyte(self.src, self.pos)
         if self:isDigit(c) then
             self.pos = self.pos + 1
         else if c == 46 and not hasDot then
@@ -189,9 +202,9 @@ end
 
 function Tokenizer:readString(quote)
     self.pos = self.pos + 1  -- skip opening quote
-    local parts = {}
+    parts = {}
     while self.pos <= self.len do
-        local c = sbyte(self.src, self.pos)
+        c = sbyte(self.src, self.pos)
         if c == quote then
             -- check for escaped quote (double quote)
             if self.pos + 1 <= self.len and sbyte(self.src, self.pos + 1) == quote then
@@ -216,25 +229,25 @@ function Tokenizer:tokenize()
             tinsert(self.tokens, Token.new(TK_EOF, nil, self.pos))
             break
         end
-        local startPos = self.pos
-        local c = sbyte(self.src, self.pos)
+        startPos = self.pos
+        c = sbyte(self.src, self.pos)
 
         if self:isAlpha(c) then
-            local ident = self:readIdent()
-            local upper = supper(ident)
+            ident = self:readIdent()
+            upper = supper(ident)
             if SQL_KEYWORDS[upper] then
                 tinsert(self.tokens, Token.new(TK_KEYWORD, upper, startPos))
             else
                 tinsert(self.tokens, Token.new(TK_IDENT, ident, startPos))
             end
         else if self:isDigit(c) then
-            local num = self:readNumber()
+            num = self:readNumber()
             tinsert(self.tokens, Token.new(TK_NUMBER, num, startPos))
         else if c == 39 then  -- single quote
-            local str = self:readString(39)
+            str = self:readString(39)
             tinsert(self.tokens, Token.new(TK_STRING, str, startPos))
         else if c == 34 then  -- double quote (identifier)
-            local str = self:readString(34)
+            str = self:readString(34)
             tinsert(self.tokens, Token.new(TK_IDENT, str, startPos))
         else if c == 40 then  -- (
             tinsert(self.tokens, Token.new(TK_LPAREN, "(", startPos))
@@ -257,7 +270,7 @@ function Tokenizer:tokenize()
         else if c == 60 then  -- < or <= or <>
             self.pos = self.pos + 1
             if self.pos <= self.len then
-                local nc = sbyte(self.src, self.pos)
+                nc = sbyte(self.src, self.pos)
                 if nc == 61 then  -- <=
                     tinsert(self.tokens, Token.new(TK_OP, "<=", startPos))
                     self.pos = self.pos + 1
@@ -350,17 +363,17 @@ function Parser:peekValue()
 end
 
 function Parser:advance()
-    local t = self:current()
+    t = self:current()
     self.pos = self.pos + 1
     return t
 end
 
 function Parser:expect(typ, val)
-    local t = self:current()
-    if t.type ~= typ then
+    t = self:current()
+    if t.type != typ then
         error(sfmt("Parser: expected %s got %s at pos %d", typ, t.type, t.pos))
     end
-    if val and t.value ~= val then
+    if val and t.value != val then
         error(sfmt("Parser: expected value '%s' got '%s' at pos %d", val, tostring(t.value), t.pos))
     end
     self.pos = self.pos + 1
@@ -368,7 +381,7 @@ function Parser:expect(typ, val)
 end
 
 function Parser:match(typ, val)
-    local t = self:current()
+    t = self:current()
     if t.type == typ and (val == nil or t.value == val) then
         self.pos = self.pos + 1
         return t
@@ -381,14 +394,14 @@ function Parser:matchKeyword(kw)
 end
 
 function Parser:isKeyword(kw)
-    local t = self:current()
+    t = self:current()
     return t.type == TK_KEYWORD and t.value == kw
 end
 
 function Parser:parse()
-    local stmts = {}
-    while self:peekType() ~= TK_EOF do
-        local stmt = self:parseStatement()
+    stmts = {}
+    while self:peekType() != TK_EOF do
+        stmt = self:parseStatement()
         if stmt then
             tinsert(stmts, stmt)
         end
@@ -398,7 +411,7 @@ function Parser:parse()
 end
 
 function Parser:parseStatement()
-    local t = self:current()
+    t = self:current()
     if t.type == TK_KEYWORD then
         if t.value == "SELECT" then
             return self:parseSelect()
@@ -417,19 +430,19 @@ end
 
 function Parser:parseSelect()
     self:expect(TK_KEYWORD, "SELECT")
-    local distinct = false
+    distinct = false
     if self:matchKeyword("DISTINCT") then
         distinct = true
     end
-    local columns = self:parseSelectColumns()
-    local from = nil
-    local joins = {}
-    local whereClause = nil
-    local groupBy = nil
-    local having = nil
-    local orderBy = nil
-    local limitVal = nil
-    local offsetVal = nil
+    columns = self:parseSelectColumns()
+    from = nil
+    joins = {}
+    whereClause = nil
+    groupBy = nil
+    having = nil
+    orderBy = nil
+    limitVal = nil
+    offsetVal = nil
 
     if self:matchKeyword("FROM") then
         from = self:parseTableRef()
@@ -474,20 +487,20 @@ function Parser:parseSelect()
 end
 
 function Parser:parseSelectColumns()
-    local cols = {}
+    cols = {}
     if self:current().type == TK_STAR then
         self:advance()
         tinsert(cols, mkNode("STAR_COL"))
         if self:match(TK_COMMA) then
             -- more columns after *? Unusual but handle
-            local rest = self:parseSelectColumns()
+            rest = self:parseSelectColumns()
             for _, c in next, rest do tinsert(cols, c) end
         end
         return cols
     end
     while true do
-        local expr = self:parseExpr()
-        local alias = nil
+        expr = self:parseExpr()
+        alias = nil
         if self:matchKeyword("AS") then
             alias = self:expect(TK_IDENT).value
         else if self:peekType() == TK_IDENT and not self:isKeyword("FROM") and not self:isKeyword("WHERE") then
@@ -501,8 +514,8 @@ function Parser:parseSelectColumns()
 end
 
 function Parser:parseTableRef()
-    local name = self:expect(TK_IDENT).value
-    local alias = nil
+    name = self:expect(TK_IDENT).value
+    alias = nil
     if self:matchKeyword("AS") then
         alias = self:expect(TK_IDENT).value
     else if self:peekType() == TK_IDENT and not self:isKeyword("WHERE") and not self:isKeyword("ON")
@@ -515,7 +528,7 @@ function Parser:parseTableRef()
 end
 
 function Parser:parseJoin()
-    local joinType = "INNER"
+    joinType = "INNER"
     if self:matchKeyword("INNER") then
         joinType = "INNER"
     else if self:matchKeyword("LEFT") then
@@ -525,8 +538,8 @@ function Parser:parseJoin()
         joinType = "CROSS"
     end
     self:expect(TK_KEYWORD, "JOIN")
-    local tableRef = self:parseTableRef()
-    local onExpr = nil
+    tableRef = self:parseTableRef()
+    onExpr = nil
     if self:matchKeyword("ON") then
         onExpr = self:parseExpr()
     end
@@ -534,10 +547,10 @@ function Parser:parseJoin()
 end
 
 function Parser:parseOrderByList()
-    local items = {}
+    items = {}
     while true do
-        local expr = self:parseExpr()
-        local dir = "ASC"
+        expr = self:parseExpr()
+        dir = "ASC"
         if self:matchKeyword("ASC") then
             dir = "ASC"
         else if self:matchKeyword("DESC") then
@@ -550,7 +563,7 @@ function Parser:parseOrderByList()
 end
 
 function Parser:parseExprList()
-    local exprs = {}
+    exprs = {}
     while true do
         tinsert(exprs, self:parseExpr())
         if not self:match(TK_COMMA) then break end
@@ -563,20 +576,20 @@ function Parser:parseExpr()
 end
 
 function Parser:parseOr()
-    local left = self:parseAnd()
+    left = self:parseAnd()
     while self:isKeyword("OR") do
         self:advance()
-        local right = self:parseAnd()
+        right = self:parseAnd()
         left = mkNode("BINOP", { op = "OR", left = left, right = right })
     end
     return left
 end
 
 function Parser:parseAnd()
-    local left = self:parseNot()
+    left = self:parseNot()
     while self:isKeyword("AND") do
         self:advance()
-        local right = self:parseNot()
+        right = self:parseNot()
         left = mkNode("BINOP", { op = "AND", left = left, right = right })
     end
     return left
@@ -585,33 +598,33 @@ end
 function Parser:parseNot()
     if self:isKeyword("NOT") then
         self:advance()
-        local expr = self:parseNot()
+        expr = self:parseNot()
         return mkNode("UNOP", { op = "NOT", operand = expr })
     end
     return self:parseComparison()
 end
 
 function Parser:parseComparison()
-    local left = self:parseAddSub()
-    local t = self:current()
+    left = self:parseAddSub()
+    t = self:current()
 
     if t.type == TK_OP then
-        local op = t.value
+        op = t.value
         if op == "=" or op == "!=" or op == "<>" or op == "<" or op == ">" or op == "<=" or op == ">=" then
             self:advance()
-            local right = self:parseAddSub()
+            right = self:parseAddSub()
             if op == "<>" then op = "!=" end
             return mkNode("BINOP", { op = op, left = left, right = right })
         end
     else if t.type == TK_KEYWORD then
         if t.value == "LIKE" then
             self:advance()
-            local right = self:parseAddSub()
+            right = self:parseAddSub()
             return mkNode("BINOP", { op = "LIKE", left = left, right = right })
         else if t.value == "IN" then
             self:advance()
             self:expect(TK_LPAREN)
-            local vals = self:parseExprList()
+            vals = self:parseExprList()
             self:expect(TK_RPAREN)
             return mkNode("IN_EXPR", { expr = left, values = vals })
         else if t.value == "IS" then
@@ -625,9 +638,9 @@ function Parser:parseComparison()
             end
         else if t.value == "BETWEEN" then
             self:advance()
-            local lo = self:parseAddSub()
+            lo = self:parseAddSub()
             self:expect(TK_KEYWORD, "AND")
-            local hi = self:parseAddSub()
+            hi = self:parseAddSub()
             return mkNode("BETWEEN", { expr = left, lo = lo, hi = hi })
         end
     end
@@ -635,12 +648,12 @@ function Parser:parseComparison()
 end
 
 function Parser:parseAddSub()
-    local left = self:parseMulDiv()
+    left = self:parseMulDiv()
     while true do
-        local t = self:current()
+        t = self:current()
         if t.type == TK_OP and (t.value == "+" or t.value == "-") then
             self:advance()
-            local right = self:parseMulDiv()
+            right = self:parseMulDiv()
             left = mkNode("BINOP", { op = t.value, left = left, right = right })
         else
             break
@@ -650,16 +663,16 @@ function Parser:parseAddSub()
 end
 
 function Parser:parseMulDiv()
-    local left = self:parseUnary()
+    left = self:parseUnary()
     while true do
-        local t = self:current()
+        t = self:current()
         if t.type == TK_OP and (t.value == "*" or t.value == "/" or t.value == "%") then
             self:advance()
-            local right = self:parseUnary()
+            right = self:parseUnary()
             left = mkNode("BINOP", { op = t.value, left = left, right = right })
         else if t.type == TK_STAR then
             self:advance()
-            local right = self:parseUnary()
+            right = self:parseUnary()
             left = mkNode("BINOP", { op = "*", left = left, right = right })
         else
             break
@@ -669,17 +682,17 @@ function Parser:parseMulDiv()
 end
 
 function Parser:parseUnary()
-    local t = self:current()
+    t = self:current()
     if t.type == TK_OP and t.value == "-" then
         self:advance()
-        local expr = self:parsePrimary()
+        expr = self:parsePrimary()
         return mkNode("UNOP", { op = "NEG", operand = expr })
     end
     return self:parsePrimary()
 end
 
 function Parser:parsePrimary()
-    local t = self:current()
+    t = self:current()
 
     if t.type == TK_NUMBER then
         self:advance()
@@ -692,15 +705,15 @@ function Parser:parsePrimary()
         return mkNode("NULL_LIT")
     else if t.type == TK_LPAREN then
         self:advance()
-        local expr = self:parseExpr()
+        expr = self:parseExpr()
         self:expect(TK_RPAREN)
         return expr
     else if t.type == TK_KEYWORD and (t.value == "COUNT" or t.value == "SUM" or t.value == "AVG" or t.value == "MIN" or t.value == "MAX") then
-        local funcName = t.value
+        funcName = t.value
         self:advance()
         self:expect(TK_LPAREN)
-        local argExpr = nil
-        local isStar = false
+        argExpr = nil
+        isStar = false
         if self:current().type == TK_STAR then
             self:advance()
             isStar = true
@@ -710,12 +723,12 @@ function Parser:parsePrimary()
         self:expect(TK_RPAREN)
         return mkNode("AGG_FUNC", { func = funcName, arg = argExpr, star = isStar })
     else if t.type == TK_IDENT then
-        local name = t.value
+        name = t.value
         self:advance()
         -- check for table.column
         if self:current().type == TK_DOT then
             self:advance()
-            local col = self:current()
+            col = self:current()
             if col.type == TK_IDENT or col.type == TK_STAR then
                 self:advance()
                 if col.type == TK_STAR then
@@ -727,8 +740,8 @@ function Parser:parsePrimary()
         -- check for function call
         if self:current().type == TK_LPAREN then
             self:advance()
-            local args = {}
-            if self:current().type ~= TK_RPAREN then
+            args = {}
+            if self:current().type != TK_RPAREN then
                 args = self:parseExprList()
             end
             self:expect(TK_RPAREN)
@@ -746,8 +759,8 @@ end
 function Parser:parseInsert()
     self:expect(TK_KEYWORD, "INSERT")
     self:expect(TK_KEYWORD, "INTO")
-    local tableName = self:expect(TK_IDENT).value
-    local columns = nil
+    tableName = self:expect(TK_IDENT).value
+    columns = nil
     if self:current().type == TK_LPAREN then
         self:advance()
         columns = {}
@@ -758,10 +771,10 @@ function Parser:parseInsert()
         self:expect(TK_RPAREN)
     end
     self:expect(TK_KEYWORD, "VALUES")
-    local rows = {}
+    rows = {}
     while true do
         self:expect(TK_LPAREN)
-        local vals = self:parseExprList()
+        vals = self:parseExprList()
         self:expect(TK_RPAREN)
         tinsert(rows, vals)
         if not self:match(TK_COMMA) then break end
@@ -780,20 +793,20 @@ function Parser:parseCreate()
 end
 
 function Parser:parseCreateTable()
-    local tableName = self:expect(TK_IDENT).value
+    tableName = self:expect(TK_IDENT).value
     self:expect(TK_LPAREN)
-    local cols = {}
+    cols = {}
     while true do
-        local colName = self:expect(TK_IDENT).value
-        local colType = "TEXT"
+        colName = self:expect(TK_IDENT).value
+        colType = "TEXT"
         if self:current().type == TK_KEYWORD then
-            local kv = self:current().value
+            kv = self:current().value
             if kv == "INTEGER" or kv == "TEXT" or kv == "REAL" then
                 colType = kv
                 self:advance()
             end
         end
-        local isPK = false
+        isPK = false
         if self:matchKeyword("PRIMARY") then
             self:expect(TK_KEYWORD, "KEY")
             isPK = true
@@ -808,11 +821,11 @@ function Parser:parseCreateTable()
 end
 
 function Parser:parseCreateIndex()
-    local indexName = self:expect(TK_IDENT).value
+    indexName = self:expect(TK_IDENT).value
     self:expect(TK_KEYWORD, "ON")
-    local tableName = self:expect(TK_IDENT).value
+    tableName = self:expect(TK_IDENT).value
     self:expect(TK_LPAREN)
-    local cols = {}
+    cols = {}
     while true do
         tinsert(cols, self:expect(TK_IDENT).value)
         if not self:match(TK_COMMA) then break end
@@ -824,8 +837,8 @@ end
 function Parser:parseDelete()
     self:expect(TK_KEYWORD, "DELETE")
     self:expect(TK_KEYWORD, "FROM")
-    local tableName = self:expect(TK_IDENT).value
-    local whereClause = nil
+    tableName = self:expect(TK_IDENT).value
+    whereClause = nil
     if self:matchKeyword("WHERE") then
         whereClause = self:parseExpr()
     end
@@ -834,17 +847,17 @@ end
 
 function Parser:parseUpdate()
     self:expect(TK_KEYWORD, "UPDATE")
-    local tableName = self:expect(TK_IDENT).value
+    tableName = self:expect(TK_IDENT).value
     self:expect(TK_KEYWORD, "SET")
-    local assignments = {}
+    assignments = {}
     while true do
-        local col = self:expect(TK_IDENT).value
+        col = self:expect(TK_IDENT).value
         self:expect(TK_OP, "=")
-        local val = self:parseExpr()
+        val = self:parseExpr()
         tinsert(assignments, { column = col, value = val })
         if not self:match(TK_COMMA) then break end
     end
-    local whereClause = nil
+    whereClause = nil
     if self:matchKeyword("WHERE") then
         whereClause = self:parseExpr()
     end
@@ -876,9 +889,9 @@ function BTree.new()
 end
 
 function BTree:insert(key, rowIndex)
-    local root = self.root
+    root = self.root
     if root.numKeys >= BTREE_ORDER - 1 then
-        local newRoot = BTreeNode.new(false)
+        newRoot = BTreeNode.new(false)
         newRoot.children[1] = root
         btreeSplitChild(newRoot, 1)
         self.root = newRoot
@@ -889,12 +902,12 @@ function BTree:insert(key, rowIndex)
 end
 
 function btreeSplitChild(parent, idx)
-    local fullChild = parent.children[idx]
-    local mid = floor((BTREE_ORDER - 1) / 2) + 1
-    local newNode = BTreeNode.new(fullChild.isLeaf)
+    fullChild = parent.children[idx]
+    mid = floor((BTREE_ORDER - 1) / 2) + 1
+    newNode = BTreeNode.new(fullChild.isLeaf)
 
     -- move upper half keys to new node
-    local j = 1
+    j = 1
     for i = mid + 1, fullChild.numKeys do
         newNode.keys[j] = fullChild.keys[i]
         fullChild.keys[i] = nil
@@ -912,7 +925,7 @@ function btreeSplitChild(parent, idx)
         end
     end
 
-    local midKey = fullChild.keys[mid]
+    midKey = fullChild.keys[mid]
     fullChild.keys[mid] = nil
     fullChild.numKeys = mid - 1
 
@@ -931,7 +944,7 @@ end
 
 function btreeInsertNonFull(node, key, rowIndex)
     if node.isLeaf then
-        local i = node.numKeys
+        i = node.numKeys
         while i >= 1 and btreeKeyLess(key, node.keys[i][1]) do
             node.keys[i + 1] = node.keys[i]
             i = i - 1
@@ -939,7 +952,7 @@ function btreeInsertNonFull(node, key, rowIndex)
         node.keys[i + 1] = { key, rowIndex }
         node.numKeys = node.numKeys + 1
     else
-        local i = node.numKeys
+        i = node.numKeys
         while i >= 1 and btreeKeyLess(key, node.keys[i][1]) do
             i = i - 1
         end
@@ -973,10 +986,10 @@ function BTree:search(key)
 end
 
 function btreeSearch(node, key)
-    local results = {}
+    results = {}
     if node == nil then return results end
 
-    local i = 1
+    i = 1
     while i <= node.numKeys and btreeKeyLess(node.keys[i][1], key) do
         i = i + 1
     end
@@ -984,7 +997,7 @@ function btreeSearch(node, key)
     if i <= node.numKeys and btreeKeyEqual(node.keys[i][1], key) then
         tinsert(results, node.keys[i][2])
         -- check for duplicates in adjacent positions
-        local j = i + 1
+        j = i + 1
         while j <= node.numKeys and btreeKeyEqual(node.keys[j][1], key) do
             tinsert(results, node.keys[j][2])
             j = j + 1
@@ -992,7 +1005,7 @@ function btreeSearch(node, key)
     end
 
     if not node.isLeaf then
-        local childResults = btreeSearch(node.children[i], key)
+        childResults = btreeSearch(node.children[i], key)
         for _, r in next, childResults do
             tinsert(results, r)
         end
@@ -1002,7 +1015,7 @@ function btreeSearch(node, key)
 end
 
 function BTree:rangeScan(lo, hi)
-    local results = {}
+    results = {}
     btreeRangeScan(self.root, lo, hi, results)
     return results
 end
@@ -1011,21 +1024,21 @@ function btreeRangeScan(node, lo, hi, results)
     if node == nil then return end
 
     for i = 1, node.numKeys do
-        local k = node.keys[i][1]
+        k = node.keys[i][1]
         if not node.isLeaf then
             if lo == nil or not btreeKeyLess(k, lo) then
                 btreeRangeScan(node.children[i], lo, hi, results)
             end
         end
-        local inRange = true
-        if lo ~= nil and btreeKeyLess(k, lo) then inRange = false end
-        if hi ~= nil and btreeKeyLess(hi, k) then inRange = false end
+        inRange = true
+        if lo != nil and btreeKeyLess(k, lo) then inRange = false end
+        if hi != nil and btreeKeyLess(hi, k) then inRange = false end
         if inRange then
             tinsert(results, node.keys[i][2])
         end
     end
     if not node.isLeaf then
-        local lastKey = node.keys[node.numKeys]
+        lastKey = node.keys[node.numKeys]
         if lastKey and (hi == nil or not btreeKeyLess(hi, lastKey[1])) then
             btreeRangeScan(node.children[node.numKeys + 1], lo, hi, results)
         end
@@ -1037,7 +1050,7 @@ TableStore = {}
 TableStore.__index = TableStore
 
 function TableStore.new(name, columns)
-    local colMap = {}
+    colMap = {}
     for i, col in next, columns do
         colMap[col.name] = i
     end
@@ -1052,14 +1065,14 @@ function TableStore.new(name, columns)
 end
 
 function TableStore:insertRow(values)
-    local rowId = self.nextRowId
+    rowId = self.nextRowId
     self.nextRowId = rowId + 1
     self.rows[rowId] = values
 
     -- update indexes
     for colName, idx in next, self.indexes do
-        local colIdx = self.colMap[colName]
-        if colIdx and values[colIdx] ~= nil then
+        colIdx = self.colMap[colName]
+        if colIdx and values[colIdx] != nil then
             idx:insert(values[colIdx], rowId)
         end
     end
@@ -1067,11 +1080,11 @@ function TableStore:insertRow(values)
 end
 
 function TableStore:createIndex(colName)
-    local tree = BTree.new()
-    local colIdx = self.colMap[colName]
+    tree = BTree.new()
+    colIdx = self.colMap[colName]
     if colIdx then
         for rowId, row in next, self.rows do
-            if row[colIdx] ~= nil then
+            if row[colIdx] != nil then
                 tree:insert(row[colIdx], rowId)
             end
         end
@@ -1098,7 +1111,7 @@ function Database.new()
 end
 
 function Database:createTable(name, columns)
-    local store = TableStore.new(name, columns)
+    store = TableStore.new(name, columns)
     self.tables[name] = store
     return store
 end
@@ -1122,11 +1135,11 @@ function Executor.new(db)
 end
 
 function Executor:execute(sql)
-    local tokenizer = Tokenizer.new(sql)
-    local tokens = tokenizer:tokenize()
-    local parser = Parser.new(tokens)
-    local stmts = parser:parse()
-    local lastResult = nil
+    tokenizer = Tokenizer.new(sql)
+    tokens = tokenizer:tokenize()
+    parser = Parser.new(tokens)
+    stmts = parser:parse()
+    lastResult = nil
     for _, stmt in next, stmts do
         lastResult = self:executeStatement(stmt)
     end
@@ -1151,7 +1164,7 @@ function Executor:executeStatement(stmt)
 end
 
 function Executor:execCreateTable(stmt)
-    local cols = {}
+    cols = {}
     for _, c in next, stmt.columns do
         tinsert(cols, { name = c.name, colType = c.colType, primaryKey = c.primaryKey })
     end
@@ -1160,7 +1173,7 @@ function Executor:execCreateTable(stmt)
 end
 
 function Executor:execCreateIndex(stmt)
-    local tbl = self.db:getTable(stmt.table_name)
+    tbl = self.db:getTable(stmt.table_name)
     if not tbl then error("Table not found: " .. stmt.table_name) end
     for _, colName in next, stmt.columns do
         tbl:createIndex(colName)
@@ -1169,19 +1182,19 @@ function Executor:execCreateIndex(stmt)
 end
 
 function Executor:execInsert(stmt)
-    local tbl = self.db:getTable(stmt.table_name)
+    tbl = self.db:getTable(stmt.table_name)
     if not tbl then error("Table not found: " .. stmt.table_name) end
-    local count = 0
+    count = 0
     for _, rowExprs in next, stmt.rows do
-        local values = {}
+        values = {}
         for i, expr in next, rowExprs do
             values[i] = self:evalLiteral(expr)
         end
         -- reorder if columns specified
         if stmt.columns then
-            local reordered = {}
+            reordered = {}
             for i, colName in next, stmt.columns do
-                local colIdx = tbl:getColumnIndex(colName)
+                colIdx = tbl:getColumnIndex(colName)
                 if colIdx then
                     reordered[colIdx] = values[i]
                 end
@@ -1200,7 +1213,7 @@ function Executor:evalLiteral(expr)
     else if expr.kind == "STRING_LIT" then return expr.value
     else if expr.kind == "NULL_LIT" then return nil
     else if expr.kind == "UNOP" and expr.op == "NEG" then
-        local v = self:evalLiteral(expr.operand)
+        v = self:evalLiteral(expr.operand)
         if type(v) == "number" then return -v end
         return nil
     end
@@ -1208,12 +1221,12 @@ function Executor:evalLiteral(expr)
 end
 
 function Executor:execDelete(stmt)
-    local tbl = self.db:getTable(stmt.table_name)
+    tbl = self.db:getTable(stmt.table_name)
     if not tbl then error("Table not found: " .. stmt.table_name) end
-    local count = 0
-    local toDelete = {}
+    count = 0
+    toDelete = {}
     for rowId, row in next, tbl.rows do
-        local ctx = self:makeRowContext(tbl, row, nil, nil)
+        ctx = self:makeRowContext(tbl, row, nil, nil)
         if stmt.where == nil or self:evalExpr(stmt.where, ctx) then
             tinsert(toDelete, rowId)
         end
@@ -1226,14 +1239,14 @@ function Executor:execDelete(stmt)
 end
 
 function Executor:execUpdate(stmt)
-    local tbl = self.db:getTable(stmt.table_name)
+    tbl = self.db:getTable(stmt.table_name)
     if not tbl then error("Table not found: " .. stmt.table_name) end
-    local count = 0
+    count = 0
     for rowId, row in next, tbl.rows do
-        local ctx = self:makeRowContext(tbl, row, nil, nil)
+        ctx = self:makeRowContext(tbl, row, nil, nil)
         if stmt.where == nil or self:evalExpr(stmt.where, ctx) then
             for _, assign in next, stmt.assignments do
-                local colIdx = tbl:getColumnIndex(assign.column)
+                colIdx = tbl:getColumnIndex(assign.column)
                 if colIdx then
                     row[colIdx] = self:evalExpr(assign.value, ctx)
                 end
@@ -1245,7 +1258,7 @@ function Executor:execUpdate(stmt)
 end
 
 function Executor:makeRowContext(tbl, row, joinTables, joinRows)
-    local ctx = {
+    ctx = {
         tables = {},
         resolve = resolveColumn
     }
@@ -1253,7 +1266,7 @@ function Executor:makeRowContext(tbl, row, joinTables, joinRows)
     if joinTables and joinRows then
         for i, jt in next, joinTables do
             if joinRows[i] then
-                local alias = jt.alias or jt.name
+                alias = jt.alias or jt.name
                 ctx.tables[alias] = { tbl = self.db:getTable(jt.name), row = joinRows[i] }
             end
         end
@@ -1263,9 +1276,9 @@ end
 
 function resolveColumn(ctx, tableName, colName)
     if tableName then
-        local entry = ctx.tables[tableName]
+        entry = ctx.tables[tableName]
         if entry and entry.tbl then
-            local colIdx = entry.tbl:getColumnIndex(colName)
+            colIdx = entry.tbl:getColumnIndex(colName)
             if colIdx and entry.row then
                 return entry.row[colIdx]
             end
@@ -1275,7 +1288,7 @@ function resolveColumn(ctx, tableName, colName)
     -- search all tables
     for _, entry in next, ctx.tables do
         if entry.tbl then
-            local colIdx = entry.tbl:getColumnIndex(colName)
+            colIdx = entry.tbl:getColumnIndex(colName)
             if colIdx and entry.row then
                 return entry.row[colIdx]
             end
@@ -1286,9 +1299,9 @@ end
 
 function Executor:execSelect(stmt)
     -- Get base table rows
-    local tbl = nil
-    local baseAlias = nil
-    local rows = {}
+    tbl = nil
+    baseAlias = nil
+    rows = {}
 
     if stmt.from then
         tbl = self.db:getTable(stmt.from.name)
@@ -1296,15 +1309,15 @@ function Executor:execSelect(stmt)
         baseAlias = stmt.from.alias or stmt.from.name
 
         -- Try index scan for simple WHERE on indexed column
-        local useIndex = false
+        useIndex = false
         if stmt.where and #stmt.joins == 0 and stmt.where.kind == "BINOP" and stmt.where.op == "=" then
-            local indexCol = self:getIndexableColumn(stmt.where, tbl)
+            indexCol = self:getIndexableColumn(stmt.where, tbl)
             if indexCol then
-                local val = self:getCompareValue(stmt.where, indexCol.colName)
-                if val ~= nil then
-                    local idx = tbl.indexes[indexCol.colName]
+                val = self:getCompareValue(stmt.where, indexCol.colName)
+                if val != nil then
+                    idx = tbl.indexes[indexCol.colName]
                     if idx then
-                        local rowIds = idx:search(val)
+                        rowIds = idx:search(val)
                         for _, rowId in next, rowIds do
                             if tbl.rows[rowId] then
                                 tinsert(rows, tbl.rows[rowId])
@@ -1328,12 +1341,12 @@ function Executor:execSelect(stmt)
     end
 
     -- Process JOINs
-    local joinTableInfo = {}
+    joinTableInfo = {}
     if stmt.joins and #stmt.joins > 0 then
         for _, join in next, stmt.joins do
-            local joinTbl = self.db:getTable(join.table.name)
+            joinTbl = self.db:getTable(join.table.name)
             if not joinTbl then error("Table not found: " .. join.table.name) end
-            local joinAlias = join.table.alias or join.table.name
+            joinAlias = join.table.alias or join.table.name
             tinsert(joinTableInfo, { name = join.table.name, alias = joinAlias, tbl = joinTbl, join = join })
         end
 
@@ -1342,9 +1355,9 @@ function Executor:execSelect(stmt)
     else
         -- Filter with WHERE (if not already done by index)
         if stmt.where then
-            local filtered = {}
+            filtered = {}
             for _, row in next, rows do
-                local ctx = { tables = {}, resolve = resolveColumn }
+                ctx = { tables = {}, resolve = resolveColumn }
                 ctx.tables[baseAlias] = { tbl = tbl, row = row }
                 if self:evalExpr(stmt.where, ctx) then
                     tinsert(filtered, row)
@@ -1376,14 +1389,14 @@ function Executor:execSelect(stmt)
 
     -- LIMIT / OFFSET
     if stmt.offsetVal then
-        local newRows = {}
+        newRows = {}
         for i = stmt.offsetVal + 1, #rows do
             tinsert(newRows, rows[i])
         end
         rows = newRows
     end
     if stmt.limitVal then
-        local newRows = {}
+        newRows = {}
         for i = 1, mmin(stmt.limitVal, #rows) do
             tinsert(newRows, rows[i])
         end
@@ -1391,10 +1404,10 @@ function Executor:execSelect(stmt)
     end
 
     -- Project columns
-    local resultCols = self:getResultColumns(stmt.columns, tbl, baseAlias, joinTableInfo)
-    local resultRows = {}
+    resultCols = self:getResultColumns(stmt.columns, tbl, baseAlias, joinTableInfo)
+    resultRows = {}
     for _, row in next, rows do
-        local resultRow = self:projectRow(stmt.columns, row, tbl, baseAlias, joinTableInfo, rows)
+        resultRow = self:projectRow(stmt.columns, row, tbl, baseAlias, joinTableInfo, rows)
         tinsert(resultRows, resultRow)
     end
 
@@ -1406,40 +1419,40 @@ function Executor:execSelect(stmt)
 end
 
 function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt)
-    local currentRows = {}
+    currentRows = {}
     -- Each element: { baseRow, joinRow1, joinRow2, ... }
     for _, row in next, baseRows do
         tinsert(currentRows, { base = row, joins = {} })
     end
 
     for ji, jinfo in next, joinTableInfo do
-        local newRows = {}
+        newRows = {}
         for _, cr in next, currentRows do
-            local matched = false
+            matched = false
             for _, jrow in next, jinfo.tbl.rows do
-                local ctx = { tables = {}, resolve = resolveColumn }
+                ctx = { tables = {}, resolve = resolveColumn }
                 ctx.tables[baseAlias] = { tbl = baseTbl, row = cr.base }
                 -- add previously joined tables
                 for pi = 1, ji - 1 do
-                    local prevInfo = joinTableInfo[pi]
+                    prevInfo = joinTableInfo[pi]
                     ctx.tables[prevInfo.alias] = { tbl = prevInfo.tbl, row = cr.joins[pi] }
                 end
                 ctx.tables[jinfo.alias] = { tbl = jinfo.tbl, row = jrow }
 
-                local pass = true
+                pass = true
                 if jinfo.join.on then
                     pass = self:evalExpr(jinfo.join.on, ctx)
                 end
                 if pass then
                     matched = true
-                    local newJoins = {}
+                    newJoins = {}
                     for k, v in next, cr.joins do newJoins[k] = v end
                     newJoins[ji] = jrow
                     tinsert(newRows, { base = cr.base, joins = newJoins })
                 end
             end
             if not matched and jinfo.join.joinType == "LEFT" then
-                local newJoins = {}
+                newJoins = {}
                 for k, v in next, cr.joins do newJoins[k] = v end
                 newJoins[ji] = nil
                 tinsert(newRows, { base = cr.base, joins = newJoins })
@@ -1450,9 +1463,9 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
 
     -- Apply WHERE
     if stmt.where then
-        local filtered = {}
+        filtered = {}
         for _, cr in next, currentRows do
-            local ctx = { tables = {}, resolve = resolveColumn }
+            ctx = { tables = {}, resolve = resolveColumn }
             ctx.tables[baseAlias] = { tbl = baseTbl, row = cr.base }
             for ji, jinfo in next, joinTableInfo do
                 ctx.tables[jinfo.alias] = { tbl = jinfo.tbl, row = cr.joins[ji] }
@@ -1466,9 +1479,9 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
 
     -- Flatten for simpler downstream processing - store join data in a side table
     -- We'll use a combined row approach: base row + metadata
-    local flatRows = {}
+    flatRows = {}
     for _, cr in next, currentRows do
-        local combined = {}
+        combined = {}
         -- base columns
         for i, v in next, cr.base do combined[i] = v end
         -- mark as joined row
@@ -1480,9 +1493,9 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
 end
 
 function Executor:getIndexableColumn(whereNode, tbl)
-    if whereNode.kind ~= "BINOP" or whereNode.op ~= "=" then return nil end
-    local left = whereNode.left
-    local right = whereNode.right
+    if whereNode.kind != "BINOP" or whereNode.op != "=" then return nil end
+    left = whereNode.left
+    right = whereNode.right
     if left.kind == "COLUMN_REF" and (right.kind == "NUMBER_LIT" or right.kind == "STRING_LIT") then
         if tbl.indexes[left.column] then
             return { colName = left.column, side = "left" }
@@ -1497,8 +1510,8 @@ function Executor:getIndexableColumn(whereNode, tbl)
 end
 
 function Executor:getCompareValue(whereNode, colName)
-    local left = whereNode.left
-    local right = whereNode.right
+    left = whereNode.left
+    right = whereNode.right
     if left.kind == "COLUMN_REF" and left.column == colName then
         if right.kind == "NUMBER_LIT" then return right.value end
         if right.kind == "STRING_LIT" then return right.value end
@@ -1520,19 +1533,19 @@ function Executor:hasAggregates(columns)
 end
 
 function Executor:execAggregateNoGroup(stmt, tbl, baseAlias, rows, joinTableInfo)
-    local resultRow = {}
-    local resultCols = {}
+    resultRow = {}
+    resultCols = {}
     for ci, col in next, stmt.columns do
         if col.kind == "COLUMN" and col.expr then
-            local colAlias = col.alias or sfmt("col%d", ci)
+            colAlias = col.alias or sfmt("col%d", ci)
             tinsert(resultCols, colAlias)
             if col.expr.kind == "AGG_FUNC" then
-                local val = self:computeAggregate(col.expr, rows, tbl, baseAlias, joinTableInfo)
+                val = self:computeAggregate(col.expr, rows, tbl, baseAlias, joinTableInfo)
                 tinsert(resultRow, val)
             else
                 -- non-aggregate in aggregate query: take first row value
                 if #rows > 0 then
-                    local ctx = self:makeCtxForRow(rows[1], tbl, baseAlias, joinTableInfo)
+                    ctx = self:makeCtxForRow(rows[1], tbl, baseAlias, joinTableInfo)
                     tinsert(resultRow, self:evalExpr(col.expr, ctx))
                 else
                     tinsert(resultRow, nil)
@@ -1548,16 +1561,16 @@ end
 
 function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
     -- Group rows
-    local groups = {}
-    local groupOrder = {}
+    groups = {}
+    groupOrder = {}
     for _, row in next, rows do
-        local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-        local keyParts = {}
+        ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+        keyParts = {}
         for _, gexpr in next, stmt.groupBy do
-            local val = self:evalExpr(gexpr, ctx)
+            val = self:evalExpr(gexpr, ctx)
             tinsert(keyParts, tostring(val))
         end
-        local gkey = tconcat(keyParts, "\0")
+        gkey = tconcat(keyParts, "\0")
         if not groups[gkey] then
             groups[gkey] = {}
             tinsert(groupOrder, gkey)
@@ -1566,32 +1579,32 @@ function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
     end
 
     -- Evaluate HAVING and project
-    local resultCols = {}
-    local resultRows = {}
-    local colsBuilt = false
+    resultCols = {}
+    resultRows = {}
+    colsBuilt = false
 
     for _, gkey in next, groupOrder do
-        local groupRows = groups[gkey]
-        local firstRow = groupRows[1]
-        local ctx = self:makeCtxForRow(firstRow, tbl, baseAlias, joinTableInfo)
+        groupRows = groups[gkey]
+        firstRow = groupRows[1]
+        ctx = self:makeCtxForRow(firstRow, tbl, baseAlias, joinTableInfo)
 
         -- Check HAVING
-        local passHaving = true
+        passHaving = true
         if stmt.having then
-            local havingVal = self:evalExprWithAgg(stmt.having, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            havingVal = self:evalExprWithAgg(stmt.having, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             if not havingVal then
                 passHaving = false
             end
         end
 
         if passHaving then
-            local resultRow = {}
+            resultRow = {}
             for ci, col in next, stmt.columns do
                 if col.kind == "COLUMN" and col.expr then
-                    local colAlias = col.alias or self:exprToName(col.expr, ci)
+                    colAlias = col.alias or self:exprToName(col.expr, ci)
                     if not colsBuilt then tinsert(resultCols, colAlias) end
                     if col.expr.kind == "AGG_FUNC" then
-                        local val = self:computeAggregate(col.expr, groupRows, tbl, baseAlias, joinTableInfo)
+                        val = self:computeAggregate(col.expr, groupRows, tbl, baseAlias, joinTableInfo)
                         tinsert(resultRow, val)
                     else
                         tinsert(resultRow, self:evalExpr(col.expr, ctx))
@@ -1610,7 +1623,7 @@ function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
 
     -- LIMIT
     if stmt.limitVal then
-        local limited = {}
+        limited = {}
         for i = 1, mmin(stmt.limitVal, #resultRows) do
             tinsert(limited, resultRows[i])
         end
@@ -1621,8 +1634,8 @@ function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
 end
 
 function Executor:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-    local ctx = { tables = {}, resolve = resolveColumn }
-    local baseRow = row
+    ctx = { tables = {}, resolve = resolveColumn }
+    baseRow = row
     if row.__base then baseRow = row.__base end
     ctx.tables[baseAlias] = { tbl = tbl, row = baseRow }
     if row.__joins and joinTableInfo then
@@ -1634,32 +1647,32 @@ function Executor:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
 end
 
 function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTableInfo)
-    local fn = aggNode.func
+    fn = aggNode.func
     if fn == "COUNT" then
         if aggNode.star then
             return #groupRows
         end
-        local count = 0
+        count = 0
         for _, row in next, groupRows do
-            local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-            local val = self:evalExpr(aggNode.arg, ctx)
-            if val ~= nil then count = count + 1 end
+            ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+            val = self:evalExpr(aggNode.arg, ctx)
+            if val != nil then count = count + 1 end
         end
         return count
     else if fn == "SUM" then
-        local sum = 0
+        sum = 0
         for _, row in next, groupRows do
-            local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-            local val = self:evalExpr(aggNode.arg, ctx)
+            ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+            val = self:evalExpr(aggNode.arg, ctx)
             if type(val) == "number" then sum = sum + val end
         end
         return sum
     else if fn == "AVG" then
-        local sum = 0
-        local count = 0
+        sum = 0
+        count = 0
         for _, row in next, groupRows do
-            local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-            local val = self:evalExpr(aggNode.arg, ctx)
+            ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+            val = self:evalExpr(aggNode.arg, ctx)
             if type(val) == "number" then
                 sum = sum + val
                 count = count + 1
@@ -1668,21 +1681,21 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
         if count == 0 then return nil end
         return sum / count
     else if fn == "MIN" then
-        local result = nil
+        result = nil
         for _, row in next, groupRows do
-            local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-            local val = self:evalExpr(aggNode.arg, ctx)
-            if val ~= nil and (result == nil or val < result) then
+            ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+            val = self:evalExpr(aggNode.arg, ctx)
+            if val != nil and (result == nil or val < result) then
                 result = val
             end
         end
         return result
     else if fn == "MAX" then
-        local result = nil
+        result = nil
         for _, row in next, groupRows do
-            local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-            local val = self:evalExpr(aggNode.arg, ctx)
-            if val ~= nil and (result == nil or val > result) then
+            ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+            val = self:evalExpr(aggNode.arg, ctx)
+            if val != nil and (result == nil or val > result) then
                 result = val
             end
         end
@@ -1696,16 +1709,16 @@ function Executor:evalExprWithAgg(expr, groupRows, tbl, baseAlias, joinTableInfo
         return self:computeAggregate(expr, groupRows, tbl, baseAlias, joinTableInfo)
     else if expr.kind == "BINOP" then
         if expr.op == "AND" then
-            local left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
-            local right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             return left and right
         else if expr.op == "OR" then
-            local left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
-            local right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             return left or right
         else
-            local left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
-            local right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            left = self:evalExprWithAgg(expr.left, groupRows, tbl, baseAlias, joinTableInfo, ctx)
+            right = self:evalExprWithAgg(expr.right, groupRows, tbl, baseAlias, joinTableInfo, ctx)
             return evalComparison(expr.op, left, right)
         end
     end
@@ -1713,16 +1726,16 @@ function Executor:evalExprWithAgg(expr, groupRows, tbl, baseAlias, joinTableInfo
 end
 
 function Executor:applyOrderBy(orderBy, rows, tbl, baseAlias, joinTableInfo)
-    local sorted = {}
+    sorted = {}
     for i, r in next, rows do sorted[i] = r end
     tsort(sorted, function(a, b)
         for _, item in next, orderBy do
-            local ctxA = self:makeCtxForRow(a, tbl, baseAlias, joinTableInfo)
-            local ctxB = self:makeCtxForRow(b, tbl, baseAlias, joinTableInfo)
-            local va = self:evalExpr(item.expr, ctxA)
-            local vb = self:evalExpr(item.expr, ctxB)
-            local cmp = compareValues(va, vb)
-            if cmp ~= 0 then
+            ctxA = self:makeCtxForRow(a, tbl, baseAlias, joinTableInfo)
+            ctxB = self:makeCtxForRow(b, tbl, baseAlias, joinTableInfo)
+            va = self:evalExpr(item.expr, ctxA)
+            vb = self:evalExpr(item.expr, ctxB)
+            cmp = compareValues(va, vb)
+            if cmp != 0 then
                 if item.dir == "DESC" then
                     return cmp > 0
                 else
@@ -1737,11 +1750,11 @@ end
 
 function Executor:applyOrderByResult(orderBy, resultRows, resultCols, stmt)
     -- Map order-by expressions to result column indices
-    local sorted = {}
+    sorted = {}
     for i, r in next, resultRows do sorted[i] = r end
 
     -- Build column name to index mapping
-    local colIndexMap = {}
+    colIndexMap = {}
     for i, name in next, resultCols do
         colIndexMap[name] = i
         colIndexMap[slower(name)] = i
@@ -1749,15 +1762,15 @@ function Executor:applyOrderByResult(orderBy, resultRows, resultCols, stmt)
 
     tsort(sorted, function(a, b)
         for _, item in next, orderBy do
-            local colIdx = nil
+            colIdx = nil
             if item.expr.kind == "COLUMN_REF" then
                 colIdx = colIndexMap[item.expr.column] or colIndexMap[slower(item.expr.column)]
             end
             if colIdx then
-                local va = a[colIdx]
-                local vb = b[colIdx]
-                local cmp = compareValues(va, vb)
-                if cmp ~= 0 then
+                va = a[colIdx]
+                vb = b[colIdx]
+                cmp = compareValues(va, vb)
+                if cmp != 0 then
                     if item.dir == "DESC" then return cmp > 0
                     else return cmp < 0 end
                 end
@@ -1769,11 +1782,11 @@ function Executor:applyOrderByResult(orderBy, resultRows, resultCols, stmt)
 end
 
 function Executor:applyDistinct(stmt, rows, tbl, baseAlias, joinTableInfo)
-    local seen = {}
-    local result = {}
+    seen = {}
+    result = {}
     for _, row in next, rows do
-        local projected = self:projectRow(stmt.columns, row, tbl, baseAlias, joinTableInfo, rows)
-        local key = ""
+        projected = self:projectRow(stmt.columns, row, tbl, baseAlias, joinTableInfo, rows)
+        key = ""
         for _, v in next, projected do
             key = key .. tostring(v) .. "\0"
         end
@@ -1792,13 +1805,13 @@ function compareValues(a, b)
     if type(a) == "number" and type(b) == "number" then
         if a < b then return -1 else if a > b then return 1 else return 0 end
     end
-    local sa = tostring(a)
-    local sb = tostring(b)
+    sa = tostring(a)
+    sb = tostring(b)
     if sa < sb then return -1 else if sa > sb then return 1 else return 0 end
 end
 
 function Executor:getResultColumns(columns, tbl, baseAlias, joinTableInfo)
-    local result = {}
+    result = {}
     for ci, col in next, columns do
         if col.kind == "STAR_COL" then
             for _, c in next, tbl.columns do
@@ -1812,7 +1825,7 @@ function Executor:getResultColumns(columns, tbl, baseAlias, joinTableInfo)
                 end
             end
         else if col.kind == "COLUMN" then
-            local alias = col.alias or self:exprToName(col.expr, ci)
+            alias = col.alias or self:exprToName(col.expr, ci)
             tinsert(result, alias)
         end
     end
@@ -1833,18 +1846,18 @@ function Executor:exprToName(expr, idx)
 end
 
 function Executor:projectRow(columns, row, tbl, baseAlias, joinTableInfo, allRows)
-    local ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
-    local result = {}
+    ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
+    result = {}
     for _, col in next, columns do
         if col.kind == "STAR_COL" then
-            local baseRow = row
+            baseRow = row
             if row.__base then baseRow = row.__base end
             for i = 1, #tbl.columns do
                 tinsert(result, baseRow[i])
             end
             if joinTableInfo and row.__joins then
                 for ji, jinfo in next, joinTableInfo do
-                    local jrow = row.__joins[ji]
+                    jrow = row.__joins[ji]
                     if jrow then
                         for i = 1, #jinfo.tbl.columns do
                             tinsert(result, jrow[i])
@@ -1858,7 +1871,7 @@ function Executor:projectRow(columns, row, tbl, baseAlias, joinTableInfo, allRow
             end
         else if col.kind == "COLUMN" and col.expr then
             if col.expr.kind == "AGG_FUNC" then
-                local val = self:computeAggregate(col.expr, allRows, tbl, baseAlias, joinTableInfo)
+                val = self:computeAggregate(col.expr, allRows, tbl, baseAlias, joinTableInfo)
                 tinsert(result, val)
             else
                 tinsert(result, self:evalExpr(col.expr, ctx))
@@ -1884,16 +1897,16 @@ function Executor:evalExpr(expr, ctx)
     else if expr.kind == "UNOP" then
         return self:evalUnop(expr, ctx)
     else if expr.kind == "IN_EXPR" then
-        local val = self:evalExpr(expr.expr, ctx)
+        val = self:evalExpr(expr.expr, ctx)
         for _, v in next, expr.values do
-            local vv = self:evalExpr(v, ctx)
+            vv = self:evalExpr(v, ctx)
             if val == vv then return true end
         end
         return false
     else if expr.kind == "BETWEEN" then
-        local val = self:evalExpr(expr.expr, ctx)
-        local lo = self:evalExpr(expr.lo, ctx)
-        local hi = self:evalExpr(expr.hi, ctx)
+        val = self:evalExpr(expr.expr, ctx)
+        lo = self:evalExpr(expr.lo, ctx)
+        hi = self:evalExpr(expr.hi, ctx)
         if val == nil or lo == nil or hi == nil then return false end
         return val >= lo and val <= hi
     else if expr.kind == "FUNC_CALL" then
@@ -1909,19 +1922,19 @@ function Executor:evalExpr(expr, ctx)
 end
 
 function Executor:evalBinop(expr, ctx)
-    local op = expr.op
+    op = expr.op
     if op == "AND" then
-        local left = self:evalExpr(expr.left, ctx)
+        left = self:evalExpr(expr.left, ctx)
         if not left then return false end
         return self:evalExpr(expr.right, ctx) and true or false
     else if op == "OR" then
-        local left = self:evalExpr(expr.left, ctx)
+        left = self:evalExpr(expr.left, ctx)
         if left then return true end
         return self:evalExpr(expr.right, ctx) and true or false
     end
 
-    local left = self:evalExpr(expr.left, ctx)
-    local right = self:evalExpr(expr.right, ctx)
+    left = self:evalExpr(expr.left, ctx)
+    right = self:evalExpr(expr.right, ctx)
 
     if op == "+" then
         if type(left) == "number" and type(right) == "number" then return left + right end
@@ -1933,10 +1946,10 @@ function Executor:evalBinop(expr, ctx)
         if type(left) == "number" and type(right) == "number" then return left * right end
         return nil
     else if op == "/" then
-        if type(left) == "number" and type(right) == "number" and right ~= 0 then return left / right end
+        if type(left) == "number" and type(right) == "number" and right != 0 then return left / right end
         return nil
     else if op == "%" then
-        if type(left) == "number" and type(right) == "number" and right ~= 0 then return left % right end
+        if type(left) == "number" and type(right) == "number" and right != 0 then return left % right end
         return nil
     end
 
@@ -1949,7 +1962,7 @@ function evalComparison(op, left, right)
         return left == right
     else if op == "!=" then
         if left == nil and right == nil then return false end
-        return left ~= right
+        return left != right
     else if op == "<" then
         if left == nil or right == nil then return false end
         return left < right
@@ -1967,7 +1980,7 @@ function evalComparison(op, left, right)
     else if op == "IS NULL" then
         return left == nil
     else if op == "IS NOT NULL" then
-        return left ~= nil
+        return left != nil
     end
     return false
 end
@@ -1977,9 +1990,9 @@ function evalLike(str, pattern)
     str = tostring(str)
     pattern = tostring(pattern)
     -- Convert SQL LIKE pattern to Lua pattern
-    local luaPat = "^"
+    luaPat = "^"
     for i = 1, slen(pattern) do
-        local c = ssub(pattern, i, i)
+        c = ssub(pattern, i, i)
         if c == "%" then
             luaPat = luaPat .. ".*"
         else if c == "_" then
@@ -1991,11 +2004,11 @@ function evalLike(str, pattern)
         end
     end
     luaPat = luaPat .. "$"
-    return sfind(str, luaPat) ~= nil
+    return sfind(str, luaPat) != nil
 end
 
 function Executor:evalUnop(expr, ctx)
-    local val = self:evalExpr(expr.operand, ctx)
+    val = self:evalExpr(expr.operand, ctx)
     if expr.op == "NOT" then
         return not val
     else if expr.op == "NEG" then
@@ -2006,8 +2019,8 @@ function Executor:evalUnop(expr, ctx)
 end
 
 function Executor:evalFuncCall(expr, ctx)
-    local name = supper(expr.name)
-    local args = {}
+    name = supper(expr.name)
+    args = {}
     for _, a in next, expr.args do
         tinsert(args, self:evalExpr(a, ctx))
     end
@@ -2020,30 +2033,30 @@ function Executor:evalFuncCall(expr, ctx)
     else if name == "LENGTH" then
         return slen(tostring(args[1] or ""))
     else if name == "SUBSTR" or name == "SUBSTRING" then
-        local s = tostring(args[1] or "")
-        local start = args[2] or 1
-        local len = args[3]
+        s = tostring(args[1] or "")
+        start = args[2] or 1
+        len = args[3]
         if len then
             return ssub(s, start, start + len - 1)
         end
         return ssub(s, start)
     else if name == "COALESCE" then
         for _, v in next, args do
-            if v ~= nil then return v end
+            if v != nil then return v end
         end
         return nil
     else if name == "IFNULL" then
-        if args[1] ~= nil then return args[1] end
+        if args[1] != nil then return args[1] end
         return args[2]
     else if name == "ROUND" then
-        local n = args[1] or 0
-        local d = args[2] or 0
-        local mult = 10 ^ d
+        n = args[1] or 0
+        d = args[2] or 0
+        mult = 10 ^ d
         return floor(n * mult + 0.5) / mult
     else if name == "REPLACE" then
-        local s = tostring(args[1] or "")
-        local old = tostring(args[2] or "")
-        local new = tostring(args[3] or "")
+        s = tostring(args[1] or "")
+        old = tostring(args[2] or "")
+        new = tostring(args[3] or "")
         return string.gsub(s, old, new)
     end
     return nil
@@ -2084,58 +2097,58 @@ function generateTestData(db, rng)
     })
 
     -- Generate users
-    local firstNames = { "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank",
+    firstNames = { "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank",
                          "Ivy", "Jack", "Karen", "Leo", "Mona", "Nick", "Olive", "Paul",
                          "Quinn", "Rose", "Sam", "Tina" }
-    local lastNames = { "Smith", "Jones", "Brown", "Davis", "Wilson", "Taylor", "Clark",
+    lastNames = { "Smith", "Jones", "Brown", "Davis", "Wilson", "Taylor", "Clark",
                         "Hall", "Allen", "Young", "King", "Wright", "Lopez", "Hill", "Green" }
-    local cities = { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
+    cities = { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
                      "Philadelphia", "San Antonio", "San Diego", "Dallas", "Austin" }
 
-    local usersTbl = db:getTable("users")
+    usersTbl = db:getTable("users")
     for i = 1, 100 do
-        local firstName = rng:choice(firstNames)
-        local lastName = rng:choice(lastNames)
-        local fullName = firstName .. " " .. lastName
-        local email = slower(firstName) .. "." .. slower(lastName) .. i .. "@example.com"
-        local age = rng:nextInt(18, 75)
-        local city = rng:choice(cities)
-        local score = floor(rng:nextFloat() * 10000) / 100
-        local active = rng:nextInt(0, 1)
+        firstName = rng:choice(firstNames)
+        lastName = rng:choice(lastNames)
+        fullName = firstName .. " " .. lastName
+        email = slower(firstName) .. "." .. slower(lastName) .. i .. "@example.com"
+        age = rng:nextInt(18, 75)
+        city = rng:choice(cities)
+        score = floor(rng:nextFloat() * 10000) / 100
+        active = rng:nextInt(0, 1)
         usersTbl:insertRow({ i, fullName, email, age, city, score, active })
     end
 
     -- Generate products
-    local categories = { "Electronics", "Books", "Clothing", "Food", "Sports", "Home", "Toys", "Garden" }
-    local adjectives = { "Premium", "Basic", "Deluxe", "Ultra", "Mini", "Super", "Pro", "Eco" }
-    local productNouns = { "Widget", "Gadget", "Tool", "Device", "Kit", "Set", "Pack", "Bundle" }
+    categories = { "Electronics", "Books", "Clothing", "Food", "Sports", "Home", "Toys", "Garden" }
+    adjectives = { "Premium", "Basic", "Deluxe", "Ultra", "Mini", "Super", "Pro", "Eco" }
+    productNouns = { "Widget", "Gadget", "Tool", "Device", "Kit", "Set", "Pack", "Bundle" }
 
-    local productsTbl = db:getTable("products")
+    productsTbl = db:getTable("products")
     for i = 1, 50 do
-        local adj = rng:choice(adjectives)
-        local noun = rng:choice(productNouns)
-        local pname = adj .. " " .. noun .. " " .. i
-        local category = rng:choice(categories)
-        local price = floor(rng:nextFloat() * 50000 + 100) / 100
-        local stock = rng:nextInt(0, 500)
-        local rating = floor(rng:nextFloat() * 50) / 10
+        adj = rng:choice(adjectives)
+        noun = rng:choice(productNouns)
+        pname = adj .. " " .. noun .. " " .. i
+        category = rng:choice(categories)
+        price = floor(rng:nextFloat() * 50000 + 100) / 100
+        stock = rng:nextInt(0, 500)
+        rating = floor(rng:nextFloat() * 50) / 10
         productsTbl:insertRow({ i, pname, category, price, stock, rating })
     end
 
     -- Generate orders
-    local statuses = { "pending", "shipped", "delivered", "cancelled", "returned" }
-    local ordersTbl = db:getTable("orders")
+    statuses = { "pending", "shipped", "delivered", "cancelled", "returned" }
+    ordersTbl = db:getTable("orders")
     for i = 1, 200 do
-        local userId = rng:nextInt(1, 100)
-        local productId = rng:nextInt(1, 50)
-        local quantity = rng:nextInt(1, 10)
-        local productRow = productsTbl.rows[productId]
-        local price = productRow and productRow[4] or 10.0
-        local total = floor(price * quantity * 100) / 100
-        local status = rng:choice(statuses)
-        local month = rng:nextInt(1, 12)
-        local day = rng:nextInt(1, 28)
-        local orderDate = sfmt("2024-%02d-%02d", month, day)
+        userId = rng:nextInt(1, 100)
+        productId = rng:nextInt(1, 50)
+        quantity = rng:nextInt(1, 10)
+        productRow = productsTbl.rows[productId]
+        price = productRow and productRow[4] or 10.0
+        total = floor(price * quantity * 100) / 100
+        status = rng:choice(statuses)
+        month = rng:nextInt(1, 12)
+        day = rng:nextInt(1, 28)
+        orderDate = sfmt("2024-%02d-%02d", month, day)
         ordersTbl:insertRow({ i, userId, productId, quantity, total, status, orderDate })
     end
 
@@ -2157,9 +2170,9 @@ function checksumResult(result)
     if result.type == "OK" then
         return slen(result.message)
     end
-    if result.type ~= "RESULT_SET" then return 0 end
+    if result.type != "RESULT_SET" then return 0 end
 
-    local hash = 7
+    hash = 7
     -- Include column names
     for _, col in next, result.columns do
         for i = 1, slen(col) do
@@ -2169,7 +2182,7 @@ function checksumResult(result)
     -- Include row data
     for _, row in next, result.rows do
         for _, val in next, row do
-            local s = tostring(val)
+            s = tostring(val)
             for i = 1, slen(s) do
                 hash = (hash * 31 + sbyte(s, i)) % 1000000007
             end
@@ -2182,7 +2195,7 @@ end
 
 -- ===== Test Queries =====
 function getTestQueries()
-    local queries = {}
+    queries = {}
 
     -- Query 1: Simple SELECT *
     tinsert(queries, "SELECT * FROM users LIMIT 10")
@@ -2317,20 +2330,20 @@ function QueryPlanner.new(db)
 end
 
 function QueryPlanner:estimateCost(stmt)
-    if stmt.kind ~= "SELECT" then return 1 end
-    local cost = 0
+    if stmt.kind != "SELECT" then return 1 end
+    cost = 0
 
     -- Base table scan cost
     if stmt.from then
-        local tbl = self.db:getTable(stmt.from.name)
+        tbl = self.db:getTable(stmt.from.name)
         if tbl then
-            local rowCount = 0
+            rowCount = 0
             for _ in next, tbl.rows do rowCount = rowCount + 1 end
             cost = cost + rowCount
 
             -- Check if index can be used
             if stmt.where then
-                local indexUsable = self:canUseIndex(stmt.where, tbl)
+                indexUsable = self:canUseIndex(stmt.where, tbl)
                 if indexUsable then
                     cost = cost * 0.1  -- index reduces cost significantly
                 end
@@ -2341,9 +2354,9 @@ function QueryPlanner:estimateCost(stmt)
     -- JOIN cost estimation (nested loop)
     if stmt.joins then
         for _, join in next, stmt.joins do
-            local joinTbl = self.db:getTable(join.table.name)
+            joinTbl = self.db:getTable(join.table.name)
             if joinTbl then
-                local joinRows = 0
+                joinRows = 0
                 for _ in next, joinTbl.rows do joinRows = joinRows + 1 end
                 cost = cost * joinRows * 0.5
             end
@@ -2357,7 +2370,7 @@ function QueryPlanner:estimateCost(stmt)
 
     -- ORDER BY cost (sort)
     if stmt.orderBy then
-        local n = mmax(cost, 1)
+        n = mmax(cost, 1)
         cost = cost + n * floor(msqrt(n))  -- approximate n*log(n)
     end
 
@@ -2384,8 +2397,8 @@ function QueryPlanner:canUseIndex(whereNode, tbl)
 end
 
 function QueryPlanner:suggestIndexes(stmt)
-    local suggestions = {}
-    if stmt.kind ~= "SELECT" then return suggestions end
+    suggestions = {}
+    if stmt.kind != "SELECT" then return suggestions end
     if stmt.where then
         self:collectIndexCandidates(stmt.where, suggestions)
     end
@@ -2424,10 +2437,10 @@ function StatsCollector.new(db)
 end
 
 function StatsCollector:analyze(tableName)
-    local tbl = self.db:getTable(tableName)
+    tbl = self.db:getTable(tableName)
     if not tbl then return nil end
 
-    local tblStats = {
+    tblStats = {
         rowCount = 0,
         columns = {}
     }
@@ -2439,7 +2452,7 @@ function StatsCollector:analyze(tableName)
 
     -- Per-column stats
     for ci, col in next, tbl.columns do
-        local colStats = {
+        colStats = {
             name = col.name,
             nullCount = 0,
             distinctCount = 0,
@@ -2448,12 +2461,12 @@ function StatsCollector:analyze(tableName)
             avgVal = nil
         }
 
-        local distinct = {}
-        local sum = 0
-        local numCount = 0
+        distinct = {}
+        sum = 0
+        numCount = 0
 
         for _, row in next, tbl.rows do
-            local val = row[ci]
+            val = row[ci]
             if val == nil then
                 colStats.nullCount = colStats.nullCount + 1
             else
@@ -2478,7 +2491,7 @@ function StatsCollector:analyze(tableName)
             end
         end
 
-        local dc = 0
+        dc = 0
         for _ in next, distinct do dc = dc + 1 end
         colStats.distinctCount = dc
         if numCount > 0 then
@@ -2492,9 +2505,9 @@ function StatsCollector:analyze(tableName)
 end
 
 function StatsCollector:getSelectivity(tableName, colName, op, value)
-    local tblStats = self.stats[tableName]
+    tblStats = self.stats[tableName]
     if not tblStats then return 0.5 end
-    local colStats = tblStats.columns[colName]
+    colStats = tblStats.columns[colName]
     if not colStats then return 0.5 end
 
     if op == "=" then
@@ -2502,14 +2515,14 @@ function StatsCollector:getSelectivity(tableName, colName, op, value)
         return 1.0 / colStats.distinctCount
     else if op == "<" or op == "<=" then
         if colStats.minVal == nil or colStats.maxVal == nil then return 0.5 end
-        if type(value) ~= "number" then return 0.5 end
-        local range = colStats.maxVal - colStats.minVal
+        if type(value) != "number" then return 0.5 end
+        range = colStats.maxVal - colStats.minVal
         if range == 0 then return 0.5 end
         return (value - colStats.minVal) / range
     else if op == ">" or op == ">=" then
         if colStats.minVal == nil or colStats.maxVal == nil then return 0.5 end
-        if type(value) ~= "number" then return 0.5 end
-        local range = colStats.maxVal - colStats.minVal
+        if type(value) != "number" then return 0.5 end
+        range = colStats.maxVal - colStats.minVal
         if range == 0 then return 0.5 end
         return (colStats.maxVal - value) / range
     end
@@ -2529,7 +2542,7 @@ function VirtualTable.new(name, query, db)
 end
 
 function VirtualTable:materialize()
-    local executor = Executor.new(self.db)
+    executor = Executor.new(self.db)
     return executor:execute(self.query)
 end
 
@@ -2554,15 +2567,15 @@ function ExprCache:getKey(expr)
 end
 
 function ExprCache:get(expr)
-    local key = self:getKey(expr)
-    if key and self.cache[key] ~= nil then
+    key = self:getKey(expr)
+    if key and self.cache[key] != nil then
         return self.cache[key], true
     end
     return nil, false
 end
 
 function ExprCache:set(expr, value)
-    local key = self:getKey(expr)
+    key = self:getKey(expr)
     if key then
         self.cache[key] = value
     end
@@ -2583,11 +2596,11 @@ end
 
 function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     -- Build hash table on right side
-    local hashTable = {}
+    hashTable = {}
     for _, rrow in next, rightRows do
-        local key = rightKeyFn(rrow)
-        if key ~= nil then
-            local keyStr = tostring(key)
+        key = rightKeyFn(rrow)
+        if key != nil then
+            keyStr = tostring(key)
             if not hashTable[keyStr] then
                 hashTable[keyStr] = {}
             end
@@ -2596,12 +2609,12 @@ function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     end
 
     -- Probe with left side
-    local results = {}
+    results = {}
     for _, lrow in next, leftRows do
-        local key = leftKeyFn(lrow)
-        if key ~= nil then
-            local keyStr = tostring(key)
-            local matches = hashTable[keyStr]
+        key = leftKeyFn(lrow)
+        if key != nil then
+            keyStr = tostring(key)
+            matches = hashTable[keyStr]
             if matches then
                 for _, rrow in next, matches do
                     tinsert(results, { left = lrow, right = rrow })
@@ -2622,37 +2635,37 @@ end
 
 function SortMergeJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     -- Sort both sides
-    local sortedLeft = {}
+    sortedLeft = {}
     for i, r in next, leftRows do sortedLeft[i] = r end
     tsort(sortedLeft, function(a, b)
-        local ka = leftKeyFn(a)
-        local kb = leftKeyFn(b)
+        ka = leftKeyFn(a)
+        kb = leftKeyFn(b)
         return compareValues(ka, kb) < 0
     end)
 
-    local sortedRight = {}
+    sortedRight = {}
     for i, r in next, rightRows do sortedRight[i] = r end
     tsort(sortedRight, function(a, b)
-        local ka = rightKeyFn(a)
-        local kb = rightKeyFn(b)
+        ka = rightKeyFn(a)
+        kb = rightKeyFn(b)
         return compareValues(ka, kb) < 0
     end)
 
     -- Merge
-    local results = {}
-    local li = 1
-    local ri = 1
+    results = {}
+    li = 1
+    ri = 1
     while li <= #sortedLeft and ri <= #sortedRight do
-        local lk = leftKeyFn(sortedLeft[li])
-        local rk = rightKeyFn(sortedRight[ri])
-        local cmp = compareValues(lk, rk)
+        lk = leftKeyFn(sortedLeft[li])
+        rk = rightKeyFn(sortedRight[ri])
+        cmp = compareValues(lk, rk)
         if cmp < 0 then
             li = li + 1
         else if cmp > 0 then
             ri = ri + 1
         else
             -- Match: collect all matching from right
-            local matchStart = ri
+            matchStart = ri
             while ri <= #sortedRight and compareValues(rightKeyFn(sortedRight[ri]), lk) == 0 do
                 ri = ri + 1
             end
@@ -2700,7 +2713,7 @@ function BufferPool:put(pageId, data)
         return
     end
     -- Evict if full
-    local count = 0
+    count = 0
     for _ in next, self.pages do count = count + 1 end
     if count >= self.capacity then
         self:evictLRU()
@@ -2722,14 +2735,14 @@ end
 
 function BufferPool:evictLRU()
     if #self.accessOrder > 0 then
-        local evictId = self.accessOrder[1]
+        evictId = self.accessOrder[1]
         tremove(self.accessOrder, 1)
         self.pages[evictId] = nil
     end
 end
 
 function BufferPool:getHitRate()
-    local total = self.hitCount + self.missCount
+    total = self.hitCount + self.missCount
     if total == 0 then return 0 end
     return self.hitCount / total
 end
@@ -2768,7 +2781,7 @@ function WAL:commit(lsn)
 end
 
 function WAL:checkpoint()
-    local newEntries = {}
+    newEntries = {}
     for _, entry in next, self.entries do
         if not entry.committed then
             tinsert(newEntries, entry)
@@ -2779,7 +2792,7 @@ function WAL:checkpoint()
 end
 
 function WAL:getUncommitted()
-    local result = {}
+    result = {}
     for _, entry in next, self.entries do
         if not entry.committed then
             tinsert(result, entry)
@@ -2801,7 +2814,7 @@ function TxManager.new(wal)
 end
 
 function TxManager:begin()
-    local txId = self.nextTxId
+    txId = self.nextTxId
     self.nextTxId = txId + 1
     self.activeTx[txId] = {
         id = txId,
@@ -2812,15 +2825,15 @@ function TxManager:begin()
 end
 
 function TxManager:addOperation(txId, op, tableName, data)
-    local tx = self.activeTx[txId]
+    tx = self.activeTx[txId]
     if not tx then error("Transaction not found: " .. txId) end
-    local lsn = self.wal:append(op, tableName, data)
+    lsn = self.wal:append(op, tableName, data)
     tinsert(tx.operations, lsn)
     return lsn
 end
 
 function TxManager:commit(txId)
-    local tx = self.activeTx[txId]
+    tx = self.activeTx[txId]
     if not tx then error("Transaction not found: " .. txId) end
     for _, lsn in next, tx.operations do
         self.wal:commit(lsn)
@@ -2829,7 +2842,7 @@ function TxManager:commit(txId)
 end
 
 function TxManager:rollback(txId)
-    local tx = self.activeTx[txId]
+    tx = self.activeTx[txId]
     if not tx then return end
     -- Mark operations as rolled back (just remove from WAL perspective)
     self.activeTx[txId] = nil
@@ -2850,7 +2863,7 @@ end
 
 function btreeCount(node)
     if node == nil then return 0 end
-    local c = node.numKeys
+    c = node.numKeys
     if not node.isLeaf then
         for i = 1, node.numKeys + 1 do
             if node.children[i] then
@@ -2872,7 +2885,7 @@ function btreeHeight(node)
 end
 
 function BTree:getAllKeys()
-    local result = {}
+    result = {}
     btreeCollectKeys(self.root, result)
     return result
 end
@@ -2902,13 +2915,13 @@ function generateExtendedData(db, rng)
         { name = "depth", colType = "INTEGER" }
     })
 
-    local catsTbl = db:getTable("categories")
-    local catNames = { "Electronics", "Books", "Clothing", "Food", "Sports", "Home", "Toys", "Garden",
+    catsTbl = db:getTable("categories")
+    catNames = { "Electronics", "Books", "Clothing", "Food", "Sports", "Home", "Toys", "Garden",
                        "Computers", "Phones", "Fiction", "NonFiction", "Mens", "Womens", "Organic",
                        "Frozen", "Team", "Individual", "Kitchen", "Bath", "Board", "Outdoor", "Indoor", "Flowers" }
     for i = 1, 24 do
-        local parentId = 0
-        local depth = 1
+        parentId = 0
+        depth = 1
         if i > 8 then
             parentId = rng:nextInt(1, 8)
             depth = 2
@@ -2925,18 +2938,18 @@ function generateExtendedData(db, rng)
         { name = "comment", colType = "TEXT" }
     })
 
-    local reviewsTbl = db:getTable("reviews")
-    local comments = {
+    reviewsTbl = db:getTable("reviews")
+    comments = {
         "Great product!", "Not bad", "Could be better", "Excellent value",
         "Disappointed", "Amazing quality", "Would buy again", "Terrible",
         "Just okay", "Highly recommend", "Waste of money", "Perfect fit",
         "Broke after a week", "Best purchase ever", "Mediocre at best"
     }
     for i = 1, 150 do
-        local userId = rng:nextInt(1, 100)
-        local productId = rng:nextInt(1, 50)
-        local rating = rng:nextInt(1, 5)
-        local comment = rng:choice(comments)
+        userId = rng:nextInt(1, 100)
+        productId = rng:nextInt(1, 50)
+        rating = rng:nextInt(1, 5)
+        comment = rng:choice(comments)
         reviewsTbl:insertRow({ i, userId, productId, rating, comment })
     end
 
@@ -2951,7 +2964,7 @@ end
 
 -- ===== Extended queries =====
 function getExtendedQueries()
-    local queries = {}
+    queries = {}
 
     -- Query E1: Review statistics per product
     tinsert(queries, "SELECT product_id, COUNT(*) AS num_reviews, AVG(rating) AS avg_rating, MIN(rating) AS min_r, MAX(rating) AS max_r FROM reviews GROUP BY product_id ORDER BY avg_rating DESC LIMIT 10")
@@ -3003,7 +3016,7 @@ end
 
 -- ===== Stress test queries (repeated complex operations) =====
 function getStressQueries()
-    local queries = {}
+    queries = {}
 
     -- Stress 1: Large GROUP BY
     tinsert(queries, "SELECT user_id, COUNT(*) AS oc, SUM(total) AS st, AVG(total) AS at FROM orders GROUP BY user_id ORDER BY st DESC")
@@ -3025,33 +3038,33 @@ end
 
 -- ===== B-Tree stress test =====
 function btreeStressTest(rng)
-    local tree = BTree.new()
-    local checksum = 0
+    tree = BTree.new()
+    checksum = 0
 
     -- Insert 500 random values
     for i = 1, 500 do
-        local key = rng:nextInt(1, 10000)
+        key = rng:nextInt(1, 10000)
         tree:insert(key, i)
     end
 
     -- Search for various keys
     for i = 1, 200 do
-        local key = rng:nextInt(1, 10000)
-        local results = tree:search(key)
+        key = rng:nextInt(1, 10000)
+        results = tree:search(key)
         checksum = (checksum + #results * i) % 1000000007
     end
 
     -- Range scans
     for i = 1, 50 do
-        local lo = rng:nextInt(1, 5000)
-        local hi = lo + rng:nextInt(100, 2000)
-        local results = tree:rangeScan(lo, hi)
+        lo = rng:nextInt(1, 5000)
+        hi = lo + rng:nextInt(100, 2000)
+        results = tree:rangeScan(lo, hi)
         checksum = (checksum + #results * (i + 200)) % 1000000007
     end
 
     -- Verify tree properties
-    local height = tree:height()
-    local count = tree:count()
+    height = tree:height()
+    count = tree:count()
     checksum = (checksum + height * 1000 + count) % 1000000007
 
     return checksum
@@ -3059,12 +3072,12 @@ end
 
 -- ===== Buffer pool stress test =====
 function bufferPoolStressTest(rng)
-    local pool = BufferPool.new(32)
-    local checksum = 0
+    pool = BufferPool.new(32)
+    checksum = 0
 
     -- Simulate page accesses with locality
     for i = 1, 1000 do
-        local pageId
+        pageId = nil
         if rng:nextFloat() < 0.7 then
             -- Access recently used page (locality)
             pageId = sfmt("page_%d", rng:nextInt(mmax(1, i - 20), i))
@@ -3073,7 +3086,7 @@ function bufferPoolStressTest(rng)
             pageId = sfmt("page_%d", rng:nextInt(1, i))
         end
 
-        local data = pool:get(pageId)
+        data = pool:get(pageId)
         if data == nil then
             -- Simulate loading page
             data = { id = pageId, content = srep("x", 64), accessed = i }
@@ -3082,22 +3095,22 @@ function bufferPoolStressTest(rng)
         checksum = (checksum + i) % 1000000007
     end
 
-    local hitRate = pool:getHitRate()
+    hitRate = pool:getHitRate()
     checksum = (checksum + floor(hitRate * 10000)) % 1000000007
     return checksum
 end
 
 -- ===== WAL / Transaction stress test =====
 function walStressTest(rng)
-    local wal = WAL.new()
-    local txMgr = TxManager.new(wal)
-    local checksum = 0
+    wal = WAL.new()
+    txMgr = TxManager.new(wal)
+    checksum = 0
 
     for i = 1, 100 do
-        local txId = txMgr:begin()
-        local numOps = rng:nextInt(1, 5)
+        txId = txMgr:begin()
+        numOps = rng:nextInt(1, 5)
         for j = 1, numOps do
-            local op = rng:nextInt(1, 3) == 1 and "INSERT" or (rng:nextInt(1, 2) == 1 and "UPDATE" or "DELETE")
+            op = rng:nextInt(1, 3) == 1 and "INSERT" or (rng:nextInt(1, 2) == 1 and "UPDATE" or "DELETE")
             txMgr:addOperation(txId, op, "test_table", { row = i * 100 + j })
         end
         -- 80% commit, 20% rollback
@@ -3111,7 +3124,7 @@ function walStressTest(rng)
 
     -- Checkpoint
     wal:checkpoint()
-    local uncommitted = wal:getUncommitted()
+    uncommitted = wal:getUncommitted()
     checksum = (checksum + #uncommitted * 7) % 1000000007
 
     return checksum
@@ -3119,28 +3132,28 @@ end
 
 -- ===== Hash Join benchmark =====
 function hashJoinBenchmark(db)
-    local usersTbl = db:getTable("users")
-    local ordersTbl = db:getTable("orders")
+    usersTbl = db:getTable("users")
+    ordersTbl = db:getTable("orders")
 
-    local userRows = {}
+    userRows = {}
     for _, row in next, usersTbl.rows do
         tinsert(userRows, row)
     end
-    local orderRows = {}
+    orderRows = {}
     for _, row in next, ordersTbl.rows do
         tinsert(orderRows, row)
     end
 
-    local hj = HashJoin.new()
-    local results = hj:execute(
+    hj = HashJoin.new()
+    results = hj:execute(
         userRows, orderRows,
         function(r) return r[1] end,  -- users.id
         function(r) return r[2] end   -- orders.user_id
     )
 
-    local checksum = 0
+    checksum = 0
     for i, r in next, results do
-        local val = (r.left[1] or 0) + (r.right[5] or 0)  -- user id + order total
+        val = (r.left[1] or 0) + (r.right[5] or 0)  -- user id + order total
         checksum = (checksum + floor(val * i)) % 1000000007
     end
     return checksum
@@ -3148,28 +3161,28 @@ end
 
 -- ===== Sort-Merge Join benchmark =====
 function sortMergeJoinBenchmark(db)
-    local usersTbl = db:getTable("users")
-    local ordersTbl = db:getTable("orders")
+    usersTbl = db:getTable("users")
+    ordersTbl = db:getTable("orders")
 
-    local userRows = {}
+    userRows = {}
     for _, row in next, usersTbl.rows do
         tinsert(userRows, row)
     end
-    local orderRows = {}
+    orderRows = {}
     for _, row in next, ordersTbl.rows do
         tinsert(orderRows, row)
     end
 
-    local smj = SortMergeJoin.new()
-    local results = smj:execute(
+    smj = SortMergeJoin.new()
+    results = smj:execute(
         userRows, orderRows,
         function(r) return r[1] end,  -- users.id
         function(r) return r[2] end   -- orders.user_id
     )
 
-    local checksum = 0
+    checksum = 0
     for i, r in next, results do
-        local val = (r.left[1] or 0) + (r.right[5] or 0)
+        val = (r.left[1] or 0) + (r.right[5] or 0)
         checksum = (checksum + floor(val * i)) % 1000000007
     end
     return checksum
@@ -3177,19 +3190,19 @@ end
 
 -- ===== Query Plan cost estimation benchmark =====
 function queryPlanBenchmark(db)
-    local planner = QueryPlanner.new(db)
-    local queries = getTestQueries()
-    local checksum = 0
+    planner = QueryPlanner.new(db)
+    queries = getTestQueries()
+    checksum = 0
 
     for qi, sql in next, queries do
-        local tokenizer = Tokenizer.new(sql)
-        local tokens = tokenizer:tokenize()
-        local parser = Parser.new(tokens)
-        local stmts = parser:parse()
+        tokenizer = Tokenizer.new(sql)
+        tokens = tokenizer:tokenize()
+        parser = Parser.new(tokens)
+        stmts = parser:parse()
         for _, stmt in next, stmts do
-            local cost = planner:estimateCost(stmt)
+            cost = planner:estimateCost(stmt)
             checksum = (checksum + cost * qi) % 1000000007
-            local suggestions = planner:suggestIndexes(stmt)
+            suggestions = planner:suggestIndexes(stmt)
             checksum = (checksum + #suggestions * qi * 7) % 1000000007
         end
     end
@@ -3198,8 +3211,8 @@ end
 
 -- ===== Statistics collector benchmark =====
 function statsBenchmark(db)
-    local collector = StatsCollector.new(db)
-    local checksum = 0
+    collector = StatsCollector.new(db)
+    checksum = 0
 
     collector:analyze("users")
     collector:analyze("products")
@@ -3208,7 +3221,7 @@ function statsBenchmark(db)
     collector:analyze("categories")
 
     -- Use selectivity estimates
-    local tests = {
+    tests = {
         { "users", "age", "=", 30 },
         { "users", "age", ">", 50 },
         { "users", "age", "<", 25 },
@@ -3219,7 +3232,7 @@ function statsBenchmark(db)
     }
 
     for i, test in next, tests do
-        local sel = collector:getSelectivity(test[1], test[2], test[3], test[4])
+        sel = collector:getSelectivity(test[1], test[2], test[3], test[4])
         checksum = (checksum + floor(sel * 10000) * i) % 1000000007
     end
 
@@ -3233,84 +3246,84 @@ end
 
 -- ===== Run benchmark =====
 function runBenchmark()
-    local numIterations = 5
-    local totalChecksum = 0
-    local expectedChecksum = nil
+    numIterations = 5
+    totalChecksum = 0
+    expectedChecksum = nil
 
     for iter = 1, numIterations do
-        local rng = PRNG.new(42)
-        local db = Database.new()
+        rng = PRNG.new(42)
+        db = Database.new()
         generateTestData(db, rng)
         generateExtendedData(db, rng)
 
-        local executor = Executor.new(db)
-        local iterChecksum = 0
+        executor = Executor.new(db)
+        iterChecksum = 0
 
         -- Run main queries
-        local queries = getTestQueries()
+        queries = getTestQueries()
         for qi, sql in next, queries do
-            local ok, result = pcall(function() return executor:execute(sql) end)
+            ok, result = pcall(function() return executor:execute(sql) end)
             if not ok then
                 error(sfmt("Query %d failed: %s\nSQL: %s", qi, tostring(result), sql))
             end
-            local cs = checksumResult(result)
+            cs = checksumResult(result)
             iterChecksum = (iterChecksum + cs * qi) % 1000000007
         end
 
         -- Run extended queries
-        local extQueries = getExtendedQueries()
+        extQueries = getExtendedQueries()
         for qi, sql in next, extQueries do
-            local ok, result = pcall(function() return executor:execute(sql) end)
+            ok, result = pcall(function() return executor:execute(sql) end)
             if not ok then
                 error(sfmt("Extended query %d failed: %s\nSQL: %s", qi, tostring(result), sql))
             end
-            local cs = checksumResult(result)
+            cs = checksumResult(result)
             iterChecksum = (iterChecksum + cs * (qi + 100)) % 1000000007
         end
 
         -- Run stress queries
-        local stressQueries = getStressQueries()
+        stressQueries = getStressQueries()
         for qi, sql in next, stressQueries do
-            local ok, result = pcall(function() return executor:execute(sql) end)
+            ok, result = pcall(function() return executor:execute(sql) end)
             if not ok then
                 error(sfmt("Stress query %d failed: %s\nSQL: %s", qi, tostring(result), sql))
             end
-            local cs = checksumResult(result)
+            cs = checksumResult(result)
             iterChecksum = (iterChecksum + cs * (qi + 200)) % 1000000007
         end
 
         -- B-Tree stress test
-        local btreeCS = btreeStressTest(rng)
+        btreeCS = btreeStressTest(rng)
         iterChecksum = (iterChecksum + btreeCS) % 1000000007
 
         -- Buffer pool stress test
-        local bpCS = bufferPoolStressTest(rng)
+        bpCS = bufferPoolStressTest(rng)
         iterChecksum = (iterChecksum + bpCS) % 1000000007
 
         -- WAL / Transaction stress test
-        local walCS = walStressTest(rng)
+        walCS = walStressTest(rng)
         iterChecksum = (iterChecksum + walCS) % 1000000007
 
         -- Hash join benchmark
-        local hjCS = hashJoinBenchmark(db)
+        hjCS = hashJoinBenchmark(db)
         iterChecksum = (iterChecksum + hjCS) % 1000000007
 
         -- Sort-merge join benchmark
-        local smjCS = sortMergeJoinBenchmark(db)
+        smjCS = sortMergeJoinBenchmark(db)
         iterChecksum = (iterChecksum + smjCS) % 1000000007
 
         -- Query plan benchmark
-        local qpCS = queryPlanBenchmark(db)
+        qpCS = queryPlanBenchmark(db)
         iterChecksum = (iterChecksum + qpCS) % 1000000007
 
         -- Stats benchmark
-        local stCS = statsBenchmark(db)
+        stCS = statsBenchmark(db)
         iterChecksum = (iterChecksum + stCS) % 1000000007
 
         if expectedChecksum == nil then
             expectedChecksum = iterChecksum
         else
-            if iterChecksum ~= expectedChecksum then
+            if iterChecksum != expectedChecksum then
                 error(sfmt("Checksum mismatch on iteration %d: got %d, expected %d", iter, iterChecksum, expectedChecksum))
             end
         end
@@ -3321,13 +3334,13 @@ function runBenchmark()
 end
 
 -- ===== Main =====
-local startTime = clock()
-local iterations, checksum = runBenchmark()
-local elapsed = clock() - startTime
+startTime = clock()
+iterations, checksum = runBenchmark()
+elapsed = clock() - startTime
 
 print(sfmt("SQL benchmark: all %d iterations passed. (checksum=%d, time=%.3fs)", iterations, checksum, elapsed))
 
-if checksum ~= 489223023 then
+if checksum != 489223023 then
     error("Wrong checksum")
 end
 

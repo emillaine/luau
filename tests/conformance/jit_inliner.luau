@@ -3,20 +3,20 @@
 const INLINING_THREASHOLD = 64
 
 do
-    local function compute(a, b)
-        local c = a + b
-        local d = c * 4.0
-        local e = d - 0.5
-        local f = e / 2.0
-        local g = f * 4.0
-        local h = g + 1.0
-        local i = h - 0.5
-        local j = i + 8.5
-        local k = j * 2.0
+    function compute(a, b)
+        c = a + b
+        d = c * 4.0
+        e = d - 0.5
+        f = e / 2.0
+        g = f * 4.0
+        h = g + 1.0
+        i = h - 0.5
+        j = i + 8.5
+        k = j * 2.0
         return k
     end
 
-    local function caller()
+    function caller()
         return compute(2.0, 0.5)
     end
 
@@ -26,32 +26,32 @@ do
 end
 
 do
-    local function clamp(x, lo, hi)
+    function clamp(x, lo, hi)
         if x < lo then return lo
         else if x > hi then return hi
         else return x end
     end
 
-    local function selectPath(mode, a, b, c)
+    function selectPath(mode, a, b, c)
         if mode == 1 then return a + b
         else if mode == 2 then return a * c
         else return 0 end
     end
 
     for i = 0, INLINING_THREASHOLD do
-        local v = selectPath(2, i, 10, 3)
-        local w = clamp(v, 0, 1000)
+        v = selectPath(2, i, 10, 3)
+        w = clamp(v, 0, 1000)
         assert(w == i * 3)
     end
 end
 
 do
-    local function inlinee()
-        local function inner() return 67 end
+    function inlinee()
+        function inner() return 67 end
         return 42 + inner()
     end
 
-    local function caller()
+    function caller()
         inlinee()
     end
 
@@ -64,9 +64,9 @@ do
     -- select("#", ...) / select(i, ...) inside a vararg function (Immutable.Append pattern).
     -- select fuses to a FASTCALL with GETVARARGS between it and the paired CALL; inlining it would
     -- shift the CALL and break the FASTCALL skip offset. The inliner must refuse to inline `append`.
-    local function append(list, ...)
-        local new = {}
-        local len = list.count
+    function append(list, ...)
+        new = {}
+        len = list.count
         for key = 1, len do
             new[key] = list[key]
         end
@@ -76,8 +76,8 @@ do
         return new
     end
 
-    local function run()
-        local r = append({ 1, 2 }, 7, 8, 9)
+    function run()
+        r = append({ 1, 2 }, 7, 8, 9)
         return r.count * 10000 + r[3] * 100 + r[5]
     end
 
@@ -86,8 +86,8 @@ do
     end
 end
 
-function fuzzfail_infinite1()
-    local function foo(x)
+_G.fuzzfail_infinite1 = function()
+    function foo(x)
         repeat
             x = nil
             (function(...) end)()
@@ -95,16 +95,16 @@ function fuzzfail_infinite1()
 
         -- unreachable SCC that closes upvalues
         repeat
-            local y = {}
+            y = {}
         until not function() y = nil end
     end
 
     for _ in foo do end
 end
 
-function fuzzfail_infinite2()
-    local f = function(...) end
-    local x = 1
+_G.fuzzfail_infinite2 = function()
+    f = function(...) end
+    x = 1
     while true do
         f(1, function(...)
             x *= x

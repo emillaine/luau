@@ -3,12 +3,12 @@
 -- analysis and the per-statement rewrite: dropping AAPCS frame setup, virtualising
 -- sp/x29-relative slots as pseudo-registers, and rejecting stack-address escapes.
 
-local arm64_frame = {}
+arm64_frame = {}
 
-local function isFrameBase(op)
+function isFrameBase(op)
 	return op and op.kind == "reg" and (op.name == "sp" or op.name == "x29")
 end
-local function immVal(op)
+function immVal(op)
 	if not op then return 0 end
 	if op.kind == "imm" then return op.value or tonumber(op.text) or 0 end
 	return 0
@@ -16,11 +16,11 @@ end
 
 -- Pre-scan: total frame size (sum of sp decrements) and fp offset (x29 = sp + fpOffset).
 function arm64_frame.analyzeFrame(body)
-	local frameSize, fpOffset = 0, 0
+	frameSize, fpOffset = 0, 0
 	for _, st in body do
 		if st.kind == "insn" then
-			local m = string.lower(st.mnemonic)
-			local ops = st.operands
+			m = string.lower(st.mnemonic)
+			ops = st.operands
 			if m == "sub" and ops[1] and ops[1].name == "sp" and ops[2] and ops[2].name == "sp" then
 				frameSize += math.abs(immVal(ops[3]))
 			else if m == "mov" and ops[1] and ops[1].name == "x29" and ops[2] and ops[2].name == "sp" then
@@ -40,25 +40,25 @@ function arm64_frame.analyzeFrame(body)
 end
 
 function arm64_frame.rewrite(st, ctx)
-	local emit = ctx.emit
-	local m = string.lower(st.mnemonic)
-	local ops = st.operands
+	emit = ctx.emit
+	m = string.lower(st.mnemonic)
+	ops = st.operands
 
 	-- sp-relative accesses that fall inside a fixed-size alloca region are redirected to the
 	-- allocation by the transform; pass them through untouched here.
-	local function immVal2(op) return (op and op.kind == "imm") and (op.value or tonumber(op.text) or 0) or nil end
-	if m == "add" and ops[2] and ops[2].name == "sp" and ops[1] and ops[1].name ~= "sp" then
-		local off = immVal2(ops[3])
+	function immVal2(op) return (op and op.kind == "imm") and (op.value or tonumber(op.text) or 0) or nil end
+	if m == "add" and ops[2] and ops[2].name == "sp" and ops[1] and ops[1].name != "sp" then
+		off = immVal2(ops[3])
 		if off and ctx.regionOf(off) then emit(st); return end
 	end
-	if m == "mov" and ops[2] and ops[2].name == "sp" and ops[1] and ops[1].name ~= "sp" then
+	if m == "mov" and ops[2] and ops[2].name == "sp" and ops[1] and ops[1].name != "sp" then
 		if ctx.regionOf(0) then emit(st); return end
 	end
 	do
-		local mem
+		mem = nil
 		for _, o in ops do if o.kind == "mem" then mem = o end end
 		if mem and isFrameBase(mem.base) and not mem.writeback then
-			local base = (mem.base.name == "sp") and 0 or ctx.fpOffset
+			base = (mem.base.name == "sp") and 0 or ctx.fpOffset
 			if ctx.regionOf(base + immVal(mem.index)) then emit(st); return end
 		end
 	end
@@ -68,7 +68,7 @@ function arm64_frame.rewrite(st, ctx)
 	if (m == "mov" or m == "add") and ops[1] and ops[1].name == "x29" then return end
 	if m == "mov" and ops[1] and ops[1].name == "sp" then return end  -- e.g. `mov sp, x29` (restore)
 
-	local mem = nil
+	mem = nil
 	for _, o in ops do if o.kind == "mem" then mem = o end end
 	if mem and isFrameBase(mem.base) then
 		-- Only writeback stp/ldp (the classic `stp x29,x30,[sp,-N]!`/`ldp ...,[sp],N`) is pure
@@ -76,8 +76,8 @@ function arm64_frame.rewrite(st, ctx)
 		-- function gcc reuses x30 (lr) as a general register and spills it, so those are real
 		-- values to virtualise. A genuine fp/lr save becomes a dead slot.
 		if mem.writeback then return end  -- frame-setup writeback store
-		local base = (mem.base.name == "sp") and 0 or ctx.fpOffset
-		local off = base + immVal(mem.index)
+		base = (mem.base.name == "sp") and 0 or ctx.fpOffset
+		off = base + immVal(mem.index)
 		if m == "str" or m == "stur" then
 			ctx.checkBounds(off, ops[1].width == 32 and 4 or 8, true, st.raw)
 			emit({ kind = "insn", mnemonic = "mov", operands = { ctx.slotReg(off, ops[1].width), ops[1] }, raw = st.raw })
@@ -101,7 +101,7 @@ function arm64_frame.rewrite(st, ctx)
 	-- Reject taking the address of the stack frame (potential escape).
 	if (m == "add" or m == "mov" or m == "sub") then
 		for _, o in ops do
-			if o.kind == "reg" and o.name == "sp" and ops[1] and ops[1].name ~= "sp" then
+			if o.kind == "reg" and o.name == "sp" and ops[1] and ops[1].name != "sp" then
 				ctx.rejectEscape(st.raw or m)
 			end
 		end

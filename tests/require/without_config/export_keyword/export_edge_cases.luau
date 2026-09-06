@@ -1,47 +1,47 @@
-export local x = 5
+export x = 5
 x = x + 1
 
-export local s = "a"
+export s = "a"
 s = s .. "b"
 
-export local n
+export n
 n = 42
 
-export local step = 0
+export step = 0
 step = step + 1
 step = step + 1
 step = step + 1
 
-export local sum = 0
+export sum = 0
 for i = 1, 3 do
     sum += i
 end
 
-export local prod = 1
-local i = 1
+export prod = 1
+i = 1
 while i <= 4 do
     prod = prod * i
     i += 1
 end
 
-export local t = { x = 1 }
+export t = { x = 1 }
 t = { x = t.x + 1 }
 
-export local a = 1
-local b
+export a = 1
+b = nil
 a, b = a + 1, a + 2
 
-export local closure = 0
+export closure = 0
 closure = (function() return closure + 1 end)()
 
-export local fw
+export fw
 function fw()
     return "forward"
 end
 
-export local f = math.max
+export f = math.max
 
-local function inner(...)
+function inner(...)
     return f(...)
 end
 

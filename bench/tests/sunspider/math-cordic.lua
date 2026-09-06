@@ -23,41 +23,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  ]]
 
- local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+ function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
 --. Start CORDIC
 
-local AG_CONST = 0.6072529350;
+AG_CONST = 0.6072529350;
 
-local function FIXED(X)
+function FIXED(X)
   return X * 65536.0;
 end
 
-local function FLOAT(X)
+function FLOAT(X)
   return X / 65536.0;
 end
 
-local function DEG2RAD(X)
+function DEG2RAD(X)
   return 0.017453 * (X);
 end
 
-local Angles = {
+Angles = {
   FIXED(45.0), FIXED(26.565), FIXED(14.0362), FIXED(7.12502),
   FIXED(3.57633), FIXED(1.78991), FIXED(0.895174), FIXED(0.447614),
   FIXED(0.223811), FIXED(0.111906), FIXED(0.055953),
   FIXED(0.027977) 
 };
 
-local Target = 28.027;
+Target = 28.027;
 
-local function cordicsincos(Target)
-    local X;
-    local Y;
-    local TargetAngle;
-    local CurrAngle;
+function cordicsincos(Target)
+    X = nil;
+    Y = nil;
+    TargetAngle = nil;
+    CurrAngle = nil;
 
     X = FIXED(AG_CONST);         -- AG_CONST * cos(0)
     Y = 0;                       -- AG_CONST * sin(0)
@@ -65,7 +65,7 @@ local function cordicsincos(Target)
     TargetAngle = FIXED(Target);
     CurrAngle = 0;
     for Step = 0,11 do
-        local NewX;
+        NewX = nil;
         if (TargetAngle > CurrAngle) then
             NewX = X - bit32.rshift(math.floor(Y), Step) -- (Y >> Step);
             Y = bit32.rshift(math.floor(X), Step) + Y;
@@ -84,9 +84,9 @@ end
 
 -- End CORDIC
 
-local total = 0;
+total = 0;
 
-local function cordic( runs )
+function cordic( runs )
   for i = 1,runs do
       total = total + cordicsincos(Target);
   end
@@ -94,9 +94,9 @@ end
 
 cordic(25000);
 
-local expected = 10362.570468755888;
+expected = 10362.570468755888;
 
-if (total ~= expected) then
+if (total != expected) then
     assert(false, "ERROR: bad result: expected " .. expected .. " but got " .. total);
 end
 

@@ -108,7 +108,7 @@ TEST_CASE_FIXTURE(Fixture, "locals_are_any_by_default")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local m = 55
+        const m = 55
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -123,7 +123,7 @@ TEST_CASE_FIXTURE(Fixture, "parameters_having_type_any_are_optional")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local function f(a, b)
+        function f(a, b)
             return a
         end
 
@@ -138,7 +138,7 @@ TEST_CASE_FIXTURE(Fixture, "local_tables_are_not_any")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
     CheckResult result = check(R"(
         --!nonstrict
-        local T = {}
+        const T = {}
         function T:method() end
         function T.staticmethod() end
 
@@ -156,7 +156,7 @@ TEST_CASE_FIXTURE(Fixture, "offer_a_hint_if_you_use_a_dot_instead_of_a_colon")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
     CheckResult result = check(R"(
         --!nonstrict
-        local T = {}
+        const T = {}
         function T:method(x: number) end
         T.method(5)
     )");
@@ -170,7 +170,7 @@ TEST_CASE_FIXTURE(Fixture, "table_props_are_any")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local T = {}
+        const T = {}
         T.foo = 55
     )");
 
@@ -186,7 +186,7 @@ TEST_CASE_FIXTURE(Fixture, "inline_table_props_are_also_any")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local T = {
+        const T = {
             one = 1,
             two = 'two',
             three = function() return 3 end
@@ -208,7 +208,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_iterator_variables_are_any")
         function requires_a_table(arg: {}) end
         function requires_a_number(arg: number) end
 
-        local T = {}
+        const T = {}
         for a, b in pairs(T) do
             requires_a_table(a)
             requires_a_table(b)
@@ -225,7 +225,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_dot_insert_and_recursive_calls")
     CheckResult result = check(R"(
         --!nonstrict
         function populateListFromIds(list, normalizedData)
-            local newList = {}
+            const newList = {}
 
             for _, value in ipairs(list) do
                 if type(value) == "table" then
@@ -260,7 +260,7 @@ TEST_CASE_FIXTURE(Fixture, "inconsistent_module_return_types_are_ok")
     CheckResult result = check(R"(
         --!nonstrict
 
-        local FFlag: any
+        const FFlag: any = nil as any
 
         if FFlag.get('SomeFlag') then
             return {foo='bar'}
@@ -326,7 +326,7 @@ TEST_CASE_FIXTURE(Fixture, "standalone_constraint_solving_incomplete_is_hidden_n
 
     CheckResult results = check(R"(
         --!nonstrict
-        local function _f(_x: _luau_force_constraint_solving_incomplete) end
+        function _f(_x: _luau_force_constraint_solving_incomplete) end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -341,7 +341,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_standalone_constraint_solving_incomplete
 
     CheckResult results = check(R"(
         --!nonstrict
-        local function _f(_x: _luau_force_constraint_solving_incomplete) end
+        function _f(_x: _luau_force_constraint_solving_incomplete) end
         math.abs("pls")
     )");
 
@@ -353,10 +353,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_standalone_constraint_solving_incomplete
 TEST_CASE_FIXTURE(BuiltinsFixture, "allow_error_type_nonstrict")
 {
     LUAU_REQUIRE_NO_ERRORS(check(Mode::Nonstrict, R"(
-        local sublist: any
+        const sublist: any = nil as any
         if sublist then
             for _, entry in sublist do
-                local _ = string.upper(entry)
+                const _ = string.upper(entry)
             end
         end
     )"));
@@ -365,10 +365,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_error_type_nonstrict")
 TEST_CASE_FIXTURE(BuiltinsFixture, "error_in_union_suppresses")
 {
     LUAU_REQUIRE_NO_ERRORS(check(Mode::Nonstrict, R"(
-        local sublist: any
+        const sublist: any = nil as any
         if sublist then
-            local subitem = sublist.item
-            local _ = string.upper(subitem)
+            const subitem = sublist.item
+            const _ = string.upper(subitem)
         end
     )"));
 }

@@ -10,6 +10,7 @@
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
 LUAU_FASTFLAG(DebugLuauMagicTypes)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 LUAU_FASTFLAG(LuauStrictVisitInstantiatedType)
 
@@ -19,14 +20,14 @@ TEST_SUITE_BEGIN("AnnotationTests");
 
 TEST_CASE_FIXTURE(Fixture, "initializers_are_checked_against_annotations")
 {
-    CheckResult result = check("local a: number = \"Hello Types!\"");
+    CheckResult result = check("const a: number = \"Hello Types!\"");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 }
 
 TEST_CASE_FIXTURE(Fixture, "check_multi_initialize")
 {
     CheckResult result = check(R"(
-        local a: number, b: string = "one", 2
+        const a: number, b: string = "one", 2
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -38,7 +39,7 @@ TEST_CASE_FIXTURE(Fixture, "check_multi_initialize")
 TEST_CASE_FIXTURE(Fixture, "successful_check")
 {
     CheckResult result = check(R"(
-        local a: number, b: string = 1, "two"
+        const a: number, b: string = 1, "two"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -47,7 +48,7 @@ TEST_CASE_FIXTURE(Fixture, "successful_check")
 TEST_CASE_FIXTURE(Fixture, "assignments_are_checked_against_annotations")
 {
     CheckResult result = check(R"(
-        local x: number = 1
+        const x: number = 1
         x = "two"
     )");
 
@@ -56,8 +57,9 @@ TEST_CASE_FIXTURE(Fixture, "assignments_are_checked_against_annotations")
 
 TEST_CASE_FIXTURE(Fixture, "multi_assign_checks_against_annotations")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a: number, b: string = 1, "two"
+        export a: number, b: string = 1, "two"
         a, b = "one", 2
     )");
 
@@ -70,7 +72,7 @@ TEST_CASE_FIXTURE(Fixture, "multi_assign_checks_against_annotations")
 TEST_CASE_FIXTURE(Fixture, "assignment_cannot_transform_a_table_property_type")
 {
     CheckResult result = check(R"(
-        local a = {x=0}
+        const a = {x=0}
         a.x = "one"
     )");
 
@@ -115,8 +117,8 @@ TEST_CASE_FIXTURE(Fixture, "assignments_to_annotated_parameters_are_checked")
 TEST_CASE_FIXTURE(Fixture, "variable_type_is_supertype")
 {
     CheckResult result = check(R"(
-        local x: number = 1
-        local y: number? = x
+        const x: number = 1
+        const y: number? = x
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -124,12 +126,13 @@ TEST_CASE_FIXTURE(Fixture, "variable_type_is_supertype")
 
 TEST_CASE_FIXTURE(Fixture, "assignment_also_checks_subtyping")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function f(): number?
             return nil
         end
-        local x: number = 1
-        local y: number? = f()
+        export x: number = 1
+        export y: number? = f()
         x = y
         y = x
     )");
@@ -145,7 +148,7 @@ TEST_CASE_FIXTURE(Fixture, "function_parameters_can_have_annotations")
             return 2
         end
 
-        local four = double(2)
+        const four = double(2)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -158,7 +161,7 @@ TEST_CASE_FIXTURE(Fixture, "function_parameter_annotations_are_checked")
             return 2
         end
 
-        local four = double("two")
+        const four = double("two")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -227,7 +230,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_annotation_should_continuously_parse
 TEST_CASE_FIXTURE(Fixture, "unknown_type_reference_generates_error")
 {
     CheckResult result = check(R"(
-        local x: IDoNotExist
+        const x: IDoNotExist = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -284,18 +287,18 @@ TEST_CASE_FIXTURE(Fixture, "unknown_generic_type_pack_in_explicit_instantiation_
     for (const char* source : {
              R"(
                 --!strict
-                local function f<T...>() end
+                function f<T...>() end
                 f<<IDoNotExist...>>()
             )",
              R"(
                 --!strict
-                local t = {}
+                const t = {}
                 function t:f<T...>() end
                 t:f<<IDoNotExist...>>()
             )",
              R"(
                 --!nonstrict
-                local t = {}
+                const t = {}
                 function t:f<T...>() end
                 t:f<<IDoNotExist...>>()
             )",
@@ -316,11 +319,11 @@ TEST_CASE_FIXTURE(Fixture, "unknown_generic_type_pack_in_explicit_instantiation_
 TEST_CASE_FIXTURE(Fixture, "typeof_variable_type_annotation_should_return_its_type")
 {
     CheckResult result = check(R"(
-        local foo = { bar = "baz" }
+        const foo = { bar = "baz" }
 
         type Foo = typeof(foo)
 
-        local foo2: Foo
+        const foo2: Foo = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -329,9 +332,10 @@ TEST_CASE_FIXTURE(Fixture, "typeof_variable_type_annotation_should_return_its_ty
 
 TEST_CASE_FIXTURE(Fixture, "infer_type_of_value_a_via_typeof_with_assignment")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a
-        local b: typeof(a) = 1
+        export a = nil
+        const b: typeof(a) = 1
 
         a = "foo"
     )");
@@ -363,9 +367,9 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_of_value_a_via_typeof_with_assignment")
 TEST_CASE_FIXTURE(Fixture, "table_annotation")
 {
     CheckResult result = check(R"(
-        local x: {a: number, b: string} = {a=2, b="three"}
-        local y = x.a
-        local z = x.b
+        const x: {a: number, b: string} = {a=2, b="three"}
+        const y = x.a
+        const z = x.b
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -376,7 +380,7 @@ TEST_CASE_FIXTURE(Fixture, "table_annotation")
 TEST_CASE_FIXTURE(Fixture, "function_annotation")
 {
     CheckResult result = check(R"(
-        local f: (number, string) -> number
+        const f: (number, string) -> number = nil as any
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -391,7 +395,7 @@ TEST_CASE_FIXTURE(Fixture, "function_annotation")
 TEST_CASE_FIXTURE(Fixture, "function_annotation_with_a_defined_function")
 {
     CheckResult result = check(R"(
-        local f: (number, number) -> string = function(a: number, b: number) return "" end
+        const f: (number, number) -> string = function(a: number, b: number) return "" end
     )");
 
     TypeId fType = requireType("f");
@@ -403,15 +407,15 @@ TEST_CASE_FIXTURE(Fixture, "function_annotation_with_a_defined_function")
 
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expr")
 {
-    CheckResult result = check("local a = 55 as any");
+    CheckResult result = check("const a = 55 as any");
     REQUIRE_EQ("any", toString(requireType("a")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "as_expr_does_not_propagate_type_info")
 {
     CheckResult result = check(R"(
-        local a = 55 as any
-        local b = a as number
+        const a = 55 as any
+        const b = a as number
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -423,8 +427,8 @@ TEST_CASE_FIXTURE(Fixture, "as_expr_does_not_propagate_type_info")
 TEST_CASE_FIXTURE(Fixture, "as_expr_is_bidirectional")
 {
     CheckResult result = check(R"(
-        local a = 55 as number?
-        local b = a as number
+        const a = 55 as number?
+        const b = a as number
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -436,7 +440,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expr_is_bidirectional")
 TEST_CASE_FIXTURE(Fixture, "as_expr_warns_on_unrelated_cast")
 {
     CheckResult result = check(R"(
-        local a = 55 as string
+        const a = 55 as string
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -449,7 +453,7 @@ TEST_CASE_FIXTURE(Fixture, "type_annotations_inside_function_bodies")
 {
     CheckResult result = check(R"(
         function get_message()
-            local message = 'That smarts!' as string
+            const message = 'That smarts!' as string
             return message
         end
     )");
@@ -474,7 +478,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_should_alias_to_number")
 {
     CheckResult result = check(R"(
         type A = number
-        local a: A = 10
+        const a: A = 10
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -484,7 +488,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_B_should_check_with_another_aliases_until
     CheckResult result = check(R"(
         type A = number
         type B = A
-        local b: B = 10
+        const b: B = 10
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -493,7 +497,7 @@ TEST_CASE_FIXTURE(Fixture, "type_aliasing_to_number_should_not_check_given_a_str
 {
     CheckResult result = check(R"(
         type A = number
-        local a: A = "fail"
+        const a: A = "fail"
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 }
@@ -550,7 +554,7 @@ TEST_CASE_FIXTURE(Fixture, "use_generic_type_alias")
 {
     CheckResult result = check(R"(
         type Array<T> = {[number]: T}   -- 1
-        local p: Array<number> = {}     -- 2
+        const p: Array<number> = {}     -- 2
         p[1] = 5                        -- 3 OK
         p[2] = 'hello'                  -- 4 Error.
     )");
@@ -565,9 +569,9 @@ TEST_CASE_FIXTURE(Fixture, "two_type_params")
 {
     CheckResult result = check(R"(
         type Map<K, V> = {[K]: V}
-        local m: Map<string, number> = {}
-        local a = m['foo']
-        local b = m[9]                  -- error here
+        const m: Map<string, number> = {}
+        const a = m['foo']
+        const b = m[9]                  -- error here
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -581,7 +585,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_type_params")
 {
     CheckResult result = check(R"(
         type Callback<A, R> = (A) -> (boolean, R)
-        local a: Callback<number, number, string> = function(i) return true, 4 end
+        const a: Callback<number, number, string> = function(i) return true, 4 end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -614,7 +618,7 @@ TEST_CASE_FIXTURE(Fixture, "typeof_expr")
     CheckResult result = check(R"(
         function id(i) return i end
 
-        local m: typeof(id(77))
+        const m: typeof(id(77)) = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -627,8 +631,8 @@ TEST_CASE_FIXTURE(Fixture, "corecursive_types_error_on_tight_loop")
         type A = B
         type B = A
 
-        local aa:A
-        local bb:B
+        const aa:A = nil as any
+        const bb:B = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -644,7 +648,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_always_resolve_to_a_real_type")
         type B = C
         type C = number
 
-        local aa:A
+        const aa:A = nil as any
     )");
 
     TypeId fType = requireType("aa");
@@ -657,7 +661,7 @@ TEST_CASE_FIXTURE(Fixture, "interface_types_belong_to_interface_arena")
     CheckResult result = check(R"(
         export type A = {field: number}
 
-        local n: A = {field = 551}
+        const n: A = {field = 551}
 
         return {n=n}
     )");
@@ -715,8 +719,8 @@ TEST_CASE_FIXTURE(Fixture, "cloned_interface_maintains_pointers_between_definiti
 {
     CheckResult result = check(R"(
         export type Record = { name: string, location: string }
-        local a: Record = { name="Waldo", location="?????" }
-        local b: Record = { name="Santa Claus", location="Maui" } -- FIXME
+        const a: Record = { name="Waldo", location="?????" }
+        const b: Record = { name="Santa Claus", location="Maui" } -- FIXME
 
         return {a=a, b=b}
     )");
@@ -755,7 +759,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "use_type_required_from_another_file")
 
     fileResolver.source["Modules/Main"] = R"(
         --!strict
-        local Test = require(script.Parent.Thing)
+        const Test = require(script.Parent.Thing)
 
         export type Foo = { [any]: Test.TestType }
 
@@ -781,7 +785,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cannot_use_nonexported_type")
 
     fileResolver.source["Modules/Main"] = R"(
         --!strict
-        local Test = require(script.Parent.Thing)
+        const Test = require(script.Parent.Thing)
 
         export type Foo = { [any]: Test.TestType }
 
@@ -807,7 +811,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "builtin_types_are_not_exported")
 
     fileResolver.source["Modules/Main"] = R"(
         --!strict
-        local Test = require(script.Parent.Thing)
+        const Test = require(script.Parent.Thing)
 
         export type Foo = { [any]: Test.number }
 
@@ -860,7 +864,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_ice_triggers_an_ice_exception_with_flag")
 
     CHECK_THROWS_AS(
         check(R"(
-        local a: _luau_ice = 55
+        const a: _luau_ice = 55
     )"),
         InternalCompilerError
     );
@@ -881,7 +885,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_ice_triggers_an_ice_exception_with_flag_handler
 
     CHECK_THROWS_AS(
         check(R"(
-        local a: _luau_ice = 55
+        const a: _luau_ice = 55
     )"),
         InternalCompilerError
     );
@@ -895,7 +899,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_ice_is_not_special_without_the_flag")
 
     // We only care that this does not throw
     check(R"(
-        local a: _luau_ice = 55
+        const a: _luau_ice = 55
     )");
 }
 
@@ -917,7 +921,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_print_is_magic_if_the_flag_is_set")
     ScopedFastFlag sffs{FFlag::DebugLuauMagicTypes, true};
 
     CheckResult result = check(R"(
-        local a: _luau_print<typeof(math.abs)>
+        const a: _luau_print<typeof(math.abs)> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -930,7 +934,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_print_is_not_special_without_the_flag")
     ScopedFastFlag sffs{FFlag::DebugLuauMagicTypes, false};
 
     CheckResult result = check(R"(
-        local a: _luau_print<number>
+        const a: _luau_print<number> = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -941,7 +945,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_print_incomplete")
     ScopedFastFlag sffs{FFlag::DebugLuauMagicTypes, true};
 
     CheckResult result = check(R"(
-        local a: _luau_print
+        const a: _luau_print = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -952,7 +956,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_type_fun_should_not_trip_rbxassert")
 {
     CheckResult result = check(R"(
         type Foo<T> = typeof(function(x) return x end)
-        local foo: Foo<number>
+        const foo: Foo<number> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -978,7 +982,7 @@ TEST_CASE_FIXTURE(Fixture, "occurs_check_on_cyclic_union_type")
 {
     CheckResult result = check(R"(
         type T = T | T
-        local x : T
+        const x : T = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1014,7 +1018,7 @@ TEST_CASE_FIXTURE(Fixture, "unifier3_supertail_covariant_with_sub")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function fib(n)
+        function fib(n)
             return n + fib(n)
         end
     )");
@@ -1025,11 +1029,11 @@ TEST_CASE_FIXTURE(Fixture, "unifier3_supertail_covariant_with_sub")
 TEST_CASE_FIXTURE(BuiltinsFixture, "respect_partially_annotated_type_packs_1")
 {
     CheckResult results = check(R"(
-        local function f(): (number, string)
+        function f(): (number, string)
             return 42, "huh"
         end
 
-        local a: number, b = f()
+        const a: number, b = f()
 
         print(math.abs(b))
     )");
@@ -1044,11 +1048,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "respect_partially_annotated_type_packs_1")
 TEST_CASE_FIXTURE(BuiltinsFixture, "respect_partially_annotated_type_packs_2")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function f(): (number, boolean, string)
+        function f(): (number, boolean, string)
             return 42, true, "huh"
         end
 
-        local a: number, b, c: string = f()
+        const a: number, b, c: string = f()
     )"));
 
     CHECK_EQ("boolean", toString(requireType("b")));
@@ -1062,11 +1066,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "react_use_state_partial_annotation")
         type BasicStateAction<S> = ((S) -> S) | S
         type Dispatch<A> = (A) -> ()
 
-        local useState: <S>( (() -> S) | S ) -> (S, Dispatch<BasicStateAction<S>>) = nil as any
+        const useState: <S>( (() -> S) | S ) -> (S, Dispatch<BasicStateAction<S>>) = nil as any
 
-        local v: number, setV = useState(0)
-        local w, setW = useState(0 as number?)
-        local x, setX = useState(0)
+        const v: number, setV = useState(0)
+        const w, setW = useState(0 as number?)
+        const x, setX = useState(0)
     )"));
 
     CHECK_EQ("(((number) -> number) | number) -> ()", toString(requireType("setV")));

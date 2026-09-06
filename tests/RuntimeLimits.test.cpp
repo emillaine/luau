@@ -61,22 +61,22 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
         -- https://github.com/Dionysusnu/rbxts-rust-classes
         -- Licensed under the MPL 2.0: https://raw.githubusercontent.com/Dionysusnu/rbxts-rust-classes/master/LICENSE
 
-        local TS = _G[script]
-        local lazyGet = TS.import(script, script.Parent.Parent, "util", "lazyLoad").lazyGet
-        local unit = TS.import(script, script.Parent.Parent, "util", "Unit").unit
-        local Iterator
+        const TS = _G[script]
+        const lazyGet = TS.import(script, script.Parent.Parent, "util", "lazyLoad").lazyGet
+        const unit = TS.import(script, script.Parent.Parent, "util", "Unit").unit
+        const Iterator
         lazyGet("Iterator", function(c)
             Iterator = c
         end)
-        local Option
+        const Option
         lazyGet("Option", function(c)
             Option = c
         end)
-        local Vec
+        const Vec
         lazyGet("Vec", function(c)
             Vec = c
         end)
-        local Result
+        const Result
         do
             Result = setmetatable({}, {
                 __tostring = function()
@@ -85,7 +85,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
             })
             Result.__index = Result
             function Result.new(...)
-                local self = setmetatable({}, Result)
+                const self = setmetatable({}, Result)
                 self:constructor(...)
                 return self
             end
@@ -100,9 +100,9 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return Result.new(nil, val)
             end
             function Result:fromCallback(c)
-                local _0 = c
-                local _1, _2 = pcall(_0)
-                local result = _1 and {
+                const _0 = c
+                const _1, _2 = pcall(_0)
+                const result = _1 and {
                     success = true,
                     value = _2,
                 } or {
@@ -112,9 +112,9 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return result.success and Result:ok(result.value) or Result:err(Option:wrap(result.error))
             end
             function Result:fromVoidCallback(c)
-                local _0 = c
-                local _1, _2 = pcall(_0)
-                local result = _1 and {
+                const _0 = c
+                const _1, _2 = pcall(_0)
+                const result = _1 and {
                     success = true,
                     value = _2,
                 } or {
@@ -124,7 +124,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return result.success and Result:ok(unit()) or Result:err(Option:wrap(result.error))
             end
             Result.fromPromise = TS.async(function(self, p)
-                local _0, _1 = TS.try(function()
+                const _0, _1 = TS.try(function()
                     return TS.TRY_RETURN, { Result:ok(TS.await(p)) }
                 end, function(e)
                     return TS.TRY_RETURN, { Result:err(Option:wrap(e)) }
@@ -134,7 +134,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 end
             end)
             Result.fromVoidPromise = TS.async(function(self, p)
-                local _0, _1 = TS.try(function()
+                const _0, _1 = TS.try(function()
                     TS.await(p)
                     return TS.TRY_RETURN, { Result:ok(unit()) }
                 end, function(e)
@@ -166,7 +166,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return self:isOk() and Result:ok(func(self.okValue)) or Result:err(self.errValue)
             end
             function Result:mapOr(def, func)
-                local _0
+                const _0
                 if self:isOk() then
                     _0 = func(self.okValue)
                 else
@@ -175,7 +175,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return _0
             end
             function Result:mapOrElse(def, func)
-                local _0
+                const _0
                 if self:isOk() then
                     _0 = func(self.okValue)
                 else
@@ -209,7 +209,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return self:expect("called `Result.unwrap()` on an `Err` value: " .. tostring(self.errValue))
             end
             function Result:unwrapOr(def)
-                local _0
+                const _0
                 if self:isOk() then
                     _0 = self.okValue
                 else
@@ -218,7 +218,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return _0
             end
             function Result:unwrapOrElse(gen)
-                local _0
+                const _0
                 if self:isOk() then
                     _0 = self.okValue
                 else
@@ -245,7 +245,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return self:isOk() and Result.new(self.okValue.okValue, self.okValue.errValue) or Result:err(self.errValue)
             end
             function Result:match(ifOk, ifErr)
-                local _0
+                const _0
                 if self:isOk() then
                     _0 = ifOk(self.okValue)
                 else
@@ -254,14 +254,14 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 return _0
             end
             function Result:asPtr()
-                local _0 = (self.okValue)
+                const _0 = (self.okValue)
                 if _0 == nil then
                     _0 = (self.errValue)
                 end
                 return _0
             end
         end
-        local resultMeta = Result
+        const resultMeta = Result
         resultMeta.__eq = function(a, b)
             return b:match(function(ok)
                 return a:contains(ok)
@@ -296,7 +296,7 @@ TEST_CASE_FIXTURE(LimitFixture, "Signal_exerpt" * doctest::timeout(LUAU_TIMEOUT)
     };
 
     constexpr const char* src = R"LUAU(
-        local Signal = {}
+        const Signal = {}
         Signal.ClassName = "Signal"
         export type Signal<T...> = typeof(setmetatable(
             {} as {},
@@ -314,7 +314,7 @@ TEST_CASE_FIXTURE(LimitFixture, "Signal_exerpt" * doctest::timeout(LUAU_TIMEOUT)
         end
 
         function Signal.Fire<T...>(self: Signal<T...>): ()
-            local connection
+            const connection
             rawget(connection, "_signal")
         end
 
@@ -469,7 +469,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 	    broadcastWatches: (self: InMemoryCachePrivate) -> (), -- ROBLOX NOTE: protected method
     }
 
-    local InMemoryCache = {}
+    const InMemoryCache = {}
     InMemoryCache.__index = InMemoryCache
 
     -- InMemoryCache.batch = nil as any
@@ -492,7 +492,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "test_generic_pruning_recursion_limit")
     ScopedFastInt sfi{FInt::LuauGenericCounterMaxSteps, 1};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function get(scale)
+        const function get(scale)
             print(scale.Do.Re.Mi)
         end
     )"));
@@ -508,16 +508,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unification_runs_a_limited_number_of_iterati
         {FInt::LuauTypeInferIterationLimit, 100},
     };
 
+    // NOTE: the original fuzzer-generated snippet relied on implicit-global
+    // inference for `_`, which no longer exists now that bare `_ =`
+    // declares an implicit local (and `_G._ =` takes the simpler field path).
+    // Use nested intersections instead; they exercise the same
+    // iteration-limit path without any globals.
     CheckResult result = check(R"(
-        local function l0<A...>()
-            for l0=_,_ do
-            end
-        end
-
-        _ = if _._ then function(l0)
-        end else if _._G then if `` then {n0=_,} else "luauExprConstantSt" else if _[_][l0] then function()
-        end else if _.n0 then if _[_] then if _ then _ else "aeld" else if false then 0 else "lead"
-        return _.n0
+type T1<X> = X & {f1: (X) -> X}
+type T2<X> = T1<T1<X>> & {f2: (X) -> X}
+type T3<X> = T2<T2<X>> & {f3: (X) -> X}
+type T4<X> = T3<T3<X>> & {f4: (X) -> X}
+type T5 = T4<T4<T4<string>>>
+const x: T5 = nil as any
+const y: T5 = x
+const z: string = y.f1(y).f2(y).f3(y).f4(y)
     )");
 
     LUAU_REQUIRE_ERROR(result, NormalizationTooComplex);
@@ -539,7 +543,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "native_stack_guard_prevents_stack_overflows"
     try
     {
         (void)check(R"(
-            local function l0<A...>()
+            function l0<A...>()
                 for l0=_,_ do
                 end
             end
@@ -585,13 +589,13 @@ export type DeriveScopeConstructor = (<S>(Scope<S>) -> Scope<S>)
     & (<S, A, B, C, D, E, F, G, H, I, J, K>(Scope<S>, A & {}, B & {}, C & {}, D & {}, E & {}, F & {}, G & {}, H & {}, I & {}, J & {}, K & {}) -> Scope<S & A & B & C & D & E & F & G & H & I & J & K>)
     & (<S, A, B, C, D, E, F, G, H, I, J, K, L>(Scope<S>, A & {}, B & {}, C & {}, D & {}, E & {}, F & {}, G & {}, H & {}, I & {}, J & {}, K & {}, L & {}) -> Scope<S & A & B & C & D & E & F & G & H & I & J & K & L>)
 
-local deriveScopeImpl : DeriveScopeConstructor = (nil as any)
+const deriveScopeImpl : DeriveScopeConstructor = (nil as any)
 
-local function innerScope<T>(
+const function innerScope<T>(
     existing: Types.Scope<T>,
     ...: {[unknown]: unknown}
 ): any
-    local new = deriveScopeImpl(existing, ...)
+    const new = deriveScopeImpl(existing, ...)
 end
 
     )"));
@@ -611,13 +615,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_stepwise_normalization_works" * docte
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_oom_unions" * doctest::timeout(LUAU_TIMEOUT))
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        local _ = true,l0
+        const _ = true,l0
         _ = if _ then _ else _._,if _[_] then nil else if _ then `` else _._,...
         _ = if _ then _ else if _ then `` else _.n0,true,...
         _G = if "" then _ else _.n0,_
         _ = if _[_] then _ else if _ then _ + n0 else _._,32804,...
         _.readstring = _,_
-        local l0 = require(module0)
+        const l0 = require(module0)
         _ = _,l0,_
         do end
         _.readstring += _
@@ -632,7 +636,7 @@ TEST_CASE_FIXTURE(Fixture, "comparison_to_nil_when_normalization_fails_should_no
         type T = { foo: number } | { bar: number } | { baz: number }
         type U = { oof: number } | { rab: number } | { zab: number }
         type TU = T & U
-        local function check(t: TU): boolean
+        const function check(t: TU): boolean
             return t == nil
         end
     )"));

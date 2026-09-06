@@ -1,9 +1,9 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-	local primes =
+	primes =
 	{
 		0x428a2f98d728ae22i, 0x7137449123ef65cdi, 0xb5c0fbcfec4d3b2fi, 0xe9b5dba58189dbbci,
 		0x3956c25bf348b538i, 0x59f111f1b605d019i, 0x923f82a4af194f9bi, 0xab1c5ed5da6d8118i,
@@ -27,27 +27,27 @@ function test()
 		0x4cc5d4becb3e42b6i, 0x597f299cfc657e2ai, 0x5fcb6fab3ad6faeci, 0x6c44198c4a475817i,
 	}
 
-	local function toHex(buf)
+	function toHex(buf)
 		return string.format(
 			"%016x%016x%016x%016x%016x%016x%016x%016x",
 			buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8]
 		)
 	end
 
-	local function preprocess(msg)
-		local msgLen = #msg
-		local extra = 128 - ((msgLen + 17) % 128)
+	function preprocess(msg)
+		msgLen = #msg
+		extra = 128 - ((msgLen + 17) % 128)
 
-		local padded = msg .. '\128' .. string.rep('\0', extra + 8)
-		local paddedLen = #padded + 8
+		padded = msg .. '\128' .. string.rep('\0', extra + 8)
+		paddedLen = #padded + 8
 
-		local buf = buffer.create(paddedLen)
+		buf = buffer.create(paddedLen)
 		buffer.writestring(buf, 0, padded)
 
 		-- length goes in the low 8 bytes (high 8 bytes left as zero, fits since msgLen*8 < 2^64)
-		local bitLen = msgLen * 8
+		bitLen = msgLen * 8
 		for i = 0, 7 do
-			local rem = bitLen % 256
+			rem = bitLen % 256
 			buffer.writeu8(buf, paddedLen - 1 - i, rem)
 			bitLen = (bitLen - rem) / 256
 		end
@@ -55,32 +55,32 @@ function test()
 		return buf, paddedLen
 	end
 
-	local function digestBlock(buf, i, hash, digest)
+	function digestBlock(buf, i, hash, digest)
 		for j = 1, 16 do
-			local offset = i + (j - 1) * 8
+			offset = i + (j - 1) * 8
 			digest[j] = integer.bswap(buffer.readinteger(buf, offset))
 		end
 
 		for j = 17, 80 do
-			local v = digest[j - 15]
-			local s0 = integer.bxor(integer.rrotate(v, 1i), integer.rrotate(v, 8i), integer.rshift(v, 7i))
+			v = digest[j - 15]
+			s0 = integer.bxor(integer.rrotate(v, 1i), integer.rrotate(v, 8i), integer.rshift(v, 7i))
 
 			v = digest[j - 2]
-			local s1 = integer.bxor(integer.rrotate(v, 19i), integer.rrotate(v, 61i), integer.rshift(v, 6i))
+			s1 = integer.bxor(integer.rrotate(v, 19i), integer.rrotate(v, 61i), integer.rshift(v, 6i))
 
 			digest[j] = integer.add(integer.add(digest[j - 16], s0), integer.add(digest[j - 7], s1))
 		end
 
-		local a, b, c, d, e, f, g, h = table.unpack(hash)
+		a, b, c, d, e, f, g, h = table.unpack(hash)
 
 		for r = 1, 80 do
-			local s0 = integer.bxor(integer.rrotate(a, 28i), integer.rrotate(a, 34i), integer.rrotate(a, 39i))
-			local maj = integer.bxor(integer.band(a, b), integer.band(a, c), integer.band(b, c))
-			local t2 = integer.add(s0, maj)
+			s0 = integer.bxor(integer.rrotate(a, 28i), integer.rrotate(a, 34i), integer.rrotate(a, 39i))
+			maj = integer.bxor(integer.band(a, b), integer.band(a, c), integer.band(b, c))
+			t2 = integer.add(s0, maj)
 
-			local s1 = integer.bxor(integer.rrotate(e, 14i), integer.rrotate(e, 18i), integer.rrotate(e, 41i))
-			local ch = integer.bxor(integer.band(e, f), integer.band(integer.bnot(e), g))
-			local t1 = integer.add(integer.add(integer.add(h, s1), ch), integer.add(primes[r], digest[r]))
+			s1 = integer.bxor(integer.rrotate(e, 14i), integer.rrotate(e, 18i), integer.rrotate(e, 41i))
+			ch = integer.bxor(integer.band(e, f), integer.band(integer.bnot(e), g))
+			t1 = integer.add(integer.add(integer.add(h, s1), ch), integer.add(primes[r], digest[r]))
 
 			h, g, f, e, d, c, b, a = g, f, e, integer.add(d, t1), c, b, a, integer.add(t1, t2)
 		end
@@ -95,10 +95,10 @@ function test()
 		hash[8] = integer.add(hash[8], h)
 	end
 
-	local function sha512(msg)
-		local buf, paddedLen = preprocess(msg)
+	function sha512(msg)
+		buf, paddedLen = preprocess(msg)
 
-		local hash =
+		hash =
 		{
 			0x6a09e667f3bcc908i,
 			0xbb67ae8584caa73bi,
@@ -110,7 +110,7 @@ function test()
 			0x5be0cd19137e2179i,
 		}
 
-		local digest = {}
+		digest = {}
 
 		for i = 0, paddedLen - 1, 128 do
 			digestBlock(buf, i, hash, digest)
@@ -119,16 +119,16 @@ function test()
 		return toHex(hash)
 	end
 
-	local input = string.rep(".", 1e3)
+	input = string.rep(".", 1e3)
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = sha512(input)
+		res = sha512(input)
 		assert(res == "a17d627e7c3f79207e8ca630348c2e15b70206f88905167dbbc18fd8d2b2806f2ad757c781dfbdc6a0caf1c84a8615bfdbda58f0356543bd00e646a45ca83790")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

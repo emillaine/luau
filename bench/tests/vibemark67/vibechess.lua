@@ -1,30 +1,30 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
-local boardMod = require("./chess-dir/board")
-local movegen = require("./chess-dir/movegen")
-local search = require("./chess-dir/search")
+boardMod = require("./chess-dir/board")
+movegen = require("./chess-dir/movegen")
+search = require("./chess-dir/search")
 
 function test()
 
 -- Chess engine benchmark: searches a set of positions to fixed depth
 
-local Board = boardMod.Board
-local WHITE = boardMod.WHITE
-local BLACK = boardMod.BLACK
-local PAWN = boardMod.PAWN
-local KNIGHT = boardMod.KNIGHT
-local BISHOP = boardMod.BISHOP
-local ROOK = boardMod.ROOK
-local QUEEN = boardMod.QUEEN
-local KING = boardMod.KING
-local EMPTY = boardMod.EMPTY
-local WK_CASTLE = boardMod.WK_CASTLE
-local WQ_CASTLE = boardMod.WQ_CASTLE
-local BK_CASTLE = boardMod.BK_CASTLE
-local BQ_CASTLE = boardMod.BQ_CASTLE
+Board = boardMod.Board
+WHITE = boardMod.WHITE
+BLACK = boardMod.BLACK
+PAWN = boardMod.PAWN
+KNIGHT = boardMod.KNIGHT
+BISHOP = boardMod.BISHOP
+ROOK = boardMod.ROOK
+QUEEN = boardMod.QUEEN
+KING = boardMod.KING
+EMPTY = boardMod.EMPTY
+WK_CASTLE = boardMod.WK_CASTLE
+WQ_CASTLE = boardMod.WQ_CASTLE
+BK_CASTLE = boardMod.BK_CASTLE
+BQ_CASTLE = boardMod.BQ_CASTLE
 
-local pieceFromChar: {[string]: number} = {
+pieceFromChar = {
     P = bit32.bor(WHITE, PAWN), N = bit32.bor(WHITE, KNIGHT),
     B = bit32.bor(WHITE, BISHOP), R = bit32.bor(WHITE, ROOK),
     Q = bit32.bor(WHITE, QUEEN), K = bit32.bor(WHITE, KING),
@@ -33,21 +33,21 @@ local pieceFromChar: {[string]: number} = {
     q = bit32.bor(BLACK, QUEEN), k = bit32.bor(BLACK, KING),
 }
 
-local function parseFEN(fen: string): boardMod.Board
-    local b = Board.new()
-    local parts = string.split(fen, " ")
-    local ranks = string.split(parts[1], "/")
+function parseFEN(fen: string): boardMod.Board
+    b = Board.new()
+    parts = string.split(fen, " ")
+    ranks = string.split(parts[1], "/")
 
     for rankIdx = 1, 8 do
-        local rankStr = ranks[rankIdx]
-        local file = 1
+        rankStr = ranks[rankIdx]
+        file = 1
         for i = 1, #rankStr do
-            local ch = string.sub(rankStr, i, i)
-            local digit = tonumber(ch)
+            ch = string.sub(rankStr, i, i)
+            digit = tonumber(ch)
             if digit then
                 file += digit
             else
-                local sq = (8 - rankIdx) * 8 + file
+                sq = (8 - rankIdx) * 8 + file
                 b.squares[sq] = pieceFromChar[ch] or EMPTY
                 file += 1
             end
@@ -56,17 +56,17 @@ local function parseFEN(fen: string): boardMod.Board
 
     b.whiteToMove = (parts[2] == "w")
 
-    if parts[3] and parts[3] ~= "-" then
-        local castling = parts[3]
+    if parts[3] and parts[3] != "-" then
+        castling = parts[3]
         if string.find(castling, "K") then b.castling = bit32.bor(b.castling, WK_CASTLE) end
         if string.find(castling, "Q") then b.castling = bit32.bor(b.castling, WQ_CASTLE) end
         if string.find(castling, "k") then b.castling = bit32.bor(b.castling, BK_CASTLE) end
         if string.find(castling, "q") then b.castling = bit32.bor(b.castling, BQ_CASTLE) end
     end
 
-    if parts[4] and parts[4] ~= "-" then
-        local epFile = string.byte(parts[4], 1) - string.byte("a", 1) + 1
-        local epRank = tonumber(string.sub(parts[4], 2, 2)) or 0
+    if parts[4] and parts[4] != "-" then
+        epFile = string.byte(parts[4], 1) - string.byte("a", 1) + 1
+        epRank = tonumber(string.sub(parts[4], 2, 2)) or 0
         b.epSquare = (epRank - 1) * 8 + epFile
     end
 
@@ -76,7 +76,7 @@ local function parseFEN(fen: string): boardMod.Board
     return b
 end
 
-local positions = {
+positions = {
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
 --    "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
 --    "r1bqkbnr/pppppppp/2n5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
@@ -91,26 +91,26 @@ local positions = {
 --    "rnbq1rk1/ppp1ppbp/5np1/3p4/2PP4/2N2N2/PP2PPPP/R1BQKB1R w KQ - 0 5",
 }
 
-local SEARCH_DEPTH = 3
-local ITERATIONS = 1
+SEARCH_DEPTH = 3
+ITERATIONS = 1
 
-local totalNodes = 0
-local totalPositions = 0
+totalNodes = 0
+totalPositions = 0
 
 for iter = 1, ITERATIONS do
     for i, fen in positions do
         search.clearTT()
-        local board = parseFEN(fen)
-        local bestMove, score, nodes = search.search(board, SEARCH_DEPTH)
+        board = parseFEN(fen)
+        bestMove, score, nodes = search.search(board, SEARCH_DEPTH)
         totalNodes += nodes
         totalPositions += 1
     end
 end
 
-if totalNodes ~= 6132 then
+if totalNodes != 6132 then
     error("Bad totalNodes: " .. totalNodes)
 end
-if totalPositions ~= 3 then
+if totalPositions != 3 then
     error("Bad totalPositions: " .. totalPositions)
 end
 

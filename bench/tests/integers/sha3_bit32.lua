@@ -1,9 +1,9 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-	local RC_HI = {
+	RC_HI = {
 		0x00000000, 0x00000000, 0x80000000, 0x80000000,
 		0x00000000, 0x00000000, 0x80000000, 0x80000000,
 		0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -12,7 +12,7 @@ function test()
 		0x80000000, 0x80000000, 0x00000000, 0x80000000,
 	}
 
-	local RC_LO = {
+	RC_LO = {
 		0x00000001, 0x00008082, 0x0000808a, 0x80008000,
 		0x0000808b, 0x80000001, 0x80008081, 0x00008009,
 		0x0000008a, 0x00000088, 0x80008009, 0x8000000a,
@@ -22,27 +22,27 @@ function test()
 	}
 
 	-- 64-bit left rotate by n (0 < n < 64)
-	local function lrotate64(h, l, n)
+	function lrotate64(h, l, n)
 		if n < 32 then
 			return bit32.bor(bit32.lshift(h, n), bit32.rshift(l, 32 - n)),
 			       bit32.bor(bit32.lshift(l, n), bit32.rshift(h, 32 - n))
 		else if n == 32 then
 			return l, h
 		else
-			local m = n - 32
+			m = n - 32
 			return bit32.bor(bit32.lshift(l, m), bit32.rshift(h, 32 - m)),
 			       bit32.bor(bit32.lshift(h, m), bit32.rshift(l, 32 - m))
 		end
 	end
 
-	local function sha3_256(msg)
-		local msgLen = #msg
-		local rateBytes = 136
+	function sha3_256(msg)
+		msgLen = #msg
+		rateBytes = 136
 
-		local pad = rateBytes - (msgLen % rateBytes)
-		local paddedLen = msgLen + pad
+		pad = rateBytes - (msgLen % rateBytes)
+		paddedLen = msgLen + pad
 
-		local buf = buffer.create(paddedLen)
+		buf = buffer.create(paddedLen)
 		buffer.writestring(buf, 0, msg)
 		if pad == 1 then
 			buffer.writeu8(buf, msgLen, 0x86)
@@ -52,11 +52,11 @@ function test()
 		end
 
 		-- 25-lane state as (hi, lo) pairs
-		local S00h, S00l, S10h, S10l, S20h, S20l, S30h, S30l, S40h, S40l = 0,0,0,0,0,0,0,0,0,0
-		local S01h, S01l, S11h, S11l, S21h, S21l, S31h, S31l, S41h, S41l = 0,0,0,0,0,0,0,0,0,0
-		local S02h, S02l, S12h, S12l, S22h, S22l, S32h, S32l, S42h, S42l = 0,0,0,0,0,0,0,0,0,0
-		local S03h, S03l, S13h, S13l, S23h, S23l, S33h, S33l, S43h, S43l = 0,0,0,0,0,0,0,0,0,0
-		local S04h, S04l, S14h, S14l, S24h, S24l, S34h, S34l, S44h, S44l = 0,0,0,0,0,0,0,0,0,0
+		S00h, S00l, S10h, S10l, S20h, S20l, S30h, S30l, S40h, S40l = 0,0,0,0,0,0,0,0,0,0
+		S01h, S01l, S11h, S11l, S21h, S21l, S31h, S31l, S41h, S41l = 0,0,0,0,0,0,0,0,0,0
+		S02h, S02l, S12h, S12l, S22h, S22l, S32h, S32l, S42h, S42l = 0,0,0,0,0,0,0,0,0,0
+		S03h, S03l, S13h, S13l, S23h, S23l, S33h, S33l, S43h, S43l = 0,0,0,0,0,0,0,0,0,0
+		S04h, S04l, S14h, S14l, S24h, S24l, S34h, S34l, S44h, S44l = 0,0,0,0,0,0,0,0,0,0
 
 		for blockOffset = 0, paddedLen - 1, rateBytes do
 			-- absorb 17 lanes (136 bytes) — LE 64-bit read = (readu32 hi at +4, readu32 lo at +0)
@@ -80,54 +80,54 @@ function test()
 
 			for round = 1, 24 do
 				-- THETA
-				local C0h = bit32.bxor(S00h, S01h, S02h, S03h, S04h); local C0l = bit32.bxor(S00l, S01l, S02l, S03l, S04l)
-				local C1h = bit32.bxor(S10h, S11h, S12h, S13h, S14h); local C1l = bit32.bxor(S10l, S11l, S12l, S13l, S14l)
-				local C2h = bit32.bxor(S20h, S21h, S22h, S23h, S24h); local C2l = bit32.bxor(S20l, S21l, S22l, S23l, S24l)
-				local C3h = bit32.bxor(S30h, S31h, S32h, S33h, S34h); local C3l = bit32.bxor(S30l, S31l, S32l, S33l, S34l)
-				local C4h = bit32.bxor(S40h, S41h, S42h, S43h, S44h); local C4l = bit32.bxor(S40l, S41l, S42l, S43l, S44l)
+				C0h = bit32.bxor(S00h, S01h, S02h, S03h, S04h); C0l = bit32.bxor(S00l, S01l, S02l, S03l, S04l)
+				C1h = bit32.bxor(S10h, S11h, S12h, S13h, S14h); C1l = bit32.bxor(S10l, S11l, S12l, S13l, S14l)
+				C2h = bit32.bxor(S20h, S21h, S22h, S23h, S24h); C2l = bit32.bxor(S20l, S21l, S22l, S23l, S24l)
+				C3h = bit32.bxor(S30h, S31h, S32h, S33h, S34h); C3l = bit32.bxor(S30l, S31l, S32l, S33l, S34l)
+				C4h = bit32.bxor(S40h, S41h, S42h, S43h, S44h); C4l = bit32.bxor(S40l, S41l, S42l, S43l, S44l)
 
 				-- D[i] = C[i-1] XOR lrotate(C[i+1], 1) — rotation by 1 (< 32)
-				local D0h = bit32.bxor(C4h, bit32.bor(bit32.lshift(C1h, 1), bit32.rshift(C1l, 31)))
-				local D0l = bit32.bxor(C4l, bit32.bor(bit32.lshift(C1l, 1), bit32.rshift(C1h, 31)))
-				local D1h = bit32.bxor(C0h, bit32.bor(bit32.lshift(C2h, 1), bit32.rshift(C2l, 31)))
-				local D1l = bit32.bxor(C0l, bit32.bor(bit32.lshift(C2l, 1), bit32.rshift(C2h, 31)))
-				local D2h = bit32.bxor(C1h, bit32.bor(bit32.lshift(C3h, 1), bit32.rshift(C3l, 31)))
-				local D2l = bit32.bxor(C1l, bit32.bor(bit32.lshift(C3l, 1), bit32.rshift(C3h, 31)))
-				local D3h = bit32.bxor(C2h, bit32.bor(bit32.lshift(C4h, 1), bit32.rshift(C4l, 31)))
-				local D3l = bit32.bxor(C2l, bit32.bor(bit32.lshift(C4l, 1), bit32.rshift(C4h, 31)))
-				local D4h = bit32.bxor(C3h, bit32.bor(bit32.lshift(C0h, 1), bit32.rshift(C0l, 31)))
-				local D4l = bit32.bxor(C3l, bit32.bor(bit32.lshift(C0l, 1), bit32.rshift(C0h, 31)))
+				D0h = bit32.bxor(C4h, bit32.bor(bit32.lshift(C1h, 1), bit32.rshift(C1l, 31)))
+				D0l = bit32.bxor(C4l, bit32.bor(bit32.lshift(C1l, 1), bit32.rshift(C1h, 31)))
+				D1h = bit32.bxor(C0h, bit32.bor(bit32.lshift(C2h, 1), bit32.rshift(C2l, 31)))
+				D1l = bit32.bxor(C0l, bit32.bor(bit32.lshift(C2l, 1), bit32.rshift(C2h, 31)))
+				D2h = bit32.bxor(C1h, bit32.bor(bit32.lshift(C3h, 1), bit32.rshift(C3l, 31)))
+				D2l = bit32.bxor(C1l, bit32.bor(bit32.lshift(C3l, 1), bit32.rshift(C3h, 31)))
+				D3h = bit32.bxor(C2h, bit32.bor(bit32.lshift(C4h, 1), bit32.rshift(C4l, 31)))
+				D3l = bit32.bxor(C2l, bit32.bor(bit32.lshift(C4l, 1), bit32.rshift(C4h, 31)))
+				D4h = bit32.bxor(C3h, bit32.bor(bit32.lshift(C0h, 1), bit32.rshift(C0l, 31)))
+				D4l = bit32.bxor(C3l, bit32.bor(bit32.lshift(C0l, 1), bit32.rshift(C0h, 31)))
 
 				-- RHO + PI
-				local B00h, B00l = bit32.bxor(S00h, D0h), bit32.bxor(S00l, D0l) -- rot 0
-				local B10h, B10l = lrotate64(bit32.bxor(S11h, D1h), bit32.bxor(S11l, D1l), 44)
-				local B20h, B20l = lrotate64(bit32.bxor(S22h, D2h), bit32.bxor(S22l, D2l), 43)
-				local B30h, B30l = lrotate64(bit32.bxor(S33h, D3h), bit32.bxor(S33l, D3l), 21)
-				local B40h, B40l = lrotate64(bit32.bxor(S44h, D4h), bit32.bxor(S44l, D4l), 14)
+				B00h, B00l = bit32.bxor(S00h, D0h), bit32.bxor(S00l, D0l) -- rot 0
+				B10h, B10l = lrotate64(bit32.bxor(S11h, D1h), bit32.bxor(S11l, D1l), 44)
+				B20h, B20l = lrotate64(bit32.bxor(S22h, D2h), bit32.bxor(S22l, D2l), 43)
+				B30h, B30l = lrotate64(bit32.bxor(S33h, D3h), bit32.bxor(S33l, D3l), 21)
+				B40h, B40l = lrotate64(bit32.bxor(S44h, D4h), bit32.bxor(S44l, D4l), 14)
 
-				local B01h, B01l = lrotate64(bit32.bxor(S30h, D3h), bit32.bxor(S30l, D3l), 28)
-				local B11h, B11l = lrotate64(bit32.bxor(S41h, D4h), bit32.bxor(S41l, D4l), 20)
-				local B21h, B21l = lrotate64(bit32.bxor(S02h, D0h), bit32.bxor(S02l, D0l), 3)
-				local B31h, B31l = lrotate64(bit32.bxor(S13h, D1h), bit32.bxor(S13l, D1l), 45)
-				local B41h, B41l = lrotate64(bit32.bxor(S24h, D2h), bit32.bxor(S24l, D2l), 61)
+				B01h, B01l = lrotate64(bit32.bxor(S30h, D3h), bit32.bxor(S30l, D3l), 28)
+				B11h, B11l = lrotate64(bit32.bxor(S41h, D4h), bit32.bxor(S41l, D4l), 20)
+				B21h, B21l = lrotate64(bit32.bxor(S02h, D0h), bit32.bxor(S02l, D0l), 3)
+				B31h, B31l = lrotate64(bit32.bxor(S13h, D1h), bit32.bxor(S13l, D1l), 45)
+				B41h, B41l = lrotate64(bit32.bxor(S24h, D2h), bit32.bxor(S24l, D2l), 61)
 
-				local B02h, B02l = lrotate64(bit32.bxor(S10h, D1h), bit32.bxor(S10l, D1l), 1)
-				local B12h, B12l = lrotate64(bit32.bxor(S21h, D2h), bit32.bxor(S21l, D2l), 6)
-				local B22h, B22l = lrotate64(bit32.bxor(S32h, D3h), bit32.bxor(S32l, D3l), 25)
-				local B32h, B32l = lrotate64(bit32.bxor(S43h, D4h), bit32.bxor(S43l, D4l), 8)
-				local B42h, B42l = lrotate64(bit32.bxor(S04h, D0h), bit32.bxor(S04l, D0l), 18)
+				B02h, B02l = lrotate64(bit32.bxor(S10h, D1h), bit32.bxor(S10l, D1l), 1)
+				B12h, B12l = lrotate64(bit32.bxor(S21h, D2h), bit32.bxor(S21l, D2l), 6)
+				B22h, B22l = lrotate64(bit32.bxor(S32h, D3h), bit32.bxor(S32l, D3l), 25)
+				B32h, B32l = lrotate64(bit32.bxor(S43h, D4h), bit32.bxor(S43l, D4l), 8)
+				B42h, B42l = lrotate64(bit32.bxor(S04h, D0h), bit32.bxor(S04l, D0l), 18)
 
-				local B03h, B03l = lrotate64(bit32.bxor(S40h, D4h), bit32.bxor(S40l, D4l), 27)
-				local B13h, B13l = lrotate64(bit32.bxor(S01h, D0h), bit32.bxor(S01l, D0l), 36)
-				local B23h, B23l = lrotate64(bit32.bxor(S12h, D1h), bit32.bxor(S12l, D1l), 10)
-				local B33h, B33l = lrotate64(bit32.bxor(S23h, D2h), bit32.bxor(S23l, D2l), 15)
-				local B43h, B43l = lrotate64(bit32.bxor(S34h, D3h), bit32.bxor(S34l, D3l), 56)
+				B03h, B03l = lrotate64(bit32.bxor(S40h, D4h), bit32.bxor(S40l, D4l), 27)
+				B13h, B13l = lrotate64(bit32.bxor(S01h, D0h), bit32.bxor(S01l, D0l), 36)
+				B23h, B23l = lrotate64(bit32.bxor(S12h, D1h), bit32.bxor(S12l, D1l), 10)
+				B33h, B33l = lrotate64(bit32.bxor(S23h, D2h), bit32.bxor(S23l, D2l), 15)
+				B43h, B43l = lrotate64(bit32.bxor(S34h, D3h), bit32.bxor(S34l, D3l), 56)
 
-				local B04h, B04l = lrotate64(bit32.bxor(S20h, D2h), bit32.bxor(S20l, D2l), 62)
-				local B14h, B14l = lrotate64(bit32.bxor(S31h, D3h), bit32.bxor(S31l, D3l), 55)
-				local B24h, B24l = lrotate64(bit32.bxor(S42h, D4h), bit32.bxor(S42l, D4l), 39)
-				local B34h, B34l = lrotate64(bit32.bxor(S03h, D0h), bit32.bxor(S03l, D0l), 41)
-				local B44h, B44l = lrotate64(bit32.bxor(S14h, D1h), bit32.bxor(S14l, D1l), 2)
+				B04h, B04l = lrotate64(bit32.bxor(S20h, D2h), bit32.bxor(S20l, D2l), 62)
+				B14h, B14l = lrotate64(bit32.bxor(S31h, D3h), bit32.bxor(S31l, D3l), 55)
+				B24h, B24l = lrotate64(bit32.bxor(S42h, D4h), bit32.bxor(S42l, D4l), 39)
+				B34h, B34l = lrotate64(bit32.bxor(S03h, D0h), bit32.bxor(S03l, D0l), 41)
+				B44h, B44l = lrotate64(bit32.bxor(S14h, D1h), bit32.bxor(S14l, D1l), 2)
 
 				-- CHI
 				S00h = bit32.bxor(B00h, bit32.band(bit32.bnot(B10h), B20h)); S00l = bit32.bxor(B00l, bit32.band(bit32.bnot(B10l), B20l))
@@ -174,16 +174,16 @@ function test()
 		)
 	end
 
-	local input = string.rep(".", 1e3)
+	input = string.rep(".", 1e3)
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = sha3_256(input)
+		res = sha3_256(input)
 		assert(res == "778f41ec28c470b1947cf8785207ca0e5829b3b04966283c93cd2f2cd37c831c")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

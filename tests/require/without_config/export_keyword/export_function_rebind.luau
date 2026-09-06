@@ -1,4 +1,4 @@
-export local foo = function()
+export foo = function()
     return "original"
 end
 

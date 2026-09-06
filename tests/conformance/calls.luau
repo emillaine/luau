@@ -14,14 +14,14 @@ f = nil
 function f (x) return a:x (x) end
 assert(type(f) == 'function')
 
-local pack = table.pack
-local unpack = table.unpack
+pack = table.pack
+unpack = table.unpack
 
 -- testing local-function recursion
 fact = false
 do
-  local res = 1
-  local function fact (n)
+  const res = 1
+  const function fact (n)
     if n==0 then return res
     else return n*fact(n-1)
     end
@@ -44,12 +44,12 @@ a["t"].x = function (self, a,b) return self.i+a+b end
 assert(a.t:x(2,3) == -95)
 
 do
-  local a = {x=0}
+  a = {x=0}
   function a:add (x) self.x, a.y = self.x+x, 20; return self end
   assert(a:add(10):add(20):add(30).x == 60 and a.y == 20)
 end
 
-local a = {b={c={}}}
+a = {b={c={}}}
 
 function a.b.c.f1 (x) return x+1 end
 function a.b.c:f2 (x,y) self[x] = y end
@@ -59,7 +59,7 @@ a.b.c:f2('k', 12); assert(a.b.c.k == 12)
 print('+')
 
 t = nil   -- 'declare' t
-function f(a,b,c) local d = 'a'; t={a,b,c,d} end
+function f(a,b,c) d = 'a'; t={a,b,c,d} end
 
 f(      -- this line change must be valid
   1,2)
@@ -70,12 +70,13 @@ assert(t[1] == 1 and t[2] == 2 and t[3] == 3 and t[4] == 'a')
 
 function fat(x)
   if x <= 1 then return 1
-  else return x*loadstring("return fat(" .. x-1 .. ")")()
+  else return x*loadstring("return _G.fat(" .. x-1 .. ")")()
   end
 end
+_G.fat = fat
 
-assert(loadstring "loadstring 'assert(fat(6)==720)' () ")()
-a = loadstring('return fat(5), 3')
+assert(loadstring "loadstring 'assert(_G.fat(6)==720)' () ")()
+a = loadstring('return _G.fat(5), 3')
 a,b = a()
 assert(a == 120 and b == 3)
 print('+')
@@ -86,12 +87,10 @@ function err_on_n (n)
   end
 end
 
-do
-  function dummy (n)
-    if n > 0 then
-      assert(not pcall(err_on_n, n))
-      dummy(n-1)
-    end
+function dummy (n)
+  if n > 0 then
+    assert(not pcall(err_on_n, n))
+    dummy(n-1)
   end
 end
 
@@ -118,7 +117,7 @@ a = nil
 assert(a == 23 and (function (x) return x*2 end)(20) == 40)
 
 
-local x,y,z,a
+x,y,z,a = nil, nil, nil, nil
 a = {}; lim = 2000
 for i=1, lim do a[i]=i end
 assert(select(lim, unpack(a)) == lim and select('#', unpack(a)) == lim)
@@ -146,7 +145,7 @@ assert(a==1 and x==nil)
 
 -- fixed-point operator
 Y = function (le)
-      local function a (f)
+      function a (f)
         return le(function (x) return f(f)(x) end)
       end
       return a(a)
@@ -166,8 +165,8 @@ fat = Y(F)
 
 assert(fat(0) == 1 and fat(4) == 24 and Y(F)(5)==5*Y(F)(4))
 
-local function g (z)
-  local function f (a,b,c,d)
+function g (z)
+  function f (a,b,c,d)
     return function (x,y) return a+b+c+d+a+x+y+z end
   end
   return f(z,z+1,z+2,z+3)
@@ -198,7 +197,7 @@ end
 function f() return 1,2,30,4 end
 function ret2 (a,b) return a,b end
 
-local a,b,c,d = unlpack{1,2,3}
+a,b,c,d = unlpack{1,2,3}
 assert(a==1 and b==2 and c==3 and d==nil)
 a = {1,2,3,4,false,10,'alo',false,assert}
 equaltab(pack(unlpack(a)), a)
@@ -223,18 +222,18 @@ table.sort({10,9,8,4,19,23,0,0}, function (a,b) return a<b end, "extra arg")
 
 -- test for bug in parameter adjustment
 assert((function () return nil end)(4) == nil)
-assert((function () local a; return a end)(4) == nil)
+assert((function () a = nil; return a end)(4) == nil)
 assert((function (a) return a end)() == nil)
 
  -- test for a bug in clobbering stack variables 
  -- this call to print will clobber x and y if the call to f is not properly setup
-local function clobber()
+function clobber()
    print("abcdefg", "hijklmnop")
 
 end
 
-local x = { }
-local y = { }
+x = { }
+y = { }
 
 x[1] = 1234
 x[2] = 4567
@@ -246,11 +245,11 @@ assert(x[2] == 4567)
 
 -- C-stack overflow while handling C-stack overflow
 if not limitedstack then
-  local function loop ()
+  function loop ()
     assert(pcall(loop))
   end
 
-  local err, msg = xpcall(loop, loop)
+  err, msg = xpcall(loop, loop)
   assert(not err and string.find(msg, "error"))
 end
 
@@ -258,7 +257,7 @@ end
 if not limitedstack then
   function recurse(n, ...) return n <= 1 and (1 + ({...}).count) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
 
-  local ok, msg = pcall(recurse, 19000)
+  ok, msg = pcall(recurse, 19000)
   assert(not ok and string.find(msg, "too many results to unpack"))
 end
 

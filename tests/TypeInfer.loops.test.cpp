@@ -15,15 +15,16 @@
 
 using namespace Luau;
 
-
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 TEST_SUITE_BEGIN("TypeInferLoops");
 
 TEST_CASE_FIXTURE(Fixture, "for_loop")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local q
+        export q = nil
         for i=0, 50, 2 do
             q = i
         end
@@ -57,7 +58,7 @@ type Iterable = typeof(setmetatable(
     }
 ))
 
-local t: Iterable
+const t: Iterable = nil as any
 
 for a, b in t do end
 )");
@@ -82,7 +83,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967")
             }
         ))
 
-        local t: Iterable
+        const t: Iterable = nil as any
 
         for a, b in t do end
     )");
@@ -95,6 +96,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967_alt")
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         type Iterable = typeof(setmetatable(
             {},
@@ -103,8 +105,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967_alt")
             }
         ))
 
-        local t: Iterable
-        local x, y
+        const t: Iterable = nil as any
+        export x, y = nil, nil
 
         for a, b in t do
             x = a
@@ -128,9 +130,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967_alt")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local n
-        local s
+        export n = nil
+        export s = nil
         for i, v in pairs({ "foo" }) do
             n = i
             s = v
@@ -156,9 +159,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_next")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local n
-        local s
+        export n = nil
+        export s = nil
         for i, v in next, { "foo" } do
             n = i
             s = v
@@ -183,9 +187,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_next")
 }
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_next_and_multiple_elements")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local n
-        local s
+        export n = nil
+        export s = nil
         for i, v in next, { "foo", "bar" } do
             n = i
             s = v
@@ -211,9 +216,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_next_and_multiple_elements"
 
 TEST_CASE_FIXTURE(Fixture, "for_in_with_an_iterator_of_type_any")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local it: any
-        local a, b
+        const it: any = nil as any
+        export a, b = nil, nil
         for i, v in it do
             a, b = i, v
         end
@@ -225,7 +231,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_with_an_iterator_of_type_any")
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_should_fail_with_non_function_iterator")
 {
     CheckResult result = check(R"(
-        local foo = "bar"
+        const foo = "bar"
         for i, v in foo do
         end
     )");
@@ -238,9 +244,9 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_should_fail_with_non_function_iterator")
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_with_just_one_iterator_is_ok")
 {
     CheckResult result = check(R"(
-        local function keys(dictionary)
-            local new = {}
-            local index = 1
+        function keys(dictionary)
+            const new = {}
+            index = 1
 
             for key in pairs(dictionary) do
                 new[index] = key
@@ -272,7 +278,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_zero_iterators_dcr")
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_with_a_custom_iterator_should_type_check")
 {
     CheckResult result = check(R"(
-        local function range(l, h): () -> number
+        function range(l, h): () -> number
             return function()
                 return l
             end
@@ -288,12 +294,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_with_a_custom_iterator_should_type_ch
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_on_error")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function f(x)
             gobble.prop = x.otherprop
         end
 
-        local p
+        export p = nil
         for _, part in i_am_not_defined do
             p = part
             f(part)
@@ -313,7 +320,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_on_error")
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_on_non_function")
 {
     CheckResult result = check(R"(
-        local bad_iter = 5
+        const bad_iter = 5
 
         for a in bad_iter() do
         end
@@ -330,7 +337,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_error_on_factory_not_returning_t
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function hasDivisors(value: number, table)
+        function hasDivisors(value: number, table)
             return false
         end
 
@@ -407,8 +414,8 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_with_incompatible_args_to_iterator")
             return state, index
         end
 
-        local my_state = {}
-        local first_index = "first"
+        const my_state = {}
+        const first_index = "first"
 
         -- Type errors here.  my_state and first_index cannot be passed to my_iter
         for a, b in my_iter, my_state, first_index do
@@ -456,8 +463,9 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_with_custom_iterator")
 
 TEST_CASE_FIXTURE(Fixture, "while_loop")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local i
+        export i = nil
         while true do
             i = 8
         end
@@ -473,8 +481,9 @@ TEST_CASE_FIXTURE(Fixture, "while_loop")
 
 TEST_CASE_FIXTURE(Fixture, "repeat_loop")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local i
+        export i = nil
         repeat
             i = 'hi'
         until true
@@ -492,7 +501,7 @@ TEST_CASE_FIXTURE(Fixture, "repeat_loop_condition_binds_to_its_block")
 {
     CheckResult result = check(R"(
         repeat
-            local x = true
+            const x = true
         until x
     )");
 
@@ -503,7 +512,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "symbols_in_repeat_block_should_not_be_visibl
 {
     CheckResult result = check(R"(
         repeat
-            local x = true
+            const x = true
         until x
 
         print(x)
@@ -515,7 +524,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "symbols_in_repeat_block_should_not_be_visibl
 TEST_CASE_FIXTURE(BuiltinsFixture, "varlist_declared_by_for_in_loop_should_be_free")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
 
         function T.f(p)
             for i, v in pairs(p) do
@@ -539,7 +548,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "varlist_declared_by_for_in_loop_should_be_fr
 TEST_CASE_FIXTURE(BuiltinsFixture, "iter_constraint_before_loop_body")
 {
     CheckResult result = check(R"(
-        local T = {
+        const T = {
     	    fields = {},
         }
 
@@ -556,12 +565,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iter_constraint_before_loop_body")
 TEST_CASE_FIXTURE(BuiltinsFixture, "rbxl_place_file_crash_for_wrong_constraints")
 {
     CheckResult result = check(R"(
-local VehicleParameters = {
+const VehicleParameters = {
     -- These are default values in the case the package structure is broken
 	StrutSpringStiffnessFront = 28000,
 }
 
-local function updateFromConfiguration()
+function updateFromConfiguration()
 	for property, value in pairs(VehicleParameters) do
         VehicleParameters[property] = value
 	end
@@ -596,7 +605,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "correctly_scope_locals_while")
 {
     CheckResult result = check(R"(
         while true do
-            local a = 1
+            const a = 1
         end
 
         print(a) -- oops!
@@ -612,7 +621,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "correctly_scope_locals_while")
 TEST_CASE_FIXTURE(BuiltinsFixture, "trivial_ipairs_usage")
 {
     CheckResult result = check(R"(
-        local next, t, s = ipairs({1, 2, 3})
+        const next, t, s = ipairs({1, 2, 3})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -624,8 +633,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "trivial_ipairs_usage")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "ipairs_produces_integral_indices")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local key
+        export key = nil
         for i, e in ipairs({}) do key = i end
     )");
 
@@ -746,7 +756,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_typecheck_crash_on_empty_optional")
         return;
 
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         for _ in t do
             for _ in assert(missing()) do
             end
@@ -781,9 +791,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_with_generic_next")
 
 TEST_CASE_FIXTURE(Fixture, "loop_iter_basic")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local t: {string} = {}
-        local key
+        const t: {string} = {}
+        export key = nil
         for k: number in t do
         end
         for k: number, v: string in t do
@@ -810,10 +821,11 @@ TEST_CASE_FIXTURE(Fixture, "loop_iter_trailing_nil")
 {
     // CLI-116498 Sometimes you can iterate over tables with no indexers.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local t: {string} = {}
-        local extra
+        const t: {string} = {}
+        export extra = nil
         for k, v, e in t do
             extra = e
         end
@@ -829,7 +841,7 @@ TEST_CASE_FIXTURE(Fixture, "loop_iter_no_indexer_strict")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         for k, v in t do
         end
     )");
@@ -840,7 +852,7 @@ TEST_CASE_FIXTURE(Fixture, "loop_iter_no_indexer_strict")
 TEST_CASE_FIXTURE(Fixture, "loop_iter_no_indexer_nonstrict")
 {
     CheckResult result = check(Mode::Nonstrict, R"(
-        local t = {}
+        const t = {}
         for k, v in t do
         end
     )");
@@ -855,7 +867,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_iter_metamethod_nil")
         return;
 
     CheckResult result = check(R"(
-        local t = setmetatable({}, { __iter = function(o) return next, nil end, })
+        const t = setmetatable({}, { __iter = function(o) return next, nil end, })
         for k: number, v: string in t do
         end
     )");
@@ -872,7 +884,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_iter_metamethod_not_enough_returns")
         return;
 
     CheckResult result = check(R"(
-        local t = setmetatable({}, { __iter = function(o) end })
+        const t = setmetatable({}, { __iter = function(o) end })
         for k: number, v: string in t do
         end
     )");
@@ -894,7 +906,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_iter_metamethod_ok")
         return;
 
     CheckResult result = check(R"(
-        local t = setmetatable({
+        const t = setmetatable({
             children = {"foo"}
         }, { __iter = function(o) return next, o.children end })
         for k: number, v: string in t do
@@ -912,11 +924,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_iter_metamethod_ok_with_inference")
         return;
 
     CheckResult result = check(R"(
-        local t = setmetatable({
+        const t = setmetatable({
             children = {"foo"}
         }, { __iter = function(o) return next, o.children end })
 
-        local a, b
+        const a, b = nil, nil
         for k, v in t do
             a = k
             b = v
@@ -964,8 +976,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_68448_iterators_need_not_accept_nil")
         return;
 
     CheckResult result = check(R"(
-        local function makeEnum(members)
-            local enum = {}
+        function makeEnum(members)
+            const enum = {}
             for _, memberName in ipairs(members) do
                 enum[memberName] = memberName
             end
@@ -999,7 +1011,7 @@ TEST_CASE_FIXTURE(Fixture, "iterate_over_free_table")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_explore_raycast_minimization")
 {
     CheckResult result = check(R"(
-        local testResults = {}
+        const testResults = {}
         for _, testData in pairs(testResults) do
         end
 
@@ -1012,12 +1024,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_explore_raycast_minimization")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_1")
 {
     CheckResult result = check(R"(
-        local function rawpairs(t)
+        function rawpairs(t)
             return next, t, nil
         end
 
-        local function getFragmentedKeys(tbl)
-            local _ = rawget(tbl, 0)
+        function getFragmentedKeys(tbl)
+            const _ = rawget(tbl, 0)
             for _ in rawpairs(tbl) do
             end
         end
@@ -1029,8 +1041,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_1")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_2")
 {
     CheckResult result = check(R"(
-        local function getFragmentedKeys(tbl)
-            local _ = rawget(tbl, 0)
+        function getFragmentedKeys(tbl)
+            const _ = rawget(tbl, 0)
             for _ in next, tbl, nil do
             end
         end
@@ -1042,8 +1054,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_2")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_3")
 {
     CheckResult result = check(R"(
-        local function getFragmentedKeys(tbl)
-            local _ = rawget(tbl, 0)
+        function getFragmentedKeys(tbl)
+            const _ = rawget(tbl, 0)
             for _ in pairs(tbl) do
             end
         end
@@ -1055,13 +1067,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_3")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_fragmented_keys")
 {
     CheckResult result = check(R"(
-        local function isIndexKey(k, contiguousLength)
+        function isIndexKey(k, contiguousLength)
             return true
         end
 
-        local function getTableLength(tbl)
-            local length = 1
-            local value = rawget(tbl, length)
+        function getTableLength(tbl)
+            length = 1
+            value = rawget(tbl, length)
             while value != nil do
                 length += 1
                 value = rawget(tbl, length)
@@ -1069,14 +1081,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_fragmented_keys")
             return length - 1
         end
 
-        local function rawpairs(t)
+        function rawpairs(t)
             return next, t, nil
         end
 
-        local function getFragmentedKeys(tbl)
-            local keys = {}
-            local keysLength = 0
-            local tableLength = getTableLength(tbl)
+        function getFragmentedKeys(tbl)
+            const keys = {}
+            keysLength = 0
+            const tableLength = getTableLength(tbl)
             for key, _ in rawpairs(tbl) do
                 if not isIndexKey(key, tableLength) then
                     keysLength = keysLength + 1
@@ -1098,13 +1110,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_xpath_candidates")
 
     CheckResult result = check(R"(
         type Instance = {}
-        local function findCandidates(instances: { Instance },  path: { string })
+        function findCandidates(instances: { Instance },  path: { string })
             for _, name in ipairs(path) do
             end
             return {}
         end
 
-        local canditates = findCandidates({}, {})
+        const canditates = findCandidates({}, {})
         for _, canditate in ipairs(canditates) do end
     )");
 
@@ -1116,9 +1128,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_on_never_gives_never")
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local iter: never
-        local ans
+        const iter: never = nil as any
+        export ans = nil
         for xs in iter do
             ans = xs
         end
@@ -1138,8 +1151,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function f()
-            local t = { p = 5, q = "hello" }
+        function f()
+            const t = { p = 5, q = "hello" }
             for k, v in t do
                 return k, v
             end
@@ -1147,7 +1160,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties")
             error("")
         end
 
-        local k, v = f()
+        const k, v = f()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1160,8 +1173,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties_nonstrict")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local function f()
-            local t = { p = 5, q = "hello" }
+        function f()
+            const t = { p = 5, q = "hello" }
             for k, v in t do
                 return k, v
             end
@@ -1169,7 +1182,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties_nonstrict")
             error("")
         end
 
-        local k, v = f()
+        const k, v = f()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1179,7 +1192,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pairs_should_not_retroactively_add_an_indexe
 {
     CheckResult result = check(R"(
         --!strict
-        local prices = {
+        const prices = {
             hat = 1,
             bat = 2,
         }
@@ -1216,10 +1229,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_array_of_singletons")
     CheckResult result = check(R"(
         --!strict
         type Direction = "Left" | "Right" | "Up" | "Down"
-        local Instructions: { Direction } = { "Left", "Down" }
+        const Instructions: { Direction } = { "Left", "Down" }
 
         for _, step in Instructions do
-            local dir: Direction = step
+            const dir: Direction = step
             print(dir)
         end
     )");
@@ -1233,7 +1246,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_array_of_singletons")
 TEST_CASE_FIXTURE(BuiltinsFixture, "iter_mm_results_are_lvalue")
 {
     CheckResult result = check(R"(
-        local foo = setmetatable({}, {
+        const foo = setmetatable({}, {
             __iter = function()
                 return pairs({1, 2, 3})
             end,
@@ -1251,7 +1264,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "forin_metatable_no_iter_mm")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local t = setmetatable({1, 2, 3}, {})
+        const t = setmetatable({1, 2, 3}, {})
 
         for i, v in t do
             print(i, v)
@@ -1305,7 +1318,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_preserves_error_suppression")
 TEST_CASE_FIXTURE(BuiltinsFixture, "tryDispatchIterableFunction_under_constrained_loop_should_not_assert")
 {
     CheckResult result = check(R"(
-local function foo(Instance)
+function foo(Instance)
     for _, Child in next, Instance:GetChildren() do
     end
 end
@@ -1337,13 +1350,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_require")
 
 TEST_CASE_FIXTURE(Fixture, "oss_1480")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type Part = { Parent: Part? }
         type Instance = Part
 
-        local part = {} as Part
+        const part = {} as Part
 
-        local currentParent: Instance? = part.Parent
+        export currentParent: Instance? = part.Parent
         while currentParent != nil do
             currentParent = currentParent.Parent
         end
@@ -1353,12 +1367,12 @@ TEST_CASE_FIXTURE(Fixture, "oss_1480")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1413")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function KahanSum(values: {number}): number
-            local sum: number = 0
-            local compensator: number = 0
+        function KahanSum(values: {number}): number
+            sum = 0
+            compensator = 0
             for _, value in values do
-                local y = value - compensator
-                local t = sum + y
+                const y = value - compensator
+                const t = sum + y
                 compensator = (t - sum) - y
                 sum = t
             end
@@ -1367,15 +1381,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1413")
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function HistogramString(values: {number})
-            local histogram = {}
+        function HistogramString(values: {number})
+            const histogram = {}
             values = table.clone(values)
             table.sort(values)
 
-            local count = values.count
-            local range = (count - 1)
+            const count = values.count
+            const range = (count - 1)
 
-            local digitIndex = range // 2 + 1
+            digitIndex = range // 2 + 1
             while digitIndex < count and values[digitIndex] == 0 do
                 digitIndex = count - ((count - digitIndex) // 2)
             end
@@ -1383,17 +1397,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1413")
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function fun1()
-            local foo = 1
-            local bar = foo - foo + foo
+        function fun1()
+            foo = 1
+            const bar = foo - foo + foo
             while false do
                 foo = bar
             end
         end
-        local function fun2()
-            local foo = 1
+        function fun2()
+            foo = 1
             while false do
-                local bar = foo - foo + foo
+                const bar = foo - foo + foo
                 foo = bar
             end
         end
@@ -1406,8 +1420,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "while_loop_error_in_body")
         return;
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function foo()
-            local x = ""
+        function foo()
+            x = ""
             while math.random () > 0.5 do
                 x = nil
                 error("why did you make x nil tho")
@@ -1424,10 +1438,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "while_loop_assign_different_type")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function takesString(_: string) end
-        local function takesNil(_: nil) end
-        local function foo()
-            local x = ""
+        function takesString(_: string) end
+        function takesNil(_: nil) end
+        function foo()
+            x = ""
             takesString(x)
             while math.random () > 0.5 do
                 x = nil
@@ -1442,12 +1456,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "while_loop_assign_different_type")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_loop_assignment")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = nil
+        export x = nil
         repeat
             x = 42
         until math.random() > 0.5
-        local y = x
+        const y = x
     )"));
 
     CHECK_EQ("number", toString(requireType("y")));
@@ -1455,12 +1470,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_loop_assignment")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_loop_assignment_with_break")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = nil
+        export x = nil
         repeat
             x = 42
         until math.random() > 0.5
-        local y = x
+        const y = x
     )"));
 
     CHECK_EQ("number", toString(requireType("y")));
@@ -1468,14 +1484,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_loop_assignment_with_break")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_unconditionally_fires_error")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = nil
+        export x = nil
         repeat
             x = 42
         until true
         -- `x` should unconditionally be `number` here as the assignment
         -- above will _always_ run.
-        local y = x
+        const y = x
     )"));
 
     CHECK_EQ("number", toString(requireType("y")));
@@ -1486,8 +1503,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_is_linearish")
     if (FFlag::DebugLuauForceOldSolver)
         return;
 
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = nil
+        export x = nil
         if math.random () > 0.5 then
             x = ""
             repeat
@@ -1496,7 +1514,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_is_linearish")
         end
         -- The repeat in the above branch unconditionally fires the error, so
         -- this should _always_ be `nil`
-        local y = x
+        const y = x
     )"));
 
     CHECK_EQ("nil", toString(requireType("y")));
@@ -1505,13 +1523,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_is_linearish")
 TEST_CASE_FIXTURE(Fixture, "ensure_local_in_loop_does_not_escape")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local x = 42
+        const x = 42
         repeat
-            local x = ""
+            const x = ""
         until true
         -- The local inside the loop should have no effect on the local
         -- outside the loop.
-        local y = x
+        const y = x
     )"));
 
     CHECK_EQ("number", toString(requireType("y")));
@@ -1523,7 +1541,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1851_union_of_many_strings")
 --!strict
 type union = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
-local example: { [union]: number } = {}
+const example: { [union]: number } = {}
 
 for key in example do
 end
@@ -1597,7 +1615,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_annotations_apply_to_function_ex
             return {}
         end
 
-        local function takesString(s: string) end
+        function takesString(s: string) end
 
         for index: number in my_iter() do
             takesString(index)
@@ -1621,7 +1639,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_annotations_apply_inside_lambdas
         end
 
         for index: number in my_iter() do
-            local fn = function()
+            const fn = function()
                 index = ""
             end
             fn()

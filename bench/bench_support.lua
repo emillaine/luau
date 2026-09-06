@@ -1,5 +1,5 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
-local bench = {}
+bench = {}
 
 bench.runs = 20
 bench.extraRuns = 4
@@ -15,7 +15,7 @@ function bench.runCode(f, description)
         return
     end
 
-    local timeTable = {}
+    timeTable = {}
 
     for i = 1,bench.runs + bench.extraRuns do
         -- try to run GC if it's available
@@ -25,11 +25,11 @@ function bench.runCode(f, description)
             end)
         end
 
-        local ts0 = os.clock()
+        ts0 = os.clock()
 
-        local result = f()
+        result = f()
 
-        local ts1 = os.clock()
+        ts1 = os.clock()
 
         -- If test case doesn't return a duration (if only a part of code is measured) we will measure full execution time here
         if not result then
@@ -46,7 +46,7 @@ function bench.runCode(f, description)
     end
 
     -- Output test name followed by each result
-    local report = "|><|"..description
+    report = "|><|"..description
 
     for _,v in ipairs(timeTable) do
         report = report .. "|><|" .. (v * 1000)
@@ -82,13 +82,13 @@ function bench.runScriptCodeUnderActor(scriptInstance, f, description)
         -- Actor instance.
 
         -- Create an Actor to run the script under
-        local actor = Instance.new("Actor")
+        actor = Instance.new("Actor")
         -- Clone this script (i.e. the bench_support module) and place it under the Actor where
         -- the script script would expect it to be when using 'require'.
-        local benchModule = script:Clone()
+        benchModule = script:Clone()
         benchModule.Parent = actor
         -- Clone the scriptInstance
-        local actorScript = scriptInstance:Clone()
+        actorScript = scriptInstance:Clone()
         -- Enable the script since `scriptInstance` may be started by roblox-cli without ever being enabled.
         actorScript.Disabled = false
         actorScript.Parent = actor

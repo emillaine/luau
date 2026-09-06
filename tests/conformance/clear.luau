@@ -1,11 +1,11 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
-local function checkerror(msg, f, ...)
-	local s, err = pcall(f, ...)
+function checkerror(msg, f, ...)
+	s, err = pcall(f, ...)
 	assert(not s and string.find(err, msg))
 end
 
 function generateClearedTable(arraySize, hashSize)
-	local tb = {}
+	tb = {}
 	for i = 1, arraySize do
 		tb[i] = i
 	end
@@ -32,17 +32,17 @@ do
 
 	
 	for i = 1, 16 do
-		local t1 = generateClearedTable(16, 0)
-		local t2 = table.create(16)
+		t1 = generateClearedTable(16, 0)
+		t2 = table.create(16)
 		t1[i] = true
 		t2[i] = true
 		assert(t1.count == t2.count, "table length mismatch with i=" .. i .. "(" .. t1.count .. " vs " .. t2.count .. ")")
 	end
 
 	do
-		local things = {"foo", "bar", "baz", "foobar", "a", "b", "c", "d", "e", "f", "g"}
-		local tb = generateClearedTable(0, 20)
-		local containsAll = {}
+		things = {"foo", "bar", "baz", "foobar", "a", "b", "c", "d", "e", "f", "g"}
+		tb = generateClearedTable(0, 20)
+		containsAll = {}
 		for _, v in ipairs(things) do
 			tb[v] = true
 		end
@@ -56,7 +56,7 @@ do
 	end
 
 	do -- Check expanding the array part after clear
-		local tb = generateClearedTable(10, 0)
+		tb = generateClearedTable(10, 0)
 		for i = 1, 40 do
 			tb[i] = i
 		end
@@ -64,11 +64,11 @@ do
 	end
 
 	do -- Check expanding the hash part after clear
-		local tb = generateClearedTable(0, 10)
+		tb = generateClearedTable(0, 10)
 		for i = 1, 40 do
 			tb[tostring(i)] = i
 		end
-		local count = 0
+		count = 0
 		for _ in pairs(tb) do
 			count = count + 1
 		end

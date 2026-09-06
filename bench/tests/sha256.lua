@@ -1,17 +1,17 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
-	local band = bit32.band
-	local bnot = bit32.bnot
-	local bxor = bit32.bxor
-	local bor = bit32.bor
+	band = bit32.band
+	bnot = bit32.bnot
+	bxor = bit32.bxor
+	bor = bit32.bor
 
-	local rrotate = bit32.rrotate
-	local rshift = bit32.rshift
+	rrotate = bit32.rrotate
+	rshift = bit32.rshift
 
-	local primes = 
+	primes = 
 	{
 		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
 		0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -31,19 +31,19 @@ function test()
 		0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 	}
 
-	local function toHex(str)
-		local result = str:gsub('.', function (char)
+	function toHex(str)
+		result = str:gsub('.', function (char)
 			return string.format("%02x", char:byte())
 		end)
 		
 		return result
 	end
 
-	local function toBytes(value, length)
-		local str = ""
+	function toBytes(value, length)
+		str = ""
 		
 		for i = 1, length do
-			local rem = value % 256
+			rem = value % 256
 			str = string.char(rem) .. str
 			value = (value - rem) / 256
 		end
@@ -51,32 +51,32 @@ function test()
 		return str
 	end
 
-	local function digestBlock(msg, i, hash, digest)
+	function digestBlock(msg, i, hash, digest)
 		for j = 1, 16 do 
-			local offset = i + (j - 1) * 4
-			local a, b, c, d = string.byte(msg, offset, offset + 3)
+			offset = i + (j - 1) * 4
+			a, b, c, d = string.byte(msg, offset, offset + 3)
 			digest[j] = ((a * 256 + b) * 256 + c) * 256 + d
 		end
 		
 		for j = 17, 64 do
-			local v = digest[j - 15]
-			local s0 = bxor(rrotate(v, 7), rrotate(v, 18), rshift(v, 3))
+			v = digest[j - 15]
+			s0 = bxor(rrotate(v, 7), rrotate(v, 18), rshift(v, 3))
 			
 			v = digest[j - 2]
 			digest[j] = digest[j - 16] + s0 + digest[j - 7] + bxor(rrotate(v, 17), rrotate(v, 19), rshift(v, 10))
 		end
 		
-		local a, b, c, d, e, f, g, h = table.unpack(hash)
+		a, b, c, d, e, f, g, h = table.unpack(hash)
 		
 		for i = 1, 64 do
-			local s0 = bxor(rrotate(a, 2), rrotate(a, 13), rrotate(a, 22))
-			local maj = bxor(band(a, b), band(a, c), band(b, c))
+			s0 = bxor(rrotate(a, 2), rrotate(a, 13), rrotate(a, 22))
+			maj = bxor(band(a, b), band(a, c), band(b, c))
 			
-			local t2 = s0 + maj
-			local s1 = bxor(rrotate(e, 6), rrotate(e, 11), rrotate(e, 25))
+			t2 = s0 + maj
+			s1 = bxor(rrotate(e, 6), rrotate(e, 11), rrotate(e, 25))
 			
-			local ch = bxor(band(e, f), band(bnot(e), g))
-			local t1 = h + s1 + ch + primes[i] + digest[i]
+			ch = bxor(band(e, f), band(bnot(e), g))
+			t1 = h + s1 + ch + primes[i] + digest[i]
 			
 			h, g, f, e, d, c, b, a = g, f, e, d + t1, c, b, a, t1 + t2
 		end
@@ -91,16 +91,16 @@ function test()
 		hash[8] = bor(hash[8] + h, 0)
 	end
 
-	local function sha256(msg)
+	function sha256(msg)
 		do
-			local extra = 64 - ((#msg + 9) % 64)
-			local len = toBytes(8 * #msg, 8)
+			extra = 64 - ((#msg + 9) % 64)
+			len = toBytes(8 * #msg, 8)
 			
 			msg = msg .. '\128' .. string.rep('\0', extra) .. len
 			assert(#msg % 64 == 0)
 		end
 		
-		local hash = 
+		hash = 
 		{
 			0x6a09e667,
 			0xbb67ae85,
@@ -112,32 +112,32 @@ function test()
 			0x5be0cd19,	
 		}
 
-		local digest = {}
+		digest = {}
 		
 		for i = 1, #msg, 64 do 
 			digestBlock(msg, i, hash, digest)
 		end
 		
-		local result = ""
+		result = ""
 		
 		for i = 1, 8 do
-			local value = hash[i]
+			value = hash[i]
 			result = result .. toBytes(value, 4)
 		end
 		
 		return toHex(result)
 	end
 
-	local input = string.rep(".", 1e3)
+	input = string.rep(".", 1e3)
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = sha256(input)
+		res = sha256(input)
 		assert(res == "45849646c50337988ccc877d23fcc0de50d1df7490fdc3b9333aed0de8ab492a")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

@@ -1659,7 +1659,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_non_generics_in_function_generics")
 {
     // This should not crash
     check(R"(
-        local _ = _
+        const _ = _
         function _(l0)
         for _ in _(_) do
         end
@@ -1958,7 +1958,7 @@ TEST_CASE_FIXTURE(Fixture, "variadic_any_pack_should_suppress_errors_during_over
 type ActionCallback = (string) -> ...any
 
 function bindAction(callback: ActionCallback)
-  local _ = function(...)
+  const _ = function(...)
     callback(...)
   end
 end

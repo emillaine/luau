@@ -25,11 +25,11 @@ TEST_SUITE_BEGIN("isSubtype");
 TEST_CASE_FIXTURE(IsSubtypeFixture, "primitives")
 {
     check(R"(
-        local a = 41
-        local b = 32
+        const a = 41
+        const b = 32
 
-        local c = "hello"
-        local d = "world"
+        const c = "hello"
+        const d = "world"
     )");
 
     TypeId a = requireType("a");
@@ -66,8 +66,8 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "functions")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "variadic_functions_with_no_head")
 {
     check(R"(
-        local a: (...number) -> ()
-        local b: (...number?) -> ()
+        const a: (...number) -> ()
+        const b: (...number?) -> ()
     )");
 
     TypeId a = requireType("a");
@@ -82,8 +82,8 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "variadic_function_with_head")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     check(R"(
-        local a: (...number) -> ()
-        local b: (number, number) -> ()
+        const a: (...number) -> ()
+        const b: (number, number) -> ()
     )");
 
     TypeId a = requireType("a");
@@ -96,10 +96,10 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "variadic_function_with_head")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "union")
 {
     check(R"(
-        local a: number | string
-        local b: number
-        local c: string
-        local d: number?
+        const a: number | string
+        const b: number
+        const c: string
+        const d: number?
     )");
 
     TypeId a = requireType("a");
@@ -123,8 +123,8 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "union")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "table_with_union_prop")
 {
     check(R"(
-        local a: {x: number}
-        local b: {x: number?}
+        const a: {x: number}
+        const b: {x: number?}
     )");
 
     TypeId a = requireType("a");
@@ -140,8 +140,8 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "table_with_union_prop")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "table_with_any_prop")
 {
     check(R"(
-        local a: {x: number}
-        local b: {x: any}
+        const a: {x: number}
+        const b: {x: any}
     )");
 
     TypeId a = requireType("a");
@@ -157,10 +157,10 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "table_with_any_prop")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "intersection")
 {
     check(R"(
-        local a: number & string
-        local b: number
-        local c: string
-        local d: number & nil
+        const a: number & string
+        const b: number
+        const c: string
+        const d: number & nil
     )");
 
     TypeId a = requireType("a");
@@ -182,8 +182,8 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "intersection")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "union_and_intersection")
 {
     check(R"(
-            local a: number & string
-            local b: number | nil
+            const a: number & string
+            const b: number | nil
     )");
 
     TypeId a = requireType("a");
@@ -196,10 +196,10 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "union_and_intersection")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "tables")
 {
     check(R"(
-        local a: {x: number}
-        local b: {x: any}
-        local c: {y: number}
-        local d: {x: number, y: number}
+        const a: {x: number}
+        const b: {x: any}
+        const c: {y: number}
+        const d: {x: number, y: number}
     )");
 
     TypeId a = requireType("a");
@@ -231,9 +231,9 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "table_indexers_are_invariant")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     check(R"(
-        local a: {[string]: number}
-        local b: {[string]: any}
-        local c: {[string]: number}
+        const a: {[string]: number}
+        const b: {[string]: any}
+        const c: {[string]: number}
     )");
 
     TypeId a = requireType("a");
@@ -252,9 +252,9 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "mismatched_indexers")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     check(R"(
-        local a: {x: number}
-        local b: {[string]: number}
-        local c: {}
+        const a: {x: number}
+        const b: {[string]: number}
+        const c: {}
     )");
 
     TypeId a = requireType("a");
@@ -273,19 +273,19 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "cyclic_table")
 {
     check(R"(
         type A = {method: (A) -> ()}
-        local a: A
+        const a: A
 
         type B = {method: (any) -> ()}
-        local b: B
+        const b: B
 
         type C = {method: (C) -> ()}
-        local c: C
+        const c: C
 
         type D = {method: (D) -> (), another: (D) -> ()}
-        local d: D
+        const d: D
 
         type E = {method: (A) -> (), another: (E) -> ()}
-        local e: E
+        const e: E
     )");
 
     TypeId a = requireType("a");
@@ -328,7 +328,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "extern_types")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "metatable" * doctest::expected_failures{1})
 {
      check(R"(
-        local T = {}
+        const T = {}
         T.__index = T
         function T.new()
             return setmetatable({}, T)
@@ -336,8 +336,8 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "metatable" * doctest::expected_failures{1})
 
         function T:method() end
 
-        local a: typeof(T.new)
-        local b: {method: (any) -> ()}
+        const a: typeof(T.new)
+        const b: {method: (any) -> ()}
      )");
 
      TypeId a = requireType("a");
@@ -350,9 +350,9 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "metatable" * doctest::expected_failures{1})
 TEST_CASE_FIXTURE(IsSubtypeFixture, "any_is_unknown_union_error")
 {
     check(R"(
-        local err = 5.nope.nope -- err is now an error type
-        local a : any
-        local b : (unknown | typeof(err))
+        const err = 5.nope.nope -- err is now an error type
+        const a : any
+        const b : (unknown | typeof(err))
     )");
 
     TypeId a = requireType("a");
@@ -366,9 +366,9 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "any_is_unknown_union_error")
 TEST_CASE_FIXTURE(IsSubtypeFixture, "any_intersect_T_is_T")
 {
     check(R"(
-        local a : (any & string)
-        local b : string
-        local c : number
+        const a : (any & string)
+        const b : string
+        const c : number
     )");
 
     TypeId a = requireType("a");
@@ -763,7 +763,7 @@ TEST_CASE_FIXTURE(Fixture, "higher_order_function_normalization")
             return f(x)
         end
 
-        local a = apply(function(x: number) return x + x end, 5)
+        const a = apply(function(x: number) return x + x end, 5)
     )");
 
     TypeId aType = requireType("a");
@@ -788,7 +788,7 @@ TEST_CASE_FIXTURE(Fixture, "higher_order_function_with_annotation")
 TEST_CASE_FIXTURE(Fixture, "cyclic_table_normalizes_sensibly")
 {
     CheckResult result = check(R"(
-        local Cyclic = {}
+        const Cyclic = {}
         function Cyclic.get()
             return Cyclic
         end
@@ -1266,7 +1266,7 @@ function fromSet<T, U>(
 	-- FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
 ): Array<U> | Array<T> | Array<string>
 
-    local array : { [number] : string} = {"foo"}
+    const array : { [number] : string} = {"foo"}
 	return array
 end
 
@@ -1280,7 +1280,7 @@ function fromArray<T, U>(
 	thisArg: Object?
 	-- FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
 ): Array<U> | Array<T> | Array<string>
-	local array : {[number] : string} = {}
+	const array : {[number] : string} = {}
 	return array
 end
 
@@ -1293,7 +1293,7 @@ return function<T, U>(
 	if value == nil then
 		error("cannot create array from a nil value")
 	end
-	local array: Array<U> | Array<T> | Array<string>
+	const array: Array<U> | Array<T> | Array<string>
 
     if instanceof(value, Set) then
 		array = fromSet(value as Set<T>, mapFn, thisArg)

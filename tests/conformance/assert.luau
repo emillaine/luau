@@ -6,7 +6,7 @@ if pcall(assert, false) or pcall(function() assert(false) end) then
 end
 
 function ecall(fn, ...)
-  local ok, err = pcall(fn, ...)
+  ok, err = pcall(fn, ...)
   assert(not ok)
   return err:sub(err:find(": ") + 2, err.count)
 end

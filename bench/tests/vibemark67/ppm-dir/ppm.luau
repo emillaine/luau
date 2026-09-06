@@ -1,19 +1,19 @@
 -- PPM compressor and decompressor
 
-local arithmetic = require("./arithmetic")
-local context = require("./context")
+arithmetic = require("./arithmetic")
+context = require("./context")
 
-local function compress(data: {number}): {number}
-    local model = context.createModel(context.MAX_ORDER)
-    local encoder = arithmetic.Encoder.new()
-    local history: {number} = {}
+function compress(data: {number}): {number}
+    model = context.createModel(context.MAX_ORDER)
+    encoder = arithmetic.Encoder.new()
+    history = {}
 
     for _, symbol in data do
-        local encoded = false
+        encoded = false
         for order = math.min(context.MAX_ORDER, #history), 0, -1 do
-            local node = context.getContext(model, history, order)
+            node = context.getContext(model, history, order)
             if node and node.total > 0 then
-                local cumLow, cumHigh, total, escaped =
+                cumLow, cumHigh, total, escaped =
                     context.getSymbolProbabilityWithEscape(node, symbol + 1)
                 encoder:encode(cumLow, cumHigh, total)
                 if not escaped then
@@ -21,9 +21,9 @@ local function compress(data: {number}): {number}
                     break
                 end
             else
-                local total = context.ALPHABET_SIZE
-                local cumLow = symbol
-                local cumHigh = symbol + 1
+                total = context.ALPHABET_SIZE
+                cumLow = symbol
+                cumHigh = symbol + 1
                 encoder:encode(cumLow, cumHigh, total)
                 encoded = true
                 break
@@ -31,7 +31,7 @@ local function compress(data: {number}): {number}
         end
 
         if not encoded then
-            local total = context.ALPHABET_SIZE
+            total = context.ALPHABET_SIZE
             encoder:encode(symbol, symbol + 1, total)
         end
 
@@ -42,11 +42,11 @@ local function compress(data: {number}): {number}
         end
     end
 
-    local eofSymbol = 256
+    eofSymbol = 256
     for order = math.min(context.MAX_ORDER, #history), 0, -1 do
-        local node = context.getContext(model, history, order)
+        node = context.getContext(model, history, order)
         if node and node.total > 0 then
-            local cumLow, cumHigh, total, escaped =
+            cumLow, cumHigh, total, escaped =
                 context.getSymbolProbabilityWithEscape(node, eofSymbol + 1)
             encoder:encode(cumLow, cumHigh, total)
             if not escaped then break end
@@ -60,22 +60,22 @@ local function compress(data: {number}): {number}
     return encoder:getBytes()
 end
 
-local function decompress(compressed: {number}, originalSize: number): {number}
-    local model = context.createModel(context.MAX_ORDER)
-    local decoder = arithmetic.Decoder.new(compressed)
-    local history: {number} = {}
-    local output: {number} = table.create(originalSize, 0)
-    local outPos = 1
+function decompress(compressed: {number}, originalSize: number): {number}
+    model = context.createModel(context.MAX_ORDER)
+    decoder = arithmetic.Decoder.new(compressed)
+    history = {}
+    output = table.create(originalSize, 0)
+    outPos = 1
 
     while outPos <= originalSize do
-        local symbol = -1
+        symbol = -1
 
         for order = math.min(context.MAX_ORDER, #history), 0, -1 do
-            local node = context.getContext(model, history, order)
+            node = context.getContext(model, history, order)
             if node and node.total > 0 then
-                local total = context.getTotalWithEscape(node)
-                local target = decoder:getTarget(total)
-                local sym, cumLow, cumHigh, escaped =
+                total = context.getTotalWithEscape(node)
+                target = decoder:getTarget(total)
+                sym, cumLow, cumHigh, escaped =
                     context.decodeSymbolFromContext(node, target, total)
                 decoder:decode(cumLow, cumHigh, total)
                 if not escaped then
@@ -83,8 +83,8 @@ local function decompress(compressed: {number}, originalSize: number): {number}
                     break
                 end
             else
-                local total = context.ALPHABET_SIZE
-                local target = decoder:getTarget(total)
+                total = context.ALPHABET_SIZE
+                target = decoder:getTarget(total)
                 decoder:decode(target, target + 1, total)
                 symbol = target
                 break
@@ -92,8 +92,8 @@ local function decompress(compressed: {number}, originalSize: number): {number}
         end
 
         if symbol == -1 then
-            local total = context.ALPHABET_SIZE
-            local target = decoder:getTarget(total)
+            total = context.ALPHABET_SIZE
+            target = decoder:getTarget(total)
             decoder:decode(target, target + 1, total)
             symbol = target
         end

@@ -381,9 +381,9 @@ TEST_CASE_FIXTURE(Fixture, "generics_dont_leak_into_callback")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local func: <T>(T, (T) -> ()) -> () = nil as any
+        const func: <T>(T, (T) -> ()) -> () = nil as any
         func({}, function(obj)
-            local _ = obj
+            const _ = obj
         end)
     )"));
 
@@ -400,8 +400,8 @@ TEST_CASE_FIXTURE(Fixture, "generics_dont_leak_into_callback_2")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-local func: <T>(T, (T) -> ()) -> () = nil as any
-local foobar: (number) -> () = nil as any
+const func: <T>(T, (T) -> ()) -> () = nil as any
+const foobar: (number) -> () = nil as any
 func({}, function(obj)
     foobar(obj)
 end)
@@ -419,7 +419,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_argument_with_singleton_oss_1808")
     // All we care about here is that this has no errors, and we correctly
     // infer that the `false` literal should be typed as `false`.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function test<T>(value: false | (T) -> T)
+        function test<T>(value: false | (T) -> T)
             return value
         end
         test(false)
@@ -429,7 +429,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_argument_with_singleton_oss_1808")
 TEST_CASE_FIXTURE(BuiltinsFixture, "avoid_cross_module_mutation_in_bidirectional_inference")
 {
     fileResolver.source["Module/ListFns"] = R"(
-        local mod = {}
+        const mod = {}
         function mod.findWhere(list, predicate): number?
             for i = 1, list.count do
                 if predicate(list[i], i) then
@@ -442,8 +442,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "avoid_cross_module_mutation_in_bidirectional
     )";
 
     fileResolver.source["Module/B"] = R"(
-        local funs = require(script.Parent.ListFns)
-        local accessories = funs.findWhere(getList(), function(accessory)
+        const funs = require(script.Parent.ListFns)
+        const accessories = funs.findWhere(getList(), function(accessory)
             return accessory.AccessoryType != accessoryTypeEnum
         end)
         return {}

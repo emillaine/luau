@@ -41,7 +41,7 @@ assert(tostring(int64(2)) == "2")
 
 -- index/newindex; note, mutable userdatas aren't very idiomatic but we need to test this
 do
-  local v = int64(42)
+  v = int64(42)
   assert(v.value == 42)
   v.value = 4
   assert(v.value == 4)

@@ -1,17 +1,17 @@
 --!native
-local Surface = require("./surface")
-local Path = require("./path")
-local Matrix = require("./matrix")
-local Color = require("./color")
-local Paint = require("./paint")
-local Rasterizer = require("./rasterizer")
-local Blend = require("./blend")
-local Stroker = require("./stroker")
+Surface = require("./surface")
+Path = require("./path")
+Matrix = require("./matrix")
+Color = require("./color")
+Paint = require("./paint")
+Rasterizer = require("./rasterizer")
+Blend = require("./blend")
+Stroker = require("./stroker")
 
-local Canvas = {}
+Canvas = {}
 Canvas.__index = Canvas
 
-local function createState()
+function createState()
     return {
         matrix = Matrix.identity(),
         color = Color.BLACK,
@@ -30,13 +30,13 @@ local function createState()
     }
 end
 
-local function copyState(state)
-    local new = {}
+function copyState(state)
+    new = {}
     for k, v in pairs(state) do
         new[k] = v
     end
     if state.dashArray then
-        local arr = {}
+        arr = {}
         for i, v in ipairs(state.dashArray) do
             arr[i] = v
         end
@@ -46,7 +46,7 @@ local function copyState(state)
 end
 
 function Canvas.create(surface)
-    local self = setmetatable({}, Canvas)
+    self = setmetatable({}, Canvas)
     self._surface = surface
     self._path = Path.create()
     self._state = createState()
@@ -62,7 +62,7 @@ function Canvas:save()
 end
 
 function Canvas:restore()
-    local n = #self._stateStack
+    n = #self._stateStack
     if n > 0 then
         self._state = self._stateStack[n]
         self._stateStack[n] = nil
@@ -285,9 +285,9 @@ end
 
 -- Internal rendering helpers
 
-local function blendSpans(self, spans)
-    local state = self._state
-    local opacity = state.opacity
+function blendSpans(self, spans)
+    state = self._state
+    opacity = state.opacity
 
     if state.paint then
         Blend.paintSrcOver(self._surface, spans, state.paint, opacity)
@@ -296,23 +296,23 @@ local function blendSpans(self, spans)
     end
 end
 
-local function rasterizeFill(self, path)
-    local state = self._state
-    local spans = Rasterizer.rasterize(path, state.matrix, self._clipRect, state.fillRule)
+function rasterizeFill(self, path)
+    state = self._state
+    spans = Rasterizer.rasterize(path, state.matrix, self._clipRect, state.fillRule)
     if state.clipping and state.clipSpans then
         spans = Rasterizer.intersectSpans(spans, state.clipSpans)
     end
     return spans
 end
 
-local function rasterizeStroke(self, path)
-    local state = self._state
-    local strokePath = path
+function rasterizeStroke(self, path)
+    state = self._state
+    strokePath = path
     if state.dashArray and #state.dashArray > 0 then
         strokePath = path:cloneDashed(state.dashOffset, state.dashArray)
     end
-    local stroked = Stroker.stroke(strokePath, state.lineWidth, state.lineCap, state.lineJoin, state.miterLimit)
-    local spans = Rasterizer.rasterize(stroked, state.matrix, self._clipRect, "nonzero")
+    stroked = Stroker.stroke(strokePath, state.lineWidth, state.lineCap, state.lineJoin, state.miterLimit)
+    spans = Rasterizer.rasterize(stroked, state.matrix, self._clipRect, "nonzero")
     if state.clipping and state.clipSpans then
         spans = Rasterizer.intersectSpans(spans, state.clipSpans)
     end
@@ -322,18 +322,18 @@ end
 -- Drawing operations
 
 function Canvas:fillPreserve()
-    local spans = rasterizeFill(self, self._path)
+    spans = rasterizeFill(self, self._path)
     blendSpans(self, spans)
 end
 
 function Canvas:strokePreserve()
-    local spans = rasterizeStroke(self, self._path)
+    spans = rasterizeStroke(self, self._path)
     blendSpans(self, spans)
 end
 
 function Canvas:clipPreserve()
-    local spans = rasterizeFill(self, self._path)
-    local state = self._state
+    spans = rasterizeFill(self, self._path)
+    state = self._state
     if state.clipping and state.clipSpans then
         spans = Rasterizer.intersectSpans(spans, state.clipSpans)
     end
@@ -357,10 +357,10 @@ function Canvas:clip()
 end
 
 function Canvas:paint()
-    local state = self._state
-    local w = self._surface:getWidth()
-    local h = self._surface:getHeight()
-    local spans = {}
+    state = self._state
+    w = self._surface:getWidth()
+    h = self._surface:getHeight()
+    spans = {}
     for y = 0, h - 1 do
         spans[#spans + 1] = { x = 0, y = y, len = w, coverage = 255 }
     end
@@ -411,9 +411,9 @@ end
 -- Hit testing
 
 function Canvas:fillContains(x, y)
-    local spans = rasterizeFill(self, self._path)
-    local ix = math.floor(x)
-    local iy = math.floor(y)
+    spans = rasterizeFill(self, self._path)
+    ix = math.floor(x)
+    iy = math.floor(y)
     for _, span in ipairs(spans) do
         if span.y == iy and ix >= span.x and ix < span.x + span.len then
             return true
@@ -423,9 +423,9 @@ function Canvas:fillContains(x, y)
 end
 
 function Canvas:strokeContains(x, y)
-    local spans = rasterizeStroke(self, self._path)
-    local ix = math.floor(x)
-    local iy = math.floor(y)
+    spans = rasterizeStroke(self, self._path)
+    ix = math.floor(x)
+    iy = math.floor(y)
     for _, span in ipairs(spans) do
         if span.y == iy and ix >= span.x and ix < span.x + span.len then
             return true
@@ -437,12 +437,12 @@ end
 -- Extents
 
 function Canvas:fillExtents()
-    local spans = rasterizeFill(self, self._path)
+    spans = rasterizeFill(self, self._path)
     if #spans == 0 then
         return { x = 0, y = 0, w = 0, h = 0 }
     end
-    local minX, minY = math.huge, spans[1].y
-    local maxX, maxY = -math.huge, spans[#spans].y
+    minX, minY = math.huge, spans[1].y
+    maxX, maxY = -math.huge, spans[#spans].y
     for _, s in ipairs(spans) do
         if s.x < minX then
             minX = s.x
@@ -455,12 +455,12 @@ function Canvas:fillExtents()
 end
 
 function Canvas:strokeExtents()
-    local spans = rasterizeStroke(self, self._path)
+    spans = rasterizeStroke(self, self._path)
     if #spans == 0 then
         return { x = 0, y = 0, w = 0, h = 0 }
     end
-    local minX, minY = math.huge, spans[1].y
-    local maxX, maxY = -math.huge, spans[#spans].y
+    minX, minY = math.huge, spans[1].y
+    maxX, maxY = -math.huge, spans[#spans].y
     for _, s in ipairs(spans) do
         if s.x < minX then
             minX = s.x

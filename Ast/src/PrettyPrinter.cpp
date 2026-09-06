@@ -33,7 +33,7 @@ bool isIdentifierChar(char c)
 }
 
 const std::vector<std::string> keywords = {"and",   "as",    "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
-                                           "local", "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
+                                           "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 } // namespace
 
@@ -986,16 +986,16 @@ struct Printer
                 if (a->keywordLocation.has_value())
                     advance(a->keywordLocation->begin);
 
-                writer.keyword(a->isConst ? "const" : "local");
+                if (a->isConst)
+                    writer.keyword("const");
+                // else bare `export a = ...` (no `local` keyword)
             }
             else if (a->isConst)
             {
                 writer.keyword("const");
             }
-            else
-            {
-                writer.keyword("local");
-            }
+            // else bare `a = ...` (no `local` keyword); AstStatLocal with isConst==false only occurs for
+            // legacy ASTs / `export`, and pretty-prints to the new bare form for migration.
 
             CommaSeparatorInserter varComma(writer, cstNode ? cstNode->varsCommaPositions.begin() : nullptr);
             for (size_t i = 0; i < a->vars.size; i++)
@@ -1215,22 +1215,22 @@ struct Printer
             if (cstNode)
                 advance(cstNode->localKeywordPosition);
 
+            bool printedPrefix = false;
             if (FFlag::LuauExportValueSyntax && a->name->isExported)
             {
                 writer.keyword("export");
+                printedPrefix = true;
             }
             else if (a->name->isConst)
             {
                 writer.keyword("const");
+                printedPrefix = true;
             }
-            else
-            {
-                writer.keyword("local");
-            }
+            // else bare `function f()` (no `local` keyword)
 
             if (cstNode)
                 advance(cstNode->functionKeywordPosition);
-            else
+            else if (printedPrefix)
                 writer.space();
 
             writer.keyword("function");

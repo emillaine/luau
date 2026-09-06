@@ -1,14 +1,14 @@
 -- --bench-args: --fflags=DebugLuauUserDefinedClasses,DebugLuauUserDefinedClassesRuntime,LuauCallFeedback,LuauEmitCallFeedback
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
-local RANKS = "12345678"
-local FILES = "abcdefgh"
-local PieceSymbols = "PpRrNnBbQqKk"
-local UnicodePieces = {"♙", "♟", "♖", "♜", "♘", "♞", "♗", "♝", "♕", "♛", "♔", "♚"}
-local StartingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+RANKS = "12345678"
+FILES = "abcdefgh"
+PieceSymbols = "PpRrNnBbQqKk"
+UnicodePieces = {"♙", "♟", "♖", "♜", "♘", "♞", "♗", "♝", "♕", "♛", "♔", "♚"}
+StartingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-local function popcnt32(i)
+function popcnt32(i)
 	i = i - bit32.band(bit32.rshift(i,1), 0x55555555)
 	i = bit32.band(i, 0x33333333) + bit32.band(bit32.rshift(i,2), 0x33333333)
 	return bit32.rshift(bit32.band(i + bit32.rshift(i,4), 0x0F0F0F0F) * 0x01010101, 24)
@@ -18,23 +18,23 @@ end
 -- Utils
 -- 
 
-local function square(s)
+function square(s)
 	return RANKS:find(s:sub(2,2)) * 8 + FILES:find(s:sub(1,1)) - 9
 end
 
-local function squareName(n)
-	local file = n % 8
-	local rank = (n-file)/8
+function squareName(n)
+	file = n % 8
+	rank = (n-file)/8
 	return FILES:sub(file+1,file+1) .. RANKS:sub(rank+1,rank+1)
 end
 
-local function moveName(v )  
-	local from = bit32.extract(v, 6, 6)
-	local to = bit32.extract(v, 0, 6)
-	local piece = bit32.extract(v, 20, 4)
-	local captured = bit32.extract(v, 25, 4)
+function moveName(v )  
+	from = bit32.extract(v, 6, 6)
+	to = bit32.extract(v, 0, 6)
+	piece = bit32.extract(v, 20, 4)
+	captured = bit32.extract(v, 25, 4)
 
-	local move = PieceSymbols:sub(piece,piece) .. ' ' .. squareName(from) .. (captured ~= 0 and 'x' or '-') .. squareName(to)
+	move = PieceSymbols:sub(piece,piece) .. ' ' .. squareName(from) .. (captured != 0 and 'x' or '-') .. squareName(to)
  
 	if bit32.extract(v,14) == 1 then
 		if to > from then
@@ -44,23 +44,23 @@ local function moveName(v )
 		end
 	end
 
-	local promote = bit32.extract(v,15,4)
-	if promote ~= 0 then
+	promote = bit32.extract(v,15,4)
+	if promote != 0 then
 		move = move .. "=" .. PieceSymbols:sub(promote,promote)
 	end
 	return move
 end
 
-local function ucimove(m)
-	local mm = squareName(bit32.extract(m, 6, 6)) .. squareName(bit32.extract(m, 0, 6))
-	local promote = bit32.extract(m,15,4)
+function ucimove(m)
+	mm = squareName(bit32.extract(m, 6, 6)) .. squareName(bit32.extract(m, 0, 6))
+	promote = bit32.extract(m,15,4)
 	if promote > 0 then
 		mm = mm .. PieceSymbols:sub(promote,promote):lower()
 	end
 	return mm
 end
 
-local _utils = {squareName, moveName}
+_utils = {squareName, moveName}
 
 -- @hgoldstein implementation notes
 -- * Fairly tedious to rewrite all of the methods: consider adding codemod.
@@ -73,37 +73,37 @@ local _utils = {squareName, moveName}
 -- Bitboards
 --
 
-local BITBOARD_ZERO
-local BITBOARD_FULL
+BITBOARD_ZERO = nil
+BITBOARD_FULL = nil
 
-local RightMasks
-local LeftMasks
-local Rank1
-local Rank3
-local Rank6
-local Rank8
-local FileA
-local FileB
-local FileC
-local FileD
-local FileE
-local FileF
-local FileG
-local FileH
+RightMasks = nil
+LeftMasks = nil
+Rank1 = nil
+Rank3 = nil
+Rank6 = nil
+Rank8 = nil
+FileA = nil
+FileB = nil
+FileC = nil
+FileD = nil
+FileE = nil
+FileF = nil
+FileG = nil
+FileH = nil
 
 class Bitboard
 	public l: number
 	public h: number
 
 	function toString(self)
-		local out = {}
-		local src = self.h
+		out = {}
+		src = self.h
 		for x=7,0,-1 do
 			table.insert(out, RANKS:sub(x+1,x+1))
 			table.insert(out, " ")
-			local bit = bit32.lshift(1,(x%4) * 8)
+			bit = bit32.lshift(1,(x%4) * 8)
 			for x=0,7 do
-				if bit32.band(src, bit) ~= 0 then
+				if bit32.band(src, bit) != 0 then
 					table.insert(out, "x ")
 				else
 					table.insert(out, "- ")
@@ -141,7 +141,7 @@ class Bitboard
 	end
 
 	function move(self, x,y)
-		local out = self
+		out = self
 
 		if x < 0 then out = out:bandnot(RightMasks[-x]):lshift(-x) end
 		if x > 0 then out = out:bandnot(LeftMasks[x]):rshift(x) end
@@ -184,7 +184,7 @@ class Bitboard
 	end
 
 	function ctz(self)
-		local result = bit32.countrz(self.l)
+		result = bit32.countrz(self.l)
 		if result == 32 then
 			return bit32.countrz(self.h) + 32
 		else
@@ -193,7 +193,7 @@ class Bitboard
 	end
 
 	function ctzafter(self, start)
-		local masked = self:band(BITBOARD_FULL:lshift(start+1))
+		masked = self:band(BITBOARD_FULL:lshift(start+1))
 		return masked:ctz()
 	end
 
@@ -205,8 +205,8 @@ class Bitboard
 			return Bitboard.from(0, bit32.lshift(self.l, amt-32))
 		end
 
-		local l = bit32.lshift(self.l, amt)
-		local h = bit32.bor(
+		l = bit32.lshift(self.l, amt)
+		h = bit32.bor(
 			bit32.lshift(self.h, amt),
 			bit32.extract(self.l, 32-amt, amt)
 		)
@@ -216,8 +216,8 @@ class Bitboard
 	function rshift(self, amt)
 		assert(amt >= 0)
 		if amt == 0 then return self end
-		local h = bit32.rshift(self.h, amt)
-		local l = bit32.bor(
+		h = bit32.rshift(self.h, amt)
+		l = bit32.bor(
 			bit32.rshift(self.l, amt),
 			bit32.lshift(bit32.extract(self.h, 0, amt), 32-amt)
 		)
@@ -279,10 +279,10 @@ end
 -- Board
 --
 
-local ROOK_SLIDES = {{1,0}, {-1,0}, {0,1}, {0,-1}}
-local BISHOP_SLIDES = {{1,1}, {-1,1}, {1,-1}, {-1,-1}}
-local QUEEN_SLIDES = {{1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {-1,1}, {1,-1}, {-1,-1}}
-local KNIGHT_MOVES = {{2,1}, {2,-1}, {-2,1}, {-2,-1}, {1,2}, {1,-2}, {-1,2}, {-1,-2}}
+ROOK_SLIDES = {{1,0}, {-1,0}, {0,1}, {0,-1}}
+BISHOP_SLIDES = {{1,1}, {-1,1}, {1,-1}, {-1,-1}}
+QUEEN_SLIDES = {{1,0}, {-1,0}, {0,1}, {0,-1}, {1,1}, {-1,1}, {1,-1}, {-1,-1}}
+KNIGHT_MOVES = {{2,1}, {2,-1}, {-2,1}, {-2,-1}, {1,2}, {1,-2}, {-1,2}, {-1,-2}}
 
 class Board
 
@@ -314,37 +314,37 @@ class Board
 	end
 
 	function fromFen(fen)
-		local b = Board.new()
-		local i = 0
-		local rank = 7
-		local file = 0
+		b = Board.new()
+		i = 0
+		rank = 7
+		file = 0
 
 		while true do
 			i = i + 1
-			local p = fen:sub(i,i)
+			p = fen:sub(i,i)
 			if p == '/' then
 				rank = rank - 1
 				file = 0
-			else if tonumber(p) ~= nil then
+			else if tonumber(p) != nil then
 				file = file + tonumber(p)
 			else
-				local pidx = PieceSymbols:find(p)
+				pidx = PieceSymbols:find(p)
 				if pidx == nil then break end
 				b.state[pidx] = b.state[pidx]:set(rank*8+file, 1)
 				file = file + 1
 			end
 		end
 
-		local move, castle, ep, hm, m = string.match(fen, "^ ([bw]) ([KQkq-]*) ([a-h-][0-9]?) (%d*) (%d*)", i)
+		move, castle, ep, hm, m = string.match(fen, "^ ([bw]) ([KQkq-]*) ([a-h-][0-9]?) (%d*) (%d*)", i)
 		if move == nil then print(fen:sub(i)) end
 		b.toMove = move == 'w' and 1 or 2
 
-		if ep ~= "-" then
+		if ep != "-" then
 			b.ep = Bitboard.some(square(ep))
 		end
 
-		if castle ~= "-" then
-			local oo = BITBOARD_ZERO
+		if castle != "-" then
+			oo = BITBOARD_ZERO
 			if castle:find("K") then
 				oo = oo:set(7, 1)
 			end
@@ -405,9 +405,9 @@ class Board
 	end
 
 	function fen(self)
-		local out = {}
-		local s = 0
-		local idx = 56
+		out = {}
+		s = 0
+		idx = 56
 		for i=0,63 do
 			if i % 8 == 0 and i > 0 then
 				idx = idx - 16
@@ -417,7 +417,7 @@ class Board
 				end
 				table.insert(out, '/')
 			end
-			local p = self:index(idx)
+			p = self:index(idx)
 			if p == 0 then
 				s = s + 1
 			else
@@ -466,23 +466,23 @@ class Board
 	end
 
 	function generate(self, idx)
-		local piece = self:index(idx)
-		local r = Bitboard.some(idx)
-		local out = BITBOARD_ZERO
-		local type = bit32.rshift(piece - 1, 1)
-		local cancapture = piece % 2 == 1 and self.black or self.white
+		piece = self:index(idx)
+		r = Bitboard.some(idx)
+		out = BITBOARD_ZERO
+		type = bit32.rshift(piece - 1, 1)
+		cancapture = piece % 2 == 1 and self.black or self.white
 
 		if piece == 0 then return BITBOARD_ZERO end
 
 		if type == 0 then
 			-- Pawn
-			local d = -(piece*2 - 3)
-			local movetwo = piece == 1 and Rank3 or Rank6
+			d = -(piece*2 - 3)
+			movetwo = piece == 1 and Rank3 or Rank6
 
 			out = out:bor(r:move(0,d):band(self.unocupied))
 			out = out:bor(out:band(movetwo):move(0,d):band(self.unocupied))
 
-			local captures = r:move(0,d)
+			captures = r:move(0,d)
 			captures = captures:right():bor(captures:left())
 
 			if not captures:bandempty(self.ep) then
@@ -497,7 +497,7 @@ class Board
 			-- King
 			for x=-1,1,1 do
 				for y = -1,1,1 do
-					local w = r:move(x,y)
+					w = r:move(x,y)
 					if self.ocupied:bandempty(w) then
 						out = out:bor(w)
 					else
@@ -510,7 +510,7 @@ class Board
 		else if type == 2 then
 			-- Knight
 			for _,j in ipairs(KNIGHT_MOVES) do
-				local w = r:move(j[1],j[2])
+				w = r:move(j[1],j[2])
 
 				if self.ocupied:bandempty(w) then
 					out = out:bor(w)
@@ -522,7 +522,7 @@ class Board
 			end
 		else
 			-- Sliders (Rook, Bishop, Queen)
-			local slides
+			slides = nil
 			if type == 1 then
 				slides = ROOK_SLIDES
 			else if type == 3 then
@@ -532,7 +532,7 @@ class Board
 			end
 
 			for _, op in ipairs(slides) do
-				local w = r
+				w = r
 				for i=1,7 do
 					w = w:move(op[1], op[2])
 					if w:empty() then break end
@@ -564,22 +564,22 @@ class Board
 
 
 	function toString(self, mark)
-		local out = {}
+		out = {}
 		for x=8,1,-1 do
 			table.insert(out, RANKS:sub(x,x) .. " ")
 		
 			for y=1,8 do
-				local n = 8*x+y-9
-				local i = self:index(n)
+				n = 8*x+y-9
+				i = self:index(n)
 				if i == 0 then
 					table.insert(out, '-')
 				else
 					-- out = out .. PieceSymbols:sub(i,i)
 					table.insert(out, UnicodePieces[i])
 				end
-				if mark ~= nil and mark:index(n) ~= 0 then
+				if mark != nil and mark:index(n) != 0 then
 					table.insert(out, ')')
-				else if mark ~= nil and n < 63 and y < 8 and mark:index(n+1) ~= 0 then
+				else if mark != nil and n < 63 and y < 8 and mark:index(n+1) != 0 then
 					table.insert(out, '(')
 				else
 					table.insert(out, ' ')
@@ -594,29 +594,29 @@ class Board
 	end
 
 	function moveList(self)
-		local tm = self.toMove == 1 and self.white or self.black
-		local castle_rank = self.toMove == 1 and Rank1 or Rank8
-		local out = {}
-		local function emit(id)
+		tm = self.toMove == 1 and self.white or self.black
+		castle_rank = self.toMove == 1 and Rank1 or Rank8
+		out = {}
+		function emit(id)
 			if not self:applyMove(id):illegalyChecked() then
 				table.insert(out, id)
 			end
 		end
 
-		local cr = tm:band(self.castle):band(castle_rank)
+		cr = tm:band(self.castle):band(castle_rank)
 		if not cr:empty() then
-			local p = self.toMove == 1 and 11 or 12
-			local tcolor = self.toMove == 1 and self.black or self.white
-			local kidx = self.state[p]:ctz()
+			p = self.toMove == 1 and 11 or 12
+			tcolor = self.toMove == 1 and self.black or self.white
+			kidx = self.state[p]:ctz()
 
 
-			local castle = bit32.replace(0, p, 20, 4)
+			castle = bit32.replace(0, p, 20, 4)
 			castle = bit32.replace(castle, kidx, 6, 6)
 			castle = bit32.replace(castle, 1, 14)
 
 
-			local mustbeemptyl = LeftMasks[4]:bxor(FileA):band(castle_rank)
-			local cantbethreatened = FileD:bor(FileC):band(castle_rank):bor(self.state[p])
+			mustbeemptyl = LeftMasks[4]:bxor(FileA):band(castle_rank)
+			cantbethreatened = FileD:bor(FileC):band(castle_rank):bor(self.state[p])
 			if
 				not cr:bandempty(FileA) and
 				mustbeemptyl:bandempty(self.ocupied) and
@@ -626,7 +626,7 @@ class Board
 			end
 
 
-			local mustbeemptyr = RightMasks[3]:bxor(FileH):band(castle_rank)
+			mustbeemptyr = RightMasks[3]:bxor(FileH):band(castle_rank)
 			if
 				not cr:bandempty(FileH) and
 				mustbeemptyr:bandempty(self.ocupied) and
@@ -636,17 +636,17 @@ class Board
 			end
 		end
 
-		local sq = tm:ctz()
+		sq = tm:ctz()
 		repeat
-			local p = self:index(sq)
-			local moves = self:pmoves(sq)
+			p = self:index(sq)
+			moves = self:pmoves(sq)
 
 			while not moves:empty() do
-				local m = moves:ctz()
+				m = moves:ctz()
 				moves = moves:set(m, 0)
-				local id = bit32.replace(m, sq, 6, 6)
+				id = bit32.replace(m, sq, 6, 6)
 				id = bit32.replace(id, p, 20, 4)
-				local mbb = Bitboard.some(m)
+				mbb = Bitboard.some(m)
 				if not self.ocupied:bandempty(mbb) then
 					id = bit32.replace(id, self:index(m), 25, 4)
 				end
@@ -670,15 +670,15 @@ class Board
 	end
 
 	function illegalyChecked(self)
-		local target = self.toMove == 1 and self.state[PieceSymbols:find("k")] or self.state[PieceSymbols:find("K")]
+		target = self.toMove == 1 and self.state[PieceSymbols:find("k")] or self.state[PieceSymbols:find("K")]
 		return self:isSquareThreatened(target, self.toMove == 1 and self.white or self.black)
 	end
 
 	function isSquareThreatened(self, target, color)
-		local tm = color
-		local sq = tm:ctz()
+		tm = color
+		sq = tm:ctz()
 		repeat
-			local moves = self:pmoves(sq)
+			moves = self:pmoves(sq)
 			if not moves:bandempty(target) then
 				return true
 			end
@@ -692,9 +692,9 @@ class Board
 		if depth == 1 then 
 			return #self:moveList()
 		end
-		local result = 0
+		result = 0
 		for k,m in ipairs(self:moveList()) do
-			local c = self:applyMove(m):perft(depth - 1)
+			c = self:applyMove(m):perft(depth - 1)
 			if c == 0 then
 				-- Perft only counts leaf nodes at target depth
 				-- result = result + 1
@@ -707,15 +707,15 @@ class Board
 
 
 	function applyMove(self, move)
-		local out = Board.new()
+		out = Board.new()
 		table.move(self.state, 1, 12, 1, out.state)
-		local from = bit32.extract(move, 6, 6)
-		local to = bit32.extract(move, 0, 6)
-		local promote = bit32.extract(move, 15, 4)
-		local piece = self:index(from)
-		local captured = self:index(to)
-		local tom = Bitboard.some(to)
-		local isCastle = bit32.extract(move, 14)
+		from = bit32.extract(move, 6, 6)
+		to = bit32.extract(move, 0, 6)
+		promote = bit32.extract(move, 15, 4)
+		piece = self:index(from)
+		captured = self:index(to)
+		tom = Bitboard.some(to)
+		isCastle = bit32.extract(move, 14)
 
 		if piece % 2 == 0 then
 			out.moves = self.moves + 1
@@ -730,8 +730,8 @@ class Board
 		out.toMove = self.toMove == 1 and 2 or 1
 
 		if isCastle == 1 then
-			local rank = piece == 11 and Rank1 or Rank8
-			local colorOffset = piece - 11
+			rank = piece == 11 and Rank1 or Rank8
+			colorOffset = piece - 11
 
 			out.state[3 + colorOffset] = out.state[3 + colorOffset]:bandnot(from < to and FileH or FileA) 
 			out.state[3 + colorOffset] = out.state[3 + colorOffset]:bor((from < to and FileF or FileD):band(rank)) 
@@ -743,7 +743,7 @@ class Board
 		end
 
 		if piece < 3 then
-			local dist = math.abs(to - from)
+			dist = math.abs(to - from)
 			-- Pawn moved two squares, set ep square
 			if dist == 16 then
 				out.ep = Bitboard.some((from + to) / 2)
@@ -765,7 +765,7 @@ class Board
 		end
 
 		if piece > 10 then
-			local rank = piece == 11 and Rank1 or Rank8
+			rank = piece == 11 and Rank1 or Rank8
 			out.castle = out.castle:bandnot(rank)
 		end
 
@@ -775,7 +775,7 @@ class Board
 		else
 			out.state[promote] = out.state[promote]:set(to, 1)
 		end
-		if captured ~= 0 then
+		if captured != 0 then
 			out.state[captured] = out.state[captured]:set(to, 0)
 		end
 
@@ -789,17 +789,17 @@ end
 -- Main
 --
 
-local failures = 0
-local function test(fen, ply, target)
-	local b = Board.fromFen(fen)
-	if b:fen() ~= fen then
+failures = 0
+function test(fen, ply, target)
+	b = Board.fromFen(fen)
+	if b:fen() != fen then
 		print("FEN MISMATCH", fen, b:fen())
 		failures = failures + 1
 		return
 	end
 
-	local found = b:perft(ply)
-	if found ~= target then
+	found = b:perft(ply)
+	if found != target then
 		print(fen, "Found", found, "target", target)
 		failures = failures + 1
 		for k,v in pairs(b:moveList()) do
@@ -815,8 +815,8 @@ end
 -- If interpreter, computers, or algorithm gets too fast
 -- feel free to go deeper
 
-local testCases = {}
-local function addTest(...) table.insert(testCases, {...}) end
+testCases = {}
+function addTest(...) table.insert(testCases, {...}) end
 
 addTest(StartingFen, 2, 400)
 addTest("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0", 1, 48)
@@ -826,7 +826,7 @@ addTest("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", 1, 44)
 addTest("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 1, 46)
 
 
-local function chess()
+function chess()
 	for k,v in ipairs(testCases) do
 		test(v[1],v[2],v[3])
 	end

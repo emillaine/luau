@@ -2,17 +2,17 @@
 print("testing coverage")
 
 function foo()
-	local x = 1
-	local y = 2
+	x = 1
+	y = 2
 	assert(x + y)
 end
 
 function bar()
-	local function one(x)
+	function one(x)
 		return x
 	end
 
-	local two = function(x)
+	two = function(x)
 		return x
 	end
 
@@ -20,7 +20,7 @@ function bar()
 end
 
 function validate(stats, hits, misses)
-	local checked = {}
+	checked = {}
 
 	for _,l in ipairs(hits) do
 		if not (stats[l] and stats[l] > 0) then

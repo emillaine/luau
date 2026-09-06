@@ -1,5 +1,5 @@
 -- mutually recursive functions with exported forward declarations
-export local a, b
+export a, b
 
 function a()
     return b() + 1

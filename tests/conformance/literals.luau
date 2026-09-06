@@ -2,7 +2,7 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print('testing scanner')
 
-local function dostring (x) return assert(loadstring(x))() end
+function dostring (x) return assert(loadstring(x))() end
 
 -- Luau doesn't support unescaped NUL literals inside Lua source code
 -- dostring("x = 'a\0a'")
@@ -27,9 +27,9 @@ assert(010 .. 020 .. -030 == "1020-30")
 -- long variable names
 
 var = string.rep('a', 15000)
-prog = string.format("%s = 5", var)
+prog = string.format("_G.%s = 5", var)
 dostring(prog)
-assert(dostring("return " .. var) == 5)
+assert(dostring("return _G." .. var) == 5)
 var = nil
 print('+')
 
@@ -53,9 +53,9 @@ a2 = "'aspas'"
 assert(string.find(a1, a2) == 31)
 print('+')
 
-a1 = [==[temp = [[um valor qualquer]]; ]==]
+a1 = [==[_G.temp = [[um valor qualquer]]; ]==]
 assert(loadstring(a1))()
-assert(temp == 'um valor qualquer')
+assert(_G.temp == 'um valor qualquer')
 -- long strings --
 b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
 assert(string.len(b) == 960)
@@ -87,13 +87,13 @@ a = [[00123456789012345678901234567890123456789123456789012345678901234567890123
 ]]
 assert(string.len(a) == 1863)
 assert(string.sub(a, 1, 40) == string.sub(b, 1, 40))
-x = 1
+_G.x = 1
 ]=]
 
 print('+')
-x = nil
+_G.x = nil
 dostring(prog)
-assert(x)
+assert(_G.x)
 
 prog = nil
 a = nil
@@ -116,7 +116,7 @@ return debug.getinfo(1).currentline
 ]]
 
 for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
-  local prog, nn = string.gsub(prog, "\n", n)
+  const prog, nn = string.gsub(prog, "\n", n)
   -- assert(dostring(prog) == nn)
   -- assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
 end
@@ -144,9 +144,9 @@ x y z [==[ blu foo
 error error]=]===]
 
 -- generate all strings of four of these chars
-local x = {"=", "[", "]", "\n"}
-local len = 4
-local function gen (c, n)
+x = {"=", "[", "]", "\n"}
+len = 4
+function gen (c, n)
   if n==0 then coroutine.yield(c)
   else
     for _, a in pairs(x) do
@@ -168,7 +168,7 @@ if os.setlocale("pt_BR") or os.setlocale("ptb") then
   assert(assert(loadstring("return .4,3"))() == .4)
   assert(assert(loadstring("return 4."))() == 4.)
   assert(assert(loadstring("return 4.+.5"))() == 4.5)
-  local a,b = loadstring("return 4.5.")
+  a,b = loadstring("return 4.5.")
   assert(string.find(b, "'4%.5%.'"))
   assert(os.setlocale("C"))
 else

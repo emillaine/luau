@@ -1,4 +1,4 @@
-local function export(hmm)
+function export(hmm)
     assert(hmm == 1)
 end
 export 1

@@ -23,19 +23,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 ]]
 
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-local loops = 15
-local nx = 120
-local nz = 120
+loops = 15
+nx = 120
+nz = 120
 
-local function morph(a, f)
-    local PI2nx = math.pi * 8/nx
-    local sin = math.sin
-    local f30 = -(50 * sin(f*math.pi*2))
+function morph(a, f)
+    PI2nx = math.pi * 8/nx
+    sin = math.sin
+    f30 = -(50 * sin(f*math.pi*2))
     
     for i = 0,nz-1 do
         for j = 0,nx-1 do
@@ -45,7 +45,7 @@ local function morph(a, f)
 end
 
     
-local a = {}
+a = {}
 for i = 0,nx*nz*3-1 do 
     a[i] = 0
 end
@@ -66,7 +66,7 @@ a = nil;
 -- says - that sin() has to return a value within 1 ulp of exact - then we still
 -- would not be able to do an exact test here since that would allow for just enough
 -- low-bit slop to create possibly big errors due to testOutput being a sum.
-local epsilon = 1e-13;
+epsilon = 1e-13;
 if (math.abs(testOutput) >= epsilon) then
     assert(false, "Error: bad test output: expected magnitude below " .. epsilon .. " but got " .. testOutput);
 end

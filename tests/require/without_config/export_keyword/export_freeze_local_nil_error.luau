@@ -1,3 +1,3 @@
-export local value = 42
+export value = 42
 
-local table = nil
+table = nil

@@ -213,12 +213,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "simple_inlining")
     */
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return a + b
         end
     
-        local function caller(x)
-            local result = inlinee(x, 42)
+        function caller(x)
+            const result = inlinee(x, 42)
             return result + 2
         end
     )"),
@@ -260,12 +260,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "simple_inlining_undercall")
     */
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return a + (b or 42)
         end
     
-        local function caller(x)
-            local result = inlinee(x)
+        function caller(x)
+            const result = inlinee(x)
             return result + 2
         end
     )"),
@@ -305,23 +305,25 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "simple_inlining_under_return")
     // NB: there are 2 RETURNs because BytecodeBuilder replaces JUMP to RETURN with RETURN
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a)
+        function inlinee(a)
             return a
         end
 
-        local function caller()
-            local r1, r2 = inlinee(10)
+        function caller()
+            r1, r2 = inlinee(10)
             return r2
         end
     )"),
         R"(
-GETUPVAL R0 0
-LOADK R1 K0 [10]
-CMPPROTO R0 #0 L0
-MOVE R0 R1
-LOADNIL R1
-RETURN R1 1
-L0: CALLFB R0 1 2 [-1]
+GETUPVAL R2 0
+LOADK R3 K0 [10]
+CMPPROTO R2 #0 L0
+MOVE R2 R3
+LOADNIL R3
+JUMP L1
+L0: CALLFB R2 1 2 [-1]
+L1: MOVE R0 R2
+MOVE R1 R3
 RETURN R1 1
 )"
     );
@@ -355,13 +357,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "namecall_inlining")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(t, x)
+        function inlinee(t, x)
             return t.v + x
         end
     
-        local function caller(x)
-            local t = {v = 7, inlinee = inlinee}
-            local result = t:inlinee(42)
+        function caller(x)
+            const t = {v = 7, inlinee = inlinee}
+            const result = t:inlinee(42)
             return result + 2
         end
     )"),
@@ -415,13 +417,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "early_return_inlining")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             if b < 0 then return a - b end
             return a + b
         end
     
-        local function caller(x)
-            local result = inlinee(x, 42)
+        function caller(x)
+            const result = inlinee(x, 42)
             return result + 2
         end
     )"),
@@ -472,13 +474,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "multi_return_inlining")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             if b < 0 then return a - b end
             return a + b, 12
         end
     
-        local function caller(x)
-            local result = inlinee(x, 42)
+        function caller(x)
+            const result = inlinee(x, 42)
             return result + 2
         end
     )"),
@@ -511,12 +513,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "var_return_inlining")
 
     // If target contains vararg returns it cannot be inlined.
     REQUIRE(!compileAndInline(R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return g(a, b)
         end
 
-        local function caller(x)
-            local a, b = inlinee(x, 42)
+        function caller(x)
+            a, b = inlinee(x, 42)
             return a + b
         end
     )"));
@@ -549,15 +551,15 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "vararg_func_inlining")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(...)
-            local x = 12
-            local a, b = ...
+        function inlinee(...)
+            const x = 12
+            const a, b = ...
             if b < 0 then return a - b end
             return a + b
         end
 
-        local function caller(x)
-            local result = inlinee(x, 42)
+        function caller(x)
+            const result = inlinee(x, 42)
             return result + 2
         end
     )"),
@@ -607,12 +609,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "mixed_vararg_func_inlining")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, ...)
-            local b = ...
+        function inlinee(a, ...)
+            const b = ...
             return a + b
         end
-        local function caller(x)
-            local result = inlinee(x, 100)
+        function caller(x)
+            const result = inlinee(x, 100)
             return result + 2
         end
     )"),
@@ -658,12 +660,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "mixed_vararg_func_inlining_nil_factor
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, b, ...)
-            local c, d = ...
+        function inlinee(a, b, ...)
+            c, d = ...
             return a + b + c + d
         end
-        local function caller(x)
-            local result = inlinee(x, 100)
+        function caller(x)
+            const result = inlinee(x, 100)
             return result + 2
         end
     )"),
@@ -672,8 +674,10 @@ GETUPVAL R1 0
 MOVE R2 R0
 LOADK R3 K0 [100]
 CMPPROTO R1 #0 L0
-LOADNIL R6
-LOADNIL R7
+LOADNIL R8
+LOADNIL R9
+MOVE R6 R8
+MOVE R7 R9
 ADD R10 R2 R3
 ADD R9 R10 R6
 ADD R8 R9 R7
@@ -713,13 +717,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "vararg_func_vararg_multi_usage")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(...)
-            local t = {1, 2, ...}
+        function inlinee(...)
+            const t = {1, 2, ...}
             return t[3]
         end
 
-        local function caller()
-            local result = inlinee(10, 20, 30)
+        function caller()
+            const result = inlinee(10, 20, 30)
             return result
         end
     )"),
@@ -772,13 +776,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "vararg_func_vararg_multi_usage_2")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, ...)
-            local t = {1, a, ...}
+        function inlinee(a, ...)
+            const t = {1, a, ...}
             return t[3]
         end
 
-        local function caller()
-            local result = inlinee(10, 20, 30)
+        function caller()
+            const result = inlinee(10, 20, 30)
             return result
         end
     )"),
@@ -833,8 +837,8 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "loop_phis")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(n)
-            local sum = 0
+        function inlinee(n)
+            sum = 0
             for i = 1, n do
                 for j = 1, i do
                     sum = sum + j
@@ -843,8 +847,8 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "loop_phis")
             return sum
         end
 
-        local function caller(x)
-            local r = inlinee(x)
+        function caller(x)
+            const r = inlinee(x)
             return r
         end
     )"),
@@ -898,12 +902,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "retain_target_on_block_split")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a)
+        function inlinee(a)
             return a + 1
         end
 
-        local function caller(n)
-            local sum = 0
+        function caller(n)
+            sum = 0
             for i = 1, n do
                 sum = sum + inlinee(i)
             end
@@ -937,12 +941,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants")
 
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return a + b
         end
 
-        local function caller(x)
-            local result = inlinee(5, 42)
+        function caller(x)
+            const result = inlinee(5, 42)
             return result + 2
         end
     )",
@@ -976,12 +980,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_chained")
     // Multiple arithmetic ops that should all fold
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return (a + b) * 2
         end
 
-        local function caller(x)
-            local result = inlinee(10, 11)
+        function caller(x)
+            const result = inlinee(10, 11)
             return result + x
         end
     )",
@@ -1015,12 +1019,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_div_by_zero")
     // Division by zero should fold to inf
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return a / b
         end
 
-        local function caller(x)
-            local result = inlinee(10, 0)
+        function caller(x)
+            const result = inlinee(10, 0)
             return result + x
         end
     )",
@@ -1051,7 +1055,7 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_with_branch")
 
     std::string result = inlineAndPrint(
         R"(
-            local function inlinee(a)
+            function inlinee(a)
                 if a then
                     return 1
                 else
@@ -1059,9 +1063,9 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_with_branch")
                 end
             end
 
-            local function caller()
-                local t = true
-                local res = inlinee(t)
+            function caller()
+                const t = true
+                const res = inlinee(t)
                 return res
             end
             )",
@@ -1091,7 +1095,7 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_with_branches")
 
     std::string result = inlineAndPrint(
         R"(
-            local function inlinee(a)
+            function inlinee(a)
                 if a then
                     if a > 1 then
                         return 3
@@ -1103,8 +1107,8 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_with_branches")
                 end
             end
 
-            local function caller()
-                local res = inlinee(5)
+            function caller()
+                const res = inlinee(5)
                 return res
             end
             )",
@@ -1131,17 +1135,17 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_with_for_loop")
 
     std::string result = inlineAndPrint(
         R"(
-            local function inlinee(a)
-                local sum = 0
+            function inlinee(a)
+                sum = 0
                 for i = 1, a do
                     sum = sum + i
                 end
                 return sum
             end
 
-            local function caller()
-                local t = 10
-                local res = inlinee(t)
+            function caller()
+                const t = 10
+                const res = inlinee(t)
                 return res
             end
             )",
@@ -1178,15 +1182,15 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_prunes_ordering_branch
 
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             if a < b then
                 return a
             end
             return b
         end
 
-        local function caller()
-            local res = inlinee(3, 10)
+        function caller()
+            const res = inlinee(3, 10)
             return res
         end
     )",
@@ -1216,15 +1220,15 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_prunes_equality_branch
 
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             if a == b then
                 return 1
             end
             return 2
         end
 
-        local function caller()
-            local res = inlinee(7, 7)
+        function caller()
+            const res = inlinee(7, 7)
             return res
         end
     )",
@@ -1255,15 +1259,15 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_string_equality")
 
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(s)
+        function inlinee(s)
             if s == "yes" then
                 return 1
             end
             return 0
         end
 
-        local function caller()
-            local res = inlinee("yes")
+        function caller()
+            const res = inlinee("yes")
             return res
         end
     )",
@@ -1294,15 +1298,15 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_nil_argument")
 
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a)
+        function inlinee(a)
             if a == nil then
                 return 0
             end
             return 1
         end
 
-        local function caller()
-            local res = inlinee()
+        function caller()
+            const res = inlinee()
             return res
         end
     )",
@@ -1333,12 +1337,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "does_not_fold_runtime_arguments")
 
     std::string result = inlineAndPrint(
         R"(
-        local function inlinee(a, b)
+        function inlinee(a, b)
             return a + b
         end
 
-        local function caller(x, y)
-            local res = inlinee(x, y)
+        function caller(x, y)
+            const res = inlinee(x, y)
             return res
         end
     )",
@@ -1372,11 +1376,11 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "graph_builds_loop_exit_phi_for_downst
     // the use is downstream of the loop exit rather than in an immediate successor
     std::vector<CompTimeBcFunction> graphs = buildGraphs(R"(
         function treeInsertLike(root, key, flag)
-            local y = nil
-            local x = root
+            y = nil
+            x = root
             while x do
                 y = x
-                local cmp = key - x.k
+                const cmp = key - x.k
                 if cmp < 0 then
                     x = x.left
                 else if cmp > 0 then
@@ -1385,7 +1389,7 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "graph_builds_loop_exit_phi_for_downst
                     return "found"
                 end
             end
-            local z = { k = key }
+            const z = { k = key }
             if flag then
                 z.tag = 1
             else
@@ -1452,10 +1456,10 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "empty_inlinee_with_vararg")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, ...)
+        function inlinee(a, ...)
         end
 
-        local function caller()
+        function caller()
             return {inlinee, (inlinee())}
         end
     )"),
@@ -1480,11 +1484,11 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "empty_varargs_sequence_in_setlist")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(...)
+        function inlinee(...)
             return {...}
         end
 
-        local function caller()
+        function caller()
             inlinee()
         end
     )"),
@@ -1506,13 +1510,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "empty_varargs_sequence_in_for_loop")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, ...)
+        function inlinee(a, ...)
             for _ in ... do
                 pcall += _
             end
         end
 
-        local function caller()
+        function caller()
             inlinee()
         end
     )"),
@@ -1541,14 +1545,14 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "vararg_in_loops_phi")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-            local function inlinee(...)
+            function inlinee(...)
                 repeat
-                    local a = ...
+                    const a = ...
                     while a do break end
                 until false
             end
 
-            local function caller()
+            function caller()
                 inlinee()
             end
     )"),
@@ -1574,10 +1578,10 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_removes_unreachable_closeupvals_
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
 
     std::vector<CompTimeBcFunction> graphs = buildGraphs(R"(
-        local function caller()
-            local f = function() end
+        function caller()
+            f = function() end
             while true do
-                local cap = function() f = f end
+                const cap = function() f = f end
                 f()
             end
         end
@@ -1620,14 +1624,14 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_removes_unreachable_closeupvals_
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
 
     std::vector<CompTimeBcFunction> graphs = buildGraphs(R"(
-        local function caller(x)
+        function caller(x)
             repeat
-                x = nil
+                const x = nil
                 (function(...) end)()
             until x
 
             repeat
-                local y = {}
+                y = {}
             until function() y = nil end
         end
         caller()
@@ -1647,19 +1651,14 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_removes_unreachable_closeupvals_
         R"(
 ; function caller($arg0) line 2 maxstacksize: 3 upvalues: 0 flags: 8
 bb_0 (entry):
-; predecessors: bb_3 [loop]
-; successors: bb_3 [fallthrough]
-  %0 = LOADNIL                                               ; uses: %3
-  %1 = DUPCLOSURE K0 (0)                                     ; uses: %2
-  %2 = CALLFB 0, 0, 0, %1
-
-bb_3:
-; predecessors: bb_0 [fallthrough]
+; predecessors: bb_0 [loop]
 ; successors: bb_0 [loop]
-  %4 = JUMPBACK bb_0
+  %0 = DUPCLOSURE K0 (0)                                     ; uses: %1
+  %1 = CALLFB 0, 0, 0, %0
+  %2 = JUMPBACK bb_0
 
 bb_1 (exit):
-; predecessors: bb_4 [fallthrough]
+; predecessors: bb_3 [fallthrough]
 )"
     );
 }
@@ -1670,12 +1669,12 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "vararg_projection_in_return_phi")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, ...)
+        function inlinee(a, ...)
             return a and ...
         end
 
-        local function caller(x)
-            local r = inlinee(x)
+        function caller(x)
+            const r = inlinee(x)
             return r
         end
     )"),
@@ -1700,11 +1699,11 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_sub_constant_lhs_is_negation_not
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, x)
+        function inlinee(a, x)
             return a - x
         end
-        local function caller(x)
-            local r = inlinee(0, x)
+        function caller(x)
+            const r = inlinee(0, x)
             return r + x
         end
     )", 0, true),
@@ -1729,11 +1728,11 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_div_constant_lhs_one_is_reciproc
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(a, x)
+        function inlinee(a, x)
             return a / x
         end
-        local function caller(x)
-            local r = inlinee(1, x)
+        function caller(x)
+            const r = inlinee(1, x)
             return r + x
         end
     )", 0, true),
@@ -1758,11 +1757,11 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_jumpxeqkb_bool_immediate_value")
 
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
-        local function inlinee(flag)
+        function inlinee(flag)
             if flag == true then return 1 else return 2 end
         end
-        local function caller(x)
-            local r = inlinee(true)
+        function caller(x)
+            const r = inlinee(true)
             return r + x
         end
     )", 0, true, 1),

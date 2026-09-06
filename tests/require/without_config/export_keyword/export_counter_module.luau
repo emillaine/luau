@@ -1,4 +1,4 @@
-export local counter = 5
+export counter = 5
 counter = 0
 
 export function set(v)

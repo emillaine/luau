@@ -1,6 +1,6 @@
 -- Chess board representation and utilities
 
-local Board = {}
+Board = {}
 Board.__index = Board
 
 export type Board = typeof(setmetatable({} as {
@@ -13,55 +13,55 @@ export type Board = typeof(setmetatable({} as {
     zobrist: number,
 }, Board))
 
-local EMPTY = 0
-local PAWN = 1
-local KNIGHT = 2
-local BISHOP = 3
-local ROOK = 4
-local QUEEN = 5
-local KING = 6
-local WHITE = 8
-local BLACK = 16
+EMPTY = 0
+PAWN = 1
+KNIGHT = 2
+BISHOP = 3
+ROOK = 4
+QUEEN = 5
+KING = 6
+WHITE = 8
+BLACK = 16
 
-local WK_CASTLE = 1
-local WQ_CASTLE = 2
-local BK_CASTLE = 4
-local BQ_CASTLE = 8
+WK_CASTLE = 1
+WQ_CASTLE = 2
+BK_CASTLE = 4
+BQ_CASTLE = 8
 
-local zobristPiece: {{number}} = {}
-local zobristCastle: {number} = {}
-local zobristEp: {number} = {}
-local zobristSide: number = 0
+zobristPiece = {}
+zobristCastle = {}
+zobristEp = {}
+zobristSide = 0
 
-local function pseudoRandom(seed: number): (number, number)
+function pseudoRandom(seed: number): (number, number)
     seed = bit32.bxor(seed, bit32.lshift(seed, 13))
     seed = bit32.bxor(seed, bit32.rshift(seed, 17))
     seed = bit32.bxor(seed, bit32.lshift(seed, 5))
-    local val = bit32.band(seed, 0x7FFFFFFF)
+    val = bit32.band(seed, 0x7FFFFFFF)
     return val, seed
 end
 
-local function initZobrist()
-    local seed = 1070372
+function initZobrist()
+    seed = 1070372
     for sq = 1, 64 do
         zobristPiece[sq] = {}
         for piece = 1, 31 do
-            local val
+            val = nil
             val, seed = pseudoRandom(seed)
             zobristPiece[sq][piece] = val
         end
     end
     for i = 1, 16 do
-        local val
+        val = nil
         val, seed = pseudoRandom(seed)
         zobristCastle[i] = val
     end
     for i = 1, 64 do
-        local val
+        val = nil
         val, seed = pseudoRandom(seed)
         zobristEp[i] = val
     end
-    local val
+    val = nil
     val, seed = pseudoRandom(seed)
     zobristSide = val
 end
@@ -69,7 +69,7 @@ end
 initZobrist()
 
 function Board.new(): Board
-    local self = setmetatable({}, Board)
+    self = setmetatable({}, Board)
     self.squares = table.create(64, EMPTY)
     self.whiteToMove = true
     self.castling = 0
@@ -81,8 +81,8 @@ function Board.new(): Board
 end
 
 function Board.startPos(): Board
-    local b = Board.new()
-    local backRank = {ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK}
+    b = Board.new()
+    backRank = {ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK}
     for i = 1, 8 do
         b.squares[i] = bit32.bor(WHITE, backRank[i])
         b.squares[8 + i] = bit32.bor(WHITE, PAWN)
@@ -95,10 +95,10 @@ function Board.startPos(): Board
 end
 
 function Board.computeZobrist(self: Board)
-    local h = 0
+    h = 0
     for sq = 1, 64 do
-        local p = self.squares[sq]
-        if p ~= EMPTY then
+        p = self.squares[sq]
+        if p != EMPTY then
             h = bit32.bxor(h, zobristPiece[sq][p])
         end
     end
@@ -115,7 +115,7 @@ function Board.computeZobrist(self: Board)
 end
 
 function Board.clone(self: Board): Board
-    local b = Board.new()
+    b = Board.new()
     table.move(self.squares, 1, 64, 1, b.squares)
     b.whiteToMove = self.whiteToMove
     b.castling = self.castling
@@ -159,7 +159,7 @@ function Board.enemyColor(self: Board): number
 end
 
 function Board.findKing(self: Board, color: number): number
-    local target = bit32.bor(color, KING)
+    target = bit32.bor(color, KING)
     for sq = 1, 64 do
         if self.squares[sq] == target then
             return sq

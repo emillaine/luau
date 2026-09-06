@@ -1,4 +1,4 @@
-export local recursive
+export recursive
 recursive = function(n)
     if n <= 1 then
         return 1
@@ -6,7 +6,7 @@ recursive = function(n)
     return n * recursive(n - 1)
 end
 
-export local mut
+export mut
 function mut()
     return "function-stat"
 end

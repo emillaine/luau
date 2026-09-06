@@ -2,6 +2,7 @@
 #include "lua.h"
 #include "lualib.h"
 
+#include "Luau/Compiler.h"
 #include "Luau/Repl.h"
 #include "ScopedFlags.h"
 
@@ -12,6 +13,43 @@
 #include <set>
 #include <string>
 #include <vector>
+
+// Runs `source` and leaves `expectedResults` values on L's stack (fails the test on load/run error).
+// Bare `x = ...` declares chunk-locals, so cross-chunk sharing must go through
+// explicit globals installed from C++ (see ReplFixture) or `return` values kept here.
+static void runCodeKeepResults(lua_State* L, const std::string& source, int expectedResults)
+{
+    std::string bytecode = Luau::compile(source);
+
+    if (luau_load(L, "=test", bytecode.data(), bytecode.size(), 0) != 0)
+    {
+        std::string err = lua_tostring(L, -1) ? lua_tostring(L, -1) : "load error";
+        lua_pop(L, 1);
+        FAIL(err);
+        return;
+    }
+
+    lua_State* T = lua_newthread(L);
+    lua_insert(L, -2); // stack: [thread, func]
+    lua_xmove(L, T, 1);
+
+    int status = lua_resume(T, nullptr, 0);
+
+    if (status != 0)
+    {
+        std::string err = lua_tostring(T, -1) ? lua_tostring(T, -1) : "resume error";
+        lua_remove(L, -2); // drop thread, keep nothing
+        FAIL(err);
+        return;
+    }
+
+    int n = lua_gettop(T);
+    CHECK(n == expectedResults);
+    lua_xmove(T, L, n);  // stack: [thread, results...]
+    lua_remove(L, -n - 1); // drop thread, keep results
+}
+
+
 
 LUAU_FASTFLAG(LuauIntegerType2)
 
@@ -36,17 +74,68 @@ public:
     {
         L = luaState.get();
         setupState(L);
+        // sandboxthread installs a fresh writable env proxying reads to the
+        // frozen shared table, so C++ setglobal works from here on. (Lua code
+        // can no longer create globals itself: bare `x = ...` declares a
+        // chunk-local, and `_G.x = ...` targets the frozen shared table.)
         luaL_sandboxthread(L);
 
-        std::string result = runCode(L, prettyPrintSource);
+        // Install the pretty printer + capture getter as globals from C++.
+        // The two returned closures share the `captured` upvalue, so no
+        // globals are written at runtime.
+        runCodeKeepResults(L, prettyPrintSource, 2);
+        lua_setglobal(L, "_GETCAPTURED");
+        lua_setglobal(L, "_PRETTYPRINT");
+    }
+
+    // Runs `source` (which must `return {name = value, ...}`) and publishes each pair as a global.
+    void publishGlobals(const std::string& source)
+    {
+        runCodeKeepResults(L, source, 1);
+
+        if (!lua_istable(L, -1))
+        {
+            lua_pop(L, 1);
+            FAIL("publishGlobals: source must return a table");
+            return;
+        }
+
+        int t = lua_gettop(L);
+        lua_pushnil(L);
+        while (lua_next(L, t) != 0)
+        {
+            // key at -2, value at -1
+            REQUIRE(lua_type(L, -2) == LUA_TSTRING);
+            std::string name = lua_tostring(L, -2);
+            lua_pushvalue(L, -1); // copy value
+            lua_setglobal(L, name.c_str()); // pops value copy, leaves key for lua_next
+            lua_pop(L, 1); // pop original value, keep key
+        }
+        lua_pop(L, 1); // pop table
     }
 
     // Returns all of the output captured from the pretty printer
     std::string getCapturedOutput()
     {
-        lua_getglobal(L, "capturedoutput");
+        lua_getglobal(L, "_GETCAPTURED");
+
+        if (!lua_isfunction(L, -1))
+        {
+            lua_pop(L, 1);
+            FAIL("capture getter missing");
+            return "";
+        }
+
+        if (lua_pcall(L, 0, 1, 0) != 0)
+        {
+            std::string err = lua_tostring(L, -1) ? lua_tostring(L, -1) : "pcall error";
+            lua_pop(L, 1);
+            FAIL(err);
+            return "";
+        }
+
         const char* str = lua_tolstring(L, -1, nullptr);
-        std::string result(str);
+        std::string result = str ? str : "";
         lua_pop(L, 1);
         return result;
     }
@@ -85,20 +174,21 @@ private:
     // It is included here to test that the pretty printer hook is being called.
     // More elaborate tests to ensure correct output can be added if we introduce
     // a more feature rich pretty printer.
+    // Note: all state lives in the chunk-local `captured` upvalue shared by the
+    // two returned closures; the fixture installs them as globals from C++
+    // (Lua code can no longer create globals, and `_G` writes are sandbox-blocked).
     std::string prettyPrintSource = R"(
--- Accumulate pretty printer output in `capturedoutput`
-capturedoutput = ""
+-- Accumulate pretty printer output in `captured`
+captured = ""
 
-function arraytostring(arr)
-    local strings = {}
-    table.foreachi(arr, function(k,v) table.insert(strings, pptostring(v)) end )
-    return "{" .. table.concat(strings, ", ") .. "}"
-end
-
+-- Single recursive printer (one function so self-recursion resolves to the
+-- chunk-local; two mutually-recursive chunk-locals would forward-reference).
 function pptostring(x)
     if type(x) == "table" then
         -- Just assume array-like tables for now.
-        return arraytostring(x)
+        const strings = {}
+        table.foreachi(x, function(k,v) table.insert(strings, pptostring(v)) end )
+        return "{" .. table.concat(strings, ", ") .. "}"
     else if type(x) == "string" then
         return '"' .. x .. '"'
     else
@@ -107,20 +197,26 @@ function pptostring(x)
 end
 
 -- Note: Instead of calling print, the pretty printer just stores the output
--- in `capturedoutput` so we can check for the correct results.
-function _PRETTYPRINT(...)
-    local args = table.pack(...)
-    local strings = {}
+-- in `captured` so we can check for the correct results.
+function dopretty(...)
+    const args = table.pack(...)
+    const strings = {}
     for i=1, args.n do
-        local item = args[i]
-        local str = pptostring(item, customoptions)
+        const item = args[i]
+        const str = pptostring(item, customoptions)
         if i == 1 then
-            capturedoutput = capturedoutput .. str
+            captured = captured .. str
         else
-            capturedoutput = capturedoutput .. "\t" .. str
+            captured = captured .. "\t" .. str
         end
     end
 end
+
+function getcaptured()
+    return captured
+end
+
+return dopretty, getcaptured
 )";
 };
 
@@ -162,9 +258,10 @@ TEST_SUITE_BEGIN("ReplCodeCompletion");
 
 TEST_CASE_FIXTURE(ReplFixture, "CompleteGlobalVariables")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
         myvariable1 = 5
         myvariable2 = 5
+        return {myvariable1 = myvariable1, myvariable2 = myvariable2}
 )");
     {
         // Try to complete globals that are added by the user's script
@@ -191,8 +288,9 @@ TEST_CASE_FIXTURE(ReplFixture, "CompleteGlobalVariables")
 
 TEST_CASE_FIXTURE(ReplFixture, "CompleteTableKeys")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
         t = { color = "red", size = 1, shape = "circle" }
+        return {t = t}
 )");
     {
         CompletionSet completions = getCompletionSet("t.");
@@ -216,8 +314,9 @@ TEST_CASE_FIXTURE(ReplFixture, "CompleteTableKeys")
 
 TEST_CASE_FIXTURE(ReplFixture, "StringMethods")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
         s = ""
+        return {s = s}
 )");
     {
         CompletionSet completions = getCompletionSet("s:l");
@@ -231,7 +330,7 @@ TEST_CASE_FIXTURE(ReplFixture, "StringMethods")
 
 TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexTable")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
         -- Create 't' which is a table with a metatable with an __index table
         mt = {}
         mt.__index = mt
@@ -244,6 +343,8 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexTable")
 
         t.tkey1 = {data1 = 2, data2 = "str", 3, 4}
         t.tkey2 = 4
+
+        return {t = t}
 )");
     {
         CompletionSet completions = getCompletionSet("t.t");
@@ -281,7 +382,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexTable")
 
 TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
         -- Create 't' which is a table with a metatable with an __index function
         mt = {}
         mt.__index = function(table, key)
@@ -298,6 +399,8 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
         t = {}
         setmetatable(t, mt)
         t.tkey = 0
+
+        return {t = t}
 )");
     {
         CompletionSet completions = getCompletionSet("t.t");
@@ -322,7 +425,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
 
 TEST_CASE_FIXTURE(ReplFixture, "TableWithMultipleMetatableIndexTables")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
         -- Create a table with a chain of metatables
         mt2 = {}
         mt2.__index = mt2
@@ -337,6 +440,8 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMultipleMetatableIndexTables")
         mt2.mt2key = {x=1, y=2}
         mt.mtkey = 2
         t.tkey = 3
+
+        return {t = t}
 )");
     {
         CompletionSet completions = getCompletionSet("t.");
@@ -369,10 +474,10 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMultipleMetatableIndexTables")
 
 TEST_CASE_FIXTURE(ReplFixture, "TableWithDeepMetatableIndexTables")
 {
-    runCode(L, R"(
+    publishGlobals(R"(
 -- Creates a table with a chain of metatables of length `count`
 function makeChainedTable(count)
-    local result = {}
+    const result = {}
     result.__index = result
     result[string.format("entry%d", count)] = { count = count }
     if count == 0 then
@@ -384,6 +489,8 @@ end
 
 t30 = makeChainedTable(30)
 t60 = makeChainedTable(60)
+
+return {t30 = t30, t60 = t60}
 )");
     {
         // Check if entry0 exists
@@ -421,8 +528,8 @@ TEST_CASE_FIXTURE(ReplFixture, "InfiniteRecursion")
 {
     // If the infinite recursion is not caught, test will fail
     runCode(L, R"(
-local NewProxyOne = newproxy(true)
-local MetaTableOne = getmetatable(NewProxyOne)
+const NewProxyOne = newproxy(true)
+const MetaTableOne = getmetatable(NewProxyOne)
 MetaTableOne.__index = function()
 	return NewProxyOne.Game
 end
@@ -436,7 +543,7 @@ TEST_CASE_FIXTURE(ReplFixture, "InteractiveStackReserve1")
     lua_resume(L, nullptr, 0);
 
     runCode(L, R"(
-local t = {}
+const t = {}
 )");
 }
 

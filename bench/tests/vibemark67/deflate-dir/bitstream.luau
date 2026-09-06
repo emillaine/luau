@@ -1,6 +1,6 @@
 -- Bit-level I/O for DEFLATE compression
 
-local BitWriter = {}
+BitWriter = {}
 BitWriter.__index = BitWriter
 
 export type BitWriter = typeof(setmetatable({} as {
@@ -48,7 +48,7 @@ function BitWriter.size(self: BitWriter): number
     return #self.buffer
 end
 
-local BitReader = {}
+BitReader = {}
 BitReader.__index = BitReader
 
 export type BitReader = typeof(setmetatable({} as {
@@ -77,7 +77,7 @@ function BitReader.readBits(self: BitReader, numBits: number): number
             self.bitCount += 8
         end
     end
-    local value = bit32.band(self.bitBuf, bit32.lshift(1, numBits) - 1)
+    value = bit32.band(self.bitBuf, bit32.lshift(1, numBits) - 1)
     self.bitBuf = bit32.rshift(self.bitBuf, numBits)
     self.bitCount -= numBits
     return value

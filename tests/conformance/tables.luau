@@ -2,12 +2,12 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print('testing tables, next, and for')
 
-local unpack = table.unpack
+unpack = table.unpack
 
 -- testing table.insert return value
 assert(select('#', table.insert({}, 42)) == 0)
 
-local a = {}
+a = {}
 
 -- make sure table has lots of space in hash part
 for i=1,100 do a[i.."+"] = true end
@@ -22,33 +22,33 @@ end
 if T then
 -- testing table sizes
 
-local l2 = math.log(2)
-local function log2 (x) return math.log(x)/l2 end
+l2 = math.log(2)
+function log2 (x) return math.log(x)/l2 end
 
-local function mp2 (n)   -- minimum power of 2 >= n
-  local mp = 2^math.ceil(log2(n))
+function mp2 (n)   -- minimum power of 2 >= n
+  mp = 2^math.ceil(log2(n))
   assert(n == 0 or (mp/2 < n and n <= mp))
   return mp
 end
 
-local function fb (n)
-  local r, nn = T.int2fb(n)
+function fb (n)
+  r, nn = T.int2fb(n)
   assert(r < 256)
   return nn
 end
 
 -- test fb function
-local a = 1
-local lim = 2^30
+a = 1
+lim = 2^30
 while a < lim do
-  local n = fb(a)
+  n = fb(a)
   assert(a <= n and n <= a*1.125)
   a = math.ceil(a*1.3)
 end
 
  
-local function check (t, na, nh)
-  local a, h = T.querytab(t)
+function check (t, na, nh)
+  a, h = T.querytab(t)
   if a != na or h != nh then
     print(na, nh, a, h)
     assert(nil)
@@ -56,13 +56,13 @@ local function check (t, na, nh)
 end
 
 -- testing constructor sizes
-local lim = 40
-local s = 'return {'
+lim = 40
+s = 'return {'
 for i=1,lim do
   s = s..i..','
-  local s = s
+  s = s
   for k=0,lim do 
-    local t = loadstring(s..'}')()
+    t = loadstring(s..'}')()
     assert(t.count == i)
     check(t, fb(i), mp2(k))
     s = string.format('%sa%d=%d,', s, k, k)
@@ -71,10 +71,10 @@ end
 
 
 -- tests with unknown number of elements
-local a = {}
+a = {}
 for i=1,lim do a[i] = i end   -- build auxiliary table
 for k=0,lim do
-  local a = {unpack(a,1,k)}
+  a = {unpack(a,1,k)}
   assert(a.count == k)
   check(a, k, 0)
   a = {1,2,3,unpack(a,1,k)}
@@ -86,10 +86,10 @@ end
 print'+'
 
 -- testing tables dynamically built
-local lim = 130
+lim = 130
 
 do
-  local a = {}; a[2] = 1; check(a, 0, 1)
+  a = {}; a[2] = 1; check(a, 0, 1)
   a = {}; a[0] = 1; check(a, 0, 1); a[2] = 1; check(a, 0, 2)
   a = {}; a[0] = 1; a[1] = 1; check(a, 1, 1)
   a = {}
@@ -101,7 +101,7 @@ do
 end
 
 do
-  local a = {}
+  a = {}
   for i = 1,lim do
     a['a'..i] = 1
     assert(a.count == 0)
@@ -110,7 +110,7 @@ do
 end
 
 do
-  local a = {}
+  a = {}
   for i=1,16 do a[i] = i end
   check(a, 16, 0)
   for i=1,11 do a[i] = nil end
@@ -125,7 +125,7 @@ do
 end
 
 do   -- rehash moving elements from array to hash
-  local a = {}
+  a = {}
   for i = 1, 100 do a[i] = i end
   check(a, 128, 0)
 
@@ -143,7 +143,7 @@ end
 
 -- reverse filling
 for i=1,lim do
-  local a = {}
+  a = {}
   for i=i,1,-1 do a[i] = i end   -- fill in reverse
   check(a, mp2(i), 0)
 end
@@ -151,7 +151,7 @@ end
 -- size tests for vararg
 lim = 35
 function foo (n, ...)
-  local arg = {...}
+  arg = {...}
   check(arg, n, 0)
   assert(select('#', ...) == n)
   arg[n+1] = true
@@ -159,7 +159,7 @@ function foo (n, ...)
   arg.x = true
   check(arg, mp2(n+1), 1)
 end
-local a = {}
+a = {}
 for i=1,lim do a[i] = true; foo(i, unpack(a)) end
 
 end
@@ -174,13 +174,13 @@ assert(({nil, nil, nil, nil}).count == 0)
 print'+'
 
 
-local nofind = {}
+nofind = {}
 
 a,b,c = 1,2,3
 a,b,c = nil
 
-local function find (name)
-  local n,v
+function find (name)
+  n,v = nil, nil
   while 1 do
     n,v = next(_G, n)
     if not n then return nofind end
@@ -189,7 +189,7 @@ local function find (name)
   end
 end
 
-local function find1 (name)
+function find1 (name)
   for n,v in pairs(_G) do
     if n==name then return v end
   end
@@ -207,7 +207,7 @@ assert(table.foreach(a, function(i,v) if i=='a' then return v end end) == nil)
 table.foreach({}, error)
 
 table.foreachi({x=10, y=20}, error)
-local a = {n = 1}
+a = {n = 1}
 table.foreachi({n=3}, function (i, v)
   assert(a.n == i and not v)
   a.n=a.n+1
@@ -249,8 +249,8 @@ a = nil
 for i=1,10000 do _G[i] = nil end
 
 do   -- clear global table
-  local a = {}
-  local preserve = {io = 1, string = 1, debug = 1, os = 1,
+  a = {}
+  preserve = {io = 1, string = 1, debug = 1, os = 1,
                     coroutine = 1, table = 1, math = 1}
   for n,v in pairs(_G) do a[n]=v end
   for n,v in pairs(a) do
@@ -262,29 +262,29 @@ do   -- clear global table
   end
 end
 
-local function foo ()
-  local getfenv, setfenv, assert, next =
+function foo ()
+  getfenv, setfenv, assert, next =
         getfenv, setfenv, assert, next
-  local n = {gl1=3}
+  n = {gl1=3}
   setfenv(foo, n)
   assert(getfenv(foo) == getfenv(1))
   assert(getfenv(foo) == n)
   assert(print == nil and gl1 == 3)
-  gl1 = nil
-  gl = 1
+  n.gl1 = nil
+  n.gl = 1
   assert(n.gl == 1 and next(n, 'gl') == nil)
 end
 foo()
 
 print'+'
 
-local function checknext (a)
-  local b = {}
+function checknext (a)
+  b = {}
   table.foreach(a, function (k,v) b[k] = v end)
   for k,v in pairs(b) do assert(a[k] == v) end
   for k,v in pairs(a) do assert(b[k] == v) end
   b = {}
-  do local k,v = next(a); while k do b[k] = v; k,v = next(a,k) end end
+  do k,v = next(a); while k do b[k] = v; k,v = next(a,k) end end
   for k,v in pairs(b) do assert(a[k] == v) end
   for k,v in pairs(a) do assert(b[k] == v) end
 end
@@ -299,7 +299,7 @@ assert(table.getn{} == 0)
 assert(table.getn{[-1] = 2} == 0)
 assert(table.getn{1,2,3,nil,nil} == 3)
 for i=0,40 do
-  local a = {}
+  a = {}
   for j=1,i do a[j]=j end
   assert(table.getn(a) == i)
 end
@@ -325,10 +325,10 @@ print("+")
 
 
 -- erasing values
-local t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
+t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
            [100.3] = 4, [4] = 5}
 
-local n = 0
+n = 0
 for k, v in pairs( t ) do
   n = n+1
   assert(t[k] == v)
@@ -339,7 +339,7 @@ end
 assert(n == 5)
 
 
-local function test (a)
+function test (a)
   table.insert(a, 10); table.insert(a, 2, 20);
   table.insert(a, 1, -1); table.insert(a, 40);
   table.insert(a, table.getn(a)+1, 50)
@@ -398,12 +398,12 @@ assert(next({}, nil) == nil)
 
 -- testing table.create and table.find
 do
-  local t = table.create(5)
+  t = table.create(5)
   assert(t.count == 0) -- filled with nil!
   t[5] = 5
   assert(t.count == 5) -- magic
 
-  local t2 = table.create(5, "nice")
+  t2 = table.create(5, "nice")
   assert(table.concat(t2,"!") == "nice!nice!nice!nice!nice")
 
   assert(table.find(t2, "nice") == 1)
@@ -416,16 +416,16 @@ do
   assert(table.find({[(2)] = true}, true, 2) == 2)
 
   -- table.find respects __eq
-  local objameta = {
+  objameta = {
       __eq = function(a, b)
         return a.x == b.x and a.y == b.y
       end
     }
-  local function makeobja(x, y)
+  function makeobja(x, y)
     return setmetatable({x=x, y=y}, objameta)
   end
 
-  local t3 = {}
+  t3 = {}
   table.insert(t3, makeobja(1, 2))
   table.insert(t3, makeobja(2, 3))
   table.insert(t3, makeobja(3, 4))
@@ -435,21 +435,21 @@ do
   assert(table.find(t3, t3[3]) == 3)
 
   -- table.find respects __eq effects
-  local function addnrec(n)
+  function addnrec(n)
       return if n == 1 then 1 else n + addnrec(n - 1)
   end
 
-  local objbmeta = {
+  objbmeta = {
       __eq = function(a, b)
         return addnrec(a.d) == addnrec(b.d)
       end
     }
-  local function makeobjb(d)
+  function makeobjb(d)
     return setmetatable({d=d}, objbmeta)
   end
 
-  local o = makeobjb(20)
-  local t4 = {o, o, o, o, o, o, o, o}
+  o = makeobjb(20)
+  t4 = {o, o, o, o, o, o, o, o}
 
   assert(table.find(t4, makeobjb(20)) == 1)
   assert(table.find(t4, makeobjb(500)) == nil)
@@ -465,7 +465,7 @@ do
   assert(table.concat({"a", "b", "c"}, ",", 1, 2) == "a,b")
 
   -- hash elements
-  local t = {}
+  t = {}
   t[123] = "a"
   t[124] = "b"
 
@@ -485,7 +485,7 @@ end
 
 -- test indexing with strings that have zeroes embedded in them
 do
-	local t = {}
+	t = {}
 	t['start\0end'] = 1
 	t['start'] = 2
 	assert(t['start\0end'] == 1)
@@ -494,7 +494,7 @@ end
 
 -- test table freezing
 do
-  local t = {}
+  t = {}
   assert(not table.isfrozen(t))
   t[1] = 1
   t.a = 2
@@ -510,14 +510,14 @@ do
   assert(not pcall(table.freeze, t)) -- already frozen
 
   -- can't freeze tables with protected metatable
-  local t = {}
+  t = {}
   setmetatable(t, { __metatable = "nope" })
   assert(not pcall(table.freeze, t))
   assert(not table.isfrozen(t))
 
   -- note that it's valid to freeze a table with a metatable and protect it later, freeze doesn't freeze metatable automatically
-  local mt = {}
-  local t = setmetatable({}, mt)
+  mt = {}
+  t = setmetatable({}, mt)
   table.freeze(t)
   mt.__metatable = "nope"
   assert(table.isfrozen(t))
@@ -526,7 +526,7 @@ end
 
 -- test t.count
 do
-  local t = table.create(10, 1)
+  t = table.create(10, 1)
   assert(t.count == 10)
   t[5] = nil
   assert(t.count == 10)
@@ -567,8 +567,8 @@ end
 
 -- test clone
 do
-  local t = {a = 1, b = 2, 3, 4, 5}
-  local tt = table.clone(t)
+  t = {a = 1, b = 2, 3, 4, 5}
+  tt = table.clone(t)
 
   assert(tt.count == 3)
   assert(tt.a == 1 and tt.b == 2)
@@ -588,7 +588,7 @@ do
   assert(not pcall(table.clone, t))
 
   function order(t)
-    local r = ''
+    r = ''
     for k,v in pairs(t) do
       r ..= tostring(v)
     end
@@ -605,7 +605,7 @@ end
 
 -- test boundary invariant maintenance during rehash
 do
-  local arr = table.create(5, 42)
+  arr = table.create(5, 42)
 
   arr[1] = nil
   arr.a = 'a' -- trigger rehash
@@ -615,7 +615,7 @@ end
 
 -- test boundary invariant maintenance when replacing hash keys
 do
-  local arr = {}
+  arr = {}
   arr.a = 'a'
   arr.a = nil
   arr[1] = 1 -- should rehash and resize array part, otherwise # won't find the boundary in array part
@@ -625,7 +625,7 @@ end
 
 -- test boundary invariant maintenance when table is filled from the end
 do
-  local arr = {}
+  arr = {}
   for i=5,2,-1 do
     arr[i] = i
     assert(arr.count == 0)
@@ -636,14 +636,14 @@ end
 
 -- test boundary invariant maintenance when table is filled using SETLIST opcode
 do
-  local arr = {[2]=2,1}
+  arr = {[2]=2,1}
   assert(arr.count == 2)
 end
 
 -- test boundary invariant maintenance when table is filled using table.move
 do
-  local t1 = {1, 2, 3, 4, 5}
-  local t2 = {[6] = 6}
+  t1 = {1, 2, 3, 4, 5}
+  t2 = {[6] = 6}
 
   table.move(t1, 1, 5, 1, t2)
   assert(t2.count == 6)
@@ -651,12 +651,12 @@ end
 
 -- test boundary invariant in sparse arrays or various kinds
 do
-  local function obscuredalloc() return {} end
+  function obscuredalloc() return {} end
 
-  local bits = 16
+  bits = 16
 
   for i = 1, 2^bits - 1 do
-      local t1 = obscuredalloc() -- to avoid NEWTABLE guessing correct size
+      t1 = obscuredalloc() -- to avoid NEWTABLE guessing correct size
 
       for k = 1, bits do
           t1[k] = if bit32.extract(i, k - 1) == 1 then true else nil
@@ -666,12 +666,12 @@ end
 
 -- test table.unpack fastcall for rejecting large unpacks
 do
-  local ok, res = pcall(function()
-    local a = table.create(7999, 0)
-    local b = table.create(8000, 0)
+  ok, res = pcall(function()
+    a = table.create(7999, 0)
+    b = table.create(8000, 0)
 
-    local at = { table.unpack(a) }
-    local bt = { table.unpack(b) }
+    at = { table.unpack(a) }
+    bt = { table.unpack(b) }
   end)
 
   assert(not ok)
@@ -679,12 +679,12 @@ end
 
 -- test iteration with lightuserdata keys
 do
-  function countud()
-    local t = {}
+  function _G.countud()
+    t = {}
     t[makelud(1)] = 1
     t[makelud(2)] = 2
 
-    local count = 0
+    count = 0
     for k,v in pairs(t) do
       count += v
     end
@@ -692,31 +692,31 @@ do
     return count
   end
 
-  assert(countud() == 3)
+  assert(_G.countud() == 3)
 end
 
 -- test iteration with lightuserdata keys with a substituted environment
 do
-  local env = { makelud = makelud, pairs = pairs }
-  setfenv(countud, env)
-  assert(countud() == 3)
+  env = { makelud = makelud, pairs = pairs }
+  setfenv(_G.countud, env)
+  assert(_G.countud() == 3)
 end
 
 -- test __newindex-as-a-table indirection: this had memory safety bugs in Lua 5.1.0
 do
-  local hit = false
+  hit = false
 
-  local grandparent = {}
+  grandparent = {}
   grandparent.__newindex = function(s,k,v)
     assert(k == "foo" and v == 10)
     hit = true
   end
 
-  local parent = {}
+  parent = {}
   parent.__newindex = parent
   setmetatable(parent, grandparent)
 
-  local child = setmetatable({}, parent)
+  child = setmetatable({}, parent)
   child.foo = 10
 
   assert(hit and child.foo == nil and parent.foo == nil)
@@ -724,19 +724,19 @@ end
 
 -- testing next x GC of deleted keys
 do
-  local co = coroutine.wrap(function (t)
+  co = coroutine.wrap(function (t)
     for k, v in pairs(t) do
-        local k1 = next(t)    -- all previous keys were deleted
+        k1 = next(t)    -- all previous keys were deleted
         assert(k == k1)       -- current key is the first in the table
         t[k] = nil
-        local expected = (type(k) == "table" and k[1] or
+        expected = (type(k) == "table" and k[1] or
                           type(k) == "function" and k() or
                           string.sub(k, 1, 1))
         assert(expected == v)
         coroutine.yield(v)
     end
   end)
-  local t = {}
+  t = {}
   t[{1}] = 1    -- add several unanchored, collectable keys
   t[{2}] = 2
   t[string.rep("a", 50)] = "a"    -- long string
@@ -744,7 +744,7 @@ do
   t[{3}] = 3
   t[string.rep("c", 10)] = "c"    -- short string
   t[function () return 10 end] = 10
-  local count = 7
+  count = 7
   while co(t) do
     collectgarbage("collect")   -- collect dead keys
     count = count - 1
@@ -775,7 +775,7 @@ end
 -- check that namecall lookup doesn't give up on entries missing from cached slot position
 do
   for i = 1,10 do
-    local t = setmetatable({}, { __index = { foo = 1 }})
+    t = setmetatable({}, { __index = { foo = 1 }})
 
     assert(t.foo == 1)
 
@@ -788,7 +788,7 @@ end
 
 -- check that fast path for table lookup can't be tricked into assuming a light user data with string pointer is a string
 assert((function ()
-  local t = {}
+  t = {}
   t[makelud("hi")] = "no"
   return t.hi
 end)() == nil)
@@ -797,13 +797,13 @@ end)() == nil)
 -- check that tables with constant keys maintain their insertion/iteration order
 -- this is important to maintain for backwards compat
 do
-  local ordering = {
+  ordering = {
     foo = 1,
     bar = "string",
     thing = true
   }
 
-  local idx = 1
+  idx = 1
   for key, val in ordering do
     if idx == 3 then
       assert(key == "foo")
@@ -822,13 +822,13 @@ end
 
 do
   -- any optimization related to constant fields must preserve side effects that may be relied upon
-  local should_change = false
+  should_change = false
 
   function side_effect()
     should_change = true
   end
 
-  local t = {a = 1, a = side_effect(), a = 3}
+  t = {a = 1, a = side_effect(), a = 3}
 
   assert(should_change == true)
   assert(t.a == 3)
@@ -838,25 +838,25 @@ end
 -- one local must be visible when the same table is read through any other local.
 do
 	-- mutate via alias, read via original
-	local t = { a = 32 }
-	local copy = t
+	t = { a = 32 }
+	copy = t
 	copy.a = 1
 	assert(t.a == 1)
 end
 
 do
 	-- mutate via original, read via alias
-	local t = { a = 32 }
-	local copy = t
+	t = { a = 32 }
+	copy = t
 	t.a = 1
 	assert(copy.a == 1)
 end
 
 do
 	-- multiple aliases all observe the mutation
-	local t = { a = 1 }
-	local a1 = t
-	local a2 = t
+	t = { a = 1 }
+	a1 = t
+	a2 = t
 	a2.a = 99
 	assert(t.a == 99)
 	assert(a1.a == 99)
@@ -864,17 +864,17 @@ end
 
 do
 	-- tables passed by closure also observe the mutation
-	local t = { a = 32 }
+	t = { a = 32 }
 	function f()
 		return t
 	end
-	local copy = f()
+	copy = f()
 	copy.a = 1
 	assert(t.a == 1)
 end
 
 do
-	local t = {x = 0}
+	t = {x = 0}
 	while t.x < 10 do
 		t.x = t.x + 1
 	end
@@ -882,76 +882,76 @@ do
 end
 
 do
-  local t1 = { a = 1 }
-  local t2 = { b = 2 }
+  t1 = { a = 1 }
+  t2 = { b = 2 }
   assert(not (t1 == t2))
   assert(t1 != t2)
 end
 
 do
-	local t = { a = 1 }
-	local x = t or false
+	t = { a = 1 }
+	x = t or false
 	t.a = 99
 	assert(x.a == 99)
 end
 
 do
-  local function incnext(t, key)
-    local k, v = next(t, key)
+  function incnext(t, key)
+    k, v = next(t, key)
     if k != nil then t[k] = v + 1 end
     return k, v
   end
-  local t = { a = 1 }
+  t = { a = 1 }
   for k, v in incnext, t do end
   assert(t.a == 2)
 end
 
 do
-  local function mutate(x) x.a = 99 end
-  local t = { a = 1 }
+  function mutate(x) x.a = 99 end
+  t = { a = 1 }
   mutate((t))
   assert(t.a == 99)
 end
 
 do
-  local function mutate(x) x.a = 99 end
-  local t = { a = 1 }
+  function mutate(x) x.a = 99 end
+  t = { a = 1 }
   mutate(t as any)
   assert(t.a == 99)
 end
 
 do
-  local t = { x = 1 }
-  local a = (t)
+  t = { x = 1 }
+  a = (t)
   a.x = 99
   assert(t.x == 99)
 end
 
 do
-  local t = {x = 1}
-  local u = {y = t}
+  t = {x = 1}
+  u = {y = t}
   u.y.x = 99
   assert(t.x == 99)
 end
 
 do
-  local function foo(u) u.y.x = 99 end
-  local t = {x = 1}
-  local u = {y = t}
+  function foo(u) u.y.x = 99 end
+  t = {x = 1}
+  u = {y = t}
   foo(u)
   assert(t.x == 99)
 end
 
 do 
-  local mt = { __add = function(t, _) t.x = 99 end }
-  local t = { x = 1 }
+  mt = { __add = function(t, _) t.x = 99 end }
+  t = { x = 1 }
   setmetatable(t, mt)
-  local _ = t + 1
+  _ = t + 1
   assert(t.x == 99)
 end
 
 do
-  local t = {x = 1}
+  t = {x = 1}
   (if true then t else t)['x'] = 99
   assert(t.x == 99);
   (if false then t else t)['x'] = 1000
@@ -959,16 +959,16 @@ do
 end
 
 do
-  local function mutate(x) x.a = 99 end
-  local t = { a = 1 }
+  function mutate(x) x.a = 99 end
+  t = { a = 1 }
   mutate(t and t)
   assert(t.a == 99)
 end
 
 do
-  local function mutate(x) x.a = 99 end
-  local t = { a = 1 }
-  local x = t or false
+  function mutate(x) x.a = 99 end
+  t = { a = 1 }
+  x = t or false
   mutate(x)
   assert(t.a == 99)
 end

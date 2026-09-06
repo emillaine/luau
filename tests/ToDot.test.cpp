@@ -136,7 +136,7 @@ n2 [label="number"];
 TEST_CASE_FIXTURE(Fixture, "function")
 {
     CheckResult result = check(R"(
-local function f(a, ...: string) return a end
+function f(a, ...: string) return a end
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -194,7 +194,7 @@ n7 -> n3;
 TEST_CASE_FIXTURE(Fixture, "union")
 {
     CheckResult result = check(R"(
-local a: string | number
+const a: string | number = nil as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -236,7 +236,7 @@ TEST_CASE_FIXTURE(Fixture, "table")
 {
     CheckResult result = check(R"(
 type A<T, U...> = { x: T, y: (U...) -> (), [string]: any }
-local a: A<number, ...string>
+const a: A<number, ...string> = nil as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -302,7 +302,7 @@ n1 -> n4 [label="typePackParam"];
 TEST_CASE_FIXTURE(BuiltinsFixture, "metatable")
 {
     CheckResult result = check(R"(
-local a: typeof(setmetatable({}, {}))
+const a: typeof(setmetatable({}, {})) = nil as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -388,7 +388,7 @@ n1 [label="GenericType T"];
 TEST_CASE_FIXTURE(ToDotClassFixture, "class")
 {
     CheckResult result = check(R"(
-local a: ChildClass
+const a: ChildClass = nil as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -510,7 +510,7 @@ n3 [label="number"];
 TEST_CASE_FIXTURE(Fixture, "builtintypes")
 {
     CheckResult result = check(R"(
-        local x: "hi" | "\"hello\"" | true | false
+        const x: "hi" | "\"hello\"" | true | false = nil as any
     )");
 
     ToDotOptions opts;

@@ -1,19 +1,14 @@
 --!strict
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
     type Vertex = { p: vector, uv: vector, n: vector, t: vector, b: vector, h: number }
 
-    local grid_size = 100
+    grid_size = 100
 
-    local mesh: {
-        vertices: {Vertex},
-        indices: {number},
-        triangle_cone_p: {vector},
-        triangle_cone_n: {vector}
-    } = {
+    mesh = {
         vertices = table.create(grid_size * grid_size),
         indices = table.create((grid_size - 1) * (grid_size - 1) * 6),
         triangle_cone_p = table.create((grid_size - 1) * (grid_size - 1) * 2),
@@ -21,10 +16,10 @@ function test()
     }
     
     function init_vertices()
-        local i = 1
+        i = 1
         for y = 1,grid_size do
             for x = 1,grid_size do
-                local v: Vertex = {}
+                v = {}
                 
                 v.p = vector.create(x, y, math.cos(x) + math.sin(y))
                 v.uv = vector.create((x-1)/(grid_size-1), (y-1)/(grid_size-1), 0)
@@ -40,7 +35,7 @@ function test()
     end
     
     function init_indices()
-        local i = 1
+        i = 1
         for y = 1,grid_size-1 do
             for x = 1,grid_size-1 do
                 mesh.indices[i] = x + (y-1)*grid_size
@@ -60,14 +55,14 @@ function test()
     end
     
     function calculate_normals()
-        local norm_sum = 0
+        norm_sum = 0
         
         for i = 1,#mesh.indices,3 do
-            local a = mesh.vertices[mesh.indices[i]]
-            local b = mesh.vertices[mesh.indices[i + 1]]
-            local c = mesh.vertices[mesh.indices[i + 2]]
+            a = mesh.vertices[mesh.indices[i]]
+            b = mesh.vertices[mesh.indices[i + 1]]
+            c = mesh.vertices[mesh.indices[i + 2]]
             
-            local n = vector.cross(a.p - b.p, a.p - c.p)
+            n = vector.cross(a.p - b.p, a.p - c.p)
             
             a.n += n
             b.n += n
@@ -84,22 +79,22 @@ function test()
     end
     
     function compute_triangle_cones()
-        local mesh_area = 0
+        mesh_area = 0
         
-        local pos = 1
+        pos = 1
 
         for i = 1,#mesh.indices,3 do
-            local p0 = mesh.vertices[mesh.indices[i]]
-            local p1 = mesh.vertices[mesh.indices[i + 1]]
-            local p2 = mesh.vertices[mesh.indices[i + 2]]
+            p0 = mesh.vertices[mesh.indices[i]]
+            p1 = mesh.vertices[mesh.indices[i + 1]]
+            p2 = mesh.vertices[mesh.indices[i + 2]]
             
-            local p10 = p1.p - p0.p
-            local p20 = p2.p - p0.p
+            p10 = p1.p - p0.p
+            p20 = p2.p - p0.p
             
-            local normal = vector.cross(p10, p20)
+            normal = vector.cross(p10, p20)
     
-            local area = vector.magnitude(normal)
-            local invarea = (area == 0) and 0 or 1 / area;
+            area = vector.magnitude(normal)
+            invarea = (area == 0) and 0 or 1 / area;
             
             mesh.triangle_cone_p[pos] = (p0.p + p1.p + p2.p) / 3
             mesh.triangle_cone_n[pos] = normal * invarea
@@ -112,23 +107,23 @@ function test()
     end
     
     function compute_tangent_space()
-        local checksum = 0
+        checksum = 0
         
         for i = 1,#mesh.indices,3 do
-            local a = mesh.vertices[mesh.indices[i]]
-            local b = mesh.vertices[mesh.indices[i + 1]]
-            local c = mesh.vertices[mesh.indices[i + 2]]
+            a = mesh.vertices[mesh.indices[i]]
+            b = mesh.vertices[mesh.indices[i + 1]]
+            c = mesh.vertices[mesh.indices[i + 2]]
     
-            local vba = b.p - a.p
-            local vca = c.p - a.p
+            vba = b.p - a.p
+            vca = c.p - a.p
     
-            local uvba = b.uv - a.uv
-            local uvca = c.uv - a.uv
+            uvba = b.uv - a.uv
+            uvca = c.uv - a.uv
     
-            local r = 1.0 / (uvba.X * uvca.Y - uvca.X * uvba.Y);
+            r = 1.0 / (uvba.X * uvca.Y - uvca.X * uvba.Y);
     
-            local sdir = (uvca.Y * vba - uvba.Y * vca) * r
-            local tdir = (uvba.X * vca - uvca.X * vba) * r
+            sdir = (uvca.Y * vba - uvba.Y * vca) * r
+            tdir = (uvba.X * vca - uvca.X * vba) * r
             
             a.t += sdir
             b.t += sdir
@@ -140,12 +135,12 @@ function test()
         end
         
         for _,v in ipairs(mesh.vertices) do
-            local t = v.t
+            t = v.t
             
             -- Gram-Schmidt orthogonalize
             v.t = vector.normalize(t - v.n * vector.dot(v.n, t))
             
-            local ht = vector.dot(vector.cross(v.n, t), v.b)
+            ht = vector.dot(vector.cross(v.n, t), v.b)
             
             v.h = ht < 0 and -1 or 1
             
@@ -160,7 +155,7 @@ function test()
     init_indices()
     calculate_normals()
     compute_triangle_cones()
-    local checksum = compute_tangent_space()
+    checksum = compute_tangent_space()
 
     assert(math.abs(checksum + 1323.4993) < 1e-2)
 end

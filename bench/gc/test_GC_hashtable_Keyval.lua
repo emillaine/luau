@@ -1,15 +1,15 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
-    local t = {}
+    t = {}
 
-    local max = 10000
-    local iters = 50000
+    max = 10000
+    iters = 50000
 
     for i = 1,iters do
-        local is = tostring(i)
-        local input = string.rep(is, 1000 / #is)
+        is = tostring(i)
+        input = string.rep(is, 1000 / #is)
 
         t[is] = input
 

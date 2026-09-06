@@ -156,7 +156,7 @@ TEST_SUITE_BEGIN("CFGConstruction");
 TEST_CASE_FIXTURE(CFGFixture, "single_local")
 {
     auto cfg = build(R"(
-        local x = 4
+        x = 4
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
@@ -164,37 +164,37 @@ TEST_CASE_FIXTURE(CFGFixture, "single_local")
     CHECK(entry->kind == BlockKind::Entry);
     REQUIRE(entry->getInstructions().size() == 1);
 
-    auto* decl = requireInst<Declare>(entry, 0);
+    auto* decl = requireInst<Assign>(entry, 0);
     CHECK(decl->def->versionedName() == "x-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "two_locals")
 {
     auto cfg = build(R"(
-        local x = 4
-        local y = 5
+        x = 4
+        y = 5
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
     Block* entry = cfg->blocks[0];
 
-    auto* declX = requireInst<Declare>(entry, 0);
+    auto* declX = requireInst<Assign>(entry, 0);
     CHECK(declX->def->versionedName() == "x-0");
-    auto* declY = requireInst<Declare>(entry, 1);
+    auto* declY = requireInst<Assign>(entry, 1);
     CHECK(declY->def->versionedName() == "y-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "simple_reassignment")
 {
     auto cfg = build(R"(
-        local x = 4
+        x = 4
         x = 5
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
     Block* entry = cfg->blocks[0];
 
-    auto* decl = requireInst<Declare>(entry, 0);
+    auto* decl = requireInst<Assign>(entry, 0);
     CHECK(decl->def->versionedName() == "x-0");
     auto* assign = requireInst<Assign>(entry, 1);
     CHECK(assign->def->versionedName() == "x-1");
@@ -203,31 +203,31 @@ TEST_CASE_FIXTURE(CFGFixture, "simple_reassignment")
 TEST_CASE_FIXTURE(CFGFixture, "reassignment_from_local")
 {
     auto cfg = build(R"(
-        local x = 1
-        local y = 2
+        x = 1
+        y = 2
         x = y
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
     Block* entry = cfg->blocks[0];
 
-    CHECK(requireInst<Declare>(entry, 0)->def->versionedName() == "x-0");
-    CHECK(requireInst<Declare>(entry, 1)->def->versionedName() == "y-0");
+    CHECK(requireInst<Assign>(entry, 0)->def->versionedName() == "x-0");
+    CHECK(requireInst<Assign>(entry, 1)->def->versionedName() == "y-0");
     CHECK(requireInst<Assign>(entry, 2)->def->versionedName() == "x-1");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "multi_assignment")
 {
     auto cfg = build(R"(
-        local a, b = 1, 2
+        a, b = 1, 2
         a, b = b, a
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
     Block* entry = cfg->blocks[0];
 
-    CHECK(requireInst<Declare>(entry, 0)->def->versionedName() == "a-0");
-    CHECK(requireInst<Declare>(entry, 1)->def->versionedName() == "b-0");
+    CHECK(requireInst<Assign>(entry, 0)->def->versionedName() == "a-0");
+    CHECK(requireInst<Assign>(entry, 1)->def->versionedName() == "b-0");
     // RHS of `a, b = b, a` is evaluated left-to-right against pre-existing defs:
     CHECK(requireInst<Assign>(entry, 2)->def->versionedName() == "a-1");
     CHECK(requireInst<Assign>(entry, 3)->def->versionedName() == "b-1");
@@ -240,13 +240,13 @@ TEST_CASE_FIXTURE(CFGFixture, "multi_assignment")
 TEST_CASE_FIXTURE(CFGFixture, "basic_join")
 {
     auto cfg = build(R"(
-        local t = 8
+        t = 8
         if true then
             t = 9
         else
             t = "hello"
         end
-        local y = t
+        y = t
     )");
 
     REQUIRE(cfg->blocks.size() == 4);
@@ -265,25 +265,25 @@ TEST_CASE_FIXTURE(CFGFixture, "basic_join")
     checkSuccessors(*cfg, elseBlk, {3});
     checkPredecessors(*cfg, merge, {1, 2});
 
-    CHECK(requireInst<Declare>(entry, 0)->def->versionedName() == "t-0");
+    CHECK(requireInst<Assign>(entry, 0)->def->versionedName() == "t-0");
     CHECK(requireInst<Assign>(thenBlk, 0)->def->versionedName() == "t-1");
     CHECK(requireInst<Assign>(elseBlk, 0)->def->versionedName() == "t-2");
 
     auto* phi = requireInst<Join>(merge, 0);
     checkJoin(phi, "t-3", {"t-1", "t-2"});
 
-    auto* declY = requireInst<Declare>(merge, 1);
+    auto* declY = requireInst<Assign>(merge, 1);
     CHECK(declY->def->versionedName() == "y-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "while_loop")
 {
     auto cfg = build(R"(
-        local x = nil
+        x = nil
         while not x do
             x = 5
         end
-        local y = x
+        y = x
     )");
 
     REQUIRE(cfg->blocks.size() == 4);
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(CFGFixture, "while_loop")
     // Header's predecessors are entry (forward) and body (back-edge).
     checkPredecessors(*cfg, header, {0, 2});
 
-    CHECK(requireInst<Declare>(entry, 0)->def->versionedName() == "x-0");
+    CHECK(requireInst<Assign>(entry, 0)->def->versionedName() == "x-0");
 
     // The header block has two predecessors - the loop block and the entry block
     auto* phi = requireInst<Join>(header, 0);
@@ -317,73 +317,73 @@ TEST_CASE_FIXTURE(CFGFixture, "while_loop")
     // `not x` falsy on exit means x is truthy.
     auto* exitRefine = requireInst<Refine>(exit, 0);
     checkRefine(exitRefine, "x-4", "x-1", /*sense*/ true);
-    CHECK(requireInst<Declare>(exit, 1)->def->versionedName() == "y-0");
+    CHECK(requireInst<Assign>(exit, 1)->def->versionedName() == "y-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "call_expression_records_uses")
 {
     auto cfg = build(R"(
-        local f = nil
-        local x = 1
-        local y = f(x)
+        f = nil
+        x = 1
+        y = f(x)
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
     // f and x are read on the RHS of `local y = f(x)`
-    CHECK_REACHING_DEF(Position(3, 18), "f-0");
-    CHECK_REACHING_DEF(Position(3, 20), "x-0");
+    CHECK_REACHING_DEF(Position(3, 12), "f-0");
+    CHECK_REACHING_DEF(Position(3, 14), "x-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "grouped_expression_records_use")
 {
     auto cfg = build(R"(
-        local x = 1
-        local y = (x)
+        x = 1
+        y = (x)
     )");
 
     REQUIRE(cfg->blocks.size() == 1);
-    CHECK_REACHING_DEF(Position(2, 19), "x-0");
+    CHECK_REACHING_DEF(Position(2, 13), "x-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "trivial_phi_if_else_unmodified")
 {
     auto cfg = build(R"(
-        local x = 1
+        x = 1
         if true then
-            local y = 2
+            y = 2
         else
-            local z = 3
+            z = 3
         end
-        local w = x
+        w = x
     )");
 
     // x is never modified on either branch, so the phi at the merge is trivial.
     // The read of x in `local w = x` should resolve directly to x-0.
-    CHECK_REACHING_DEF(Position(7, 18), "x-0");
+    CHECK_REACHING_DEF(Position(7, 12), "x-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "trivial_phi_while_loop_unmodified")
 {
     auto cfg = build(R"(
-        local x = 1
+        x = 1
         while true do
-            local y = x
+            y = x
         end
     )");
 
     // x is never modified in the loop body, so the loop header phi is trivial.
     // The read of x inside the loop should resolve directly to x-0.
-    CHECK_REACHING_DEF(Position(3, 22), "x-0");
+    CHECK_REACHING_DEF(Position(3, 16), "x-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "nontrivial_phi_one_branch_modifies")
 {
     auto cfg = build(R"(
-        local x = 1
+        x = 1
         if true then
             x = 2
         end
-        local w = x
+        w = x
     )");
 
     // x is modified in the then branch (x-1) but not else (x-0).
@@ -391,7 +391,7 @@ TEST_CASE_FIXTURE(CFGFixture, "nontrivial_phi_one_branch_modifies")
     Block* merge = cfg->blocks[3];
     auto* phi = requireInst<Join>(merge, 0);
     checkJoin(phi, "x-2", {"x-1", "x-0"});
-    CHECK_REACHING_DEF(Position(5, 18), "x-2");
+    CHECK_REACHING_DEF(Position(5, 12), "x-2");
 }
 
 TEST_SUITE_END();
@@ -401,14 +401,14 @@ TEST_SUITE_BEGIN("CFGRefinement");
 TEST_CASE_FIXTURE(CFGFixture, "if_truthy_both_branches")
 {
     auto cfg = build(R"(
-        local x = nil
+        x = nil
         if x then
-            local y = x
+            y = x
         else
-            local z = x
+            z = x
         end
 
-        local y = x
+        y = x
     )");
 
     REQUIRE(cfg->blocks.size() == 4);
@@ -417,24 +417,24 @@ TEST_CASE_FIXTURE(CFGFixture, "if_truthy_both_branches")
     Block* merge = cfg->blocks[3];
 
     checkRefine(requireInst<Refine>(thenBlk, 0), "x-1", "x-0", /*sense*/ true);
-    CHECK(requireInst<Declare>(thenBlk, 1)->def->versionedName() == "y-0");
+    CHECK(requireInst<Assign>(thenBlk, 1)->def->versionedName() == "y-0");
 
     checkRefine(requireInst<Refine>(elseBlk, 0), "x-2", "x-0", /*sense*/ false);
-    CHECK(requireInst<Declare>(elseBlk, 1)->def->versionedName() == "z-0");
+    CHECK(requireInst<Assign>(elseBlk, 1)->def->versionedName() == "z-0");
 
     auto* phi = requireInst<Join>(merge, 0);
     checkJoin(phi, "x-3", {"x-1", "x-2"});
-    CHECK(requireInst<Declare>(merge, 1)->def->versionedName() == "y-0");
+    CHECK(requireInst<Assign>(merge, 1)->def->versionedName() == "y-0");
 }
 
 TEST_CASE_FIXTURE(CFGFixture, "if_falsy_single_branch")
 {
     auto cfg = build(R"(
-        local x = nil
+        x = nil
         if not x then
-            local y = x
+            y = x
         end
-        local z = x
+        z = x
     )");
 
     REQUIRE(cfg->blocks.size() == 4);
@@ -454,9 +454,9 @@ TEST_CASE_FIXTURE(CFGFixture, "if_falsy_single_branch")
 TEST_CASE_FIXTURE(CFGFixture, "typeof_guard_emits_type_proposition")
 {
     auto cfg = build(R"(
-        local x = nil
+        x = nil
         if typeof(x) == "string" then
-            local y = x
+            y = x
         end
     )");
 
@@ -474,9 +474,9 @@ TEST_CASE_FIXTURE(CFGFixture, "dump_renders_type_guard_as_a_call")
     // a `typeof(x) == "string"` guard must be rendered with call syntax
     // `typeof(x-0) == "string"`, not as the malformed `x-0 typeof == "string"`.
     auto cfg = build(R"(
-        local x = nil
+        x = nil
         if typeof(x) == "string" then
-            local y = x
+            y = x
         end
     )");
 
@@ -492,9 +492,9 @@ TEST_CASE_FIXTURE(CFGFixture, "dump_renders_type_guard_as_a_call")
 TEST_CASE_FIXTURE(CFGFixture, "type_guard_inequality_flips_sense")
 {
     auto cfg = build(R"(
-        local x = nil
+        x = nil
         if type(x) != "string" then
-            local y = x
+            y = x
         end
     )");
 
@@ -509,10 +509,10 @@ TEST_CASE_FIXTURE(CFGFixture, "type_guard_inequality_flips_sense")
 TEST_CASE_FIXTURE(CFGFixture, "conjunction_emits_flow_per_side")
 {
     auto cfg = build(R"(
-        local x = nil
-        local y = nil
+        x = nil
+        y = nil
         if x and y then
-            local z = x
+            z = x
         end
     )");
 
@@ -521,7 +521,7 @@ TEST_CASE_FIXTURE(CFGFixture, "conjunction_emits_flow_per_side")
 
     checkRefine(requireInst<Refine>(thenBlk, 0), "x-1", "x-0", /*sense*/ true);
     checkRefine(requireInst<Refine>(thenBlk, 1), "y-1", "y-0", /*sense*/ true);
-    CHECK(requireInst<Declare>(thenBlk, 2)->def->versionedName() == "z-0");
+    CHECK(requireInst<Assign>(thenBlk, 2)->def->versionedName() == "z-0");
 
     // Falsy side of conjunction is a disjunction (~x \/ ~y) which doesn't decompose yet
 }
@@ -534,11 +534,11 @@ TEST_CASE_FIXTURE(Fixture, "is_truthy_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local v : string?
+const v : string? = nil
 if v then
-    local s = v
+    const s = v
 else
-    local s = v
+    const s = v
 end
 )");
     CHECK_EQ("string", toString(requireTypeAtPosition({3, 14})));
@@ -550,11 +550,11 @@ TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local v : string?
+const v : string? = nil
 if not v then
-    local s = v
+    const s = v
 else
-    local s = v
+    const s = v
 end
 )");
     CHECK_EQ("nil", toString(requireTypeAtPosition({3, 14})));
@@ -566,11 +566,11 @@ TEST_CASE_FIXTURE(Fixture, "parenthesized_expressions_are_followed_through")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local v : string?
+const v : string? = nil
 if (not v) then
-    local s = v
+    const s = v
 else
-    local s = v
+    const s = v
 end
 )");
     CHECK_EQ("nil", toString(requireTypeAtPosition({3, 14})));
@@ -582,14 +582,14 @@ TEST_CASE_FIXTURE(Fixture, "and_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local a : string?
-local b : number?
+const a : string? = nil
+const b : number? = nil
 if a and b then
-    local x = a
-    local y = b
+    const x = a
+    const y = b
 else
-    local x = a
-    local y = b
+    const x = a
+    const y = b
 end
 )");
     CHECK_EQ("string", toString(requireTypeAtPosition({4, 14})));
@@ -603,14 +603,14 @@ TEST_CASE_FIXTURE(Fixture, "not_and_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local a : string?
-local b : number?
+const a : string? = nil
+const b : number? = nil
 if not (a and b) then
-    local x = a
-    local y = b
+    const x = a
+    const y = b
 else
-    local x = a
-    local y = b
+    const x = a
+    const y = b
 end
 )");
     CHECK_EQ("string?", toString(requireTypeAtPosition({4, 14})));
@@ -624,9 +624,9 @@ TEST_CASE_FIXTURE(Fixture, "is_truthy_while_loop")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local v : string?
+const v : string? = nil
 while v do
-    local s = v
+    const s = v
 end
 )");
     CHECK_EQ("string", toString(requireTypeAtPosition({3, 14})));
@@ -637,9 +637,9 @@ TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_while_loop")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local v : string?
+const v : string? = nil
 while not v do
-    local s = v
+    const s = v
 end
 )");
     CHECK_EQ("nil", toString(requireTypeAtPosition({3, 14})));
@@ -650,9 +650,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_truthy")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local foo : string?
+const foo : string? = nil
 assert(foo)
-local bar : string = foo
+const bar : string = foo
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -661,11 +661,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_truthy_then_type_guard")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local a : (number | string)?
+const a : (number | string)? = nil
 assert(a)
-local b = a
+const b = a
 assert(type(a) == "number")
-local c = a
+const c = a
 )");
     CHECK_EQ("number | string", toString(requireTypeAtPosition({3, 10})));
     CHECK_EQ("number", toString(requireTypeAtPosition({5, 10})));
@@ -678,11 +678,11 @@ TEST_CASE_FIXTURE(Fixture, "interesting_refinement")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local x : number?
+x = nil
 if not x then
     x = 0
 end
-local y = x + 4
+const y = x + 4
 )");
     CHECK_EQ("number", toString(requireTypeAtPosition({5, 10})));
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -693,10 +693,10 @@ TEST_CASE_FIXTURE(Fixture, "while_back_edge")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-local x = 42
-local e = 0
+x = 42
+const e = 0
 while e > 1 do
-  local y = x
+  const y = x
   x = "foo"
 end
 )");

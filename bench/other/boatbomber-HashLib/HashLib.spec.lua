@@ -1,10 +1,10 @@
-local function describe(phrase, callback) end
-local function it(phrase, callback) end
-local function expect(value) end
+function describe(phrase, callback) end
+function it(phrase, callback) end
+function expect(value) end
 
 return function()
-	local HashLib = require(script.Parent)
-	local sha256 = HashLib.sha256
+	HashLib = require(script.Parent)
+	sha256 = HashLib.sha256
 
 	describe("HashLib.sha256", function()
 		it("should properly encode strings", function()
@@ -18,7 +18,7 @@ return function()
 		end)
 
 		it("should create a private closure that works", function()
-			local AppendNextChunk = sha256()
+			AppendNextChunk = sha256()
 			AppendNextChunk("The quick brown fox")
 			AppendNextChunk(" jumps ")
 			AppendNextChunk("") -- chunk may be an empty string
@@ -27,7 +27,7 @@ return function()
 		end)
 
 		it("should allow the private closure to work if called twice", function()
-			local AppendNextChunk = sha256()
+			AppendNextChunk = sha256()
 			AppendNextChunk("The quick brown fox")
 			AppendNextChunk(" jumps ")
 			AppendNextChunk("") -- chunk may be an empty string

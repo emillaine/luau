@@ -19,6 +19,7 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 LUAU_FASTFLAG(LuauNewTypePathErrorMessages)
 
 LUAU_FASTFLAG(LuauInstantiateInSubtyping)
@@ -43,7 +44,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generalization_shouldnt_seal_table_in_len_fu
     if (FFlag::DebugLuauForceOldSolver)
         return;
     CheckResult result = check(R"(
-local t = {}
+const t = {}
 for i = t.count, 2, -1 do
     t[i] = t[i + 1]
 end
@@ -60,9 +61,9 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "LUAU_ASSERT_arg_exprs_doesnt_trigger_assert")
 {
     CheckResult result = check(R"(
-local FadeValue = {}
+const FadeValue = {}
 function FadeValue.new(finalCallback)
-	local self = setmetatable({}, FadeValue)
+	const self = setmetatable({}, FadeValue)
 	self.finalCallback = finalCallback
 	return self
 end
@@ -76,7 +77,7 @@ end
 
 TEST_CASE_FIXTURE(Fixture, "basic")
 {
-    CheckResult result = check("local t = {foo = \"bar\", baz = 9, quux = nil}");
+    CheckResult result = check("const t = {foo = \"bar\", baz = 9, quux = nil}");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     const TableType* tType = get<TableType>(requireType("t"));
@@ -101,7 +102,7 @@ TEST_CASE_FIXTURE(Fixture, "basic")
 TEST_CASE_FIXTURE(Fixture, "augment_table")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t.foo = 'bar'
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -118,7 +119,7 @@ TEST_CASE_FIXTURE(Fixture, "augment_table")
 TEST_CASE_FIXTURE(Fixture, "augment_nested_table")
 {
     CheckResult result = check(R"(
-        local t = { p = {} }
+        const t = { p = {} }
         t.p.foo = 'bar'
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -175,7 +176,7 @@ TEST_CASE_FIXTURE(Fixture, "cannot_augment_sealed_table")
             return {prop=999}
         end
 
-        local t = mkt()
+        const t = mkt()
         t.foo = 'bar'
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -200,7 +201,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_seal_an_unsealed_table_by_passing_it_to_a_funct
         type T = {[number]: number}
         function f(arg: T) end
 
-        local B = {}
+        const B = {}
         f(B)
         function B:method() end
     )");
@@ -210,14 +211,14 @@ TEST_CASE_FIXTURE(Fixture, "dont_seal_an_unsealed_table_by_passing_it_to_a_funct
 
 TEST_CASE_FIXTURE(Fixture, "updating_sealed_table_prop_is_ok")
 {
-    CheckResult result = check("local t = {prop=999}    t.prop = 0");
+    CheckResult result = check("const t = {prop=999}    t.prop = 0");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
 
 TEST_CASE_FIXTURE(Fixture, "cannot_change_type_of_unsealed_table_prop")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t.prop = 999
         t.prop = 'hello'
     )");
@@ -226,14 +227,14 @@ TEST_CASE_FIXTURE(Fixture, "cannot_change_type_of_unsealed_table_prop")
 
 TEST_CASE_FIXTURE(Fixture, "cannot_change_type_of_table_prop")
 {
-    CheckResult result = check("local t = {prop=999}   t.prop = 'hello'");
+    CheckResult result = check("const t = {prop=999}   t.prop = 'hello'");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 }
 
 TEST_CASE_FIXTURE(Fixture, "report_sensible_error_when_adding_a_value_to_a_nonexistent_prop")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t.foo[1] = 'one'
     )");
 
@@ -265,7 +266,7 @@ TEST_CASE_FIXTURE(Fixture, "function_calls_produces_sealed_table_given_unsealed_
 
 TEST_CASE_FIXTURE(Fixture, "tc_member_function")
 {
-    CheckResult result = check("local T = {}  function T:foo() return 5 end");
+    CheckResult result = check("const T = {}  function T:foo() return 5 end");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     const TableType* tableType = get<TableType>(requireType("T"));
@@ -281,7 +282,7 @@ TEST_CASE_FIXTURE(Fixture, "tc_member_function")
 
 TEST_CASE_FIXTURE(Fixture, "tc_member_function_2")
 {
-    CheckResult result = check("local T = {U={}}  function T.U:foo() return 5 end");
+    CheckResult result = check("const T = {U={}}  function T.U:foo() return 5 end");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     const TableType* tableType = get<TableType>(requireType("T"));
@@ -314,12 +315,12 @@ TEST_CASE_FIXTURE(Fixture, "tc_member_function_2")
 TEST_CASE_FIXTURE(Fixture, "call_method")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.x = 0
         function T:method()
             return self.x
         end
-        local a = T:method()
+        const a = T:method()
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -329,14 +330,14 @@ TEST_CASE_FIXTURE(Fixture, "call_method")
 TEST_CASE_FIXTURE(Fixture, "call_method_with_explicit_self_argument")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.x = 0
 
         function T:method()
             return self.x
         end
 
-        local a = T.method(T)
+        const a = T.method(T)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -348,12 +349,12 @@ TEST_CASE_FIXTURE(Fixture, "used_dot_instead_of_colon")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.x = 0
         function T:method()
             return self.x
         end
-        local a = T.method()
+        const a = T.method()
     )");
 
     auto it = std::find_if(
@@ -371,11 +372,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "used_colon_correctly")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local upVector = {}
+        const upVector = {}
         function upVector:Dot(lookVector)
             return 8
         end
-        local v = math.abs(upVector:Dot(5))
+        const v = math.abs(upVector:Dot(5))
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -384,12 +385,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "used_colon_correctly")
 TEST_CASE_FIXTURE(Fixture, "used_dot_instead_of_colon_but_correctly")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.x = 0
         function T:method(arg1, arg2)
             return self.x
         end
-        local a = T.method(T, 6, 7)
+        const a = T.method(T, 6, 7)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -401,12 +402,12 @@ TEST_CASE_FIXTURE(Fixture, "used_colon_instead_of_dot")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.x = 0
         function T.method()
             return 5
         end
-        local a = T:method()
+        const a = T:method()
     )");
 
     auto it = std::find_if(
@@ -426,7 +427,7 @@ TEST_CASE_FIXTURE(Fixture, "open_table_unification_2")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         a.x = 99
 
         function a:method()
@@ -481,8 +482,8 @@ TEST_CASE_FIXTURE(Fixture, "table_param_width_subtyping_1")
 {
     CheckResult result = check(R"(
         function foo(o)
-            local a = o.x
-            local b = o.y
+            const a = o.x
+            const b = o.y
             return o
         end
 
@@ -516,10 +517,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_param_width_subtyping_2")
 TEST_CASE_FIXTURE(Fixture, "table_param_width_subtyping_3")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.bar = 'hello'
         function T:method()
-            local a = self.baz
+            const a = self.baz
         end
         T:method()
     )");
@@ -596,14 +597,15 @@ TEST_CASE_FIXTURE(Fixture, "okay_to_add_property_to_unsealed_tables_by_assignmen
 {
     // CLI-114872
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
         --!strict
-        local t = { u = {} }
+        export t = { u = {} }
         t = { u = { p = 37 } }
         t = { u = { q = "hi" } }
-        local x = t.u.p
-        local y = t.u.q
+        const x = t.u.p
+        const y = t.u.q
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -617,9 +619,9 @@ TEST_CASE_FIXTURE(Fixture, "okay_to_add_property_to_unsealed_tables_by_function_
         --!strict
         function get(x) return x.opts["MYOPT"] end
         function set(x,y) x.opts["MYOPT"] = y end
-        local t = { opts = {} }
+        const t = { opts = {} }
         set(t,37)
-        local x = get(t)
+        const x = get(t)
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -633,9 +635,9 @@ TEST_CASE_FIXTURE(Fixture, "width_subtyping")
         function f(x : { q : number })
            x.q = 8
         end
-        local t : { q : number, r : string } = { q = 8, r = "hi" }
+        const t : { q : number, r : string } = { q = 8, r = "hi" }
         f(t)
-        local x : string = t.r
+        const x : string = t.r
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -648,9 +650,9 @@ TEST_CASE_FIXTURE(Fixture, "width_subtyping_needs_covariance")
         function f(x : { p : { q : number }})
            x.p = { q = 8, r = 5 }
         end
-        local t : { p : { q : number, r : string } } = { p = { q = 8, r = "hi" } }
+        const t : { p : { q : number, r : string } } = { p = { q = 8, r = "hi" } }
         f(t) -- Shouldn't typecheck
-        local x : string = t.p.r -- x is 5
+        const x : string = t.p.r -- x is 5
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -659,7 +661,7 @@ TEST_CASE_FIXTURE(Fixture, "width_subtyping_needs_covariance")
 TEST_CASE_FIXTURE(Fixture, "infer_array")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t[1] = 'one'
         t[2] = 'two'
     )");
@@ -687,10 +689,10 @@ TEST_CASE_FIXTURE(Fixture, "infer_array")
 TEST_CASE_FIXTURE(Fixture, "infer_array_2")
 {
     CheckResult result = check(R"(
-        local buttonVector = {}
+        const buttonVector = {}
 
         function createButton( actionName, functionInfoTable )
-            local position = nil
+            position = nil
             for i = 1,buttonVector.count do
                 if buttonVector[i] == "empty" then
                     position = i
@@ -708,7 +710,7 @@ TEST_CASE_FIXTURE(Fixture, "indexers_get_quantified_too")
 {
     CheckResult result = check(R"(
         function swap(p)
-            local temp = p[0]
+            const temp = p[0]
             p[0] = p[1]
             p[1] = temp
         end
@@ -745,7 +747,7 @@ TEST_CASE_FIXTURE(Fixture, "indexers_quantification_2")
 {
     CheckResult result = check(R"(
         function mergesort(arr)
-            local p = arr[0]
+            const p = arr[0]
             return arr
         end
     )");
@@ -775,7 +777,7 @@ TEST_CASE_FIXTURE(Fixture, "indexers_quantification_2")
 TEST_CASE_FIXTURE(Fixture, "infer_indexer_from_array_like_table")
 {
     CheckResult result = check(R"(
-        local t = {"one", "two", "three"}
+        const t = {"one", "two", "three"}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -827,10 +829,11 @@ TEST_CASE_FIXTURE(Fixture, "infer_indexer_from_its_variable_type_and_unifiable")
 {
     // This code is totally different in the new solver.  We instead create a new type state for t2.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local t1: { [string]: string } = {}
-        local t2 = { "bar" }
+        const t1: { [string]: string } = {}
+        export t2 = { "bar" }
 
         t2 = t1
     )");
@@ -851,9 +854,10 @@ TEST_CASE_FIXTURE(Fixture, "infer_indexer_from_its_variable_type_and_unifiable")
 
 TEST_CASE_FIXTURE(Fixture, "indexer_mismatch")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local t1: { [string]: string } = {}
-        local t2: { [number]: number } = {}
+        const t1: { [string]: string } = {}
+        export t2: { [number]: number } = {}
 
         t2 = t1
     )");
@@ -874,7 +878,7 @@ TEST_CASE_FIXTURE(Fixture, "indexer_mismatch")
 TEST_CASE_FIXTURE(Fixture, "infer_indexer_from_its_function_return_type")
 {
     CheckResult result = check(R"(
-        local function f(): { [number]: string }
+        function f(): { [number]: string }
             return {}
         end
     )");
@@ -884,10 +888,11 @@ TEST_CASE_FIXTURE(Fixture, "infer_indexer_from_its_function_return_type")
 
 TEST_CASE_FIXTURE(Fixture, "infer_indexer_for_left_unsealed_table_from_right_hand_table_with_indexer")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local function f(): { [number]: string } return {} end
+        function f(): { [number]: string } return {} end
 
-        local t = {}
+        export t = {}
         t = f()
     )");
 
@@ -897,7 +902,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_indexer_for_left_unsealed_table_from_right_han
 TEST_CASE_FIXTURE(Fixture, "sealed_table_value_can_infer_an_indexer")
 {
     CheckResult result = check(R"(
-        local t: { a: string, [number]: string } = { a = "foo" }
+        const t: { a: string, [number]: string } = { a = "foo" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -909,7 +914,7 @@ TEST_CASE_FIXTURE(Fixture, "array_factory_function")
 
     CheckResult result = check(R"(
         function empty() return {} end
-        local array: {string} = empty()
+        const array: {string} = empty()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -964,7 +969,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_when_indexing_from_a_table_indexer")
             return t[1]
         end
 
-        local s = f({})
+        const s = f({})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -979,18 +984,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "indexing_from_a_table_should_prefer_properti
             error("e")
         end
 
-        local t = f()
+        const t = f()
 
-        local a1 = t.a
-        local a2 = t["a"]
+        const a1 = t.a
+        const a2 = t["a"]
 
-        local b1 = t.b
-        local b2 = t["b"]
+        const b1 = t.b
+        const b2 = t["b"]
 
-        local some_indirection_variable = "foo"
-        local c = t[some_indirection_variable]
+        const some_indirection_variable = "foo"
+        const c = t[some_indirection_variable]
 
-        local d = t[1]
+        const d = t[1]
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1013,16 +1018,16 @@ TEST_CASE_FIXTURE(Fixture, "any_when_indexing_into_an_unsealed_table_with_no_ind
     CheckResult result = check(R"(
         --!nonstrict
 
-        local constants = {
+        const constants = {
             key1 = "value1",
             key2 = "value2"
         }
 
-        local function getKey()
+        function getKey()
             return "key1"
         end
 
-        local k1 = constants[getKey()]
+        const k1 = constants[getKey()]
     )");
 
     CHECK("any" == toString(requireType("k1")));
@@ -1033,7 +1038,7 @@ TEST_CASE_FIXTURE(Fixture, "any_when_indexing_into_an_unsealed_table_with_no_ind
 TEST_CASE_FIXTURE(Fixture, "disallow_indexing_into_an_unsealed_table_with_no_indexer_in_strict_mode")
 {
     CheckResult result = check(R"(
-        local constants = {
+        const constants = {
             key1 = "value1",
             key2 = "value2"
         }
@@ -1042,7 +1047,7 @@ TEST_CASE_FIXTURE(Fixture, "disallow_indexing_into_an_unsealed_table_with_no_ind
             return constants[key]
         end
 
-        local k1 = getConstant("key1")
+        const k1 = getConstant("key1")
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -1056,10 +1061,10 @@ TEST_CASE_FIXTURE(Fixture, "disallow_indexing_into_an_unsealed_table_with_no_ind
 TEST_CASE_FIXTURE(Fixture, "assigning_to_an_unsealed_table_with_string_literal_should_infer_new_properties_over_indexer")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t["a"] = "foo"
 
-        local a = t.a
+        const a = t.a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1082,7 +1087,7 @@ TEST_CASE_FIXTURE(Fixture, "assigning_to_an_unsealed_table_with_string_literal_s
 TEST_CASE_FIXTURE(BuiltinsFixture, "oop_indexer_works")
 {
     CheckResult result = check(R"(
-        local clazz = {}
+        const clazz = {}
         clazz.__index = clazz
 
         function clazz:speak()
@@ -1093,8 +1098,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oop_indexer_works")
             return setmetatable({}, clazz)
         end
 
-        local me = clazz.new()
-        local words = me:speak()
+        const me = clazz.new()
+        const words = me:speak()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1105,9 +1110,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oop_indexer_works")
 TEST_CASE_FIXTURE(BuiltinsFixture, "indexer_table")
 {
     CheckResult result = check(R"(
-        local clazz = {a="hello"}
-        local instanace = setmetatable({}, {__index=clazz})
-        local b = instanace.a
+        const clazz = {a="hello"}
+        const instanace = setmetatable({}, {__index=clazz})
+        const b = instanace.a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1118,8 +1123,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "indexer_table")
 TEST_CASE_FIXTURE(BuiltinsFixture, "indexer_fn")
 {
     CheckResult result = check(R"(
-        local instanace = setmetatable({}, {__index=function() return 10 end})
-        local b = instanace.somemethodwedonthave
+        const instanace = setmetatable({}, {__index=function() return 10 end})
+        const b = instanace.somemethodwedonthave
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -1132,14 +1137,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add")
     // We'll want to change this one in particular when we add real syntax for metatables.
 
     CheckResult result = check(R"(
-        local mt = {
+        const mt = {
             __add = function(l, r)
                 return l
             end
         }
-        local a = setmetatable({}, mt)
-        local b = setmetatable({}, mt)
-        local c = a + b
+        const a = setmetatable({}, mt)
+        const b = setmetatable({}, mt)
+        const c = a + b
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1150,9 +1155,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add")
 TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add_inferred")
 {
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         setmetatable(a, {__add=function(a,b) return b end} )
-        local c = a + a
+        const c = a + a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1164,12 +1169,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add_both_ways")
 {
     CheckResult result = check(R"(
         type VectorMt = { __add: (Vector, number) -> Vector }
-        local vectorMt: VectorMt
+        const vectorMt: VectorMt = nil as any
         type Vector = typeof(setmetatable({}, vectorMt))
-        local a: Vector
+        const a: Vector = nil as any
 
-        local b = a + 2
-        local c = 2 + a
+        const b = a + 2
+        const c = 2 + a
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -1183,17 +1188,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add_both_ways_lti")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local vectorMt = {}
+        const vectorMt = {}
 
         function vectorMt.__add(self: Vector, other: number)
             return self
         end
 
         type Vector = typeof(setmetatable({}, vectorMt))
-        local a: Vector = setmetatable({}, vectorMt)
+        const a: Vector = setmetatable({}, vectorMt)
 
-        local b = a + 2
-        local c = 2 + a
+        const b = a + 2
+        const c = 2 + a
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -1206,17 +1211,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add_both_ways_lti")
 // As a result, type inference crashed with a stack overflow.
 TEST_CASE_FIXTURE(BuiltinsFixture, "unification_of_unions_in_a_self_referential_type")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         type A = {}
         type AMT = { __mul: (A, A | number) -> A }
-        local a: A
-        local amt: AMT
+        export a: A = nil as any
+        const amt: AMT = nil as any
         setmetatable(a, amt)
 
         type B = {}
         type BMT = { __mul: (B, A | B | number) -> A }
-        local b: B
-        local bmt: BMT
+        const b: B = nil as any
+        const bmt: BMT = nil as any
         setmetatable(b, bmt)
 
         a = b
@@ -1236,31 +1242,31 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unification_of_unions_in_a_self_referential_
 TEST_CASE_FIXTURE(BuiltinsFixture, "oop_polymorphic")
 {
     CheckResult result = check(R"(
-        local animal = {}
+        const animal = {}
         animal.__index = animal
         function animal:isAlive() return true end
         function animal:speed() return 10 end
 
-        local pelican = {}
+        const pelican = {}
         setmetatable(pelican, animal)
         pelican.__index = pelican
         function pelican:movement() return "fly" end
         function pelican:speed() return 30 end
 
         function pelican.new(name)
-            local s = {}
+            const s = {}
             setmetatable(s, pelican)
             s.name = name
             return s
         end
 
-        local scoops = pelican.new("scoops")
+        const scoops = pelican.new("scoops")
 
-        local alive = scoops:isAlive()
-        local at = scoops.isAlive
-        local movement = scoops:movement()
-        local name = scoops.name
-        local speed = scoops:speed()
+        const alive = scoops:isAlive()
+        const at = scoops.isAlive
+        const movement = scoops:movement()
+        const name = scoops.name
+        const speed = scoops:speed()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1276,7 +1282,7 @@ TEST_CASE_FIXTURE(Fixture, "user_defined_table_types_are_named")
     CheckResult result = check(R"(
         type Vector3 = {x: number, y: number}
 
-        local v: Vector3 = {x = 5, y = 7}
+        const v: Vector3 = {x = 5, y = 7}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1292,22 +1298,22 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "result_is_always_any_if_lhs_is_any")
             __mul: (Vector3MT, Vector3MT|number) -> Vector3MT
         }
 
-        local Vector3: {new: (number?, number?, number?) -> Vector3MT}
-        local Vector3MT: Vector3MT
+        const Vector3: {new: (number?, number?, number?) -> Vector3MT} = nil as any
+        const Vector3MT: Vector3MT = nil as any
         setmetatable(Vector3, Vector3MT)
 
         type CFrameMT = {
             __mul: (CFrameMT, Vector3MT|CFrameMT) -> Vector3MT|CFrameMT
         }
 
-        local CFrame: {
+        const CFrame: {
             Angles:(number, number, number) -> CFrameMT
-        }
-        local CFrameMT: CFrameMT
+        } = nil as any
+        const CFrameMT: CFrameMT = nil as any
         setmetatable(CFrame, CFrameMT)
 
-        local n: any
-        local a = (n + Vector3.new(0, 1.5, 0)) * CFrame.Angles(0, math.pi/2, 0)
+        const n: any = nil as any
+        const a = (n + Vector3.new(0, 1.5, 0)) * CFrame.Angles(0, math.pi/2, 0)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1322,9 +1328,9 @@ TEST_CASE_FIXTURE(Fixture, "result_is_bool_for_equality_operators_if_lhs_is_any"
             return 5, 7
         end
 
-        local a: any, b: number = f()
+        const a: any, b: number = f()
 
-        local c = a < b
+        const c = a < b
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1351,8 +1357,8 @@ TEST_CASE_FIXTURE(Fixture, "inequality_operators_imply_exactly_matching_types")
 TEST_CASE_FIXTURE(Fixture, "nice_error_when_trying_to_fetch_property_of_boolean")
 {
     CheckResult result = check(R"(
-        local a = true
-        local b = a.some_prop
+        const a = true
+        const b = a.some_prop
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1382,7 +1388,7 @@ TEST_CASE_FIXTURE(Fixture, "defining_a_method_for_a_local_sealed_table_must_fail
 {
     CheckResult result = check(R"(
         function mkt() return {x = 1} end
-        local t = mkt()
+        const t = mkt()
         function t.m() end
     )");
 
@@ -1393,7 +1399,7 @@ TEST_CASE_FIXTURE(Fixture, "defining_a_self_method_for_a_local_sealed_table_must
 {
     CheckResult result = check(R"(
         function mkt() return {x = 1} end
-        local t = mkt()
+        const t = mkt()
         function t:m() end
     )");
 
@@ -1403,7 +1409,7 @@ TEST_CASE_FIXTURE(Fixture, "defining_a_self_method_for_a_local_sealed_table_must
 TEST_CASE_FIXTURE(Fixture, "defining_a_method_for_a_local_unsealed_table_is_ok")
 {
     CheckResult result = check(R"(
-        local t = {x = 1}
+        const t = {x = 1}
         function t.m() end
     )");
 
@@ -1413,7 +1419,7 @@ TEST_CASE_FIXTURE(Fixture, "defining_a_method_for_a_local_unsealed_table_is_ok")
 TEST_CASE_FIXTURE(Fixture, "defining_a_self_method_for_a_local_unsealed_table_is_ok")
 {
     CheckResult result = check(R"(
-        local t = {x = 1}
+        const t = {x = 1}
         function t:m() end
     )");
 
@@ -1463,7 +1469,7 @@ TEST_CASE_FIXTURE(Fixture, "passing_compatible_unions_to_a_generic_table_without
 TEST_CASE_FIXTURE(Fixture, "found_like_key_in_table_function_call")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         function t.Foo() end
 
         t.fOo()
@@ -1489,7 +1495,7 @@ TEST_CASE_FIXTURE(Fixture, "found_like_key_in_table_function_call")
 TEST_CASE_FIXTURE(BuiltinsFixture, "found_like_key_in_table_property_access")
 {
     CheckResult result = check(R"(
-        local t = {X = 1}
+        const t = {X = 1}
 
         print(t.x)
     )");
@@ -1514,7 +1520,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "found_like_key_in_table_property_access")
 TEST_CASE_FIXTURE(BuiltinsFixture, "found_multiple_like_keys")
 {
     CheckResult result = check(R"(
-        local t = {Foo = 1, foO = 2}
+        const t = {Foo = 1, foO = 2}
 
         print(t.foo)
     )");
@@ -1543,7 +1549,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_suggest_exact_match_keys")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
         t.foO = 1
         print(t.Foo)
         t.Foo = 2
@@ -1570,11 +1576,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_suggest_exact_match_keys")
 TEST_CASE_FIXTURE(BuiltinsFixture, "getmetatable_returns_pointer_to_metatable")
 {
     CheckResult result = check(R"(
-        local t = {x = 1}
-        local mt = {__index = {y = 2}}
+        const t = {x = 1}
+        const mt = {__index = {y = 2}}
         setmetatable(t, mt)
 
-        local returnedMT = getmetatable(t)
+        const returnedMT = getmetatable(t)
     )");
 
     CHECK(follow(requireType("mt")) == follow(requireType("returnedMT")));
@@ -1584,14 +1590,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_mismatch_should_fail")
 {
     // This test is invalid because we now create a new type state for t1 at the assignment.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local t1 = {x = 1}
-        local mt1 = {__index = {y = 2}}
+        export t1 = {x = 1}
+        const mt1 = {__index = {y = 2}}
         setmetatable(t1, mt1)
 
-        local t2 = {x = 1}
-        local mt2 = {__index = function() return nil end}
+        const t2 = {x = 1}
+        const mt2 = {__index = function() return nil end}
         setmetatable(t2, mt2)
 
         t1 = t2
@@ -1608,8 +1615,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_mismatch_should_fail")
 TEST_CASE_FIXTURE(BuiltinsFixture, "property_lookup_through_tabletypevar_metatable")
 {
     CheckResult result = check(R"(
-        local t = {x = 1}
-        local mt = {__index = {y = 2}}
+        const t = {x = 1}
+        const mt = {__index = {y = 2}}
         setmetatable(t, mt)
 
         print(t.x)
@@ -1628,12 +1635,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "missing_metatable_for_sealed_tables_do_not_g
 {
     // This test is invalid because we now create a new type state for t at the assignment.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local t = {x = 1}
+        export t = {x = 1}
 
-        local a = {x = 1}
-        local b = {__index = {y = 2}}
+        const a = {x = 1}
+        const b = {__index = {y = 2}}
         setmetatable(a, b)
 
         t = a
@@ -1664,7 +1672,7 @@ TEST_CASE_FIXTURE(Fixture, "right_table_missing_key")
     CheckResult result = check(R"(
         function _(...)
         end
-        local l7 = not _,function(l0)
+        const l7 = not _,function(l0)
         _ += _((_) or {function(...)
         end,["z"]=_,} or {},(function(l43,...)
         end))
@@ -1672,7 +1680,7 @@ TEST_CASE_FIXTURE(Fixture, "right_table_missing_key")
         end
         repeat
         until _
-        local l0 = n4,_((_) or {} or {[30976]=_,},({}))
+        const l0 = n4,_((_) or {} or {[30976]=_,},({}))
     )");
 
     CHECK_GE(result.errors.size(), 0);
@@ -1706,7 +1714,7 @@ TEST_CASE_FIXTURE(Fixture, "casting_unsealed_tables_with_props_into_table_with_i
 {
     CheckResult result = check(R"(
         type StringToStringMap = { [string]: string }
-        local rt: StringToStringMap = { ["foo"] = 1 }
+        const rt: StringToStringMap = { ["foo"] = 1 }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1736,7 +1744,7 @@ TEST_CASE_FIXTURE(Fixture, "casting_sealed_tables_with_props_into_table_with_ind
     CheckResult result = check(R"(
         type StringToStringMap = { [string]: string }
         function mkrt() return { ["foo"] = 1 } end
-        local rt: StringToStringMap = mkrt()
+        const rt: StringToStringMap = mkrt()
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1751,7 +1759,7 @@ TEST_CASE_FIXTURE(Fixture, "casting_sealed_tables_with_props_into_table_with_ind
 TEST_CASE_FIXTURE(Fixture, "casting_tables_with_props_into_table_with_indexer2")
 {
     CheckResult result = check(R"(
-        local function foo(x: {[string]: number, a: string}) end
+        function foo(x: {[string]: number, a: string}) end
         foo({ a = "" })
     )");
 
@@ -1761,7 +1769,7 @@ TEST_CASE_FIXTURE(Fixture, "casting_tables_with_props_into_table_with_indexer2")
 TEST_CASE_FIXTURE(Fixture, "casting_tables_with_props_into_table_with_indexer3")
 {
     CheckResult result = check(R"(
-        local function foo(a: {[string]: number, a: string}) end
+        function foo(a: {[string]: number, a: string}) end
         foo({ a = 1 })
     )");
 
@@ -1786,10 +1794,10 @@ TEST_CASE_FIXTURE(Fixture, "casting_tables_with_props_into_table_with_indexer3")
 TEST_CASE_FIXTURE(Fixture, "casting_tables_with_props_into_table_with_indexer4")
 {
     CheckResult result = check(R"(
-        local function foo(a: {[string]: number, a: string}, i: string)
+        function foo(a: {[string]: number, a: string}, i: string)
             return a[i]
         end
-        local hi: number = foo({ a = "hi" }, "a") -- shouldn't typecheck since at runtime hi is "hi"
+        const hi: number = foo({ a = "hi" }, "a") -- shouldn't typecheck since at runtime hi is "hi"
     )");
 
     // This typechecks but shouldn't
@@ -1832,7 +1840,7 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_with_missing_props_dont_report_multi
 {
     CheckResult result = check(R"(
         type MixedTable = {[number]: number, x: number}
-        local t: MixedTable = {"fail"}
+        const t: MixedTable = {"fail"}
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1855,12 +1863,13 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_with_missing_props_dont_report_multi
 
 TEST_CASE_FIXTURE(Fixture, "table_subtyping_with_extra_props_dont_report_multiple_errors")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function mkvec3() return {x = 1, y = 2, z = 3} end
         function mkvec1() return {x = 1} end
 
-        local vec3: {{x: number, y: number, z: number}} = {mkvec3()}
-        local vec1: {{x: number}} = {mkvec1()}
+        const vec3: {{x: number, y: number, z: number}} = {mkvec3()}
+        export vec1: {{x: number}} = {mkvec1()}
 
         vec1 = vec3
     )");
@@ -1876,9 +1885,10 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_with_extra_props_dont_report_multipl
 
 TEST_CASE_FIXTURE(Fixture, "table_subtyping_with_extra_props_is_ok")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local vec3 = {x = 1, y = 2, z = 3}
-        local vec1 = {x = 1}
+        const vec3 = {x = 1, y = 2, z = 3}
+        export vec1 = {x = 1}
 
         vec1 = vec3
     )");
@@ -1889,10 +1899,11 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_with_extra_props_is_ok")
 TEST_CASE_FIXTURE(Fixture, "type_mismatch_on_massive_table_is_cut_short")
 {
     ScopedFastInt sfis{FInt::LuauTableTypeMaximumStringifierLength, 40};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
 
     CheckResult result = check(R"(
-        local t: {a: number,b: number, c: number, d: number, e: number, f: number} = nil as any
+        export t: {a: number,b: number, c: number, d: number, e: number, f: number} = nil as any
         t = 1
     )");
 
@@ -1915,7 +1926,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function f(): { [string]: number }
+        function f(): { [string]: number }
             return { ["foo"] = 1 }
         end
 
@@ -1923,7 +1934,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function f(
+        function f(
             t: {known_prop: boolean, [string]: number},
             key: string
         )
@@ -1934,7 +1945,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
     )"));
 
     auto result = check(R"(
-        local function f(t: {known_prop: boolean, [string]: number, })
+        function f(t: {known_prop: boolean, [string]: number, })
             t.known_prop = nil
         end
     )");
@@ -1951,7 +1962,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
      )");
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function removekey(fh: FancyHashtable, other_key: string)
+        function removekey(fh: FancyHashtable, other_key: string)
             fh["hmmm"] = nil
             fh[other_key] = nil
             fh.dne = nil
@@ -1959,7 +1970,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
     )"));
 
     result = check(R"(
-        local function removekey(fh: FancyHashtable)
+        function removekey(fh: FancyHashtable)
             fh.real_property = nil
         end
     )");
@@ -1979,7 +1990,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_on_generic_map")
         function unset<K, V>(m: MyMap<K, V>, k: K)
             m[k] = nil
         end
-        local m: MyMap<string, boolean> = {}
+        const m: MyMap<string, boolean> = {}
         set(m, "foo", true)
         unset(m, "foo")
     )"));
@@ -1989,15 +2000,15 @@ TEST_CASE_FIXTURE(Fixture, "key_setting_inference_given_nil_upper_bound")
 {
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function setkey_object(t: { [string]: number }, v)
+        function setkey_object(t: { [string]: number }, v)
             t.foo = v
             t.foo = nil
         end
-        local function setkey_constindex(t: { [string]: number }, v)
+        function setkey_constindex(t: { [string]: number }, v)
             t["foo"] = v
             t["foo"] = nil
         end
-        local function setkey_unknown(t: { [string]: number }, k, v)
+        function setkey_unknown(t: { [string]: number }, k, v)
             t[k] = v
             t[k] = nil
         end
@@ -2007,8 +2018,8 @@ TEST_CASE_FIXTURE(Fixture, "key_setting_inference_given_nil_upper_bound")
     CHECK_EQ(toString(requireType("setkey_unknown")), "({ [string]: number }, string, number) -> ()");
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function on_number(v: number): () end
-        local function setkey_object(t: { [string]: number }, v)
+        function on_number(v: number): () end
+        function setkey_object(t: { [string]: number }, v)
             t.foo = v
             on_number(v)
         end
@@ -2021,7 +2032,7 @@ TEST_CASE_FIXTURE(Fixture, "explicit_nil_indexer")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        local function _(t: { [string]: number? }): number
+        function _(t: { [string]: number? }): number
             return t.hello
         end
     )");
@@ -2034,8 +2045,8 @@ TEST_CASE_FIXTURE(Fixture, "explicit_nil_indexer")
 TEST_CASE_FIXTURE(Fixture, "ok_to_provide_a_subtype_during_construction")
 {
     CheckResult result = check(R"(
-        local a: string | number = 1
-        local t = {a, 1}
+        const a: string | number = 1
+        const t = {a, 1}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2047,7 +2058,7 @@ TEST_CASE_FIXTURE(Fixture, "reasonable_error_when_adding_a_nonexistent_property_
     CheckResult result = check(R"(
         --!strict
         function mkA() return {"value"} end
-        local A = mkA()
+        const A = mkA()
         A.B = "Hello"
     )");
 
@@ -2073,7 +2084,7 @@ TEST_CASE_FIXTURE(Fixture, "shorter_array_types_actually_work")
 {
     CheckResult result = check(R"(
         --!strict
-        local A: {string | number}
+        const A: {string | number} = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(0, result);
@@ -2082,13 +2093,14 @@ TEST_CASE_FIXTURE(Fixture, "shorter_array_types_actually_work")
 
 TEST_CASE_FIXTURE(Fixture, "only_ascribe_synthetic_names_at_module_scope")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        local TopLevel = {}
-        local foo
+        const TopLevel = {}
+        export foo = nil
 
         for i = 1, 10 do
-            local SubScope = { 1, 2, 3 }
+            const SubScope = { 1, 2, 3 }
             foo = SubScope
         end
     )");
@@ -2109,9 +2121,9 @@ TEST_CASE_FIXTURE(Fixture, "hide_table_error_properties")
     CheckResult result = check(R"(
         --!strict
 
-        local function f()
-        local function mkt() return { x = 1 } end
-        local t = mkt()
+        function f()
+        function mkt() return { x = 1 } end
+        const t = mkt()
 
         function t.a() end
         function t.b() end
@@ -2161,7 +2173,7 @@ type Table = {
     b: number?
 }
 
-local Test: {Table} = {
+const Test: {Table} = {
     { a = 1 },
     { a = 2, b = 3 }
 }
@@ -2178,7 +2190,7 @@ TEST_CASE_FIXTURE(Fixture, "common_table_element_general")
             b: number?
         }
 
-        local Test: {Table} = {
+        const Test: {Table} = {
             [2] = { a = 1 },
             [5] = { a = 2, b = 3 }
         }
@@ -2195,7 +2207,7 @@ type Table = {
     b: number?
 }
 
-local Test: {{Table}} = {{
+const Test: {{Table}} = {{
     { a = 1 },
     { a = 2, b = 3 }
 },{
@@ -2215,7 +2227,7 @@ type Table = {
     b: number?
 }
 
-local Test: {{x: Table, y: Table}} = {{
+const Test: {{x: Table, y: Table}} = {{
     x = { a = 1 },
     y = { a = 2, b = 3 }
 },{
@@ -2232,7 +2244,7 @@ TEST_CASE_FIXTURE(Fixture, "common_table_element_union_assignment")
     CheckResult result = check(R"(
 type Foo = {x: number | string}
 
-local foos: {Foo} = {
+const foos: {Foo} = {
     {x = 1234567},
     {x = "hello"},
 }
@@ -2244,7 +2256,7 @@ local foos: {Foo} = {
 TEST_CASE_FIXTURE(BuiltinsFixture, "quantifying_a_bound_var_works")
 {
     CheckResult result = check(R"(
-        local clazz = {}
+        const clazz = {}
         clazz.__index = clazz
 
         function clazz:speak()
@@ -2278,7 +2290,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "quantifying_a_bound_var_works")
 TEST_CASE_FIXTURE(Fixture, "common_table_element_union_in_call")
 {
     CheckResult result = check(R"(
-local function foo(l: {{x: number | string}}) end
+function foo(l: {{x: number | string}}) end
 
 foo({
     {x = 1234567},
@@ -2293,7 +2305,7 @@ TEST_CASE_FIXTURE(Fixture, "common_table_element_union_in_call_tail")
 {
     CheckResult result = check(R"(
         type Foo = {x: number | string}
-        local function foo(l: {Foo}, ...: {Foo}) end
+        function foo(l: {Foo}, ...: {Foo}) end
 
         foo(
             {{x = 1234567}, {x = "hello"}},
@@ -2309,7 +2321,7 @@ TEST_CASE_FIXTURE(Fixture, "common_table_element_union_in_prop")
 {
     CheckResult result = check(R"(
 type Foo = {x: number | string}
-local t: { a: {Foo}, b: number } = {
+const t: { a: {Foo}, b: number } = {
     a = {
         {x = 1234567},
         {x = "hello"},
@@ -2331,13 +2343,13 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
 
     CheckResult result = check(R"(
         --!strict
-        local t = {}
+        const t = {}
         function t.m(x) return x end
-        local a : string = t.m("hi")
-        local b : number = t.m(5)
-        local u : { m : (number)->number } = t -- This shouldn't typecheck
+        const a : string = t.m("hi")
+        const b : number = t.m(5)
+        const u : { m : (number)->number } = t -- This shouldn't typecheck
         u.m = function(x) return 1+x end
-        local c : string = t.m("hi")
+        const c : string = t.m("hi")
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -2354,7 +2366,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_should_cope_with_optional_prope
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local buttons = {}
+        const buttons = {}
         table.insert(buttons, { a = 1 })
         table.insert(buttons, { a = 2, b = true })
         table.insert(buttons, { a = 3 })
@@ -2373,7 +2385,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_should_cope_with_optional_prope
 
     CheckResult result = check(R"(
         --!strict
-        local buttons = {}
+        const buttons = {}
         table.insert(buttons, { a = 1 })
         table.insert(buttons, { a = 2, b = true })
         table.insert(buttons, { a = 3 })
@@ -2385,7 +2397,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_should_cope_with_optional_prope
 TEST_CASE_FIXTURE(BuiltinsFixture, "cli_186992_accidental_dropping_free_ty_bounds")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local lines = {}
+        const lines = {}
         table.insert(lines, table.concat({}, ""))
         print(table.concat(lines, "\n"))
     )"));
@@ -2399,8 +2411,8 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_prop")
 type A = { x: number, y: number }
 type B = { x: number, y: string }
 
-local a: A = { x = 123, y = 456 }
-local b: B = a
+const a: A = { x = 123, y = 456 }
+const b: B = a
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -2438,8 +2450,8 @@ type BS = { x: number, y: string }
 type A = { a: boolean, b: AS }
 type B = { a: boolean, b: BS }
 
-local a: A = { a = false, b = { x = 123, y = 456 } }
-local b: B = a
+const a: A = { a = false, b = { x = 123, y = 456 } }
+const b: B = a
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -2478,13 +2490,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "error_detailed_metatable_prop")
     };
 
     CheckResult result = check(R"(
-local a1 = setmetatable({ x = 2, y = 3 }, { __call = function(s) end });
-local b1 = setmetatable({ x = 2, y = "hello" }, { __call = function(s) end });
-local c1: typeof(a1) = b1
+const a1 = setmetatable({ x = 2, y = 3 }, { __call = function(s) end });
+const b1 = setmetatable({ x = 2, y = "hello" }, { __call = function(s) end });
+const c1: typeof(a1) = b1
 
-local a2 = setmetatable({ x = 2, y = 3 }, { __call = function(s) end });
-local b2 = setmetatable({ x = 2, y = 4 }, { __call = function(s, t) end });
-local c2: typeof(a2) = b2
+const a2 = setmetatable({ x = 2, y = 3 }, { __call = function(s) end });
+const b2 = setmetatable({ x = 2, y = 4 }, { __call = function(s, t) end });
+const c2: typeof(a2) = b2
     )");
 
     const std::string expected1 =
@@ -2553,8 +2565,8 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_indexer_key")
         type A = { [number]: string }
         type B = { [string]: string }
 
-        local a: A = { 'a', 'b' }
-        local b: B = a
+        const a: A = { 'a', 'b' }
+        const b: B = a
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -2589,8 +2601,8 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_indexer_value")
         type A = { [number]: number }
         type B = { [number]: string }
 
-        local a: A = { 1, 2, 3 }
-        local b: B = a
+        const a: A = { 1, 2, 3 }
+        const b: B = a
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -2627,7 +2639,7 @@ type Super = { x : number }
 type Sub = { x : number, y: number }
 type HasSuper = { p : Super }
 type HasSub = { p : Sub }
-local a: HasSuper = { p = { x = 5, y = 7 }}
+const a: HasSuper = { p = { x = 5, y = 7 }}
 a.p = { x = 9 }
     )");
 
@@ -2642,11 +2654,11 @@ type Super = { x : number }
 type Sub = { x : number, y: number }
 type HasSuper = { p : Super }
 type HasSub = { p : Sub }
-local tmp = { p = { x = 5, y = 7 }}
-local a: HasSuper = tmp
+const tmp = { p = { x = 5, y = 7 }}
+const a: HasSuper = tmp
 a.p = { x = 9 }
 -- needs to be an error because
-local y: number = tmp.p.y
+const y: number = tmp.p.y
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2683,7 +2695,7 @@ TEST_CASE_FIXTURE(Fixture, "explicitly_typed_table_with_indexer")
         type Sub = { x : number, y: number }
         type HasSuper = { [string] : Super }
         type HasSub = { [string] : Sub }
-        local a: HasSuper = { p = { x = 5, y = 7 }}
+        const a: HasSuper = { p = { x = 5, y = 7 }}
         a.p = { x = 9 }
     )");
 
@@ -2694,9 +2706,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "recursive_metatable_type_call")
 {
     // CLI-114782
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-local b
+export b = nil
 b = setmetatable({}, {__call = b})
 b()
     )");
@@ -2710,15 +2723,15 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_shouldn't_add_optional_properties_to
 {
     CheckResult result = check(R"(
         --!strict
-        local function setNumber(t: { p: number? }, x:number) t.p = x end
-        local function getString(t: { p: string? }):string return t.p or "" end
+        function setNumber(t: { p: number? }, x:number) t.p = x end
+        function getString(t: { p: string? }):string return t.p or "" end
         -- This shouldn't type-check!
-        local function oh(x:number): string
-          local t: {} = {}
+        function oh(x:number): string
+          const t: {} = {}
           setNumber(t, x)
           return getString(t)
         end
-        local s: string = oh(37)
+        const s: string = oh(37)
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -2731,9 +2744,9 @@ TEST_CASE_FIXTURE(Fixture, "top_table_type")
         type Table = { [any] : any }
         type HasTable = { p: Table? }
         type HasHasTable = { p: HasTable? }
-        local t : Table = { p = 5 }
-        local u : HasTable = { p = { p = 5 } }
-        local v : HasHasTable = { p = { p = { p = 5 } } }
+        const t : Table = { p = 5 }
+        const u : HasTable = { p = { p = 5 } }
+        const v : HasHasTable = { p = { p = { p = 5 } } }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2742,8 +2755,8 @@ TEST_CASE_FIXTURE(Fixture, "top_table_type")
 TEST_CASE_FIXTURE(Fixture, "length_operator_union")
 {
     CheckResult result = check(R"(
-local x: {number} | {string}
-local y = x.count
+const x: {number} | {string} = nil as any
+const y = x.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2752,8 +2765,8 @@ local y = x.count
 TEST_CASE_FIXTURE(Fixture, "length_operator_intersection")
 {
     CheckResult result = check(R"(
-local x: {number} & {z:string} -- mixed tables are evil
-local y = x.count
+const x: {number} & {z:string} = nil as any -- mixed tables are evil
+const y = x.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2762,8 +2775,8 @@ local y = x.count
 TEST_CASE_FIXTURE(Fixture, "length_operator_non_table_union")
 {
     CheckResult result = check(R"(
-local x: {number} | any | string
-local y = x.count
+const x: {number} | any | string = nil as any
+const y = x.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2774,8 +2787,8 @@ TEST_CASE_FIXTURE(Fixture, "length_operator_union_errors")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-local x: {number} | number | string
-local y = x.count
+const x: {number} | number | string = nil as any
+const y = x.count
     )");
 
     // `.count` reports a single MissingUnionProperty (old `#` double-errored, CLI-119936).
@@ -2786,8 +2799,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_hang_when_trying_to_look_up_in_cyclic_m
 {
     // t as t1 where t1 = {metatable {__index: t1, __tostring: (t1) -> string}}
     CheckResult result = check(R"(
-        local mt = {}
-        local t = setmetatable({}, mt)
+        const mt = {}
+        const t = setmetatable({}, mt)
         mt.__index = t
 
         function mt:__tostring()
@@ -2802,12 +2815,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_hang_when_trying_to_look_up_in_cyclic_m
 TEST_CASE_FIXTURE(BuiltinsFixture, "give_up_after_one_metatable_index_look_up")
 {
     CheckResult result = check(R"(
-        local data = { x = 5 }
-        local t1 = setmetatable({}, { __index = data })
-        local t2 = setmetatable({}, t1) -- note: must be t1, not a new table
+        const data = { x = 5 }
+        const t1 = setmetatable({}, { __index = data })
+        const t2 = setmetatable({}, t1) -- note: must be t1, not a new table
 
-        local x1 = t1.x -- ok
-        local x2 = t2.x -- nope
+        const x1 = t1.x -- ok
+        const x2 = t2.x -- nope
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2818,11 +2831,11 @@ TEST_CASE_FIXTURE(Fixture, "confusing_indexing")
 {
     CheckResult result = check(R"(
         type T = {} & {p: number | string}
-        local function f(t: T)
+        function f(t: T)
             return t.p
         end
 
-        local foo = f({p = "string"})
+        const foo = f({p = "string"})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2832,14 +2845,14 @@ TEST_CASE_FIXTURE(Fixture, "confusing_indexing")
 TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a_table")
 {
     CheckResult result = check(R"(
-        local a: {x: number, y: number, [any]: any} | {y: number}
+        const a: {x: number, y: number, [any]: any} | {y: number} = nil as any
 
         function f(t)
             t.y = 1
             return t
         end
 
-        local b = f(a)
+        const b = f(a)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2853,14 +2866,14 @@ TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a
 TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a_table_2")
 {
     CheckResult result = check(R"(
-        local a: {y: number} | {x: number, y: number, [any]: any}
+        const a: {y: number} | {x: number, y: number, [any]: any} = nil as any
 
         function f(t)
             t.y = 1
             return t
         end
 
-        local b = f(a)
+        const b = f(a)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2886,15 +2899,15 @@ type _Entry = {
 
 export type AnyEntry = _Entry
 
-local Entry = {}
+const Entry = {}
 Entry.__index = Entry
+
+function forgetChildren(parent: AnyEntry)
+end
 
 function Entry:dispose()
     self:middle()
     forgetChildren(self) -- unify free with sealed AnyEntry
-end
-
-function forgetChildren(parent: AnyEntry)
 end
     )");
 
@@ -2905,7 +2918,7 @@ TEST_CASE_FIXTURE(Fixture, "unifying_tables_shouldnt_uaf2")
 {
     CheckResult result = check(R"(
 -- Another example that UAFd, this time found by fuzzing.
-local _
+const _ = nil
 do
 _._ *= (_[{n0=_[{[{[_]=_,}]=_,}],}])[_]
 _ = (_.n0)
@@ -2919,7 +2932,7 @@ _ = (_.cos)
 
 TEST_CASE_FIXTURE(Fixture, "cannot_call_tables")
 {
-    CheckResult result = check("local foo = {}    foo()");
+    CheckResult result = check("const foo = {}    foo()");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
     CHECK(get<CannotCallNonFunction>(result.errors[0]) != nullptr);
@@ -2928,8 +2941,8 @@ TEST_CASE_FIXTURE(Fixture, "cannot_call_tables")
 TEST_CASE_FIXTURE(Fixture, "table_length")
 {
     CheckResult result = check(R"(
-        local t = {}
-        local s = t.count
+        const t = {}
+        const s = t.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2940,7 +2953,7 @@ TEST_CASE_FIXTURE(Fixture, "table_length")
 
 TEST_CASE_FIXTURE(Fixture, "nil_assign_doesnt_hit_indexer")
 {
-    LUAU_REQUIRE_NO_ERRORS(check("local a = {} a[0] = 7  a[0] = nil"));
+    LUAU_REQUIRE_NO_ERRORS(check("const a = {} a[0] = 7  a[0] = nil"));
 }
 
 TEST_CASE_FIXTURE(Fixture, "wrong_assign_does_hit_indexer")
@@ -2948,7 +2961,7 @@ TEST_CASE_FIXTURE(Fixture, "wrong_assign_does_hit_indexer")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         a[0] = 7
         a[0] = 't'
         a[0] = nil
@@ -2965,7 +2978,7 @@ TEST_CASE_FIXTURE(Fixture, "wrong_assign_does_hit_indexer")
 TEST_CASE_FIXTURE(Fixture, "nil_assign_doesnt_hit_no_indexer")
 {
     CheckResult result = check(R"(
-        local a = {a=1, b=2}
+        const a = {a=1, b=2}
         a['a'] = nil
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2984,8 +2997,8 @@ TEST_CASE_FIXTURE(Fixture, "nil_assign_doesnt_hit_no_indexer")
 TEST_CASE_FIXTURE(Fixture, "free_rhs_table_can_also_be_bound")
 {
     check(R"(
-        local o
-        local v = o:i()
+        const o = nil
+        const v = o:i()
 
         function g(u)
             v = u
@@ -3000,12 +3013,12 @@ TEST_CASE_FIXTURE(Fixture, "free_rhs_table_can_also_be_bound")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_unifies_into_map")
 {
     CheckResult result = check(R"(
-        local Instance: any
-        local UDim2: any
+        const Instance: any = nil as any
+        const UDim2: any = nil as any
 
         function Create(instanceType)
             return function(data)
-                local obj = Instance.new(instanceType)
+                const obj = Instance.new(instanceType)
                 for k, v in pairs(data) do
                     if type(k) == 'number' then
                         --v.Parent = obj
@@ -3017,7 +3030,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_unifies_into_map")
             end
         end
 
-        local topbarShadow = Create'ImageLabel'{
+        const topbarShadow = Create'ImageLabel'{
             Name = "TopBarShadow";
             Size = UDim2.new(1, 0, 0, 3);
             Position = UDim2.new(0, 0, 1, 0);
@@ -3035,7 +3048,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_unifies_into_map")
 TEST_CASE_FIXTURE(Fixture, "tables_get_names_from_their_locals")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3050,7 +3063,7 @@ TEST_CASE_FIXTURE(Fixture, "should_not_unblock_table_type_twice")
         return;
 
     check(R"(
-        local timer = peek(timerQueue)
+        const timer = peek(timerQueue)
         while timer != nil do
             if timer.startTime <= currentTime then
                 timer.isQueued = true
@@ -3066,7 +3079,7 @@ TEST_CASE_FIXTURE(Fixture, "generalize_table_argument")
 {
     CheckResult result = check(R"(
         function foo(arr)
-            local work = {}
+            const work = {}
             for i = 1, arr.count do
                 work[i] = arr[i]
             end
@@ -3107,11 +3120,11 @@ TEST_CASE_FIXTURE(Fixture, "generalize_table_argument")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dont_quantify_table_that_belongs_to_outer_scope")
 {
     CheckResult result = check(R"(
-        local Counter = {}
+        const Counter = {}
         Counter.__index = Counter
 
         function Counter.new()
-            local self = setmetatable({cnt=0}, Counter)
+            const self = setmetatable({count=0}, Counter)
             return self
         end
 
@@ -3120,7 +3133,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_quantify_table_that_belongs_to_outer_sc
             return self.cnt
         end
 
-        local self = Counter.new()
+        const self = Counter.new()
         print(self:incr())
     )");
 
@@ -3152,7 +3165,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "instantiate_tables_at_scope_level")
 {
     CheckResult result = check(R"(
         --!strict
-        local Option = {}
+        const Option = {}
         Option.__index = Option
 
         function Option.Is(obj)
@@ -3184,7 +3197,7 @@ TEST_CASE_FIXTURE(Fixture, "inferring_crazy_table_should_also_be_quick")
 TEST_CASE_FIXTURE(Fixture, "MixedPropertiesAndIndexers")
 {
     CheckResult result = check(R"(
-local x = {}
+const x = {}
 x.a = "a"
 x[0] = true
 x.b = 37
@@ -3233,7 +3246,7 @@ do end
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "dont_crash_when_setmetatable_does_not_produce_a_metatabletypevar")
 {
-    CheckResult result = check("local x = setmetatable({})");
+    CheckResult result = check("const x = setmetatable({})");
 
     if (!FFlag::DebugLuauForceOldSolver)
     {
@@ -3252,7 +3265,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "instantiate_table_cloning")
 {
     CheckResult result = check(R"(
 --!nonstrict
-local l0:any,l61:t0<t32> = _,math
+const l0:any,l61:t0<t32> = _,math
 while _ do
 _()
 end
@@ -3288,13 +3301,14 @@ type K = X<typeof(math)>
 
 TEST_CASE_FIXTURE(Fixture, "instantiate_table_cloning_3")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
 type X<T> = T
-local a = {}
+const a = {}
 a.x = 4
-local b: X<typeof(a)>
+const b: X<typeof(a)> = nil as any
 a.y = 5
-local c: X<typeof(a)>
+export c: X<typeof(a)> = nil as any
 c = b
 )");
 
@@ -3311,7 +3325,7 @@ c = b
 TEST_CASE_FIXTURE(Fixture, "record_location_of_inserted_table_properties")
 {
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         a.foo = 1234
     )");
 
@@ -3329,9 +3343,9 @@ TEST_CASE_FIXTURE(Fixture, "record_location_of_inserted_table_properties")
 TEST_CASE_FIXTURE(Fixture, "table_indexing_error_location")
 {
     CheckResult result = check(R"(
-local foo = {42}
-local bar: number?
-local baz = foo[bar]
+const foo = {42}
+const bar: number? = nil as any
+const baz = foo[bar]
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3345,7 +3359,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_call_metamethod_basic")
         return;
 
     CheckResult result = check(R"(
-        local a = setmetatable({
+        const a = setmetatable({
             a = 1,
         }, {
             __call = function(self, b: number)
@@ -3353,7 +3367,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_call_metamethod_basic")
             end,
         })
 
-        local foo = a(12)
+        const foo = a(12)
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -3369,11 +3383,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_call_metamethod_basic")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_call_metamethod_must_be_callable")
 {
     CheckResult result = check(R"(
-        local a = setmetatable({}, {
+        const a = setmetatable({}, {
             __call = 123,
         })
 
-        local foo = a()
+        const foo = a()
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3395,14 +3409,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_call_metamethod_must_be_callable")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_call_metamethod_generic")
 {
     CheckResult result = check(R"(
-        local a = setmetatable({}, {
+        const a = setmetatable({}, {
             __call = function<T>(self, b: T)
                 return b
             end,
         })
 
-        local foo = a(12)
-        local bar = a("bar")
+        const foo = a(12)
+        const bar = a("bar")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3416,13 +3430,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_simple_call")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local a = setmetatable({ x = 2 }, {
+        const a = setmetatable({ x = 2 }, {
             __call = function(self)
                 return (self.x as number) * 2 -- should work without annotation in the future
             end
         })
-        local b = a()
-        local c = a(2) -- too many arguments
+        const b = a()
+        const c = a(2) -- too many arguments
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3433,14 +3447,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "access_index_metamethod_that_returns_variadi
 {
     CheckResult result = check(R"(
         type Foo = {x: string}
-        local t = {}
+        const t = {}
         setmetatable(t, {
             __index = function(x: string): ...Foo
                 return {x = x}
             end
         })
 
-        local foo = t.bar
+        const foo = t.bar
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3460,18 +3474,18 @@ TEST_CASE_FIXTURE(Fixture, "dont_invalidate_the_properties_iterator_of_free_tabl
     )";
 
     fileResolver.source["Module/Backend"] = R"(
-        local Types = require(script.Types)
+        const Types = require(script.Types)
         type Fiber = Types.Fiber
         type ReactRenderer = { findFiberByHostInstance: () -> Fiber? }
 
-        local function attach(renderer): ()
-            local function getPrimaryFiber(fiber)
-                local alternate = fiber.alternate
+        function attach(renderer): ()
+            function getPrimaryFiber(fiber)
+                const alternate = fiber.alternate
                 return fiber
             end
 
-            local function getFiberIDForNative()
-                local fiber = renderer.findFiberByHostInstance()
+            function getFiberIDForNative()
+                const fiber = renderer.findFiberByHostInstance()
                 fiber = fiber.return_
                 return getPrimaryFiber(fiber)
             end
@@ -3490,8 +3504,8 @@ TEST_CASE_FIXTURE(Fixture, "dont_invalidate_the_properties_iterator_of_free_tabl
 TEST_CASE_FIXTURE(Fixture, "checked_prop_too_early")
 {
     CheckResult result = check(R"(
-        local t: {x: number?}? = {x = nil}
-        local u = t.x and t or 5
+        const t: {x: number?}? = {x = nil}
+        const u = t.x and t or 5
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3511,8 +3525,8 @@ TEST_CASE_FIXTURE(Fixture, "checked_prop_too_early")
 TEST_CASE_FIXTURE(Fixture, "accidentally_checked_prop_in_opposite_branch")
 {
     CheckResult result = check(R"(
-        local t: {x: number?}? = {x = nil}
-        local u = t and t.x == 5 or t.x == 31337
+        const t: {x: number?}? = {x = nil}
+        const u = t and t.x == 5 or t.x == 31337
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3536,7 +3550,7 @@ TEST_CASE_FIXTURE(Fixture, "pairs_parameters_are_not_unsealed_tables")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_function_check_use_after_free")
 {
     CheckResult result = check(R"(
-local t = {}
+const t = {}
 
 function t.x(value)
     for k,v in pairs(t) do end
@@ -3554,16 +3568,16 @@ TEST_CASE_FIXTURE(Fixture, "inferred_properties_of_a_table_should_start_with_the
 {
     CheckResult result = check(R"(
         --!strict
-        local T = {}
+        const T = {}
 
-        local function f(prop)
+        function f(prop)
             T[1] = {
                 prop = prop,
             }
         end
 
-        local function g()
-            local l = T[1].prop
+        function g()
+            const l = T[1].prop
         end
     )");
 
@@ -3574,11 +3588,11 @@ TEST_CASE_FIXTURE(Fixture, "inferred_properties_of_a_table_should_start_with_the
 TEST_CASE_FIXTURE(BuiltinsFixture, "dont_leak_free_table_props")
 {
     CheckResult result = check(R"(
-        local function a(state)
+        function a(state)
             print(state.blah)
         end
 
-        local function b(state) -- The bug was that we inferred state: {blah: any, gwar: any}
+        function b(state) -- The bug was that we inferred state: {blah: any, gwar: any}
             print(state.gwar)
         end
 
@@ -3609,7 +3623,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_leak_free_table_props")
 TEST_CASE_FIXTURE(Fixture, "mixed_tables_with_implicit_numbered_keys")
 {
     CheckResult result = check(R"(
-        local t: { [string]: number } = { 5, 6, 7 }
+        const t: { [string]: number } = { 5, 6, 7 }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -3632,8 +3646,8 @@ TEST_CASE_FIXTURE(Fixture, "expected_indexer_value_type_extra")
     CheckResult result = check(R"(
         type X = { { x: boolean?, y: boolean? } }
 
-        local l1: {[string]: X} = { key = { { x = true }, { y = true } } }
-        local l2: {[any]: X} = { key = { { x = true }, { y = true } } }
+        const l1: {[string]: X} = { key = { { x = true }, { y = true } } }
+        const l2: {[any]: X} = { key = { { x = true }, { y = true } } }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3644,7 +3658,7 @@ TEST_CASE_FIXTURE(Fixture, "expected_indexer_value_type_extra_2")
     CheckResult result = check(R"(
         type X = {[any]: string | boolean}
 
-        local x: X = { key = "str" }
+        const x: X = { key = "str" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3652,16 +3666,16 @@ TEST_CASE_FIXTURE(Fixture, "expected_indexer_value_type_extra_2")
 
 TEST_CASE_FIXTURE(Fixture, "expected_indexer_from_table_union")
 {
-    LUAU_REQUIRE_NO_ERRORS(check(R"(local a: {[string]: {number | string}} = {a = {2, 's'}})"));
-    LUAU_REQUIRE_NO_ERRORS(check(R"(local a: {[string]: {number | string}}? = {a = {2, 's'}})"));
-    LUAU_REQUIRE_NO_ERRORS(check(R"(local a: {[string]: {[string]: {string?}}?} = {["a"] = {["b"] = {"a", "b"}}})"));
+    LUAU_REQUIRE_NO_ERRORS(check(R"(const a: {[string]: {number | string}} = {a = {2, 's'}})"));
+    LUAU_REQUIRE_NO_ERRORS(check(R"(const a: {[string]: {number | string}}? = {a = {2, 's'}})"));
+    LUAU_REQUIRE_NO_ERRORS(check(R"(const a: {[string]: {[string]: {string?}}?} = {["a"] = {["b"] = {"a", "b"}}})"));
 }
 
 TEST_CASE_FIXTURE(Fixture, "prop_access_on_key_whose_types_mismatches")
 {
     CheckResult result = check(R"(
-        local t: {number} = {}
-        local x = t.x
+        const t: {number} = {}
+        const x = t.x
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3671,8 +3685,8 @@ TEST_CASE_FIXTURE(Fixture, "prop_access_on_key_whose_types_mismatches")
 TEST_CASE_FIXTURE(Fixture, "prop_access_on_unions_of_indexers_where_key_whose_types_mismatches")
 {
     CheckResult result = check(R"(
-        local t: { [number]: number } | { [boolean]: number } = {}
-        local u = t.x
+        const t: { [number]: number } | { [boolean]: number } = {}
+        const u = t.x
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3682,8 +3696,8 @@ TEST_CASE_FIXTURE(Fixture, "prop_access_on_unions_of_indexers_where_key_whose_ty
 TEST_CASE_FIXTURE(BuiltinsFixture, "leaking_bad_metatable_errors")
 {
     CheckResult result = check(R"(
-local a = setmetatable({}, 1)
-local b = a.x
+const a = setmetatable({}, 1)
+const b = a.x
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3697,7 +3711,7 @@ TEST_CASE_FIXTURE(Fixture, "scalar_is_a_subtype_of_a_compatible_polymorphic_shap
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function f(s)
+        function f(s)
             return s:lower()
         end
 
@@ -3713,7 +3727,7 @@ TEST_CASE_FIXTURE(Fixture, "scalar_is_not_a_subtype_of_a_compatible_polymorphic_
 {
     ScopedFastFlag sff{FFlag::LuauCallErrorReportingRecoversArgumentLocationsForPacks, true};
     CheckResult result = check(R"(
-        local function f(s)
+        function f(s)
             return s:absolutely_no_scalar_has_this_method()
         end
 
@@ -3787,8 +3801,8 @@ TEST_CASE_FIXTURE(Fixture, "a_free_shape_can_turn_into_a_scalar_if_it_is_compati
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function f(s): string
-            local foo = s:lower()
+        function f(s): string
+            const foo = s:lower()
             return s
         end
     )");
@@ -3800,8 +3814,8 @@ TEST_CASE_FIXTURE(Fixture, "a_free_shape_can_turn_into_a_scalar_if_it_is_compati
 TEST_CASE_FIXTURE(Fixture, "a_free_shape_cannot_turn_into_a_scalar_if_it_is_not_compatible")
 {
     CheckResult result = check(R"(
-        local function f(s): string
-            local foo = s:absolutely_no_scalar_has_this_method()
+        function f(s): string
+            const foo = s:absolutely_no_scalar_has_this_method()
             return s
         end
     )");
@@ -3836,15 +3850,15 @@ Table type 'typeof(string)' not compatible with type 't1 where t1 = {+ absolutel
 TEST_CASE_FIXTURE(BuiltinsFixture, "a_free_shape_can_turn_into_a_scalar_directly")
 {
     CheckResult result = check(R"(
-        local function stringByteList(str)
-            local out = {}
+        function stringByteList(str)
+            const out = {}
             for i = 1, str.count do
                 table.insert(out, string.byte(str, i))
             end
             return table.concat(out, ",")
         end
 
-        local x = stringByteList("xoo")
+        const x = stringByteList("xoo")
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -3872,17 +3886,17 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
 
     CheckResult result = check(R"(
         --!strict
-        local t = {}
+        const t = {}
         function t.m<T>(x: T) return x end
-        local a : string = t.m("hi")
-        local b : number = t.m(5)
+        const a : string = t.m("hi")
+        const b : number = t.m(5)
         function f(x : { m : (number)->number })
             x.m = function(x: number) return 1+x end
         end
 
         f(t) -- This shouldn't typecheck
 
-        local c : string = t.m("hi")
+        const c : string = t.m("hi")
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -3917,7 +3931,7 @@ function f(x)
   x.p = 5
   return x
 end
-local g : ({ p : number, q : string }) -> ({ p : number, r : boolean }) = f
+const g : ({ p : number, q : string }) -> ({ p : number, r : boolean }) = f
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3946,13 +3960,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_has_a_side_effect")
         return;
 
     CheckResult result = check(R"(
-        local mt = {
+        const mt = {
             __add = function(x, y)
                 return 123
             end,
         }
 
-        local foo = {}
+        const foo = {}
         setmetatable(foo, mt)
     )");
 
@@ -3963,7 +3977,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_has_a_side_effect")
 TEST_CASE_FIXTURE(BuiltinsFixture, "tables_should_be_fully_populated")
 {
     CheckResult result = check(R"(
-        local t = {
+        const t = {
             x = 5 as NonexistingTypeWhichEndsUpReturningAnErrorType,
             y = 5
         }
@@ -4021,7 +4035,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_table_unify_instantiated_table")
     CheckResult result = check(R"(
 function _(...)
 end
-local function l0():typeof(_()()[_()()[_]])
+function l0():typeof(_()()[_()()[_]])
 end
 return _[_()()[_]] <= _
     )");
@@ -4063,8 +4077,8 @@ _ = {_,}
 TEST_CASE_FIXTURE(Fixture, "when_augmenting_an_unsealed_table_with_an_indexer_apply_the_correct_scope_to_the_indexer_type")
 {
     CheckResult result = check(R"(
-        local events = {}
-        local mockObserveEvent = function(_, key, callback)
+        const events = {}
+        const mockObserveEvent = function(_, key, callback)
             events[key] = callback
         end
 
@@ -4101,13 +4115,13 @@ TEST_CASE_FIXTURE(Fixture, "when_augmenting_an_unsealed_table_with_an_indexer_ap
 TEST_CASE_FIXTURE(Fixture, "dont_extend_unsealed_tables_in_rvalue_position")
 {
     CheckResult result = check(R"(
-        local testDictionary = {
+        const testDictionary = {
             FruitName = "Lemon",
             FruitColor = "Yellow",
             Sour = true
         }
 
-        local print: any
+        const print: any = nil as any
 
         print(testDictionary[""])
     )");
@@ -4127,7 +4141,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_extend_unsealed_tables_in_rvalue_position")
 TEST_CASE_FIXTURE(BuiltinsFixture, "extend_unsealed_table_with_metatable")
 {
     CheckResult result = check(R"(
-        local T = setmetatable({}, {
+        const T = setmetatable({}, {
             __call = function(_, name: string?)
             end,
         })
@@ -4143,15 +4157,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extend_unsealed_table_with_metatable")
 TEST_CASE_FIXTURE(BuiltinsFixture, "top_table_type_is_isomorphic_to_empty_sealed_table_type")
 {
     CheckResult result = check(R"(
-        local None = newproxy(true)
-        local mt = getmetatable(None)
+        const None = newproxy(true)
+        const mt = getmetatable(None)
         mt.__tostring = function()
             return "Object.None"
         end
 
         function assign(...)
             for index = 1, select("#", ...) do
-                local rest = select(index, ...)
+                const rest = select(index, ...)
 
                 if rest != nil and typeof(rest) == "table" then
                     for key, value in pairs(rest) do
@@ -4188,7 +4202,7 @@ TEST_CASE_FIXTURE(Fixture, "certain_properties_of_table_literal_arguments_can_be
             return a
         end
 
-        local x = f({
+        const x = f({
             title = "Feature.VirtualEvents.EnableNotificationsModalTitle",
             body = "Feature.VirtualEvents.EnableNotificationsModalBody",
             notNow = "Feature.VirtualEvents.NotNowButton",
@@ -4210,15 +4224,15 @@ TEST_CASE_FIXTURE(Fixture, "subproperties_can_also_be_covariantly_tested")
             return t
         end
 
-        local x = f({
+        const x = f({
             subprop={x="hello"}
         })
 
-        local y = f({
+        const y = f({
             subprop={x=41}
         })
 
-        local z = f({
+        const z = f({
             subprop={}
         })
     )");
@@ -4228,19 +4242,20 @@ TEST_CASE_FIXTURE(Fixture, "subproperties_can_also_be_covariantly_tested")
 
 TEST_CASE_FIXTURE(Fixture, "cyclic_shifted_tables")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local function id<a>(x: a): a
+        function id<a>(x: a): a
           return x
         end
 
         -- Remove name from cyclic table
-        local foo = id({})
+        const foo = id({})
         foo.foo = id({})
         foo.foo.foo = id({})
         foo.foo.foo.foo = id({})
         foo.foo.foo.foo.foo = foo
 
-        local almostFoo = id({})
+        export almostFoo = id({})
         almostFoo.foo = id({})
         almostFoo.foo.foo = id({})
         almostFoo.foo.foo.foo = id({})
@@ -4260,11 +4275,11 @@ TEST_CASE_FIXTURE(Fixture, "cli_84607_missing_prop_in_array_or_dict")
     CheckResult result = check(R"(
         type Thing = { name: string, prop: boolean }
 
-        local arrayOfThings : {Thing} = {
+        const arrayOfThings : {Thing} = {
             { name = "a" }
         }
 
-        local dictOfThings : {[string]: Thing} = {
+        const dictOfThings : {[string]: Thing} = {
             a = { name = "a" }
         }
     )");
@@ -4304,7 +4319,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_84607_missing_prop_in_array_or_dict")
 TEST_CASE_FIXTURE(Fixture, "simple_method_definition")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
 
         function T:m()
             return 5
@@ -4332,7 +4347,7 @@ TEST_CASE_FIXTURE(Fixture, "identify_all_problematic_table_fields")
             c: boolean,
         }
 
-        local a: T = {
+        const a: T = {
             a = "foo",
             b = false,
             c = 123,
@@ -4438,8 +4453,8 @@ TEST_CASE_FIXTURE(Fixture, "nested_write_property_mismatch_describes_the_assigne
     CheckResult result = check(R"(
         type A = { write outer: { read inner: number } }
         type B = { write outer: { read inner: string } }
-        local a: A
-        local b: B = a
+        const a: A = nil as any
+        const b: B = a
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -4533,7 +4548,7 @@ TEST_CASE_FIXTURE(Fixture, "read_from_write_only_property")
 
     CheckResult result = check(R"(
         function f(t: {write x: number})
-            local foo = t.x
+            const foo = t.x
         end
     )");
 
@@ -4572,7 +4587,7 @@ TEST_CASE_FIXTURE(Fixture, "read_only_property_with_type_mismatch_reports_both_e
     // When a property is both read-only AND has a type mismatch, both issues are reported
     // independently so the user knows they need to fix both.
     CheckResult result = check(R"(
-        local function f(t: { read woof: string }): { woof: number }
+        function f(t: { read woof: string }): { woof: number }
             return t
         end
     )");
@@ -4593,7 +4608,7 @@ TEST_CASE_FIXTURE(Fixture, "read_only_property_subtype_mismatch_error_message")
     ScopedFastFlag sff{FFlag::LuauPropertyModifierMismatchErrors, true};
 
     CheckResult result = check(R"(
-        local function f(t: { read woof: number }): { woof: number }
+        function f(t: { read woof: number }): { woof: number }
             return t
         end
     )");
@@ -4615,7 +4630,7 @@ TEST_CASE_FIXTURE(Fixture, "write_only_property_subtype_mismatch_error_message")
     ScopedFastFlag sff{FFlag::LuauPropertyModifierMismatchErrors, true};
 
     CheckResult result = check(R"(
-        local function f(t: { write woof: number }): { woof: number }
+        function f(t: { write woof: number }): { woof: number }
             return t
         end
     )");
@@ -4685,7 +4700,7 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_write_rejected")
     ScopedFastFlag sffs[] = {{FFlag::DebugLuauForceOldSolver, false}};
 
     CheckResult result = check(R"(
-        local t: {read [string]: number} = {}
+        const t: {read [string]: number} = {}
         t["k"] = 1
     )");
 
@@ -4702,8 +4717,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_covariance")
 
     // A read-write indexer is a subtype of a read-only indexer (covariance).
     CheckResult result = check(R"(
-        local rw: {[string]: number} = {}
-        local ro: {read [string]: number} = rw
+        const rw: {[string]: number} = {}
+        const ro: {read [string]: number} = rw
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -4715,8 +4730,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_not_subtype_of_readwrite")
 
     // A read-only indexer is NOT a subtype of a read-write indexer.
     CheckResult result = check(R"(
-        local ro: {read [string]: number} = {}
-        local rw: {[string]: number} = ro
+        const ro: {read [string]: number} = {}
+        const rw: {[string]: number} = ro
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -4733,8 +4748,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_value_covariance")
 
     // Value type is covariant for read-only indexers.
     CheckResult result = check(R"(
-        local narrow: {read [string]: number} = {}
-        local wide: {read [string]: number | string} = narrow
+        const narrow: {read [string]: number} = {}
+        const wide: {read [string]: number | string} = narrow
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -4746,8 +4761,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_array_shorthand")
 
     // {read T} is a read-only array (desugars to {read [number]: T}).
     CheckResult result = check(R"(
-        local t: {read number} = {1, 2, 3}
-        local x: number = t[1]
+        const t: {read number} = {1, 2, 3}
+        const x: number = t[1]
         t[1] = 4
     )");
 
@@ -4764,8 +4779,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_value_not_contravariant")
 
     // {read [K]: number | string} is NOT a subtype of {read [K]: number}: value type is covariant.
     CheckResult result = check(R"(
-        local wide: {read [string]: number | string} = {}
-        local narrow: {read [string]: number} = wide
+        const wide: {read [string]: number | string} = {}
+        const narrow: {read [string]: number} = wide
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -4781,7 +4796,7 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_tostring")
     ScopedFastFlag sffs[] = {{FFlag::DebugLuauForceOldSolver, false}};
 
     CheckResult result = check(R"(
-        local t: {read [string]: number} = {}
+        const t: {read [string]: number} = {}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -4793,8 +4808,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_read_allowed")
     ScopedFastFlag sffs[] = {{FFlag::DebugLuauForceOldSolver, false}};
 
     CheckResult result = check(R"(
-        local t: {read [string]: number} = {}
-        local x: number = t["k"]
+        const t: {read [string]: number} = {}
+        const x: number = t["k"]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -4807,8 +4822,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_cannot_cover_readwrite_property")
     // A read-only string indexer cannot satisfy a read-write named property because the
     // holder cannot be written through.
     CheckResult result = check(R"(
-        local ro: {read [string]: number} = {}
-        local t: {foo: number} = ro
+        const ro: {read [string]: number} = {}
+        const t: {foo: number} = ro
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -4826,10 +4841,10 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_read_only_indexers_is_read_only")
     // {read [K]: V} & {read [K]: W} must normalize to {read [K]: V & W}.
     // Reading is fine; writing must fail because both sides are read-only.
     CheckResult result = check(R"(
-        local function readOk(t: {read [string]: number} & {read [string]: number | string})
-            local _x: number = t["k"]
+        function readOk(t: {read [string]: number} & {read [string]: number | string})
+            const _x: number = t["k"]
         end
-        local function writeFails(t: {read [string]: number} & {read [string]: number | string})
+        function writeFails(t: {read [string]: number} & {read [string]: number | string})
             t["k"] = 1
         end
     )");
@@ -4849,13 +4864,13 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_read_only_and_read_write_indexer_all
     // {read [K]: V} & {[K]: W} normalizes to {[K]: V & W} — read-write with intersection value.
     // Write access comes from the read-write side; write type is the conservative intersection.
     CheckResult result = check(R"(
-        local function readOk(t: {read [string]: number} & {[string]: number | string})
-            local _x: number = t["k"]
+        function readOk(t: {read [string]: number} & {[string]: number | string})
+            const _x: number = t["k"]
         end
-        local function writeOk(t: {read [string]: number} & {[string]: number | string})
+        function writeOk(t: {read [string]: number} & {[string]: number | string})
             t["k"] = 1
         end
-        local function writeFails(t: {read [string]: number} & {[string]: number | string})
+        function writeFails(t: {read [string]: number} & {[string]: number | string})
             t["k"] = "hello"
         end
     )");
@@ -4874,7 +4889,7 @@ TEST_CASE_FIXTURE(Fixture, "table_writes_introduce_write_properties")
 
     CheckResult result = check(R"(
         function oc(player, speaker)
-            local head = speaker.Character:FindFirstChild('Head')
+            const head = speaker.Character:FindFirstChild('Head')
             speaker.Character = player[1].Character
         end
     )");
@@ -4891,14 +4906,14 @@ TEST_CASE_FIXTURE(Fixture, "table_writes_introduce_write_properties")
 TEST_CASE_FIXTURE(BuiltinsFixture, "tables_can_have_both_metatables_and_indexers")
 {
     CheckResult result = check(R"(
-        local a = {}
+        const a = {}
         a[1] = 5
         a[2] = 17
 
-        local t = {}
+        const t = {}
         setmetatable(a, t)
 
-        local c = a[1]
+        const c = a[1]
         print(a[1])
     )");
 
@@ -4930,7 +4945,7 @@ TEST_CASE_FIXTURE(Fixture, "parameter_was_set_an_indexer_and_bounded_by_string")
 
     CheckResult result = check(R"(
         function f(t)
-            local s: string = t
+            const s: string = t
             t[5] = 7
         end
     )");
@@ -4991,7 +5006,7 @@ TEST_CASE_FIXTURE(Fixture, "mymovie_read_write_tables_bug")
         type MockedResponseBody = string | (() -> MockedResponseBody)
         type MockedResponse = { type: 'body', body: MockedResponseBody } | { type: 'error' }
 
-        local function mockedResponseToHttpResponse(mockedResponse: MockedResponse)
+        function mockedResponseToHttpResponse(mockedResponse: MockedResponse)
             assert(mockedResponse.type == 'body', 'Mocked response is not a body')
             if typeof(mockedResponse.body) == 'string' then
             else
@@ -5009,7 +5024,7 @@ TEST_CASE_FIXTURE(Fixture, "mymovie_read_write_tables_bug_2")
     CheckResult result = check(R"(
         type MockedResponse = { type: 'body' } | { type: 'error' }
 
-        local function mockedResponseToHttpResponse(mockedResponse: MockedResponse)
+        function mockedResponseToHttpResponse(mockedResponse: MockedResponse)
             assert(mockedResponse.type == 'body', 'Mocked response is not a body')
 
             if typeof(mockedResponse.body) == 'string' then
@@ -5039,7 +5054,7 @@ return {}
     )";
 
     fileResolver.source["game/library"] = R"(
-local Worker = require(game.worker)
+const Worker = require(game.worker)
 
 export type Worker<T..., R...> = Worker.Worker<T..., R...>
 
@@ -5053,7 +5068,7 @@ return {}
 TEST_CASE_FIXTURE(Fixture, "setprop_on_a_mutating_local_in_both_loops_and_functions")
 {
     CheckResult result = check(R"(
-        local _ = 5
+        const _ = 5
 
         while (_) do
             _._ = nil
@@ -5069,7 +5084,7 @@ TEST_CASE_FIXTURE(Fixture, "setprop_on_a_mutating_local_in_both_loops_and_functi
 TEST_CASE_FIXTURE(Fixture, "cant_index_this")
 {
     CheckResult result = check(R"(
-        local a: number = 9
+        const a: number = 9
         a[18] = "tomfoolery"
     )");
 
@@ -5086,8 +5101,8 @@ TEST_CASE_FIXTURE(Fixture, "setindexer_multiple_tables_intersection")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function f(t: { [string]: number } & { [thread]: boolean }, x)
-            local k = "a"
+        function f(t: { [string]: number } & { [thread]: boolean }, x)
+            const k = "a"
             t[k] = x
         end
     )");
@@ -5099,8 +5114,8 @@ TEST_CASE_FIXTURE(Fixture, "setindexer_multiple_tables_intersection")
 TEST_CASE_FIXTURE(Fixture, "insert_a_and_f_of_a_into_table_res_in_a_loop")
 {
     CheckResult result = check(R"(
-        local function f(t)
-            local res = {}
+        function f(t)
+            const res = {}
 
             for k, a in t do
                 res[k] = f(a)
@@ -5123,7 +5138,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ipairs_adds_an_unbounded_indexer")
     CheckResult result = check(R"(
         --!strict
 
-        local a = {}
+        const a = {}
         ipairs(a)
     )");
 
@@ -5161,7 +5176,7 @@ Module 'l0':
 do end
 
 Module 'l1':
-local _ = {n0=nil,}
+const _ = {n0=nil,}
 if if nil then _ then
 if nil and (_)._ != (_)._ then
 do end
@@ -5172,7 +5187,7 @@ end
 end
 do end
 end
-local l0
+const l0 = nil
 while _ do
 _ = nil
 (_[_])._ %= `{# _}{bit32.extract(# _,1)}`
@@ -5184,7 +5199,7 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_literal_inference_assert")
 {
     CheckResult result = check(R"(
-        local buttons = {
+        const buttons = {
             buttons = {};
         }
 
@@ -5198,7 +5213,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_literal_inference_assert")
         }
         buttons.Button.__index = buttons.Button
 
-        local lightFuncs: { (self: types.Button, lit: boolean) -> nil } = {
+        const lightFuncs: { (self: types.Button, lit: boolean) -> nil } = {
             ['\x00'] = function(self: types.Button, lit: boolean)
         end;
         }
@@ -5208,10 +5223,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_literal_inference_assert")
 TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_table_assertion_crash")
 {
     CheckResult result = check(R"(
-        local NexusInstance = {}
+        const NexusInstance = {}
         function NexusInstance:__InitMetaMethods(): ()
-            local Metatable = {}
-            local OriginalIndexTable = getmetatable(self).__index
+            const Metatable = {}
+            const OriginalIndexTable = getmetatable(self).__index
             setmetatable(self, Metatable)
 
             Metatable.__newindex = function(_, Index: string, Value: any): ()
@@ -5227,15 +5242,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table::insert_should_not_report_errors_when_
 {
     CheckResult result = check(R"(
 type cs = { GetTagged : (cs, string) -> any}
-local destroyQueue: {any} = {} -- pair of (time, coin)
-local tick : () -> any
-local CS : cs
-local DESTROY_DELAY
-local function SpawnCoin()
-	local spawns = CS:GetTagged('CoinSpawner')
-	local n : any
-	local StartPos = spawns[n].CFrame
-	local Coin = script.Coin:Clone()
+const destroyQueue: {any} = {} -- pair of (time, coin)
+const tick : () -> any = nil as any
+const CS : cs = nil as any
+const DESTROY_DELAY = nil
+function SpawnCoin()
+	const spawns = CS:GetTagged('CoinSpawner')
+	const n : any = nil as any
+	const StartPos = spawns[n].CFrame
+	const Coin = script.Coin:Clone()
 	Coin.CFrame = StartPos
 	Coin.Parent = workspace.Coins
 
@@ -5252,8 +5267,8 @@ TEST_CASE_FIXTURE(Fixture, "indexing_branching_table")
     ScopedFastFlag _{FFlag::LuauRemoveConstraintSolverEmplace, true};
 
     CheckResult result = check(R"(
-        local test = if true then { "meow", "woof" } else { 4, 81 }
-        local test2 = test[1]
+        const test = if true then { "meow", "woof" } else { 4, 81 }
+        const test2 = test[1]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -5274,8 +5289,8 @@ TEST_CASE_FIXTURE(Fixture, "indexing_branching_table")
 TEST_CASE_FIXTURE(BuiltinsFixture, "indexing_branching_table2")
 {
     CheckResult result = check(R"(
-        local test = if true then {} else {}
-        local test2 = test[1]
+        const test = if true then {} else {}
+        const test2 = test[1]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -5290,11 +5305,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "indexing_branching_table2")
 TEST_CASE_FIXTURE(BuiltinsFixture, "length_of_array_is_number")
 {
     CheckResult result = check(R"(
-        local function TestFunc(ranges: {number}): number
+        function TestFunc(ranges: {number}): number
             if true then
                 ranges = {} as {number}
             end
-            local numRanges: number = ranges.count
+            const numRanges: number = ranges.count
             return numRanges
         end
     )");
@@ -5309,7 +5324,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_with_a_metatable_table_path")
     CheckResult result = check(R"(
         type self = {} & {}
         type Class = typeof(setmetatable())
-        local function _(): Class
+        function _(): Class
             return setmetatable({} as self, {})
         end
     )");
@@ -5347,14 +5362,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_union_type")
 
     // This will have one (legitimate) error but previously would crash.
     auto result = check(R"(
-        local function set(key, value)
-            local Message = {}
+        function set(key, value)
+            const Message = {}
             function Message.new(message)
-                local self = message or {}
+                const self = message or {}
                 setmetatable(self, Message)
                 return self
             end
-            local self = Message.new(nil)
+            const self = Message.new(nil)
             self[key] = value
         end
     )");
@@ -5371,7 +5386,7 @@ TEST_CASE_FIXTURE(Fixture, "function_check_constraint_too_eager")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function doTheThing(_: { [string]: unknown }) end
+        function doTheThing(_: { [string]: unknown }) end
         doTheThing({
             ['foo'] = 5,
             ['bar'] = 'heyo',
@@ -5383,7 +5398,7 @@ TEST_CASE_FIXTURE(Fixture, "function_check_constraint_too_eager")
     result = check(R"(
         type Input = { [string]: unknown }
 
-        local i : Input = {
+        const i : Input = {
             [('%s'):format('3.14')]=5,
             ['stringField']='Heyo'
         }
@@ -5395,7 +5410,7 @@ TEST_CASE_FIXTURE(Fixture, "function_check_constraint_too_eager")
     result = check(R"(
         type Input = { [string]: unknown }
 
-        local function doTheThing(_: Input) end
+        function doTheThing(_: Input) end
 
         doTheThing({
             [('%s'):format('3.14')]=5,
@@ -5411,10 +5426,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "magic_functions_bidirectionally_inferred")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function getStuff(): (string, number, string)
+        function getStuff(): (string, number, string)
             return "hello", 42, "world"
         end
-        local t: { [string]: number } = {
+        const t: { [string]: number } = {
             [select(1, getStuff())] = select(2, getStuff()),
             [select(3, getStuff())] = select(2, getStuff())
         }
@@ -5423,10 +5438,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "magic_functions_bidirectionally_inferred")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     result = check(R"(
-        local function getStuff(): (string, number, string)
+        function getStuff(): (string, number, string)
             return "hello", 42, "world"
         end
-        local t: { [string]: number } = {
+        const t: { [string]: number } = {
             [select(1, getStuff())] = select(2, getStuff()),
             [select(3, getStuff())] = select(3, getStuff())
         }
@@ -5449,12 +5464,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "read_only_property_reads")
     auto result = check(R"(
         --!strict
         type readonlyTable = {read id: number}
-        local t:readonlyTable = {id = 1}
+        const t:readonlyTable = {id = 1}
 
-        local _:{number} = {[t.id] = 1}
-        local _:{number} = {[t.id as number] = 1}
+        const _:{number} = {[t.id] = 1}
+        const _:{number} = {[t.id as number] = 1}
 
-        local arr:{number} = {}
+        const arr:{number} = {}
         arr[t.id] = 1
     )");
 
@@ -5474,7 +5489,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "multiple_fields_in_literal")
                 Max: number
             }
         }
-        local Foos: Foo = {
+        const Foos: Foo = {
             ["Foo"] = {
                 Min = -1,
                 Max = 1
@@ -5506,7 +5521,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "write_only_table_field_duplicate")
 
     auto result = check(R"(
         type WriteOnlyTable = { write x: number }
-        local wo: WriteOnlyTable = {
+        const wo: WriteOnlyTable = {
             x = 42,
             x = 13,
         }
@@ -5522,10 +5537,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_musnt_assert")
     };
 
     auto result = check(R"(
-        local m = {}
+        const m = {}
         function m.foo()
-           local self = { entries = entries, _caches = {}}
-           local self = setmetatable(self, {})
+           const self = { entries = entries, _caches = {}}
+           const self = setmetatable(self, {})
            table.freeze(self)
         end
     )");
@@ -5539,11 +5554,11 @@ TEST_CASE_FIXTURE(Fixture, "optional_property_with_call")
             time: number,
         }
 
-        local function num(): number
+        function num(): number
             return 0
         end
 
-        local _: t = {
+        const _: t = {
             time = num(),
         }
     )"));
@@ -5553,15 +5568,15 @@ TEST_CASE_FIXTURE(Fixture, "empty_union_container_overflow")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local CellRenderer = {}
+        const CellRenderer = {}
         function CellRenderer:init(props)
             self._separators = {
                 unhighlight = function()
-                    local cellKey, prevCellKey = self.props.cellKey, self.props.prevCellKey
+                    const cellKey, prevCellKey = self.props.cellKey, self.props.prevCellKey
                     self.props.onUpdateSeparators({ cellKey, prevCellKey })
                 end,
                 updateProps = function (select, newProps)
-                    local cellKey, prevCellKey = self.props.cellKey, self.props.prevCellKey
+                    const cellKey, prevCellKey = self.props.cellKey, self.props.prevCellKey
                     self.props.onUpdateSeparators({ if select == 'leading' then prevCellKey else cellKey })
                 end
             }
@@ -5572,8 +5587,8 @@ TEST_CASE_FIXTURE(Fixture, "empty_union_container_overflow")
 TEST_CASE_FIXTURE(Fixture, "inference_in_constructor")
 {
     LUAU_CHECK_NO_ERRORS(check(R"(
-        local function new(y)
-            local t: { x: number } = { x = y }
+        function new(y)
+            const t: { x: number } = { x = y }
             return t
         end
     )"));
@@ -5583,8 +5598,8 @@ TEST_CASE_FIXTURE(Fixture, "inference_in_constructor")
 TEST_CASE_FIXTURE(Fixture, "returning_optional_in_table")
 {
     LUAU_CHECK_NO_ERRORS(check(R"(
-        local Numbers = { zero = 0 }
-        local function FuncA(): { Value: number? }
+        const Numbers = { zero = 0 }
+        function FuncA(): { Value: number? }
             return { Value = Numbers.zero }
         end
     )"));
@@ -5595,8 +5610,8 @@ TEST_CASE_FIXTURE(Fixture, "returning_mismatched_optional_in_table")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        local Numbers = { str = ( "" as string ) }
-        local function FuncB(): { Value: number? }
+        const Numbers = { str = ( "" as string ) }
+        function FuncB(): { Value: number? }
             return {
                 Value = Numbers.str
             }
@@ -5614,13 +5629,13 @@ TEST_CASE_FIXTURE(Fixture, "optional_function_in_table")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_CHECK_NO_ERRORS(check(R"(
-        local t: { (() -> ())? } = {
+        const t: { (() -> ())? } = {
             function() end,
         }
     )"));
 
     auto result = check(R"(
-        local t: { ((number) -> ())? } = {
+        const t: { ((number) -> ())? } = {
             function(_: string) end,
         }
     )");
@@ -5637,8 +5652,8 @@ TEST_CASE_FIXTURE(Fixture, "oss_1596_expression_in_table")
 {
     LUAU_CHECK_NO_ERRORS(check(R"(
         type foo = {abc: number?}
-        local x: foo = {abc = 100}
-        local y: foo = {abc = 10 * 10}
+        const x: foo = {abc = 100}
+        const y: foo = {abc = 10 * 10}
     )"));
 }
 
@@ -5646,7 +5661,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1615_parametrized_type_alias")
 {
     LUAU_CHECK_NO_ERRORS(check(R"(
         type Pair<Node> = { sep: {}? }
-        local a: Pair<{}> = {
+        const a: Pair<{}> = {
             sep = nil,
         }
     )"));
@@ -5657,9 +5672,9 @@ TEST_CASE_FIXTURE(Fixture, "oss_1543_optional_generic_param")
     LUAU_CHECK_NO_ERRORS(check(R"(
         type foo<T> = { bar: T? }
 
-        local foo: foo<any> = { bar = "foobar" }
-        local foo: foo<any> = { }
-        local foo: foo<nil> = { }
+        const foo: foo<any> = { bar = "foobar" }
+        const foo: foo<any> = { }
+        const foo: foo<nil> = { }
     )"));
 }
 
@@ -5669,8 +5684,8 @@ TEST_CASE_FIXTURE(Fixture, "missing_fields_bidirectional_inference")
 
     auto result = check(R"(
         type Book = { title: string, author: string }
-        local b: Book = { title = "The Odyssey" }
-        local t: { Book } = {
+        const b: Book = { title = "The Odyssey" }
+        const t: { Book } = {
             { title = "The Illiad", author = "Homer" },
             { title = "Inferno", author = "Virgil" },
             { author = "Virgil" },
@@ -5695,17 +5710,17 @@ TEST_CASE_FIXTURE(Fixture, "generic_index_syntax_bidirectional_infer_with_tables
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check((R"(
-        local function getStatus(): string
+        function getStatus(): string
             return "Yeah can you look in returned books?"
         end
-        local function getPratchettStatus()
+        function getPratchettStatus()
             return { isLate = true }
         end
         type Status = { isLate: boolean, daysLate: number? }
-        local key1 = "Great Expecations"
-        local key2 = "The Outsiders"
-        local key3 = "Guards! Guards!"
-        local books: { [string]: Status } = {
+        const key1 = "Great Expecations"
+        const key2 = "The Outsiders"
+        const key3 = "Guards! Guards!"
+        const books: { [string]: Status } = {
             [key1] = { isLate = true, daysLate = "coconut" },
             [key2] = getStatus(),
             [key3] = getPratchettStatus()
@@ -5737,8 +5752,8 @@ TEST_CASE_FIXTURE(Fixture, "deeply_nested_classish_inference")
     // NOTE: This probably should be revisited after CLI-143852: we end up
     // cyclic types with *tons* of overlap.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function f(part, flag, params)
-            local humanoid = part.Parent:FindFirstChild("Humanoid") or part.Parent.Parent:FindFirstChild("Humanoid")
+        function f(part, flag, params)
+            const humanoid = part.Parent:FindFirstChild("Humanoid") or part.Parent.Parent:FindFirstChild("Humanoid")
             if humanoid.Parent:GetAttribute("Blocking") then
                 if flag then
                     params.Found = { humanoid }
@@ -5772,7 +5787,7 @@ TEST_CASE_FIXTURE(Fixture, "bigger_nested_table_causes_big_type_error")
 
         type DirectoryChildren = { File | Dir }
 
-        local newtree: DirectoryChildren = {
+        const newtree: DirectoryChildren = {
             {
                 type = "dir",
                 name = "src",
@@ -5804,7 +5819,7 @@ TEST_CASE_FIXTURE(Fixture, "unsafe_bidirectional_mutation")
         function _()
             return
         end
-        local function h(f: F) end
+        function h(f: F) end
         h({
             _G = {},
             _G = _,
@@ -5819,7 +5834,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_in_indexer_with_compound_assig
     // This has a bunch of errors, we really just need it to not crash / assert.
     std::ignore = check(R"(
         --!strict
-        local _ = 7143424
+        const _ = 7143424
         _[
             setfenv(
                 ...,
@@ -5837,9 +5852,9 @@ TEST_CASE_FIXTURE(Fixture, "stop_refining_new_table_indices_for_non_primitive_ta
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local foo:{val:number} = {val = 1}
+        const foo:{val:number} = {val = 1}
         if foo.vall then
-            local bar = foo.vall
+            const bar = foo.vall
         end
     )");
 
@@ -5868,7 +5883,7 @@ TEST_CASE_FIXTURE(Fixture, "type_mismatch_in_dict")
 
     CheckResult result = check(R"(
         --!strict
-        local dict: {[string]: boolean} = {
+        const dict: {[string]: boolean} = {
             code1 = true,
             code2 = 123,
         }
@@ -5885,7 +5900,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check")
 
     CheckResult result = check(R"(
         --!strict
-        local dict: { code1: boolean } = {
+        const dict: { code1: boolean } = {
             code1 = 123,
         }
     )");
@@ -5902,10 +5917,10 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_regression")
 
     CheckResult result = check(R"(
         --!strict
-        local d1: { code1: boolean } = {
+        const d1: { code1: boolean } = {
             code1 = true,
         }
-        local d2: { [string]: number } = d1
+        const d2: { [string]: number } = d1
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     TypeMismatch* tm = get<TypeMismatch>(result.errors[0]);
@@ -5917,10 +5932,11 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_regression")
 TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_assignment")
 {
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
         --!strict
-        local d1: { code1: boolean } = {
+        export d1: { code1: boolean } = {
             code1 = true,
         }
         d1 = { code1 = 42 }
@@ -5940,7 +5956,7 @@ TEST_CASE_FIXTURE(Fixture, "disable_singleton_inference_on_large_tables")
 
     CheckResult result = check(R"(
         type Word = "foo" | "bar"
-        local words: { Word } = { "foo", "bar", "foo" }
+        const words: { Word } = { "foo", "bar", "foo" }
     )");
     // We expect this to have errors now, as we've set the limit for inference
     // in tables so low.
@@ -5954,7 +5970,7 @@ TEST_CASE_FIXTURE(Fixture, "disable_singleton_inference_on_large_nested_tables")
 
     CheckResult result = check(R"(
         type Word = "foo" | "bar"
-        local words: {{ Word }} = {{ "foo", "bar", "foo" }}
+        const words: {{ Word }} = {{ "foo", "bar", "foo" }}
     )");
     LUAU_REQUIRE_ERROR_COUNT(3, result);
 }
@@ -5966,8 +5982,8 @@ TEST_CASE_FIXTURE(Fixture, "large_table_inference_does_not_bleed")
 
     CheckResult result = check(R"(
         type Word = "foo" | "bar"
-        local words: { Word } = { "foo", "bar", "foo" }
-        local otherWords: { Word } = {"foo"}
+        const words: { Word } = { "foo", "bar", "foo" }
+        const otherWords: { Word } = {"foo"}
     )");
     LUAU_REQUIRE_ERROR_COUNT(3, result);
     for (const auto& err : result.errors)
@@ -5979,7 +5995,7 @@ TEST_CASE_FIXTURE(Fixture, "extremely_large_table" * doctest::timeout(LUAU_TIMEO
 {
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
-    const std::string source = "local res = {\n" + rep("\"foo\",\n", 10'000) + "}";
+    const std::string source = "const res = {\n" + rep("\"foo\",\n", 10'000) + "}";
     LUAU_REQUIRE_NO_ERRORS(check(source));
     CHECK_EQ("{string}", toString(requireType("res"), {true}));
 }
@@ -5987,7 +6003,7 @@ TEST_CASE_FIXTURE(Fixture, "extremely_large_table" * doctest::timeout(LUAU_TIMEO
 TEST_CASE_FIXTURE(Fixture, "oss_1838")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local myTable = {}
+        const myTable = {}
         myTable.foo = {}
         myTable.foo.bar = {}
     )"));
@@ -6009,8 +6025,8 @@ TEST_CASE_FIXTURE(Fixture, "oss_1859")
             }
         }
 
-        local function new(): Cat
-            local self = {}
+        function new(): Cat
+            const self = {}
             self.name = "Taz"
             self.age = 12
             self.actions = {}
@@ -6042,8 +6058,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1797_intersection_of_tables_arent_disjoi
             copy: (...any) -> any
         }
 
-        local function _test(nd: { bar: Bar? })
-            local bar = nd.bar
+        function _test(nd: { bar: Bar? })
+            const bar = nd.bar
             if not bar then
                 return
             end
@@ -6058,19 +6074,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1797_intersection_of_tables_arent_disjoi
 
 TEST_CASE_FIXTURE(Fixture, "oss_1344")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
         type t = {
         	value: string?,
         }
 
-        local t: t = {}
+        const t: t = {}
 
         if not t.value then
         	t.value = ""
         end
 
-        local s: string? = nil
+        export s: string? = nil
 
         if not s then
         	s = ""
@@ -6082,7 +6099,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1651")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local MyModule = {}
+        const MyModule = {}
         MyModule._isEnabled = true as boolean
 
         assert(MyModule._isEnabled, `type solver`)
@@ -6095,7 +6112,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_call")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function take(_: { foo: string? }) end
+        function take(_: { foo: string? }) end
 
         take({ foo = "bar" })
     )"));
@@ -6106,7 +6123,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_call_incorrect")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local function take(_: { foo: string?, bing: number }) end
+        function take(_: { foo: string?, bing: number }) end
 
         take({ foo = "bar", bing = true })
     )");
@@ -6124,7 +6141,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_call_singleton")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local function take(_: { foo: "foo" }) end
+        function take(_: { foo: "foo" }) end
 
         take({ foo = "foo" })
     )");
@@ -6137,14 +6154,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1450")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local keycodes = {
+        const keycodes = {
             Alt = 2,
             Space = 3,
             Tab = 4,
         }
 
         type Keycode = keyof<typeof(keycodes)>
-        local function sendInput(keycodes: { Keycode })
+        function sendInput(keycodes: { Keycode })
             print(keycodes)
         end
 
@@ -6179,13 +6196,13 @@ TEST_CASE_FIXTURE(Fixture, "oss_1888_and_or_subscriptable")
         type Cache<T> = { [string]: CachedValue<T> }
         type CacheMap = { [string]: Cache<any> }
 
-        local _caches: CacheMap = {}
+        const _caches: CacheMap = {}
 
-        local CacheManager = {}
+        const CacheManager = {}
 
         function CacheManager:has(cacheName: string, id: string): boolean
-            local cache = _caches[cacheName]
-            local entry = cache and cache[id]
+            const cache = _caches[cacheName]
+            const entry = cache and cache[id]
             return entry != nil
         end
     )"));
@@ -6198,7 +6215,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_119126_regression")
     CheckResult results = check(R"(
         type literals = "foo" | "bar" | "foobar"
 
-        local exampleA: {[literals]: string} = {
+        const exampleA: {[literals]: string} = {
             foo = '1',
             bar = 2,
             foobar = 3,
@@ -6218,6 +6235,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_119126_regression")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1914_access_after_assignment_with_assertion")
 {
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
@@ -6230,13 +6248,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1914_access_after_assignment_with_assert
             },
         }
 
-        local walls = {
+        const walls = {
             { name = "Part1" },
             { name = "Part2" },
-            { name = "Wall" },
+            { name = "Part3" },
         }
 
-        local baseWall: WallHolder?
+        export baseWall: WallHolder? = nil as any
         for _, wall in walls do
             if wall.name == "Wall" then
                 baseWall = wall as WallHolder
@@ -6244,7 +6262,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1914_access_after_assignment_with_assert
         end
         assert(baseWall, "Failed to get base wall when creating room props")
 
-        local myAge = baseWall.Wall.age
+        const myAge = baseWall.Wall.age
     )"));
 
     CHECK_EQ("number", toString(requireType("myAge")));
@@ -6254,9 +6272,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_162179_avoid_exponential_blowup_in_norma
 {
     const std::string source = format(
         R"(
-        local res = { %s }
+        const res = { %s }
 
-        local function check(index: number)
+        function check(index: number)
             if res[index] == "foo" then
                 print("found a foo!")
             end
@@ -6293,7 +6311,7 @@ TEST_CASE_FIXTURE(Fixture, "free_types_with_sealed_table_upper_bounds_can_still_
 TEST_CASE_FIXTURE(Fixture, "mixed_tables_are_ok_when_explicit")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local foo: { [number | string]: unknown } = {
+        const foo: { [number | string]: unknown } = {
             Key = "sorry",
             "A",
             "B",
@@ -6304,7 +6322,7 @@ TEST_CASE_FIXTURE(Fixture, "mixed_tables_are_ok_when_explicit")
 TEST_CASE_FIXTURE(Fixture, "mixed_tables_are_ok_for_any_key")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local foo: { [any]: unknown } = {
+        const foo: { [any]: unknown } = {
             Key = "sorry",
             "A",
             "B",
@@ -6341,8 +6359,8 @@ TEST_CASE_FIXTURE(Fixture, "result_like_tagged_union")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
 --!strict
-local function retry(func: (...any) -> ...any): { type: "ok", value: any } | { type: "failed" }
-    local success: boolean, result: any = func()
+function retry(func: (...any) -> ...any): { type: "ok", value: any } | { type: "failed" }
+    const success: boolean, result: any = func()
 
     if success then
         return { type = "ok", value = result }
@@ -6360,7 +6378,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1924")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local t: { [string]: "s" } = {
+        const t: { [string]: "s" } = {
             key = "s",
             other_key = "t",
         }
@@ -6375,8 +6393,8 @@ TEST_CASE_FIXTURE(Fixture, "oss_1924")
 TEST_CASE_FIXTURE(BuiltinsFixture, "cli_167052")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local Children = newproxy()
-        local Macro: { [ string | typeof(Children) ]: true } = {
+        const Children = newproxy()
+        const Macro: { [ string | typeof(Children) ]: true } = {
             ["_exec"] = true;
             ["_run"] = true;
             ["_init"] = true;
@@ -6391,11 +6409,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_167052")
 TEST_CASE_FIXTURE(Fixture, "duplicate_prop_references_share_same_result_type_and_constraint")
 {
     CheckResult result = check(R"(
-local tbl = {}
+const tbl = {}
 function f(x : number) : () end
 function tbl:updateAmmoText()
     f(self.leadingZeros)
-    local y = self.leadingZeros - 3
+    const y = self.leadingZeros - 3
 end
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -6424,7 +6442,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bad_insert_type_mismatch")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function doInsert(t: { string })
+        function doInsert(t: { string })
             table.insert(t, true)
         end
     )");
@@ -6444,7 +6462,7 @@ TEST_CASE_FIXTURE(Fixture, "string_indexer_satisfies_read_only_property")
     // NOTE: Unclear if this should be allowed, but for the type solver's
     // current state I think it's reasonable.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function foo(t: { [string]: number }): { read X: number }
+        function foo(t: { [string]: number }): { read X: number }
             return t
         end
     )"));
@@ -6456,7 +6474,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_inference_works_through_intersections"
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type x = {} & ({ state: "1" } | { state: "2" })
-        local x: x = { state = "2" }
+        const x: x = { state = "2" }
     )"));
 }
 
@@ -6468,7 +6486,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_inference_intersection_other_intersect
         type A = { foo: "a" }
         type B = { bar: "b" }
         type AB = A & B
-        local t: AB = {
+        const t: AB = {
             foo = "a",
             bar = "b",
         }
@@ -6482,7 +6500,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_force_on_simple_bidirectional_inference")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type Role = "Citizen"
 
-        local function getRoles(): { Role }
+        function getRoles(): { Role }
             return { 'Citizen' }
         end
     )"));
@@ -6494,15 +6512,15 @@ TEST_CASE_FIXTURE(Fixture, "oss_2017")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local class = {}
+        const class = {}
         class.__index = class
 
         type Role = string
-        local ROLES_PLAYERS_REQUIRED: {[Role]: number} = {}
+        const ROLES_PLAYERS_REQUIRED: {[Role]: number} = {}
 
         function class.distributeRoles()
             for _, role: Role in class.getAllRoles() do
-                local _ = ROLES_PLAYERS_REQUIRED[role]
+                const _ = ROLES_PLAYERS_REQUIRED[role]
             end
         end
 
@@ -6522,8 +6540,8 @@ TEST_CASE_FIXTURE(Fixture, "oss_1953")
         type A = { kind: "a" }
         type B = { kind: "b" }
 
-        local function foo<T>(fn: () -> A | B | T)
-            local v = fn()
+        function foo<T>(fn: () -> A | B | T)
+            const v = fn()
             return v and v.kind
         end
     )");
@@ -6541,7 +6559,7 @@ TEST_CASE_FIXTURE(Fixture, "array_of_callbacks_bidirectionally_inferred")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local Actions : { [string]: (string?) -> number? } = {
+        const Actions : { [string]: (string?) -> number? } = {
             Foo = function (input)
                 if input then
                     return 42
@@ -6565,7 +6583,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1483")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type Form = "do-not-register" | (() -> ())
 
-        local function observer(register: () -> Form) end
+        function observer(register: () -> Form) end
 
         observer(function()
             if math.random() > 0.5 then
@@ -6588,9 +6606,9 @@ TEST_CASE_FIXTURE(Fixture, "oss_1910")
             on_thing: (something: boolean) -> (),
         }
 
-        local a: Implementation = {
+        const a: Implementation = {
             on_thing = function(something)
-                local _ = something
+                const _ = something
             end,
         }
     )"));
@@ -6610,7 +6628,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bidirectional_inference_variadic_type_pack")
     // but you need to order the constraints correctly, otherwise we
     // generalize the lambda too early.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local foo: { (...string) -> () } = {
+        const foo: { (...string) -> () } = {
             function (foobar)
                 print(foobar)
             end
@@ -6634,10 +6652,10 @@ TEST_CASE_FIXTURE(Fixture, "table_with_intersection_containing_lambda")
 
         type TypeB = TypeA & {}
 
-        local bar: TypeB = {
+        const bar: TypeB = {
             foo = "wow!",
             method = function(arg)
-                local _ = arg
+                const _ = arg
                 return nil
             end,
         }
@@ -6649,12 +6667,12 @@ TEST_CASE_FIXTURE(Fixture, "table_with_intersection_containing_lambda")
 TEST_CASE_FIXTURE(BuiltinsFixture, "cli_174304_allow_getmetatable_error_and_table")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function instanceof(tbl: any, class: any): boolean
+        function instanceof(tbl: any, class: any): boolean
             if typeof(tbl) != "table" then
                 return false
             end
 
-            local ok, hasNew = pcall(function()
+            const ok, hasNew = pcall(function()
                 return class.new != nil and tbl.new == class.new
             end)
             if ok and hasNew then
@@ -6677,13 +6695,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_indexing_into_error_or_not_nil")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local function f(i: number, ...)
-            local value = select(i, ...)
-            local valueType = typeof(value)
+        function f(i: number, ...)
+            const value = select(i, ...)
+            const valueType = typeof(value)
             if value == nil then
             else if valueType == "table" then
                 for k = 1, value.count do
-                    local _ = value[k]
+                    const _ = value[k]
                 end
             end
         end
@@ -6694,7 +6712,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "show_not_a_table_error_when_indexing_into_no
 {
     CheckResult result = check(R"(
         --!strict
-        local function f(t: number | boolean)
+        function f(t: number | boolean)
             t[0] = "huh"
         end
     )");
@@ -6711,7 +6729,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1684")
 
     CheckResult result = check(R"(
         --!strict
-        local targetConfig = { ["Bag of coins"] = {}, }
+        const targetConfig = { ["Bag of coins"] = {}, }
 
         type TargetConfig = typeof(targetConfig)
         type Targets = keyof<TargetConfig>
@@ -6720,7 +6738,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1684")
 
         -- All of the table members that aren't "Bag of coins" should
         -- have errors.
-        local questConfig: { [string]: QuestConfig  } = {
+        const questConfig: { [string]: QuestConfig  } = {
             ["Works as intended"] = { target = "Bag of coins" },
             ["Also works as intended "] = { target = "Not bag of coins" },
             ["Should warn 1"] = { target = "Also not a bag of coins" },
@@ -6749,7 +6767,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2094_push_type_constraint_should_always_
             return t
         end
 
-        local function new<T>(t: T): Interface<TypeFn<T>>
+        function new<T>(t: T): Interface<TypeFn<T>>
             return {
                 _t = nil as any,
             }
@@ -6765,8 +6783,8 @@ TEST_CASE_FIXTURE(Fixture, "table_access_indexer_via_name_expr")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
         type List = "Val1" | "Val2" | "Val3"
-        local Table: { [List]: boolean }
-        local _ = Table.Val1
+        const Table: { [List]: boolean } = nil as any
+        const _ = Table.Val1
     )"));
 
     CHECK_EQ("boolean", toString(requireType("_")));
@@ -6779,8 +6797,8 @@ TEST_CASE_FIXTURE(Fixture, "table_access_indexer_fails_with_missing_key")
     auto result = check(R"(
         --!strict
         type List = "Val2" | "Val3"
-        local Table: { [List]: boolean }
-        local _ = Table.Val1
+        const Table: { [List]: boolean } = nil as any
+        const _ = Table.Val1
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -6798,7 +6816,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184926_bidi_inference_pushes_into_lambda_return_
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type MyType = { Func: (transformFunction: () -> ({number})) -> () }
 
-        local myValue = {} as MyType
+        const myValue = {} as MyType
 
         myValue.Func(function() return {} end)
     )"));
@@ -6813,12 +6831,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_allow_laundering")
 
     CheckResult result = check(R"(
         --!strict
-        local function foo(t: {}): { x: nil }
+        function foo(t: {}): { x: nil }
             return t
         end
 
-        local t: { x: number } = { x = 42 }
-        local laundered = foo(t) -- via width subtyping
+        const t: { x: number } = { x = 42 }
+        const laundered = foo(t) -- via width subtyping
         laundered.x = nil
         assert(type(t) == "number")
     )");
@@ -6829,7 +6847,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_allow_laundering")
 TEST_CASE_FIXTURE(Fixture, "table_inference_one_incorrect_member")
 {
     CheckResult result = check(R"(
-        local function makeTable(x): { x: number, y: string }
+        function makeTable(x): { x: number, y: string }
             return { x = x, y = true }
         end
     )");
@@ -6845,7 +6863,7 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_1")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local t = {
+        const t = {
             {1, 2, 3},
             {4, 5, 6}
         }
@@ -6860,7 +6878,7 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_2")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local t = {
+        const t = {
             {1, 2, 3},
             {"foo", "bar", "baz"}
         }
@@ -6875,12 +6893,12 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_3")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local v: number?
-        local t1 = {
+        const v: number? = nil as any
+        const t1 = {
             {1, 2, 3},
             {v}
         }
-        local t2 = {
+        const t2 = {
             {v},
             {1, 2, 3}
         }
@@ -6898,9 +6916,9 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_4")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local v: number?
-        local s: string?
-        local t = {
+        const v: number? = nil as any
+        const s: string? = nil as any
+        const t = {
             {s},
             {v}
         }
@@ -6916,8 +6934,8 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_5")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local v: number?
-        local t = {
+        const v: number? = nil as any
+        const t = {
             { entry = 42 },
             { entry = v }
         }
@@ -6931,7 +6949,7 @@ TEST_CASE_FIXTURE(Fixture, "large_data_like_array_can_simplify")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     std::stringstream stream;
-    stream << "local function get()" << '\n';
+    stream << "function get()" << '\n';
     stream << "\treturn { " << '\n';
     for (size_t i = 0; i < 200; i++)
     {
@@ -6963,8 +6981,8 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil as any)
-local found = x.parsed.foo["any"] == nil -- errors
+const x : B = (nil as any)
+const found = x.parsed.foo["any"] == nil -- errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -6985,8 +7003,8 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil as any)
-local found = x.parsed.foo["any"] != nil -- errors
+const x : B = (nil as any)
+const found = x.parsed.foo["any"] != nil -- errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -7007,7 +7025,7 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil as any)
+const x : B = (nil as any)
 
 if x.parsed.foo["any"] != nil then
 end
@@ -7032,7 +7050,7 @@ type B = {
 	parsed: A,
 }
 
-local x : B = (nil as any)
+const x : B = (nil as any)
 
 if x.parsed.foo["any"] == nil then
 end
@@ -7048,7 +7066,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1986")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type A<T> = { s: T, n: number? }
 
-        local function f<T>(_a: A<T>)
+        function f<T>(_a: A<T>)
             return
         end
 
@@ -7061,7 +7079,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1947_partial")
     // This fixes _one_ case of the given OSS issue, but we don't do
     // bidirectional inference of lambdas afterward.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function foo<T>(bar: { qux: T, baz: string? }) end
+        function foo<T>(bar: { qux: T, baz: string? }) end
         foo { qux = "string", baz = "a" }
         foo { qux = "string", baz = nil }
         foo { qux = "string" }
@@ -7070,6 +7088,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1947_partial")
 
 TEST_CASE_FIXTURE(Fixture, "oss_1890")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type ListConfig<T> = {
             items: T,
@@ -7077,11 +7096,11 @@ TEST_CASE_FIXTURE(Fixture, "oss_1890")
             a: string?,
         }
 
-        local function test_fn<T>(p: ListConfig<T>)
+        function test_fn<T>(p: ListConfig<T>)
             return nil as any
         end
 
-        local a = test_fn {
+        export a = test_fn {
             items = "a",
             each = function(item: string)
                 return item
@@ -7109,7 +7128,7 @@ TEST_CASE_FIXTURE(Fixture, "compound_assignment_writes_lhs")
             read x: number
         }
 
-        local foo: T = { x = 5 }
+        const foo: T = { x = 5 }
         foo.x += 5
     )");
 
@@ -7125,7 +7144,7 @@ TEST_CASE_FIXTURE(Fixture, "error_supression_of_union_of_tables_should_work")
         type Bar<T> = { kind: "bar", bar: T }
         type FooBar<T> = Foo<T> | Bar<T>
 
-        local function f(x: Foo<number>): FooBar<any>
+        function f(x: Foo<number>): FooBar<any>
             return x
         end
     )"));
@@ -7134,7 +7153,7 @@ TEST_CASE_FIXTURE(Fixture, "error_supression_of_union_of_tables_should_work")
 TEST_CASE_FIXTURE(Fixture, "no_error_suppression_for_single_bad_type_mismatch")
 {
     CheckResult result = check(R"(
-        local function f(t: { a: string, b: number }): { a: any, b: boolean }
+        function f(t: { a: string, b: number }): { a: any, b: boolean }
             return t
         end
     )");
@@ -7149,7 +7168,7 @@ TEST_CASE_FIXTURE(Fixture, "no_error_suppression_for_single_bad_type_mismatch")
 TEST_CASE_FIXTURE(Fixture, "error_suppression_on_all_table_properties")
 {
     CheckResult result = check(R"(
-        local function f(t: { a: string, b: number }): { a: any, b: any }
+        function f(t: { a: string, b: number }): { a: any, b: any }
             return t
         end
     )");
@@ -7160,7 +7179,7 @@ TEST_CASE_FIXTURE(Fixture, "error_suppression_on_all_table_properties")
 TEST_CASE_FIXTURE(Fixture, "one_correct_one_suppressed_table_property")
 {
     CheckResult result = check(R"(
-        local function f(t: { a: string, b: number }): { a: any, b: number }
+        function f(t: { a: string, b: number }): { a: any, b: number }
             return t
         end
     )");
@@ -7173,7 +7192,7 @@ TEST_CASE_FIXTURE(Fixture, "error_suppression_for_read_write")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function f(t: { [string]: string }): { read foo: any, write foo: number }
+        function f(t: { [string]: string }): { read foo: any, write foo: number }
             return t
         end
     )");
@@ -7193,7 +7212,7 @@ TEST_CASE_FIXTURE(Fixture, "table_read_any_counts_as_read_nil")
     };
 
     CheckResult result = check(R"(
-        local function f(t: {}): { read foo: any }
+        function f(t: {}): { read foo: any }
             return t
         end
     )");
@@ -7246,7 +7265,7 @@ TEST_CASE_FIXTURE(Fixture, "tables_routing_bidirectional_inference")
 
         export type Handler = (request: ReceivedRequest, server: Server) -> ServerResponse?
 
-        local routes: Routes? = {
+        const routes: Routes? = {
             ["/health"] = "ok",
             ["/json"] = {
                 status = 200,
@@ -7254,7 +7273,7 @@ TEST_CASE_FIXTURE(Fixture, "tables_routing_bidirectional_inference")
                 body = '{"ok":true}',
             },
             ["/hello"] = function(req)
-                local _ = req
+                const _ = req
                 return { status = 200, body = "hello" }
             end,
         }
@@ -7275,8 +7294,8 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_union_non_singleton_discrimination")
         type StringRecord = { value: string, flag: boolean }
         type Record = NumericRecord | StringRecord
 
-        local r1: Record = { value = 42, label = "hello" }
-        local r2: Record = { value = "hmmm", flag = true }
+        const r1: Record = { value = 42, label = "hello" }
+        const r2: Record = { value = "hmmm", flag = true }
     )"));
 }
 
@@ -7287,7 +7306,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_union_mixed_table_and_non_table")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type Response = string | { status: number, body: string }
 
-        local r: Response = { status = 200, body = "ok" }
+        const r: Response = { status = 200, body = "ok" }
     )"));
 }
 
@@ -7306,7 +7325,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bidirectional_union_via_type_function")
             verbose: boolean?,
         }
 
-        local cfg: Optional<Config> = {
+        const cfg: Optional<Config> = {
             host = "localhost",
             port = 8080,
             verbose = true,
@@ -7323,7 +7342,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bidirectional_union_function_vs_primitive_pr
         type StrRecord = { handler: string, label: string? }
         type Record = FnRecord | StrRecord
 
-        local r: Record = {
+        const r: Record = {
             handler = function(input)
                 return tostring(input)
             end,
@@ -7339,8 +7358,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "indexer_and_subsequent_constraint")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function getnumberandabs(tbl, key: string)
-            local x = tbl[key]
+        function getnumberandabs(tbl, key: string)
+            const x = tbl[key]
             return math.abs(x)
         end
     )"));
@@ -7356,9 +7375,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersection_of_indexers_1")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl: { [string | number]: string } & { [string | number]: unknown }
-        local key: string
-        local val = tbl[key]
+        const tbl: { [string | number]: string } & { [string | number]: unknown } = nil as any
+        const key: string = nil as any
+        const val = tbl[key]
     )"));
 
     CHECK_EQ("string", toString(requireType("val")));
@@ -7372,9 +7391,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersection_of_indexers_2")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl: { [string | number]: never } & { [string | number]: string }
-        local key: string
-        local val = tbl[key]
+        const tbl: { [string | number]: never } & { [string | number]: string } = nil as any
+        const key: string = nil as any
+        const val = tbl[key]
     )"));
 
     CHECK_EQ("never", toString(requireType("val")));
@@ -7388,9 +7407,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersection_of_indexers_3")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl: { good: boolean } & { [string]: string }
-        local key: string
-        local val = tbl[key]
+        const tbl: { good: boolean } & { [string]: string } = nil as any
+        const key: string = nil as any
+        const val = tbl[key]
     )"));
 
     CHECK_EQ("string", toString(requireType("val")));
@@ -7404,9 +7423,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_indexers_1")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl: { [string | number]: never } | { [string | number]: string }
-        local key: string
-        local val = tbl[key]
+        const tbl: { [string | number]: never } | { [string | number]: string } = nil as any
+        const key: string = nil as any
+        const val = tbl[key]
     )"));
 
     CHECK_EQ("string", toString(requireType("val")));
@@ -7420,9 +7439,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_indexers_2")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl: { [string | number]: unknown } | { [string | number]: string }
-        local key: string
-        local val = tbl[key]
+        const tbl: { [string | number]: unknown } | { [string | number]: string } = nil as any
+        const key: string = nil as any
+        const val = tbl[key]
     )"));
 
     CHECK_EQ("unknown", toString(requireType("val")));
@@ -7436,9 +7455,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_indexers_3")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl: { [string | number]: boolean | string } | { [string | number]: boolean | number }
-        local key: string
-        local val = tbl[key]
+        const tbl: { [string | number]: boolean | string } | { [string | number]: boolean | number } = nil as any
+        const key: string = nil as any
+        const val = tbl[key]
     )"));
 
     CHECK_EQ("boolean | number | string", toString(requireType("val")));
@@ -7453,8 +7472,8 @@ TEST_CASE_FIXTURE(Fixture, "read_only_indexer_mismatch")
     };
 
     CheckResult result = check(R"(
-        local x: { read string } = {}
-        local y: { string } = x
+        const x: { read string } = {}
+        const y: { string } = x
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -7472,10 +7491,10 @@ TEST_CASE_FIXTURE(Fixture, "test_indexing_into_unsealed_table")
     };
 
     CheckResult results = check(R"(
-        local key1: string, key2: number
-        local tbl = {}
+        const key1: string, key2: number = nil as any, nil as any
+        const tbl = {}
         tbl[key1] = 42
-        local val = tbl[key2]
+        const val = tbl[key2]
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -7491,8 +7510,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_strings_and_then_concat")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         export type Glob = { string }
 
-        local function parseGlob(): Glob
-            local lua_parts = {}
+        function parseGlob(): Glob
+            const lua_parts = {}
             table.insert(lua_parts, "")
             table.insert(lua_parts, "")
 
@@ -7508,14 +7527,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "normalization_always_intersects_table")
     ScopedFastFlag _{FFlag::LuauAlwaysIntersectTablesWithTables, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local tbl = {}
+        const tbl = {}
 
         function tbl:hmm(occlusionMode)
             if self.activeOcclusionModule and self.activeOcclusionModule:GetOcclusionMode() == occlusionMode then
             end
 
             if self.activeOcclusionModule then
-                local newModuleOcclusionMode = self.activeOcclusionModule:GetOcclusionMode()
+                const newModuleOcclusionMode = self.activeOcclusionModule:GetOcclusionMode()
                 error("CameraScript ActivateOcclusionModule mismatch: ",self.activeOcclusionModule:GetOcclusionMode())
             end
         end
@@ -7547,7 +7566,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2597_constraint_forcing_bad_refinement")
                 f(self)
             else if f.fn then
                 const thevalue = f.fn
-                local _ = thevalue
+                const _ = thevalue
                 f.fn(self)
             end
         end
@@ -7563,7 +7582,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "test_inferring_generalized_iteration_1")
     ScopedFastFlag sffs[] = {{FFlag::LuauIterableConstraintMutatesIterator, true}, {FFlag::DebugLuauAssertOnForcedConstraint, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function setupRootMappingMove(rootMapping)
+        function setupRootMappingMove(rootMapping)
             -- Prior, the new solver would eagerly generalize `rootMapping.RootToDescendantCountMap`
             -- to unknown, which is clearly not correct.
             for root, childCount in rootMapping.RootToDescendantCountMap do
@@ -7583,7 +7602,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "test_inferring_generalized_iteration_2")
     ScopedFastFlag sffs[] = {{FFlag::LuauIterableConstraintMutatesIterator, true}, {FFlag::DebugLuauAssertOnForcedConstraint, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function setupRootMappingMove(rootMapping)
+        function setupRootMappingMove(rootMapping)
             for root, childCount in rootMapping.RootToDescendantCountMap do
             end
         end

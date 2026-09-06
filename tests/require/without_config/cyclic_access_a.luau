@@ -1,2 +1,2 @@
-local B = require("./cyclic_access_b")
-export local Tree = {}
+B = require("./cyclic_access_b")
+export Tree = {}

@@ -3,7 +3,7 @@
 print("testing numbers and math lib")
 
 do
-  local a,b,c = "2", " 3e0 ", " 10  "
+  a,b,c = "2", " 3e0 ", " 10  "
   assert(a+b == 5 and -b == -3 and b+"2" == 5 and "10"-c == 0)
   assert(type(a) == 'string' and type(b) == 'string' and type(c) == 'string')
   assert(a == "2" and b == " 3e0 " and c == " 10  " and -c == -"  10 ")
@@ -12,7 +12,7 @@ end
 
 
 do
-  local a,b = math.modf(3.5)
+  a,b = math.modf(3.5)
   assert(a == 3 and b == 0.5)
   assert(math.huge > 10e30)
   assert(-math.huge < -10e30)
@@ -92,13 +92,13 @@ assert(math.pi - math.pi % 1 == 3)
 assert(math.pi - math.pi % 0.001 == 3.141)
 
 do
-  local a = 3 % 0;
+  a = 3 % 0;
   assert(a != a) -- Expect NaN
   assert(((2^53+1) % 2) == 0)
   assert((1234 % (2^53+1)) == 1234)
 end
 
-local function testbit(a, n)
+function testbit(a, n)
   return a/2^n % 2 >= 1
 end
 
@@ -120,7 +120,7 @@ assert(eq(math.log(9, 3), 2))
 assert(eq(math.log(100, 10), 2))
 assert(eq(math.exp(0), 1))
 assert(eq(math.sin(10), math.sin(10%(2*math.pi))))
-local v,e = math.frexp(math.pi)
+v,e = math.frexp(math.pi)
 assert(eq(math.ldexp(v,e), math.pi))
 
 assert(eq(math.tanh(3.5), math.sinh(3.5)/math.cosh(3.5)))
@@ -136,7 +136,7 @@ assert(8388607 + -8388607 == 0)
 
 if rawget(_G, "_soft") then return end
 
-f = "a = {"
+f = "_G.a = {"
 i = 1
 repeat
   f = f .. "{" .. math.sin(i) .. ", " .. math.cos(i) .. ", " .. (i/3) .. "},\n"
@@ -145,16 +145,16 @@ until i > 1000
 f = f .. "}"
 assert(loadstring(f))()
 
-assert(eq(a[300][1], math.sin(300)))
-assert(eq(a[600][1], math.sin(600)))
-assert(eq(a[500][2], math.cos(500)))
-assert(eq(a[800][2], math.cos(800)))
-assert(eq(a[200][3], 200/3))
-assert(eq(a[1000][3], 1000/3, 0.001))
+assert(eq(_G.a[300][1], math.sin(300)))
+assert(eq(_G.a[600][1], math.sin(600)))
+assert(eq(_G.a[500][2], math.cos(500)))
+assert(eq(_G.a[800][2], math.cos(800)))
+assert(eq(_G.a[200][3], 200/3))
+assert(eq(_G.a[1000][3], 1000/3, 0.001))
 print('+')
 
 do   -- testing NaN
-  local NaN -- to avoid constant folding
+  NaN  = nil-- to avoid constant folding
   NaN = 10e500 - 10e400
 
   assert(NaN != NaN)
@@ -182,7 +182,7 @@ do   -- testing NaN
   assert(if NaN > 0 then false else true)
   assert(if NaN >= 0 then false else true)
 
-  local a = {}
+  a = {}
   assert(not pcall(function () a[NaN] = 1 end))
   assert(a[NaN] == nil)
   a[1] = 1
@@ -199,7 +199,7 @@ do
   function gt(a) return a > a end
   function ge(a) return a >= a end
 
-  local NaN -- to avoid constant folding
+  NaN  = nil-- to avoid constant folding
   NaN = 10e500 - 10e400
 
   assert(neq(NaN))
@@ -217,18 +217,19 @@ a = nil
 
 -- testing implicit conversions
 
-local a,b = '10', '20'
+a,b = '10', '20'
 assert(a*b == 200 and a+b == 30 and a-b == -10 and a/b == 0.5 and -b == -20)
 assert(a == '10' and b == '20')
 
 
 math.randomseed(0)
 
-local i = 0
-local Max = 0
-local Min = 2
+i = 0
+Max = 0
+Min = 2
+flag = nil
 repeat
-  local t = math.random()
+  t = math.random()
   Max = math.max(Max, t)
   Min = math.min(Min, t)
   i=i+1
@@ -238,7 +239,7 @@ assert(0 <= Min and Max<1)
 assert(flag);
 
 for i=1,10 do
-  local t = math.random(5)
+  t = math.random(5)
   assert(1 <= t and t <= 5)
 end
 
@@ -246,7 +247,7 @@ i = 0
 Max = -200
 Min = 200
 repeat
-  local t = math.random(-10,0)
+  t = math.random(-10,0)
   Max = math.max(Max, t)
   Min = math.min(Min, t)
   i=i+1
@@ -275,7 +276,7 @@ assert(math.max(1, 2, -1) == 2)
 assert(math.max(1, -1, 2) == 2)
 assert(math.max(1, -1, 2, -2) == 2)
 
-local ma, mb, mc, md
+ma, mb, mc, md = nil, nil, nil, nil
 
 assert(pcall(function()
   ma = 1
@@ -296,15 +297,15 @@ assert(math.max(ma, mc, mb) == 2)
 assert(math.max(ma, mb, mc) == 2)
 assert(math.max(ma, mb, mc, md) == 2)
 
-local inf = math.huge * 2
-local nan = 0 / 0
+inf = math.huge * 2
+nan = 0 / 0
 
 assert(math.min(nan, 2) != math.min(nan, 2))
 assert(math.min(1, nan) == 1)
 assert(math.max(nan, 2) != math.max(nan, 2))
 assert(math.max(1, nan) == 1)
 
-local function noinline(x, ...) local s, r = pcall(function(y) return y end, x) return r end
+function noinline(x, ...) s, r = pcall(function(y) return y end, x) return r end
 
 -- noise
 assert(math.noise(0.5) == 0)
@@ -417,7 +418,7 @@ assert(math.lerp(1, 5, -0.5) == -1)
 assert(math.lerp(1, 5, noinline(0.5)) == 3)
 
 -- lerp properties
-local sq2, sq3 = math.sqrt(2), math.sqrt(3)
+sq2, sq3 = math.sqrt(2), math.sqrt(3)
 assert(math.lerp(sq2, sq3, 0) == sq2) -- exact at 0
 assert(math.lerp(sq2, sq3, 1) == sq3) -- exact at 1
 assert(math.lerp(-sq3, sq2, 1) == sq2) -- exact at 1 (fails for a + t*(b-a))
@@ -492,7 +493,7 @@ assert(math.deg("0") == 0)
 assert(math.exp("0") == 1)
 assert(math.floor("1.5") == 1)
 assert(math.fmod("1.5", 1) == 0.5)
-local v,e = math.frexp("1.5")
+v,e = math.frexp("1.5")
 assert(v == 0.75 and e == 1)
 assert(math.ldexp("0.75", 1) == 1.5)
 assert(math.log10("10") == 1)
@@ -506,7 +507,7 @@ assert(math.max(1, 2, "3") == 3)
 assert(math.min("1", 2) == 1)
 assert(math.min(2, "1") == 1)
 assert(math.min(1, 2, "3") == 1)
-local v,f = math.modf("1.5")
+v,f = math.modf("1.5")
 assert(v == 1 and f == 0.5)
 assert(math.pow("2", 2) == 4)
 assert(math.rad("0") == 0)

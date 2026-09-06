@@ -2,7 +2,7 @@
 print("testing interrupts")
 
 -- this function will be called by C code with a special interrupt handler that validates hit locations
-function test()
+_G.test = function()
 	function foo()
 		for i=1,10 do end
 		return
@@ -11,7 +11,7 @@ function test()
 	foo()
 
 	function bar()
-		local i = 0
+		i = 0
 		while i < 10 do
 			i += i + 1
 		end
@@ -26,48 +26,48 @@ function test()
 end
 
 -- these functions will be called by C code with a special interrupt handler that terminates after a few invocations
-function infloop1()
+_G.infloop1 = function()
 	while true do end
 end
 
-function infloop2()
+_G.infloop2 = function()
 	while true do continue end
 end
 
-function infloop3()
+_G.infloop3 = function()
 	repeat until false
 end
 
-function infloop4()
+_G.infloop4 = function()
 	repeat continue until false
 end
 
-function infloop5()
+_G.infloop5 = function()
 	for i=0,0,0 do end
 end
 
-function infloop6()
+_G.infloop6 = function()
 	for i=0,0,0 do continue end
 end
 
-function infloop7()
+_G.infloop7 = function()
 	for i=1,math.huge do end
 end
 
-function infloop8()
+_G.infloop8 = function()
 	for i=1,math.huge do continue end
 end
 
-function infloop9()
+_G.infloop9 = function()
 	-- technically not a loop, but an exponentially recursive function
-	local function boom()
+	function boom()
 		boom()
 		boom()
 	end
 	boom()
 end
 
-function infloop10()
+_G.infloop10 = function()
 	for l0=4096,0,0 do
 		repeat
 			continue
@@ -75,34 +75,34 @@ function infloop10()
 	end
 end
 
-local haystack = string.rep("x", 100)
-local pattern = string.rep("x?", 100) .. string.rep("x", 100)
+haystack = string.rep("x", 100)
+pattern = string.rep("x?", 100) .. string.rep("x", 100)
 
-function hang1()
+_G.hang1 = function()
 	string.find(haystack, pattern)
 end
 
-function hang2()
+_G.hang2 = function()
 	string.match(haystack, pattern)
 end
 
-function hang3()
+_G.hang3 = function()
 	string.gsub(haystack, pattern, "%0")
 end
 
-function hang4()
+_G.hang4 = function()
 	for k, v in string.gmatch(haystack, pattern) do
 	end
 end
 
-function hang5()
-	local x = string.rep('x', 1000)
+_G.hang5 = function()
+	x = string.rep('x', 1000)
 	string.match(x, string.rep('x.*', 100) .. 'y')
 end
 
-function hang6()
+_G.hang6 = function()
 	-- the reason an interrupt in RETURN is needed, CALL alone is not enough
-	local obj = setmetatable({}, {
+	obj = setmetatable({}, {
 		__index = function(obj, n)
 			return if n < 2 then 1 else obj[n - 1] + obj[n - 2]
 		end
@@ -111,7 +111,7 @@ function hang6()
 	print(obj[100])
 end
 
-function hang7()
+_G.hang7 = function()
 	-- technically not a loop, but an exponentially recursive function
 	function l0()
 		pcall(l0)
@@ -121,9 +121,9 @@ function hang7()
 	l0()
 end
 
-function hangpcall()
+_G.hangpcall = function()
 	for i = 1,100 do
-		local status, msg = pcall(string.find, haystack, pattern)
+		status, msg = pcall(string.find, haystack, pattern)
 		assert(status == false)
 		assert(msg == "timeout")
 	end

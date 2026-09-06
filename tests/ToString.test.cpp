@@ -13,13 +13,14 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 LUAU_FASTFLAG(LuauNewTypePathErrorMessages)
 
 TEST_SUITE_BEGIN("ToString");
 
 TEST_CASE_FIXTURE(Fixture, "primitive")
 {
-    CheckResult result = check("local a = nil    local b = 44    local c = 'lalala'    local d = true");
+    CheckResult result = check("const a = nil    const b = 44    const c = 'lalala'    const d = true");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -43,7 +44,7 @@ TEST_CASE_FIXTURE(Fixture, "builtin_top_extern_types")
 
 TEST_CASE_FIXTURE(Fixture, "bound_types")
 {
-    CheckResult result = check("local a = 444    local b = a");
+    CheckResult result = check("const a = 444    const b = a");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("number", toString(requireType("b")));
@@ -52,8 +53,9 @@ TEST_CASE_FIXTURE(Fixture, "bound_types")
 TEST_CASE_FIXTURE(Fixture, "free_types")
 {
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
-    CheckResult result = check("local a");
+    CheckResult result = check("export a");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("'a", toString(requireType("a")));
@@ -89,7 +91,7 @@ TEST_CASE_FIXTURE(Fixture, "named_table")
 TEST_CASE_FIXTURE(Fixture, "empty_table")
 {
     CheckResult result = check(R"(
-        local a: {}
+        const a: {}
     )");
 
     CHECK_EQ("{  }", toString(requireType("a")));
@@ -103,7 +105,7 @@ TEST_CASE_FIXTURE(Fixture, "empty_table")
 TEST_CASE_FIXTURE(Fixture, "table_respects_use_line_break")
 {
     CheckResult result = check(R"(
-        local a: { prop: string, anotherProp: number, thirdProp: boolean }
+        const a: { prop: string, anotherProp: number, thirdProp: boolean }
     )");
 
     ToStringOptions opts;
@@ -123,7 +125,7 @@ TEST_CASE_FIXTURE(Fixture, "nil_or_nil_is_nil_not_question_mark")
 {
     CheckResult result = check(R"(
       type nil_ty = nil | nil
-      local a : nil_ty = nil
+      const a : nil_ty = nil
   )");
     ToStringOptions opts;
     opts.useLineBreaks = false;
@@ -134,7 +136,7 @@ TEST_CASE_FIXTURE(Fixture, "long_disjunct_of_nil_is_nil_not_question_mark")
 {
     CheckResult result = check(R"(
       type nil_ty = nil | nil | nil | nil | nil
-      local a : nil_ty = nil
+      const a : nil_ty = nil
   )");
     ToStringOptions opts;
     opts.useLineBreaks = false;
@@ -162,7 +164,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "named_metatable_toStringNamedFunction")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        local function createTbl(): NamedMetatable
+        function createTbl(): NamedMetatable
             return setmetatable({}, {})
         end
         type NamedMetatable = typeof(createTbl())
@@ -178,7 +180,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exhaustive_toString_of_cyclic_table")
 {
     CheckResult result = check(R"(
         --!strict
-        local Vec3 = {}
+        const Vec3 = {}
         Vec3.__index = Vec3
         function Vec3.new()
             return setmetatable({x=0, y=0, z=0}, Vec3)
@@ -186,13 +188,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exhaustive_toString_of_cyclic_table")
 
         export type Vec3 = typeof(Vec3.new())
 
-        local thefun: any = function(self, o) return self end
+        const thefun: any = function(self, o) return self end
 
-        local multiply: ((Vec3, Vec3) -> Vec3) & ((Vec3, number) -> Vec3) = thefun
+        const multiply: ((Vec3, Vec3) -> Vec3) & ((Vec3, number) -> Vec3) = thefun
 
         Vec3.__mul = multiply
 
-        local a = Vec3.new()
+        const a = Vec3.new()
     )");
 
     std::string a = toString(requireType("a"), {true});
@@ -254,7 +256,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_are_always_parenthesized_in_unions_or_inte
 TEST_CASE_FIXTURE(Fixture, "simple_intersections_printed_on_one_line")
 {
     CheckResult result = check(R"(
-        local a: string & number
+        const a: string & number
     )");
 
     ToStringOptions opts;
@@ -266,7 +268,7 @@ TEST_CASE_FIXTURE(Fixture, "simple_intersections_printed_on_one_line")
 TEST_CASE_FIXTURE(Fixture, "complex_intersections_printed_on_multiple_lines")
 {
     CheckResult result = check(R"(
-        local a: string & number & boolean
+        const a: string & number & boolean
     )");
 
     ToStringOptions opts;
@@ -284,7 +286,7 @@ TEST_CASE_FIXTURE(Fixture, "complex_intersections_printed_on_multiple_lines")
 TEST_CASE_FIXTURE(Fixture, "overloaded_functions_always_printed_on_multiple_lines")
 {
     CheckResult result = check(R"(
-        local a: ((string) -> string) & ((number) -> number)
+        const a: ((string) -> string) & ((number) -> number)
     )");
 
     ToStringOptions opts;
@@ -300,7 +302,7 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_always_printed_on_multiple_line
 TEST_CASE_FIXTURE(Fixture, "simple_unions_printed_on_one_line")
 {
     CheckResult result = check(R"(
-        local a: number | boolean
+        const a: number | boolean
     )");
 
     ToStringOptions opts;
@@ -312,7 +314,7 @@ TEST_CASE_FIXTURE(Fixture, "simple_unions_printed_on_one_line")
 TEST_CASE_FIXTURE(Fixture, "complex_unions_printed_on_multiple_lines")
 {
     CheckResult result = check(R"(
-        local a: string | number | boolean
+        const a: string | number | boolean
     )");
 
     ToStringOptions opts;
@@ -493,7 +495,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_packs_are_stringified_differently_from_gener
 
 TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names")
 {
-    CheckResult result = check("type MyFunc = (a: number, string, c: number) -> string; local a : MyFunc");
+    CheckResult result = check("type MyFunc = (a: number, string, c: number) -> string; const a : MyFunc = nil as any");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     ToStringOptions opts;
@@ -503,7 +505,7 @@ TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names")
 
 TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names_generic")
 {
-    CheckResult result = check("local function f<a...>(n: number, ...: a...): (a...) return ... end");
+    CheckResult result = check("function f<a...>(n: number, ...: a...): (a...) return ... end");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     ToStringOptions opts;
@@ -514,12 +516,12 @@ TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names_generic")
 TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names_and_self")
 {
     CheckResult result = check(R"(
-local tbl = {}
+const tbl = {}
 tbl.a = 2
 function tbl:foo(b: number, c: number) return (self.a as number) + b + c end
 type Table = typeof(tbl)
 type Foo = typeof(tbl.foo)
-local u: Foo
+const u: Foo = nil as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -584,7 +586,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringDetailed")
 TEST_CASE_FIXTURE(Fixture, "toStringErrorPack")
 {
     CheckResult result = check(R"(
-local function target(callback: nil) return callback(4, "hello") end
+function target(callback: nil) return callback(4, "hello") end
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -641,8 +643,8 @@ TEST_CASE_FIXTURE(Fixture, "no_parentheses_around_cyclic_function_type_in_union"
 {
     CheckResult result = check(R"(
         type F = ((() -> number)?) -> F?
-        local function f(p) return f end
-        local g: F = f
+        function f(p) return f end
+        const g: F = f
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -654,7 +656,7 @@ TEST_CASE_FIXTURE(Fixture, "no_parentheses_around_cyclic_function_type_in_inters
 {
     CheckResult result = check(R"(
         function f() return f end
-        local a: ((number) -> ()) & typeof(f)
+        const a: ((number) -> ()) & typeof(f) = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -675,7 +677,7 @@ TEST_CASE_FIXTURE(Fixture, "self_recursive_instantiated_param")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_id")
 {
     CheckResult result = check(R"(
-        local function id(x) return x end
+        function id(x) return x end
     )");
 
     TypeId ty = requireType("id");
@@ -687,8 +689,8 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_id")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_map")
 {
     CheckResult result = check(R"(
-        local function map(arr, fn)
-            local t = {}
+        function map(arr, fn)
+            const t = {}
             for i = 0, arr.count do
                 t[i] = fn(arr[i])
             end
@@ -708,8 +710,8 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_map")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_generic_pack")
 {
     CheckResult result = check(R"(
-        local function f(a: number, b: string) end
-        local function test<T..., U...>(...: T...): U...
+        function f(a: number, b: string) end
+        function test<T..., U...>(...: T...): U...
             f(...)
             return 1, 2, 3
         end
@@ -731,7 +733,7 @@ TEST_CASE("toStringNamedFunction_unit_f")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_variadics")
 {
     CheckResult result = check(R"(
-        local function f<a, b...>(x: a, ...): (a, a, b...)
+        function f<a, b...>(x: a, ...): (a, a, b...)
             return x, x, ...
         end
     )");
@@ -745,7 +747,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_variadics")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_variadics2")
 {
     CheckResult result = check(R"(
-        local function f(): ...number
+        function f(): ...number
             return 1, 2, 3
         end
     )");
@@ -759,7 +761,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_variadics2")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_variadics3")
 {
     CheckResult result = check(R"(
-        local function f(): (string, ...number)
+        function f(): (string, ...number)
             return 'a', 1, 2, 3
         end
     )");
@@ -773,7 +775,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_variadics3")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_type_annotation_has_partial_argnames")
 {
     CheckResult result = check(R"(
-        local f: (number, y: number) -> number
+        const f: (number, y: number) -> number
     )");
 
     TypeId ty = requireType("f");
@@ -785,7 +787,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_type_annotation_has_partial_ar
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_hide_type_params")
 {
     CheckResult result = check(R"(
-        local function f<T>(x: T, g: <U>(T) -> U)): ()
+        function f<T>(x: T, g: <U>(T) -> U)): ()
         end
     )");
 
@@ -800,7 +802,7 @@ TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_hide_type_params")
 TEST_CASE_FIXTURE(Fixture, "toStringNamedFunction_overrides_param_names")
 {
     CheckResult result = check(R"(
-        local function test(a, b : string, ... : number) return a end
+        function test(a, b : string, ... : number) return a end
     )");
 
     TypeId ty = requireType("test");
@@ -828,10 +830,10 @@ TEST_CASE_FIXTURE(Fixture, "pick_distinct_names_for_mixed_explicit_and_implicit_
 TEST_CASE_FIXTURE(Fixture, "tostring_unsee_ttv_if_array")
 {
     CheckResult result = check(R"(
-        local x: {string}
+        const x: {string} = nil as any
         -- This code is constructed very specifically to use the same (by pointer
         -- identity) type in the function twice.
-        local y: (typeof(x), typeof(x)) -> ()
+        const y: (typeof(x), typeof(x)) -> () = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -892,7 +894,7 @@ TEST_CASE_FIXTURE(Fixture, "checked_fn_toString")
 )");
 
     auto result = check(Mode::Nonstrict, R"(
-local f = abs
+const f = abs
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1045,7 +1047,7 @@ TEST_CASE_FIXTURE(Fixture, "record_type_compositions_generic")
         type Object = {}
         type Box<T> = { inner: T }
 
-        local x: Box<Object>
+        const x: Box<Object> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(checkResult);

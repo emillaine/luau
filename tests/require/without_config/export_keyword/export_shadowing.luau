@@ -1,5 +1,6 @@
--- exported bindings should follow normal local shadowing rules
-local function foo()
+-- exported bindings follow shadowing rules: bare assigns reuse the in-scope
+-- binding (updating the export); only `const`/nested scopes shadow it
+function foo()
     return "local"
 end
 
@@ -7,9 +8,9 @@ export function foo()
     return "exported"
 end
 
-local fruit = "apple"
-export local fruit
+fruit = "apple"
+export fruit
 
-export local animal = "dog"
-local animal = "cat"
+export animal = "dog"
+animal = "cat"
 animal = "bird"

@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -32,18 +32,18 @@ function test()
 
 -- ==================== Constants ====================
 
-local MIN_X = 0
-local MIN_Y = 0
-local MAX_X = 1000
-local MAX_Y = 1000
-local MIN_Z = 0
-local MAX_Z = 10
-local PROXIMITY_RADIUS = 1
-local GOOD_VOXEL_SIZE = PROXIMITY_RADIUS * 2
+MIN_X = 0
+MIN_Y = 0
+MAX_X = 1000
+MAX_Y = 1000
+MIN_Z = 0
+MAX_Z = 10
+PROXIMITY_RADIUS = 1
+GOOD_VOXEL_SIZE = PROXIMITY_RADIUS * 2
 
 -- ==================== Utilities ====================
 
-local function compareNumbers(a, b)
+function compareNumbers(a, b)
     if a == b then return 0 end
     if a < b then return -1 end
     if a > b then return 1 end
@@ -53,14 +53,14 @@ local function compareNumbers(a, b)
 end
 
 -- Truncate toward zero, equivalent to JavaScript's | 0 operator
-local function intTrunc(x)
-    local i = math.modf(x)
+function intTrunc(x)
+    i = math.modf(x)
     return i
 end
 
 -- ==================== CallSign ====================
 
-local CallSign_mt = {}
+CallSign_mt = {}
 CallSign_mt.__index = CallSign_mt
 
 function CallSign_mt:compareTo(other)
@@ -69,22 +69,22 @@ function CallSign_mt:compareTo(other)
     else return 0 end
 end
 
-local function CallSign_new(value)
+function CallSign_new(value)
     return setmetatable({ _value = value }, CallSign_mt)
 end
 
 -- ==================== Vector2D ====================
 
-local Vector2D_mt = {}
+Vector2D_mt = {}
 Vector2D_mt.__index = Vector2D_mt
 
-local function Vector2D_new(x, y)
+function Vector2D_new(x, y)
     return setmetatable({ x = x or 0, y = y or 0 }, Vector2D_mt)
 end
 
 function Vector2D_mt:compareTo(other)
-    local result = compareNumbers(self.x, other.x)
-    if result ~= 0 then return result end
+    result = compareNumbers(self.x, other.x)
+    if result != 0 then return result end
     return compareNumbers(self.y, other.y)
 end
 
@@ -98,10 +98,10 @@ end
 
 -- ==================== Vector3D ====================
 
-local Vector3D_mt = {}
+Vector3D_mt = {}
 Vector3D_mt.__index = Vector3D_mt
 
-local function Vector3D_new(x, y, z)
+function Vector3D_new(x, y, z)
     return setmetatable({ x = x, y = y, z = z }, Vector3D_mt)
 end
 
@@ -135,43 +135,43 @@ end
 
 -- ==================== Motion ====================
 
-local function Motion_new(callsign, posOne, posTwo)
+function Motion_new(callsign, posOne, posTwo)
     return { callsign = callsign, posOne = posOne, posTwo = posTwo }
 end
 
-local function Motion_delta(m)
+function Motion_delta(m)
     return m.posTwo - m.posOne
 end
 
-local function Motion_findIntersection(motion1, motion2)
-    local init1 = motion1.posOne
-    local init2 = motion2.posOne
-    local vec1 = Motion_delta(motion1)
-    local vec2 = Motion_delta(motion2)
-    local radius = PROXIMITY_RADIUS
+function Motion_findIntersection(motion1, motion2)
+    init1 = motion1.posOne
+    init2 = motion2.posOne
+    vec1 = Motion_delta(motion1)
+    vec2 = Motion_delta(motion2)
+    radius = PROXIMITY_RADIUS
 
     -- This is a 4D intersection test accounting for constant-speed motion
     -- over the interval. We solve for times v where dist(P1(v), P2(v)) = r.
 
     -- a = (V2 - V1)^T * (V2 - V1)
-    local a = (vec2 - vec1):squaredMagnitude()
+    a = (vec2 - vec1):squaredMagnitude()
 
-    if a ~= 0 then
+    if a != 0 then
         -- b = 2 * <I1-I2, V1-V2>
-        local b = 2 * (init1 - init2):dot(vec1 - vec2)
+        b = 2 * (init1 - init2):dot(vec1 - vec2)
         -- c = -r^2 + (I2 - I1)^T * (I2 - I1)
-        local c = -radius * radius + (init2 - init1):squaredMagnitude()
+        c = -radius * radius + (init2 - init1):squaredMagnitude()
 
-        local discr = b * b - 4 * a * c
+        discr = b * b - 4 * a * c
         if discr < 0 then return nil end
 
-        local v1 = (-b - math.sqrt(discr)) / (2 * a)
-        local v2 = (-b + math.sqrt(discr)) / (2 * a)
+        v1 = (-b - math.sqrt(discr)) / (2 * a)
+        v2 = (-b + math.sqrt(discr)) / (2 * a)
 
         if v1 <= v2 and ((v1 <= 1 and 1 <= v2) or
                          (v1 <= 0 and 0 <= v2) or
                          (0 <= v1 and v2 <= 1)) then
-            local v
+            v = nil
             if v1 <= 0 then
                 -- Collision started before this frame; report at frame start
                 v = 0
@@ -180,9 +180,9 @@ local function Motion_findIntersection(motion1, motion2)
                 v = v1
             end
 
-            local result1 = init1 + vec1 * v
-            local result2 = init2 + vec2 * v
-            local result  = (result1 + result2) * 0.5
+            result1 = init1 + vec1 * v
+            result2 = init2 + vec2 * v
+            result  = (result1 + result2) * 0.5
 
             if result.x >= MIN_X and result.x <= MAX_X and
                result.y >= MIN_Y and result.y <= MAX_Y and
@@ -196,7 +196,7 @@ local function Motion_findIntersection(motion1, motion2)
 
     -- Planes have same speed and move in parallel (or are stationary);
     -- distance is constant, computed from initial positions
-    local dist = (init2 - init1):magnitude()
+    dist = (init2 - init1):magnitude()
     if dist <= radius then
         return (init1 + init2) * 0.5
     end
@@ -206,23 +206,23 @@ end
 
 -- ==================== RedBlackTree ====================
 
-local function RBNode_new(key, value)
+function RBNode_new(key, value)
     return { key = key, value = value, left = nil, right = nil, parent = nil, color = "red" }
 end
 
-local function treeMinimum(x)
+function treeMinimum(x)
     while x.left do x = x.left end
     return x
 end
 
-local function treeMaximum(x)
+function treeMaximum(x)
     while x.right do x = x.right end
     return x
 end
 
-local function RBNode_successor(x)
+function RBNode_successor(x)
     if x.right then return treeMinimum(x.right) end
-    local y = x.parent
+    y = x.parent
     while y and x == y.right do
         x = y
         y = y.parent
@@ -230,15 +230,15 @@ local function RBNode_successor(x)
     return y
 end
 
-local RBTree = {}
+RBTree = {}
 RBTree.__index = RBTree
 
-local function RedBlackTree_new()
+function RedBlackTree_new()
     return setmetatable({ _root = nil }, RBTree)
 end
 
 function RBTree:_leftRotate(x)
-    local y = x.right
+    y = x.right
     x.right = y.left
     if y.left then y.left.parent = x end
     y.parent = x.parent
@@ -255,7 +255,7 @@ function RBTree:_leftRotate(x)
 end
 
 function RBTree:_rightRotate(y)
-    local x = y.left
+    x = y.left
     y.left = x.right
     if x.right then x.right.parent = y end
     x.parent = y.parent
@@ -272,9 +272,9 @@ function RBTree:_rightRotate(y)
 end
 
 function RBTree:_findNode(key)
-    local current = self._root
+    current = self._root
     while current do
-        local cmp = key:compareTo(current.key)
+        cmp = key:compareTo(current.key)
         if cmp == 0 then return current
         else if cmp < 0 then current = current.left
         else current = current.right
@@ -284,22 +284,22 @@ function RBTree:_findNode(key)
 end
 
 function RBTree:_treeInsert(key, value)
-    local y = nil
-    local x = self._root
+    y = nil
+    x = self._root
     while x do
         y = x
-        local cmp = key:compareTo(x.key)
+        cmp = key:compareTo(x.key)
         if cmp < 0 then
             x = x.left
         else if cmp > 0 then
             x = x.right
         else
-            local oldValue = x.value
+            oldValue = x.value
             x.value = value
             return { isNewEntry = false, oldValue = oldValue }
         end
     end
-    local z = RBNode_new(key, value)
+    z = RBNode_new(key, value)
     z.parent = y
     if not y then
         self._root = z
@@ -312,15 +312,15 @@ function RBTree:_treeInsert(key, value)
 end
 
 function RBTree:put(key, value)
-    local insertionResult = self:_treeInsert(key, value)
+    insertionResult = self:_treeInsert(key, value)
     if not insertionResult.isNewEntry then
         return insertionResult.oldValue
     end
-    local x = insertionResult.newNode
+    x = insertionResult.newNode
 
-    while x ~= self._root and x.parent.color == "red" do
+    while x != self._root and x.parent.color == "red" do
         if x.parent == x.parent.parent.left then
-            local y = x.parent.parent.right
+            y = x.parent.parent.right
             if y and y.color == "red" then
                 -- Case 1
                 x.parent.color = "black"
@@ -340,7 +340,7 @@ function RBTree:put(key, value)
             end
         else
             -- Mirror of above with left/right exchanged
-            local y = x.parent.parent.left
+            y = x.parent.parent.left
             if y and y.color == "red" then
                 -- Case 1
                 x.parent.color = "black"
@@ -366,14 +366,14 @@ function RBTree:put(key, value)
 end
 
 function RBTree:get(key)
-    local node = self:_findNode(key)
+    node = self:_findNode(key)
     if not node then return nil end
     return node.value
 end
 
 function RBTree:forEach(callback)
     if not self._root then return end
-    local current = treeMinimum(self._root)
+    current = treeMinimum(self._root)
     while current do
         callback(current.key, current.value)
         current = RBNode_successor(current)
@@ -381,9 +381,9 @@ function RBTree:forEach(callback)
 end
 
 function RBTree:_removeFixup(x, xParent)
-    while x ~= self._root and (not x or x.color == "black") do
+    while x != self._root and (not x or x.color == "black") do
         if x == xParent.left then
-            local w = xParent.right
+            w = xParent.right
             if w.color == "red" then
                 -- Case 1
                 w.color = "black"
@@ -415,7 +415,7 @@ function RBTree:_removeFixup(x, xParent)
             end
         else
             -- Mirror of above with left/right exchanged
-            local w = xParent.left
+            w = xParent.left
             if w.color == "red" then
                 -- Case 1
                 w.color = "black"
@@ -451,11 +451,11 @@ function RBTree:_removeFixup(x, xParent)
 end
 
 function RBTree:remove(key)
-    local z = self:_findNode(key)
+    z = self:_findNode(key)
     if not z then return nil end
 
     -- y is the node to unlink from the tree
-    local y
+    y = nil
     if not z.left or not z.right then
         y = z
     else
@@ -463,12 +463,12 @@ function RBTree:remove(key)
     end
 
     -- x is y's only child (possibly nil), which may replace y
-    local x
+    x = nil
     if y.left then x = y.left
     else x = y.right
     end
 
-    local xParent
+    xParent = nil
     if x then
         x.parent = y.parent
         xParent = x.parent
@@ -484,7 +484,7 @@ function RBTree:remove(key)
         y.parent.right = x
     end
 
-    if y ~= z then
+    if y != z then
         if y.color == "black" then
             self:_removeFixup(x, xParent)
         end
@@ -510,21 +510,21 @@ end
 
 -- ==================== Simulator ====================
 
-local function Simulator_new(numAircraft)
-    local aircraft = {}
+function Simulator_new(numAircraft)
+    aircraft = {}
     for i = 0, numAircraft - 1 do
         aircraft[i + 1] = CallSign_new("foo" .. tostring(i))
     end
     return { _aircraft = aircraft }
 end
 
-local function Simulator_simulate(sim, time)
-    local frame = {}
-    local aircraft = sim._aircraft
+function Simulator_simulate(sim, time)
+    frame = {}
+    aircraft = sim._aircraft
     -- JS iterates i = 0, 2, 4, ..., numAircraft-2 (0-indexed pairs)
     -- Lua aircraft is 1-indexed, so luaI = 1, 3, 5, ...; jsI = luaI - 1
     for luaI = 1, #aircraft - 1, 2 do
-        local jsI = luaI - 1
+        jsI = luaI - 1
         table.insert(frame, {
             callsign = aircraft[luaI],
             position = Vector3D_new(time, math.cos(time) * 2 + jsI * 3, 10)
@@ -539,14 +539,14 @@ end
 
 -- ==================== Voxel map / collision reduction ====================
 
-local VOXEL_SIZE = GOOD_VOXEL_SIZE
-local HORIZONTAL = Vector2D_new(VOXEL_SIZE, 0)
-local VERTICAL   = Vector2D_new(0, VOXEL_SIZE)
+VOXEL_SIZE = GOOD_VOXEL_SIZE
+HORIZONTAL = Vector2D_new(VOXEL_SIZE, 0)
+VERTICAL   = Vector2D_new(0, VOXEL_SIZE)
 
-local function voxelHash(position)
-    local xDiv = intTrunc(position.x / VOXEL_SIZE)
-    local yDiv = intTrunc(position.y / VOXEL_SIZE)
-    local result = Vector2D_new()
+function voxelHash(position)
+    xDiv = intTrunc(position.x / VOXEL_SIZE)
+    yDiv = intTrunc(position.y / VOXEL_SIZE)
+    result = Vector2D_new()
     result.x = VOXEL_SIZE * xDiv
     result.y = VOXEL_SIZE * yDiv
     if position.x < 0 then result.x = result.x - VOXEL_SIZE end
@@ -554,11 +554,11 @@ local function voxelHash(position)
     return result
 end
 
-local function drawMotionOnVoxelMap(voxelMap, motion)
-    local seen = RedBlackTree_new()
+function drawMotionOnVoxelMap(voxelMap, motion)
+    seen = RedBlackTree_new()
 
-    local function putIntoMap(voxel)
-        local array = voxelMap:get(voxel)
+    function putIntoMap(voxel)
+        array = voxelMap:get(voxel)
         if not array then
             array = {}
             voxelMap:put(voxel, array)
@@ -566,31 +566,31 @@ local function drawMotionOnVoxelMap(voxelMap, motion)
         table.insert(array, motion)
     end
 
-    local function isInVoxel(voxel)
+    function isInVoxel(voxel)
         if voxel.x > MAX_X or voxel.x < MIN_X or
            voxel.y > MAX_Y or voxel.y < MIN_Y then
             return false
         end
 
-        local init = motion.posOne
-        local fin  = motion.posTwo
-        local v_s  = VOXEL_SIZE
-        local r    = PROXIMITY_RADIUS / 2
+        init = motion.posOne
+        fin  = motion.posTwo
+        v_s  = VOXEL_SIZE
+        r    = PROXIMITY_RADIUS / 2
 
-        local v_x = voxel.x
-        local x0  = init.x
-        local xv  = fin.x - init.x
+        v_x = voxel.x
+        x0  = init.x
+        xv  = fin.x - init.x
 
-        local v_y = voxel.y
-        local y0  = init.y
-        local yv  = fin.y - init.y
+        v_y = voxel.y
+        y0  = init.y
+        yv  = fin.y - init.y
 
-        local low_x  = (v_x - r - x0) / xv
-        local high_x = (v_x + v_s + r - x0) / xv
+        low_x  = (v_x - r - x0) / xv
+        high_x = (v_x + v_s + r - x0) / xv
         if xv < 0 then low_x, high_x = high_x, low_x end
 
-        local low_y  = (v_y - r - y0) / yv
-        local high_y = (v_y + v_s + r - y0) / yv
+        low_y  = (v_y - r - y0) / yv
+        high_y = (v_y + v_s + r - y0) / yv
         if yv < 0 then low_y, high_y = high_y, low_y end
 
         return (
@@ -607,7 +607,7 @@ local function drawMotionOnVoxelMap(voxelMap, motion)
         )
     end
 
-    local function recurse(nextVoxel)
+    function recurse(nextVoxel)
         if not isInVoxel(nextVoxel) then return end
         if seen:put(nextVoxel, true) then return end  -- already visited
         putIntoMap(nextVoxel)
@@ -624,12 +624,12 @@ local function drawMotionOnVoxelMap(voxelMap, motion)
     recurse(voxelHash(motion.posOne))
 end
 
-local function reduceCollisionSet(motions)
-    local voxelMap = RedBlackTree_new()
+function reduceCollisionSet(motions)
+    voxelMap = RedBlackTree_new()
     for i = 1, #motions do
         drawMotionOnVoxelMap(voxelMap, motions[i])
     end
-    local result = {}
+    result = {}
     voxelMap:forEach(function(key, value)
         if #value > 1 then
             table.insert(result, value)
@@ -640,18 +640,18 @@ end
 
 -- ==================== CollisionDetector ====================
 
-local function CollisionDetector_new()
+function CollisionDetector_new()
     return { _state = RedBlackTree_new() }
 end
 
-local function CollisionDetector_handleNewFrame(detector, frame)
-    local motions = {}
-    local seen = RedBlackTree_new()
+function CollisionDetector_handleNewFrame(detector, frame)
+    motions = {}
+    seen = RedBlackTree_new()
 
     for i = 1, #frame do
-        local aircraft = frame[i]
-        local oldPosition = detector._state:put(aircraft.callsign, aircraft.position)
-        local newPosition = aircraft.position
+        aircraft = frame[i]
+        oldPosition = detector._state:put(aircraft.callsign, aircraft.position)
+        newPosition = aircraft.position
         seen:put(aircraft.callsign, true)
 
         if not oldPosition then
@@ -663,7 +663,7 @@ local function CollisionDetector_handleNewFrame(detector, frame)
     end
 
     -- Remove aircraft no longer present
-    local toRemove = {}
+    toRemove = {}
     detector._state:forEach(function(callsign, position)
         if not seen:get(callsign) then
             table.insert(toRemove, callsign)
@@ -673,15 +673,15 @@ local function CollisionDetector_handleNewFrame(detector, frame)
         detector._state:remove(toRemove[i])
     end
 
-    local allReduced = reduceCollisionSet(motions)
-    local collisions = {}
+    allReduced = reduceCollisionSet(motions)
+    collisions = {}
     for reductionIndex = 1, #allReduced do
-        local reduced = allReduced[reductionIndex]
+        reduced = allReduced[reductionIndex]
         for i = 1, #reduced do
-            local motion1 = reduced[i]
+            motion1 = reduced[i]
             for j = i + 1, #reduced do
-                local motion2 = reduced[j]
-                local collision = Motion_findIntersection(motion1, motion2)
+                motion2 = reduced[j]
+                collision = Motion_findIntersection(motion1, motion2)
                 if collision then
                     table.insert(collisions, {
                         aircraft = { motion1.callsign, motion2.callsign },
@@ -697,21 +697,21 @@ end
 
 -- ==================== Benchmark entry point ====================
 
-local function benchmarkImpl(configuration)
-    local numAircraft       = configuration.numAircraft
-    local numFrames         = configuration.numFrames
-    local expectedCollisions = configuration.expectedCollisions
-    local exclude           = configuration.exclude
+function benchmarkImpl(configuration)
+    numAircraft       = configuration.numAircraft
+    numFrames         = configuration.numFrames
+    expectedCollisions = configuration.expectedCollisions
+    exclude           = configuration.exclude
 
-    local simulator = Simulator_new(numAircraft)
-    local detector  = CollisionDetector_new()
-    local results   = {}
+    simulator = Simulator_new(numAircraft)
+    detector  = CollisionDetector_new()
+    results   = {}
 
     for i = 0, numFrames - 1 do
-        local time = i / 10
+        time = i / 10
 
         -- [frame start: insert frame-time measurement here]
-        local collisions = CollisionDetector_handleNewFrame(
+        collisions = CollisionDetector_handleNewFrame(
             detector,
             Simulator_simulate(simulator, time)
         )
@@ -726,17 +726,17 @@ local function benchmarkImpl(configuration)
     end
 
     -- Check results.
-    local actualCollisions = 0
+    actualCollisions = 0
     for i = 1, #results do
         actualCollisions = actualCollisions + results[i].numCollisions
     end
-    if actualCollisions ~= expectedCollisions then
+    if actualCollisions != expectedCollisions then
         error("Bad number of collisions: " .. actualCollisions ..
               " (expected " .. expectedCollisions .. ")")
     end
 end
 
-local function benchmark()
+function benchmark()
     benchmarkImpl({
         numAircraft       = 1000,
         numFrames         = 70,

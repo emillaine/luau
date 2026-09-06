@@ -1,4 +1,4 @@
-local m = require("./export_function_rebind")
+m = require("./export_function_rebind")
 
 pcall(function() m.rebind(5) end)
 

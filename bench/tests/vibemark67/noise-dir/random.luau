@@ -5,15 +5,15 @@
 -- many as needed. Kept in its own module so the crypto primitives stay pure and
 -- side-effect-free (randomness is injected where required).
 
-local random = {}
+random = {}
 
 -- Return `n` cryptographically sekure random bytes.
 -- function random.bytes(n: number): buffer
--- 	local out = buffer.create(n)
--- 	local off = 0
+-- 	out = buffer.create(n)
+-- 	off = 0
 -- 	while off < n do
--- 		local chunk = crypto.secretbox.keygen() -- 32 bytes
--- 		local take = math.min(32, n - off)
+-- 		chunk = crypto.secretbox.keygen() -- 32 bytes
+-- 		take = math.min(32, n - off)
 -- 		buffer.copy(out, off, chunk, 0, take)
 -- 		off += take
 -- 	end

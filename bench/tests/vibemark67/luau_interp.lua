@@ -1,5 +1,33 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+-- forward declarations (implicit-local dialect has no hoisted globals)
+callClosure = nil
+callFunction = nil
+evalArgList = nil
+evalBinop = nil
+evalCall = nil
+evalExprMulti = nil
+evalMethodCall = nil
+evalTableConstructor = nil
+evalUnop = nil
+execAssign = nil
+execBlock = nil
+execFuncDef = nil
+execGenFor = nil
+execIf = nil
+execLocal = nil
+execLocalFunc = nil
+execNumFor = nil
+execRepeat = nil
+execReturn = nil
+execStat = nil
+execWhile = nil
+interpToString = nil
+lexCountLongBracket = nil
+lexSkipLongString = nil
+parseCallArgs = nil
+parseFuncBody = nil
+parseTableConstructor = nil
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -7,33 +35,33 @@ function test()
 -- A full Luau interpreter: lexer, parser, evaluator with metatables, standard library
 -- Target runtimes: Luau (lute)
 
-local floor = math.floor
-local mabs = math.abs
-local msqrt = math.sqrt
-local msin = math.sin
-local mcos = math.cos
-local mlog = math.log
-local mexp = math.exp
-local mmax = math.max
-local mmin = math.min
-local mpi = math.pi
-local mhuge = math.huge
-local mceil = math.ceil
-local mrandom = math.random
-local sformat = string.format
-local ssub = string.sub
-local sbyte = string.byte
-local schar = string.char
-local srep = string.rep
-local slen = string.len
-local sfind = string.find
-local slower = string.lower
-local supper = string.upper
-local tinsert = table.insert
-local tremove = table.remove
-local tconcat = table.concat
-local tsort = table.sort
-local tmove = table.move or function(a, f, e, t, dest)
+floor = math.floor
+mabs = math.abs
+msqrt = math.sqrt
+msin = math.sin
+mcos = math.cos
+mlog = math.log
+mexp = math.exp
+mmax = math.max
+mmin = math.min
+mpi = math.pi
+mhuge = math.huge
+mceil = math.ceil
+mrandom = math.random
+sformat = string.format
+ssub = string.sub
+sbyte = string.byte
+schar = string.char
+srep = string.rep
+slen = string.len
+sfind = string.find
+slower = string.lower
+supper = string.upper
+tinsert = table.insert
+tremove = table.remove
+tconcat = table.concat
+tsort = table.sort
+tmove = table.move or function(a, f, e, t, dest)
     dest = dest or a
     if t > f then
         for i = e, f, -1 do dest[t + (i - f)] = a[i] end
@@ -42,8 +70,8 @@ local tmove = table.move or function(a, f, e, t, dest)
     end
     return dest
 end
-local unpack_ = table.unpack or unpack
-local clock = os.clock
+unpack_ = table.unpack or unpack
+clock = os.clock
 
 -- ============================================================================
 -- TOKEN TYPES
@@ -135,7 +163,7 @@ KEYWORDS["continue"] = TK_CONTINUE
 -- ============================================================================
 
 function newLexer(source)
-    local lex = {}
+    lex = {}
     lex.source = source
     lex.pos = 1
     lex.len = slen(source)
@@ -151,7 +179,7 @@ function lexPeekChar(lex)
 end
 
 function lexNextChar(lex)
-    local ch = ssub(lex.source, lex.pos, lex.pos)
+    ch = ssub(lex.source, lex.pos, lex.pos)
     lex.pos = lex.pos + 1
     if ch == "\n" then lex.line = lex.line + 1 end
     return ch
@@ -159,7 +187,7 @@ end
 
 function lexSkipWhitespace(lex)
     while lex.pos <= lex.len do
-        local ch = ssub(lex.source, lex.pos, lex.pos)
+        ch = ssub(lex.source, lex.pos, lex.pos)
         if ch == " " or ch == "\t" or ch == "\r" or ch == "\n" then
             if ch == "\n" then lex.line = lex.line + 1 end
             lex.pos = lex.pos + 1
@@ -167,17 +195,17 @@ function lexSkipWhitespace(lex)
             -- comment
             lex.pos = lex.pos + 2
             if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "[" then
-                local lvl = lexCountLongBracket(lex)
+                lvl = lexCountLongBracket(lex)
                 if lvl >= 0 then
                     lexSkipLongString(lex, lvl)
                 else
                     -- line comment
-                    while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) ~= "\n" do
+                    while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) != "\n" do
                         lex.pos = lex.pos + 1
                     end
                 end
             else
-                while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) ~= "\n" do
+                while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) != "\n" do
                     lex.pos = lex.pos + 1
                 end
             end
@@ -188,10 +216,10 @@ function lexSkipWhitespace(lex)
 end
 
 function lexCountLongBracket(lex)
-    local p = lex.pos
-    if p > lex.len or ssub(lex.source, p, p) ~= "[" then return -1 end
+    p = lex.pos
+    if p > lex.len or ssub(lex.source, p, p) != "[" then return -1 end
     p = p + 1
-    local count = 0
+    count = 0
     while p <= lex.len and ssub(lex.source, p, p) == "=" do
         count = count + 1
         p = p + 1
@@ -206,11 +234,11 @@ function lexSkipLongString(lex, level)
     -- skip opening [==..==[
     lex.pos = lex.pos + 1 + level + 1
     while lex.pos <= lex.len do
-        local ch = ssub(lex.source, lex.pos, lex.pos)
+        ch = ssub(lex.source, lex.pos, lex.pos)
         if ch == "\n" then lex.line = lex.line + 1 end
         if ch == "]" then
-            local p2 = lex.pos + 1
-            local cnt = 0
+            p2 = lex.pos + 1
+            cnt = 0
             while p2 <= lex.len and ssub(lex.source, p2, p2) == "=" do
                 cnt = cnt + 1
                 p2 = p2 + 1
@@ -232,13 +260,13 @@ function lexReadLongString(lex, level)
         lex.line = lex.line + 1
         lex.pos = lex.pos + 1
     end
-    local parts = {}
+    parts = {}
     while lex.pos <= lex.len do
-        local ch = ssub(lex.source, lex.pos, lex.pos)
+        ch = ssub(lex.source, lex.pos, lex.pos)
         if ch == "\n" then lex.line = lex.line + 1 end
         if ch == "]" then
-            local p2 = lex.pos + 1
-            local cnt = 0
+            p2 = lex.pos + 1
+            cnt = 0
             while p2 <= lex.len and ssub(lex.source, p2, p2) == "=" do
                 cnt = cnt + 1
                 p2 = p2 + 1
@@ -255,61 +283,61 @@ function lexReadLongString(lex, level)
 end
 
 function lexIsDigit(ch)
-    local b = sbyte(ch)
+    b = sbyte(ch)
     return b >= 48 and b <= 57
 end
 
 function lexIsAlpha(ch)
-    local b = sbyte(ch)
+    b = sbyte(ch)
     return (b >= 65 and b <= 90) or (b >= 97 and b <= 122) or b == 95
 end
 
 function lexIsAlnum(ch)
-    local b = sbyte(ch)
+    b = sbyte(ch)
     return (b >= 65 and b <= 90) or (b >= 97 and b <= 122) or b == 95 or (b >= 48 and b <= 57)
 end
 
 function lexReadNumber(lex)
-    local start = lex.pos
-    local ch = ssub(lex.source, lex.pos, lex.pos)
+    start = lex.pos
+    ch = ssub(lex.source, lex.pos, lex.pos)
     if ch == "0" and lex.pos + 1 <= lex.len then
-        local nxt = ssub(lex.source, lex.pos + 1, lex.pos + 1)
+        nxt = ssub(lex.source, lex.pos + 1, lex.pos + 1)
         if nxt == "x" or nxt == "X" then
             lex.pos = lex.pos + 2
             while lex.pos <= lex.len do
-                local c = ssub(lex.source, lex.pos, lex.pos)
-                local b = sbyte(c)
+                c = ssub(lex.source, lex.pos, lex.pos)
+                b = sbyte(c)
                 if (b >= 48 and b <= 57) or (b >= 65 and b <= 70) or (b >= 97 and b <= 102) or c == "_" then
                     lex.pos = lex.pos + 1
                 else
                     break
                 end
             end
-            local raw = ssub(lex.source, start, lex.pos - 1)
+            raw = ssub(lex.source, start, lex.pos - 1)
             -- remove underscores
-            local clean = ""
+            clean = ""
             for i = 1, slen(raw) do
-                local c = ssub(raw, i, i)
-                if c ~= "_" then clean = clean .. c end
+                c = ssub(raw, i, i)
+                if c != "_" then clean = clean .. c end
             end
             return tonumber(clean)
         else if nxt == "b" or nxt == "B" then
             lex.pos = lex.pos + 2
             while lex.pos <= lex.len do
-                local c = ssub(lex.source, lex.pos, lex.pos)
+                c = ssub(lex.source, lex.pos, lex.pos)
                 if c == "0" or c == "1" or c == "_" then
                     lex.pos = lex.pos + 1
                 else
                     break
                 end
             end
-            local raw = ssub(lex.source, start + 2, lex.pos - 1)
-            local clean = ""
+            raw = ssub(lex.source, start + 2, lex.pos - 1)
+            clean = ""
             for i = 1, slen(raw) do
-                local c = ssub(raw, i, i)
-                if c ~= "_" then clean = clean .. c end
+                c = ssub(raw, i, i)
+                if c != "_" then clean = clean .. c end
             end
-            local val = 0
+            val = 0
             for i = 1, slen(clean) do
                 val = val * 2 + (sbyte(clean, i, i) - 48)
             end
@@ -318,7 +346,7 @@ function lexReadNumber(lex)
     end
     -- decimal
     while lex.pos <= lex.len do
-        local c = ssub(lex.source, lex.pos, lex.pos)
+        c = ssub(lex.source, lex.pos, lex.pos)
         if lexIsDigit(c) or c == "_" then
             lex.pos = lex.pos + 1
         else
@@ -328,7 +356,7 @@ function lexReadNumber(lex)
     if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "." then
         lex.pos = lex.pos + 1
         while lex.pos <= lex.len do
-            local c = ssub(lex.source, lex.pos, lex.pos)
+            c = ssub(lex.source, lex.pos, lex.pos)
             if lexIsDigit(c) or c == "_" then
                 lex.pos = lex.pos + 1
             else
@@ -337,11 +365,11 @@ function lexReadNumber(lex)
         end
     end
     if lex.pos <= lex.len then
-        local c = ssub(lex.source, lex.pos, lex.pos)
+        c = ssub(lex.source, lex.pos, lex.pos)
         if c == "e" or c == "E" then
             lex.pos = lex.pos + 1
             if lex.pos <= lex.len then
-                local c2 = ssub(lex.source, lex.pos, lex.pos)
+                c2 = ssub(lex.source, lex.pos, lex.pos)
                 if c2 == "+" or c2 == "-" then lex.pos = lex.pos + 1 end
             end
             while lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) do
@@ -349,26 +377,26 @@ function lexReadNumber(lex)
             end
         end
     end
-    local raw = ssub(lex.source, start, lex.pos - 1)
-    local clean = ""
+    raw = ssub(lex.source, start, lex.pos - 1)
+    clean = ""
     for i = 1, slen(raw) do
-        local c = ssub(raw, i, i)
-        if c ~= "_" then clean = clean .. c end
+        c = ssub(raw, i, i)
+        if c != "_" then clean = clean .. c end
     end
     return tonumber(clean)
 end
 
 function lexReadString(lex, quote)
     lex.pos = lex.pos + 1 -- skip opening quote
-    local parts = {}
+    parts = {}
     while lex.pos <= lex.len do
-        local ch = ssub(lex.source, lex.pos, lex.pos)
+        ch = ssub(lex.source, lex.pos, lex.pos)
         if ch == quote then
             lex.pos = lex.pos + 1
             return tconcat(parts)
         else if ch == "\\" then
             lex.pos = lex.pos + 1
-            local esc = ssub(lex.source, lex.pos, lex.pos)
+            esc = ssub(lex.source, lex.pos, lex.pos)
             lex.pos = lex.pos + 1
             if esc == "n" then tinsert(parts, "\n")
             else if esc == "t" then tinsert(parts, "\t")
@@ -381,7 +409,7 @@ function lexReadString(lex, quote)
                 lex.line = lex.line + 1
                 tinsert(parts, "\n")
             else if lexIsDigit(esc) then
-                local numstr = esc
+                numstr = esc
                 for _ = 1, 2 do
                     if lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) then
                         numstr = numstr .. ssub(lex.source, lex.pos, lex.pos)
@@ -409,7 +437,7 @@ function lexNext(lex)
         lex.value = nil
         return
     end
-    local ch = ssub(lex.source, lex.pos, lex.pos)
+    ch = ssub(lex.source, lex.pos, lex.pos)
 
     -- Numbers
     if lexIsDigit(ch) then
@@ -420,12 +448,12 @@ function lexNext(lex)
 
     -- Identifiers and keywords
     if lexIsAlpha(ch) then
-        local start = lex.pos
+        start = lex.pos
         while lex.pos <= lex.len and lexIsAlnum(ssub(lex.source, lex.pos, lex.pos)) do
             lex.pos = lex.pos + 1
         end
-        local word = ssub(lex.source, start, lex.pos - 1)
-        local kw = KEYWORDS[word]
+        word = ssub(lex.source, start, lex.pos - 1)
+        kw = KEYWORDS[word]
         if kw then
             lex.token = kw
             lex.value = word
@@ -445,7 +473,7 @@ function lexNext(lex)
 
     -- Long strings
     if ch == "[" then
-        local lvl = lexCountLongBracket(lex)
+        lvl = lexCountLongBracket(lex)
         if lvl >= 0 then
             lex.value = lexReadLongString(lex, lvl)
             lex.token = TK_STRING
@@ -490,17 +518,17 @@ function lexNext(lex)
             -- number starting with dot like .5
             lex.pos = lex.pos - 1 -- back up to include the dot
             -- Actually read as number
-            local start = lex.pos
+            start = lex.pos
             lex.pos = lex.pos + 1 -- skip dot
             while lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) do
                 lex.pos = lex.pos + 1
             end
             if lex.pos <= lex.len then
-                local c = ssub(lex.source, lex.pos, lex.pos)
+                c = ssub(lex.source, lex.pos, lex.pos)
                 if c == "e" or c == "E" then
                     lex.pos = lex.pos + 1
                     if lex.pos <= lex.len then
-                        local c2 = ssub(lex.source, lex.pos, lex.pos)
+                        c2 = ssub(lex.source, lex.pos, lex.pos)
                         if c2 == "+" or c2 == "-" then lex.pos = lex.pos + 1 end
                     end
                     while lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) do
@@ -562,7 +590,7 @@ end
 -- ============================================================================
 
 function newParser(source)
-    local parser = {}
+    parser = {}
     parser.lex = newLexer(source)
     lexNext(parser.lex)
     return parser
@@ -573,10 +601,10 @@ function parserError(parser, msg)
 end
 
 function parserExpect(parser, tk)
-    if parser.lex.token ~= tk then
+    if parser.lex.token != tk then
         parserError(parser, "expected '" .. tk .. "'")
     end
-    local val = parser.lex.value
+    val = parser.lex.value
     lexNext(parser.lex)
     return val
 end
@@ -587,7 +615,7 @@ end
 
 function parserMatch(parser, tk)
     if parser.lex.token == tk then
-        local val = parser.lex.value
+        val = parser.lex.value
         lexNext(parser.lex)
         return true, val
     end
@@ -600,8 +628,8 @@ parseBlock = nil
 parseStat = nil
 
 function parsePrimaryExpr(parser)
-    local tk = parser.lex.token
-    local node
+    tk = parser.lex.token
+    node = nil
     if tk == TK_NAME then
         node = astNode("Var", {name = parser.lex.value})
         lexNext(parser.lex)
@@ -617,25 +645,25 @@ function parsePrimaryExpr(parser)
 end
 
 function parseSuffixExpr(parser)
-    local node = parsePrimaryExpr(parser)
+    node = parsePrimaryExpr(parser)
     while true do
-        local tk = parser.lex.token
+        tk = parser.lex.token
         if tk == TK_DOT then
             lexNext(parser.lex)
-            local field = parserExpect(parser, TK_NAME)
+            field = parserExpect(parser, TK_NAME)
             node = astNode("Index", {obj = node, key = astNode("String", {value = field})})
         else if tk == TK_LBRACKET then
             lexNext(parser.lex)
-            local key = parseExpr(parser)
+            key = parseExpr(parser)
             parserExpect(parser, TK_RBRACKET)
             node = astNode("Index", {obj = node, key = key})
         else if tk == TK_COLON then
             lexNext(parser.lex)
-            local method = parserExpect(parser, TK_NAME)
-            local args = parseCallArgs(parser)
+            method = parserExpect(parser, TK_NAME)
+            args = parseCallArgs(parser)
             node = astNode("MethodCall", {obj = node, method = method, args = args})
         else if tk == TK_LPAREN or tk == TK_LBRACE or tk == TK_STRING then
-            local args = parseCallArgs(parser)
+            args = parseCallArgs(parser)
             node = astNode("Call", {func = node, args = args})
         else
             break
@@ -645,10 +673,10 @@ function parseSuffixExpr(parser)
 end
 
 function parseCallArgs(parser)
-    local tk = parser.lex.token
+    tk = parser.lex.token
     if tk == TK_LPAREN then
         lexNext(parser.lex)
-        local args = {}
+        args = {}
         if not parserCheck(parser, TK_RPAREN) then
             tinsert(args, parseExpr(parser))
             while parserCheck(parser, TK_COMMA) do
@@ -661,7 +689,7 @@ function parseCallArgs(parser)
     else if tk == TK_LBRACE then
         return {parseTableConstructor(parser)}
     else if tk == TK_STRING then
-        local val = parser.lex.value
+        val = parser.lex.value
         lexNext(parser.lex)
         return {astNode("String", {value = val})}
     else
@@ -671,9 +699,9 @@ end
 
 function parseTableConstructor(parser)
     parserExpect(parser, TK_LBRACE)
-    local fields = {}
+    fields = {}
     while not parserCheck(parser, TK_RBRACE) do
-        local field = {}
+        field = {}
         if parserCheck(parser, TK_LBRACKET) then
             lexNext(parser.lex)
             field.key = parseExpr(parser)
@@ -683,11 +711,11 @@ function parseTableConstructor(parser)
             field.kind = "bracket"
         else if parserCheck(parser, TK_NAME) then
             -- Could be name=value or just an expression
-            local savedPos = parser.lex.pos
-            local savedLine = parser.lex.line
-            local savedToken = parser.lex.token
-            local savedValue = parser.lex.value
-            local name = parser.lex.value
+            savedPos = parser.lex.pos
+            savedLine = parser.lex.line
+            savedToken = parser.lex.token
+            savedValue = parser.lex.value
+            name = parser.lex.value
             lexNext(parser.lex)
             if parserCheck(parser, TK_ASSIGN) then
                 lexNext(parser.lex)
@@ -717,13 +745,13 @@ function parseTableConstructor(parser)
 end
 
 function parseSimpleExpr(parser)
-    local tk = parser.lex.token
+    tk = parser.lex.token
     if tk == TK_NUMBER then
-        local val = parser.lex.value
+        val = parser.lex.value
         lexNext(parser.lex)
         return astNode("Number", {value = val})
     else if tk == TK_STRING then
-        local val = parser.lex.value
+        val = parser.lex.value
         lexNext(parser.lex)
         return astNode("String", {value = val})
     else if tk == TK_NIL then
@@ -749,18 +777,18 @@ function parseSimpleExpr(parser)
 end
 
 function parseUnaryExpr(parser)
-    local tk = parser.lex.token
+    tk = parser.lex.token
     if tk == TK_NOT then
         lexNext(parser.lex)
-        local expr = parseUnaryExpr(parser)
+        expr = parseUnaryExpr(parser)
         return astNode("Unop", {op = "not", expr = expr})
     else if tk == TK_MINUS then
         lexNext(parser.lex)
-        local expr = parseUnaryExpr(parser)
+        expr = parseUnaryExpr(parser)
         return astNode("Unop", {op = "-", expr = expr})
     else if tk == TK_HASH then
         lexNext(parser.lex)
-        local expr = parseUnaryExpr(parser)
+        expr = parseUnaryExpr(parser)
         return astNode("Unop", {op = "#", expr = expr})
     else
         return parseSimpleExpr(parser)
@@ -795,20 +823,20 @@ function isRightAssoc(tk)
 end
 
 function parseBinopExpr(parser, minPrec)
-    local lhs = parseUnaryExpr(parser)
+    lhs = parseUnaryExpr(parser)
     while true do
-        local tk = parser.lex.token
-        local prec = getBinopPrecedence(tk)
+        tk = parser.lex.token
+        prec = getBinopPrecedence(tk)
         if prec < minPrec then break end
-        local op = tk
+        op = tk
         lexNext(parser.lex)
-        local nextMinPrec
+        nextMinPrec = nil
         if isRightAssoc(op) then
             nextMinPrec = prec
         else
             nextMinPrec = prec + 1
         end
-        local rhs = parseBinopExpr(parser, nextMinPrec)
+        rhs = parseBinopExpr(parser, nextMinPrec)
         lhs = astNode("Binop", {op = op, left = lhs, right = rhs})
     end
     return lhs
@@ -820,8 +848,8 @@ end
 
 function parseFuncBody(parser)
     parserExpect(parser, TK_LPAREN)
-    local params = {}
-    local hasVarargs = false
+    params = {}
+    hasVarargs = false
     if not parserCheck(parser, TK_RPAREN) then
         if parserCheck(parser, TK_DOTS) then
             hasVarargs = true
@@ -840,13 +868,13 @@ function parseFuncBody(parser)
         end
     end
     parserExpect(parser, TK_RPAREN)
-    local body = parseBlock(parser)
+    body = parseBlock(parser)
     parserExpect(parser, TK_END)
     return astNode("Function", {params = params, varargs = hasVarargs, body = body})
 end
 
 function parseExprList(parser)
-    local list = {}
+    list = {}
     tinsert(list, parseExpr(parser))
     while parserCheck(parser, TK_COMMA) do
         lexNext(parser.lex)
@@ -856,7 +884,7 @@ function parseExprList(parser)
 end
 
 function parseNameList(parser)
-    local list = {}
+    list = {}
     tinsert(list, parserExpect(parser, TK_NAME))
     while parserCheck(parser, TK_COMMA) do
         lexNext(parser.lex)
@@ -866,7 +894,7 @@ function parseNameList(parser)
 end
 
 function parseLvalueList(parser)
-    local list = {}
+    list = {}
     tinsert(list, parseSuffixExpr(parser))
     while parserCheck(parser, TK_COMMA) do
         lexNext(parser.lex)
@@ -876,18 +904,18 @@ function parseLvalueList(parser)
 end
 
 parseStat = function(parser)
-    local tk = parser.lex.token
+    tk = parser.lex.token
 
     if tk == TK_LOCAL then
         lexNext(parser.lex)
         if parserCheck(parser, TK_FUNCTION) then
             lexNext(parser.lex)
-            local name = parserExpect(parser, TK_NAME)
-            local func = parseFuncBody(parser)
+            name = parserExpect(parser, TK_NAME)
+            func = parseFuncBody(parser)
             return astNode("LocalFunc", {name = name, func = func})
         else
-            local names = parseNameList(parser)
-            local values = nil
+            names = parseNameList(parser)
+            values = nil
             if parserMatch(parser, TK_ASSIGN) then
                 values = parseExprList(parser)
             end
@@ -896,9 +924,9 @@ parseStat = function(parser)
     else if tk == TK_FUNCTION then
         lexNext(parser.lex)
         -- function name or function t.name or function t:name
-        local name = parserExpect(parser, TK_NAME)
-        local indexChain = {name}
-        local isMethod = false
+        name = parserExpect(parser, TK_NAME)
+        indexChain = {name}
+        isMethod = false
         while parserCheck(parser, TK_DOT) do
             lexNext(parser.lex)
             tinsert(indexChain, parserExpect(parser, TK_NAME))
@@ -908,14 +936,14 @@ parseStat = function(parser)
             tinsert(indexChain, parserExpect(parser, TK_NAME))
             isMethod = true
         end
-        local func = parseFuncBody(parser)
+        func = parseFuncBody(parser)
         return astNode("FuncDef", {names = indexChain, isMethod = isMethod, func = func})
     else if tk == TK_IF then
         lexNext(parser.lex)
-        local clauses = {}
-        local cond = parseExpr(parser)
+        clauses = {}
+        cond = parseExpr(parser)
         parserExpect(parser, TK_THEN)
-        local body = parseBlock(parser)
+        body = parseBlock(parser)
         tinsert(clauses, {cond = cond, body = body})
         while parserCheck(parser, TK_ELSEIF) do
             lexNext(parser.lex)
@@ -924,7 +952,7 @@ parseStat = function(parser)
             body = parseBlock(parser)
             tinsert(clauses, {cond = cond, body = body})
         end
-        local elseBody = nil
+        elseBody = nil
         if parserMatch(parser, TK_ELSE) then
             elseBody = parseBlock(parser)
         end
@@ -932,56 +960,56 @@ parseStat = function(parser)
         return astNode("If", {clauses = clauses, elseBody = elseBody})
     else if tk == TK_WHILE then
         lexNext(parser.lex)
-        local cond = parseExpr(parser)
+        cond = parseExpr(parser)
         parserExpect(parser, TK_DO)
-        local body = parseBlock(parser)
+        body = parseBlock(parser)
         parserExpect(parser, TK_END)
         return astNode("While", {cond = cond, body = body})
     else if tk == TK_REPEAT then
         lexNext(parser.lex)
-        local body = parseBlock(parser)
+        body = parseBlock(parser)
         parserExpect(parser, TK_UNTIL)
-        local cond = parseExpr(parser)
+        cond = parseExpr(parser)
         return astNode("Repeat", {body = body, cond = cond})
     else if tk == TK_FOR then
         lexNext(parser.lex)
-        local firstName = parserExpect(parser, TK_NAME)
+        firstName = parserExpect(parser, TK_NAME)
         if parserCheck(parser, TK_ASSIGN) then
             -- numeric for
             lexNext(parser.lex)
-            local start = parseExpr(parser)
+            start = parseExpr(parser)
             parserExpect(parser, TK_COMMA)
-            local limit = parseExpr(parser)
-            local step = nil
+            limit = parseExpr(parser)
+            step = nil
             if parserMatch(parser, TK_COMMA) then
                 step = parseExpr(parser)
             end
             parserExpect(parser, TK_DO)
-            local body = parseBlock(parser)
+            body = parseBlock(parser)
             parserExpect(parser, TK_END)
             return astNode("NumFor", {var = firstName, start = start, limit = limit, step = step, body = body})
         else
             -- generic for
-            local names = {firstName}
+            names = {firstName}
             while parserCheck(parser, TK_COMMA) do
                 lexNext(parser.lex)
                 tinsert(names, parserExpect(parser, TK_NAME))
             end
             parserExpect(parser, TK_IN)
-            local iterExprs = parseExprList(parser)
+            iterExprs = parseExprList(parser)
             parserExpect(parser, TK_DO)
-            local body = parseBlock(parser)
+            body = parseBlock(parser)
             parserExpect(parser, TK_END)
             return astNode("GenFor", {names = names, iters = iterExprs, body = body})
         end
     else if tk == TK_DO then
         lexNext(parser.lex)
-        local body = parseBlock(parser)
+        body = parseBlock(parser)
         parserExpect(parser, TK_END)
         return astNode("Do", {body = body})
     else if tk == TK_RETURN then
         lexNext(parser.lex)
-        local values = {}
+        values = {}
         if not parserCheck(parser, TK_END) and not parserCheck(parser, TK_ELSE) and not parserCheck(parser, TK_ELSEIF) and not parserCheck(parser, TK_UNTIL) and not parserCheck(parser, TK_EOF) and not parserCheck(parser, TK_SEMI) then
             values = parseExprList(parser)
         end
@@ -995,10 +1023,10 @@ parseStat = function(parser)
         return astNode("Continue", {})
     else
         -- expression statement (assignment or function call)
-        local suffixes = parseLvalueList(parser)
+        suffixes = parseLvalueList(parser)
         if parserCheck(parser, TK_ASSIGN) then
             lexNext(parser.lex)
-            local values = parseExprList(parser)
+            values = parseExprList(parser)
             return astNode("Assign", {targets = suffixes, values = values})
         else
             -- must be a function call
@@ -1016,9 +1044,9 @@ function isBlockEnd(tk)
 end
 
 parseBlock = function(parser)
-    local stmts = {}
+    stmts = {}
     while not isBlockEnd(parser.lex.token) do
-        local stmt = parseStat(parser)
+        stmt = parseStat(parser)
         tinsert(stmts, stmt)
         parserMatch(parser, TK_SEMI)
     end
@@ -1026,9 +1054,9 @@ parseBlock = function(parser)
 end
 
 function parseProgram(source)
-    local parser = newParser(source)
-    local block = parseBlock(parser)
-    if parser.lex.token ~= TK_EOF then
+    parser = newParser(source)
+    block = parseBlock(parser)
+    if parser.lex.token != TK_EOF then
         parserError(parser, "expected EOF")
     end
     return block
@@ -1048,17 +1076,17 @@ end
 
 -- Environment
 function newEnv(parent)
-    local env = {}
+    env = {}
     env.vars = {}
     env.parent = parent
     return env
 end
 
 function envGet(env, name)
-    local e = env
+    e = env
     while e do
-        local v = e.vars[name]
-        if v ~= nil then
+        v = e.vars[name]
+        if v != nil then
             return v[1] -- stored as {value} to allow nil distinction
         end
         e = e.parent
@@ -1067,9 +1095,9 @@ function envGet(env, name)
 end
 
 function envSet(env, name, value)
-    local e = env
+    e = env
     while e do
-        if e.vars[name] ~= nil then
+        if e.vars[name] != nil then
             e.vars[name] = {value}
             return true
         end
@@ -1084,7 +1112,7 @@ end
 
 -- Closure
 function newClosure(node, env, globals)
-    local cl = {}
+    cl = {}
     cl.node = node
     cl.env = env
     cl.globals = globals
@@ -1093,7 +1121,7 @@ end
 
 -- Interpreter state
 function newInterp()
-    local interp = {}
+    interp = {}
     interp.globals = {}
     interp.output = {}
     interp.callDepth = 0
@@ -1103,9 +1131,9 @@ end
 -- Get metafield
 function getMetafield(interp, val, field)
     if type(val) == "table" then
-        local mt = interp.metatables[val]
+        mt = interp.metatables[val]
         if mt then
-            local handler = rawget(mt, field)
+            handler = rawget(mt, field)
             return handler
         end
     end
@@ -1114,7 +1142,7 @@ end
 
 -- Arithmetic metamethod helper
 function arith(interp, op, a, b)
-    local metafield
+    metafield = nil
     if op == "+" then metafield = "__add"
     else if op == "-" then metafield = "__sub"
     else if op == "*" then metafield = "__mul"
@@ -1123,9 +1151,9 @@ function arith(interp, op, a, b)
     else if op == "%" then metafield = "__mod"
     else if op == "^" then metafield = "__pow"
     end
-    local handler = getMetafield(interp, a, metafield) or getMetafield(interp, b, metafield)
+    handler = getMetafield(interp, a, metafield) or getMetafield(interp, b, metafield)
     if handler then
-        local results = callFunction(interp, handler, {a, b})
+        results = callFunction(interp, handler, {a, b})
         if results and #results > 0 then return results[1] end
         return nil
     end
@@ -1134,16 +1162,16 @@ end
 
 -- Table indexing with __index metamethod
 function tableIndex(interp, tbl, key)
-    local val = rawget(tbl, key)
-    if val ~= nil then return val end
-    local mt = interp.metatables[tbl]
+    val = rawget(tbl, key)
+    if val != nil then return val end
+    mt = interp.metatables[tbl]
     if mt then
-        local idx = rawget(mt, "__index")
-        if idx ~= nil then
+        idx = rawget(mt, "__index")
+        if idx != nil then
             if type(idx) == "table" then
                 return tableIndex(interp, idx, key)
             else if type(idx) == "function" or (type(idx) == "table" and idx._isClosure) then
-                local results = callFunction(interp, idx, {tbl, key})
+                results = callFunction(interp, idx, {tbl, key})
                 if results and #results > 0 then return results[1] end
                 return nil
             end
@@ -1154,15 +1182,15 @@ end
 
 -- Table newindex with __newindex metamethod
 function tableNewIndex(interp, tbl, key, value)
-    local existing = rawget(tbl, key)
-    if existing ~= nil then
+    existing = rawget(tbl, key)
+    if existing != nil then
         rawset(tbl, key, value)
         return
     end
-    local mt = interp.metatables[tbl]
+    mt = interp.metatables[tbl]
     if mt then
-        local ni = rawget(mt, "__newindex")
-        if ni ~= nil then
+        ni = rawget(mt, "__newindex")
+        if ni != nil then
             if type(ni) == "function" or (type(ni) == "table" and ni._isClosure) then
                 callFunction(interp, ni, {tbl, key, value})
                 return
@@ -1185,11 +1213,11 @@ function callFunction(interp, func, args)
     end
     -- try __call metamethod
     if type(func) == "table" then
-        local mt = interp.metatables[func]
+        mt = interp.metatables[func]
         if mt then
-            local callMeta = rawget(mt, "__call")
+            callMeta = rawget(mt, "__call")
             if callMeta then
-                local newArgs = {func}
+                newArgs = {func}
                 if args then
                     for i = 1, #args do
                         newArgs[#newArgs + 1] = args[i]
@@ -1208,18 +1236,18 @@ function callClosure(interp, closure, args)
         interp.callDepth = interp.callDepth - 1
         error("stack overflow")
     end
-    local funcNode = closure.node
-    local localEnv = newEnv(closure.env)
+    funcNode = closure.node
+    localEnv = newEnv(closure.env)
     -- Bind parameters
-    local paramCount = #funcNode.params
+    paramCount = #funcNode.params
     for i = 1, paramCount do
-        local argVal = nil
+        argVal = nil
         if args and i <= #args then argVal = args[i] end
         envDefine(localEnv, funcNode.params[i], argVal)
     end
     -- Bind varargs
     if funcNode.varargs then
-        local varargsList = {}
+        varargsList = {}
         if args then
             for i = paramCount + 1, #args do
                 varargsList[#varargsList + 1] = args[i]
@@ -1227,7 +1255,7 @@ function callClosure(interp, closure, args)
         end
         envDefine(localEnv, "...", varargsList)
     end
-    local result = execBlock(interp, funcNode.body, localEnv)
+    result = execBlock(interp, funcNode.body, localEnv)
     interp.callDepth = interp.callDepth - 1
     if result and result.type == "return" then
         return result.values
@@ -1237,14 +1265,14 @@ end
 
 -- Evaluate expression - returns single value
 function evalExpr(interp, node, env)
-    local results = evalExprMulti(interp, node, env)
+    results = evalExprMulti(interp, node, env)
     if results and #results > 0 then return results[1] end
     return nil
 end
 
 -- Evaluate expression - returns multiple values (only for last position)
 function evalExprMulti(interp, node, env)
-    local tag = node.tag
+    tag = node.tag
     if tag == "Number" then
         return {node.value}
     else if tag == "String" then
@@ -1254,25 +1282,25 @@ function evalExprMulti(interp, node, env)
     else if tag == "Bool" then
         return {node.value}
     else if tag == "Dots" then
-        local varargs = envGet(env, "...")
+        varargs = envGet(env, "...")
         if varargs then return varargs end
         return {}
     else if tag == "Var" then
-        local val = envGet(env, node.name)
+        val = envGet(env, node.name)
         if val == nil then
             val = interp.globals[node.name]
         end
         return {val}
     else if tag == "Paren" then
-        local val = evalExpr(interp, node.expr, env)
+        val = evalExpr(interp, node.expr, env)
         return {val}
     else if tag == "Unop" then
         return {evalUnop(interp, node, env)}
     else if tag == "Binop" then
         return {evalBinop(interp, node, env)}
     else if tag == "Index" then
-        local obj = evalExpr(interp, node.obj, env)
-        local key = evalExpr(interp, node.key, env)
+        obj = evalExpr(interp, node.obj, env)
+        key = evalExpr(interp, node.key, env)
         if type(obj) == "table" then
             return {tableIndex(interp, obj, key)}
         end
@@ -1284,7 +1312,7 @@ function evalExprMulti(interp, node, env)
     else if tag == "Table" then
         return {evalTableConstructor(interp, node, env)}
     else if tag == "Function" then
-        local cl = newClosure(node, env, interp.globals)
+        cl = newClosure(node, env, interp.globals)
         cl._isClosure = true
         return {cl}
     else
@@ -1293,13 +1321,13 @@ function evalExprMulti(interp, node, env)
 end
 
 function evalUnop(interp, node, env)
-    local val = evalExpr(interp, node.expr, env)
-    local op = node.op
+    val = evalExpr(interp, node.expr, env)
+    op = node.op
     if op == "-" then
         if type(val) == "number" then return -val end
-        local handler = getMetafield(interp, val, "__unm")
+        handler = getMetafield(interp, val, "__unm")
         if handler then
-            local r = callFunction(interp, handler, {val})
+            r = callFunction(interp, handler, {val})
             if r and #r > 0 then return r[1] end
             return nil
         end
@@ -1307,9 +1335,9 @@ function evalUnop(interp, node, env)
     else if op == "#" then
         if type(val) == "string" then return slen(val) end
         if type(val) == "table" then
-            local handler = getMetafield(interp, val, "__len")
+            handler = getMetafield(interp, val, "__len")
             if handler then
-                local r = callFunction(interp, handler, {val})
+                r = callFunction(interp, handler, {val})
                 if r and #r > 0 then return r[1] end
                 return nil
             end
@@ -1322,21 +1350,21 @@ function evalUnop(interp, node, env)
 end
 
 function evalBinop(interp, node, env)
-    local op = node.op
+    op = node.op
 
     -- Short-circuit operators
     if op == TK_AND then
-        local left = evalExpr(interp, node.left, env)
+        left = evalExpr(interp, node.left, env)
         if not left then return left end
         return evalExpr(interp, node.right, env)
     else if op == TK_OR then
-        local left = evalExpr(interp, node.left, env)
+        left = evalExpr(interp, node.left, env)
         if left then return left end
         return evalExpr(interp, node.right, env)
     end
 
-    local left = evalExpr(interp, node.left, env)
-    local right = evalExpr(interp, node.right, env)
+    left = evalExpr(interp, node.left, env)
+    right = evalExpr(interp, node.right, env)
 
     if op == TK_PLUS then
         if type(left) == "number" and type(right) == "number" then return left + right end
@@ -1363,29 +1391,29 @@ function evalBinop(interp, node, env)
         if (type(left) == "string" or type(left) == "number") and (type(right) == "string" or type(right) == "number") then
             return tostring(left) .. tostring(right)
         end
-        local handler = getMetafield(interp, left, "__concat") or getMetafield(interp, right, "__concat")
+        handler = getMetafield(interp, left, "__concat") or getMetafield(interp, right, "__concat")
         if handler then
-            local r = callFunction(interp, handler, {left, right})
+            r = callFunction(interp, handler, {left, right})
             if r and #r > 0 then return r[1] end
             return nil
         end
         error("attempt to concatenate a " .. type(left) .. " value")
     else if op == TK_EQ then
         if left == right then return true end
-        if type(left) ~= type(right) then return false end
-        local handler = getMetafield(interp, left, "__eq")
+        if type(left) != type(right) then return false end
+        handler = getMetafield(interp, left, "__eq")
         if handler then
-            local r = callFunction(interp, handler, {left, right})
+            r = callFunction(interp, handler, {left, right})
             if r and #r > 0 then return r[1] end
             return false
         end
         return false
     else if op == TK_NEQ then
         if left == right then return false end
-        if type(left) ~= type(right) then return true end
-        local handler = getMetafield(interp, left, "__eq")
+        if type(left) != type(right) then return true end
+        handler = getMetafield(interp, left, "__eq")
         if handler then
-            local r = callFunction(interp, handler, {left, right})
+            r = callFunction(interp, handler, {left, right})
             if r and #r > 0 then return not r[1] end
             return true
         end
@@ -1393,9 +1421,9 @@ function evalBinop(interp, node, env)
     else if op == TK_LT then
         if type(left) == "number" and type(right) == "number" then return left < right end
         if type(left) == "string" and type(right) == "string" then return left < right end
-        local handler = getMetafield(interp, left, "__lt") or getMetafield(interp, right, "__lt")
+        handler = getMetafield(interp, left, "__lt") or getMetafield(interp, right, "__lt")
         if handler then
-            local r = callFunction(interp, handler, {left, right})
+            r = callFunction(interp, handler, {left, right})
             if r and #r > 0 then return r[1] end
             return false
         end
@@ -1403,9 +1431,9 @@ function evalBinop(interp, node, env)
     else if op == TK_GT then
         if type(left) == "number" and type(right) == "number" then return left > right end
         if type(left) == "string" and type(right) == "string" then return left > right end
-        local handler = getMetafield(interp, right, "__lt") or getMetafield(interp, left, "__lt")
+        handler = getMetafield(interp, right, "__lt") or getMetafield(interp, left, "__lt")
         if handler then
-            local r = callFunction(interp, handler, {right, left})
+            r = callFunction(interp, handler, {right, left})
             if r and #r > 0 then return r[1] end
             return false
         end
@@ -1413,9 +1441,9 @@ function evalBinop(interp, node, env)
     else if op == TK_LE then
         if type(left) == "number" and type(right) == "number" then return left <= right end
         if type(left) == "string" and type(right) == "string" then return left <= right end
-        local handler = getMetafield(interp, left, "__le") or getMetafield(interp, right, "__le")
+        handler = getMetafield(interp, left, "__le") or getMetafield(interp, right, "__le")
         if handler then
-            local r = callFunction(interp, handler, {left, right})
+            r = callFunction(interp, handler, {left, right})
             if r and #r > 0 then return r[1] end
             return false
         end
@@ -1423,9 +1451,9 @@ function evalBinop(interp, node, env)
     else if op == TK_GE then
         if type(left) == "number" and type(right) == "number" then return left >= right end
         if type(left) == "string" and type(right) == "string" then return left >= right end
-        local handler = getMetafield(interp, right, "__le") or getMetafield(interp, left, "__le")
+        handler = getMetafield(interp, right, "__le") or getMetafield(interp, left, "__le")
         if handler then
-            local r = callFunction(interp, handler, {right, left})
+            r = callFunction(interp, handler, {right, left})
             if r and #r > 0 then return r[1] end
             return false
         end
@@ -1435,33 +1463,33 @@ function evalBinop(interp, node, env)
 end
 
 function evalCall(interp, node, env)
-    local func = evalExpr(interp, node.func, env)
-    local args = evalArgList(interp, node.args, env)
+    func = evalExpr(interp, node.func, env)
+    args = evalArgList(interp, node.args, env)
     return callFunction(interp, func, args)
 end
 
 function evalMethodCall(interp, node, env)
-    local obj = evalExpr(interp, node.obj, env)
-    local method
+    obj = evalExpr(interp, node.obj, env)
+    method = nil
     if type(obj) == "table" then
         method = tableIndex(interp, obj, node.method)
     else
         error("attempt to index a " .. type(obj) .. " value")
     end
-    local args = evalArgList(interp, node.args, env)
+    args = evalArgList(interp, node.args, env)
     tinsert(args, 1, obj)
     return callFunction(interp, method, args)
 end
 
 function evalArgList(interp, argNodes, env)
-    local args = {}
+    args = {}
     if not argNodes or #argNodes == 0 then return args end
     -- All args except last: take single value
     for i = 1, #argNodes - 1 do
         args[#args + 1] = evalExpr(interp, argNodes[i], env)
     end
     -- Last arg: expand multiple returns
-    local lastResults = evalExprMulti(interp, argNodes[#argNodes], env)
+    lastResults = evalExprMulti(interp, argNodes[#argNodes], env)
     if lastResults then
         for i = 1, #lastResults do
             args[#args + 1] = lastResults[i]
@@ -1471,30 +1499,30 @@ function evalArgList(interp, argNodes, env)
 end
 
 function evalTableConstructor(interp, node, env)
-    local tbl = {}
-    local arrayIdx = 1
-    local fields = node.fields
+    tbl = {}
+    arrayIdx = 1
+    fields = node.fields
     for i = 1, #fields do
-        local field = fields[i]
+        field = fields[i]
         if field.kind == "bracket" then
-            local key = evalExpr(interp, field.key, env)
-            local val
+            key = evalExpr(interp, field.key, env)
+            val = nil
             if i == #fields then
-                local multi = evalExprMulti(interp, field.value, env)
+                multi = evalExprMulti(interp, field.value, env)
                 val = multi and multi[1] or nil
             else
                 val = evalExpr(interp, field.value, env)
             end
             rawset(tbl, key, val)
         else if field.kind == "name" then
-            local key = field.key.value
-            local val = evalExpr(interp, field.value, env)
+            key = field.key.value
+            val = evalExpr(interp, field.value, env)
             rawset(tbl, key, val)
         else
             -- sequential
             if i == #fields then
                 -- last item: expand multi-return
-                local multi = evalExprMulti(interp, field.value, env)
+                multi = evalExprMulti(interp, field.value, env)
                 if multi then
                     for j = 1, #multi do
                         rawset(tbl, arrayIdx, multi[j])
@@ -1502,7 +1530,7 @@ function evalTableConstructor(interp, node, env)
                     end
                 end
             else
-                local val = evalExpr(interp, field.value, env)
+                val = evalExpr(interp, field.value, env)
                 rawset(tbl, arrayIdx, val)
                 arrayIdx = arrayIdx + 1
             end
@@ -1514,7 +1542,7 @@ end
 -- Execute a block, return a signal or nil
 function execBlock(interp, stmts, env)
     for i = 1, #stmts do
-        local result = execStat(interp, stmts[i], env)
+        result = execStat(interp, stmts[i], env)
         if result then return result end
     end
     return nil
@@ -1522,7 +1550,7 @@ end
 
 -- Execute a statement
 function execStat(interp, node, env)
-    local tag = node.tag
+    tag = node.tag
 
     if tag == "Local" then
         return execLocal(interp, node, env)
@@ -1543,7 +1571,7 @@ function execStat(interp, node, env)
     else if tag == "GenFor" then
         return execGenFor(interp, node, env)
     else if tag == "Do" then
-        local blockEnv = newEnv(env)
+        blockEnv = newEnv(env)
         return execBlock(interp, node.body, blockEnv)
     else if tag == "Return" then
         return execReturn(interp, node, env)
@@ -1560,17 +1588,17 @@ function execStat(interp, node, env)
 end
 
 function execLocal(interp, node, env)
-    local names = node.names
-    local values = node.values
+    names = node.names
+    values = node.values
     if values then
-        local vals = {}
+        vals = {}
         -- Evaluate all except last for single value
         for i = 1, #values - 1 do
             vals[#vals + 1] = evalExpr(interp, values[i], env)
         end
         -- Last value: expand multi-return
         if #values > 0 then
-            local lastResults = evalExprMulti(interp, values[#values], env)
+            lastResults = evalExprMulti(interp, values[#values], env)
             if lastResults then
                 for i = 1, #lastResults do
                     vals[#vals + 1] = lastResults[i]
@@ -1591,23 +1619,23 @@ end
 function execLocalFunc(interp, node, env)
     -- Define name first (for recursion)
     envDefine(env, node.name, nil)
-    local cl = newClosure(node.func, env, interp.globals)
+    cl = newClosure(node.func, env, interp.globals)
     cl._isClosure = true
     envDefine(env, node.name, cl)
     return nil
 end
 
 function execAssign(interp, node, env)
-    local targets = node.targets
-    local values = node.values
-    local vals = {}
+    targets = node.targets
+    values = node.values
+    vals = {}
     -- Evaluate all except last for single value
     for i = 1, #values - 1 do
         vals[#vals + 1] = evalExpr(interp, values[i], env)
     end
     -- Last value: expand multi-return
     if #values > 0 then
-        local lastResults = evalExprMulti(interp, values[#values], env)
+        lastResults = evalExprMulti(interp, values[#values], env)
         if lastResults then
             for i = 1, #lastResults do
                 vals[#vals + 1] = lastResults[i]
@@ -1615,15 +1643,15 @@ function execAssign(interp, node, env)
         end
     end
     for i = 1, #targets do
-        local target = targets[i]
-        local val = vals[i]
+        target = targets[i]
+        val = vals[i]
         if target.tag == "Var" then
             if not envSet(env, target.name, val) then
                 interp.globals[target.name] = val
             end
         else if target.tag == "Index" then
-            local obj = evalExpr(interp, target.obj, env)
-            local key = evalExpr(interp, target.key, env)
+            obj = evalExpr(interp, target.obj, env)
+            key = evalExpr(interp, target.key, env)
             if type(obj) == "table" then
                 tableNewIndex(interp, obj, key, val)
             else
@@ -1637,19 +1665,19 @@ function execAssign(interp, node, env)
 end
 
 function execFuncDef(interp, node, env)
-    local funcNode = node.func
+    funcNode = node.func
     if node.isMethod then
         -- Add implicit self parameter
-        local newParams = {"self"}
+        newParams = {"self"}
         for i = 1, #funcNode.params do
             newParams[#newParams + 1] = funcNode.params[i]
         end
         funcNode = {tag = funcNode.tag, params = newParams, varargs = funcNode.varargs, body = funcNode.body}
     end
-    local cl = newClosure(funcNode, env, interp.globals)
+    cl = newClosure(funcNode, env, interp.globals)
     cl._isClosure = true
 
-    local names = node.names
+    names = node.names
     if #names == 1 then
         -- Simple global function
         if not envSet(env, names[1], cl) then
@@ -1657,8 +1685,8 @@ function execFuncDef(interp, node, env)
         end
     else
         -- Dot chain: function a.b.c()
-        local obj
-        local v = envGet(env, names[1])
+        obj = nil
+        v = envGet(env, names[1])
         if v == nil then v = interp.globals[names[1]] end
         obj = v
         for i = 2, #names - 1 do
@@ -1671,15 +1699,15 @@ end
 
 function execIf(interp, node, env)
     for i = 1, #node.clauses do
-        local clause = node.clauses[i]
-        local cond = evalExpr(interp, clause.cond, env)
-        if cond and cond ~= false then
-            local blockEnv = newEnv(env)
+        clause = node.clauses[i]
+        cond = evalExpr(interp, clause.cond, env)
+        if cond and cond != false then
+            blockEnv = newEnv(env)
             return execBlock(interp, clause.body, blockEnv)
         end
     end
     if node.elseBody then
-        local blockEnv = newEnv(env)
+        blockEnv = newEnv(env)
         return execBlock(interp, node.elseBody, blockEnv)
     end
     return nil
@@ -1687,10 +1715,10 @@ end
 
 function execWhile(interp, node, env)
     while true do
-        local cond = evalExpr(interp, node.cond, env)
+        cond = evalExpr(interp, node.cond, env)
         if not cond or cond == false then break end
-        local blockEnv = newEnv(env)
-        local result = execBlock(interp, node.body, blockEnv)
+        blockEnv = newEnv(env)
+        result = execBlock(interp, node.body, blockEnv)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
@@ -1705,45 +1733,45 @@ end
 
 function execRepeat(interp, node, env)
     while true do
-        local blockEnv = newEnv(env)
-        local result = execBlock(interp, node.body, blockEnv)
+        blockEnv = newEnv(env)
+        result = execBlock(interp, node.body, blockEnv)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
                 -- evaluate condition before continuing
-                local cond = evalExpr(interp, node.cond, blockEnv)
-                if cond and cond ~= false then break end
+                cond = evalExpr(interp, node.cond, blockEnv)
+                if cond and cond != false then break end
             else
                 return result
             end
         else
-            local cond = evalExpr(interp, node.cond, blockEnv)
-            if cond and cond ~= false then break end
+            cond = evalExpr(interp, node.cond, blockEnv)
+            if cond and cond != false then break end
         end
     end
     return nil
 end
 
 function execNumFor(interp, node, env)
-    local startVal = evalExpr(interp, node.start, env)
-    local limitVal = evalExpr(interp, node.limit, env)
-    local stepVal = 1
+    startVal = evalExpr(interp, node.start, env)
+    limitVal = evalExpr(interp, node.limit, env)
+    stepVal = 1
     if node.step then stepVal = evalExpr(interp, node.step, env) end
-    if type(startVal) ~= "number" or type(limitVal) ~= "number" or type(stepVal) ~= "number" then
+    if type(startVal) != "number" or type(limitVal) != "number" or type(stepVal) != "number" then
         error("'for' limit must be a number")
     end
     if stepVal == 0 then error("'for' step is zero") end
 
-    local i = startVal
+    i = startVal
     while true do
         if stepVal > 0 then
             if i > limitVal then break end
         else
             if i < limitVal then break end
         end
-        local blockEnv = newEnv(env)
+        blockEnv = newEnv(env)
         envDefine(blockEnv, node.var, i)
-        local result = execBlock(interp, node.body, blockEnv)
+        result = execBlock(interp, node.body, blockEnv)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
@@ -1758,20 +1786,20 @@ function execNumFor(interp, node, env)
 end
 
 function execGenFor(interp, node, env)
-    local iterExprs = evalArgList(interp, node.iters, env)
-    local iterFunc = iterExprs[1]
-    local state = iterExprs[2]
-    local control = iterExprs[3]
+    iterExprs = evalArgList(interp, node.iters, env)
+    iterFunc = iterExprs[1]
+    state = iterExprs[2]
+    control = iterExprs[3]
 
     while true do
-        local results = callFunction(interp, iterFunc, {state, control})
+        results = callFunction(interp, iterFunc, {state, control})
         if not results or results[1] == nil then break end
         control = results[1]
-        local blockEnv = newEnv(env)
+        blockEnv = newEnv(env)
         for i = 1, #node.names do
             envDefine(blockEnv, node.names[i], results[i])
         end
-        local result = execBlock(interp, node.body, blockEnv)
+        result = execBlock(interp, node.body, blockEnv)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
@@ -1785,16 +1813,16 @@ function execGenFor(interp, node, env)
 end
 
 function execReturn(interp, node, env)
-    local values = node.values
+    values = node.values
     if not values or #values == 0 then
         return newSignalReturn({})
     end
-    local vals = {}
+    vals = {}
     for i = 1, #values - 1 do
         vals[#vals + 1] = evalExpr(interp, values[i], env)
     end
     -- Last value: expand multi-return
-    local lastResults = evalExprMulti(interp, values[#values], env)
+    lastResults = evalExprMulti(interp, values[#values], env)
     if lastResults then
         for i = 1, #lastResults do
             vals[#vals + 1] = lastResults[i]
@@ -1809,12 +1837,12 @@ end
 
 function setupStdlib(interp)
     interp.metatables = {} -- table -> metatable mapping
-    local G = interp.globals
+    G = interp.globals
 
     G["print"] = function(...)
-        local args = {...}
-        local n = select("#", ...)
-        local parts = {}
+        args = {...}
+        n = select("#", ...)
+        parts = {}
         for i = 1, n do
             parts[i] = interpToString(interp, args[i])
         end
@@ -1851,10 +1879,10 @@ function setupStdlib(interp)
     end
 
     G["select"] = function(n, ...)
-        local args = {...}
+        args = {...}
         if n == "#" then return select("#", ...) end
-        if type(n) ~= "number" then error("bad argument #1 to 'select'") end
-        local results = {}
+        if type(n) != "number" then error("bad argument #1 to 'select'") end
+        results = {}
         for i = n, select("#", ...) do
             results[#results + 1] = args[i]
         end
@@ -1881,17 +1909,17 @@ function setupStdlib(interp)
     end
 
     G["setmetatable"] = function(t, mt)
-        if type(t) ~= "table" then error("bad argument #1 to 'setmetatable' (table expected)") end
+        if type(t) != "table" then error("bad argument #1 to 'setmetatable' (table expected)") end
         interp.metatables[t] = mt
         return t
     end
 
     G["getmetatable"] = function(t)
         if type(t) == "table" then
-            local mt = interp.metatables[t]
+            mt = interp.metatables[t]
             if mt then
-                local mtmt = rawget(mt, "__metatable")
-                if mtmt ~= nil then return mtmt end
+                mtmt = rawget(mt, "__metatable")
+                if mtmt != nil then return mtmt end
                 return mt
             end
         end
@@ -1899,13 +1927,13 @@ function setupStdlib(interp)
     end
 
     G["pcall"] = function(f, ...)
-        local args = {...}
-        local ok, result = pcall(function()
+        args = {...}
+        ok, result = pcall(function()
             return callFunction(interp, f, args)
         end)
         if ok then
             if result and #result > 0 then
-                local ret = {true}
+                ret = {true}
                 for i = 1, #result do ret[#ret + 1] = result[i] end
                 return unpack_(ret)
             end
@@ -1916,11 +1944,11 @@ function setupStdlib(interp)
     end
 
     G["ipairs"] = function(t)
-        local i = 0
+        i = 0
         return function(tbl, idx)
             i = i + 1
-            local v = rawget(t, i)
-            if v ~= nil then
+            v = rawget(t, i)
+            if v != nil then
                 return i, v
             end
             return nil
@@ -1937,14 +1965,14 @@ function setupStdlib(interp)
     end
 
     -- String library
-    local strLib = {}
+    strLib = {}
     strLib.len = function(s) return slen(s) end
     strLib.sub = function(s, i, j) return ssub(s, i, j) end
     strLib.byte = function(s, i, j) return sbyte(s, i or 1, j or (i or 1)) end
     strLib.char = function(...) return schar(...) end
     strLib.rep = function(s, n) return srep(s, n) end
     strLib.reverse = function(s)
-        local t = {}
+        t = {}
         for i = slen(s), 1, -1 do t[#t + 1] = ssub(s, i, i) end
         return tconcat(t)
     end
@@ -1958,23 +1986,23 @@ function setupStdlib(interp)
     end
     strLib.gsub = function(s, pattern, repl, n)
         -- Simple plain-text replacement
-        local result = {}
-        local pos = 1
-        local count = 0
-        local patLen = slen(pattern)
+        result = {}
+        pos = 1
+        count = 0
+        patLen = slen(pattern)
         while pos <= slen(s) do
             if n and count >= n then
                 tinsert(result, ssub(s, pos))
                 pos = slen(s) + 1
                 break
             end
-            local found = sfind(s, pattern, pos, true)
+            found = sfind(s, pattern, pos, true)
             if found then
                 tinsert(result, ssub(s, pos, found - 1))
                 if type(repl) == "string" then
                     tinsert(result, repl)
                 else if type(repl) == "function" then
-                    local r = repl(ssub(s, found, found + patLen - 1))
+                    r = repl(ssub(s, found, found + patLen - 1))
                     tinsert(result, r or "")
                 else
                     tinsert(result, tostring(repl))
@@ -1991,10 +2019,10 @@ function setupStdlib(interp)
     G["string"] = strLib
 
     -- Table library
-    local tblLib = {}
+    tblLib = {}
     tblLib.insert = function(t, ...)
-        local args = {...}
-        local n = select("#", ...)
+        args = {...}
+        n = select("#", ...)
         if n == 1 then
             tinsert(t, args[1])
         else if n == 2 then
@@ -2007,7 +2035,7 @@ function setupStdlib(interp)
     tblLib.sort = function(t, comp)
         if comp then
             tsort(t, function(a, b)
-                local r = callFunction(interp, comp, {a, b})
+                r = callFunction(interp, comp, {a, b})
                 if r and #r > 0 then return r[1] end
                 return false
             end)
@@ -2030,7 +2058,7 @@ function setupStdlib(interp)
     G["table"] = tblLib
 
     -- Math library
-    local mathLib = {}
+    mathLib = {}
     mathLib.floor = floor
     mathLib.ceil = mceil
     mathLib.sqrt = msqrt
@@ -2065,9 +2093,9 @@ function interpToString(interp, val)
     if type(val) == "string" then return val end
     if type(val) == "table" then
         if val._isClosure then return "function" end
-        local handler = getMetafield(interp, val, "__tostring")
+        handler = getMetafield(interp, val, "__tostring")
         if handler then
-            local r = callFunction(interp, handler, {val})
+            r = callFunction(interp, handler, {val})
             if r and #r > 0 then return tostring(r[1]) end
             return ""
         end
@@ -2082,10 +2110,10 @@ end
 -- ============================================================================
 
 function runProgram(source)
-    local interp = newInterp()
+    interp = newInterp()
     setupStdlib(interp)
-    local ast = parseProgram(source)
-    local env = newEnv(nil)
+    ast = parseProgram(source)
+    env = newEnv(nil)
     execBlock(interp, ast, env)
     return interp.output
 end
@@ -3055,11 +3083,11 @@ EXPECTED_OUTPUTS[11] = {
 -- ============================================================================
 
 function computeChecksum(outputLines)
-    local hash = 5381
+    hash = 5381
     for i = 1, #outputLines do
-        local line = outputLines[i]
+        line = outputLines[i]
         for j = 1, slen(line) do
-            local c = sbyte(line, j)
+            c = sbyte(line, j)
             hash = ((hash * 33) + c) % 4294967296
         end
         hash = ((hash * 33) + 10) % 4294967296 -- newline
@@ -3069,13 +3097,13 @@ end
 
 function verifyOutputs()
     for idx = 1, #TEST_PROGRAMS do
-        local output = runProgram(TEST_PROGRAMS[idx])
-        local expected = EXPECTED_OUTPUTS[idx]
-        if #output ~= #expected then
+        output = runProgram(TEST_PROGRAMS[idx])
+        expected = EXPECTED_OUTPUTS[idx]
+        if #output != #expected then
             error("Test " .. idx .. " output count mismatch: got " .. #output .. " expected " .. #expected)
         end
         for i = 1, #expected do
-            if output[i] ~= expected[i] then
+            if output[i] != expected[i] then
                 error("Test " .. idx .. " line " .. i .. " mismatch: got '" .. tostring(output[i]) .. "' expected '" .. expected[i] .. "'")
             end
         end

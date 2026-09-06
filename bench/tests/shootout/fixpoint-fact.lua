@@ -21,15 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
 
 -- fixed-point operator
-local Z = function (le)
-      local a = function (f)
+Z = function (le)
+      a = function (f)
         return le(function (x) return f(f)(x) end)
       end
       return a(a)
@@ -38,16 +38,16 @@ local Z = function (le)
 
 -- non-recursive factorial
 
-local F = function (f)
+F = function (f)
       return function (n)
                if n == 0 then return 1
                else return n*f(n-1) end
              end
     end
 
-local fat = Z(F)
+fat = Z(F)
 
-local s = 0
+s = 0
 for i = 1, (arg and arg[1]) or 1000 do s = s + fat(i) end
 --print(s)
 

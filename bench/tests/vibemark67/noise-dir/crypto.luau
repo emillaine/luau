@@ -10,7 +10,7 @@
 -- (see noise.luau). Primitives are exposed individually so they can also be
 -- used standalone.
 
-local crypto = {
+crypto = {
 	wordmath = require("./wordmath"),
 	chacha20 = require("./chacha20"),
 	poly1305 = require("./poly1305"),

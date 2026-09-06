@@ -1,14 +1,14 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
-local block = require("./markdown-dir/block")
-local render = require("./markdown-dir/render")
+block = require("./markdown-dir/block")
+render = require("./markdown-dir/render")
 
 function test()
 
 -- Markdown benchmark: parse and render a large embedded document repeatedly
 
-local document = [[
+document = [[
 # Introduction to Computing
 
 This is a **comprehensive** guide to *modern computing*. It covers everything
@@ -216,23 +216,23 @@ or contact us at <support@example.com>.
 &copy; 2024 Computing Guide Authors
 ]]
 
-local ITERATIONS = 100
+ITERATIONS = 100
 
-local totalNodes = 0
-local totalHtmlLen = 0
-local totalHtmlHash = 0
+totalNodes = 0
+totalHtmlLen = 0
+totalHtmlHash = 0
 
-local function hashstr(str: string): number
+function hashstr(str: string): number
     -- 1. Load the string into a high-performance byte buffer
-    local buf = buffer.fromstring(str)
-    local len = buffer.len(buf)
+    buf = buffer.fromstring(str)
+    len = buffer.len(buf)
     
     -- FNV-1a 32-bit offset basis
-    local hash = 2166136261 
+    hash = 2166136261 
     
     -- 2. Traverse buffer indices sequentially (0-indexed)
     for i = 0, len - 1 do
-        local byte = buffer.readu8(buf, i)
+        byte = buffer.readu8(buf, i)
         
         -- CORRECT LUAU WAY: Use bit32 library fastcalls instead of syntax operators
         hash = bit32.bxor(hash, byte)
@@ -244,14 +244,14 @@ local function hashstr(str: string): number
 end
 
 for i = 1, ITERATIONS do
-    local parser = block.createBlockParser(document)
-    local doc = block.parseBlocks(parser)
-    local html = render.render(doc, parser.refDefs)
+    parser = block.createBlockParser(document)
+    doc = block.parseBlocks(parser)
+    html = render.render(doc, parser.refDefs)
     totalHtmlLen += #html
     totalHtmlHash += hashstr(html)
 
-    local function countNodes(node: any): number
-        local count = 1
+    function countNodes(node: any): number
+        count = 1
         if node.children then
             for _, child in node.children do
                 count += countNodes(child)
@@ -265,13 +265,13 @@ end
 print(string.format("Markdown benchmark complete: %d iterations, %d total AST nodes, %d total HTML bytes, %d total HTML hash",
     ITERATIONS, totalNodes, totalHtmlLen, totalHtmlHash))
 
-if totalNodes ~= 16100 then
+if totalNodes != 16100 then
     error("Bad total nodes")
 end
-if totalHtmlLen ~= 683000 then
+if totalHtmlLen != 683000 then
     error("Bad total HTML length")
 end
-if totalHtmlHash ~= 98494973400 then
+if totalHtmlHash != 98494973400 then
     error("Bad total HTML hash")
 end
 

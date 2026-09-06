@@ -105,7 +105,7 @@ private:
     AstStatBlock* parseBlockNoScope();
 
     // stat ::=
-    // varlist `=' explist |
+    // varlist `=' explist (`a = b` declares an implicit local when no in-scope local exists, else reuses it) |
     // functioncall |
     // do block end |
     // while exp [do] block end |
@@ -113,9 +113,8 @@ private:
     // if exp [then] block {else if exp [then] block} [else block] end |
     // for Name `=' exp `,' exp [`,' exp] [do] block end |
     // for namelist in explist [do] block end |
-    // [attributes] function funcname funcbody |
-    // [attributes] local function Name funcbody |
-    // local namelist [`=' explist]
+    // [attributes] function funcname funcbody (bare `function f()` is an implicit-local declaration) |
+    // const namelist [`=' explist]
     // laststat ::= return [explist] | break
     AstStat* parseStat();
 
@@ -151,7 +150,8 @@ private:
     AstExpr* parseFunctionName(bool& hasself, AstName& debugname);
 
     // function funcname funcbody
-    LUAU_FORCEINLINE AstStatFunction* parseFunctionStat(const AstArray<AstAttr*>& attributes, TempVector<CstAttrList*>* cstAttrLists = nullptr);
+    // Bare `function f()` declares-or-reuses a local (like `a = function...`); `function t.k()` stays a field assign.
+    LUAU_FORCEINLINE AstStat* parseFunctionStat(const AstArray<AstAttr*>& attributes, TempVector<CstAttrList*>* cstAttrLists = nullptr);
 
     std::optional<AstAttr::Type> validateAttribute(
         Location loc,
@@ -175,14 +175,14 @@ private:
     // attributes ::= {attribute}
     AstArray<AstAttr*> parseAttributes(TempVector<CstAttrList*>* cstAttrLists = nullptr);
 
-    // attributes local function Name funcbody
     // attributes function funcname funcbody
     // attributes `declare function' Name`(' [parlist] `)' [`:` Type]
     // declare Name '{' Name ':' attributes `(' [parlist] `)' [`:` Type] '}'
     AstStat* parseAttributeStat();
 
-    // local function Name funcbody |
-    // local namelist [`=' explist]
+    // const function Name funcbody |
+    // const namelist [`=' explist]
+    // (`local` keyword removed; this path only serves `const` now)
     AstStat* parseLocal(
         const Location start,
         const Position keywordPosition,
@@ -212,6 +212,12 @@ private:
 
     // varlist `=' explist
     AstStat* parseAssignment(AstExpr* initial);
+
+    // Implicit-local helpers: `a = b` declares a fresh local when no in-scope local exists, else reuses it.
+    // Returns rewritten LHS expr (Global -> Local when declared/reused). Reports errors for const writes or
+    // undeclared compound-assign targets when allowDeclare is false.
+    AstExpr* resolveAssignTarget(AstExpr* expr, bool allowDeclare, bool markExported = false);
+    AstExpr* resolveFunctionNameForAssign(AstExpr* expr, bool allowDeclare);
 
     AstStat* parseExportValue(
         const Location& start,

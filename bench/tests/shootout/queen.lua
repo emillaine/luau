@@ -21,16 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-local N = tonumber((arg and arg[1]) or 8)    -- board size
+N = tonumber((arg and arg[1]) or 8)    -- board size
 
 
 -- check whether position (n,c) is free from attacks
-local function isplaceok (a, n, c)
+function isplaceok (a, n, c)
   for i = 1, n - 1 do   -- for each queen already placed
     if (a[i] == c) or                -- same column?
        (a[i] - i == c - n) or        -- same diagonal?
@@ -43,7 +43,7 @@ end
 
 
 -- print a board
-local function printsolution (a)
+function printsolution (a)
   for i = 1, N do
     for j = 1, N do
       --print(a[i] == j and "X" or "-", " ")
@@ -55,7 +55,7 @@ end
 
 
 -- add to board 'a' all queens from 'n' to 'N'
-local function addqueen (a, n)
+function addqueen (a, n)
   if n > N then    -- all queens have been placed?
     printsolution(a)
   else  -- try to place n-th queen

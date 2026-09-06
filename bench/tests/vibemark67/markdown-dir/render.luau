@@ -1,9 +1,9 @@
 -- HTML rendering from Markdown AST
 
-local ast = require("./ast")
-local inline = require("./inline")
+ast = require("./ast")
+inline = require("./inline")
 
-local function escapeHtml(s: string): string
+function escapeHtml(s: string): string
     s = string.gsub(s, "&", "&amp;")
     s = string.gsub(s, "<", "&lt;")
     s = string.gsub(s, ">", "&gt;")
@@ -11,8 +11,8 @@ local function escapeHtml(s: string): string
     return s
 end
 
-local function renderInlineNodes(nodes: {ast.Node}): string
-    local out = {}
+function renderInlineNodes(nodes: {ast.Node}): string
+    out = {}
     for _, node in nodes do
         if node.type == "text" then
             table.insert(out, escapeHtml(node.content))
@@ -32,7 +32,7 @@ local function renderInlineNodes(nodes: {ast.Node}): string
             table.insert(out, '<a href="')
             table.insert(out, escapeHtml(node.destination))
             table.insert(out, '"')
-            if node.title ~= "" then
+            if node.title != "" then
                 table.insert(out, ' title="')
                 table.insert(out, escapeHtml(node.title))
                 table.insert(out, '"')
@@ -48,7 +48,7 @@ local function renderInlineNodes(nodes: {ast.Node}): string
                 table.insert(out, escapeHtml(node.children[1].content))
             end
             table.insert(out, '"')
-            if node.title ~= "" then
+            if node.title != "" then
                 table.insert(out, ' title="')
                 table.insert(out, escapeHtml(node.title))
                 table.insert(out, '"')
@@ -63,10 +63,10 @@ local function renderInlineNodes(nodes: {ast.Node}): string
     return table.concat(out)
 end
 
-local renderNode: (ast.Node, {[string]: {dest: string, title: string}}) -> string
+renderNode = nil
 
 function renderNode(node: ast.Node, refDefs: {[string]: {dest: string, title: string}}): string
-    local out = {}
+    out = {}
 
     if node.type == "document" then
         for _, child in node.children do
@@ -74,17 +74,17 @@ function renderNode(node: ast.Node, refDefs: {[string]: {dest: string, title: st
         end
     else if node.type == "paragraph" then
         table.insert(out, "<p>")
-        local inlineNodes = inline.parseInlines(node.content, refDefs)
+        inlineNodes = inline.parseInlines(node.content, refDefs)
         table.insert(out, renderInlineNodes(inlineNodes))
         table.insert(out, "</p>\n")
     else if node.type == "heading" then
-        local tag = "h" .. tostring(node.level)
+        tag = "h" .. tostring(node.level)
         table.insert(out, "<" .. tag .. ">")
-        local inlineNodes = inline.parseInlines(node.content, refDefs)
+        inlineNodes = inline.parseInlines(node.content, refDefs)
         table.insert(out, renderInlineNodes(inlineNodes))
         table.insert(out, "</" .. tag .. ">\n")
     else if node.type == "code_block" then
-        if node.info ~= "" then
+        if node.info != "" then
             table.insert(out, '<pre><code class="language-')
             table.insert(out, escapeHtml(node.info))
             table.insert(out, '">')
@@ -106,7 +106,7 @@ function renderNode(node: ast.Node, refDefs: {[string]: {dest: string, title: st
         end
         table.insert(out, "</ul>\n")
     else if node.type == "ordered_list" then
-        if node.start ~= 1 then
+        if node.start != 1 then
             table.insert(out, '<ol start="' .. tostring(node.start) .. '">\n')
         else
             table.insert(out, "<ol>\n")
@@ -119,7 +119,7 @@ function renderNode(node: ast.Node, refDefs: {[string]: {dest: string, title: st
         table.insert(out, "<li>")
         for i, child in node.children do
             if child.type == "paragraph" then
-                local inlineNodes = inline.parseInlines(child.content, refDefs)
+                inlineNodes = inline.parseInlines(child.content, refDefs)
                 table.insert(out, renderInlineNodes(inlineNodes))
             else
                 table.insert(out, renderNode(child, refDefs))
@@ -136,7 +136,7 @@ function renderNode(node: ast.Node, refDefs: {[string]: {dest: string, title: st
     return table.concat(out)
 end
 
-local function render(doc: ast.Node, refDefs: {[string]: {dest: string, title: string}}): string
+function render(doc: ast.Node, refDefs: {[string]: {dest: string, title: string}}): string
     return renderNode(doc, refDefs)
 end
 

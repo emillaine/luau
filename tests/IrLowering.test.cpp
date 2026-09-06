@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorReciprocal")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vecrcp(a: vector)
+function vecrcp(a: vector)
     return 1 / a
 end
 )"),
@@ -331,7 +331,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorComponentRead")
     ensureVectorFloat();
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function compsum(a: vector)
+function compsum(a: vector)
     return a.X + a.Y + a.Z
 end
 )"),
@@ -365,7 +365,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorAdd")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3add(a: vector, b: vector)
+function vec3add(a: vector, b: vector)
     return a + b
 end
 )"),
@@ -395,7 +395,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorMinus")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3minus(a: vector)
+function vec3minus(a: vector)
     return -a
 end
 )"),
@@ -423,7 +423,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorSubMulDiv")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3combo(a: vector, b: vector, c: vector, d: vector)
+function vec3combo(a: vector, b: vector, c: vector, d: vector)
     return a * b - c / d
 end
 )"),
@@ -459,8 +459,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorSubMulDiv2")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3combo(a: vector)
-    local tmp = a * a
+function vec3combo(a: vector)
+    const tmp = a * a
     return (tmp - tmp) / (tmp + tmp)
 end
 )"),
@@ -491,7 +491,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorMulDivMixed")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3combo(a: vector, b: vector, c: vector, d: vector)
+function vec3combo(a: vector, b: vector, c: vector, d: vector)
     return a * 2 + b / 4 + 0.5 * c + 40 / d
 end
 )"),
@@ -535,7 +535,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorLerp")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3lerp(a: vector, b: vector, t: number)
+function vec3lerp(a: vector, b: vector, t: number)
     return vector.lerp(a, b, t)
 end
 )"),
@@ -573,7 +573,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorMinMax")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vecops(a: vector, b: vector)
+function vecops(a: vector, b: vector)
     return vector.min(a, b), vector.max(a, b)
 end
 )"),
@@ -606,7 +606,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorFloorCeilAbs")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vecops(a: vector)
+function vecops(a: vector)
     return vector.abs(a), vector.floor(a), vector.ceil(a)
 end
 )"),
@@ -639,7 +639,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "ExtraMathMemoryOperands")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number, c: number, d: number, e: number)
+function foo(a: number, b: number, c: number, d: number, e: number)
     return math.floor(a) + math.ceil(b) + math.round(c) + math.sqrt(d) + math.abs(e)
 end
 )"),
@@ -677,9 +677,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "DseInitialStackState")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo()
+function foo()
     while {} do
-        local _ = not _,{}
+        _ = not _,{}
         _ = nil
     end
 end
@@ -711,7 +711,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DseInitialStackState2")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a)
+function foo(a)
     math.frexp(a)
     return a
 end
@@ -733,7 +733,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "StringCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return a == "test"
 end
 )"
@@ -760,7 +760,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "StringCompareAnnotated")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: string)
+function foo(a: string)
     return a == "test"
 end
 )"
@@ -791,7 +791,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NilCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return a == nil
 end
 )"
@@ -816,7 +816,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BooleanCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return { a == true, a == false, a != true, a != false }
 end
 )"
@@ -863,7 +863,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return { a == 4.0, a != 3.0 }
 end
 )"
@@ -900,7 +900,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberCompare2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a, b, c)
+function foo(a, b, c)
     return { a == b, a != c }
 end
 )"
@@ -943,7 +943,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberCompare3")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: number, b: number, c: number)
+function foo(a: number, b: number, c: number)
     return { a == b, a != c }
 end
 )"
@@ -988,7 +988,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TypeCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return type(a) == "number"
 end
 )"
@@ -1014,7 +1014,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TypeofCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return typeof(a) == "number"
 end
 )"
@@ -1039,7 +1039,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TypeofCompareCustom")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     return typeof(a) == "User"
 end
 )"
@@ -1067,7 +1067,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TypeCondition")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     if type(a) == "number" then
         return a + b
     end
@@ -1107,7 +1107,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TypeCondition2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a, b)
+function foo(a, b)
     if type(a) == "number" and type(b) == "number" then
         return a + b
     end
@@ -1152,7 +1152,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "AssertTypeGuard")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a)
+function foo(a)
     assert(type(a) == "number")
     return a * 2
 end
@@ -1193,7 +1193,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorConstantTag")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vecrcp(a: vector)
+function vecrcp(a: vector)
     return vector(1, 2, 3) + a
 end
 )"),
@@ -1223,7 +1223,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorNamecall")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function abs(a: vector)
+function abs(a: vector)
     return a:Abs()
 end
 )"),
@@ -1249,7 +1249,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorRandomProp")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: vector)
+function foo(a: vector)
     return a.XX + a.YY + a.ZZ
 end
 )"),
@@ -1292,7 +1292,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCustomAccess")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3magn(a: vector)
+function vec3magn(a: vector)
     return a.Magnitude * 3
 end
 )"),
@@ -1332,7 +1332,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCustomNamecall")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3dot(a: vector, b: vector)
+function vec3dot(a: vector, b: vector)
     return (a:Dot(b))
 end
 )"),
@@ -1375,7 +1375,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCustomNamecall2")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vec3dot(a: vector)
+function vec3dot(a: vector)
     return (a:Dot(vector.create(1, 2, 3)))
 end
 )"),
@@ -1409,7 +1409,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCustomAccessChain")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: vector, b: vector)
+function foo(a: vector, b: vector)
     return a.Unit * b.Magnitude
 end
 )"),
@@ -1466,7 +1466,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCustomNamecallChain")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(n: vector, b: vector, t: vector)
+function foo(n: vector, b: vector, t: vector)
     return n:Cross(t):Dot(b) + 1
 end
 )"),
@@ -1532,7 +1532,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCustomNamecallChain2")
         "\n" + getCodegenAssembly(R"(
 type Vertex = {n: vector, b: vector}
 
-local function foo(v: Vertex, t: vector)
+function foo(v: Vertex, t: vector)
     return v.n:Cross(t):Dot(v.b) + 1
 end
 )"),
@@ -1607,7 +1607,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorLoadFloatPropagation")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(t: vector)
+function foo(t: vector)
     t = t * 2
     return vector.create(t.x, t.y, t.x)
 end
@@ -1640,7 +1640,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorLibraryChain")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: vector, b: vector)
+function foo(a: vector, b: vector)
     return vector.normalize(a) * (vector.magnitude(b) + vector.dot(a, b))
 end
 )"),
@@ -1686,7 +1686,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorIdiv")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(x: vector): vector
+function foo(x: vector): vector
     x *= 1.5
     x -= x // 1
     x -= vector.create(0.5, 0.5, 0.5)
@@ -1725,8 +1725,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorNumberMixed1")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(vectors: {vector}, i)
-    local t = i / 100
+function foo(vectors: {vector}, i)
+    const t = i / 100
     return vectors[i] * (1 - t)
 end
 )",
@@ -1781,7 +1781,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorNumberMixed2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(vectors: {vector}, i: string, t: {})
+function foo(vectors: {vector}, i: string, t: {})
     return vectors[i] * (1 - t)
 end
 )"
@@ -1831,7 +1831,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorReverseOps")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function vecrcp(a: vector)
+function vecrcp(a: vector)
     return vector(1, 2, 3) + a
 end
 )"),
@@ -1858,7 +1858,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "UserDataGetIndex")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function getxy(a: Point)
+function getxy(a: Point)
     return a.x + a.y
 end
 )"),
@@ -1890,7 +1890,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "UserDataSetIndex")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function setxy(a: Point)
+function setxy(a: Point)
     a.x = 3
     a.y = 4
 end
@@ -1921,7 +1921,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "UserDataNamecall")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function getxy(a: Point)
+function getxy(a: Point)
     return a:GetX() + a:GetY()
 end
 )"),
@@ -2151,10 +2151,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "ExplicitUpvalueAndLocalTypes")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local y: vector = ...
+const y: vector = ...
 
-local function getsum(t)
-    local x: vector = t
+function getsum(t)
+    const x: vector = t
     return x.X + x.Y + y.X + y.Y
 end
 )",
@@ -2197,7 +2197,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DuplicateArrayLoads1")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(n: number, t: {number}, u: {number})
+function foo(n: number, t: {number}, u: {number})
     return t[n] * t[n] + u[n] * u[n]
 end
 )",
@@ -2259,7 +2259,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DuplicateArrayLoads2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t, a: number, b: number)
+function test(t, a: number, b: number)
     return t[a][b].x + t[a][b].y + t[a][b].z
 end
 )",
@@ -2341,7 +2341,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DuplicateArrayLoads3")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: number)
+function test(t: { x: number, y: number }, a: number)
     t[1] += a
     t[2] += a * a
 
@@ -2406,7 +2406,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DuplicateArrayLoads4")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: number, i: number)
+function test(t: { x: number, y: number }, a: number, i: number)
     t[i] += a
     t[i + 1] += a * a
 
@@ -2484,7 +2484,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DuplicateArrayLoads5")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number })
+function test(t: { x: number, y: number })
     t[1] = 14
     t[2] = 28
 
@@ -2532,7 +2532,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DuplicateArrayLoads6")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: number, i: number)
+function test(t: { x: number, y: number }, a: number, i: number)
     t[i] = 2
     t[2] = 4
     return t[i] * 2
@@ -2589,7 +2589,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp1")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { u: number, a: { b: number, c: { x: number, y: number } } })
+function test(t: { u: number, a: { b: number, c: { x: number, y: number } } })
     return t.a.b + t.a.c.x + t.a.c.y
 end
 )",
@@ -2660,7 +2660,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: number)
+function test(t: { x: number, y: number }, a: number)
     t.x += a
     t.y += a * a
 
@@ -2720,7 +2720,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp3")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: string)
+function test(t: { x: number, y: number }, a: string)
     t.x = 2
     t[a] = 4
     return t.x * 2
@@ -2774,7 +2774,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp4")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: string)
+function test(t: { x: number, y: number }, a: string)
     t.x = 2
     t[1] = nil
     return t.x * 2
@@ -2828,16 +2828,16 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp5")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { w: number, h: number, data: {vector} }, uv: vector)
+function test(t: { w: number, h: number, data: {vector} }, uv: vector)
     uv *= vector.create(t.w, t.h)
     uv -= vector.create(.5,.5)
-    local uv0 = vector.floor(uv)
-    local uv1 = vector.ceil(uv)
-    local a = uv - uv0
-    local x0 = uv0.x % t.w
-    local x1 = uv1.x % t.w
-    local y0 = (uv0.y % t.h) * t.w
-    local y1 = (uv1.y % t.h) * t.w
+    const uv0 = vector.floor(uv)
+    const uv1 = vector.ceil(uv)
+    const a = uv - uv0
+    const x0 = uv0.x % t.w
+    const x1 = uv1.x % t.w
+    const y0 = (uv0.y % t.h) * t.w
+    const y1 = (uv1.y % t.h) * t.w
     return a, x0, x1, y0, y1
 end
 )",
@@ -2924,7 +2924,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp6")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number })
+function test(t: { x: number, y: number })
     t.x = 14
     t.y = 28
 
@@ -2972,7 +2972,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp7")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number })
+function test(t: { x: number, y: number })
     t.x, t.y = t.y, t.x
 end
 )",
@@ -3016,7 +3016,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "LoadEnvReuse")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: number, b: number)
+function foo(a: number, b: number)
     x = a
     y = b
     x = b
@@ -3036,20 +3036,7 @@ bb_0:
 bb_2:
   JUMP bb_bytecode_1
 bb_bytecode_1:
-  %6 = LOAD_ENV
-  %7 = GET_SLOT_NODE_ADDR %6, 0u, K0 ('x')
-  CHECK_SLOT_MATCH %7, K0 ('x'), bb_fallback_3
-  CHECK_READONLY %6, bb_fallback_3
-  %10 = LOAD_TVALUE R0, 0i, tnumber
-  STORE_TVALUE %7, %10, 0i
-  JUMP bb_linear_9
-bb_linear_9:
-  %39 = GET_SLOT_NODE_ADDR %6, 2u, K1 ('y')
-  CHECK_SLOT_MATCH %39, K1 ('y'), bb_fallback_5
-  %42 = LOAD_TVALUE R1, 0i, tnumber
-  STORE_TVALUE %39, %42, 0i
-  STORE_TVALUE %7, %42, 0i
-  INTERRUPT 6u
+  INTERRUPT 3u
   RETURN R0, 0i
 )"
     );
@@ -3060,7 +3047,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CheckReadonlyEliminationOnSsaValues")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(t: { y: { a: number, b: number, c: number } })
+function foo(t: { y: { a: number, b: number, c: number } })
     t.y.a = t.y.b -- this kills 'readonly' state tracking through VM RegisterLink
     t.y.c = 3
 end
@@ -3115,7 +3102,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CheckNoMetatableEliminationOnSsaValues")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(t: { y: { z: number } })
+function foo(t: { y: { z: number } })
     t.y[1] = t.y.z
     t.y[2] = 20
 end
@@ -3170,7 +3157,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CheckNoMetatableSsaElim")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(t: { y: { z: number } })
+function foo(t: { y: { z: number } })
     t.y[1] = t.y.z
     t.y[2] = 20
 end
@@ -3223,7 +3210,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableStoreForwardUnknownTag")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(t: {}, v, w)
+function foo(t: {}, v, w)
     t.x = v
     t.y = w
     return t.x
@@ -3271,7 +3258,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableArrayStoreForwardUnknownTag")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(t: {}, v, w)
+function foo(t: {}, v, w)
     t[1] = v
     t[2] = w
     return t[1]
@@ -3319,8 +3306,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FastcallTypeInferThroughLocal")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function getsum(x, c)
-    local v = vector(x, 2, 3)
+function getsum(x, c)
+    const v = vector(x, 2, 3)
     if c then
         return v.X + v.Y
     else
@@ -3372,9 +3359,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FastcallTypeInferThroughUpvalue")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local v = ...
+v = ...
 
-local function getsum(x, c)
+function getsum(x, c)
     v = vector(x, 2, 3)
     if c then
         return v.X + v.Y
@@ -3434,8 +3421,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "LoadAndMoveTypePropagation")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function getsum(n)
-    local seqsum = 0
+function getsum(n)
+    seqsum = 0
     for i = 1,n do
         if i < 10 then
             seqsum += i
@@ -3507,7 +3494,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "ArgumentTypeRefinement")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function getsum(x, y)
+function getsum(x, y)
     x = vector(1, y, 3)
     return x.Y + x.Z
 end
@@ -3542,11 +3529,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "InlineFunctionType")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function inl(v: vector, s: number)
+function inl(v: vector, s: number)
     return v.Y * s
 end
 
-local function getsum(x)
+function getsum(x)
     return inl(x, 3) + inl(x, 5)
 end
 )",
@@ -3597,8 +3584,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "ResolveTablePathTypes")
                    R"(
 type Vertex = {pos: vector, normal: vector}
 
-local function foo(arr: {Vertex}, i)
-    local v = arr[i]
+function foo(arr: {Vertex}, i)
+    const v = arr[i]
 
     return v.pos.Y
 end
@@ -3653,23 +3640,23 @@ TEST_CASE_FIXTURE(LoweringFixture, "ResolvableSimpleMath")
     CHECK_EQ(
         "\n" + getCodegenHeader(R"(
 type Vertex = { p: vector, uv: vector, n: vector, t: vector, b: vector, h: number }
-local mesh: { vertices: {Vertex}, indices: {number} } = ...
+const mesh: { vertices: {Vertex}, indices: {number} } = ...
 
-local function compute()
+function compute()
     for i = 1,mesh.indices.count,3 do
-        local a = mesh.vertices[mesh.indices[i]]
-        local b = mesh.vertices[mesh.indices[i + 1]]
-        local c = mesh.vertices[mesh.indices[i + 2]]
+        const a = mesh.vertices[mesh.indices[i]]
+        const b = mesh.vertices[mesh.indices[i + 1]]
+        const c = mesh.vertices[mesh.indices[i + 2]]
 
-        local vba = b.p - a.p
-        local vca = c.p - a.p
+        const vba = b.p - a.p
+        const vca = c.p - a.p
 
-        local uvba = b.uv - a.uv
-        local uvca = c.uv - a.uv
+        const uvba = b.uv - a.uv
+        const uvca = c.uv - a.uv
 
-        local r = 1.0 / (uvba.X * uvca.Y - uvca.X * uvba.Y);
+        const r = 1.0 / (uvba.X * uvca.Y - uvca.X * uvba.Y);
 
-        local sdir = (uvca.Y * vba - uvba.Y * vca) * r
+        const sdir = (uvca.Y * vba - uvba.Y * vca) * r
 
         a.t += sdir
     end
@@ -3709,22 +3696,22 @@ TEST_CASE_FIXTURE(LoweringFixture, "ResolvableFunctionReturns")
     CHECK_EQ(
         "\n" + getCodegenHeader(R"(
 type Vertex = { p: vector, uv: vector, n: vector, t: vector, b: vector, h: number }
-local mesh: { vertices: {Vertex}, indices: {number} } = ...
+const mesh: { vertices: {Vertex}, indices: {number} } = ...
 
-local function temp(b: vector, c: vector) : number
+function temp(b: vector, c: vector) : number
     return 1 / (b.X * c.Y - c.X * b.Y)
 end
 
-local function compute()
+function compute()
     for i = 1,mesh.indices.count,3 do
-        local a = mesh.vertices[mesh.indices[i]]
-        local b = mesh.vertices[mesh.indices[i + 1]]
-        local c = mesh.vertices[mesh.indices[i + 2]]
+        const a = mesh.vertices[mesh.indices[i]]
+        const b = mesh.vertices[mesh.indices[i + 1]]
+        const c = mesh.vertices[mesh.indices[i + 2]]
 
-        local uvba = b.uv - a.uv
-        local uvca = c.uv - a.uv
+        const uvba = b.uv - a.uv
+        const uvca = c.uv - a.uv
 
-        local r = temp(uvba, uvca);
+        const r = temp(uvba, uvca);
 
         a.t += a.p * r
     end
@@ -3762,7 +3749,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "ResolveVectorNamecalls")
                    R"(
 type Vertex = {pos: vector, normal: vector}
 
-local function foo(arr: {Vertex}, i)
+function foo(arr: {Vertex}, i)
     return arr[i].normal:Dot(vector(0.707, 0, 0.707))
 end
 )",
@@ -3826,7 +3813,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "ImmediateTypeAnnotationHelp")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(arr, i)
+function foo(arr, i)
     return (arr[i] as vector) / 5
 end
 )",
@@ -3867,10 +3854,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "UnaryTypeResolve")
 
     CHECK_EQ(
         "\n" + getCodegenHeader(R"(
-local function foo(a, b: vector, c)
-    local d = not a
-    local e = -b
-    local f = c.count
+function foo(a, b: vector, c)
+    const d = not a
+    const e = -b
+    const f = c.count
     return (if d then e else vector(f, 2, 3)).X
 end
 )"),
@@ -3898,8 +3885,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "ForInManualAnnotation")
                    R"(
 type Vertex = {pos: vector, normal: vector}
 
-local function foo(a: {Vertex})
-    local sum = 0
+function foo(a: {Vertex})
+    sum = 0
     for k, v: Vertex in ipairs(a) do
         sum += v.pos.X
     end
@@ -3995,10 +3982,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "ForInAutoAnnotationIpairs")
         "\n" + getCodegenHeader(R"(
 type Vertex = {pos: vector, normal: vector}
 
-local function foo(a: {Vertex})
-    local sum = 0
+function foo(a: {Vertex})
+    sum = 0
     for k, v in ipairs(a) do
-        local n = v.pos.X
+        n = v.pos.X
         sum += n
     end
     return sum
@@ -4010,8 +3997,8 @@ end
 ; R1: number from 0 to 15 [local 'sum']
 ; R5: number from 6 to 12 [local 'k']
 ; R6: table from 6 to 12 [local 'v']
-; R7: vector from 9 to 11
-; R7: number from 7 to 12 [local 'n']
+; R7: any from 7 to 12 [local 'n']
+; R8: vector from 9 to 11
 )"
     );
 }
@@ -4025,10 +4012,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "ForInAutoAnnotationPairs")
         "\n" + getCodegenHeader(R"(
 type Vertex = {pos: vector, normal: vector}
 
-local function foo(a: {[string]: Vertex})
-    local sum = 0
+function foo(a: {[string]: Vertex})
+    sum = 0
     for k, v in pairs(a) do
-        local n = v.pos.X
+        n = v.pos.X
         sum += n
     end
     return sum
@@ -4040,8 +4027,8 @@ end
 ; R1: number from 0 to 15 [local 'sum']
 ; R5: string from 6 to 12 [local 'k']
 ; R6: table from 6 to 12 [local 'v']
-; R7: vector from 9 to 11
-; R7: number from 7 to 12 [local 'n']
+; R7: any from 7 to 12 [local 'n']
+; R8: vector from 9 to 11
 )"
     );
 }
@@ -4052,10 +4039,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "ForInAutoAnnotationGeneric")
         "\n" + getCodegenHeader(R"(
 type Vertex = {pos: vector, normal: vector}
 
-local function foo(a: {Vertex})
-    local sum = 0
+function foo(a: {Vertex})
+    sum = 0
     for k, v in a do
-        local n = v.pos.X
+        n = v.pos.X
         sum += n
     end
     return sum
@@ -4067,8 +4054,8 @@ end
 ; R1: number from 0 to 13 [local 'sum']
 ; R5: number from 4 to 10 [local 'k']
 ; R6: table from 4 to 10 [local 'v']
-; R7: vector from 7 to 9
-; R7: number from 5 to 10 [local 'n']
+; R7: any from 5 to 10 [local 'n']
+; R8: vector from 7 to 9
 )"
     );
 }
@@ -4081,7 +4068,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataTypes")
 
     CHECK_EQ(
         "\n" + getCodegenHeader(R"(
-local function foo(v: vec2, x: mat3)
+function foo(v: vec2, x: mat3)
     return v.X * x
 end
 )"),
@@ -4102,7 +4089,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataPropertyAccess")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(v: vec2)
+function foo(v: vec2)
     return v.X + v.Y
 end
 )",
@@ -4143,7 +4130,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataPropertyAccess2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: mat3)
+function foo(a: mat3)
     return a.Row1 * a.Row2
 end
 )",
@@ -4182,7 +4169,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataNamecall1")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: vec2, b: vec2)
+function foo(a: vec2, b: vec2)
     return a:Dot(b)
 end
 )",
@@ -4234,7 +4221,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataNamecall2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: vec2, b: vec2)
+function foo(a: vec2, b: vec2)
     return a:Min(b)
 end
 )",
@@ -4290,7 +4277,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataMetamethodDirectFlow")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: mat3, b: mat3)
+function foo(a: mat3, b: mat3)
     return a * b
 end
 )",
@@ -4324,7 +4311,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataMetamethodDirectFlow2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: mat3)
+function foo(a: mat3)
     return -a
 end
 )",
@@ -4356,7 +4343,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataMetamethodDirectFlow3")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: sequence)
+function foo(a: sequence)
     return a.count
 end
 )",
@@ -4387,7 +4374,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataMetamethod")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: vec2, b: vec2, c: vec2)
+function foo(a: vec2, b: vec2, c: vec2)
     return -c + a * b
 end
 )",
@@ -4452,7 +4439,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CustomUserdataMapping")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: mat3)
+function foo(a: mat3)
     print(a, vec2.create(0, 0))
 end
 )",
@@ -4495,7 +4482,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "LibraryFieldTypesAndConstants")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: vector)
+function foo(a: vector)
     return Vector3.xAxis * a + Vector3.yAxis
 end
 )",
@@ -4533,8 +4520,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "LibraryFieldTypesAndConstants")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: vector)
-    local x = vector.zero
+function foo(a: vector)
+    x = vector.zero
     x += a
     return x
 end
@@ -4569,7 +4556,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "LibraryFieldTypesAndConstantsCApi")
     CHECK_EQ(
         "\n" + getCodegenAssemblyUsingCApi(
                    R"(
-local function foo()
+function foo()
     return test.some_nil, test.some_boolean, test.some_number, test.some_vector, test.some_string
 end
 )",
@@ -4597,7 +4584,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "MathIsNan")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number)
+function foo(a: number)
     return math.isnan(a)
 end
 )"),
@@ -4624,7 +4611,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32BtestDirect")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number)
+function foo(a: number)
     return bit32.btest(a, 0x1f)
 end
 )"),
@@ -4656,12 +4643,12 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32ReplaceDirect")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number)
-    local x = bit32.band(a, 0x003FFFFF)
-    local y = bit32.band(b, 0x003FFFFF)
-    local z = bit32.replace(bit32.rshift(a, 22), bit32.rshift(b, 22), 10, 10)
+function foo(a: number, b: number)
+    const x = bit32.band(a, 0x003FFFFF)
+    const y = bit32.band(b, 0x003FFFFF)
+    const z = bit32.replace(bit32.rshift(a, 22), bit32.rshift(b, 22), 10, 10)
 
-    local v = vector.create(x, y, z)
+    const v = vector.create(x, y, z)
     return v, v.x + v.y -- tests UINT_TO_FLOAT propagation as well
 end
 )"),
@@ -4707,7 +4694,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32ExtractDirect")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number)
+function foo(a: number, b: number)
     return bit32.extract(a, b, 4)
 end
 )"),
@@ -4745,7 +4732,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32SingleArg")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number, c: number)
+function foo(a: number, b: number, c: number)
     return bit32.band(a) + bit32.bor(b) + bit32.bxor(c)
 end
 )"),
@@ -4783,7 +4770,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32SingleArgBtest")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number)
+function foo(a: number)
     return bit32.btest(a)
 end
 )"),
@@ -4813,7 +4800,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorLoadReuse")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function shuffle(v: vector)
+function shuffle(v: vector)
     return v.x * v.x + v.y * v.y
 end
 )"),
@@ -4848,7 +4835,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorShuffle1")
     // TODO: opportunity - if we introduce a separate vector shuffle instruction, this can be done in a single shuffle (+/- load and store)
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function shuffle(v: vector)
+function shuffle(v: vector)
     return vector.create(v.z, v.x, v.y)
 end
 )"),
@@ -4879,9 +4866,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorShuffle2")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function crossshuffle(v: vector, t: vector)
-    local tmp1 = vector.create(v.x, v.x, v.z)
-    local tmp2 = vector.create(t.y, t.z, t.x)
+function crossshuffle(v: vector, t: vector)
+    const tmp1 = vector.create(v.x, v.x, v.z)
+    const tmp2 = vector.create(t.y, t.z, t.x)
     return vector.create(tmp1.z, tmp2.x, tmp1.y)
 end
 )"),
@@ -4915,7 +4902,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorShuffleFromComposite1")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function test(v: vertex)
+function test(v: vertex)
     return v.normal.X * v.normal.X + v.normal.Y * v.normal.Y
 end
 )"),
@@ -4952,7 +4939,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorShuffleFromComposite2")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function test(v: vertex)
+function test(v: vertex)
     return v.uv.X * v.uv.Y
 end
 )"),
@@ -4987,7 +4974,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorCreateXY")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(a: number): vector
+function foo(a: number): vector
     return vector.create(a, a * 2.0)
 end
 )"
@@ -5017,7 +5004,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorComparison1")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: vector, b: vector)
+function foo(a: vector, b: vector)
     return a == b
 end
 )"),
@@ -5046,7 +5033,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorComparison2")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: vector, b)
+function foo(a: vector, b)
     return a == b
 end
 )"),
@@ -5075,10 +5062,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "ComparisonPropagationWall")
     // After CMP_ANY 'z' cannot reuse any SSA registers before
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a, b)
-    local x = type(b)
-    local y = (not a) != b
-    local z = type(b)
+function foo(a, b)
+    const x = type(b)
+    const y = (not a) != b
+    const z = type(b)
     return x, y, z
 end
 )"),
@@ -5120,8 +5107,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "VectorLoadStoreOnlySamePrecision")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function test(x: number, y: number)
-    local vec = vector.create(x, y, 0)
+function test(x: number, y: number)
+    const vec = vector.create(x, y, 0)
     return vec.X + vec.Y + vec.Z
 end
 )"),
@@ -5155,7 +5142,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NonNumericalComparison1")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: string, b: string, c: {}, d: {})
+function foo(a: string, b: string, c: {}, d: {})
     return a == b and c == d
 end
 )"),
@@ -5192,7 +5179,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NonNumericalComparison2")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: string, b: string, c: {}, d: {})
+function foo(a: string, b: string, c: {}, d: {})
     return a > b and c > d
 end
 )"),
@@ -5235,7 +5222,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveBase")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi32(buf, a) + buffer.readi32(buf, a + 4) + buffer.readi32(buf, a + 8)
 end
 )"),
@@ -5275,7 +5262,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveBaseInverted")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi32(buf, a + 8) + buffer.readi32(buf, a + 4) + buffer.readi32(buf, a + 0)
 end
 )"),
@@ -5316,8 +5303,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveDynamicBase")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(index: buffer, data: buffer, a: number)
-    local i = buffer.readi32(index, a)
+function foo(index: buffer, data: buffer, a: number)
+    const i = buffer.readi32(index, a)
     return buffer.readf32(data, i + 0) * buffer.readf32(data, i + 4) * buffer.readf32(data, i + 8)
 end
 )"),
@@ -5371,8 +5358,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveLoopRangeBase")
     // TODO: opportunity 2 - range of 'i' is known, we can check it in loop header
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
-    local s = 0
+function foo(buf: buffer, a: number)
+    s = 0
     for i = 0, buffer.len(buf) - 1, 12 do
         s += buffer.readf32(buf, i) * buffer.readf32(buf, i + 4) * buffer.readf32(buf, i + 8)
     end
@@ -5450,7 +5437,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveAdvancingBase")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, pos: number, a: number, b: number, c: number)
+function foo(buf: buffer, pos: number, a: number, b: number, c: number)
     buffer.writei32(buf, pos, a)
     pos += 4
     buffer.writei32(buf, pos, b)
@@ -5503,7 +5490,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesNegativeBase")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi32(buf, a - 8) + buffer.readi32(buf, a - 4) + buffer.readi32(buf, a - 0)
 end
 )"),
@@ -5545,7 +5532,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesMixedBase")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi32(buf, a) + buffer.readi32(buf, a - 4) + buffer.readi32(buf, a + 4)
 end
 )"),
@@ -5585,7 +5572,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferSanityPositive")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(zero: number, b1: buffer, b2: buffer)
+function foo(zero: number, b1: buffer, b2: buffer)
     buffer.writei8(b1, zero + 0, buffer.readi8(b1, zero + 0))
     buffer.writeu8(b1, zero + 0, buffer.readu8(b1, zero + 0))
 
@@ -5642,7 +5629,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferSanityNegative")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(one: number, b1: buffer, b2: buffer)
+function foo(one: number, b1: buffer, b2: buffer)
     buffer.writei8(b1, one - 1, buffer.readi8(b1, one - 1))
     buffer.writeu8(b1, one - 1, buffer.readu8(b1, one - 1))
 
@@ -5700,7 +5687,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumericConversionReplacementCheck")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     math.ldexp(a, a) -- generate NUM_TO_INT early
 
     -- range checks cannot make NUM_TO_INT exit to VM at a later location
@@ -5739,7 +5726,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveMultBase")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi32(buf, a * 4) + buffer.readi32(buf, (a + 1) * 4) + buffer.readi32(buf, (a + 2) * 4)
 end
 )"),
@@ -5782,7 +5769,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveMultBase2")
     // Different index multipliers are not merged
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi32(buf, a * 4) + buffer.readi32(buf, (a + 1) * 8)
 end
 )"),
@@ -5824,11 +5811,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveMultBaseInt")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     -- trying to be helpful
-    local t1 = bit32.bor(a, 0)
-    local t2 = bit32.bor(t1 + 8, 0)
-    local t3 = bit32.bor(t1 + 16, 0)
+    const t1 = bit32.bor(a, 0)
+    const t2 = bit32.bor(t1 + 8, 0)
+    const t3 = bit32.bor(t1 + 16, 0)
     return buffer.readf64(buf, t1) + buffer.readf64(buf, t2) + buffer.readf64(buf, t3)
 end
 )"),
@@ -5866,7 +5853,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesMixedSizes")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number)
+function foo(buf: buffer, a: number)
     return buffer.readi8(buf, a) + buffer.readi8(buf, a + 4) + buffer.readf64(buf, a - 1)
 end
 )"),
@@ -5905,9 +5892,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferVmExitSync")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number, b: number, c: number)
-    local x = buffer.readu8(buf, a * b)
-    local y = buffer.readu8(buf, a * b + c)
+function foo(buf: buffer, a: number, b: number, c: number)
+    const x = buffer.readu8(buf, a * b)
+    const y = buffer.readu8(buf, a * b + c)
     return x, y
 end
 )"),
@@ -5955,10 +5942,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferVmExitSyncMultiUseSink")
     // If the compiler output makes this test outdated, it can be removed as we have IR builder tests covering this as well
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(buf: buffer, a: number, b: number, p: number, q: number)
-    local s = a * b
-    local v1 = buffer.readi32(buf, p)
-    local v2 = buffer.readi32(buf, q)
+function foo(buf: buffer, a: number, b: number, p: number, q: number)
+    s = a * b
+    v1 = buffer.readi32(buf, p)
+    v2 = buffer.readi32(buf, q)
     s = v1 + v2
     return s
 end
@@ -5985,15 +5972,15 @@ bb_bytecode_1:
    ; exit sync: R5, {%16, %17}
   %30 = BUFFER_READI32 %26, %28, tbuffer
   %31 = INT_TO_NUM %30
-  %41 = LOAD_DOUBLE R4
-  %42 = NUM_TO_INT %41
-  CHECK_BUFFER_LEN %26, %42, 0i, 4i, undef, bb_exit_6
-   ; exit sync: R6, R5, {%31, %16, %17}
-  %44 = BUFFER_READI32 %26, %42, tbuffer
-  %45 = INT_TO_NUM %44
-  %55 = ADD_NUM %31, %45
-  STORE_SPLIT_TVALUE R5, tnumber, %55
-  INTERRUPT 16u
+  %43 = LOAD_DOUBLE R4
+  %44 = NUM_TO_INT %43
+  CHECK_BUFFER_LEN %26, %44, 0i, 4i, undef, bb_exit_6
+   ; exit sync: R7, R6, R5, {%31, %16, %17}
+  %46 = BUFFER_READI32 %26, %44, tbuffer
+  %47 = INT_TO_NUM %46
+  %59 = ADD_NUM %31, %47
+  STORE_SPLIT_TVALUE R5, tnumber, %59
+  INTERRUPT 18u
   RETURN R5, 1i
 )"
     );
@@ -6004,11 +5991,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferEffects")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(buf: buffer)
+function foo(buf: buffer)
     buffer.writef64(buf, 0, 3.14)
-    local u1 = buffer.writeu8(buf, 4, 170)
-    local u2 = buffer.writeu8(buf, 5, 187)
-    local u3 = buffer.writeu8(buf, 0, 255)
+    const u1 = buffer.writeu8(buf, 4, 170)
+    const u2 = buffer.writeu8(buf, 5, 187)
+    const u3 = buffer.writeu8(buf, 0, 255)
     return buffer.readf64(buf, 0), u1, u2, u3
 end
 )",
@@ -6071,10 +6058,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32NoDoubleTemporariesAdd")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number)
-    local a = bit32.band(bit32.bor(a, 0) + bit32.bor(b, 0), 0xffff)
-    local b = bit32.band(bit32.bor(a, 0) + 127, 0xffff)
-    local c = bit32.band(254 + bit32.bor(a, 1), 0xffff)
+function foo(a: number, b: number)
+    const a = bit32.band(bit32.bor(a, 0) + bit32.bor(b, 0), 0xffff)
+    const b = bit32.band(bit32.bor(a, 0) + 127, 0xffff)
+    const c = bit32.band(254 + bit32.bor(a, 1), 0xffff)
     return a, b, c
 end
 )"),
@@ -6116,10 +6103,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32HasToUseDoubleTemporariesAdd")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number)
-    local a = bit32.band(bit32.bor(a, 0) + 0.75, 0xffff)
-    local b = bit32.band(bit32.bor(a, 0) + 1e30, 0xffff)
-    local c = bit32.band(1e30 + bit32.bor(a, 1), 0xffff)
+function foo(a: number, b: number)
+    const a = bit32.band(bit32.bor(a, 0) + 0.75, 0xffff)
+    const b = bit32.band(bit32.bor(a, 0) + 1e30, 0xffff)
+    const c = bit32.band(1e30 + bit32.bor(a, 1), 0xffff)
     return a, b, c
 end
 )"),
@@ -6164,10 +6151,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32NoDoubleTemporariesSub")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number)
-    local a = bit32.band(bit32.bor(a, 0) - bit32.bor(b, 0), 0xffff)
-    local b = bit32.band(bit32.bor(a, 0) - 127, 0xffff)
-    local c = bit32.band(254 - bit32.bor(a, 1), 0xffff)
+function foo(a: number, b: number)
+    const a = bit32.band(bit32.bor(a, 0) - bit32.bor(b, 0), 0xffff)
+    const b = bit32.band(bit32.bor(a, 0) - 127, 0xffff)
+    const c = bit32.band(254 - bit32.bor(a, 1), 0xffff)
     return a, b, c
 end
 )"),
@@ -6209,10 +6196,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "Bit32HasToUseDoubleTemporariesSub")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: number, b: number)
-    local a = bit32.band(bit32.bor(a, 0) - 0.75, 0xffff)
-    local b = bit32.band(bit32.bor(a, 0) - 1e30, 0xffff)
-    local c = bit32.band(1e30 - bit32.bor(a, 1), 0xffff)
+function foo(a: number, b: number)
+    const a = bit32.band(bit32.bor(a, 0) - 0.75, 0xffff)
+    const b = bit32.band(bit32.bor(a, 0) - 1e30, 0xffff)
+    const c = bit32.band(1e30 - bit32.bor(a, 1), 0xffff)
     return a, b, c
 end
 )"),
@@ -6257,13 +6244,13 @@ TEST_CASE_FIXTURE(LoweringFixture, "OptionalOr")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a, b)
+function foo(a, b)
     a = a or 0
     b = b or 0
     return a + b
 end
 -- when a function like 'foo' is inlined, those 'default values' collapse
-local function bar()
+function bar()
     return foo(3, 4)
 end
 )"),
@@ -6302,11 +6289,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "LinearAndOr")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a, b)
+function foo(a, b)
     return a and b, a or b
 end
-local function bar()
-    local a, b = foo(3, 4)
+function bar()
+    const a, b = foo(3, 4)
     return a, b
 end
 )"),
@@ -6338,8 +6325,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "OldStyleConditional")
     // TODO: opportunity - this can be done in two SELECT_IF_TRUTHY, but we cannot match such complex sequences right now
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: boolean, b: number, c: number)
-    local x = a and b or c
+function foo(a: boolean, b: number, c: number)
+    const x = a and b or c
     return x + 1
 end
 )"),
@@ -6379,8 +6366,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "NewStyleConditional")
     // TODO: opportunity - this can be done in one SELECT_IF_TRUTHY, but this is also hard to detect in current system
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function foo(a: boolean, b: number, c: number)
-    local x = if a then b else c
+function foo(a: boolean, b: number, c: number)
+    const x = if a then b else c
     return x + 1
 end
 )"),
@@ -6421,7 +6408,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval1")
     CHECK(
         getCodegenAssembly(R"(
 repeat
-local _ = ({}).count < ({}).count < _ < _ < _ ^ _ ^ ""
+const _ = ({}).count < ({}).count < _ < _ < _ ^ _ ^ ""
 until ""
 )")
             .size() > 0
@@ -6433,7 +6420,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval2")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local _
+_ = nil
 
 for l0={[1]=(_),},_ do
     _ += _
@@ -6452,7 +6439,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval3")
     CHECK(
         getCodegenAssembly(R"(
 while {_,} do
-    local _
+    _ = nil
     repeat
         _ = "x",_ or {}
     until "x"
@@ -6468,13 +6455,13 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval4")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local _ = 5633,5633
+_ = 5633,5633
 while "" do
     _ += bit32.replace(_,function() end,0)
     for l0=_,{_,} do
         do
             _ += bit32.replace(_,nil,0)
-            local _
+            _ = nil
         end
     end
 end
@@ -6488,7 +6475,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTagsAcrossChains")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function f(...)
+function f(...)
     if bit32.btest(538976288,4,4,4,262144) then
     else if bit32.btest(538976288,4,_,4,67108864) then
     end
@@ -6529,7 +6516,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest1")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local _ = 5633,5633
+_ = 5633,5633
 while _ do
     _ ^= _
     for l0=_,_,{[({}).count]=_,} do
@@ -6547,7 +6534,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest2")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local _
+_ = nil
 while true != _ do
     _ = nil
 end
@@ -6565,8 +6552,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest3")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = ``,_
+function f(...)
+    _ = ``,_
     _ ..= _(_()(_(_ and (...),_ .. _),_(_)),_(_(_(_(_ .. _,- _),_(_)),_()(_)),_(_,_._)))
     _(_)
 end
@@ -6580,10 +6567,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest4")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local _ = math.exp,_(),_
-local _ = math._,_(_(_),_(_ and _),_(_(_),_,_,_()),`{nil}`),_
+_ = math.exp,_(),_
+_ = math._,_(_(_),_(_ and _),_(_(_),_,_,_()),`{nil}`),_
 for l41=_,_ do
 end
+l0 = nil
 l0 -= _(0,_(_.count,_(_),_(_(_),_(_),_,_()),`{nil}`))
 )")
             .size() > 0
@@ -6597,11 +6585,12 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest5")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local _ = 32768
+_ = 32768
+n0 = nil
 while "" do
     n0 ..= 0
     for l0=`{-2013233152}`,65535 do
-        local l0 = vector.create(`{-2013233152}`,-2147450880,_,_)
+        l0 = vector.create(`{-2013233152}`,-2147450880,_,_)
         _ = _,_ // 0,_ // _
     end
 end
@@ -6615,7 +6604,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest6")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local l0:any = _(393216),(0).count,n0
+l0 = _(393216),(0).count,n0
+_ = nil
 while vector.sign(_ and true) do
 _ ..= nil
 do end
@@ -6639,9 +6629,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest7")
         getCodegenAssembly(R"(
 for l0=0,32768 do end
 
-local _ = vector.create(14941,14941,14848)
+_ = vector.create(14941,14941,14848)
 
-local function l0() end
+function l0() end
 
 _,l0,_,_,_G,_ = vector.clamp(_,_ / _,_),- - _
 )")
@@ -6654,9 +6644,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest8")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = bit32.arshift
-    local _ = (_),_(_((true).count.count,0),30),_(l158(true,_),0),_(_(l9,8258560),_)(_),_ + _,_
+function f(...)
+    _ = bit32.arshift
+    _ = (_),_(_((true).count.count,0),30),_(l158(true,_),0),_(_(l9,8258560),_)(_),_ + _,_
 end
 )")
             .size() > 0
@@ -6668,9 +6658,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest9")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = bit32.lshift
-    local _ = nil,bit32(l0(_(_(8200202,0,_),nil),_),_),_(_,1752395619),{_=_(_,0),},_(_(_(8200202,0,_),0,""),0),_[_]
+function f(...)
+    _ = bit32.lshift
+    _ = nil,bit32(l0(_(_(8200202,0,_),nil),_),_),_(_,1752395619),{_=_(_,0),},_(_(_(8200202,0,_),0,""),0),_[_]
 end
 )")
             .size() > 0
@@ -6682,8 +6672,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest10")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local b, t = ...
+function f(...)
+    const b, t = ...
     t[buffer.readi8(b, -52436992 * -52436992)] /= buffer.readi8(b, -52436992 * 52436991)
 end
 )")
@@ -6696,8 +6686,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest11")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = 1024,l0[_],...
+function f(...)
+    _ = 1024,l0[_],...
     function _(l1, l118, l32, ...)
         for l0,l0,l0 in nil,__index,_ do
         end
@@ -6717,7 +6707,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest12")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
+function f(...)
+    _ = nil
     if buffer.readf64(_, bit32.bxor(0,_,0), function() _ += _ end) then
     else if ... then
     end
@@ -6732,8 +6723,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest13")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local l0 = require(module0)
+function f(...)
+    const l0 = require(module0)
     buffer.writeu8(l0,1697972224 * 4,function(l0,...)end)
     buffer.writef32(l0,1697972224 * 4,function(l0,...)end)
 end
@@ -6747,8 +6738,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest14")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = true
+function f(...)
+    _ = true
     if tanh then
         l242,_,_,_._ = _,tanh,_,_
         _(...)
@@ -6797,12 +6788,12 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest16")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _
+function f(...)
+    _ = nil
     table.insert(_,insert)
     repeat
     table.insert(_,insert)
-    local l0 = "",{_=_,_=_,n0=_,n0=_,n0=_,n1=_,_=_,n0=_,}
+    l0 = "",{_=_,_=_,n0=_,n0=_,n0=_,n1=_,_=_,n0=_,}
     _ = nil
     until ...
 end
@@ -6816,8 +6807,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest17")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = vector.sign,l0
+function f(...)
+    _ = vector.sign,l0
     _({_,},_,_,_,true,_,_({(if _ then _ else n0._),}),_)
     _(true,vector,_,nil,true,_(- _,l0),n0.sign)
 end
@@ -6836,7 +6827,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest18")
         getCodegenAssembly(
             R"(
 _[_](_)
-local _ = 538976256,_()()
+_ = 538976256,_()()
 do end
 _ = 28672,false,_ != _ - _ - _ / _ >= _ - _ - _ / _ - _ - _ - "" - _ - _ - _,not _ - "",not _ - _ - _,_
 )",
@@ -6859,7 +6850,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest19")
     CHECK(
         getCodegenAssembly(
             R"(
-local _ = tonumber(159)
+_ = tonumber(159)
 _ += _
 while 128 do
 _,_ = vector.create(_,2304)
@@ -6889,7 +6880,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest20")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
+function f(...)
     vector.sign(vector.create(3080192,vector.dot(_,_)))
     vector.sign(vector.create(3080192,vector.dot(_,_)))
 end
@@ -6903,9 +6894,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest21")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
-    local _ = (_)._,math.abs(...)._,_._
-    local _ = `{string.byte("",0,_)}`,math.abs(...,...).n8,_._
+function f(...)
+    _ = (_)._,math.abs(...)._,_._
+    _ = `{string.byte("",0,_)}`,math.abs(...,...).n8,_._
 end
 )")
             .size() > 0
@@ -6918,8 +6909,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest22")
     CHECK(
         getCodegenAssembly(
             R"(
-local function f(...)
-    local _ = _
+function f(...)
+    const _ = _
     for l0=-1,22 do
         for l0=512,187 do
             for l8=16,0 do
@@ -6947,7 +6938,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest23")
     CHECK(
         getCodegenAssembly(
             R"(
-local _ = ...
+const _ = ...
 for l0=_._,_,... do
 repeat
 until nil
@@ -6964,8 +6955,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest24")
     CHECK(
         getCodegenAssembly(
             R"(
-local _ = function(l1,l1)
-    local _
+_ = function(l1,l1)
+    _ = nil
     n0,_,_,l0,_._,_[""] = _ == _,``,_,_,_
     _ ""
 end
@@ -6984,9 +6975,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest25")
     CHECK(
         getCodegenAssembly(
             R"(
-local _ = ...
-local _ = function(l0,l4,l0: ()->())
-    local _ = l0,_.n249 + l0
+_ = ...
+_ = function(l0,l4,l0: ()->())
+    _ = l0,_.n249 + l0
     n0,_,l0 = _,_,{},n0,_
     n0 *= _
     while true do
@@ -7008,8 +6999,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest26")
     CHECK(
         getCodegenAssembly(
             R"(
-local function foo(...)
-    local _ = ...
+function foo(...)
+    const _ = ...
     buffer.readu32(_,_,_,nil,integer.max(0i,_,_,_,_,_,_,_,_,_,_,_,_,_,nil,- _,_,_),_)
 end
 )"
@@ -7039,7 +7030,7 @@ end
     CHECK(
         getCodegenAssembly(
             R"(
-local _ = ...
+const _ = ...
 bit32.replace(_ + _ + _ + _,_,_,_);
 bit32.replace(0,bit32.replace(_,_,_,_),28257,_);
 (0)(28257,bit32.replace(_,bit32.replace((_),_ + _,(_),_,_),_,_ + _),_);
@@ -7053,9 +7044,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "UpvalueAccessLoadStore1")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local m = 1
+m = 1
 
-local function foo(a: number, b: number)
+function foo(a: number, b: number)
     return m * a + m * b
 end
 
@@ -7072,13 +7063,35 @@ bb_2:
 bb_bytecode_1:
   %6 = GET_UPVALUE U0
   STORE_TVALUE R4, %6
-  CHECK_TAG R4, tnumber, exit(1)
+  CHECK_TAG R4, tnumber, bb_fallback_3
   %12 = LOAD_DOUBLE R4
   %14 = MUL_NUM %12, R0
-  %25 = MUL_NUM %12, R1
-  %34 = ADD_NUM %14, %25
-  STORE_DOUBLE R2, %34
+  JUMP bb_linear_9
+bb_linear_9:
+  %57 = MUL_NUM %12, R1
+  %67 = ADD_NUM %14, %57
+  STORE_DOUBLE R2, %67
   STORE_TAG R2, tnumber
+  INTERRUPT 5u
+  RETURN R2, 1i
+bb_4:
+  %21 = GET_UPVALUE U0
+  STORE_TVALUE R5, %21
+  CHECK_TAG R5, tnumber, bb_fallback_5
+  %27 = LOAD_DOUBLE R5
+  %29 = MUL_NUM %27, R1
+  STORE_DOUBLE R4, %29
+  STORE_TAG R4, tnumber
+  JUMP bb_6
+bb_6:
+  CHECK_TAG R3, tnumber, bb_fallback_7
+  CHECK_TAG R4, tnumber, bb_fallback_7
+  %40 = LOAD_DOUBLE R3
+  %42 = ADD_NUM %40, R4
+  STORE_DOUBLE R2, %42
+  STORE_TAG R2, tnumber
+  JUMP bb_8
+bb_8:
   INTERRUPT 5u
   RETURN R2, 1i
 ; function setm($arg0) line 8
@@ -7096,9 +7109,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "UpvalueAccessLoadStore2")
     // TODO: opportunity - if the value was just stored to VM register in parts, we can use those parts to store upvalue
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local m
+m = nil
 
-local function foo(a: number, b: number)
+function foo(a: number, b: number)
     m = a - b
     m = m * a + m * b
     return m + a
@@ -7138,12 +7151,12 @@ TEST_CASE_FIXTURE(LoweringFixture, "UpvalueAccessLoadStore3")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local m = 1
+m = 1
 
-local function foo()
-    local a = m
+function foo()
+    a = m
     m = a
-    local b = m
+    b = m
     m = b
     return m + a + b
 end
@@ -7154,16 +7167,26 @@ function setm(x, y) m = x end
 ; function foo() line 4
 bb_bytecode_0:
   %0 = GET_UPVALUE U0
+  STORE_TVALUE R0, %0
   SET_UPVALUE U0, %0, undef
+  STORE_TVALUE R1, %0
   SET_UPVALUE U0, %0, undef
   STORE_TVALUE R4, %0
-  CHECK_TAG R4, tnumber, bb_exit_1
-   ; exit sync: R1, R0, {%0}
+  CHECK_TAG R4, tnumber, bb_fallback_1
   %14 = LOAD_DOUBLE R4
   %16 = ADD_NUM %14, %14
-  %25 = ADD_NUM %16, %14
-  STORE_DOUBLE R2, %25
+  STORE_DOUBLE R3, %16
+  STORE_TAG R3, tnumber
+  JUMP bb_2
+bb_2:
+  CHECK_TAG R3, tnumber, bb_fallback_3
+  CHECK_TAG R1, tnumber, bb_fallback_3
+  %27 = LOAD_DOUBLE R3
+  %29 = ADD_NUM %27, R1
+  STORE_DOUBLE R2, %29
   STORE_TAG R2, tnumber
+  JUMP bb_4
+bb_4:
   INTERRUPT 7u
   RETURN R2, 1i
 ; function setm($arg0, $arg1) line 12
@@ -7183,15 +7206,13 @@ TEST_CASE_FIXTURE(LoweringFixture, "UpvalueAccessLoadStore4")
 
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local arr: {number}
+const arr: {number} = {1, 2, 3, 4}
 
-local function foo(a: number)
+function foo(a: number)
     for i = 1,arr.count do
         arr[i] = arr[i] + arr[i] * a
     end
 end
-
-arr = {1, 2, 3, 4}
 )"),
         R"(
 ; function foo($arg0) line 4
@@ -7310,7 +7331,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferLoadStoreProp1")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function test(b: buffer)
+function test(b: buffer)
     return buffer.readf32(b, 0) * buffer.readf32(b, 0) + buffer.readf32(b, 4) * buffer.readf32(b, 4)
 end
 )"),
@@ -7344,7 +7365,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferLoadStoreProp2")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function test(b: buffer)
+function test(b: buffer)
     buffer.writei8(b, 10, 32)
     assert(buffer.readi8(b, 10) == 32)
 
@@ -7390,7 +7411,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferLoadStoreProp3")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function storeloadpreserve(b: buffer)
+function storeloadpreserve(b: buffer)
     buffer.writeu32(b, 0, 0xffffffff)
     assert(buffer.readi32(b, 0) == -1)
     assert(buffer.readu32(b, 0) == 4294967295)
@@ -7493,7 +7514,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferLoadStoreProp4")
 {
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-local function test(b: buffer, n: number, f: number)
+function test(b: buffer, n: number, f: number)
     buffer.writei8(b, 0, n)
     buffer.writef64(b, 100, buffer.readi8(b, 0))
     buffer.writei8(b, 108, buffer.readi8(b, 0))
@@ -7608,8 +7629,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "LoopStepDetection1")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(n: number)
-    local s = 0
+function foo(n: number)
+    s = 0
     for i = 1,n do
         s += i
     end
@@ -7672,8 +7693,8 @@ TEST_CASE_FIXTURE(LoweringFixture, "LoopStepDetection2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(n: number, t: {number})
-    local s = 0
+function foo(n: number, t: {number})
+    s = 0
     for i = 1,t.count do
         s += t[i]
     end
@@ -7746,11 +7767,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "UintSourceSanity")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(b: buffer, a: number, s: string)
-    local r1 = buffer.readi32(b, bit32.bor(a, 0))
-    local r2 = buffer.readu32(b, r1)
-    local r3 = buffer.readi32(b, r2)
-    local r4 = buffer.readu32(b, string.len(s))
+function foo(b: buffer, a: number, s: string)
+    const r1 = buffer.readi32(b, bit32.bor(a, 0))
+    const r2 = buffer.readu32(b, r1)
+    const r3 = buffer.readi32(b, r2)
+    const r4 = buffer.readu32(b, string.len(s))
     return r1, r2, r3, r4
 end
 )"
@@ -7807,7 +7828,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "LibmIsPure")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(p: vector, v: vector): vector
+function foo(p: vector, v: vector): vector
     return vector.create(
         math.cos(0.6 * p.x + 0.4 * math.sin(v.y) + 0),
         math.cos(0.6 * p.x + 0.4 * math.sin(v.y) + 1),
@@ -7859,7 +7880,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VecOpReuse")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(c: vector): vector
+function foo(c: vector): vector
     return vector.create(
         math.sin(3.0 * vector.magnitude(c) + 6.0),
         math.sin(3.0 * vector.magnitude(c) + 1.0),
@@ -7906,7 +7927,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "VecOpReuse2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(c: vector, d: vector): vector
+function foo(c: vector, d: vector): vector
     return {2 * c + d, 2 * c + d}
 end
 )"
@@ -7945,7 +7966,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableOperationTagSuggestion1")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(t: { x: number, y: number }, a: string)
+function test(t: { x: number, y: number }, a: string)
     t.x = 2
     t[a] = 4
     return t.x * 2
@@ -8002,7 +8023,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableOperationTagSuggestion2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function test(self, t: { id: string }, a: number)
+function test(self, t: { id: string }, a: number)
     self.map[t.id] = self.map[t.id] + a
     self.foo(self.map[t.id])
 end
@@ -8138,7 +8159,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "Collatz")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function collatz(x : number)
+function collatz(x : number)
     return if ((x % 2) == 1) then 3 * x + 1 else x // 2
 end
 )",
@@ -8187,7 +8208,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TypeAliasResolution")
 type foo = number
 type bar = foo
 
-local function meow(foo: foo, bar: bar)
+function meow(foo: foo, bar: bar)
   return foo + bar
 end
 )",
@@ -8224,7 +8245,7 @@ bb_bytecode_1:
 type foo = bar
 type bar = foo
 
-local function meow(foo: foo, bar: bar)
+function meow(foo: foo, bar: bar)
   return foo + bar
 end
 )",
@@ -8258,7 +8279,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerMultiargValidate")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function f(a, b)
+function f(a, b)
     return integer.bxor(a, b, a)
 end
 )"
@@ -8290,7 +8311,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerMultiargValidate2")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function f(a, b)
+function f(a, b)
     return integer.clamp(a, b, a)
 end
 )"
@@ -8323,7 +8344,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerMultiargValidate3")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function f(a, b)
+function f(a, b)
     return integer.mul(integer.min(a, b, a), integer.max(a, b, a))
 end
 )"
@@ -8357,7 +8378,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerFastcallWrongConst")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
+function f(...)
     integer.add(..., 0.5)
     integer.sub(..., 0.5)
     integer.mul(..., 0.5)
@@ -8406,7 +8427,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberFastcallWrongConst")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-local function f(...)
+function f(...)
     -- 2-arg math
     math.pow(..., 5i)
     math.fmod(..., 5i)
@@ -8458,7 +8479,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerFastcallConstant")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(x: integer)
+function foo(x: integer)
     return integer.band(x, 5i)
 end
 )",
@@ -8491,7 +8512,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferWriteChecksExtraArgs")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(b: buffer, offset: number, val)
+function foo(b: buffer, offset: number, val)
     return buffer.writeu32(b, offset, val, 0) -- unused extra argument
 end
 )",
@@ -8543,7 +8564,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerCompare")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(x: integer, y: integer)
+function foo(x: integer, y: integer)
     if x == y then
         return 1
     end
@@ -8594,10 +8615,10 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerCompareConstLhs")
     CHECK_EQ(
         "\n" + getCodegenAssembly(
                    R"(
-local function foo(b: buffer, x: integer)
+function foo(b: buffer, x: integer)
     -- bytecode compiler is unlikely to constant-fold this
     buffer.writeinteger(b, 0, 2i)
-    local lhs = buffer.readinteger(b, 0)
+    const lhs = buffer.readinteger(b, 0)
 
     if lhs == x then
         return 1

@@ -10,6 +10,7 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 LUAU_FASTFLAG(LuauDisallowRedefiningBuiltinTypes)
 LUAU_FASTFLAG(LuauInstantiationCheckArguments)
 LUAU_FASTFLAG(LuauInstantiationCheckArgumentsDedup)
@@ -22,7 +23,7 @@ TEST_CASE_FIXTURE(Fixture, "basic_alias")
 {
     CheckResult result = check(R"(
         type T = number
-        local x: T = 1
+        const x: T = 1
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -33,11 +34,11 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_function_type_in_type_alias")
 {
     CheckResult result = check(R"(
         type F = () -> F?
-        local function f()
+        function f()
             return f
         end
 
-        local g: F = f
+        const g: F = f
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -48,7 +49,7 @@ TEST_CASE_FIXTURE(Fixture, "names_are_ascribed")
 {
     CheckResult result = check(R"(
         type T = { x: number }
-        local x: T
+        const x: T = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -72,7 +73,7 @@ TEST_CASE_FIXTURE(Fixture, "cannot_steal_hoisted_type_alias")
     // Essentially we've "stolen" the alias's type out from under it.
     // This test ensures that we don't actually do this.
     CheckResult result = check(R"(
-        local x: T = "foo"
+        const x: T = "foo"
         type T = number
     )");
 
@@ -139,7 +140,7 @@ TEST_CASE_FIXTURE(Fixture, "default_type_parameter")
 {
     CheckResult result = check(R"(
         type T<A = number, B = string> = { a: A, b: B }
-        local x: T<string> = { a = "foo", b = "bar" }
+        const x: T<string> = { a = "foo", b = "bar" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -150,7 +151,7 @@ TEST_CASE_FIXTURE(Fixture, "default_pack_parameter")
 {
     CheckResult result = check(R"(
         type T<A... = (number, string)> = { fn: (A...) -> () }
-        local x: T
+        const x: T = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -161,8 +162,8 @@ TEST_CASE_FIXTURE(Fixture, "saturate_to_first_type_pack")
 {
     CheckResult result = check(R"(
         type T<A, B, C...> = { fn: (A, B) -> C... }
-        local x: T<string, number, string, boolean>
-        local f = x.fn
+        const x: T<string, number, string, boolean> = nil as any
+        const f = x.fn
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -195,9 +196,9 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_aliases")
         --!strict
         type T = { f: number, g: U }
         type U = { h: number, i: T? }
-        local x: T = { f = 37, g = { h = 5, i = nil } }
+        const x: T = { f = 37, g = { h = 5, i = nil } }
         x.g.i = x
-        local y: T = { f = 3, g = { h = 5, i = nil } }
+        const y: T = { f = 3, g = { h = 5, i = nil } }
         y.g.i = y
     )");
 
@@ -210,9 +211,9 @@ TEST_CASE_FIXTURE(Fixture, "generic_aliases")
 
     CheckResult result = check(R"(
         type T<a> = { v: a }
-        local x: T<number> = { v = 123 }
-        local y: T<string> = { v = "foo" }
-        local bad: T<number> = { v = "foo" }
+        const x: T<number> = { v = 123 }
+        const y: T<string> = { v = "foo" }
+        const bad: T<number> = { v = "foo" }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -227,8 +228,8 @@ TEST_CASE_FIXTURE(Fixture, "dependent_generic_aliases")
     CheckResult result = check(R"(
         type T<a> = { v: a }
         type U<a> = { t: T<a> }
-        local x: U<number> = { t = { v = 123 } }
-        local bad: U<number> = { t = { v = "foo" } }
+        const x: U<number> = { t = { v = 123 } }
+        const bad: U<number> = { t = { v = "foo" } }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -242,9 +243,9 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_generic_aliases")
         --!strict
         type T<a> = { f: a, g: U<a> }
         type U<a> = { h: a, i: T<a>? }
-        local x: T<number> = { f = 37, g = { h = 5, i = nil } }
+        const x: T<number> = { f = 37, g = { h = 5, i = nil } }
         x.g.i = x
-        local y: T<string> = { f = "hi", g = { h = "lo", i = nil } }
+        const y: T<string> = { f = "hi", g = { h = "lo", i = nil } }
         y.g.i = y
     )");
 
@@ -257,9 +258,9 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_errors")
         --!strict
         type T<a> = { f: a, g: U<a> }
         type U<b> = { h: b, i: T<b>? }
-        local x: T<number> = { f = 37, g = { h = 5, i = nil } }
+        const x: T<number> = { f = 37, g = { h = 5, i = nil } }
         x.g.i = x
-        local y: T<string> = { f = "hi", g = { h = 5, i = nil } }
+        const y: T<string> = { f = "hi", g = { h = 5, i = nil } }
         y.g.i = y
     )");
 
@@ -280,10 +281,11 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_errors")
 
 TEST_CASE_FIXTURE(Fixture, "use_table_name_and_generic_params_in_errors")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         type Pair<T, U> = {first: T, second: U}
-        local a: Pair<string, number>
-        local b: Pair<string, string>
+        export a: Pair<string, number> = nil as any
+        const b: Pair<string, string> = nil as any
 
         a = b
     )");
@@ -302,7 +304,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_stop_typechecking_after_reporting_duplicate_typ
     CheckResult result = check(R"(
         type A = number
         type A = string -- Redefinition of type 'A', previously defined at line 1
-        local foo: string = 1 -- "Type 'number' could not be converted into 'string'"
+        const foo: string = 1 -- "Type 'number' could not be converted into 'string'"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -314,7 +316,7 @@ TEST_CASE_FIXTURE(Fixture, "stringify_type_alias_of_recursive_template_table_typ
     CheckResult result = check(R"(
         type Table<T> = { a: T }
         type Wrapped = Table<Wrapped>
-        local l: Wrapped = 2
+        const l: Wrapped = 2
         )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -331,7 +333,7 @@ TEST_CASE_FIXTURE(Fixture, "stringify_type_alias_of_recursive_template_table_typ
     CheckResult result = check(R"(
         type Table<T> = { a: T }
         type Wrapped = (Table<Wrapped>) -> string
-        local l: Wrapped = 2
+        const l: Wrapped = 2
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -356,7 +358,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_38393_recursive_intersection_oom")
 TEST_CASE_FIXTURE(Fixture, "type_alias_fwd_declaration_is_precise")
 {
     CheckResult result = check(R"(
-        local foo: Id<number> = 1
+        const foo: Id<number> = 1
         type Id<T> = T
     )");
 
@@ -407,15 +409,15 @@ TEST_CASE_FIXTURE(Fixture, "generic_param_remap")
     const std::string code = R"(
         -- An example of a forwarded use of a type that has different type arguments than parameters
         type A<T,U> = {t:T, u:U, next:A<U,T>?}
-        local aa:A<number,string> = { t = 5, u = 'hi', next = { t = 'lo', u = 8 } }
-        local bb = aa
+        const aa:A<number,string> = { t = 5, u = 'hi', next = { t = 'lo', u = 8 } }
+        const bb = aa
     )";
 
     const std::string expected = R"(
 
         type A<T,U> = {t:T, u:U, next:A<U,T>?}
-        local aa:A<number,string> = { t = 5, u = 'hi', next = { t = 'lo', u = 8 } }
-        local bb:A<number,string>=aa
+        const aa:A<number,string> = { t = 5, u = 'hi', next = { t = 'lo', u = 8 } }
+        const bb:A<number,string>=aa
     )";
 
     CHECK_EQ(expected, decorateWithTypes(code));
@@ -461,9 +463,7 @@ TEST_CASE_FIXTURE(Fixture, "stringify_optional_parameterized_alias")
     CheckResult result = check(R"(
         type Node<T> = { value: T, child: Node<T>? }
 
-        local function visitor<T>(node: Node<T>?)
-            local a: Node<T>
-
+        function visitor<T>(node: Node<T>?, a: Node<T>)
             if node then
                 a = node.child -- Observe the output of the error message.
             end
@@ -491,10 +491,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "general_require_multi_assign")
     )";
 
     fileResolver.source["workspace/C"] = R"(
-        local Foo, Bar = require(workspace.A), require(workspace.B)
+        const Foo, Bar = require(workspace.A), require(workspace.B)
 
-        local a: Foo.myvec2
-        local b: Bar.myvec3
+        const a: Foo.myvec2 = nil as any
+        const b: Bar.myvec3 = nil as any
     )";
 
     CheckResult result = getFrontend().check("workspace/C");
@@ -532,7 +532,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_local_mutation")
 
     CheckResult result = check(R"(
         type Cool = { a: number, b: string }
-        local c: Cool = { a = 1, b = "s" }
+        const c: Cool = { a = 1, b = "s" }
         type NotCool<x> = Cool
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -554,8 +554,8 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_local_rename")
     CheckResult result = check(R"(
 type Cool = { a: number, b: string }
 type NotCool = Cool
-local c: Cool = { a = 1, b = "s" }
-local d: NotCool = { a = 1, b = "s" }
+const c: Cool = { a = 1, b = "s" }
+const d: NotCool = { a = 1, b = "s" }
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -571,7 +571,7 @@ local d: NotCool = { a = 1, b = "s" }
 TEST_CASE_FIXTURE(Fixture, "type_alias_local_synthetic_mutation")
 {
     CheckResult result = check(R"(
-local c = { a = 1, b = "s" }
+const c = { a = 1, b = "s" }
 type Cool = typeof(c)
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -596,7 +596,7 @@ return {}
     LUAU_REQUIRE_NO_ERRORS(aResult);
 
     CheckResult bResult = check(R"(
-local Import = require(game.A)
+const Import = require(game.A)
 type X = Import.X
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
@@ -622,7 +622,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_of_an_imported_recursive_generic_
     LUAU_REQUIRE_NO_ERRORS(aResult);
 
     CheckResult bResult = check(R"(
-        local Import = require(game.A)
+        const Import = require(game.A)
         type X<T, U> = Import.X<T, U>
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
@@ -636,7 +636,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_of_an_imported_recursive_generic_
     CHECK_EQ(toString(*ty1, {true}), toString(*ty2, {true}));
 
     bResult = check(R"(
-        local Import = require(game.A)
+        const Import = require(game.A)
         type X<T, U> = Import.X<U, T>
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
@@ -743,7 +743,7 @@ TEST_CASE_FIXTURE(Fixture, "free_variables_from_typeof_in_aliases")
     CheckResult result = check(R"(
         function f(x) return x[1] end
         -- x has type X? for a free type variable X
-        local x = f ({})
+        const x = f ({})
         type ContainsFree<a> = { this: a, that: typeof(x) }
         type ContainsContainsFree = { that: ContainsFree<number> }
     )");
@@ -757,7 +757,7 @@ TEST_CASE_FIXTURE(Fixture, "non_recursive_aliases_that_reuse_a_generic_name")
         type Array<T> = { [number]: T }
         type Tuple<T, V> = Array<T | V>
 
-        local p: Tuple<number, string>
+        const p: Tuple<number, string> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -778,14 +778,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_quantify_unresolved_aliases")
     CheckResult result = check(R"(
         --!strict
 
-        local KeyPool = {}
+        const KeyPool = {}
 
-        local function newkey(pool: KeyPool, index)
+        function newkey(pool: KeyPool, index)
             return {}
         end
 
         function newKeyPool()
-            local pool = {
+            const pool = {
                 available = {} as {Key},
             }
 
@@ -826,12 +826,12 @@ TEST_CASE_FIXTURE(Fixture, "forward_declared_alias_is_not_clobbered_by_prior_uni
 {
 
     CheckResult result = check(R"(
-        local function x()
-            local y: FutureType = {} as any
+        function x()
+            const y: FutureType = {} as any
             return 1
         end
         type FutureType = { foo: typeof(x()) }
-        local d: FutureType = { smth = true } -- missing error, 'd' is resolved to 'any'
+        const d: FutureType = { smth = true } -- missing error, 'd' is resolved to 'any'
     )");
 
     CHECK_EQ("{ foo: number }", toString(requireType("d"), {true}));
@@ -958,16 +958,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_lose_track_of_PendingExpansionTypes_aft
     // Note: This script path is actually as short as it can be.  Any shorter
     // and we somehow fail to surface the bug.
     fileResolver.source["game/React/React/ReactHooks"] = R"(
-        local RCD = require(script.Parent.Parent.Parent.ReactCurrentDispatcher)
+        const RCD = require(script.Parent.Parent.Parent.ReactCurrentDispatcher)
 
-        local function resolveDispatcher(): RCD.Dispatcher
+        function resolveDispatcher(): RCD.Dispatcher
             return (nil as any) as RCD.Dispatcher
         end
 
         function useState<S>(
             initialState: (() -> S) | S
         ): (S, RCD.Dispatch<RCD.BasicStateAction<S>>)
-            local dispatcher = resolveDispatcher()
+            const dispatcher = resolveDispatcher()
             return dispatcher.useState(initialState)
         end
     )";
@@ -991,8 +991,8 @@ TEST_CASE_FIXTURE(Fixture, "another_thing_from_roact")
             andThen: (self: Wakeable) -> nil | Wakeable,
         }
 
-        local function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: number)
-            local pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | nil = root.pingCache
+        function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: number)
+            const pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | nil = root.pingCache
         end
     )");
 
@@ -1015,12 +1015,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "alias_expands_to_bare_reference_to_imported_
     )";
 
     fileResolver.source["game/B"] = R"(
-        local A = require(script.Parent.A)
+        const A = require(script.Parent.A)
 
         type Object = A.Object
         type ReadOnly<T> = T
 
-        local function f(): ReadOnly<Object>
+        function f(): ReadOnly<Object>
             return nil as any
         end
     )";
@@ -1036,7 +1036,7 @@ TEST_CASE_FIXTURE(Fixture, "table_types_record_the_property_locations")
             create: () -> ()
         }
 
-        local x: Table
+        const x: Table = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1141,7 +1141,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_adds_reduce_constraint_for_type_f
     CheckResult result = check(R"(
     type plus<T> = add<number, T>
 
-    local sum: plus<number> = 10
+    const sum: plus<number> = 10
     )");
 
     LUAU_CHECK_NO_ERRORS(result);
@@ -1181,7 +1181,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1632_no_infinite_recursion_in_normalizatio
             head: Node<T>?
         }
 
-        local function IsFront(list: List<any>, nodeB: Node<any>)
+        function IsFront(list: List<any>, nodeB: Node<any>)
             -- remove if statement below, solves issue
             if (list.head == nodeB) then
             end
@@ -1271,7 +1271,7 @@ export type t0<t0,t10,t10,t109> = t0
 TEST_CASE_FIXTURE(Fixture, "evaluating_generic_default_type_shouldnt_ice")
 {
     auto result = check(R"(
-local A = {}
+const A = {}
 type B<T = typeof(A)> = unknown
 )");
 
@@ -1287,7 +1287,7 @@ type B<T = typeof(A)> = unknown
 TEST_CASE_FIXTURE(Fixture, "evaluating_generic_default_type_pack_shouldnt_ice")
 {
     auto result = check(R"(
-local A = {}
+const A = {}
 type B<T... = ...typeof(A)> = unknown
 )");
 
@@ -1308,7 +1308,7 @@ TEST_CASE_FIXTURE(Fixture, "evaluating_generic_default_type_for_symbol_before_de
 
     auto result = check(R"(
 type B<T = typeof(A)> = unknown
-local A = {}
+const A = {}
 )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1323,7 +1323,7 @@ TEST_CASE_FIXTURE(Fixture, "evaluating_generic_default_type_pack_for_symbol_befo
 
     auto result = check(R"(
 type B<T... = ...typeof(A)> = unknown
-local A = {}
+const A = {}
 )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1391,13 +1391,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unpack_doesnt_emplace_typeof_type")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local Obj = {}
+        const Obj = {}
 
-        local function g(): number
+        function g(): number
             return 42
         end
 
-        local val: typeof(Obj.Foo.Bar) = g()
+        const val: typeof(Obj.Foo.Bar) = g()
 
         Obj.Foo = {}
         Obj.Foo.Bar = 42
@@ -1480,9 +1480,9 @@ type Alias<Generic> = typeof(getmetatable(... as Generic))
 type Value = { x: number, y: number }
 type Meta = setmetatable<Value, { __len : (Value) -> number }>
 
-local foo: Alias<Meta>
+const foo: Alias<Meta> = nil as any
 
-local x: number = foo.__len({ x = 1, y = 2})
+const x: number = foo.__len({ x = 1, y = 2})
 
 return foo
     )"));

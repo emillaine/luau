@@ -1,15 +1,15 @@
 -- Alpha-beta search with iterative deepening, quiescence, and transposition table
 
-local boardMod = require("./board")
-local movegen = require("./movegen")
-local eval = require("./eval")
+boardMod = require("./board")
+movegen = require("./movegen")
+eval = require("./eval")
 
-local INFINITY = 999999
-local MATE_SCORE = 100000
+INFINITY = 999999
+MATE_SCORE = 100000
 
-local TT_EXACT = 0
-local TT_ALPHA = 1
-local TT_BETA = 2
+TT_EXACT = 0
+TT_ALPHA = 1
+TT_BETA = 2
 
 type TTEntry = {
     hash: number,
@@ -20,15 +20,15 @@ type TTEntry = {
     bestTo: number,
 }
 
-local ttSize = 65536
-local ttMask = ttSize - 1
-local tt: {TTEntry?} = table.create(ttSize, nil)
+ttSize = 65536
+ttMask = ttSize - 1
+tt = table.create(ttSize, nil)
 
-local nodesSearched = 0
+nodesSearched = 0
 
-local function ttProbe(hash: number, depth: number, alpha: number, beta: number): (number?, number?, number?)
-    local idx = bit32.band(hash, ttMask) + 1
-    local entry = tt[idx]
+function ttProbe(hash: number, depth: number, alpha: number, beta: number): (number?, number?, number?)
+    idx = bit32.band(hash, ttMask) + 1
+    entry = tt[idx]
     if entry and entry.hash == hash then
         if entry.depth >= depth then
             if entry.flag == TT_EXACT then
@@ -44,8 +44,8 @@ local function ttProbe(hash: number, depth: number, alpha: number, beta: number)
     return nil, nil, nil
 end
 
-local function ttStore(hash: number, depth: number, score: number, flag: number, bestFrom: number, bestTo: number)
-    local idx = bit32.band(hash, ttMask) + 1
+function ttStore(hash: number, depth: number, score: number, flag: number, bestFrom: number, bestTo: number)
+    idx = bit32.band(hash, ttMask) + 1
     tt[idx] = {
         hash = hash,
         depth = depth,
@@ -56,16 +56,16 @@ local function ttStore(hash: number, depth: number, score: number, flag: number,
     }
 end
 
-local function mvvLva(move: movegen.Move): number
+function mvvLva(move: movegen.Move): number
     if move.capture == boardMod.EMPTY then return 0 end
-    local captureVal = eval.pieceValues[bit32.band(move.capture, 7)] or 0
+    captureVal = eval.pieceValues[bit32.band(move.capture, 7)] or 0
     return captureVal * 10
 end
 
-local function orderMoves(moves: {movegen.Move}, ttFrom: number?, ttTo: number?)
-    local scores: {number} = table.create(#moves, 0)
+function orderMoves(moves: {movegen.Move}, ttFrom: number?, ttTo: number?)
+    scores = table.create(#moves, 0)
     for i, move in moves do
-        local s = mvvLva(move)
+        s = mvvLva(move)
         if ttFrom and ttTo and move.from == ttFrom and move.to == ttTo then
             s += 1000000
         end
@@ -73,34 +73,34 @@ local function orderMoves(moves: {movegen.Move}, ttFrom: number?, ttTo: number?)
     end
 
     for i = 1, #moves - 1 do
-        local bestIdx = i
-        local bestScore = scores[i]
+        bestIdx = i
+        bestScore = scores[i]
         for j = i + 1, #moves do
             if scores[j] > bestScore then
                 bestIdx = j
                 bestScore = scores[j]
             end
         end
-        if bestIdx ~= i then
+        if bestIdx != i then
             moves[i], moves[bestIdx] = moves[bestIdx], moves[i]
             scores[i], scores[bestIdx] = scores[bestIdx], scores[i]
         end
     end
 end
 
-local function quiescence(board: boardMod.Board, alpha: number, beta: number, depth: number): number
+function quiescence(board: boardMod.Board, alpha: number, beta: number, depth: number): number
     nodesSearched += 1
-    local standPat = eval.evaluate(board)
+    standPat = eval.evaluate(board)
     if standPat >= beta then return beta end
     if depth <= -6 then return standPat end
     if standPat > alpha then alpha = standPat end
 
-    local moves = movegen.generateLegalMoves(board)
+    moves = movegen.generateLegalMoves(board)
     for _, move in moves do
         if move.capture == boardMod.EMPTY then continue end
 
-        local newBoard = movegen.makeMove(board, move)
-        local score = -quiescence(newBoard, -beta, -alpha, depth - 1)
+        newBoard = movegen.makeMove(board, move)
+        score = -quiescence(newBoard, -beta, -alpha, depth - 1)
 
         if score >= beta then return beta end
         if score > alpha then alpha = score end
@@ -109,17 +109,17 @@ local function quiescence(board: boardMod.Board, alpha: number, beta: number, de
     return alpha
 end
 
-local function alphaBeta(board: boardMod.Board, depth: number, alpha: number, beta: number, ply: number): number
+function alphaBeta(board: boardMod.Board, depth: number, alpha: number, beta: number, ply: number): number
     if depth <= 0 then
         return quiescence(board, alpha, beta, 0)
     end
 
     nodesSearched += 1
 
-    local ttScore, ttFrom, ttTo = ttProbe(board.zobrist, depth, alpha, beta)
+    ttScore, ttFrom, ttTo = ttProbe(board.zobrist, depth, alpha, beta)
     if ttScore then return ttScore end
 
-    local moves = movegen.generateLegalMoves(board)
+    moves = movegen.generateLegalMoves(board)
     if #moves == 0 then
         if movegen.isInCheck(board) then
             return -(MATE_SCORE - ply)
@@ -129,14 +129,14 @@ local function alphaBeta(board: boardMod.Board, depth: number, alpha: number, be
 
     orderMoves(moves, ttFrom, ttTo)
 
-    local bestFrom = moves[1].from
-    local bestTo = moves[1].to
-    local ttFlag = TT_ALPHA
-    local bestScore = -INFINITY
+    bestFrom = moves[1].from
+    bestTo = moves[1].to
+    ttFlag = TT_ALPHA
+    bestScore = -INFINITY
 
     for _, move in moves do
-        local newBoard = movegen.makeMove(board, move)
-        local score = -alphaBeta(newBoard, depth - 1, -beta, -alpha, ply + 1)
+        newBoard = movegen.makeMove(board, move)
+        score = -alphaBeta(newBoard, depth - 1, -beta, -alpha, ply + 1)
 
         if score > bestScore then
             bestScore = score
@@ -158,26 +158,26 @@ local function alphaBeta(board: boardMod.Board, depth: number, alpha: number, be
     return alpha
 end
 
-local function search(board: boardMod.Board, maxDepth: number): (movegen.Move?, number, number)
+function search(board: boardMod.Board, maxDepth: number): (movegen.Move?, number, number)
     nodesSearched = 0
-    local bestMove: movegen.Move? = nil
-    local bestScore = -INFINITY
+    bestMove = nil
+    bestScore = -INFINITY
 
     for depth = 1, maxDepth do
-        local moves = movegen.generateLegalMoves(board)
+        moves = movegen.generateLegalMoves(board)
         if #moves == 0 then break end
 
-        local _, ttFrom, ttTo = ttProbe(board.zobrist, 0, -INFINITY, INFINITY)
+        _, ttFrom, ttTo = ttProbe(board.zobrist, 0, -INFINITY, INFINITY)
         orderMoves(moves, ttFrom, ttTo)
 
-        local alpha = -INFINITY
-        local beta = INFINITY
-        local currentBest: movegen.Move? = nil
-        local currentScore = -INFINITY
+        alpha = -INFINITY
+        beta = INFINITY
+        currentBest = nil
+        currentScore = -INFINITY
 
         for _, move in moves do
-            local newBoard = movegen.makeMove(board, move)
-            local score = -alphaBeta(newBoard, depth - 1, -beta, -alpha, 1)
+            newBoard = movegen.makeMove(board, move)
+            score = -alphaBeta(newBoard, depth - 1, -beta, -alpha, 1)
 
             if score > currentScore then
                 currentScore = score
@@ -197,7 +197,7 @@ local function search(board: boardMod.Board, maxDepth: number): (movegen.Move?, 
     return bestMove, bestScore, nodesSearched
 end
 
-local function clearTT()
+function clearTT()
     for i = 1, ttSize do
         tt[i] = nil
     end

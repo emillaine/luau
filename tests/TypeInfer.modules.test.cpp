@@ -38,9 +38,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_require_basic")
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local b = A.a
+        const b = A.a
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -59,7 +59,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_require_basic")
 TEST_CASE_FIXTURE(BuiltinsFixture, "require")
 {
     fileResolver.source["game/A"] = R"(
-        local function hooty(x: number): string
+        function hooty(x: number): string
             return "Hi there!"
         end
 
@@ -69,19 +69,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         fileResolver.source["game/B"] = R"(
-            local Hooty = require(game.A)
+            const Hooty = require(game.A)
 
-            local h = 4
-            local i = Hooty.hooty(h)
+            const h = 4
+            const i = Hooty.hooty(h)
         )";
     }
     else
     {
         fileResolver.source["game/B"] = R"(
-            local Hooty = require(game.A)
+            const Hooty = require(game.A)
 
-            local h -- free!
-            local i = Hooty.hooty(h)
+            const h  = nil-- free!
+            const i = Hooty.hooty(h)
         )";
     }
 
@@ -115,9 +115,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_types")
     )";
 
     fileResolver.source["workspace/B"] = R"(
-        local Hooty = require(workspace.A)
+        const Hooty = require(workspace.A)
 
-        local h: Hooty.Point
+        const h: Hooty.Point = nil as any
     )";
 
     CheckResult bResult = getFrontend().check("workspace/B");
@@ -133,14 +133,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_types")
 TEST_CASE_FIXTURE(BuiltinsFixture, "require_a_variadic_function")
 {
     fileResolver.source["game/A"] = R"(
-        local T = {}
+        const T = {}
         function T.f(...) end
         return T
     )";
 
     fileResolver.source["game/B"] = R"(
-        local A = require(game.A)
-        local f = A.f
+        const A = require(game.A)
+        const f = A.f
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -199,7 +199,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_table_freeze")
 TEST_CASE_FIXTURE(Fixture, "type_error_of_unknown_qualified_type")
 {
     CheckResult result = check(R"(
-        local p: SomeModule.DoesNotExist
+        const p: SomeModule.DoesNotExist = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -213,7 +213,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_module_that_does_not_export")
     )";
 
     const std::string sourceB = R"(
-        local Hooty = require(script.Parent.A)
+        const Hooty = require(script.Parent.A)
     )";
 
     fileResolver.source["game/Workspace/A"] = sourceA;
@@ -240,7 +240,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "warn_if_you_try_to_require_a_non_modulescrip
     fileResolver.sourceTypes["Modules/A"] = SourceCode::Script;
 
     fileResolver.source["Modules/B"] = R"(
-        local M = require(script.Parent.A)
+        const M = require(script.Parent.A)
     )";
 
     CheckResult result = getFrontend().check("Modules/B");
@@ -252,6 +252,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "warn_if_you_try_to_require_a_non_modulescrip
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "general_require_call_expression")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     fileResolver.source["game/A"] = R"(
 --!strict
 return { def = 4 }
@@ -259,8 +260,8 @@ return { def = 4 }
 
     fileResolver.source["game/B"] = R"(
 --!strict
-local tbl = { abc = require(game.A) }
-local a : string = ""
+const tbl = { abc = require(game.A) }
+export a : string = ""
 a = tbl.abc.def
     )";
 
@@ -276,7 +277,7 @@ return { def = 4 }
     )";
 
     fileResolver.source["game/B"] = R"(
-local tbl: string = require(game.A)
+const tbl: string = require(game.A)
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -287,10 +288,10 @@ local tbl: string = require(game.A)
 TEST_CASE_FIXTURE(Fixture, "bound_free_table_export_is_ok")
 {
     CheckResult result = check(R"(
-local n = {}
+const n = {}
 function n:Clone() end
 
-local m = {}
+const m = {}
 
 function m.a(x)
     x:Clone()
@@ -312,7 +313,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "custom_require_global")
 --!nonstrict
 require = function(a) end
 
-local crash = require(game.A)
+const crash = require(game.A)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -328,7 +329,7 @@ return unfortunately()
     LUAU_REQUIRE_ERRORS(aResult);
 
     CheckResult result = check(R"(
-local ModuleA = require(game.A)
+const ModuleA = require(game.A)
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -345,9 +346,9 @@ return {}
     )";
 
     fileResolver.source["game/B"] = R"(
-local types = require(game.A)
+const types = require(game.A)
 type Type = types.Type
-local x: Type = {}
+const x: Type = {}
 function x:Destroy(): () end
     )";
 
@@ -363,9 +364,9 @@ return {}
     )";
 
     fileResolver.source["game/B"] = R"(
-local types = require(game.A)
+const types = require(game.A)
 type Type = types.Type
-local x: Type = { x = { a = 2 } }
+const x: Type = { x = { a = 2 } }
 type Rename = typeof(x.x)
     )";
 
@@ -376,15 +377,15 @@ type Rename = typeof(x.x)
 TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_modify_imported_types_3")
 {
     fileResolver.source["game/A"] = R"(
-local y = setmetatable({}, {})
+const y = setmetatable({}, {})
 export type Type = { x: typeof(y) }
 return { x = y }
     )";
 
     fileResolver.source["game/B"] = R"(
-local types = require(game.A)
+const types = require(game.A)
 type Type = types.Type
-local x: Type = types
+const x: Type = types
 type Rename = typeof(x.x)
     )";
 
@@ -396,15 +397,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_modify_imported_types_4")
 {
     fileResolver.source["game/A"] = R"(
 export type Array<T> = {T}
-local arrayops = {}
+const arrayops = {}
 function arrayops.foo(x: Array<any>) end
 return arrayops
     )";
 
     CheckResult result = check(R"(
-local arrayops = require(game.A)
+const arrayops = require(game.A)
 
-local tbl = {}
+const tbl = {}
 tbl.a = 2
 function tbl:foo(b: number, c: number)
     -- introduce BoundType to imported type
@@ -421,15 +422,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_modify_imported_types_5")
 {
     fileResolver.source["game/A"] = R"(
 export type Type = {x: number, y: number}
-local arrayops = {}
+const arrayops = {}
 function arrayops.foo(x: Type) end
 return arrayops
     )";
 
     CheckResult result = check(R"(
-local arrayops = require(game.A)
+const arrayops = require(game.A)
 
-local tbl = {}
+const tbl = {}
 tbl.a = 2
 function tbl:foo(b: number, c: number)
     -- introduce boundTo TableType to imported type
@@ -456,10 +457,10 @@ return {}
     )";
 
     fileResolver.source["game/C"] = R"(
-local A = require(game.A)
-local B = require(game.B)
-local a: A.T = { x = 2 }
-local b: B.T = a
+const A = require(game.A)
+const B = require(game.B)
+const a: A.T = { x = 2 }
+const b: B.T = a
     )";
 
     CheckResult result = getFrontend().check("game/C");
@@ -494,22 +495,22 @@ return {}
     )";
 
     fileResolver.source["game/B"] = R"(
-local A = require(game.A)
+const A = require(game.A)
 export type T = A.Wrap<number>
 return {}
     )";
 
     fileResolver.source["game/C"] = R"(
-local A = require(game.A)
+const A = require(game.A)
 export type T = A.Wrap<string>
 return {}
     )";
 
     fileResolver.source["game/D"] = R"(
-local A = require(game.B)
-local B = require(game.C)
-local a: A.T = { x = 2 }
-local b: B.T = a
+const A = require(game.B)
+const B = require(game.C)
+const a: A.T = { x = 2 }
+const b: B.T = a
     )";
 
     CheckResult result = getFrontend().check("game/D");
@@ -543,7 +544,7 @@ return function(...) end
     )";
 
     fileResolver.source["game/B"] = R"(
-local l0 = require(game.A)
+const l0 = require(game.A)
 return l0
     )";
 
@@ -567,14 +568,14 @@ return function(...) end
     )";
 
     fileResolver.source["game/B"] = R"(
-local l0 = require(game.A)
+const l0 = require(game.A)
 return l0
     )";
 
     CheckResult result = check(R"(
-local l0 = require(game.B)
+const l0 = require(game.B)
 if true then
-    local l1 = require(game.A)
+    const l1 = require(game.A)
 end
 return l0
     )");
@@ -604,7 +605,7 @@ return {}
     )";
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-local Types = require(game.A)
+const Types = require(game.A)
 type Binding<T> = Types.Binding<T>
     )"));
 }
@@ -616,7 +617,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ensure_free_variables_are_generialized_acros
     fileResolver.source["game/A"] = R"(
 -- Roughly taken from react-shallow-renderer
 function createUpdater(renderer)
-    local updater = {
+    const updater = {
         _renderer = renderer,
     }
 
@@ -642,7 +643,7 @@ function createUpdater(renderer)
     end
 
     function updater.enqueueSetState(publicInstance, partialState, callback, _callerName)
-        local currentState = updater._renderer._newState or publicInstance.state
+        const currentState = updater._renderer._newState or publicInstance.state
         updater._renderer.render(
             updater._renderer,
             updater._renderer._element,
@@ -653,7 +654,7 @@ function createUpdater(renderer)
     return updater
 end
 
-local ReactShallowRenderer = {}
+const ReactShallowRenderer = {}
 
 function ReactShallowRenderer:_reset()
     self._updater = createUpdater(self)
@@ -663,7 +664,7 @@ return ReactShallowRenderer
     )";
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-local ReactShallowRenderer = require(game.A);
+const ReactShallowRenderer = require(game.A);
     )"));
 }
 
@@ -673,11 +674,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "untitled_segfault_number_13")
 
     fileResolver.source["game/A"] = R"(
         -- minimized from roblox-requests/http/src/response.lua
-        local Response = {}
+        const Response = {}
         Response.__index = Response
         function Response.new(content_type)
             -- creates response object from original request and roblox http response
-            local self = setmetatable({}, Response)
+            const self = setmetatable({}, Response)
             self.content_type = content_type
             return self
         end
@@ -694,7 +695,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "untitled_segfault_number_13")
     )";
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local _ = require(game.A);
+        const _ = require(game.A);
     )"));
 }
 
@@ -703,7 +704,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     fileResolver.source["game/A"] = R"(
-        local Cache = {}
+        const Cache = {}
 
         Cache.settings = {}
 
@@ -724,8 +725,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
         function Cache.is_cached(url, req_id)
             -- check local server cache first
 
-            local setting_key = Cache.should_cache(url)
-            local settings = Cache.settings[setting_key]
+            const setting_key = Cache.should_cache(url)
+            const settings = Cache.settings[setting_key]
 
             if not setting_key then
                 return false
@@ -743,7 +744,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
         end
 
         function Cache.get_expire(url)
-            local setting_key = Cache.should_cache(url)
+            const setting_key = Cache.should_cache(url)
             return Cache.settings[setting_key].expires or math.huge
         end
 
@@ -751,7 +752,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
     )";
 
     auto result = check(R"(
-        local _ = require(game.A);
+        const _ = require(game.A);
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -762,7 +763,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "leaky_generics")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        local Cache = {}
+        const Cache = {}
 
         Cache.settings = {}
 
@@ -775,8 +776,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "leaky_generics")
         end
 
         function Cache.is_cached(url)
-            local setting_key = Cache.should_cache(url)
-            local settings = Cache.settings[setting_key]
+            const setting_key = Cache.should_cache(url)
+            const settings = Cache.settings[setting_key]
 
             return settings
         end
@@ -793,14 +794,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cycles_dont_make_everything_any")
 {
     fileResolver.source["game/A"] = R"(
         --!strict
-        local module = {}
+        const module = {}
 
         function module.foo()
             return 2
         end
 
         function module.bar()
-            local m = require(game.B)
+            const m = require(game.B)
             return m.foo() + 1
         end
 
@@ -809,14 +810,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cycles_dont_make_everything_any")
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local module = {}
+        const module = {}
 
         function module.foo()
             return 2
         end
 
         function module.bar()
-            local m = require(game.A)
+            const m = require(game.A)
             return m.foo() + 1
         end
 
@@ -844,7 +845,7 @@ return test2
 function wrapper<A...>(f: (A...) -> number, ...: A...)
 end
 
-local test2 = require(game.A)
+const test2 = require(game.A)
 
 return wrapper(test2, 1, "")
     )";
@@ -902,14 +903,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "scrub_unsealed_tables")
     fileResolver.source["game/A"] = R"(
         type Array<T> = {T}
         type Hello = Array<Array<Array<Array<Array<Array<Array<Array<Array<Array<number>>>>>>>>>>
-        local X = {}
+        const X = {}
         X.foo = 42
         X.bar = ""
         return X
     )";
 
     fileResolver.source["game/B"] = R"(
-        local x = require(game.A)
+        const x = require(game.A)
         x.lmao = 42
         return {}
     )";
@@ -929,10 +930,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invalid_local_alias_shouldnt_shadow_imported
     )";
 
     fileResolver.source["game/B"] = R"(
-        local a_mod = require(game.A)
+        const a_mod = require(game.A)
         type bad<T> = {bad<{T}>}
         type fine<T> = a_mod.bad<T>
-        local f: fine<number>
+        const f: fine<number> = nil as any
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -955,8 +956,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invalid_alias_should_export_as_error_type")
     )";
 
     fileResolver.source["game/B"] = R"(
-        local a_mod = require(game.A)
-        local f: a_mod.bad<number>
+        const a_mod = require(game.A)
+        const f: a_mod.bad<number> = nil as any
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -975,7 +976,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_194463_modify_bounds_of_visited_generic_
     ScopedFastFlag _{FFlag::LuauRemovePrimitiveTypeConstraintAndSubtypingUnifier, true};
 
     fileResolver.source["game/Container"] = R"(
-        local Container = {}
+        const Container = {}
 
         export type Container<K, V> = {[K]: V} & typeof(Container)
 
@@ -987,7 +988,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_194463_modify_bounds_of_visited_generic_
 
 
         function Container.new<K, V>(initialValues: {[K]: V}?): Container<K, V>
-            local self: Container<K, V> = setmetatable({}, Container) as any
+            const self: Container<K, V> = setmetatable({}, Container) as any
             if initialValues then
                 for key, value in initialValues do
                     rawset(self, key, value)
@@ -1004,8 +1005,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_194463_modify_bounds_of_visited_generic_
     )";
 
     fileResolver.source["game/Main"] = R"(
-        local Container = require(game.Container)
-        local states: Container.Container<any, any> = Container.new(nil as any)
+        const Container = require(game.Container)
+        const states: Container.Container<any, any> = Container.new(nil as any)
         return {}
     )";
 
@@ -1019,20 +1020,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_basic")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        export local version = "1.0.0"
+        export version = "1.0.0"
         export const name = "test module"
-        export local count = 41
+        export count = 41
 
         count += 1
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local version = A.version
-        local name = A.name
-        local count = A.count
+        const version = A.version
+        const name = A.name
+        const count = A.count
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1059,15 +1060,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_initializer_type_packs")
     fileResolver.source["game/A"] = R"(
         --!strict
 
-        local function makeValues(): ({ value: number }, string)
+        function makeValues(): ({ value: number }, string)
             return {value = 42}, "unused"
         end
 
         export const constDirect = makeValues()
-        export local localDirect = makeValues()
-        local indirect = makeValues()
+        export localDirect = makeValues()
+        const indirect = makeValues()
         export const constAlias = indirect
-        export local localAlias = indirect
+        export localAlias = indirect
     )";
 
     CheckResult result = getFrontend().check("game/A");
@@ -1097,7 +1098,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_initializer_type_packs_multi
     fileResolver.source["game/A"] = R"(
         --!strict
 
-        local function makeValues(): ({ value: number }, string)
+        function makeValues(): ({ value: number }, string)
             return {value = 42}, "unused"
         end
 
@@ -1126,7 +1127,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_mutual_recursive_functions")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        export local a, b
+        export a, b
 
         function a()
             return b() + 1
@@ -1139,10 +1140,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_mutual_recursive_functions")
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a = A.a
-        local b = A.b
+        const a = A.a
+        const b = A.b
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1162,17 +1163,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_unassigned_local_stays_nil")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        export local a
-        export local b = function() return 1 end
+        export a
+        export b = function() return 1 end
         b = nil
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a = A.a
-        local b = A.b
+        const a = A.a
+        const b = A.b
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1193,18 +1194,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "returned_module_unassigned_local_stays_nil")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        local a = nil
-        local b = function() return 1 end
+        const a = nil
+        b = function() return 1 end
         b = nil
         return {a = a, b = b}
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a = A.a
-        local b = A.b
+        const a = A.a
+        const b = A.b
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1239,11 +1240,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_function")
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local add = A.add
-        local greet = A.greet
-        local noop = A.noop
+        const add = A.add
+        const greet = A.greet
+        const noop = A.noop
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1264,20 +1265,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_multret")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        local function huh()
+        function huh()
             return 42, "huh", false
         end
 
-        export local a, b, c = huh()
+        export a, b, c = huh()
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a = A.a
-        local b = A.b
-        local c = A.c
+        const a = A.a
+        const b = A.b
+        const c = A.c
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1298,20 +1299,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_partial_multret")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        local function huh()
+        function huh()
             return "huh", false
         end
 
-        export local a, b, c = 42, huh()
+        export a, b, c = 42, huh()
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a = A.a
-        local b = A.b
-        local c = A.c
+        const a = A.a
+        const b = A.b
+        const c = A.c
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1336,7 +1337,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "export_class")
     };
 
     fileResolver.source["game/A"] = R"(
-        export class Point
+        class PointImpl
             public x: number
             public y: number
 
@@ -1344,14 +1345,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "export_class")
                 return `Point x={self.x} y={self.y}`
             end
         end
+
+        export type Point = PointImpl
+
+        return { Point = PointImpl }
     )";
 
     fileResolver.source["game/B"] = R"(
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a: A.Point = A.Point.new { x=2, y=3 }
+        const a: A.Point = A.Point.new { x=2, y=3 }
 
-        local x, y = a.x, a.y
+        const x, y = a.x, a.y
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -1380,9 +1385,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_exported_class")
     )";
 
     fileResolver.source["game/B"] = R"(
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local a: A.Point = A.Point.new { x=2, y=3 }
+        const a: A.Point = A.Point.new { x=2, y=3 }
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -1406,18 +1411,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_uses_binding_type
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        export local x: number = 5
-        export local y: string = "hello"
-        export local z: {name: string} = {name = "test"}
+        export x: number = 5
+        export y: string = "hello"
+        export z: {name: string} = {name = "test"}
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local x = A.x
-        local y = A.y
-        local z = A.z
+        const x = A.x
+        const y = A.y
+        const z = A.z
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1449,14 +1454,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_preferred_over_in
     fileResolver.source["game/A"] = R"(
         --!strict
         type Callback = (number) -> string
-        export local handler: Callback = function(n) return tostring(n) end
+        export handler: Callback = function(n) return tostring(n) end
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
 
-        local h = A.handler
+        const h = A.handler
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1480,12 +1485,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_binding_is_readonly")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        export local Value = 42
+        export Value = 42
     )";
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local A = require(game.A)
+        const A = require(game.A)
         A.Value = 13
     )";
 
@@ -1508,7 +1513,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_mismatch_errors")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        export local x: number = "RUH ROH"
+        export x: number = "RUH ROH"
     )";
 
     CheckResult result = getFrontend().check("game/A");

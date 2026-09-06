@@ -19,14 +19,14 @@ function EvalElse_IfChain(condition1, condition2, condition3)
 end
 
 function CheckForConditionalEvaluation(condition)
-    local counter = 0
+    counter = 0
 
-    local function AddToCounter(count)
+    function AddToCounter(count)
       counter += count
       return counter
     end
 
-    local result = if condition then AddToCounter(7) else AddToCounter(17)
+    result = if condition then AddToCounter(7) else AddToCounter(17)
     if condition then
       assert(result == 7)
     else

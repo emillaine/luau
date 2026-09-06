@@ -21,14 +21,15 @@ LUAU_FASTFLAG(DebugLuauForceOldSolver)
 LUAU_FASTFLAG(LuauIntegerType2)
 LUAU_FASTFLAG(LuauSolverAgnosticStringification)
 LUAU_FASTFLAG(LuauCompoundAssignSeedsAstTypes)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 TEST_SUITE_BEGIN("TypeInferOperators");
 
 TEST_CASE_FIXTURE(Fixture, "or_joins_types")
 {
     CheckResult result = check(R"(
-        local s = "a" or 10
-        local x:string|number = s
+        const s = "a" or 10
+        const x:string|number = s
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -48,9 +49,9 @@ TEST_CASE_FIXTURE(Fixture, "or_joins_types")
 TEST_CASE_FIXTURE(Fixture, "or_joins_types_with_no_extras")
 {
     CheckResult result = check(R"(
-        local s = "a" or 10
-        local x:number|string = s
-        local y = x or "s"
+        const s = "a" or 10
+        const x:number|string = s
+        const y = x or "s"
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -70,8 +71,8 @@ TEST_CASE_FIXTURE(Fixture, "or_joins_types_with_no_extras")
 TEST_CASE_FIXTURE(Fixture, "or_joins_types_with_no_superfluous_union")
 {
     CheckResult result = check(R"(
-        local s = "a" or "b"
-        local x:string = s
+        const s = "a" or "b"
+        const x:string = s
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -87,8 +88,8 @@ TEST_CASE_FIXTURE(Fixture, "or_joins_types_with_no_superfluous_union")
 TEST_CASE_FIXTURE(Fixture, "and_does_not_always_add_boolean")
 {
     CheckResult result = check(R"(
-        local s = "a" and 10
-        local x:boolean|number = s
+        const s = "a" and 10
+        const x:boolean|number = s
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK_EQ(toString(*requireType("s")), "number");
@@ -97,8 +98,8 @@ TEST_CASE_FIXTURE(Fixture, "and_does_not_always_add_boolean")
 TEST_CASE_FIXTURE(Fixture, "and_adds_boolean_no_superfluous_union")
 {
     CheckResult result = check(R"(
-        local s = "a" and true
-        local x:boolean = s
+        const s = "a" and true
+        const x:boolean = s
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK("boolean" == toString(requireType("x")));
@@ -107,7 +108,7 @@ TEST_CASE_FIXTURE(Fixture, "and_adds_boolean_no_superfluous_union")
 TEST_CASE_FIXTURE(Fixture, "and_or_ternary")
 {
     CheckResult result = check(R"(
-        local s = (1/2) > 0.5 and "a" or 10
+        const s = (1/2) > 0.5 and "a" or 10
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK_EQ(toString(*requireType("s")), "number | string");
@@ -119,7 +120,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "primitive_arith_no_metatable")
         function add(a: number, b: string)
             return a + (tonumber(b) as number), tostring(a) .. b
         end
-        local n, s = add(2,"3")
+        const n, s = add(2,"3")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -136,8 +137,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "primitive_arith_no_metatable")
 TEST_CASE_FIXTURE(Fixture, "primitive_arith_no_metatable_with_follows")
 {
     CheckResult result = check(R"(
-        local PI=3.1415926535897931
-        local SOLAR_MASS=4*PI * PI
+        const PI=3.1415926535897931
+        const SOLAR_MASS=4*PI * PI
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -150,7 +151,7 @@ TEST_CASE_FIXTURE(Fixture, "primitive_arith_possible_metatable")
         function add(a: number, b: any)
             return a + b
         end
-        local t = add(1,2)
+        const t = add(1,2)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -160,11 +161,11 @@ TEST_CASE_FIXTURE(Fixture, "primitive_arith_possible_metatable")
 TEST_CASE_FIXTURE(Fixture, "some_primitive_binary_ops")
 {
     CheckResult result = check(R"(
-        local a = 4 + 8
-        local b = a + 9
-        local s = 'hotdogs'
-        local t = s .. s
-        local c = b - a
+        const a = 4 + 8
+        const b = a + 9
+        const s = 'hotdogs'
+        const t = s .. s
+        const c = b - a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -178,10 +179,11 @@ TEST_CASE_FIXTURE(Fixture, "some_primitive_binary_ops")
 
 TEST_CASE_FIXTURE(Fixture, "floor_division_binary_op")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a = 4 // 8
-        local b = -4 // 9
-        local c = 9
+        const a = 4 // 8
+        const b = -4 // 9
+        export c = 9
         c //= -6.5
     )");
 
@@ -196,7 +198,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_overloaded_multiply_that_is_an_int
 {
     CheckResult result = check(R"(
         --!strict
-        local Vec3 = {}
+        const Vec3 = {}
         Vec3.__index = Vec3
         function Vec3.new()
             return setmetatable({x=0, y=0, z=0}, Vec3)
@@ -204,17 +206,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_overloaded_multiply_that_is_an_int
 
         export type Vec3 = typeof(Vec3.new())
 
-        local thefun: any = function(self, o) return self end
+        const thefun: any = function(self, o) return self end
 
-        local multiply: ((Vec3, Vec3) -> Vec3) & ((Vec3, number) -> Vec3) = thefun
+        const multiply: ((Vec3, Vec3) -> Vec3) & ((Vec3, number) -> Vec3) = thefun
 
         Vec3.__mul = multiply
 
-        local a = Vec3.new()
-        local b = Vec3.new()
-        local c = a * b
-        local d = a * 2
-        local e = a * 'cabbage'
+        const a = Vec3.new()
+        const b = Vec3.new()
+        const c = a * b
+        const d = a * 2
+        const e = a * 'cabbage'
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -234,7 +236,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_overloaded_multiply_that_is_an_int
 {
     CheckResult result = check(R"(
         --!strict
-        local Vec3 = {}
+        const Vec3 = {}
         Vec3.__index = Vec3
         function Vec3.new()
             return setmetatable({x=0, y=0, z=0}, Vec3)
@@ -242,17 +244,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_overloaded_multiply_that_is_an_int
 
         export type Vec3 = typeof(Vec3.new())
 
-        local thefun: any = function(self, o) return self end
+        const thefun: any = function(self, o) return self end
 
-        local multiply: ((Vec3, Vec3) -> Vec3) & ((Vec3, number) -> Vec3) = thefun
+        const multiply: ((Vec3, Vec3) -> Vec3) & ((Vec3, number) -> Vec3) = thefun
 
         Vec3.__mul = multiply
 
-        local a = Vec3.new()
-        local b = Vec3.new()
-        local c = b * a
-        local d = 2 * a
-        local e = 'cabbage' * a
+        const a = Vec3.new()
+        const b = Vec3.new()
+        const c = b * a
+        const d = 2 * a
+        const e = 'cabbage' * a
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -271,9 +273,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_overloaded_multiply_that_is_an_int
 TEST_CASE_FIXTURE(Fixture, "compare_numbers")
 {
     CheckResult result = check(R"(
-        local a = 441
-        local b = 0
-        local c = a < b
+        const a = 441
+        const b = 0
+        const c = a < b
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -282,9 +284,9 @@ TEST_CASE_FIXTURE(Fixture, "compare_numbers")
 TEST_CASE_FIXTURE(Fixture, "compare_strings")
 {
     CheckResult result = check(R"(
-        local a = '441'
-        local b = '0'
-        local c = a < b
+        const a = '441'
+        const b = '0'
+        const c = a < b
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -293,9 +295,9 @@ TEST_CASE_FIXTURE(Fixture, "compare_strings")
 TEST_CASE_FIXTURE(Fixture, "cannot_indirectly_compare_types_that_do_not_have_a_metatable")
 {
     CheckResult result = check(R"(
-        local a = {}
-        local b = {}
-        local c = a < b
+        const a = {}
+        const b = {}
+        const c = a < b
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -315,15 +317,15 @@ TEST_CASE_FIXTURE(Fixture, "cannot_indirectly_compare_types_that_do_not_have_a_m
 TEST_CASE_FIXTURE(BuiltinsFixture, "cannot_indirectly_compare_types_that_do_not_offer_overloaded_ordering_operators")
 {
     CheckResult result = check(R"(
-        local M = {}
+        const M = {}
         function M.new()
             return setmetatable({}, M)
         end
         type M = typeof(M.new())
 
-        local a = M.new()
-        local b = M.new()
-        local c = a < b
+        const a = M.new()
+        const b = M.new()
+        const c = a < b
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -344,16 +346,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cannot_compare_tables_that_do_not_have_the_s
 {
     CheckResult result = check(R"(
         --!strict
-        local M = {}
+        const M = {}
         function M.new()
             return setmetatable({}, M)
         end
         function M.__lt(left, right) return true end
 
-        local a = M.new()
-        local b = {}
-        local c = a < b -- line 10
-        local d = b < a -- line 11
+        const a = M.new()
+        const b = {}
+        const c = a < b -- line 10
+        const d = b < a -- line 11
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -367,16 +369,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "produce_the_correct_error_message_when_compa
 {
     CheckResult result = check(R"(
         --!strict
-        local M = {}
+        const M = {}
         function M.new()
             return setmetatable({}, M)
         end
         function M.__lt(left, right) return true end
         type M = typeof(M.new())
 
-        local a = M.new()
-        local b = {}
-        local c = a < b -- line 10
+        const a = M.new()
+        const b = {}
+        const c = a < b -- line 10
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -397,7 +399,7 @@ TEST_CASE_FIXTURE(Fixture, "in_nonstrict_mode_strip_nil_from_intersections_when_
             return 50
         end
 
-        local a = maybe_a_number() < maybe_a_number()
+        const a = maybe_a_number() < maybe_a_number()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -405,8 +407,9 @@ TEST_CASE_FIXTURE(Fixture, "in_nonstrict_mode_strip_nil_from_intersections_when_
 
 TEST_CASE_FIXTURE(Fixture, "compound_assign_basic")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local s = 10
+        export s = 10
         s += 20
     )");
     CHECK_EQ(0, result.errors.size());
@@ -416,9 +419,10 @@ TEST_CASE_FIXTURE(Fixture, "compound_assign_basic")
 TEST_CASE_FIXTURE(Fixture, "compound_assign_mismatch_op")
 {
     ScopedFastFlag sff{FFlag::LuauCompoundAssignSeedsAstTypes, true};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local s = 10
+        export s = 10
         s += true
     )");
 
@@ -440,12 +444,13 @@ TEST_CASE_FIXTURE(Fixture, "compound_assign_mismatch_op")
 TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_reports_invalid_vector_arithmetic")
 {
     ScopedFastFlag sff{FFlag::LuauCompoundAssignSeedsAstTypes, true};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local x = vector.zero
+        export x = vector.zero
         x = x + 1
 
-        local y = vector.zero
+        export y = vector.zero
         y += 1
     )");
 
@@ -472,9 +477,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_reports_invalid_vector_arith
 TEST_CASE_FIXTURE(Fixture, "compound_assign_mismatch_result")
 {
     ScopedFastFlag sff{FFlag::LuauCompoundAssignSeedsAstTypes, true};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        local s = 'hello'
+        export s = 'hello'
         s += 10
     )");
 
@@ -496,11 +502,12 @@ TEST_CASE_FIXTURE(Fixture, "compound_assign_mismatch_result")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_metatable")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
         type V2B = { x: number, y: number }
-        local v2b: V2B = { x = 0, y = 0 }
-        local VMT = {}
+        const v2b: V2B = { x = 0, y = 0 }
+        const VMT = {}
 
         VMT.__add = function(a: V2, b: V2): V2
             return setmetatable({ x = a.x + b.x, y = a.y + b.y }, VMT)
@@ -508,8 +515,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_metatable")
 
         type V2 = typeof(setmetatable(v2b, VMT))
 
-        local v1: V2 = setmetatable({ x = 1, y = 2 }, VMT)
-        local v2: V2 = setmetatable({ x = 3, y = 4 }, VMT)
+        export v1: V2 = setmetatable({ x = 1, y = 2 }, VMT)
+        const v2: V2 = setmetatable({ x = 3, y = 4 }, VMT)
         v1 += v2
     )");
 
@@ -519,18 +526,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_metatable")
 TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_metatable_with_changing_return_type")
 {
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
         --!strict
         type T = { x: number }
-        local MT = {}
+        const MT = {}
 
         function MT:__add(other): number
             return 112
         end
 
-        local t = setmetatable({x = 2}, MT)
-        local u = t + 3
+        export t = setmetatable({x = 2}, MT)
+        const u = t + 3
         t += 3
     )");
 
@@ -545,17 +553,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_metatable_with_changing_retu
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_result_must_be_compatible_with_var")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function __add(left, right)
             return 123
         end
 
-        local mt = {
+        const mt = {
             __add = __add,
         }
 
-        local x = setmetatable({}, mt)
-        local v: number
+        export x = setmetatable({}, mt)
+        export v: number = nil as any
 
         v += x -- okay: number + x -> number
         x += v -- not okay: x </: number
@@ -573,19 +582,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_result_must_be_compatible_wi
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_mismatch_metatable")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
         type V2B = { x: number, y: number }
-        local v2b: V2B = { x = 0, y = 0 }
-        local VMT = {}
+        const v2b: V2B = { x = 0, y = 0 }
+        const VMT = {}
         type V2 = typeof(setmetatable(v2b, VMT))
 
         function VMT.__mod(a: V2, b: V2): number
             return a.x * b.x + a.y * b.y
         end
 
-        local v1: V2 = setmetatable({ x = 1, y = 2 }, VMT)
-        local v2: V2 = setmetatable({ x = 3, y = 4 }, VMT)
+        export v1: V2 = setmetatable({ x = 1, y = 2 }, VMT)
+        const v2: V2 = setmetatable({ x = 3, y = 4 }, VMT)
         v1 %= v2
     )");
 
@@ -609,7 +619,7 @@ TEST_CASE_FIXTURE(Fixture, "CallAndOrOfFunctions")
     CheckResult result = check(R"(
 function f() return 1; end
 function g() return 2; end
-local x = false
+const x = false
 (x and f or g)()
 )");
 
@@ -618,10 +628,11 @@ local x = false
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_minus")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        local foo
-        local mt = {}
+        export foo = nil
+        const mt = {}
 
         mt.__unm = function(val): string
             return tostring(val.value) .. "test"
@@ -631,14 +642,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_minus")
             value = 10
         }, mt)
 
-        local a = -foo
+        const a = -foo
 
-        local b = 1+-1
+        const b = 1+-1
 
-        local bar = {
+        const bar = {
             value = 10
         }
-        local c = -bar -- disallowed
+        const c = -bar -- disallowed
     )");
 
     CHECK_EQ("string", toString(requireType("a")));
@@ -671,17 +682,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_minus_error")
 {
     CheckResult result = check(R"(
         --!strict
-        local mt = {}
+        const mt = {}
 
         mt.__unm = function(val: boolean): string
             return "test"
         end
 
-        local foo = setmetatable({
+        const foo = setmetatable({
             value = 10
         }, mt)
 
-        local a = -foo
+        const a = -foo
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -719,17 +730,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_len_error")
 
     CheckResult result = check(R"(
         --!strict
-        local mt = {}
+        const mt = {}
 
         mt.__len = function(val): string
             return "test"
         end
 
-        local foo = setmetatable({
+        const foo = setmetatable({
             value = 10,
         }, mt)
 
-        local a = foo.count
+        const a = foo.count
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -746,8 +757,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_len_error")
 TEST_CASE_FIXTURE(BuiltinsFixture, "unary_not_is_boolean")
 {
     CheckResult result = check(R"(
-        local b = not "string"
-        local c = not (math.random() > 0.5 and "string" or 7)
+        const b = not "string"
+        const c = not (math.random() > 0.5 and "string" or 7)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -759,19 +770,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "disallow_string_and_types_without_metatables
 {
     CheckResult result = check(R"(
         --!strict
-        local a = "1.24" + 123 -- not allowed
+        const a = "1.24" + 123 -- not allowed
 
-        local foo = {
+        const foo = {
             value = 10
         }
 
-        local b = foo + 1 -- not allowed
+        const b = foo + 1 -- not allowed
 
-        local bar = {
+        const bar = {
             value = 1
         }
 
-        local mt = {}
+        const mt = {}
 
         setmetatable(bar, mt)
 
@@ -779,9 +790,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "disallow_string_and_types_without_metatables
             return a.value + b
         end
 
-        local c = bar + 1 -- allowed
+        const c = bar + 1 -- allowed
 
-        local d = bar + foo -- not allowed
+        const d = bar + foo -- not allowed
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -832,7 +843,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_type_in_comparison")
 TEST_CASE_FIXTURE(Fixture, "concat_op_on_free_lhs_and_string_rhs")
 {
     CheckResult result = check(R"(
-        local function f(x)
+        function f(x)
             return x .. "y"
         end
     )");
@@ -852,7 +863,7 @@ TEST_CASE_FIXTURE(Fixture, "concat_op_on_free_lhs_and_string_rhs")
 TEST_CASE_FIXTURE(Fixture, "concat_op_on_string_lhs_and_free_rhs")
 {
     CheckResult result = check(R"(
-        local function f(x)
+        function f(x)
             return "foo" .. x
         end
     )");
@@ -872,7 +883,7 @@ TEST_CASE_FIXTURE(Fixture, "strict_binary_op_where_lhs_unknown")
     std::string src = "function foo(a, b)\n";
 
     for (const auto& op : ops)
-        src += "local _ = a " + op + " b\n";
+        src += "const _ = a " + op + " b\n";
 
     src += "end";
 
@@ -905,7 +916,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "and_binexps_dont_unify")
     // unreachable.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local t = {}
+        const t = {}
         while true and t[1] do
             print(t[1].test)
         end
@@ -915,9 +926,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "and_binexps_dont_unify")
 TEST_CASE_FIXTURE(Fixture, "error_on_invalid_operand_types_to_relational_operators")
 {
     CheckResult result = check(R"(
-        local a: boolean = true
-        local b: boolean = false
-        local foo = a < b
+        const a: boolean = true
+        const b: boolean = false
+        const foo = a < b
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -939,9 +950,9 @@ TEST_CASE_FIXTURE(Fixture, "error_on_invalid_operand_types_to_relational_operato
 TEST_CASE_FIXTURE(Fixture, "error_on_invalid_operand_types_to_relational_operators2")
 {
     CheckResult result = check(R"(
-        local a: number | string = ""
-        local b: number | string = 1
-        local foo = a < b
+        const a: number | string = ""
+        const b: number | string = 1
+        const foo = a < b
     )");
 
     // If DCR is off and the flag to remove this check in the old solver is on, the expected behavior is no errors.
@@ -971,10 +982,11 @@ TEST_CASE_FIXTURE(Fixture, "cli_38355_recursive_union")
 {
     // There's an extra spurious warning here when the new solver is enabled.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
         --!strict
-        local _
+        export _ = nil
         _ += _ and _ or _ and _ or _ and _
     )");
 
@@ -1008,7 +1020,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "UnknownGlobalCompoundAssign")
         )");
 
         LUAU_REQUIRE_ERRORS(result);
-        CHECK_EQ(toString(result.errors[0]), "Unknown global 'a'; consider assigning to it first");
+        CHECK_EQ(toString(result.errors[0]), "Undeclared variable 'a'; assign with `=` first to declare it");
     }
 
     // In non-strict mode, compound assignment is not a definition, it's a modification
@@ -1031,8 +1043,8 @@ TEST_CASE_FIXTURE(Fixture, "strip_nil_from_lhs_or_operator")
 {
     CheckResult result = check(R"(
 --!strict
-local a: number? = nil
-local b: number = a or 1
+const a: number? = nil
+const b: number = a or 1
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1042,8 +1054,8 @@ TEST_CASE_FIXTURE(Fixture, "strip_nil_from_lhs_or_operator2")
 {
     CheckResult result = check(R"(
 --!nonstrict
-local a: number? = nil
-local b: number = a or 1
+const a: number? = nil
+const b: number = a or 1
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1053,8 +1065,8 @@ TEST_CASE_FIXTURE(Fixture, "dont_strip_nil_from_rhs_or_operator")
 {
     CheckResult result = check(R"(
 --!strict
-local a: number? = nil
-local b: number = 1 or a
+const a: number? = nil
+const b: number = 1 or a
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1072,12 +1084,12 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_verifies_types_do_intersect")
         type Fiber = { id: number }
         type null = {}
 
-        local fiberStack: Array<Fiber | null> = {}
-        local index = 0
+        const fiberStack: Array<Fiber | null> = {}
+        const index = 0
 
-        local function f(fiber: Fiber)
-            local a = fiber != fiberStack[index]
-            local b = fiberStack[index] != fiber
+        function f(fiber: Fiber)
+            const a = fiber != fiberStack[index]
+            const b = fiberStack[index] != fiber
         end
 
         return f
@@ -1089,7 +1101,7 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_verifies_types_do_intersect")
 TEST_CASE_FIXTURE(Fixture, "operator_eq_operands_are_not_subtypes_of_each_other_but_has_overlap")
 {
     CheckResult result = check(R"(
-        local function f(a: string | number, b: boolean | number)
+        function f(a: string | number, b: boolean | number)
             return a == b
         end
     )");
@@ -1102,11 +1114,11 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_operands_are_not_subtypes_of_each_other_
 TEST_CASE_FIXTURE(Fixture, "operator_eq_completely_incompatible")
 {
     CheckResult result = check(R"(
-        local a: string | number = "hi"
-        local b: {x: string}? = {x = "bye"}
+        const a: string | number = "hi"
+        const b: {x: string}? = {x = "bye"}
 
-        local r1 = a == b
-        local r2 = b == a
+        const r1 = a == b
+        const r2 = b == a
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1115,8 +1127,8 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_completely_incompatible")
 TEST_CASE_FIXTURE(Fixture, "refine_and_or")
 {
     CheckResult result = check(R"(
-        local t: {x: number?}? = {x = nil}
-        local u = t and t.x or 5
+        const t: {x: number?}? = {x = nil}
+        const u = t and t.x or 5
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1127,7 +1139,7 @@ TEST_CASE_FIXTURE(Fixture, "refine_and_or")
 TEST_CASE_FIXTURE(Fixture, "infer_any_in_all_modes_when_lhs_is_unknown")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x + y
         end
     )");
@@ -1144,7 +1156,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_any_in_all_modes_when_lhs_is_unknown")
     }
 
     result = check(Mode::Nonstrict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x + y
         end
     )");
@@ -1159,7 +1171,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_any_in_all_modes_when_lhs_is_unknown")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_subtraction")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x - y
         end
     )");
@@ -1179,7 +1191,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_subtraction")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_multiplication")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x * y
         end
     )");
@@ -1199,7 +1211,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_multiplication")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_division")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x / y
         end
     )");
@@ -1219,7 +1231,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_division")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_floor_division")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x // y
         end
     )");
@@ -1239,7 +1251,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_floor_division")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_exponentiation")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x ^ y
         end
     )");
@@ -1259,7 +1271,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_exponentiation")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_modulo")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x % y
         end
     )");
@@ -1279,7 +1291,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_modulo")
 TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_concat")
 {
     CheckResult result = check(Mode::Strict, R"(
-        local function f(x, y)
+        function f(x, y)
             return x .. y
         end
     )");
@@ -1299,38 +1311,38 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_for_generic_concat")
 TEST_CASE_FIXTURE(BuiltinsFixture, "equality_operations_succeed_if_any_union_branch_succeeds")
 {
     CheckResult result = check(R"(
-        local mm = {}
+        const mm = {}
         type Foo = typeof(setmetatable({}, mm))
-        local x: Foo
-        local y: Foo?
+        const x: Foo = nil as any
+        const y: Foo? = nil as any
 
-        local v1 = x == y
-        local v2 = y == x
-        local v3 = x != y
-        local v4 = y != x
+        const v1 = x == y
+        const v2 = y == x
+        const v3 = x != y
+        const v4 = y != x
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CheckResult result2 = check(R"(
-        local mm1 = {
+        const mm1 = {
             x = "foo",
         }
 
-        local mm2 = {
+        const mm2 = {
             y = "bar",
         }
 
         type Foo = typeof(setmetatable({}, mm1))
         type Bar = typeof(setmetatable({}, mm2))
 
-        local x1: Foo
-        local x2: Foo?
-        local y1: Bar
-        local y2: Bar?
+        const x1: Foo = nil as any
+        const x2: Foo? = nil as any
+        const y1: Bar = nil as any
+        const y2: Bar? = nil as any
 
-        local v1 = x1 == y1
-        local v2 = x2 == y2
+        const v1 = x1 == y1
+        const v2 = x2 == y2
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result2);
@@ -1340,7 +1352,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "equality_operations_succeed_if_any_union_bra
 TEST_CASE_FIXTURE(BuiltinsFixture, "expected_types_through_binary_and")
 {
     CheckResult result = check(R"(
-        local x: "a" | "b" | boolean = math.random() > 0.5 and "a"
+        const x: "a" | "b" | boolean = math.random() > 0.5 and "a"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1349,7 +1361,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "expected_types_through_binary_and")
 TEST_CASE_FIXTURE(BuiltinsFixture, "expected_types_through_binary_or")
 {
     CheckResult result = check(R"(
-        local x: "a" | "b" | boolean = math.random() > 0.5 or "b"
+        const x: "a" | "b" | boolean = math.random() > 0.5 or "b"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1358,10 +1370,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "expected_types_through_binary_or")
 TEST_CASE_FIXTURE(ExternTypeFixture, "unrelated_extern_types_cannot_be_compared")
 {
     CheckResult result = check(R"(
-        local a = BaseClass.New()
-        local b = UnrelatedClass.New()
+        const a = BaseClass.New()
+        const b = UnrelatedClass.New()
 
-        local c = a == b
+        const c = a == b
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1374,7 +1386,7 @@ TEST_CASE_FIXTURE(Fixture, "unrelated_primitives_cannot_be_compared")
     };
 
     CheckResult result = check(R"(
-        local c = 5 == true
+        const c = 5 == true
     )");
 
     LUAU_CHECK_ERROR_COUNT(1, result);
@@ -1388,23 +1400,23 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "mm_comparisons_must_return_a_boolean")
         return;
 
     CheckResult result = check(R"(
-        local mm1 = {
+        const mm1 = {
             __lt = function(self, other)
                 return 123
             end,
         }
 
-        local mm2 = {
+        const mm2 = {
             __lt = function(self, other)
                 return
             end,
         }
 
-        local o1 = setmetatable({}, mm1)
-        local v1 = o1 < o1
+        const o1 = setmetatable({}, mm1)
+        const v1 = o1 < o1
 
-        local o2 = setmetatable({}, mm2)
-        local v2 = o2 < o2
+        const o2 = setmetatable({}, mm2)
+        const v2 = o2 < o2
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(4, result);
@@ -1420,14 +1432,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "mm_comparisons_must_return_a_boolean")
 TEST_CASE_FIXTURE(BuiltinsFixture, "reworked_and")
 {
     CheckResult result = check(R"(
-local a: number? = 5
-local b: boolean = (a or 1) > 10
-local c -- free
+const a: number? = 5
+const b: boolean = (a or 1) > 10
+const c  = nil-- free
 
-local x = a and 1
-local y = 'a' and 1
-local z = b and 1
-local w = c and 1
+const x = a and 1
+const y = 'a' and 1
+const z = b and 1
+const w = c and 1
     )");
 
     CHECK("number?" == toString(requireType("x")));
@@ -1446,19 +1458,19 @@ local w = c and 1
 TEST_CASE_FIXTURE(BuiltinsFixture, "reworked_or")
 {
     CheckResult result = check(R"(
-local a: number | false = 5
-local b: number? = 6
-local c: boolean = true
-local d: true = true
-local e: false = false
-local f: nil = false
+const a: number | false = 5
+const b: number? = 6
+const c: boolean = true
+const d: true = true
+const e: false = false
+const f: nil = false
 
-local a1 = a or 'a'
-local b1 = b or 4
-local c1 = c or 'c'
-local d1 = d or 'd'
-local e1 = e or 'e'
-local f1 = f or 'f'
+const a1 = a or 'a'
+const b1 = b or 4
+const c1 = c or 'c'
+const d1 = d or 'd'
+const e1 = e or 'e'
+const f1 = f or 'f'
     )");
 
     CHECK("number | string" == toString(requireType("a1")));
@@ -1481,10 +1493,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "reducing_and")
 {
     CheckResult result = check(R"(
 type Foo = { name: string?, flag: boolean? }
-local arr: {Foo} = {}
+const arr: {Foo} = {}
 
-local function foo(arg: {name: string}?)
-    local name = if arg and arg.name then arg.name else nil
+function foo(arg: {name: string}?)
+    const name = if arg and arg.name then arg.name else nil
 
     table.insert(arr, {
         name = name or "",
@@ -1527,14 +1539,14 @@ return function(value: any): boolean
         return true
     end
 
-    local length = value.count
+    const length = value.count
 
     if length == 0 then
         return false
     end
 
-    local count = 0
-    local sum = 0
+    count = 0
+    sum = 0
     for key in pairs(value) do
         if typeof(key) != "number" then
             return false
@@ -1558,14 +1570,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.String.slice")
 
     CheckResult result = check(R"(
 --!strict
-local function slice(str: string, startIndexStr: string | number, lastIndexStr: (string | number)?): string
-	local strLen, invalidBytePosition = utf8.len(str)
+function slice(str: string, startIndexStr: string | number, lastIndexStr: (string | number)?): string
+	const strLen, invalidBytePosition = utf8.len(str)
 	assert(strLen != nil, ("string `%s` has an invalid byte at position %s"):format(str, tostring(invalidBytePosition)))
-    local startIndex = tonumber(startIndexStr)
+    const startIndex = tonumber(startIndexStr)
 
 
-	-- if no last index length set, go to str length + 1
-	local lastIndex = strLen + 1
+ 	-- if no last index length set, go to str length + 1
+ 	lastIndex = strLen + 1
 
 	assert(typeof(lastIndex) == "number", "lastIndexStr should convert to number")
 
@@ -1573,7 +1585,7 @@ local function slice(str: string, startIndexStr: string | number, lastIndexStr: 
 		lastIndex = strLen + 1
 	end
 
-	local startIndexByte = utf8.offset(str, startIndex)
+	const startIndexByte = utf8.offset(str, startIndex)
 
 	return string.sub(str, startIndexByte, startIndexByte)
 end
@@ -1591,10 +1603,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.Array.startswith")
     // to it's l,r operands
     CheckResult result = check(R"(
 --!strict
-local function startsWith(value: string, substring: string, position: number?): boolean
-	-- Luau FIXME: we have to use a tmp variable, as Luau doesn't understand the logic below narrow position to `number`
-	local position_
-	if position == nil or position < 1 then
+function startsWith(value: string, substring: string, position: number?): boolean
+ 	-- Luau FIXME: we have to use a tmp variable, as Luau doesn't understand the logic below narrow position to `number`
+ 	position_ = nil
+ 	if position == nil or position < 1 then
 		position_ = 1
 	else
 		position_ = position
@@ -1616,12 +1628,12 @@ TEST_CASE_FIXTURE(Fixture, "add_type_function_works")
         return;
 
     CheckResult result = check(R"(
-        local function add(x, y)
+        function add(x, y)
             return x + y
         end
 
-        local a = add(1, 2)
-        local b = add("foo", "bar")
+        const a = add(1, 2)
+        const b = add("foo", "bar")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1636,9 +1648,9 @@ TEST_CASE_FIXTURE(Fixture, "add_type_function_works")
 TEST_CASE_FIXTURE(BuiltinsFixture, "normalize_strings_comparison")
 {
     CheckResult result = check(R"(
-local function sortKeysForPrinting(a: any, b)
-	local typeofA = type(a)
-	local typeofB = type(b)
+function sortKeysForPrinting(a: any, b)
+	const typeofA = type(a)
+	const typeofB = type(b)
 	-- strings and numbers are sorted numerically/alphabetically
 	if typeofA == typeofB and (typeofA == "number" or typeofA == "string") then
 		return a < b
@@ -1653,7 +1665,7 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "compare_singleton_string_to_string")
 {
     CheckResult result = check(R"(
-        local function test(a: string, b: string)
+        function test(a: string, b: string)
             if a == "Pet" and b == "Pet" then
                 return true
             else if a != b then
@@ -1673,10 +1685,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_infinite_expansion_of_free_type" * doctes
 {
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
     check(R"(
-        local tooltip = {}
+        const tooltip = {}
 
         function tooltip:Show()
-            local playerGui = self.Player:FindFirstChild("PlayerGui")
+            const playerGui = self.Player:FindFirstChild("PlayerGui")
             for _,c in ipairs(playerGui:GetChildren()) do
                 if c:IsA("ScreenGui") and c.DisplayOrder > self.Gui.DisplayOrder then
                 end
@@ -1689,10 +1701,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_infinite_expansion_of_free_type" * doctes
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "compound_operator_on_upvalue")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local byteCursor: number = 0
+        export byteCursor: number = 0
 
-        local function advance(bytes: number)
+        function advance(bytes: number)
             byteCursor += bytes
         end
     )");
@@ -1703,9 +1716,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_operator_on_upvalue")
 TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_operator_follow")
 {
     CheckResult result = check(R"(
-local t1 = {}
-local t2 = {}
-local mt = {}
+const t1 = {}
+const t2 = {}
+const mt = {}
 
 mt.__eq = function(a, b)
     return false
@@ -1724,12 +1737,13 @@ end
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "overload_concat")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         type classData = {
             b:buffer;
             len:number;
         }
-        local metatable = {
+        const metatable = {
             __concat = function(self:cls,str:string):cls
                 buffer.writestring(self.b,self.len,str)
                 self.len+=str.count
@@ -1740,13 +1754,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "overload_concat")
         export type cls = typeof(setmetatable({} as classData, metatable))
 
         --returns a long string
-        local new = function():cls
+        const new = function():cls
             return setmetatable({
                 b = buffer.create(100_000 as number);
                 len = 0;
             } as classData,metatable) as cls
         end
-        local class = new()
+        export class = new()
 
         class ..= "Hello"
     )");
@@ -1762,7 +1776,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "negated_integer_literal_is_a_constant")
     // compileExprUnary folds this into one negative constant, so it never negates anything at runtime.
     CheckResult result = check(R"(
         --!strict
-        local a = -4194626i
+        const a = -4194626i
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1777,9 +1791,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "negating_a_non_literal_integer_is_an_error")
     // Only the literal is folded. This one reaches the runtime, where integer has no __unm.
     CheckResult result = check(R"(
         --!strict
-        local b = 5i
-        local c = -b
-        local d = -(5i)
+        const b = 5i
+        const c = -b
+        const d = -(5i)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(4, result);

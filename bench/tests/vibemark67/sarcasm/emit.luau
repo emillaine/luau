@@ -9,17 +9,17 @@
 --   renderInsn(node,colorNum,syntax)->string, isSelfMove(node,colorNum)->bool.
 -- `rc` = { out, tr, layout, colorNum, calleeSaved, mythNum, sigName, syntax }.
 
-local emit = {}
+emit = {}
 
 function emit.emitFip(out, tr, colorResult, render, syntax)
 	-- the driver resolves all spills before calling us; this only trips on an internal bug
 	assert(#colorResult.spilled == 0, "sarcasm: internal error: uncolored temps remain after spilling")
-	local color = colorResult.color
-	local colorNum = render.makeColorNum(color)
-	local calleeSaved = render.usedCalleeSaved(color)
-	local layout = render.computeLayout(calleeSaved, tr.numRoots, (tr.numSpillSlots or 0) * 8)
-	local sigName = "pizlonatedFIP" .. tostring(tr.sigDesc.signature) .. "_" .. tr.name
-	local rc = {
+	color = colorResult.color
+	colorNum = render.makeColorNum(color)
+	calleeSaved = render.usedCalleeSaved(color)
+	layout = render.computeLayout(calleeSaved, tr.numRoots, (tr.numSpillSlots or 0) * 8)
+	sigName = "pizlonatedFIP" .. tostring(tr.sigDesc.signature) .. "_" .. tr.name
+	rc = {
 		out = out, tr = tr, layout = layout, colorNum = colorNum,
 		calleeSaved = calleeSaved, mythNum = colorNum(tr.vMyth), sigName = sigName, syntax = syntax,
 	}
@@ -29,8 +29,8 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 	-- Reload elimination: track which physical register currently holds each spill slot, and
 	-- drop a reload whose destination register already holds that slot's value. `avail` is
 	-- reset at every control-flow boundary (labels, branches, calls, prologue/epilogue).
-	local avail = {}  -- spillOff -> physReg num
-	local function invalidateReg(r)
+	avail = {}  -- spillOff -> physReg num
+	function invalidateReg(r)
 		if r == nil then return end
 		for off, reg in avail do if reg == r then avail[off] = nil end end
 	end
@@ -49,7 +49,7 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 			table.insert(out, node.name .. ":")
 		else if node.kind == "insn" then
 			if node.spillReload then
-				local r = colorNum(node.spillTemp)
+				r = colorNum(node.spillTemp)
 				if avail[node.spillOff] == r then
 					-- redundant: the slot's value is already live in r; drop the reload
 				else
@@ -66,8 +66,8 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 					table.insert(out, render.renderInsn(node, colorNum, syntax))
 				end
 				for _, t in (node.defTemps or {}) do invalidateReg(colorNum(t)) end
-				local ctl = node.control or (node.c and node.c.control) or "none"
-				if ctl ~= "none" then avail = {} end  -- branch/call/ret ends the region
+				ctl = node.control or (node.c and node.c.control) or "none"
+				if ctl != "none" then avail = {} end  -- branch/call/ret ends the region
 			end
 		else if node.kind == "raw" then
 			table.insert(out, node.text)

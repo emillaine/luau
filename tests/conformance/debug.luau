@@ -16,7 +16,7 @@ assert(foo("hello"):find("foo") > 0)
 assert(foo("hello", 2):find("hello") > 0)
 assert(foo("hello", 2):find("foo") == nil)
 
-local co = coroutine.create(bar)
+co = coroutine.create(bar)
 coroutine.resume(co)
 
 assert(debug.traceback(co):find("bar") > 0)
@@ -27,12 +27,12 @@ assert(debug.traceback(co, "hello", 2):find("bar") == nil)
 
 -- traceback for the top frame
 function halp(key, value)
-	local t = {}
+	t = {}
 	t[key] = value -- line 30
 	return t
 end
 
-local co2 = coroutine.create(halp)
+co2 = coroutine.create(halp)
 coroutine.resume(co2, 0 / 0, 42)
 
 assert(debug.traceback(co2) == "debug.luau:31 function halp\n")
@@ -41,7 +41,7 @@ assert(debug.info(co2, 0, "f") == halp)
 
 -- info errors
 function qux(...)
-	local ok, err = pcall(debug.info, ...)
+	ok, err = pcall(debug.info, ...)
 	assert(not ok)
 	return err
 end
@@ -76,7 +76,7 @@ assert(baz(co, 2, "n") == nil)
 assert(baz(math.sqrt, "n") == "sqrt")
 assert(baz(math.sqrt, "f") == math.sqrt) -- yes this is pointless
 
-local t = { foo = function() return 1 end }
+t = { foo = function() return 1 end }
 assert(baz(t.foo, "n") == "foo")
 
 -- info multi-arg returns
@@ -92,7 +92,7 @@ assert(quux(1, "nlsf")[4] == quux)
 
 -- info arity
 function quuz(f)
-	local a, v = debug.info(f, "a")
+	a, v = debug.info(f, "a")
 	return tostring(a) .. " " .. tostring(v)
 end
 
@@ -104,47 +104,47 @@ assert(quuz(function(a, b, ...) end) == "2 true")
 
 -- info linedefined & line
 function testlinedefined()
-	local line = debug.info(1, "l")
-	local linedefined = debug.info(testlinedefined, "l")
+	line = debug.info(1, "l")
+	linedefined = debug.info(testlinedefined, "l")
 	assert(linedefined + 1 == line)
 end
 
 testlinedefined()
 
 -- don't leave garbage on the other thread
-local wrapped1 = coroutine.create(function()
-	local thread = coroutine.create(function(target)
+wrapped1 = coroutine.create(function()
+	thread = coroutine.create(function(target)
 		for i = 1, 100 do pcall(debug.info, target, 0, "llf") end
 		return 123
 	end)
 
-	local success, res = coroutine.resume(thread, coroutine.running())
+	success, res = coroutine.resume(thread, coroutine.running())
 	assert(success)
 	assert(res == 123)
 end)
 
 coroutine.resume(wrapped1)
 
-local wrapped2 = coroutine.create(function()
-	local thread = coroutine.create(function(target)
+wrapped2 = coroutine.create(function()
+	thread = coroutine.create(function(target)
 		for i = 1, 100 do pcall(debug.info, target, 0, "ff") end
 		return 123
 	end)
 
-	local success, res = coroutine.resume(thread, coroutine.running())
+	success, res = coroutine.resume(thread, coroutine.running())
 	assert(success)
 	assert(res == 123)
 end)
 
 coroutine.resume(wrapped2)
 
-local wrapped3 = coroutine.create(function()
-	local thread = coroutine.create(function(target)
+wrapped3 = coroutine.create(function()
+	thread = coroutine.create(function(target)
 		for i = 1, 100 do pcall(debug.info, target, 0, "?f") end
 		return 123
 	end)
 
-	local success, res = coroutine.resume(thread, coroutine.running())
+	success, res = coroutine.resume(thread, coroutine.running())
 	assert(success)
 	assert(res == 123)
 end)

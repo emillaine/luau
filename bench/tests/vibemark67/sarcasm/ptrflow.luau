@@ -12,16 +12,16 @@
 -- Returns { isPtr = {temp->bool}, lowerTemp = {temp->loTemp}, newTemps = {...} }
 -- New lower temps are allocated via allocTemp().
 
-local ptrflow = {}
+ptrflow = {}
 
 function ptrflow.analyze(lf, seeds, allocTemp, opts)
 	opts = opts or {}
-	local baseMnemonic = opts.baseMnemonic or function(m) return string.lower(m) end
-	local isPtr = {}
-	local lowerTemp = {}     -- ptr temp -> its lower temp
-	local nodes = lf.nodes
+	baseMnemonic = opts.baseMnemonic or function(m) return string.lower(m) end
+	isPtr = {}
+	lowerTemp = {}     -- ptr temp -> its lower temp
+	nodes = lf.nodes
 
-	local function ensureLower(t)
+	function ensureLower(t)
 		if not lowerTemp[t] then
 			lowerTemp[t] = allocTemp({ isLower = true, forPtr = t })
 		end
@@ -40,34 +40,34 @@ function ptrflow.analyze(lf, seeds, allocTemp, opts)
 			if (seeds.loadPtrDefs and seeds.loadPtrDefs[node])
 				or (seeds.callPtrDefs and seeds.callPtrDefs[node])
 				or (seeds.allocaResultDefs and seeds.allocaResultDefs[node]) then
-				local d = node.defTemps and node.defTemps[1]
+				d = node.defTemps and node.defTemps[1]
 				if d then isPtr[d] = true; ensureLower(d) end
 			end
 		end
 	end
 
 	-- Fixpoint propagation through copies and address arithmetic.
-	local changed = true
+	changed = true
 	while changed do
 		changed = false
 		for _, node in nodes do
-			local seeded = (seeds.loadPtrDefs and seeds.loadPtrDefs[node])
+			seeded = (seeds.loadPtrDefs and seeds.loadPtrDefs[node])
 				or (seeds.allocaResultDefs and seeds.allocaResultDefs[node])
 			if node.kind == "insn" and not seeded then
-				local m = baseMnemonic(node.stmt and node.stmt.mnemonic or node.mnemonic or "")
-				local d = node.defTemps and node.defTemps[1]
-				local us = node.useTemps or {}
-				local function markFrom(srcPtr)
+				m = baseMnemonic(node.stmt and node.stmt.mnemonic or node.mnemonic or "")
+				d = node.defTemps and node.defTemps[1]
+				us = node.useTemps or {}
+				function markFrom(srcPtr)
 					if not isPtr[d] then isPtr[d] = true; changed = true end
-					local lo = lowerTemp[srcPtr]
-					if lo and lowerTemp[d] ~= lo then lowerTemp[d] = lo; changed = true end
+					lo = lowerTemp[srcPtr]
+					if lo and lowerTemp[d] != lo then lowerTemp[d] = lo; changed = true end
 				end
 				-- A memory-source instruction is a LOAD, not a register copy/arithmetic:
 				-- the loaded value's pointer-ness comes from a `;! load ptr` seed, never the
 				-- address register. On x86 a load is `mov reg, [mem]`, so without this guard
 				-- ptrflow would treat it as `reg = base` and flip-flop the lower forever.
-				local hasMemSrc = false
-				local sops = node.stmt and node.stmt.operands
+				hasMemSrc = false
+				sops = node.stmt and node.stmt.operands
 				if sops then for _, op in sops do if op.kind == "mem" then hasMemSrc = true end end end
 				if d then
 					if m == "mov" and #us == 1 and not hasMemSrc then
@@ -77,7 +77,7 @@ function ptrflow.analyze(lf, seeds, allocTemp, opts)
 						or m == "or" or m == "shl" or m == "shr" or m == "sar" then
 						-- address arithmetic / alignment: a pointer combined with integers
 						-- keeps the pointer's lower (bounds checks still guard any misuse).
-						local ptrSrc, intCount = nil, 0
+						ptrSrc, intCount = nil, 0
 						for _, u in us do
 							if isPtr[u] then ptrSrc = u else intCount += 1 end
 						end

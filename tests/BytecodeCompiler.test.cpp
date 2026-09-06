@@ -213,7 +213,7 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "from_function_bytecode")
 
     auto fn = buildBytecode(R"(
         function fn(a, b)
-            local extra = 0
+            extra = 0
             if a > b then extra = 1 end 
             return extra + a + b
         end
@@ -260,7 +260,7 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "repeat_until_loop")
 
     auto fn = buildBytecode(R"(
         function fn()
-            local var = 0
+            var = 0
             repeat var += 1 until var < 10
             --return var
         end
@@ -308,7 +308,7 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "for_loop_and_backward_input")
 
     auto fn = buildBytecode(R"(
         function fn()
-            local var = 3
+            var = 3
             for i = 1, 10 do
                 if var > 0 then print(i) end
                 var -= 1;
@@ -368,10 +368,10 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "nested_loops")
 
     auto fn = buildBytecode(R"(
         function fn()
-            local res = 0
-            local var = 0
+            res = 0
+            var = 0
             repeat
-                local i = 0
+                i = 0
                 repeat
                     res += i * var
                     i += 1
@@ -445,8 +445,8 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "multi_call_fixed")
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
 
     auto fn = buildBytecode(R"(
-        local function x()
-            local a, b = f()
+        function x()
+            a, b = f()
             return b, a
         end
     )");
@@ -461,9 +461,11 @@ bb_0 (entry):
 ; successors: bb_1 [fallthrough]
   %0 = GETGLOBAL 135, K0 ('f')
   %1 = CALLFB 0, 2, 0, %0
-  %2 = MOVE %1[1]
-  %3 = MOVE %1[0]
-  %4 = RETURN 2, %2, %3
+  %2 = MOVE %1[0]
+  %3 = MOVE %1[1]
+  %4 = MOVE %3
+  %5 = MOVE %2
+  %6 = RETURN 2, %4, %5
 
 bb_1 (exit):
 ; predecessors: bb_0 [fallthrough]
@@ -476,11 +478,11 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "multi_call_variadic")
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
 
     auto fn = buildBytecode(R"(
-        local function fn(n)
+        function fn(n)
             if n > 0 then
                 return 0, 1
             else
-                local a, b = fn(n - 1)
+                a, b = fn(n - 1)
                 return a + b, fn(n)
             end
         end
@@ -511,11 +513,13 @@ bb_2:
   %6 = LOADK K1 (1)                                          ; uses: %7
   %7 = SUB R0, %6                                            ; uses: %8
   %8 = CALLFB 1, 2, 0, %5, %7
-  %9 = ADD %8[0], %8[1]                                      ; uses: %13
-  %10 = GETUPVAL U0                                          ; uses: %12
-  %11 = MOVE R0                                              ; uses: %12
-  %12 = CALL 1, -1, %10, %11                                 ; uses: %13
-  %13 = RETURN -1, %9, %12
+  %9 = MOVE %8[0]                                            ; uses: %11
+  %10 = MOVE %8[1]                                           ; uses: %11
+  %11 = ADD %9, %10                                          ; uses: %15
+  %12 = GETUPVAL U0                                          ; uses: %14
+  %13 = MOVE R0                                              ; uses: %14
+  %14 = CALL 1, -1, %12, %13                                 ; uses: %15
+  %15 = RETURN -1, %11, %14
 
 bb_1 (exit):
 ; predecessors: bb_3 [fallthrough], bb_2 [fallthrough]
@@ -526,9 +530,9 @@ bb_1 (exit):
 TEST_CASE_FIXTURE(BytecodeCompilerFixture, "variadic_function")
 {
     auto fn = buildBytecode(R"(
-        local function fn(a, ...)
-            local b, c = ...
-            local l = {...}
+        function fn(a, ...)
+            b, c = ...
+            l = {...}
             return a + b + c + l[1], ...
         end
     )");
@@ -542,17 +546,20 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "variadic_function")
 bb_0 (entry):
 ; successors: bb_1 [fallthrough]
   %0 = PREPVARARGS 1
-  %1 = GETVARARGS R1, 2
-  %2 = NEWTABLE 0, 0                                         ; uses: %4, %8
-  %3 = GETVARARGS R4, -1                                     ; uses: %4
-  %4 = SETLIST 1, -1, %2, %3
-  %5 = ADD R0, %1[0]                                         ; uses: %6
-  %6 = ADD %5, %1[1]                                         ; uses: %9
-  %7 = LOADK K0 (1)                                          ; uses: %8
-  %8 = GETTABLE %2, %7                                       ; uses: %9
-  %9 = ADD %6, %8                                            ; uses: %11
-  %10 = GETVARARGS R5, -1                                    ; uses: %11
-  %11 = RETURN -1, %9, %10
+  %1 = GETVARARGS R3, 2
+  %2 = MOVE %1[0]                                            ; uses: %8
+  %3 = MOVE %1[1]                                            ; uses: %9
+  %4 = NEWTABLE 0, 0                                         ; uses: %6, %7
+  %5 = GETVARARGS R5, -1                                     ; uses: %6
+  %6 = SETLIST 1, -1, %4, %5
+  %7 = MOVE %4                                               ; uses: %11
+  %8 = ADD R0, %2                                            ; uses: %9
+  %9 = ADD %8, %3                                            ; uses: %12
+  %10 = LOADK K0 (1)                                         ; uses: %11
+  %11 = GETTABLE %7, %10                                     ; uses: %12
+  %12 = ADD %9, %11                                          ; uses: %14
+  %13 = GETVARARGS R5, -1                                    ; uses: %14
+  %14 = RETURN -1, %12, %13
 
 bb_1 (exit):
 ; predecessors: bb_0 [fallthrough]
@@ -564,9 +571,9 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "tables_strings_and_fastcall")
 {
     auto fn = buildBytecode(
         R"(
-        local tt = {}
-        local function fn(x)
-            local t = { a = x, b = x .. 42 }
+        tt = {}
+        function fn(x)
+            t = { a = x, b = x .. 42 }
             return table.insert({t}, tt)
         end
     )",
@@ -578,23 +585,24 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "tables_strings_and_fastcall")
     CHECK_EQ(
         "\n" + toString(*fn, true),
         R"(
-; function fn($arg0) line 3 maxstacksize: 5 upvalues: 1 flags: 0
+; function fn($arg0) line 3 maxstacksize: 6 upvalues: 1 flags: 0
 bb_0 (entry):
 ; successors: bb_1 [fallthrough]
-  %0 = DUPTABLE K2 ({...})                                   ; uses: %1, %5, %7
+  %0 = DUPTABLE K2 ({...})                                   ; uses: %1, %5, %6
   %1 = SETTABLEKS R0, %0, 128, K0 ('a')
   %2 = MOVE R0                                               ; uses: %4
   %3 = LOADN 42                                              ; uses: %4
   %4 = CONCAT %2, %3                                         ; uses: %5
   %5 = SETTABLEKS %4, %0, 131, K1 ('b')
-  %6 = NEWTABLE 0, 1                                         ; uses: %8, %10, %12
-  %7 = MOVE %0                                               ; uses: %8
-  %8 = SETLIST 1, 1, %6, %7
-  %9 = GETUPVAL U0                                           ; uses: %10, %12
-  %10 = FASTCALL2 52, %6, %9, 3
-  %11 = GETIMPORT K5 (table.insert), 2, K3 ('table'), K4 ('insert') ; uses: %12
-  %12 = CALL 2, -1, %11, %6, %9                              ; uses: %13
-  %13 = RETURN -1, %12
+  %6 = MOVE %0                                               ; uses: %8
+  %7 = NEWTABLE 0, 1                                         ; uses: %9, %11, %13
+  %8 = MOVE %6                                               ; uses: %9
+  %9 = SETLIST 1, 1, %7, %8
+  %10 = GETUPVAL U0                                          ; uses: %11, %13
+  %11 = FASTCALL2 52, %7, %10, 3
+  %12 = GETIMPORT K5 (table.insert), 2, K3 ('table'), K4 ('insert') ; uses: %13
+  %13 = CALL 2, -1, %12, %7, %10                             ; uses: %14
+  %14 = RETURN -1, %13
 
 bb_1 (exit):
 ; predecessors: bb_0 [fallthrough]
@@ -607,10 +615,10 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "def_use_chains")
     ScopedFastFlag luauEmitCallFeedback{FFlag::LuauEmitCallFeedback, true};
 
     auto fn = buildBytecode(R"(
-        local function fn(a, b, c)
-            local s = a + b
-            local x = s + c
-            local y = s + a
+        function fn(a, b, c)
+            s = a + b
+            x = s + c
+            y = s + a
             return x + y
         end
     )");
@@ -651,9 +659,9 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "loop_invariant_inst_phi_collapse")
     ScopedFastFlag luauEmitCallFeedback{FFlag::LuauEmitCallFeedback, true};
 
     auto fn = buildBytecode(R"(
-        local function fn(a, b)
-            local s = a + b
-            local acc = 0
+        function fn(a, b)
+            s = a + b
+            acc = 0
             repeat acc += s until acc < 100
             return acc
         end
@@ -700,20 +708,20 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "bytecode_roundtrip")
     std::string snippets[] = {
         R"(
         function fn(a, b)
-            local extra = 0
+            extra = 0
             if a > b then extra = 1 end 
             return extra + a + b
         end
     )",
         R"(
         function fn()
-            local var = 0
+            var = 0
             repeat var += 1 until var < 10
         end
     )",
         R"(
         function fn()
-            local var = 3
+            var = 3
             for i = 1, 10 do
                 if var > 0 then print(i) end
                 var -= 1;
@@ -722,10 +730,10 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "bytecode_roundtrip")
     )",
         R"(
         function fn()
-            local res = 0
-            local var = 0
+            res = 0
+            var = 0
             repeat
-                local i = 0
+                i = 0
                 repeat
                     res += i * var
                     i += 1
@@ -735,38 +743,38 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "bytecode_roundtrip")
         end
     )",
         R"(
-        local function x()
-            local a, b = f()
+        function x()
+            a, b = f()
             return b, a
         end
     )",
         R"(
-        local function fn(n)
+        function fn(n)
             if n > 0 then
                 return 0, 1
             else
-                local a, b = fn(n - 1)
+                a, b = fn(n - 1)
                 return a + b, fn(n)
             end
         end
     )",
         R"(
-        local function fn(a, ...)
-            local b, c = ...
-            local l = {...}
+        function fn(a, ...)
+            b, c = ...
+            l = {...}
             return a + b + c + l[1], ...
         end
     )",
         R"(
-        local function fn(x)
-            local f = function (a, b) return a .. " and " .. b .. " and agian " .. b end
+        function fn(x)
+            f = function (a, b) return a .. " and " .. b .. " and agian " .. b end
             return f(x, "eleven")
         end
     )",
         R"(
-        local tt = {}
-        local function fn(x)
-            local t = { a = x, b = x .. 42 }
+        tt = {}
+        function fn(x)
+            t = { a = x, b = x .. 42 }
             return table.insert({t}, tt)
         end
     )",
@@ -807,7 +815,7 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "classes_bytecode_roundtrips")
             end
 
             function asserttriple(self)
-                local mag = self:magnitude()
+                mag = self:magnitude()
                 assert(mag == math.ceil(mag), "Not a pythagorean triple!")
             end
 
@@ -913,13 +921,13 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "fastpcall_roundtrip")
     ScopedFastFlag luauCompileFastpcall{FFlag::LuauCompileFastpcall, true};
 
     checkRoundtrip(R"(
-        local function test(fn)
+        function test(fn)
             return pcall(fn, 42)
         end
     )");
 
     checkRoundtrip(R"(
-        local function test(fn, errf)
+        function test(fn, errf)
             return xpcall(fn, errf, 1, 2, 3)
         end
     )");

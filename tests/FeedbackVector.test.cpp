@@ -105,8 +105,8 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "simple_call")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function g() return 1 end
-        local function f() return g() + 1 end
+        function g() return 1 end
+        function f() return g() + 1 end
         f()
         f()
     )");
@@ -154,8 +154,8 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "simple_call_sealed")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function g() return 1 end
-        local function f() return g() + 1 end
+        function g() return 1 end
+        function f() return g() + 1 end
         f()
         f()
     )");
@@ -183,8 +183,8 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "simple_call_sealed_on_inline")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function g() return 1 end
-        local function f() return g() + 1 end
+        function g() return 1 end
+        function f() return g() + 1 end
         f()
         f()
     )");
@@ -209,8 +209,8 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "high_order_call")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function g() return 1 end
-        local function f(h) return h() + 1 end
+        function g() return 1 end
+        function f(h) return h() + 1 end
         f(g)
         f(g)
     )");
@@ -258,9 +258,9 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "polymorphic_call_sealed")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function g() return 1 end
-        local function y() return 2 end
-        local function f(h) return h() + 1 end
+        function g() return 1 end
+        function y() return 2 end
+        function f(h) return h() + 1 end
         f(g)
         f(y)
     )");
@@ -285,7 +285,7 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "c_call_sealed")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function f(h) return h(1) + 1 end
+        function f(h) return h(1) + 1 end
         f(tostring)
     )");
 
@@ -312,9 +312,9 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "metamethod_call_sealed")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local function f(h) return h(1) + 1 end
+        function f(h) return h(1) + 1 end
 
-        local callableTable = {}
+        const callableTable = {}
 
         setmetatable(callableTable, { __call = function(self, arg) return arg + 42 end })
 
@@ -344,9 +344,9 @@ TEST_CASE_FIXTURE(FeedbackVectorFixture, "namecall")
     ScopedFastInt inlineThreshold{FInt::LuauInlineHitsThreshold, 2};
 
     compile(R"(
-        local t = { x = 1 }
+        const t = { x = 1 }
         function t.g(self) return self.x end
-        local function f(t) return t:g() + 1 end
+        function f(t) return t:g() + 1 end
         f(t)
         f(t)
     )");

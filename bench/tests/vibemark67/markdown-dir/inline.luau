@@ -1,14 +1,14 @@
 -- Inline parsing for Markdown (emphasis, code spans, links, images)
 
-local ast = require("./ast")
+ast = require("./ast")
 
-local function parseInlines(text: string, refDefs: {[string]: {dest: string, title: string}}?): {ast.Node}
-    local nodes: {ast.Node} = {}
-    local pos = 1
-    local len = #text
-    local currentText = ""
+function parseInlines(text: string, refDefs: {[string]: {dest: string, title: string}}?): {ast.Node}
+    nodes = {}
+    pos = 1
+    len = #text
+    currentText = ""
 
-    local function flushText()
+    function flushText()
         if #currentText > 0 then
             table.insert(nodes, ast.createText(currentText))
             currentText = ""
@@ -16,10 +16,10 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
     end
 
     while pos <= len do
-        local ch = string.sub(text, pos, pos)
+        ch = string.sub(text, pos, pos)
 
         if ch == "\\" and pos < len then
-            local next = string.sub(text, pos + 1, pos + 1)
+            next = string.sub(text, pos + 1, pos + 1)
             if string.find("\\`*_{}[]()#+-.!|~", next, 1, true) then
                 currentText ..= next
                 pos += 2
@@ -28,25 +28,25 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 pos += 1
             end
         else if ch == "`" then
-            local tickCount = 0
-            local tickStart = pos
+            tickCount = 0
+            tickStart = pos
             while pos <= len and string.sub(text, pos, pos) == "`" do
                 tickCount += 1
                 pos += 1
             end
-            local closer = string.rep("`", tickCount)
-            local closePos = string.find(text, closer, pos, true)
+            closer = string.rep("`", tickCount)
+            closePos = string.find(text, closer, pos, true)
             if closePos then
-                local isClose = true
+                isClose = true
                 if closePos + tickCount <= len and string.sub(text, closePos + tickCount, closePos + tickCount) == "`" then
-                    local actualEnd = closePos
+                    actualEnd = closePos
                     while actualEnd <= len do
                         actualEnd = string.find(text, closer, actualEnd, true)
                         if not actualEnd then
                             isClose = false
                             break
                         end
-                        if actualEnd + tickCount > len or string.sub(text, actualEnd + tickCount, actualEnd + tickCount) ~= "`" then
+                        if actualEnd + tickCount > len or string.sub(text, actualEnd + tickCount, actualEnd + tickCount) != "`" then
                             closePos = actualEnd
                             break
                         end
@@ -55,7 +55,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 end
                 if isClose and closePos then
                     flushText()
-                    local code = string.sub(text, pos, closePos - 1)
+                    code = string.sub(text, pos, closePos - 1)
                     code = string.gsub(code, "\n", " ")
                     if #code > 1 and string.sub(code, 1, 1) == " " and string.sub(code, -1) == " " then
                         code = string.sub(code, 2, -2)
@@ -69,25 +69,25 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 currentText ..= string.sub(text, tickStart, tickStart + tickCount - 1)
             end
         else if (ch == "*" or ch == "_") then
-            local delimChar = ch
-            local delimCount = 0
-            local delimStart = pos
+            delimChar = ch
+            delimCount = 0
+            delimStart = pos
             while pos <= len and string.sub(text, pos, pos) == delimChar do
                 delimCount += 1
                 pos += 1
             end
 
-            local canOpen = pos <= len and string.sub(text, pos, pos) ~= " "
-            local canClose = delimStart > 1 and string.sub(text, delimStart - 1, delimStart - 1) ~= " "
+            canOpen = pos <= len and string.sub(text, pos, pos) != " "
+            canClose = delimStart > 1 and string.sub(text, delimStart - 1, delimStart - 1) != " "
 
             if delimCount >= 2 and canOpen then
-                local closePattern = string.rep(delimChar, 2)
-                local closePos = string.find(text, closePattern, pos, true)
+                closePattern = string.rep(delimChar, 2)
+                closePos = string.find(text, closePattern, pos, true)
                 if closePos then
                     flushText()
-                    local innerText = string.sub(text, pos, closePos - 1)
-                    local strong = ast.createStrong()
-                    local innerNodes = parseInlines(innerText, refDefs)
+                    innerText = string.sub(text, pos, closePos - 1)
+                    strong = ast.createStrong()
+                    innerNodes = parseInlines(innerText, refDefs)
                     for _, n in innerNodes do
                         ast.addChild(strong, n)
                     end
@@ -100,12 +100,12 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                     currentText ..= string.rep(delimChar, delimCount)
                 end
             else if delimCount >= 1 and canOpen then
-                local closePos = string.find(text, delimChar, pos, true)
+                closePos = string.find(text, delimChar, pos, true)
                 if closePos then
                     flushText()
-                    local innerText = string.sub(text, pos, closePos - 1)
-                    local em = ast.createEmphasis()
-                    local innerNodes = parseInlines(innerText, refDefs)
+                    innerText = string.sub(text, pos, closePos - 1)
+                    em = ast.createEmphasis()
+                    innerNodes = parseInlines(innerText, refDefs)
                     for _, n in innerNodes do
                         ast.addChild(em, n)
                     end
@@ -121,12 +121,12 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 currentText ..= string.rep(delimChar, delimCount)
             end
         else if ch == "[" or (ch == "!" and pos < len and string.sub(text, pos + 1, pos + 1) == "[") then
-            local isImage = ch == "!"
-            local labelStart = if isImage then pos + 2 else pos + 1
-            local bracketDepth = 1
-            local labelEnd = labelStart
+            isImage = ch == "!"
+            labelStart = if isImage then pos + 2 else pos + 1
+            bracketDepth = 1
+            labelEnd = labelStart
             while labelEnd <= len and bracketDepth > 0 do
-                local bc = string.sub(text, labelEnd, labelEnd)
+                bc = string.sub(text, labelEnd, labelEnd)
                 if bc == "[" then bracketDepth += 1
                 else if bc == "]" then bracketDepth -= 1
                 end
@@ -134,15 +134,15 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
             end
 
             if bracketDepth == 0 and labelEnd <= len then
-                local label = string.sub(text, labelStart, labelEnd - 1)
-                local afterLabel = labelEnd + 1
+                label = string.sub(text, labelStart, labelEnd - 1)
+                afterLabel = labelEnd + 1
                 if afterLabel <= len and string.sub(text, afterLabel, afterLabel) == "(" then
-                    local parenEnd = string.find(text, ")", afterLabel, true)
+                    parenEnd = string.find(text, ")", afterLabel, true)
                     if parenEnd then
-                        local linkContent = string.sub(text, afterLabel + 1, parenEnd - 1)
-                        local dest = linkContent
-                        local title = ""
-                        local titleMatch = string.match(linkContent, '^(.-)%s+"(.-)"$')
+                        linkContent = string.sub(text, afterLabel + 1, parenEnd - 1)
+                        dest = linkContent
+                        title = ""
+                        titleMatch = string.match(linkContent, '^(.-)%s+"(.-)"$')
                         if titleMatch then
                             dest = titleMatch
                             title = string.match(linkContent, '"(.-)"$') or ""
@@ -154,13 +154,13 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                         end
 
                         flushText()
-                        local node
+                        node = nil
                         if isImage then
                             node = ast.createImage(dest, title)
                             ast.addChild(node, ast.createText(label))
                         else
                             node = ast.createLink(dest, title)
-                            local linkInlines = parseInlines(label, refDefs)
+                            linkInlines = parseInlines(label, refDefs)
                             for _, n in linkInlines do
                                 ast.addChild(node, n)
                             end
@@ -172,20 +172,20 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                         pos = if isImage then pos + 1 else pos + 1
                     end
                 else if afterLabel <= len and string.sub(text, afterLabel, afterLabel) == "[" then
-                    local refEnd = string.find(text, "]", afterLabel + 1, true)
+                    refEnd = string.find(text, "]", afterLabel + 1, true)
                     if refEnd then
-                        local refLabel = string.sub(text, afterLabel + 1, refEnd - 1)
+                        refLabel = string.sub(text, afterLabel + 1, refEnd - 1)
                         if refLabel == "" then refLabel = label end
-                        local ref = refDefs and refDefs[string.lower(refLabel)]
+                        ref = refDefs and refDefs[string.lower(refLabel)]
                         if ref then
                             flushText()
-                            local node
+                            node = nil
                             if isImage then
                                 node = ast.createImage(ref.dest, ref.title)
                                 ast.addChild(node, ast.createText(label))
                             else
                                 node = ast.createLink(ref.dest, ref.title)
-                                local linkInlines = parseInlines(label, refDefs)
+                                linkInlines = parseInlines(label, refDefs)
                                 for _, n in linkInlines do
                                     ast.addChild(node, n)
                                 end
@@ -201,16 +201,16 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                         pos += 1
                     end
                 else
-                    local ref = refDefs and refDefs[string.lower(label)]
+                    ref = refDefs and refDefs[string.lower(label)]
                     if ref then
                         flushText()
-                        local node
+                        node = nil
                         if isImage then
                             node = ast.createImage(ref.dest, ref.title)
                             ast.addChild(node, ast.createText(label))
                         else
                             node = ast.createLink(ref.dest, ref.title)
-                            local linkInlines = parseInlines(label, refDefs)
+                            linkInlines = parseInlines(label, refDefs)
                             for _, n in linkInlines do
                                 ast.addChild(node, n)
                             end
@@ -227,12 +227,12 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 pos += 1
             end
         else if ch == "&" then
-            local entity = string.match(text, "^&(#?%w+);", pos)
+            entity = string.match(text, "^&(#?%w+);", pos)
             if entity then
-                local decoded = ""
+                decoded = ""
                 if string.sub(entity, 1, 1) == "#" then
-                    local numStr = string.sub(entity, 2)
-                    local num: number?
+                    numStr = string.sub(entity, 2)
+                    num = nil
                     if string.sub(numStr, 1, 1) == "x" or string.sub(numStr, 1, 1) == "X" then
                         num = tonumber(string.sub(numStr, 2), 16)
                     else
@@ -244,7 +244,7 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                         decoded = "&" .. entity .. ";"
                     end
                 else
-                    local entities: {[string]: string} = {
+                    entities = {
                         amp = "&", lt = "<", gt = ">", quot = '"',
                         apos = "'", nbsp = " ", copy = "(c)", reg = "(r)",
                     }
@@ -257,18 +257,18 @@ local function parseInlines(text: string, refDefs: {[string]: {dest: string, tit
                 pos += 1
             end
         else if ch == "<" then
-            local autolink = string.match(text, "^<([%w]+://[^>]+)>", pos)
+            autolink = string.match(text, "^<([%w]+://[^>]+)>", pos)
             if autolink then
                 flushText()
-                local link = ast.createLink(autolink, "")
+                link = ast.createLink(autolink, "")
                 ast.addChild(link, ast.createText(autolink))
                 table.insert(nodes, link)
                 pos += #autolink + 2
             else
-                local emailLink = string.match(text, "^<([%w%.%-]+@[%w%.%-]+)>", pos)
+                emailLink = string.match(text, "^<([%w%.%-]+@[%w%.%-]+)>", pos)
                 if emailLink then
                     flushText()
-                    local link = ast.createLink("mailto:" .. emailLink, "")
+                    link = ast.createLink("mailto:" .. emailLink, "")
                     ast.addChild(link, ast.createText(emailLink))
                     table.insert(nodes, link)
                     pos += #emailLink + 2

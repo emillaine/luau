@@ -6,12 +6,46 @@
 #include "lua.h"
 #include "lualib.h"
 
+#include "Luau/Compiler.h"
 #include "Luau/Repl.h"
 #include "Luau/ReplRequirer.h"
 #include "Luau/Require.h"
 #include "Luau/FileUtils.h"
 
 #include "doctest.h"
+
+// Runs `source` and leaves `expectedResults` values on L's stack (fails the test on load/run error).
+static void runCodeKeepResults(lua_State* L, const std::string& source, int expectedResults)
+{
+    std::string bytecode = Luau::compile(source);
+
+    if (luau_load(L, "=test", bytecode.data(), bytecode.size(), 0) != 0)
+    {
+        std::string err = lua_tostring(L, -1) ? lua_tostring(L, -1) : "load error";
+        lua_pop(L, 1);
+        FAIL(err);
+        return;
+    }
+
+    lua_State* T = lua_newthread(L);
+    lua_insert(L, -2); // stack: [thread, func]
+    lua_xmove(L, T, 1);
+
+    int status = lua_resume(T, nullptr, 0);
+
+    if (status != 0)
+    {
+        std::string err = lua_tostring(T, -1) ? lua_tostring(T, -1) : "resume error";
+        lua_remove(L, -2); // drop thread, keep nothing
+        FAIL(err);
+        return;
+    }
+
+    int n = lua_gettop(T);
+    CHECK(n == expectedResults);
+    lua_xmove(T, L, n); // stack: [thread, results...]
+    lua_remove(L, -n - 1); // drop thread, keep results
+}
 
 #include <algorithm>
 #include <cstring>
@@ -82,17 +116,42 @@ public:
     {
         L = luaState.get();
         setupState(L);
+        // sandboxthread installs a fresh writable env proxying reads to the
+        // frozen shared table, so C++ setglobal works from here on. (Lua code
+        // can no longer create globals itself: bare `x = ...` declares a
+        // chunk-local, and `_G.x = ...` targets the frozen shared table.)
         luaL_sandboxthread(L);
 
-        runCode(L, prettyPrintSource);
+        // Install the pretty printer + capture getter as globals from C++.
+        // The two returned closures share the `captured` upvalue, so no
+        // globals are written at runtime.
+        runCodeKeepResults(L, prettyPrintSource, 2);
+        lua_setglobal(L, "_GETCAPTURED");
+        lua_setglobal(L, "_PRETTYPRINT");
     }
 
     // Returns all of the output captured from the pretty printer
     std::string getCapturedOutput()
     {
-        lua_getglobal(L, "capturedoutput");
+        lua_getglobal(L, "_GETCAPTURED");
+
+        if (!lua_isfunction(L, -1))
+        {
+            lua_pop(L, 1);
+            FAIL("capture getter missing");
+            return "";
+        }
+
+        if (lua_pcall(L, 0, 1, 0) != 0)
+        {
+            std::string err = lua_tostring(L, -1) ? lua_tostring(L, -1) : "pcall error";
+            lua_pop(L, 1);
+            FAIL(err);
+            return "";
+        }
+
         const char* str = lua_tolstring(L, -1, nullptr);
-        std::string result(str);
+        std::string result = str ? str : "";
         lua_pop(L, 1);
         return result;
     }
@@ -193,20 +252,20 @@ private:
     // It is included here to test that the pretty printer hook is being called.
     // More elaborate tests to ensure correct output can be added if we introduce
     // a more feature rich pretty printer.
+    // State lives in the chunk-local `captured` upvalue shared by the two
+    // returned closures; the fixture installs them as globals from C++ (Lua
+    // code can no longer create globals, and `_G` writes are sandbox-blocked).
+    // Single recursive printer so self-recursion resolves to the chunk-local.
     std::string prettyPrintSource = R"(
--- Accumulate pretty printer output in `capturedoutput`
-capturedoutput = ""
-
-function arraytostring(arr)
-    local strings = {}
-    table.foreachi(arr, function(k,v) table.insert(strings, pptostring(v)) end )
-    return "{" .. table.concat(strings, ", ") .. "}"
-end
+-- Accumulate pretty printer output in `captured`
+captured = ""
 
 function pptostring(x)
     if type(x) == "table" then
         -- Just assume array-like tables for now.
-        return arraytostring(x)
+        const strings = {}
+        table.foreachi(x, function(k,v) table.insert(strings, pptostring(v)) end )
+        return "{" .. table.concat(strings, ", ") .. "}"
     else if type(x) == "string" then
         return '"' .. x .. '"'
     else
@@ -215,20 +274,26 @@ function pptostring(x)
 end
 
 -- Note: Instead of calling print, the pretty printer just stores the output
--- in `capturedoutput` so we can check for the correct results.
-function _PRETTYPRINT(...)
-    local args = table.pack(...)
-    local strings = {}
+-- in `captured` so we can check for the correct results.
+function dopretty(...)
+    const args = table.pack(...)
+    const strings = {}
     for i=1, args.n do
-        local item = args[i]
-        local str = pptostring(item, customoptions)
+        const item = args[i]
+        const str = pptostring(item, customoptions)
         if i == 1 then
-            capturedoutput = capturedoutput .. str
+            captured = captured .. str
         else
-            capturedoutput = capturedoutput .. "\t" .. str
+            captured = captured .. "\t" .. str
         end
     end
 end
+
+function getcaptured()
+    return captured
+end
+
+return dopretty, getcaptured
 )";
 };
 

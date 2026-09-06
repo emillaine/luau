@@ -14,17 +14,19 @@
 using namespace Luau;
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 
 TEST_SUITE_BEGIN("TypeInferAnyError");
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function bar(): any
             return true
         end
 
-        local a
+        export a = nil
         for b in bar do
             a = b
         end
@@ -40,12 +42,13 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any")
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any2")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function bar(): any
             return true
         end
 
-        local a
+        export a = nil
         for b in bar() do
             a = b
         end
@@ -61,10 +64,11 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any2")
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local bar = nil as any
+        const bar = nil as any
 
-        local a
+        export a = nil
         for b in bar do
             a = b
         end
@@ -80,10 +84,11 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any")
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any2")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local bar = nil as any
+        const bar = nil as any
 
-        local a
+        export a = nil
         for b in bar() do
             a = b
         end
@@ -97,10 +102,11 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any2")
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any_pack")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function bar(): ...any end
 
-        local a
+        export a = nil
         for b in bar() do
             a = b
         end
@@ -116,8 +122,9 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any_pack")
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a
+        export a = nil
         for b in bar do
             a = b
         end
@@ -139,10 +146,11 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error")
 
 TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error2")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function bar(c) return c end
 
-        local a
+        export a = nil
         for b in bar() do
             a = b
         end
@@ -167,7 +175,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error2")
 TEST_CASE_FIXTURE(Fixture, "length_of_error_type_does_not_produce_an_error")
 {
     CheckResult result = check(R"(
-        local l = this_is_not_defined.count
+        const l = this_is_not_defined.count
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -176,7 +184,7 @@ TEST_CASE_FIXTURE(Fixture, "length_of_error_type_does_not_produce_an_error")
 TEST_CASE_FIXTURE(Fixture, "indexing_error_type_does_not_produce_an_error")
 {
     CheckResult result = check(R"(
-        local originalReward = unknown.Parent.Reward:GetChildren()[1]
+        const originalReward = unknown.Parent.Reward:GetChildren()[1]
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -185,7 +193,7 @@ TEST_CASE_FIXTURE(Fixture, "indexing_error_type_does_not_produce_an_error")
 TEST_CASE_FIXTURE(Fixture, "dot_on_error_type_does_not_produce_an_error")
 {
     CheckResult result = check(R"(
-        local foo = (true).x
+        const foo = (true).x
         foo.x = foo.y
     )");
 
@@ -195,8 +203,8 @@ TEST_CASE_FIXTURE(Fixture, "dot_on_error_type_does_not_produce_an_error")
 TEST_CASE_FIXTURE(Fixture, "any_type_propagates")
 {
     CheckResult result = check(R"(
-        local foo: any
-        local bar = foo:method("argument")
+        const foo: any = nil as any
+        const bar = foo:method("argument")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -207,8 +215,8 @@ TEST_CASE_FIXTURE(Fixture, "any_type_propagates")
 TEST_CASE_FIXTURE(Fixture, "can_subscript_any")
 {
     CheckResult result = check(R"(
-        local foo: any
-        local bar = foo[5]
+        const foo: any = nil as any
+        const bar = foo[5]
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -220,8 +228,8 @@ TEST_CASE_FIXTURE(Fixture, "can_subscript_any")
 TEST_CASE_FIXTURE(Fixture, "can_get_length_of_any")
 {
     CheckResult result = check(R"(
-        local foo = ({} as any)
-        local bar = foo.count
+        const foo = ({} as any)
+        const bar = foo.count
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -232,8 +240,8 @@ TEST_CASE_FIXTURE(Fixture, "can_get_length_of_any")
 TEST_CASE_FIXTURE(Fixture, "assign_prop_to_table_by_calling_any_yields_any")
 {
     CheckResult result = check(R"(
-        local f: any
-        local T = {}
+        const f: any = nil as any
+        const T = {}
 
         T.prop = f()
 
@@ -253,7 +261,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_prop_to_table_by_calling_any_yields_any")
 TEST_CASE_FIXTURE(Fixture, "quantify_any_does_not_bind_to_itself")
 {
     CheckResult result = check(R"(
-        local A : any
+        const A : any = nil as any
         function A.B() end
         A:C()
     )");
@@ -267,7 +275,7 @@ TEST_CASE_FIXTURE(Fixture, "quantify_any_does_not_bind_to_itself")
 TEST_CASE_FIXTURE(Fixture, "calling_error_type_yields_error")
 {
     CheckResult result = check(R"(
-        local a = unknown.Parent.Reward.GetChildren()
+        const a = unknown.Parent.Reward.GetChildren()
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -282,7 +290,7 @@ TEST_CASE_FIXTURE(Fixture, "calling_error_type_yields_error")
 TEST_CASE_FIXTURE(Fixture, "chain_calling_error_type_yields_error")
 {
     CheckResult result = check(R"(
-        local a = Utility.Create "Foo" {}
+        const a = Utility.Create "Foo" {}
     )");
 
     CHECK_EQ("*error-type*", toString(requireType("a")));
@@ -290,9 +298,10 @@ TEST_CASE_FIXTURE(Fixture, "chain_calling_error_type_yields_error")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "replace_every_free_type_when_unifying_a_complex_function_with_any")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a: any
-        local b
+        const a: any = nil as any
+        export b = nil
         for _, i in pairs(a) do
             b = i
         end
@@ -305,8 +314,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "replace_every_free_type_when_unifying_a_comp
 TEST_CASE_FIXTURE(Fixture, "call_to_any_yields_any")
 {
     CheckResult result = check(R"(
-        local a: any
-        local b = a()
+        const a: any
+        const b = a()
     )");
 
     REQUIRE_EQ("any", toString(requireType("b")));
@@ -315,9 +324,9 @@ TEST_CASE_FIXTURE(Fixture, "call_to_any_yields_any")
 TEST_CASE_FIXTURE(Fixture, "CheckMethodsOfAny")
 {
     CheckResult result = check(R"(
-local x: any = {}
+const x: any = {}
 function x:y(z: number)
-    local s: string = z
+    const s: string = z
 end
 )");
 
@@ -327,9 +336,9 @@ end
 TEST_CASE_FIXTURE(Fixture, "CheckMethodsOfError")
 {
     CheckResult result = check(R"(
-local x = (true).foo
+const x = (true).foo
 function x:y(z: number)
-    local s: string = z
+    const s: string = z
 end
 )");
 
@@ -338,13 +347,14 @@ end
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_of_any_can_be_a_table")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
 --!strict
-local T: any
+export T: any = nil as any
 T = {}
 T.__index = T
 function T.new(...)
-    local self = {}
+    const self = {}
     setmetatable(self, T)
     self:construct(...)
     return self
@@ -360,8 +370,8 @@ TEST_CASE_FIXTURE(Fixture, "type_error_addition")
 {
     CheckResult result = check(R"(
 --!strict
-local foo = makesandwich()
-local bar = foo.nutrition + 100
+const foo = makesandwich()
+const bar = foo.nutrition + 100
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -375,8 +385,8 @@ local bar = foo.nutrition + 100
 TEST_CASE_FIXTURE(Fixture, "prop_access_on_any_with_other_options")
 {
     CheckResult result = check(R"(
-        local function f(thing: any | string)
-            local foo = thing.SomeRandomKey
+        function f(thing: any | string)
+            const foo = thing.SomeRandomKey
         end
     )");
 
@@ -385,9 +395,10 @@ TEST_CASE_FIXTURE(Fixture, "prop_access_on_any_with_other_options")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_types_regression_test")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
 --!strict
-local stat
+export stat = nil
 stat = stat and tonumber(stat) or stat
     )");
 
@@ -397,10 +408,10 @@ stat = stat and tonumber(stat) or stat
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_of_any_calls")
 {
     CheckResult result = check(R"(
-        local function testFunc(input: {any})
+        function testFunc(input: {any})
         end
 
-        local v = {true}
+        const v = {true}
 
         testFunc(v)
     )");
@@ -437,7 +448,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "cast_to_table_of_any")
 {
     CheckResult result = check(R"(
-        local v = {true} as {any}
+        const v = {true} as {any}
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

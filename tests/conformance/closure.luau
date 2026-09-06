@@ -2,18 +2,18 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print "testing closures and coroutines"
 
-local unpack = table.unpack
+unpack = table.unpack
 
-local A,B = 0,{g=10}
+A,B = 0,{g=10}
 function f(x)
-  local a = {}
+  a = {}
   for i=1,1000 do
-    local y = 0
+    y = 0
     do
       a[i] = function () B.g = B.g+1; y = y+x; return y+A end
     end
   end
-  local dummy = function () return a[A] end
+  dummy = function () return a[A] end
   collectgarbage()
   A = 1; assert(dummy() == a[1]); A = 0;
   assert(a[1]() == x)
@@ -25,10 +25,10 @@ end
 
 a = f(10)
 -- force a GC in this level
-local x = {[1] = {}}   -- to detect a GC
+x = {[1] = {}}   -- to detect a GC
 setmetatable(x, {__mode = 'kv'})
 while x[1] do   -- repeat until GC
-  local a = A..A..A..A  -- create garbage
+  const a = A..A..A..A  -- create garbage
   A = A+1
 end
 assert(a[1]() == 20+A)
@@ -62,7 +62,7 @@ for i, k in pairs{'a', 'b'} do
   if i == 2 then break end
 end
 a[1].set(10, 20)
-local r,s = a[2].get()
+r,s = a[2].get()
 assert(r == 2 and s == 'b')
 r,s = a[1].get()
 assert(r == 10 and s == 20)
@@ -88,12 +88,12 @@ assert(({f()})[2] == "a")
 
 -- testing closure x break x return x errors
 
-local b
+b = nil
 function f(x)
-  local first = 1
+  first = 1
   while 1 do
     if x == 3 and not first then return end
-    local a = 'xuxu'
+    a = 'xuxu'
     b = function (op, y)
           if op == 'set' then
             a = x+y
@@ -121,7 +121,7 @@ assert(b('get') == 'xuxu')
 b('set', 10); assert(b('get') == 14)
 
 
-local w
+w = nil
 -- testing multi-level closure
 function f(x)
   return function (y)
@@ -135,10 +135,10 @@ assert(y(20)(30) == 60+w)
 
 -- testing closures x repeat-until
 
-local a = {}
-local i = 1
+a = {}
+i = 1
 repeat
-  local x = i
+  const x = i
   a[i] = function () i = x+1; return x end
 until i > 10 or a[i]() != x
 assert(i == 11 and a[1]() == 1 and a[3]() == 3 and i == 4)
@@ -147,10 +147,10 @@ print'+'
 
 
 -- test for correctly closing upvalues in tail calls of vararg functions
-local function t ()
-  local function c(a,b) assert(a=="test" and b=="OK") end
-  local function v(f, ...) c("test", f() != 1 and "FAILED" or "OK") end
-  local x = 1
+function t ()
+  function c(a,b) assert(a=="test" and b=="OK") end
+  function v(f, ...) c("test", f() != 1 and "FAILED" or "OK") end
+  x = 1
   return v(function() return x end)
 end
 t()
@@ -158,15 +158,15 @@ t()
 
 -- coroutine tests
 
-local f
+f = nil
 
 -- assert(coroutine.running() == nil)
 
 
 -- tests for global environment
-local _G = getfenv()
+_G = getfenv()
 
-local function foo (a)
+function foo (a)
   setfenv(0, a)
   coroutine.yield(getfenv())
   assert(getfenv(0) == a)
@@ -176,15 +176,15 @@ local function foo (a)
 end
 
 f = coroutine.wrap(foo)
-local a = {}
+a = {}
 assert(f(a) == _G)
-local a,b = pcall(f)
+a,b = pcall(f)
 assert(a and b == _G)
 
 
 -- tests for multiple yield/resume arguments
 
-local function eqtab (t1, t2)
+function eqtab (t1, t2)
   assert(table.getn(t1) == table.getn(t2))
   for i,v in ipairs(t1) do
     assert(t2[i] == v)
@@ -195,7 +195,7 @@ _G.x = nil   -- declare x
 function foo (a, ...)
   assert(coroutine.running() == f)
   assert(coroutine.status(f) == "running")
-  local arg = {...}
+  arg = {...}
   for i=1,table.getn(arg) do
     _G.x = {coroutine.yield(unpack(arg[i]))}
   end
@@ -205,7 +205,7 @@ end
 f = coroutine.create(foo)
 assert(type(f) == "thread" and coroutine.status(f) == "suspended")
 assert(string.find(tostring(f), "thread"))
-local s,a,b,c,d
+s,a,b,c,d = nil, nil, nil, nil, nil
 s,a,b,c,d = coroutine.resume(f, {1,2,3}, {}, {1}, {'a', 'b', 'c'})
 assert(s and a == nil and coroutine.status(f) == "suspended")
 s,a,b,c,d = coroutine.resume(f)
@@ -223,7 +223,7 @@ assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
 
 
 -- yields in tail calls
-local function foo (i) return coroutine.yield(i) end
+function foo (i) return coroutine.yield(i) end
 f = coroutine.wrap(function ()
   for i=1,10 do
     assert(foo(i) == _G.x)
@@ -240,7 +240,7 @@ function pf (n, i)
 end
 
 f = coroutine.wrap(pf)
-local s=1
+s=1
 for i=1,10 do
   assert(f(1, 1) == s)
   s = s*i
@@ -257,17 +257,17 @@ end
 function filter (p, g)
   return coroutine.wrap(function ()
     while 1 do
-      local n = g()
+      n = g()
       if n == nil then return end
       if n%p != 0 then coroutine.yield(n) end
     end
   end)
 end
 
-local x = gen(100)
-local a = {}
+x = gen(100)
+a = {}
 while 1 do
-  local n = x()
+  n = x()
   if n == nil then break end
   table.insert(a, n)
   x = filter(n, x)
@@ -284,12 +284,12 @@ function foo ()
   error("foo")
 end
 
-local fooerr = "closure.luau:284: foo"
+fooerr = "closure.luau:284: foo"
 
 function goo() foo() end
 x = coroutine.wrap(goo)
 assert(x() == 3)
-local a,b = pcall(x)
+a,b = pcall(x)
 assert(not a and b == fooerr)
 
 x = coroutine.create(goo)
@@ -312,7 +312,7 @@ function all (a, n, k)
   end
 end
 
-local a = 0
+a = 0
 for t in coroutine.wrap(function () all({}, 5, 4) end) do
   a = a+1
 end
@@ -320,10 +320,10 @@ assert(a == 5^4)
 
 
 -- access to locals of collected coroutines
-local C = {}; setmetatable(C, {__mode = "kv"})
-local x = coroutine.wrap (function ()
-            local a = 10
-            local function f () a = a+10; return a end
+C = {}; setmetatable(C, {__mode = "kv"})
+x = coroutine.wrap (function ()
+            a = 10
+            function f () a = a+10; return a end
             while true do
               a = a+1
               coroutine.yield(f)
@@ -332,7 +332,7 @@ local x = coroutine.wrap (function ()
 
 C[1] = x;
 
-local f = x()
+f = x()
 assert(f() == 21 and x()() == 32 and x() == f)
 x = nil
 collectgarbage()
@@ -349,15 +349,15 @@ function co_func (current_co)
   return 10
 end
 
-local co = coroutine.create(co_func)
-local a,b = coroutine.resume(co, co)
+co = coroutine.create(co_func)
+a,b = coroutine.resume(co, co)
 assert(a == true and b == 10)
 assert(coroutine.resume(co, co) == false)
 assert(coroutine.resume(co, co) == false)
 
 -- access to locals of erroneous coroutines
-local x = coroutine.create (function ()
-            local a = 10
+x = coroutine.create (function ()
+            a = 10
             _G.f = function () a=a+1; return a end
             error('x')
           end)
@@ -371,8 +371,8 @@ assert(_G.f() == 12)
 
 -- leaving a pending coroutine open
 _X = coroutine.wrap(function ()
-      local a = 10
-      local x = function () a = a+1 end
+      a = 10
+      x = function () a = a+1 end
       coroutine.yield()
     end)
 
@@ -387,12 +387,12 @@ co = coroutine.create(function ()
 
 -- large closure size
 do
-  local a1, a2, a3, a4, a5, a6, a7, a8, a9, a0
-  local b1, b2, b3, b4, b5, b6, b7, b8, b9, b0
-  local c1, c2, c3, c4, c5, c6, c7, c8, c9, c0
-  local d1, d2, d3, d4, d5, d6, d7, d8, d9, d0
+  a1, a2, a3, a4, a5, a6, a7, a8, a9, a0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+  b1, b2, b3, b4, b5, b6, b7, b8, b9, b0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+  c1, c2, c3, c4, c5, c6, c7, c8, c9, c0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+  d1, d2, d3, d4, d5, d6, d7, d8, d9, d0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
 
-  local f = function()
+  f = function()
     return
       a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a0 +
       b1 + b2 + b3 + b4 + b5 + b6 + b7 + b8 + b9 + b0 +

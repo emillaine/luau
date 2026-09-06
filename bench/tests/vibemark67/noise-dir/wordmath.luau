@@ -6,7 +6,7 @@
 -- patterns (modular 32-bit add, rotation, byte splitting) so the individual
 -- ciphers can stay focused on their own structure.
 
-local wordmath = {}
+wordmath = {}
 
 wordmath.TWO32 = 0x100000000
 

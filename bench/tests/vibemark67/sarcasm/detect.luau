@@ -2,7 +2,7 @@
 -- Auto-detect the target architecture (arm64 vs x86_64) and, for x86_64, the assembly
 -- syntax (att vs intel) from the input assembly text.
 
-local detect = {}
+detect = {}
 
 -- Returns arch ("arm64"|"x86_64"), syntax ("att"|"intel"|nil).
 function detect.detect(text)

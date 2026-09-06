@@ -1,13 +1,13 @@
-local table = {
+table = {
     freeze = function(t)
         t.which = "early"
         return t
     end,
 }
 
-export local value = 42
+export value = 42
 
-local table = {
+table = {
     freeze = function(t)
         t.which = "late"
         return t

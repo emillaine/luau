@@ -20,7 +20,7 @@ TEST_SUITE_BEGIN("PrettyPrinterTests");
 TEST_CASE("test_1")
 {
     const std::string example = R"(
-local function isPortal(element)
+function isPortal(element)
     if type(element)!='table'then
         return false
     end
@@ -34,7 +34,7 @@ end
 
 TEST_CASE("prettyPrint_AstStatBlock_overload")
 {
-    const std::string code = "local a = 1";
+    const std::string code = "a = 1";
     ParseOptions options;
     Allocator allocator;
     AstNameTable names(allocator);
@@ -42,19 +42,19 @@ TEST_CASE("prettyPrint_AstStatBlock_overload")
     REQUIRE(result.root != nullptr);
 
     std::string printed = prettyPrint(*result.root);
-    CHECK_EQ("local a = 1", printed);
+    CHECK_EQ("a = 1", printed);
 }
 
 TEST_CASE("string_literals")
 {
-    const std::string code = R"( local S='abcdef\n\f\a\020' )";
+    const std::string code = R"( S='abcdef\n\f\a\020' )";
 
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("string_literals_containing_utf8")
 {
-    const std::string code = R"( local S='lalala こんにちは' )"; // Konichiwa!
+    const std::string code = R"( S='lalala こんにちは' )"; // Konichiwa!
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -132,15 +132,15 @@ TEST_CASE("elseif_chains_indent_sensibly")
 
 TEST_CASE("strips_type_annotations")
 {
-    const std::string code = R"( local s: string= 'hello there' )";
-    const std::string expected = R"( local s        = 'hello there' )";
+    const std::string code = R"( const s: string= 'hello there' )";
+    const std::string expected = R"( const s        = 'hello there' )";
     CHECK_EQ(expected, prettyPrint(code).code);
 }
 
 TEST_CASE("strips_type_assertion_expressions")
 {
-    const std::string code = R"( local s= some_function() as any+ something_else() as number )";
-    const std::string expected = R"( local s= some_function()       + something_else()           )";
+    const std::string code = R"( s= some_function() as any+ something_else() as number )";
+    const std::string expected = R"( s= some_function()       + something_else()           )";
     CHECK_EQ(expected, prettyPrint(code).code);
 }
 
@@ -153,7 +153,7 @@ TEST_CASE("function_taking_ellipsis")
 
 TEST_CASE("omit_decimal_place_for_integers")
 {
-    const std::string code = R"( local a=5, 6, 7, 3.141, 1.1290000000000002e+45 )";
+    const std::string code = R"( a=5, 6, 7, 3.141, 1.1290000000000002e+45 )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -253,64 +253,64 @@ TEST_CASE("repeat_until_loop_condition_on_new_line")
 
 TEST_CASE("lambda")
 {
-    const std::string one = R"( local p=function(o, m, g) return 77 end )";
+    const std::string one = R"( p=function(o, m, g) return 77 end )";
     CHECK_EQ(one, prettyPrint(one).code);
 
-    const std::string two = R"( local p=function(o, m, g,...)  return 77 end )";
+    const std::string two = R"( p=function(o, m, g,...)  return 77 end )";
     CHECK_EQ(two, prettyPrint(two).code);
 }
 
 TEST_CASE("local_assignment")
 {
-    const std::string one = R"( local x = 1 )";
+    const std::string one = R"( x = 1 )";
     CHECK_EQ(one, prettyPrint(one).code);
 
-    const std::string two = R"( local x, y, z = 1, 2, 3 )";
+    const std::string two = R"( x, y, z = 1, 2, 3 )";
     CHECK_EQ(two, prettyPrint(two).code);
 
-    const std::string three = R"( local x )";
+    const std::string three = R"( x  = nil)";
     CHECK_EQ(three, prettyPrint(three).code);
 }
 
 TEST_CASE("local_assignment_spaces_around_tokens")
 {
-    const std::string one = R"( local    x = 1 )";
+    const std::string one = R"( x = 1 )";
     CHECK_EQ(one, prettyPrint(one).code);
 
-    const std::string two = R"( local x    = 1 )";
+    const std::string two = R"( x    = 1 )";
     CHECK_EQ(two, prettyPrint(two).code);
 
-    const std::string three = R"( local x =    1 )";
+    const std::string three = R"( x =    1 )";
     CHECK_EQ(three, prettyPrint(three).code);
 
-    const std::string four = R"( local x   , y = 1, 2 )";
+    const std::string four = R"( x   , y = 1, 2 )";
     CHECK_EQ(four, prettyPrint(four).code);
 
-    const std::string five = R"( local x,    y = 1, 2 )";
+    const std::string five = R"( x,    y = 1, 2 )";
     CHECK_EQ(five, prettyPrint(five).code);
 
-    const std::string six = R"( local x, y = 1   , 2 )";
+    const std::string six = R"( x, y = 1   , 2 )";
     CHECK_EQ(six, prettyPrint(six).code);
 
-    const std::string seven = R"( local x, y = 1,    2 )";
+    const std::string seven = R"( x, y = 1,    2 )";
     CHECK_EQ(seven, prettyPrint(seven).code);
 }
 
 TEST_CASE("local_function")
 {
-    const std::string one = R"( local function p(o, m, g) return 77 end )";
+    const std::string one = R"( function p(o, m, g) return 77 end )";
     CHECK_EQ(one, prettyPrint(one).code);
 
-    const std::string two = R"( local function p(o, m, g,...)  return 77 end )";
+    const std::string two = R"( function p(o, m, g,...)  return 77 end )";
     CHECK_EQ(two, prettyPrint(two).code);
 }
 
 TEST_CASE("local_function_spaces_around_tokens")
 {
-    const std::string one = R"( local     function p(o, m, ...) end )";
+    const std::string one = R"( function p(o, m, ...) end )";
     CHECK_EQ(one, prettyPrint(one).code);
 
-    const std::string two = R"( local function    p(o, m, ...) end )";
+    const std::string two = R"( function    p(o, m, ...) end )";
     CHECK_EQ(two, prettyPrint(two).code);
 }
 
@@ -487,38 +487,38 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_with_defaults_spaces_around_tokens")
 
 TEST_CASE("table_literals")
 {
-    const std::string code = R"( local t={1, 2, 3, foo='bar', baz=99,[5.5]='five point five', 'end'} )";
+    const std::string code = R"( t={1, 2, 3, foo='bar', baz=99,[5.5]='five point five', 'end'} )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("more_table_literals")
 {
-    const std::string code = R"( local t={['Content-Type']='text/plain'} )";
+    const std::string code = R"( t={['Content-Type']='text/plain'} )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("table_literal_preserves_record_vs_general")
 {
-    const std::string code = R"( local t={['foo']='bar',quux=42} )";
+    const std::string code = R"( t={['foo']='bar',quux=42} )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("table_literal_with_numeric_key")
 {
-    const std::string code = R"( local t={[5]='five',[6]='six'} )";
+    const std::string code = R"( t={[5]='five',[6]='six'} )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("table_literal_with_keyword_key")
 {
-    const std::string code = R"( local t={['nil']=nil,['true']=true} )";
+    const std::string code = R"( t={['nil']=nil,['true']=true} )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("table_literal_closing_brace_at_correct_position")
 {
     const std::string code = R"(
-        local t={
+        t={
             eggs='Tasty',
             avocado='more like awesomecavo amirite'
         }
@@ -530,7 +530,7 @@ TEST_CASE("table_literal_closing_brace_at_correct_position")
 TEST_CASE("table_literal_with_semicolon_separators")
 {
     const std::string code = R"(
-        local t = { x = 1; y = 2 }
+        t = { x = 1; y = 2 }
     )";
 
     CHECK_EQ(code, prettyPrint(code).code);
@@ -539,7 +539,7 @@ TEST_CASE("table_literal_with_semicolon_separators")
 TEST_CASE("table_literal_with_trailing_separators")
 {
     const std::string code = R"(
-        local t = { x = 1, y = 2, }
+        t = { x = 1, y = 2, }
     )";
 
     CHECK_EQ(code, prettyPrint(code).code);
@@ -548,7 +548,7 @@ TEST_CASE("table_literal_with_trailing_separators")
 TEST_CASE("table_literal_with_spaces_around_separator")
 {
     const std::string code = R"(
-        local t = { x = 1  , y = 2 }
+        t = { x = 1  , y = 2 }
     )";
 
     CHECK_EQ(code, prettyPrint(code).code);
@@ -557,7 +557,7 @@ TEST_CASE("table_literal_with_spaces_around_separator")
 TEST_CASE("table_literal_with_spaces_around_equals")
 {
     const std::string code = R"(
-        local t = { x    =   1  }
+        t = { x    =   1  }
     )";
 
     CHECK_EQ(code, prettyPrint(code).code);
@@ -566,7 +566,7 @@ TEST_CASE("table_literal_with_spaces_around_equals")
 TEST_CASE("table_literal_multiline_with_indexers")
 {
     const std::string code = R"(
-        local t = {
+        t = {
             ["my first value"] = "x";
             ["my second value"] = "y";
         }
@@ -595,73 +595,73 @@ TEST_CASE("spaces_between_keywords_even_if_it_pushes_the_line_estimation_off")
 
 TEST_CASE("numbers")
 {
-    const std::string code = R"( local a=2510238627 )";
+    const std::string code = R"( a=2510238627 )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("infinity")
 {
-    const std::string code = R"( local a = 1e500    local b = 1e400 )";
+    const std::string code = R"( a = 1e500    b = 1e400 )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("numbers_with_separators")
 {
-    const std::string code = R"( local a = 123_456_789 )";
+    const std::string code = R"( a = 123_456_789 )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("hexadecimal_numbers")
 {
-    const std::string code = R"( local a = 0xFFFF )";
+    const std::string code = R"( a = 0xFFFF )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("binary_numbers")
 {
-    const std::string code = R"( local a = 0b0101 )";
+    const std::string code = R"( a = 0b0101 )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("single_quoted_strings")
 {
-    const std::string code = R"( local a = 'hello world' )";
+    const std::string code = R"( a = 'hello world' )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("double_quoted_strings")
 {
-    const std::string code = R"( local a = "hello world" )";
+    const std::string code = R"( a = "hello world" )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("simple_interp_string")
 {
-    const std::string code = R"( local a = `hello world` )";
+    const std::string code = R"( a = `hello world` )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("raw_strings")
 {
-    const std::string code = R"( local a = [[ hello world ]] )";
+    const std::string code = R"( a = [[ hello world ]] )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("raw_strings_with_blocks")
 {
-    const std::string code = R"( local a = [==[ hello world ]==] )";
+    const std::string code = R"( a = [==[ hello world ]==] )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("escaped_strings")
 {
-    const std::string code = R"( local s='\\b\\t\\n\\\\' )";
+    const std::string code = R"( s='\\b\\t\\n\\\\' )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE("escaped_strings_2")
 {
-    const std::string code = R"( local s="\a\b\f\n\r\t\v\'\"\\" )";
+    const std::string code = R"( s="\a\b\f\n\r\t\v\'\"\\" )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -676,7 +676,7 @@ TEST_CASE("escaped_strings_newline")
 
 TEST_CASE("escaped_strings_raw")
 {
-    const std::string code = R"( local x = [=[\v<((do|load)file|require)\s*\(?['"]\zs[^'"]+\ze['"]]=] )";
+    const std::string code = R"( x = [=[\v<((do|load)file|require)\s*\(?['"]\zs[^'"]+\ze['"]]=] )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -697,7 +697,7 @@ TEST_CASE("need_a_space_between_number_literals_and_dots")
 
 TEST_CASE("binary_keywords")
 {
-    const std::string code = "local c = a0 ._ or b0 ._";
+    const std::string code = "c = a0 ._ or b0 ._";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -779,7 +779,7 @@ TEST_CASE("do_blocks")
         foo()
 
         do
-            local bar=baz()
+            bar=baz()
             quux()
         end
 
@@ -794,7 +794,7 @@ TEST_CASE("nested_do_block")
     const std::string code = R"(
         do
             do
-                local x = 1
+                x = 1
             end
         end
     )";
@@ -814,7 +814,7 @@ TEST_CASE("emit_a_do_block_in_cases_of_potentially_ambiguous_syntax")
 TEST_CASE_FIXTURE(Fixture, "parentheses_multiline")
 {
     std::string code = R"(
-local test = (
+test = (
     x
 )
     )";
@@ -824,10 +824,10 @@ local test = (
 
 TEST_CASE_FIXTURE(Fixture, "stmt_semicolon")
 {
-    std::string code = R"( local test = 1; )";
+    std::string code = R"( test = 1; )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local test = 1  ; )";
+    code = R"( test = 1  ; )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -889,13 +889,13 @@ TEST_CASE_FIXTURE(Fixture, "function_definition_semicolon")
 TEST_CASE("roundtrip_types")
 {
     const std::string code = R"(
-        local s:string='str'
-        local t:{a:string,b:number,[string]:number}
-        local fn:(string,string)->(number,number)
-        local s2:typeof(s)='foo'
-        local os:string?
-        local sn:string|number
-        local it:{x:number}&{y:number}
+        const s:string='str'
+        const t:{a:string,b:number,[string]:number}=nil
+        const fn:(string,string)->(number,number)=nil
+        const s2:typeof(s)='foo'
+        const os:string?=nil
+        const sn:string|number=nil
+        const it:{x:number}&{y:number}=nil
     )";
     auto allocator = Allocator{};
     auto names = AstNameTable{allocator};
@@ -927,16 +927,16 @@ TEST_CASE("roundtrip_generic_types")
 TEST_CASE_FIXTURE(Fixture, "attach_types")
 {
     const std::string code = R"(
-        local s='str'
-        local t={a=1,b=false}
-        local function fn()
+        const s='str'
+        const t={a=1,b=false}
+        function fn()
             return 10
         end
     )";
     const std::string expected = R"(
-        local s:string='str'
-        local t:{a:number,b:boolean}={a=1,b=false}
-        local function fn(): number
+        const s:string='str'
+        const t:{a:number,b:boolean}={a=1,b=false}
+        function fn(): number
             return 10
         end
     )";
@@ -949,16 +949,16 @@ TEST_CASE_FIXTURE(Fixture, "attach_type_negate")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     const std::string code = R"(
-        local function foo(x: unknown)
+        function foo(x: unknown)
             assert(x)
-            local b = x
+            const b = x
             return b
         end
     )";
     const std::string expected = R"(
-        local function foo(x: unknown): negate<false?>
+        function foo(x: unknown): negate<false?>
             assert(x)
-            local b:negate<false?>=x
+            const b:negate<false?>=x
             return b
         end
     )";
@@ -968,7 +968,7 @@ TEST_CASE_FIXTURE(Fixture, "attach_type_negate")
 
 TEST_CASE("a_table_key_can_be_the_empty_string")
 {
-    std::string code = "local T = {[''] = true}";
+    std::string code = "T = {[''] = true}";
 
     CHECK_EQ(code, prettyPrint(code).code);
 }
@@ -977,24 +977,24 @@ TEST_CASE("a_table_key_can_be_the_empty_string")
 // This was surfacing an issue where we might not insert a space after the 'local' keyword.
 TEST_CASE("always_emit_a_space_after_local_keyword")
 {
-    std::string code = "do local aZZZZ = Workspace.P1.Shape local bZZZZ = Enum.PartType.Cylinder end";
+    std::string code = "do aZZZZ = Workspace.P1.Shape bZZZZ = Enum.PartType.Cylinder end";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "types_should_not_be_considered_cyclic_if_they_are_not_recursive")
 {
     std::string code = R"(
-        local common: {foo:string} = {foo = 'foo'}
+        const common: {foo:string} = {foo = 'foo'}
 
-        local t = {}
+        const t = {}
         t.x = common
         t.y = common
     )";
 
     std::string expected = R"(
-        local common: {foo:string} = {foo = 'foo'}
+        const common: {foo:string} = {foo = 'foo'}
 
-        local t:{x:{foo:string},y:{foo:string}}={}
+        const t:{x:{foo:string},y:{foo:string}}={}
         t.x = common
         t.y = common
     )";
@@ -1005,24 +1005,24 @@ TEST_CASE_FIXTURE(Fixture, "types_should_not_be_considered_cyclic_if_they_are_no
 TEST_CASE_FIXTURE(Fixture, "type_lists_should_be_emitted_correctly")
 {
     std::string code = R"(
-        local a = function(a: string, b: number, ...: string): (string, ...number)
+        const a = function(a: string, b: number, ...: string): (string, ...number)
         end
 
-        local b = function(...: string): ...number
+        const b = function(...: string): ...number
         end
 
-        local c = function()
+        const c = function()
         end
     )";
 
     std::string expected = R"(
-        local a:(a:string,b:number,...string)->(string,...number)=function(a:string,b:number,...:string): (string,...number)
+        const a:(a:string,b:number,...string)->(string,...number)=function(a:string,b:number,...:string): (string,...number)
         end
 
-        local b:(...string)->(...number)=function(...:string): ...number
+        const b:(...string)->(...number)=function(...:string): ...number
         end
 
-        local c:()->()=function(): ()
+        const c:()->()=function(): ()
         end
     )";
 
@@ -1034,17 +1034,17 @@ TEST_CASE_FIXTURE(Fixture, "type_lists_should_be_emitted_correctly")
 TEST_CASE_FIXTURE(Fixture, "function_type_location")
 {
     std::string code = R"(
-        local function foo(x: number): number
+        function foo(x: number): number
          return x
         end
-        local g: (number)->number = foo
+        const g: (number)->number = foo
     )";
 
     std::string expected = R"(
-        local function foo(x: number): number
+        function foo(x: number): number
          return x
         end
-        local g: (number)->(number)=foo
+        const g: (number)->(number)=foo
     )";
 
     std::string actual = decorateWithTypes(code);
@@ -1054,30 +1054,30 @@ TEST_CASE_FIXTURE(Fixture, "function_type_location")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_assertion")
 {
-    std::string code = "local a = 5 as number";
+    std::string code = "a = 5 as number";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "type_assertion_spaces_around_tokens")
 {
-    std::string code = "local a = 5   as number";
+    std::string code = "a = 5   as number";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a = 5 as   number";
+    code = "a = 5 as   number";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else")
 {
-    std::string code = "local a = if 1 then 2 else 3";
+    std::string code = "a = if 1 then 2 else 3";
 
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else_multiple_conditions")
 {
-    std::string code = "local a = if 1 then 2 else if 3 then 4 else 5";
+    std::string code = "a = if 1 then 2 else if 3 then 4 else 5";
 
     CHECK_EQ(code, prettyPrint(code).code);
 }
@@ -1085,7 +1085,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else_multiple_conditions")
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else_multiple_conditions_2")
 {
     std::string code = R"(
-        local x = if yes
+        x = if yes
             then nil
             else if no
                 then if this
@@ -1099,37 +1099,37 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else_multiple_conditions_2")
 
 TEST_CASE_FIXTURE(Fixture, "if_then_else_spaces_around_tokens")
 {
-    std::string code = "local a = if   1 then 2 else 3";
+    std::string code = "a = if   1 then 2 else 3";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1   then 2 else 3";
+    code = "a = if 1   then 2 else 3";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then   2 else 3";
+    code = "a = if 1 then   2 else 3";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2   else 3";
+    code = "a = if 1 then 2   else 3";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 else   3";
+    code = "a = if 1 then 2 else   3";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2   else if 3 then 4 else 5";
+    code = "a = if 1 then 2   else if 3 then 4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 else if   3 then 4 else 5";
+    code = "a = if 1 then 2 else if   3 then 4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 else if 3   then 4 else 5";
+    code = "a = if 1 then 2 else if 3   then 4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 else if 3 then   4 else 5";
+    code = "a = if 1 then 2 else if 3 then   4 else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 else if 3 then 4   else 5";
+    code = "a = if 1 then 2 else if 3 then 4   else 5";
     CHECK_EQ(code, prettyPrint(code).code);
 
-    code = "local a = if 1 then 2 else if 3 then 4 else   5";
+    code = "a = if 1 then 2 else if 3 then 4 else   5";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -1153,8 +1153,8 @@ return {}
     )";
 
     std::string code = R"(
-local Import = require(game.A)
-local a: Import.Type
+Import = require(game.A)
+const a: Import.Type = nil
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1162,46 +1162,46 @@ local a: Import.Type
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_reference_spaces_around_tokens")
 {
-    std::string code = R"( local _: Foo.Type )";
+    std::string code = R"( const _: Foo.Type = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Foo   .Type )";
+    code = R"( const _: Foo   .Type = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Foo.   Type )";
+    code = R"( const _: Foo.   Type = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Type  <> )";
+    code = R"( const _: Type  <> = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Type<  > )";
+    code = R"( const _: Type<  > = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Type<  number> )";
+    code = R"( const _: Type<  number> = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Type<number  ,string> )";
+    code = R"( const _: Type<number  ,string> = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _: Type<number,  string  > )";
+    code = R"( const _: Type<number,  string  > = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_annotation_spaces_around_tokens")
 {
-    std::string code = R"( local _: Type )";
+    std::string code = R"( const _: Type = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _  : Type )";
+    code = R"( const _  : Type = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local _:   Type )";
+    code = R"( const _:   Type = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local x: Type, y = 1 )";
+    code = R"( const x: Type, y = nil, 1 )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( local x  : Type, y = 1 )";
+    code = R"( const x  : Type, y = nil, 1 )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -1236,8 +1236,8 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_packs")
 {
     std::string code = R"(
 type Packed<T...> = (T...)->(T...)
-local a: Packed<>
-local b: Packed<(number, string)>
+const a: Packed<> = nil
+const b: Packed<(number, string)> = nil
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1287,34 +1287,34 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_spaces_around_tokens")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_type_nested")
 {
-    std::string code = "local a: ((number)->(string))|((string)->(string))";
+    std::string code = "const a: ((number)->(string))|((string)->(string)) = nil";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_type_nested_2")
 {
-    std::string code = "local a: (number&string)|(string&boolean)";
+    std::string code = "const a: (number&string)|(string&boolean) = nil";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_type_nested_3")
 {
-    std::string code = "local a: nil | (string & number)";
+    std::string code = "const a: nil | (string & number) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_type_nested")
 {
-    std::string code = "local a: ((number)->(string))&((string)->(string))";
+    std::string code = "const a: ((number)->(string))&((string)->(string)) = nil";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_type_nested_2")
 {
-    std::string code = "local a: (number|string)&(string|boolean)";
+    std::string code = "const a: (number|string)&(string|boolean) = nil";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
@@ -1328,104 +1328,104 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_type_with_function")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_leading_union_pipe")
 {
-    std::string code = "local a: | string | number";
+    std::string code = "const a: | string | number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: | string";
+    code = "const a: | string = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_spaces_around_tokens")
 {
-    std::string code = "local a: string   | number";
+    std::string code = "const a: string   | number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string |   number";
+    code = "const a: string |   number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_leading_intersection_ampersand")
 {
-    std::string code = "local a: & string & number";
+    std::string code = "const a: & string & number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: & string";
+    code = "const a: & string = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_spaces_around_tokens")
 {
-    std::string code = "local a: string   & number";
+    std::string code = "const a: string   & number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string &   number";
+    code = "const a: string &   number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_mixed_union_intersection")
 {
-    std::string code = "local a: string | (Foo & Bar)";
+    std::string code = "const a: string | (Foo & Bar) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string |   (Foo & Bar)";
+    code = "const a: string |   (Foo & Bar) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string | (  Foo & Bar)";
+    code = "const a: string | (  Foo & Bar) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string | (Foo & Bar  )";
+    code = "const a: string | (Foo & Bar  ) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string &   (Foo | Bar)";
+    code = "const a: string &   (Foo | Bar) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string & (  Foo | Bar)";
+    code = "const a: string & (  Foo | Bar) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string & (Foo | Bar  )";
+    code = "const a: string & (Foo | Bar  ) = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_preserve_union_optional_style")
 {
-    std::string code = "local a: string | nil";
+    std::string code = "const a: string | nil = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string?";
+    code = "const a: string? = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string???";
+    code = "const a: string??? = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string? | nil";
+    code = "const a: string? | nil = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string | nil | number";
+    code = "const a: string | nil | number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string | nil | number?";
+    code = "const a: string | nil | number? = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "local a: string? | number?";
+    code = "const a: string? | number? = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_varargs")
 {
-    std::string code = "local function f(...) return ... end";
+    std::string code = "function f(...) return ... end";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "index_name_spaces_around_tokens")
 {
-    std::string one = "local _ = a.name";
+    std::string one = "_ = a.name";
     CHECK_EQ(one, prettyPrint(one, {}, true).code);
 
-    std::string two = "local _ = a   .name";
+    std::string two = "_ = a   .name";
     CHECK_EQ(two, prettyPrint(two, {}, true).code);
 
-    std::string three = "local _ = a.   name";
+    std::string three = "_ = a.   name";
     CHECK_EQ(three, prettyPrint(three, {}, true).code);
 }
 
@@ -1437,35 +1437,35 @@ TEST_CASE_FIXTURE(Fixture, "index_name_ends_with_digit")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_index_expr")
 {
-    std::string code = "local a = {1, 2, 3} local b = a[2]";
+    std::string code = "a = {1, 2, 3} b = a[2]";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "index_expr_spaces_around_tokens")
 {
-    std::string one = "local _ = a[2]";
+    std::string one = "_ = a[2]";
     CHECK_EQ(one, prettyPrint(one, {}, true).code);
 
-    std::string two = "local _ = a   [2]";
+    std::string two = "_ = a   [2]";
     CHECK_EQ(two, prettyPrint(two, {}, true).code);
 
-    std::string three = "local _ = a[   2]";
+    std::string three = "_ = a[   2]";
     CHECK_EQ(three, prettyPrint(three, {}, true).code);
 
-    std::string four = "local _ = a[2   ]";
+    std::string four = "_ = a[2   ]";
     CHECK_EQ(four, prettyPrint(four, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_unary")
 {
     std::string code = R"(
-local a = 1
-local b = -1
-local c = true
-local d = not c
-local e = 'hello'
-local d = e.count
+a = 1
+b = -1
+c = true
+d = not c
+e = 'hello'
+d = e.count
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1474,12 +1474,12 @@ local d = e.count
 TEST_CASE_FIXTURE(Fixture, "unary_spaces_around_tokens")
 {
     std::string code = R"(
-local _ =   -1
-local _ = -  1
-local _ =   not true
-local _ = not   true
-local _ =   e.count
-local _ = e  .  count
+_ =   -1
+_ = -  1
+_ =   not true
+_ = not   true
+_ =   e.count
+_ = e  .  count
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1488,9 +1488,9 @@ local _ = e  .  count
 TEST_CASE_FIXTURE(Fixture, "binary_spaces_around_tokens")
 {
     std::string code = R"(
-local _ =    1+1
-local _ = 1   +1
-local _ = 1+   1
+_ =    1+1
+_ = 1   +1
+_ = 1+   1
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1499,7 +1499,7 @@ local _ = 1+   1
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_break_continue")
 {
     std::string code = R"(
-local a, b, c
+a, b, c = nil, nil, nil
 repeat
     if a then break end
     if b then continue end
@@ -1512,7 +1512,7 @@ until c
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_compound_assignment")
 {
     std::string code = R"(
-local a = 1
+a = 1
 a += 2
 a -= 3
 a *= 4
@@ -1528,10 +1528,10 @@ a ..= ' - result'
 
 TEST_CASE_FIXTURE(Fixture, "compound_assignment_spaces_around_tokens")
 {
-    std::string one = R"( a   += 1 )";
+    std::string one = R"( a = 0 a   += 1 )";
     CHECK_EQ(one, prettyPrint(one, {}, true).code);
 
-    std::string two = R"( a +=   1 )";
+    std::string two = R"( a = 0 a +=   1 )";
     CHECK_EQ(two, prettyPrint(two, {}, true).code);
 }
 
@@ -1569,8 +1569,8 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_assign_spaces_around_tokens")
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_generic_function")
 {
     std::string code = R"(
-local function foo<T,S...>(a: T, ...: S...) return 1 end
-local f: <T,S...>(T, S...)->(number) = foo
+function foo<T,S...>(a: T, ...: S...) return 1 end
+const f: <T,S...>(T, S...)->(number) = foo
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1578,7 +1578,7 @@ local f: <T,S...>(T, S...)->(number) = foo
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_reverse")
 {
-    std::string code = "local a: nil | number";
+    std::string code = "const a: nil | number = nil";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -1591,13 +1591,13 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_for_in_multiple")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_error_expr")
 {
-    std::string code = "local a = f:-";
+    std::string code = "a = f:-";
 
     auto allocator = Allocator{};
     auto names = AstNameTable{allocator};
     ParseResult parseResult = Parser::parse(code.data(), code.size(), names, allocator, {});
 
-    CHECK_EQ("local a = (error-expr: f:%error-id%)-(error-expr)", prettyPrintWithTypes(*parseResult.root));
+    CHECK_EQ("a = (error-expr: f:%error-id%)-(error-expr)", prettyPrintWithTypes(*parseResult.root));
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_error_stat")
@@ -1613,18 +1613,18 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_error_stat")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_error_type")
 {
-    std::string code = "local a: ";
+    std::string code = "const a: ";
 
     auto allocator = Allocator{};
     auto names = AstNameTable{allocator};
     ParseResult parseResult = Parser::parse(code.data(), code.size(), names, allocator, {});
 
-    CHECK_EQ("local a:%error-type%", prettyPrintWithTypes(*parseResult.root));
+    CHECK_EQ("const a:%error-type%", prettyPrintWithTypes(*parseResult.root));
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_parse_error")
 {
-    std::string code = "local a = -";
+    std::string code = "a = -";
 
     auto result = prettyPrint(code);
     CHECK_EQ("", result.code);
@@ -1649,7 +1649,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_declare_global_stat")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_to_string")
 {
-    std::string code = "local a: string = 'hello'";
+    std::string code = "const a: string = 'hello'";
 
     auto allocator = Allocator{};
     auto names = AstNameTable{allocator};
@@ -1659,7 +1659,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_to_string")
     REQUIRE(parseResult.root->body.size == 1);
     AstStatLocal* statLocal = parseResult.root->body.data[0]->as<AstStatLocal>();
     REQUIRE(statLocal);
-    CHECK_EQ("local a: string = 'hello'", toString(statLocal));
+    CHECK_EQ("const a: string = 'hello'", toString(statLocal));
     REQUIRE(statLocal->vars.size == 1);
     AstLocal* local = statLocal->vars.data[0];
     REQUIRE(local->annotation);
@@ -1673,7 +1673,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_alias_default_type_parameters")
 {
     std::string code = R"(
 type Packed<T = string, U = T, V... = ...boolean, W... = (T, U, V...)> = (T, U, V...)->(W...)
-local a: Packed<number>
+const a: Packed<number> = nil
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1710,14 +1710,14 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_for_in_multiple_types")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_string_interp")
 {
-    std::string code = R"( local _ = `hello {name}` )";
+    std::string code = R"( _ = `hello {name}` )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_string_interp_multiline")
 {
-    std::string code = R"( local _ = `hello {
+    std::string code = R"( _ = `hello {
         name
     }!` )";
 
@@ -1737,7 +1737,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_string_interp_on_new_line")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_string_interp_multiline_escape")
 {
-    std::string code = R"( local _ = `hello \
+    std::string code = R"( _ = `hello \
         world!` )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1745,7 +1745,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_string_interp_multiline_escape")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_string_literal_escape")
 {
-    std::string code = R"( local _ = ` bracket = \{, backtick = \` = {'ok'} ` )";
+    std::string code = R"( _ = ` bracket = \{, backtick = \` = {'ok'} ` )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
@@ -1977,7 +1977,7 @@ if _ then
 else if _ then
 else if l0 then
 else
-local function l0<t0>(...):(t0<t0...>,(any)|(<t0>((any)|(<t0>(""[[[[[[[[[[[[[[[[[[[[[[[[!*t")->()))->()))
+function l0<t0>(...):(t0<t0...>,(any)|(<t0>((any)|(<t0>(""[[[[[[[[[[[[[[[[[[[[[[[[!*t")->()))->()))
 end
 end
 )";
@@ -2144,7 +2144,7 @@ TEST_CASE("prettyPrint_chained_function_types")
 
 TEST_CASE("fuzzer_nil_optional")
 {
-    const std::string code = R"( local x: nil? )";
+    const std::string code = R"( const x: nil? = nil )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -2245,19 +2245,19 @@ TEST_CASE("prettyPrint_function_attributes")
 
     code = R"(
         @native
-        local function foo()
+        function foo()
         end
     )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
     code = R"(
-        @checked local function foo()
+        @checked function foo()
         end
     )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
     code = R"(
-        local foo = @native function() end
+        foo = @native function() end
     )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
@@ -2279,7 +2279,7 @@ TEST_CASE("prettyPrint_function_attributes")
         ScopedFastFlag noInline{FFlag::DebugLuauNoInline, true};
         code = R"(
         @debugnoinline
-        local function t() end
+        function t() end
         )";
         CHECK_EQ(code, prettyPrint(code, {}, true).code);
     }
@@ -2289,7 +2289,7 @@ TEST_CASE("prettyPrint_function_attributes")
         use = "newApi()",
         reason = "newApi is faster and supports all value types.",
     }]
-    local function oldApi()
+    function oldApi()
     end
     )=";
 
@@ -2297,7 +2297,7 @@ TEST_CASE("prettyPrint_function_attributes")
 
     code = R"=(
     @[deprecated {use = "newApi()"}, native]
-    local function oldFastApi()
+    function oldFastApi()
     end
     )=";
 
@@ -2305,7 +2305,7 @@ TEST_CASE("prettyPrint_function_attributes")
 
     code = R"=(
     @[deprecated({use = "newApi()"})]
-    local function oldFastApi()
+    function oldFastApi()
     end
     )=";
 
@@ -2352,7 +2352,7 @@ TEST_CASE("prettyPrint_function_attributes")
     }
 
     code = R"=(
-    local foo = @checked
+    foo = @checked
     @[    deprecated  , native    ]
     function()
     end
@@ -2385,12 +2385,12 @@ TEST_CASE("export")
     std::string code;
 
     code = (R"(
-export                      local version = "1.0.0"
+export version = "1.0.0"
 export           const tabbed = ...
 export const TAU = math.pi * 2
-export local settings: Settings = getSettings()
-export local a, b, c = 1, 2, 3
-export local d
+export settings: Settings = getSettings()
+export a, b, c = 1, 2, 3
+export d
     )");
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
@@ -2424,7 +2424,7 @@ end
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
     code = (R"(
-export local f, g
+export f, g
 
 function f()
     return g()
@@ -2442,7 +2442,7 @@ export type Config = {
     timeout: number,
 }
 
-export local currentConfig: Config
+export currentConfig: Config
 
 export function createConfig(debug: boolean, timeout: number): Config
     return {
@@ -2456,10 +2456,10 @@ end
 
 TEST_CASE("pretty_print_incomplete_expr_group")
 {
-    std::string code = "local x = (1 + 2";
+    std::string code = "x = (1 + 2";
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);
 
-    code = "local x = (1 + 2                 )";
+    code = "x = (1 + 2                 )";
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);
 }
 
@@ -2495,7 +2495,7 @@ TEST_CASE("pretty_print_incomplete_function_call")
 TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_index_expr")
 {
     // Parser branch for index expr is triggered by a '[' token
-    std::string code = "local a = {1, 2, 3} local b = a[2";
+    std::string code = "a = {1, 2, 3} b = a[2";
 
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);
 }
@@ -2503,7 +2503,7 @@ TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_index_expr")
 TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_function_expr")
 {
     std::string code = R"(
-local a = function<T(x : T, y: string, ... : number)
+a = function<T(x : T, y: string, ... : number)
     return x
 end)";
 
@@ -2512,18 +2512,18 @@ end)";
 
 TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_table_expr")
 {
-    std::string code = R"(local a = { a = 1 ["b"] = 2 })";
+    std::string code = R"(a = { a = 1 ["b"] = 2 })";
 
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);
 
-    code = R"(local a = { ["b" = 2, ["c"] 3, ["d" 4 })";
+    code = R"(a = { ["b" = 2, ["c"] 3, ["d" 4 })";
 
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_if_else_expr")
 {
-    std::string code = R"(local a = if true 1 else 2)";
+    std::string code = R"(a = if true 1 else 2)";
 
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);
 }
@@ -2628,7 +2628,7 @@ TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_table_type")
 TEST_CASE_FIXTURE(Fixture, "pretty_print_incomplete_function_type")
 {
     std::string code = R"(
-local function foo() : (number, string -> ()
+function foo() : (number, string -> ()
 end
 )";
 
@@ -2690,8 +2690,8 @@ TEST_CASE("pretty_print_readonly_indexer")
     ScopedFastFlag visualizeIndexerAccess{FFlag::LuauPrettyPrintVisualizeIndexerAccess, true};
 
     std::string code = R"(
-        local _t: { read number } = {}
-        local _u: { read [string]: boolean }
+        const _t: { read number } = {}
+        const _u: { read [string]: boolean }
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true, true).code);

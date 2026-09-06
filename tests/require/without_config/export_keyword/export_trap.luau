@@ -1,7 +1,7 @@
-export local a = 0
-export local b = 0
+export a = 0
+export b = 0
 
-local trap = table.freeze({})
+trap = table.freeze({})
 
 pcall(function()
     a, trap.x, b = 1, 2, 3

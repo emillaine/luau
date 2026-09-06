@@ -188,8 +188,8 @@ TEST_CASE_FIXTURE(Fixture, "members_of_failed_typepack_unification_are_unified_w
 
     CheckResult result = check(R"(
         function f(arg: number) end
-        local a
-        local b
+        const a = nil
+        const b = nil
         f(a, b)
     )");
 
@@ -205,9 +205,9 @@ TEST_CASE_FIXTURE(Fixture, "result_of_failed_typepack_unification_is_constrained
 
     CheckResult result = check(R"(
         function f(arg: number) return arg end
-        local a
-        local b
-        local c = f(a, b)
+        const a = nil
+        const b = nil
+        const c = f(a, b)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -221,7 +221,7 @@ TEST_CASE_FIXTURE(Fixture, "typepack_unification_should_trim_free_tails")
 {
     CheckResult result = check(R"(
         --!strict
-        local function f(v: number)
+        function f(v: number)
             if v % 2 == 0 then
                 return true
             end
@@ -261,11 +261,11 @@ TEST_CASE_FIXTURE(Fixture, "variadics_should_use_reversed_properly")
 {
     CheckResult result = check(R"(
         --!strict
-        local function f<T>(...: T): ...T
+        function f<T>(...: T): ...T
             return ...
         end
 
-        local x: string = f(1)
+        const x: string = f(1)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -366,7 +366,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_unify_any_should_check_log")
 repeat
 _._,_ = nil
 until _
-local l0:(any)&(typeof(_)),l0:(any)|(any) = _,_
+const l0:(any)&(typeof(_)),l0:(any)|(any) = _,_
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -375,23 +375,23 @@ local l0:(any)&(typeof(_)),l0:(any)|(any) = _,_
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_unification_full_restart_recursion")
 {
     CheckResult result = check(R"(
-local A, B, C, D
+const A, B, C, D = nil, nil, nil, nil
 
 E = function(a, b)
-    local mt = getmetatable(b)
+    const mt = getmetatable(b)
     if mt.tm:bar(A) == nil and mt.tm:bar(B) == nil then end
     if mt.foo == true then D(b, 3) end
     mt.foo:call(false, b)
 end
 
 A = function(a, b)
-    local mt = getmetatable(b)
+    const mt = getmetatable(b)
     if mt.foo == true then D(b, 3) end
     C(mt, 3)
 end
 
 B = function(a, b)
-    local mt = getmetatable(b)
+    const mt = getmetatable(b)
     if mt.foo == true then D(b, 3) end
     C(mt, 3)
 end

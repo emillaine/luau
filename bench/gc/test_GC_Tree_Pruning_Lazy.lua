@@ -1,12 +1,12 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
-    local count = 1
+    count = 1
 
-    local function fill_tree(tree, levels)
-        local left = tree.left;
-        local right = tree.right;
+    function fill_tree(tree, levels)
+        left = tree.left;
+        right = tree.right;
     
         if not left then
             left = { id = count }
@@ -18,7 +18,7 @@ function test()
             count = count + 1
         end
     
-        if levels ~= 0 then
+        if levels != 0 then
             fill_tree(left, levels - 1)
             fill_tree(right, levels - 1)
         end
@@ -27,7 +27,7 @@ function test()
         tree.right = right;
     end
     
-    local function prune_tree(tree, level)
+    function prune_tree(tree, level)
         if tree.left then
             if math.random() > 0.9 - level * 0.05 then
                 tree.left = nil
@@ -45,7 +45,7 @@ function test()
         end
     end
 
-    local tree = { id = 0 }
+    tree = { id = 0 }
 
 	for i = 1,100 do
 		fill_tree(tree, 10)

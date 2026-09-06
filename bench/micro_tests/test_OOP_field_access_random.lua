@@ -1,18 +1,18 @@
-local function prequire(name)
-    local success, result = pcall(require, name)
+function prequire(name)
+    success, result = pcall(require, name)
     return success and result
 end
-local bench = script and require(script.Parent.bench_support)
+bench = script and require(script.Parent.bench_support)
     or prequire("bench_support")
     or require("../bench_support")
 
 bench.runCode(function()
 
-    local Number = {}
+    Number = {}
     Number.__index = Number
 
     function Number.new(v)
-        local self = {
+        self = {
             value = v,
         }
         setmetatable(self, Number)
@@ -20,12 +20,12 @@ bench.runCode(function()
     end
 
     function Number:Swap(other)
-        local tmp = other.value
+        tmp = other.value
         other.value = self.value
         self.value = tmp
     end
 
-    local numbers = {}
+    numbers = {}
 
     for i = 1, 100 do
         numbers[i] = Number.new(math.random())

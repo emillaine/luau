@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
@@ -9,11 +9,11 @@ function test()
   -- extracted from Programming Pearls, page 110
   function qsort(x,l,u,f)
   if l<u then
-    local m=math.random(u-(l-1))+l-1	-- choose a random pivot in range l..u
+    m=math.random(u-(l-1))+l-1	-- choose a random pivot in range l..u
     x[l],x[m]=x[m],x[l]			-- swap pivot to first position
-    local t=x[l]				-- pivot value
+    t=x[l]				-- pivot value
     m=l
-    local i=l+1
+    i=l+1
     while i<=u do
       -- invariant: x[l+1..m] < t <= x[m+1..i-1]
       if f(x[i],t) then
@@ -30,9 +30,9 @@ function test()
   end
 
   function selectionsort(x,n,f)
-  local i=1
+  i=1
   while i<=n do
-    local m,j=i,i+1
+    m,j=i,i+1
     while j<=n do
     if f(x[j],x[m]) then m=j end
     j=j+1
@@ -54,10 +54,10 @@ function test()
   --end
 
   function testsorts(x)
-	  local clone = table.clone(x)
+	  clone = table.clone(x)
 	  table.sort(clone)
 
-	  local n=1
+	  n=1
 	  while x[n] do n=n+1 end; n=n-1		-- count elements
 	  --show("original",x)
 	  qsort(x,1,n,function (x,y) return x<y end)
@@ -74,11 +74,11 @@ function test()
   -- array to be sorted
   x={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
 
-  local ts0 = os.clock()
+  ts0 = os.clock()
   for loops=1,10000 do
     testsorts(x)
   end
-  local ts1 = os.clock()
+  ts1 = os.clock()
 
   return ts1 - ts0
 end

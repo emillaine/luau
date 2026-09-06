@@ -1,12 +1,12 @@
 -- Arithmetic coder for PPM compression
 
-local PRECISION = 30
-local TOP_VALUE = bit32.lshift(1, PRECISION) - 1
-local FIRST_QUARTER = bit32.lshift(1, PRECISION - 2)
-local HALF = bit32.lshift(1, PRECISION - 1)
-local THIRD_QUARTER = FIRST_QUARTER + HALF
+PRECISION = 30
+TOP_VALUE = bit32.lshift(1, PRECISION) - 1
+FIRST_QUARTER = bit32.lshift(1, PRECISION - 2)
+HALF = bit32.lshift(1, PRECISION - 1)
+THIRD_QUARTER = FIRST_QUARTER + HALF
 
-local Encoder = {}
+Encoder = {}
 Encoder.__index = Encoder
 
 export type Encoder = typeof(setmetatable({} as {
@@ -29,7 +29,7 @@ function Encoder.new(): Encoder
     }, Encoder)
 end
 
-local function encoderOutputBit(self: Encoder, bit: number)
+function encoderOutputBit(self: Encoder, bit: number)
     self.bitBuf = bit32.bor(self.bitBuf, bit32.lshift(bit, self.bitCount))
     self.bitCount += 1
     if self.bitCount == 8 then
@@ -40,7 +40,7 @@ local function encoderOutputBit(self: Encoder, bit: number)
 end
 
 function Encoder.encode(self: Encoder, cumLow: number, cumHigh: number, total: number)
-    local range = self.high - self.low + 1
+    range = self.high - self.low + 1
     self.high = self.low + math.floor(range * cumHigh / total) - 1
     self.low = self.low + math.floor(range * cumLow / total)
 
@@ -93,7 +93,7 @@ function Encoder.getBytes(self: Encoder): {number}
     return self.output
 end
 
-local Decoder = {}
+Decoder = {}
 Decoder.__index = Decoder
 
 export type Decoder = typeof(setmetatable({} as {
@@ -106,7 +106,7 @@ export type Decoder = typeof(setmetatable({} as {
 }, Decoder))
 
 function Decoder.new(data: {number}): Decoder
-    local d = setmetatable({
+    d = setmetatable({
         low = 0,
         high = TOP_VALUE,
         value = 0,
@@ -122,7 +122,7 @@ end
 
 function Decoder.readBit(self: Decoder): number
     if self.bytePos > #self.input then return 0 end
-    local bit = bit32.band(bit32.rshift(self.input[self.bytePos], self.bitPos), 1)
+    bit = bit32.band(bit32.rshift(self.input[self.bytePos], self.bitPos), 1)
     self.bitPos += 1
     if self.bitPos == 8 then
         self.bitPos = 0
@@ -132,13 +132,13 @@ function Decoder.readBit(self: Decoder): number
 end
 
 function Decoder.getTarget(self: Decoder, total: number): number
-    local range = self.high - self.low + 1
-    local offset = self.value - self.low
+    range = self.high - self.low + 1
+    offset = self.value - self.low
     return math.floor(((offset + 1) * total - 1) / range)
 end
 
 function Decoder.decode(self: Decoder, cumLow: number, cumHigh: number, total: number)
-    local range = self.high - self.low + 1
+    range = self.high - self.low + 1
     self.high = self.low + math.floor(range * cumHigh / total) - 1
     self.low = self.low + math.floor(range * cumLow / total)
 

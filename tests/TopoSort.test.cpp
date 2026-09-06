@@ -21,11 +21,11 @@ TEST_SUITE_BEGIN("TopoSortTests");
 TEST_CASE_FIXTURE(Fixture, "sorts")
 {
     AstStatBlock* program = parse(R"(
-        function A()
-            return B("high five!")
+        function _G.A()
+            return _G.B("high five!")
         end
 
-        function B(x)
+        function _G.B(x)
             return x
         end
     )");
@@ -61,19 +61,19 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_dependency_terminates")
 TEST_CASE_FIXTURE(Fixture, "doesnt_omit_statements_that_dont_need_sorting")
 {
     AstStatBlock* program = parse(R"(
-        local X = {}
+        const X = {}
 
-        function A()
-            return B(5), B("Hi")
+        function _G.A()
+            return _G.B(5), _G.B("Hi")
         end
 
-        local Y = {}
+        const Y = {}
 
-        function B(x)
+        function _G.B(x)
             return x
         end
 
-        local Z = B()
+        const Z = _G.B()
     )");
 
     auto sorted = toposort(*program);
@@ -99,7 +99,7 @@ TEST_CASE_FIXTURE(Fixture, "doesnt_omit_statements_that_dont_need_sorting")
 TEST_CASE_FIXTURE(Fixture, "slightly_more_complex")
 {
     AstStatBlock* program = parse(R"(
-        local T = {}
+        const T = {}
 
         function T:foo()
             return T:bar(999), T:bar("hi")
@@ -122,7 +122,7 @@ TEST_CASE_FIXTURE(Fixture, "slightly_more_complex")
 TEST_CASE_FIXTURE(Fixture, "reorder_functions_after_dependent_assigns")
 {
     AstStatBlock* program = parse(R"(
-        local T = {}                -- 0
+        const T = {}                -- 0
 
         function T.a()              -- 1 depends on (2)
             T.b()
@@ -156,7 +156,7 @@ TEST_CASE_FIXTURE(Fixture, "reorder_functions_after_dependent_assigns")
 TEST_CASE_FIXTURE(Fixture, "dont_reorder_assigns")
 {
     AstStatBlock* program = parse(R"(
-        local T = {}                -- 0
+        const T = {}                -- 0
 
         function T.a()              -- 1 depends on (2)
             T.b()
@@ -190,7 +190,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_reorder_assigns")
 TEST_CASE_FIXTURE(Fixture, "dont_reorder_function_after_assignment_to_global")
 {
     AstStatBlock* program = parse(R"(
-        local f
+        f = nil
 
         function g()
             f()
@@ -211,13 +211,13 @@ TEST_CASE_FIXTURE(Fixture, "dont_reorder_function_after_assignment_to_global")
 TEST_CASE_FIXTURE(Fixture, "local_functions_need_sorting_too")
 {
     AstStatBlock* program = parse(R"(
-        local a = nil                       -- 0
+        a = nil                       -- 0
 
-        local function f()                  -- 1 depends on 4
+        function f()                  -- 1 depends on 4
             a.c = 4
         end
 
-        local function g()                  -- 2 depends on 1
+        function g()                  -- 2 depends on 1
             f()
         end
 
@@ -239,16 +239,16 @@ TEST_CASE_FIXTURE(Fixture, "local_functions_need_sorting_too")
 TEST_CASE_FIXTURE(Fixture, "dont_force_checking_until_an_AstExprCall_needs_the_symbol")
 {
     AstStatBlock* program = parse(R"(
-        function A(obj)
-            C(obj)
+        function _G.A(obj)
+            _G.C(obj)
         end
 
-        local B = A             -- It would be an error to force checking of A at this point just because the definition of B is an imperative
+        const B = _G.A             -- It would be an error to force checking of A at this point just because the definition of B is an imperative
 
-        function C(player)
+        function _G.C(player)
         end
 
-        local D = A(nil)        -- The real dependency on A is here, where A is invoked.
+        const D = _G.A(nil)        -- The real dependency on A is here, where A is invoked.
     )");
 
     auto sorted = toposort(*program);
@@ -269,7 +269,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_force_checking_until_an_AstExprCall_needs_the_s
 TEST_CASE_FIXTURE(Fixture, "dont_reorder_imperatives")
 {
     AstStatBlock* program = parse(R"(
-        local temp = work
+        const temp = work
         work = arr
         arr = temp
         width = width * 2
@@ -283,7 +283,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_reorder_imperatives")
 TEST_CASE_FIXTURE(Fixture, "sort_typealias_first")
 {
     AstStatBlock* program = parse(R"(
-        local foo: A = 1
+        const foo: A = 1
         type A = number
     )");
 
@@ -302,7 +302,7 @@ TEST_CASE_FIXTURE(Fixture, "typealias_of_typeof_is_not_sorted")
 {
     AstStatBlock* program = parse(R"(
         type Foo = typeof(foo)
-        local function foo(x: number) end
+        function foo(x: number) end
     )");
 
     auto sorted = toposort(*program);
@@ -366,9 +366,9 @@ TEST_CASE_FIXTURE(Fixture, "function_return_type_depends_on_type_aliases")
 TEST_CASE_FIXTURE(Fixture, "return_comes_last")
 {
     AstStatBlock* program = parse(R"(
-        local module = {}
+        const module = {}
 
-        local function confuseCompiler() return module.foo() end
+        function confuseCompiler() return module.foo() end
 
         module.foo = function() return "" end
 
@@ -393,8 +393,8 @@ TEST_CASE_FIXTURE(Fixture, "break_comes_last")
 {
     AstStatBlock* program = parse(R"(
 repeat
-local module = {}
-local function confuseCompiler() return module.foo() end
+const module = {}
+function confuseCompiler() return module.foo() end
 module.foo = function() return "" end
 break
 until true
@@ -417,8 +417,8 @@ TEST_CASE_FIXTURE(Fixture, "continue_comes_last")
 {
     AstStatBlock* program = parse(R"(
 repeat
-local module = {}
-local function confuseCompiler() return module.foo() end
+const module = {}
+function confuseCompiler() return module.foo() end
 module.foo = function() return "" end
 continue
 until true

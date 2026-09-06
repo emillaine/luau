@@ -3511,9 +3511,9 @@ TEST_CASE("GCDump")
     lua_State* CL = lua_newthread(L);
 
     std::string source = R"(
-local x
+x = nil
 x = {}
-local function f()
+function f()
     x[1] = math.abs(42)
 end
 function foo()
@@ -3525,7 +3525,7 @@ foo()
 class HeapClass
     public value
 end
-local object = HeapClass.new { value = x }
+const object = HeapClass.new { value = x }
 
 return f, object
 )";
@@ -4700,7 +4700,7 @@ TEST_CASE("Classes")
 
     // add non-executed block that requires JUMPKX and generates a lot of constants that take available short (15-bit) constant space
     source += "if ... then\n";
-    source += "local _ = {\n";
+    source += "const _ = {\n";
 
     for (int i = 0; i < 40000; ++i)
     {
@@ -4823,8 +4823,8 @@ TEST_CASE("HugeConstantTable")
 {
     std::string source = "function foo(...)\n";
 
-    source += "    local args = ...\n";
-    source += "    local t = args and {\n";
+    source += "    const args = ...\n";
+    source += "    const t = args and {\n";
 
     for (int i = 0; i < 400; i++)
     {
@@ -4877,16 +4877,17 @@ TEST_CASE("LargeNestedClosure")
     const int kCount = 2048;
     std::string source;
 
-    source += "local function test()\n";
-    source += "local x = 0\n";
+    source += "function test()\n";
+    source += "x = 0\n";
+    source += "t = {}\n";
 
     for (int i = 0; i < kCount; ++i)
     {
         std::string n = std::to_string(i + 1);
-        source += "    function f" + n + "() x = x + 1; return " + n + " end\n";
+        source += "    t.f" + n + " = function() x = x + 1; return " + n + " end\n";
     }
 
-    source += "    return f" + std::to_string(kCount) + "\n";
+    source += "    return t.f" + std::to_string(kCount) + "\n";
     source += "end\n";
     source += "return test()()\n";
 
@@ -5004,10 +5005,10 @@ TEST_CASE("IrInstructionLimit")
     // Generate a hundred fat functions
     for (int fn = 0; fn < 100; fn++)
     {
-        source += "local function fn" + std::to_string(fn) + "(...)\n";
+        source += "function fn" + std::to_string(fn) + "(...)\n";
         source += "if ... then\n";
-        source += "local p1, p2 = ...\n";
-        source += "local _ = {\n";
+        source += "const p1, p2 = ...\n";
+        source += "const _ = {\n";
 
         for (int i = 0; i < 100; ++i)
         {
@@ -5062,11 +5063,11 @@ TEST_CASE("IrInstructionLimit")
 TEST_CASE("BytecodeDistributionPerFunctionTest")
 {
     const char* source = R"(
-local function first(n, p)
-  local t = {}
+function first(n, p)
+  const t = {}
   for i=1,p do t[i] = i*10 end
 
-  local function inner(_,n)
+  function inner(_,n)
     if n > 0 then
       n = n-1
       return n, unpack(t)
@@ -5075,7 +5076,7 @@ local function first(n, p)
   return inner, nil, n
 end
 
-local function second(x)
+function second(x)
  return x[1]
 end
 )";
@@ -5139,16 +5140,16 @@ TEST_CASE("NativeAttribute")
 
     std::string source = R"R(
         @native
-        local function sum(x, y)
-            local function sumHelper(z)
+        function sum(x, y)
+            function sumHelper(z)
                 return (x+y+z)
             end
             return sumHelper
         end
 
-        local function sub(x, y)
+        function sub(x, y)
             @native
-            local function subHelper(z)
+            function subHelper(z)
                 return (x+y-z)
             end
             return subHelper
@@ -5192,7 +5193,7 @@ TEST_CASE("CodegenNopPaddingDeterministicOff")
         return;
 
     const char* source = R"(
-        local function add(a, b) return a + b end
+        function add(a, b) return a + b end
         return add(1, 2)
     )";
 
@@ -5225,7 +5226,7 @@ TEST_CASE("CodegenRandomizeCodeSizeNonDecreasing")
 
     // Multiple branches give the NOP padding more opportunities to fire.
     const char* source = R"(
-        local function classify(x)
+        function classify(x)
             if x > 0 then
                 return "positive"
             else if x < 0 then
@@ -5267,7 +5268,7 @@ TEST_CASE("CodegenRandomizeFunctionalCorrectness")
         return;
 
     const char* source = R"(
-        local function add(a, b) return a + b end
+        function add(a, b) return a + b end
         return add(10, 32)
     )";
 

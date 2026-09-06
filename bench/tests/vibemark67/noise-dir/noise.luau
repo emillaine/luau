@@ -21,42 +21,42 @@
 -- The four primitives (chacha20, poly1305, x25519, mlkem768) live in their own
 -- modules; this file only orchestrates them per the Noise rules.
 
-local sha256 = require("./sha256")
-local aead = require("./aead")
-local x25519 = require("./x25519")
-local mlkem = require("./mlkem768")
-local random = require("./random")
+sha256 = require("./sha256")
+aead = require("./aead")
+x25519 = require("./x25519")
+mlkem = require("./mlkem768")
+random = require("./random")
 
 -- Wire the sekure RNG into ML-KEM's randomized API (keygen / encaps).
 mlkem.randomBytes = random.bytes
 
-local noise = {}
+noise = {}
 
-local HASHLEN = 32
-local DHLEN = 32
-local TAGLEN = aead.TAG_SIZE
-local EKEM_LEN = mlkem.EK_SIZE
-local CTKEM_LEN = mlkem.C_SIZE
+HASHLEN = 32
+DHLEN = 32
+TAGLEN = aead.TAG_SIZE
+EKEM_LEN = mlkem.EK_SIZE
+CTKEM_LEN = mlkem.C_SIZE
 
-local PROTOCOL_NAME = "Noise_pqXX_25519+MLKEM768_ChaChaPoly_SHA256"
+PROTOCOL_NAME = "Noise_pqXX_25519+MLKEM768_ChaChaPoly_SHA256"
 
 -- === small buffer helpers ================================================
 
 -- Return a new buffer containing bytes [off, off+len) of `b`.
-local function slice(b: buffer, off: number, len: number): buffer
-	local out = buffer.create(len)
+function slice(b: buffer, off: number, len: number): buffer
+	out = buffer.create(len)
 	buffer.copy(out, 0, b, off, len)
 	return out
 end
 
 -- Concatenate a list of buffers.
-local function concat(parts: { buffer }): buffer
-	local total = 0
+function concat(parts: { buffer }): buffer
+	total = 0
 	for _, p in parts do
 		total += buffer.len(p)
 	end
-	local out = buffer.create(total)
-	local off = 0
+	out = buffer.create(total)
+	off = 0
 	for _, p in parts do
 		buffer.copy(out, off, p, 0, buffer.len(p))
 		off += buffer.len(p)
@@ -64,26 +64,26 @@ local function concat(parts: { buffer }): buffer
 	return out
 end
 
-local EMPTY = buffer.create(0)
+EMPTY = buffer.create(0)
 
 -- === HKDF (Noise variant, over HMAC-SHA256) ==============================
 
-local function oneByte(v: number): buffer
-	local b = buffer.create(1)
+function oneByte(v: number): buffer
+	b = buffer.create(1)
 	buffer.writeu8(b, 0, v)
 	return b
 end
 
 -- Noise HKDF: derive two or three HASHLEN outputs from a chaining key and
 -- input key material.
-local function hkdf(chainingKey: buffer, ikm: buffer, numOutputs: number): (buffer, buffer, buffer?)
-	local tempKey = sha256.hmac(chainingKey, ikm)
-	local out1 = sha256.hmac(tempKey, oneByte(0x01))
-	local out2 = sha256.hmac(tempKey, concat({ out1, oneByte(0x02) }))
+function hkdf(chainingKey: buffer, ikm: buffer, numOutputs: number): (buffer, buffer, buffer?)
+	tempKey = sha256.hmac(chainingKey, ikm)
+	out1 = sha256.hmac(tempKey, oneByte(0x01))
+	out2 = sha256.hmac(tempKey, concat({ out1, oneByte(0x02) }))
 	if numOutputs == 2 then
 		return out1, out2, nil
 	end
-	local out3 = sha256.hmac(tempKey, concat({ out2, oneByte(0x03) }))
+	out3 = sha256.hmac(tempKey, concat({ out2, oneByte(0x03) }))
 	return out1, out2, out3
 end
 
@@ -94,14 +94,14 @@ export type CipherState = {
 	n: number,
 }
 
-local function newCipherState(key: buffer?): CipherState
+function newCipherState(key: buffer?): CipherState
 	return { k = key, n = 0 }
 end
 
 -- Build the 12-byte ChaCha20-Poly1305 nonce for counter n: 4 zero bytes
 -- followed by the 64-bit little-endian counter.
-local function nonceBuffer(n: number): buffer
-	local b = buffer.create(12)
+function nonceBuffer(n: number): buffer
+	b = buffer.create(12)
 	buffer.writeu32(b, 4, n % 0x100000000)
 	buffer.writeu32(b, 8, math.floor(n / 0x100000000))
 	return b
@@ -109,28 +109,28 @@ end
 
 -- Encrypt with associated data. With no key set (pre-first-MixKey), the
 -- plaintext passes through unchanged, per the Noise spec.
-local function encryptWithAd(cs: CipherState, ad: buffer, plaintext: buffer): buffer
-	local k = cs.k
+function encryptWithAd(cs: CipherState, ad: buffer, plaintext: buffer): buffer
+	k = cs.k
 	if k == nil then
 		return plaintext
 	end
-	local ct, tag = aead.seal(k, nonceBuffer(cs.n), plaintext, ad)
+	ct, tag = aead.seal(k, nonceBuffer(cs.n), plaintext, ad)
 	cs.n += 1
 	return concat({ ct, tag })
 end
 
 -- Decrypt with associated data. Returns plaintext, or errors on auth failure.
-local function decryptWithAd(cs: CipherState, ad: buffer, ciphertext: buffer): buffer
-	local k = cs.k
+function decryptWithAd(cs: CipherState, ad: buffer, ciphertext: buffer): buffer
+	k = cs.k
 	if k == nil then
 		return ciphertext
 	end
-	local n = buffer.len(ciphertext)
+	n = buffer.len(ciphertext)
 	assert(n >= TAGLEN, "ciphertext too short")
-	local ct = slice(ciphertext, 0, n - TAGLEN)
-	local tag = slice(ciphertext, n - TAGLEN, TAGLEN)
-	local pt = aead.open(k, nonceBuffer(cs.n), ct, tag, ad)
-	assert(pt ~= nil, "Noise: decryption failed (authentication)")
+	ct = slice(ciphertext, 0, n - TAGLEN)
+	tag = slice(ciphertext, n - TAGLEN, TAGLEN)
+	pt = aead.open(k, nonceBuffer(cs.n), ct, tag, ad)
+	assert(pt != nil, "Noise: decryption failed (authentication)")
 	cs.n += 1
 	return pt as buffer
 end
@@ -153,9 +153,9 @@ type SymmetricState = {
 	cs: CipherState,
 }
 
-local function newSymmetricState(protocolName: string): SymmetricState
-	local nameBuf = buffer.fromstring(protocolName)
-	local h: buffer
+function newSymmetricState(protocolName: string): SymmetricState
+	nameBuf = buffer.fromstring(protocolName)
+	h = nil
 	if buffer.len(nameBuf) <= HASHLEN then
 		h = buffer.create(HASHLEN) -- zero-padded
 		buffer.copy(h, 0, nameBuf, 0, buffer.len(nameBuf))
@@ -165,32 +165,32 @@ local function newSymmetricState(protocolName: string): SymmetricState
 	return { ck = slice(h, 0, HASHLEN), h = h, cs = newCipherState(nil) }
 end
 
-local function mixKey(ss: SymmetricState, ikm: buffer)
-	local ck, tempK = hkdf(ss.ck, ikm, 2)
+function mixKey(ss: SymmetricState, ikm: buffer)
+	ck, tempK = hkdf(ss.ck, ikm, 2)
 	ss.ck = ck
 	ss.cs = newCipherState(tempK)
 end
 
-local function mixHash(ss: SymmetricState, data: buffer)
+function mixHash(ss: SymmetricState, data: buffer)
 	ss.h = sha256.hash(concat({ ss.h, data }))
 end
 
-local function encryptAndHash(ss: SymmetricState, plaintext: buffer): buffer
-	local ct = encryptWithAd(ss.cs, ss.h, plaintext)
+function encryptAndHash(ss: SymmetricState, plaintext: buffer): buffer
+	ct = encryptWithAd(ss.cs, ss.h, plaintext)
 	mixHash(ss, ct)
 	return ct
 end
 
-local function decryptAndHash(ss: SymmetricState, ciphertext: buffer): buffer
-	local pt = decryptWithAd(ss.cs, ss.h, ciphertext)
+function decryptAndHash(ss: SymmetricState, ciphertext: buffer): buffer
+	pt = decryptWithAd(ss.cs, ss.h, ciphertext)
 	mixHash(ss, ciphertext)
 	return pt
 end
 
 -- Split into two transport CipherStates (c1 for initiator->responder,
 -- c2 for responder->initiator).
-local function split(ss: SymmetricState): (CipherState, CipherState)
-	local k1, k2 = hkdf(ss.ck, EMPTY, 2)
+function split(ss: SymmetricState): (CipherState, CipherState)
+	k1, k2 = hkdf(ss.ck, EMPTY, 2)
 	return newCipherState(k1), newCipherState(k2)
 end
 
@@ -217,13 +217,13 @@ export type Handshake = {
 
 -- Generate a fresh X25519 static key pair for a party's long-term identity.
 function noise.generateStaticKeyPair(): KeyPair
-	local priv = random.bytes(32)
+	priv = random.bytes(32)
 	return { priv = priv, pub = x25519.publicKey(priv) }
 end
 
 -- Initialize a handshake. `staticKeys` is the party's long-term X25519 identity.
-local function initialize(initiator: boolean, staticKeys: KeyPair, prologue: buffer?): Handshake
-	local ss = newSymmetricState(PROTOCOL_NAME)
+function initialize(initiator: boolean, staticKeys: KeyPair, prologue: buffer?): Handshake
+	ss = newSymmetricState(PROTOCOL_NAME)
 	mixHash(ss, prologue or EMPTY)
 	return {
 		ss = ss,
@@ -248,47 +248,47 @@ function noise.newResponder(staticKeys: KeyPair, prologue: buffer?): Handshake
 	return initialize(false, staticKeys, prologue)
 end
 
-local function newEphemeral(): KeyPair
-	local priv = random.bytes(32)
+function newEphemeral(): KeyPair
+	priv = random.bytes(32)
 	return { priv = priv, pub = x25519.publicKey(priv) }
 end
 
 -- --- message 1: initiator -> responder : e, ekem, payload ---------------
 
-local function writeMsg1(hs: Handshake, payload: buffer): buffer
-	local ss = hs.ss
-	local e = newEphemeral()
+function writeMsg1(hs: Handshake, payload: buffer): buffer
+	ss = hs.ss
+	e = newEphemeral()
 	hs.e = e
 	mixHash(ss, e.pub)
 
 	-- Ephemeral ML-KEM key pair; its public key travels in the clear.
-	local ek, dk = mlkem.keygen()
+	ek, dk = mlkem.keygen()
 	hs.kem = { ek = ek, dk = dk }
 	mixHash(ss, ek)
 
-	local payloadPart = encryptAndHash(ss, payload) -- no key yet: plaintext
+	payloadPart = encryptAndHash(ss, payload) -- no key yet: plaintext
 	return concat({ e.pub, ek, payloadPart })
 end
 
-local function readMsg1(hs: Handshake, message: buffer): buffer
-	local ss = hs.ss
-	local re = slice(message, 0, DHLEN)
+function readMsg1(hs: Handshake, message: buffer): buffer
+	ss = hs.ss
+	re = slice(message, 0, DHLEN)
 	hs.re = re
 	mixHash(ss, re)
 
-	local ek = slice(message, DHLEN, EKEM_LEN)
+	ek = slice(message, DHLEN, EKEM_LEN)
 	hs.remoteEk = ek
 	mixHash(ss, ek)
 
-	local rest = slice(message, DHLEN + EKEM_LEN, buffer.len(message) - DHLEN - EKEM_LEN)
+	rest = slice(message, DHLEN + EKEM_LEN, buffer.len(message) - DHLEN - EKEM_LEN)
 	return decryptAndHash(ss, rest)
 end
 
 -- --- message 2: responder -> initiator : e, ee, ekem_ct, s, es, payload -
 
-local function writeMsg2(hs: Handshake, payload: buffer): buffer
-	local ss = hs.ss
-	local e = newEphemeral()
+function writeMsg2(hs: Handshake, payload: buffer): buffer
+	ss = hs.ss
+	e = newEphemeral()
 	hs.e = e
 	mixHash(ss, e.pub)
 
@@ -296,24 +296,24 @@ local function writeMsg2(hs: Handshake, payload: buffer): buffer
 	mixKey(ss, x25519.scalarMult(e.priv, hs.re as buffer))
 
 	-- ekem: encapsulate to the initiator's ML-KEM key.
-	local kemSecret, kemCt = mlkem.encaps(hs.remoteEk as buffer)
+	kemSecret, kemCt = mlkem.encaps(hs.remoteEk as buffer)
 	mixHash(ss, kemCt)
 	mixKey(ss, kemSecret)
 
 	-- s (responder static, now encrypted under ee + ML-KEM keys)
-	local encStatic = encryptAndHash(ss, hs.s.pub)
+	encStatic = encryptAndHash(ss, hs.s.pub)
 
 	-- es = DH(responder static, initiator ephemeral)
 	mixKey(ss, x25519.scalarMult(hs.s.priv, hs.re as buffer))
 
-	local payloadPart = encryptAndHash(ss, payload)
+	payloadPart = encryptAndHash(ss, payload)
 	return concat({ e.pub, kemCt, encStatic, payloadPart })
 end
 
-local function readMsg2(hs: Handshake, message: buffer): buffer
-	local ss = hs.ss
-	local off = 0
-	local re = slice(message, off, DHLEN)
+function readMsg2(hs: Handshake, message: buffer): buffer
+	ss = hs.ss
+	off = 0
+	re = slice(message, off, DHLEN)
 	hs.re = re
 	off += DHLEN
 	mixHash(ss, re)
@@ -322,51 +322,51 @@ local function readMsg2(hs: Handshake, message: buffer): buffer
 	mixKey(ss, x25519.scalarMult((hs.e as KeyPair).priv, re))
 
 	-- ekem: decapsulate the ciphertext.
-	local kemCt = slice(message, off, CTKEM_LEN)
+	kemCt = slice(message, off, CTKEM_LEN)
 	off += CTKEM_LEN
 	mixHash(ss, kemCt)
-	local kemSecret = mlkem.decaps((hs.kem as any).dk, kemCt)
+	kemSecret = mlkem.decaps((hs.kem as any).dk, kemCt)
 	mixKey(ss, kemSecret)
 
 	-- s (responder static): encrypted 32-byte key + 16-byte tag.
-	local encStatic = slice(message, off, DHLEN + TAGLEN)
+	encStatic = slice(message, off, DHLEN + TAGLEN)
 	off += DHLEN + TAGLEN
-	local rs = decryptAndHash(ss, encStatic)
+	rs = decryptAndHash(ss, encStatic)
 	hs.rs = rs
 
 	-- es = DH(initiator ephemeral, responder static)
 	mixKey(ss, x25519.scalarMult((hs.e as KeyPair).priv, rs))
 
-	local rest = slice(message, off, buffer.len(message) - off)
+	rest = slice(message, off, buffer.len(message) - off)
 	return decryptAndHash(ss, rest)
 end
 
 -- --- message 3: initiator -> responder : s, se, payload -----------------
 
-local function writeMsg3(hs: Handshake, payload: buffer): buffer
-	local ss = hs.ss
+function writeMsg3(hs: Handshake, payload: buffer): buffer
+	ss = hs.ss
 	-- s (initiator static, encrypted)
-	local encStatic = encryptAndHash(ss, hs.s.pub)
+	encStatic = encryptAndHash(ss, hs.s.pub)
 	-- se = DH(initiator static, responder ephemeral)
 	mixKey(ss, x25519.scalarMult(hs.s.priv, hs.re as buffer))
-	local payloadPart = encryptAndHash(ss, payload)
+	payloadPart = encryptAndHash(ss, payload)
 	return concat({ encStatic, payloadPart })
 end
 
-local function readMsg3(hs: Handshake, message: buffer): buffer
-	local ss = hs.ss
-	local encStatic = slice(message, 0, DHLEN + TAGLEN)
-	local rs = decryptAndHash(ss, encStatic)
+function readMsg3(hs: Handshake, message: buffer): buffer
+	ss = hs.ss
+	encStatic = slice(message, 0, DHLEN + TAGLEN)
+	rs = decryptAndHash(ss, encStatic)
 	hs.rs = rs
 	-- se = DH(responder ephemeral, initiator static)
 	mixKey(ss, x25519.scalarMult((hs.e as KeyPair).priv, rs))
-	local rest = slice(message, DHLEN + TAGLEN, buffer.len(message) - DHLEN - TAGLEN)
+	rest = slice(message, DHLEN + TAGLEN, buffer.len(message) - DHLEN - TAGLEN)
 	return decryptAndHash(ss, rest)
 end
 
 -- Finalize: derive transport CipherStates and attach them to the handshake.
-local function doSplit(hs: Handshake)
-	local c1, c2 = split(hs.ss)
+function doSplit(hs: Handshake)
+	c1, c2 = split(hs.ss)
 	if hs.initiator then
 		hs.sendCS = c1
 		hs.recvCS = c2
@@ -379,8 +379,8 @@ end
 -- Write the next handshake message with an optional payload. Returns the
 -- message bytes to transmit.
 function noise.writeMessage(hs: Handshake, payload: buffer?): buffer
-	local pl = payload or EMPTY
-	local msg: buffer
+	pl = payload or EMPTY
+	msg = nil
 	if hs.initiator and hs.msgIndex == 0 then
 		msg = writeMsg1(hs, pl)
 	else if not hs.initiator and hs.msgIndex == 1 then
@@ -398,7 +398,7 @@ end
 
 -- Read the next handshake message. Returns the decrypted payload.
 function noise.readMessage(hs: Handshake, message: buffer): buffer
-	local payload: buffer
+	payload = nil
 	if not hs.initiator and hs.msgIndex == 0 then
 		payload = readMsg1(hs, message)
 	else if hs.initiator and hs.msgIndex == 1 then
@@ -415,7 +415,7 @@ end
 
 -- True once the three-message handshake is complete and transport keys exist.
 function noise.handshakeFinished(hs: Handshake): boolean
-	return hs.sendCS ~= nil and hs.recvCS ~= nil
+	return hs.sendCS != nil and hs.recvCS != nil
 end
 
 -- Expose the handshake hash (channel binding value) after completion.

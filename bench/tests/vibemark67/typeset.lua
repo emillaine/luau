@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -11,28 +11,28 @@ function test()
 --------------------------------------------------------------------------------
 -- Utility imports
 --------------------------------------------------------------------------------
-local floor = math.floor
-local abs = math.abs
-local min = math.min
-local max = math.max
-local huge = math.huge
-local sqrt = math.sqrt
-local unpack_ = table.unpack or unpack
-local format = string.format
-local concat = table.concat
-local insert = table.insert
-local remove = table.remove
-local clock = os.clock
-local byte = string.byte
-local char = string.char
-local sub = string.sub
-local len = string.len
-local lower = string.lower
+floor = math.floor
+abs = math.abs
+min = math.min
+max = math.max
+huge = math.huge
+sqrt = math.sqrt
+unpack_ = table.unpack or unpack
+format = string.format
+concat = table.concat
+insert = table.insert
+remove = table.remove
+clock = os.clock
+byte = string.byte
+char = string.char
+sub = string.sub
+len = string.len
+lower = string.lower
 
 --------------------------------------------------------------------------------
 -- Font metrics: character widths in 1/1000 em for proportional fonts
 --------------------------------------------------------------------------------
-local font_metrics = {}
+font_metrics = {}
 
 font_metrics["TimesRoman"] = {
     units_per_em = 1000,
@@ -647,9 +647,9 @@ font_metrics["Courier"] = {
     depths = {},
 }
 do
-    local cw = font_metrics["Courier"].widths
-    local ch = font_metrics["Courier"].heights
-    local cd = font_metrics["Courier"].depths
+    cw = font_metrics["Courier"].widths
+    ch = font_metrics["Courier"].heights
+    cd = font_metrics["Courier"].depths
     for i = 32, 126 do
         cw[i] = 600
         ch[i] = 562
@@ -782,7 +782,7 @@ font_metrics["TimesRoman-Italic"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["TimesRoman-Italic"]
+    fm = font_metrics["TimesRoman-Italic"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -898,7 +898,7 @@ font_metrics["Helvetica-Bold"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["Helvetica-Bold"]
+    fm = font_metrics["Helvetica-Bold"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["Helvetica"].heights[i]
         fm.depths[i] = font_metrics["Helvetica"].depths[i]
@@ -909,7 +909,7 @@ end
 --------------------------------------------------------------------------------
 -- Kerning pairs: value in 1/1000 em (negative = tighter)
 --------------------------------------------------------------------------------
-local kerning = {}
+kerning = {}
 
 kerning["TimesRoman"] = {
     -- A pairs
@@ -1764,7 +1764,7 @@ kerning["Courier"] = {}
 -- Key: pattern (with . for word boundary)
 -- Value: digit string where odd digits indicate valid hyphenation points
 --------------------------------------------------------------------------------
-local hyphenation_patterns = {
+hyphenation_patterns = {
     -- Prefix patterns: .a through .z
     [".ab"] = "0010",
     [".abi"] = "00100",
@@ -2717,14 +2717,14 @@ local hyphenation_patterns = {
 --------------------------------------------------------------------------------
 -- Hyphenation engine
 --------------------------------------------------------------------------------
-local function find_hyphenation_points(word)
+function find_hyphenation_points(word)
     if len(word) < 4 then
         return {}
     end
 
-    local padded = "." .. lower(word) .. "."
-    local plen = len(padded)
-    local values = {}
+    padded = "." .. lower(word) .. "."
+    plen = len(padded)
+    values = {}
     for i = 1, plen do
         values[i] = 0
     end
@@ -2732,12 +2732,12 @@ local function find_hyphenation_points(word)
     -- Apply patterns
     for i = 1, plen do
         for j = i + 1, min(i + 6, plen) do
-            local pat = sub(padded, i, j)
-            local digits = hyphenation_patterns[pat]
+            pat = sub(padded, i, j)
+            digits = hyphenation_patterns[pat]
             if digits then
                 for k = 1, len(digits) do
-                    local d = byte(digits, k) - 48
-                    local pos = i + k - 1
+                    d = byte(digits, k) - 48
+                    pos = i + k - 1
                     if pos <= plen and d > values[pos] then
                         values[pos] = d
                     end
@@ -2747,8 +2747,8 @@ local function find_hyphenation_points(word)
     end
 
     -- Extract break points (odd values, not at start/end)
-    local points = {}
-    local wlen = len(word)
+    points = {}
+    wlen = len(word)
     for i = 2, wlen - 1 do
         if values[i + 1] % 2 == 1 then
             points[i] = true
@@ -2758,11 +2758,11 @@ local function find_hyphenation_points(word)
     return points
 end
 
-local function hyphenate_word(word)
-    local points = find_hyphenation_points(word)
-    local parts = {}
-    local start = 1
-    local wlen = len(word)
+function hyphenate_word(word)
+    points = find_hyphenation_points(word)
+    parts = {}
+    start = 1
+    wlen = len(word)
 
     for i = 2, wlen - 1 do
         if points[i] then
@@ -2779,7 +2779,7 @@ end
 --------------------------------------------------------------------------------
 -- Box, Glue, and Penalty classes (TeX box-and-glue model)
 --------------------------------------------------------------------------------
-local Box = {}
+Box = {}
 Box.__index = Box
 
 function Box.new(width, content, font_name, char_code)
@@ -2804,7 +2804,7 @@ function Box:__tostring()
     return format("Box(%d, %q)", self.width, self.content)
 end
 
-local Glue = {}
+Glue = {}
 Glue.__index = Glue
 
 function Glue.new(width, stretch, shrink)
@@ -2821,14 +2821,14 @@ function Glue:is_glue() return true end
 function Glue:is_penalty() return false end
 
 function Glue.word_space(font_name)
-    local fm = font_metrics[font_name]
-    local w = fm and fm.space_width or 250
+    fm = font_metrics[font_name]
+    w = fm and fm.space_width or 250
     return Glue.new(w, floor(w / 2), floor(w / 3))
 end
 
 function Glue.sentence_space(font_name)
-    local fm = font_metrics[font_name]
-    local w = fm and fm.space_width or 250
+    fm = font_metrics[font_name]
+    w = fm and fm.space_width or 250
     return Glue.new(floor(w * 1.2), floor(w * 0.8), floor(w / 3))
 end
 
@@ -2844,7 +2844,7 @@ function Glue:__tostring()
     return format("Glue(%d+%d-%d)", self.width, self.stretch, self.shrink)
 end
 
-local Penalty = {}
+Penalty = {}
 Penalty.__index = Penalty
 
 Penalty.INFINITY = 10000
@@ -2864,8 +2864,8 @@ function Penalty:is_glue() return false end
 function Penalty:is_penalty() return true end
 
 function Penalty.hyphen(font_name)
-    local fm = font_metrics[font_name]
-    local w = fm and fm.widths[45] or 333
+    fm = font_metrics[font_name]
+    w = fm and fm.widths[45] or 333
     return Penalty.new(w, 50, true)
 end
 
@@ -2888,7 +2888,7 @@ end
 --------------------------------------------------------------------------------
 -- GlyphRun class: a sequence of positioned glyphs
 --------------------------------------------------------------------------------
-local GlyphRun = {}
+GlyphRun = {}
 GlyphRun.__index = GlyphRun
 
 function GlyphRun.new(font_name, font_size)
@@ -2908,7 +2908,7 @@ function GlyphRun:glyph_count()
 end
 
 function GlyphRun:total_width()
-    local w = 0
+    w = 0
     for i = 1, #self.glyphs do
         w = w + self.glyphs[i][4]
     end
@@ -2916,9 +2916,9 @@ function GlyphRun:total_width()
 end
 
 function GlyphRun:clone()
-    local run = GlyphRun.new(self.font_name, self.font_size)
+    run = GlyphRun.new(self.font_name, self.font_size)
     for i = 1, #self.glyphs do
-        local g = self.glyphs[i]
+        g = self.glyphs[i]
         insert(run.glyphs, {g[1], g[2], g[3], g[4]})
     end
     return run
@@ -2927,7 +2927,7 @@ end
 --------------------------------------------------------------------------------
 -- Breakpoint class for the Knuth-Plass algorithm
 --------------------------------------------------------------------------------
-local Breakpoint = {}
+Breakpoint = {}
 Breakpoint.__index = Breakpoint
 
 function Breakpoint.new(position, line, fitness, total_width, total_stretch, total_shrink, demerits, previous, ratio)
@@ -2947,7 +2947,7 @@ end
 --------------------------------------------------------------------------------
 -- Knuth-Plass line breaking algorithm
 --------------------------------------------------------------------------------
-local function compute_adjustment_ratio(target_width, natural_width, total_stretch, total_shrink)
+function compute_adjustment_ratio(target_width, natural_width, total_stretch, total_shrink)
     if natural_width == target_width then
         return 0
     else if natural_width < target_width then
@@ -2967,7 +2967,7 @@ local function compute_adjustment_ratio(target_width, natural_width, total_stret
     end
 end
 
-local function compute_fitness_class(ratio)
+function compute_fitness_class(ratio)
     if ratio < -0.5 then
         return 0  -- tight
     else if ratio <= 0.5 then
@@ -2979,33 +2979,33 @@ local function compute_fitness_class(ratio)
     end
 end
 
-local function compute_badness(ratio)
+function compute_badness(ratio)
     if ratio < -1 then
         return huge
     end
-    local r = abs(ratio)
+    r = abs(ratio)
     return min(floor(100 * r * r * r + 0.5), 10000)
 end
 
-local function knuth_plass_break(items, line_lengths, options)
-    local tolerance = (options and options.tolerance) or 2
-    local fitness_demerit = (options and options.fitness_demerit) or 100
-    local flagged_demerit = (options and options.flagged_demerit) or 100
-    local looseness = (options and options.looseness) or 0
+function knuth_plass_break(items, line_lengths, options)
+    tolerance = (options and options.tolerance) or 2
+    fitness_demerit = (options and options.fitness_demerit) or 100
+    flagged_demerit = (options and options.flagged_demerit) or 100
+    looseness = (options and options.looseness) or 0
 
-    local n = #items
+    n = #items
     if n == 0 then return {} end
 
     -- Running totals
-    local sum_width = {}
-    local sum_stretch = {}
-    local sum_shrink = {}
+    sum_width = {}
+    sum_stretch = {}
+    sum_shrink = {}
     sum_width[1] = 0
     sum_stretch[1] = 0
     sum_shrink[1] = 0
 
     for i = 1, n do
-        local item = items[i]
+        item = items[i]
         if item.type == "box" then
             sum_width[i + 1] = sum_width[i] + item.width
             sum_stretch[i + 1] = sum_stretch[i]
@@ -3022,11 +3022,11 @@ local function knuth_plass_break(items, line_lengths, options)
     end
 
     -- Active node list
-    local active = {
+    active = {
         Breakpoint.new(0, 0, 1, 0, 0, 0, 0, nil, 0)
     }
 
-    local function get_line_length(line_num)
+    function get_line_length(line_num)
         if type(line_lengths) == "number" then
             return line_lengths
         else if type(line_lengths) == "table" then
@@ -3040,8 +3040,8 @@ local function knuth_plass_break(items, line_lengths, options)
     end
 
     for i = 1, n do
-        local item = items[i]
-        local is_feasible_break = false
+        item = items[i]
+        is_feasible_break = false
 
         if item.type == "glue" then
             if i > 1 and items[i - 1].type == "box" then
@@ -3054,18 +3054,18 @@ local function knuth_plass_break(items, line_lengths, options)
         end
 
         if is_feasible_break then
-            local new_active = {}
-            local best_candidates = {}  -- indexed by fitness class
+            new_active = {}
+            best_candidates = {}  -- indexed by fitness class
 
             for a = 1, #active do
-                local node = active[a]
-                local line_num = node.line + 1
-                local target_width = get_line_length(line_num)
+                node = active[a]
+                line_num = node.line + 1
+                target_width = get_line_length(line_num)
 
                 -- Compute natural width from node to current position
-                local nat_width = sum_width[i + 1] - node.total_width
-                local nat_stretch = sum_stretch[i + 1] - node.total_stretch
-                local nat_shrink = sum_shrink[i + 1] - node.total_shrink
+                nat_width = sum_width[i + 1] - node.total_width
+                nat_stretch = sum_stretch[i + 1] - node.total_stretch
+                nat_shrink = sum_shrink[i + 1] - node.total_shrink
 
                 -- If the break is a penalty with width (hyphen), add it
                 if item.type == "penalty" and item.width > 0 then
@@ -3079,7 +3079,7 @@ local function knuth_plass_break(items, line_lengths, options)
                     nat_shrink = nat_shrink - item.shrink
                 end
 
-                local ratio = compute_adjustment_ratio(target_width, nat_width, nat_stretch, nat_shrink)
+                ratio = compute_adjustment_ratio(target_width, nat_width, nat_stretch, nat_shrink)
 
                 -- Check if this node should be deactivated (line too short even with max stretch)
                 if ratio < -1 then
@@ -3093,13 +3093,13 @@ local function knuth_plass_break(items, line_lengths, options)
                     insert(new_active, node)
 
                     if ratio >= -1 and ratio <= tolerance then
-                        local badness = compute_badness(ratio)
-                        local pen = 0
+                        badness = compute_badness(ratio)
+                        pen = 0
                         if item.type == "penalty" then
                             pen = item.penalty
                         end
 
-                        local demerits
+                        demerits = nil
                         if pen >= 0 then
                             demerits = (1 + badness + pen) * (1 + badness + pen)
                         else if pen > Penalty.NEG_INFINITY then
@@ -3109,7 +3109,7 @@ local function knuth_plass_break(items, line_lengths, options)
                         end
 
                         -- Fitness demerit
-                        local fitness = compute_fitness_class(ratio)
+                        fitness = compute_fitness_class(ratio)
                         if abs(fitness - node.fitness) > 1 then
                             demerits = demerits + fitness_demerit
                         end
@@ -3124,9 +3124,9 @@ local function knuth_plass_break(items, line_lengths, options)
                         demerits = demerits + node.demerits
 
                         -- Compute total_width/stretch/shrink after this break
-                        local tw = sum_width[i + 1]
-                        local ts = sum_stretch[i + 1]
-                        local tsh = sum_shrink[i + 1]
+                        tw = sum_width[i + 1]
+                        ts = sum_stretch[i + 1]
+                        tsh = sum_shrink[i + 1]
 
                         -- Skip any glue/penalty after break
                         -- (natural width for next line starts after break)
@@ -3150,13 +3150,13 @@ local function knuth_plass_break(items, line_lengths, options)
             if #new_active == 0 then
                 -- Emergency: no feasible breaks found, force a break at current position
                 -- Use the best (least bad) active node
-                local best_node = active[1]
+                best_node = active[1]
                 if best_node then
-                    local line_num = best_node.line + 1
-                    local tw = sum_width[i + 1]
-                    local ts = sum_stretch[i + 1]
-                    local tsh = sum_shrink[i + 1]
-                    local bp = Breakpoint.new(i, line_num, 1, tw, ts, tsh,
+                    line_num = best_node.line + 1
+                    tw = sum_width[i + 1]
+                    ts = sum_stretch[i + 1]
+                    tsh = sum_shrink[i + 1]
+                    bp = Breakpoint.new(i, line_num, 1, tw, ts, tsh,
                         best_node.demerits + 100000, best_node, 0)
                     new_active = {bp}
                 end
@@ -3171,7 +3171,7 @@ local function knuth_plass_break(items, line_lengths, options)
         return {}
     end
 
-    local best = active[1]
+    best = active[1]
     for i = 2, #active do
         if active[i].demerits < best.demerits then
             best = active[i]
@@ -3179,12 +3179,12 @@ local function knuth_plass_break(items, line_lengths, options)
     end
 
     -- Handle looseness
-    if looseness ~= 0 then
-        local target_lines = best.line + looseness
-        local closest = best
-        local closest_diff = huge
+    if looseness != 0 then
+        target_lines = best.line + looseness
+        closest = best
+        closest_diff = huge
         for i = 1, #active do
-            local diff = abs(active[i].line - target_lines)
+            diff = abs(active[i].line - target_lines)
             if diff < closest_diff or (diff == closest_diff and active[i].demerits < closest.demerits) then
                 closest = active[i]
                 closest_diff = diff
@@ -3194,8 +3194,8 @@ local function knuth_plass_break(items, line_lengths, options)
     end
 
     -- Trace back through the chain of breakpoints
-    local breaks = {}
-    local node = best
+    breaks = {}
+    node = best
     while node and node.position > 0 do
         insert(breaks, 1, {position = node.position, ratio = node.ratio, line = node.line})
         node = node.previous
@@ -3208,7 +3208,7 @@ end
 --------------------------------------------------------------------------------
 -- Paragraph layout engine
 --------------------------------------------------------------------------------
-local ParagraphLayout = {}
+ParagraphLayout = {}
 ParagraphLayout.__index = ParagraphLayout
 
 function ParagraphLayout.new(options)
@@ -3219,48 +3219,48 @@ function ParagraphLayout.new(options)
         font_size = options.font_size or 10,
         leading = options.leading or 12,
         tolerance = options.tolerance or 2,
-        hyphenate_flag = options.hyphenate ~= false,
-        justify = options.justify ~= false,
+        hyphenate_flag = options.hyphenate != false,
+        justify = options.justify != false,
         first_indent = options.first_indent or 0,
     }, ParagraphLayout)
 end
 
 function ParagraphLayout:get_char_width(char_code, font_name)
-    local fm = font_metrics[font_name or self.font_name]
+    fm = font_metrics[font_name or self.font_name]
     if not fm then return 500 end
     return fm.widths[char_code] or 500
 end
 
 function ParagraphLayout:get_kerning(c1, c2, font_name)
-    local fn = font_name or self.font_name
-    local kt = kerning[fn]
+    fn = font_name or self.font_name
+    kt = kerning[fn]
     if not kt then return 0 end
-    local pair = char(c1) .. char(c2)
+    pair = char(c1) .. char(c2)
     return kt[pair] or 0
 end
 
 function ParagraphLayout:build_items(text)
-    local items = {}
-    local fn = self.font_name
-    local text_len = len(text)
+    items = {}
+    fn = self.font_name
+    text_len = len(text)
 
     -- Add first-line indent if needed
     if self.first_indent > 0 then
         insert(items, Box.new(self.first_indent, "", fn, 0))
     end
 
-    local i = 1
-    local word_start = nil
-    local in_word = false
+    i = 1
+    word_start = nil
+    in_word = false
 
     while i <= text_len do
-        local c = byte(text, i)
+        c = byte(text, i)
 
         if c == 32 or c == 9 or c == 10 or c == 13 then
             -- Space character - end word if in one, add glue
             if in_word then
                 -- Process accumulated word
-                local word = sub(text, word_start, i - 1)
+                word = sub(text, word_start, i - 1)
                 self:emit_word(items, word, fn)
                 in_word = false
             end
@@ -3268,7 +3268,7 @@ function ParagraphLayout:build_items(text)
             insert(items, Glue.word_space(fn))
             -- Check for sentence end (period followed by space)
             if i > 1 then
-                local prev = byte(text, i - 1)
+                prev = byte(text, i - 1)
                 if prev == 46 or prev == 63 or prev == 33 then
                     -- Sentence-ending punctuation: use wider space
                     items[#items] = Glue.sentence_space(fn)
@@ -3286,7 +3286,7 @@ function ParagraphLayout:build_items(text)
 
     -- Process final word
     if in_word then
-        local word = sub(text, word_start, text_len)
+        word = sub(text, word_start, text_len)
         self:emit_word(items, word, fn)
     end
 
@@ -3298,14 +3298,14 @@ function ParagraphLayout:build_items(text)
 end
 
 function ParagraphLayout:emit_word(items, word, font_name)
-    local wlen = len(word)
+    wlen = len(word)
 
     if self.hyphenate_flag and wlen >= 5 then
         -- Try to hyphenate
-        local parts = hyphenate_word(word)
+        parts = hyphenate_word(word)
         if #parts > 1 then
             for pi = 1, #parts do
-                local part = parts[pi]
+                part = parts[pi]
                 self:emit_chars(items, part, font_name)
                 if pi < #parts then
                     insert(items, Penalty.hyphen(font_name))
@@ -3320,17 +3320,17 @@ function ParagraphLayout:emit_word(items, word, font_name)
 end
 
 function ParagraphLayout:emit_chars(items, str, font_name)
-    local slen = len(str)
-    local total_width = 0
+    slen = len(str)
+    total_width = 0
 
     for i = 1, slen do
-        local c = byte(str, i)
-        local w = self:get_char_width(c, font_name)
+        c = byte(str, i)
+        w = self:get_char_width(c, font_name)
 
         -- Apply kerning
         if i < slen then
-            local next_c = byte(str, i + 1)
-            local kern = self:get_kerning(c, next_c, font_name)
+            next_c = byte(str, i + 1)
+            kern = self:get_kerning(c, next_c, font_name)
             w = w + kern
         end
 
@@ -3341,13 +3341,13 @@ function ParagraphLayout:emit_chars(items, str, font_name)
 end
 
 function ParagraphLayout:layout(text)
-    local items = self:build_items(text)
+    items = self:build_items(text)
 
     -- Determine line lengths
-    local line_lengths = self.line_width
+    line_lengths = self.line_width
 
     -- Run Knuth-Plass
-    local breaks = knuth_plass_break(items, line_lengths, {
+    breaks = knuth_plass_break(items, line_lengths, {
         tolerance = self.tolerance,
         fitness_demerit = 100,
         flagged_demerit = 100,
@@ -3358,14 +3358,14 @@ function ParagraphLayout:layout(text)
 end
 
 function ParagraphLayout:position_lines(items, breaks, line_lengths)
-    local lines = {}
-    local n_items = #items
-    local prev_break = 0
+    lines = {}
+    n_items = #items
+    prev_break = 0
 
     for b = 1, #breaks do
-        local bp = breaks[b]
-        local line_num = b
-        local target_width
+        bp = breaks[b]
+        line_num = b
+        target_width = nil
         if type(line_lengths) == "number" then
             target_width = line_lengths
         else if type(line_lengths) == "table" then
@@ -3374,12 +3374,12 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
             target_width = 28000
         end
 
-        local ratio = bp.ratio
+        ratio = bp.ratio
 
         -- Collect items for this line
-        local line_items = {}
-        local start_idx = prev_break + 1
-        local end_idx = bp.position
+        line_items = {}
+        start_idx = prev_break + 1
+        end_idx = bp.position
 
         -- Skip leading glue
         while start_idx <= end_idx and items[start_idx] and items[start_idx].type == "glue" do
@@ -3393,22 +3393,22 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
         end
 
         -- Position glyphs
-        local glyph_run = GlyphRun.new(self.font_name, self.font_size)
-        local x = 0
+        glyph_run = GlyphRun.new(self.font_name, self.font_size)
+        x = 0
 
         for li = 1, #line_items do
-            local item = line_items[li]
+            item = line_items[li]
             if item.type == "box" then
                 -- Place the box
-                local content = item.content
+                content = item.content
                 if content and len(content) > 0 then
                     for ci = 1, len(content) do
-                        local cc = byte(content, ci)
-                        local cw = self:get_char_width(cc, item.font_name or self.font_name)
+                        cc = byte(content, ci)
+                        cw = self:get_char_width(cc, item.font_name or self.font_name)
 
                         -- Apply kerning with next char
                         if ci < len(content) then
-                            local next_cc = byte(content, ci + 1)
+                            next_cc = byte(content, ci + 1)
                             cw = cw + self:get_kerning(cc, next_cc, item.font_name or self.font_name)
                         end
 
@@ -3421,7 +3421,7 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
                 end
             else if item.type == "glue" then
                 -- Adjust glue width based on ratio
-                local adjusted_width = item.width
+                adjusted_width = item.width
                 if ratio > 0 then
                     adjusted_width = item.width + floor(ratio * item.stretch)
                 else if ratio < 0 then
@@ -3454,7 +3454,7 @@ end
 --------------------------------------------------------------------------------
 -- Page layout engine
 --------------------------------------------------------------------------------
-local Page = {}
+Page = {}
 Page.__index = Page
 
 function Page.new(page_num, width, height)
@@ -3470,7 +3470,7 @@ function Page:add_glyph_run(run, x, y)
     insert(self.glyph_runs, {run = run, x = x, y = y})
 end
 
-local PageLayout = {}
+PageLayout = {}
 PageLayout.__index = PageLayout
 
 function PageLayout.new(options)
@@ -3497,8 +3497,8 @@ function PageLayout:get_text_height()
 end
 
 function PageLayout:new_page()
-    local page_num = #self.pages + 1
-    local page = Page.new(page_num, self.page_width, self.page_height)
+    page_num = #self.pages + 1
+    page = Page.new(page_num, self.page_width, self.page_height)
     insert(self.pages, page)
     self.current_page = page
     self.current_y = self.margin_top
@@ -3513,7 +3513,7 @@ end
 
 function PageLayout:add_paragraph(lines, leading)
     leading = leading or 12
-    local line_height = leading * 100  -- Convert to font units (approx)
+    line_height = leading * 100  -- Convert to font units (approx)
 
     for i = 1, #lines do
         self:ensure_page()
@@ -3523,12 +3523,12 @@ function PageLayout:add_paragraph(lines, leading)
             self:new_page()
         end
 
-        local line = lines[i]
-        local run = line.glyph_run
+        line = lines[i]
+        run = line.glyph_run
 
         -- Position the glyph run on the page
         -- Adjust y coordinates for all glyphs in the run
-        local page_run = run:clone()
+        page_run = run:clone()
         for g = 1, #page_run.glyphs do
             page_run.glyphs[g][3] = self.current_y  -- Set y position
         end
@@ -3554,7 +3554,7 @@ end
 --------------------------------------------------------------------------------
 -- Document model
 --------------------------------------------------------------------------------
-local Section = {}
+Section = {}
 Section.__index = Section
 
 function Section.new(title, level)
@@ -3575,9 +3575,9 @@ end
 
 function Section:typeset(page_layout)
     -- Typeset section title
-    local title_size = 14 - (self.level - 1) * 2
-    local title_font = "Helvetica-Bold"
-    local title_layout = ParagraphLayout.new({
+    title_size = 14 - (self.level - 1) * 2
+    title_font = "Helvetica-Bold"
+    title_layout = ParagraphLayout.new({
         line_width = page_layout:get_text_width(),
         font_name = title_font,
         font_size = title_size,
@@ -3587,32 +3587,32 @@ function Section:typeset(page_layout)
     })
 
     page_layout:add_vertical_space(title_size * 150)
-    local title_lines = title_layout:layout(self.title)
+    title_lines = title_layout:layout(self.title)
     page_layout:add_paragraph(title_lines, title_size + 4)
     page_layout:add_vertical_space(title_size * 50)
 
     -- Typeset elements
     for _, elem in ipairs(self.elements) do
         if elem.type == "paragraph" then
-            local opts = elem.options
-            local para_layout = ParagraphLayout.new({
+            opts = elem.options
+            para_layout = ParagraphLayout.new({
                 line_width = page_layout:get_text_width(),
                 font_name = opts.font_name or "TimesRoman",
                 font_size = opts.font_size or 10,
                 leading = opts.leading or 12,
                 tolerance = opts.tolerance or 2,
-                hyphenate = opts.hyphenate ~= false,
-                justify = opts.justify ~= false,
+                hyphenate = opts.hyphenate != false,
+                justify = opts.justify != false,
                 first_indent = opts.first_indent or 1500,
             })
-            local lines = para_layout:layout(elem.text)
+            lines = para_layout:layout(elem.text)
             page_layout:add_paragraph(lines, opts.leading or 12)
             page_layout:add_vertical_space(600)
         end
     end
 end
 
-local Document = {}
+Document = {}
 Document.__index = Document
 
 function Document.new(title)
@@ -3623,7 +3623,7 @@ function Document.new(title)
 end
 
 function Document:add_section(title, level)
-    local section = Section.new(title, level)
+    section = Section.new(title, level)
     insert(self.sections, section)
     return section
 end
@@ -3639,7 +3639,7 @@ end
 --------------------------------------------------------------------------------
 -- Sample texts for benchmarking
 --------------------------------------------------------------------------------
-local sample_texts = {}
+sample_texts = {}
 
 sample_texts[1] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo."
 
@@ -3834,7 +3834,7 @@ font_metrics["Georgia"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["Georgia"]
+    fm = font_metrics["Georgia"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -3949,7 +3949,7 @@ font_metrics["Palatino"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["Palatino"]
+    fm = font_metrics["Palatino"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -4064,7 +4064,7 @@ font_metrics["Garamond"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["Garamond"]
+    fm = font_metrics["Garamond"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -4179,7 +4179,7 @@ font_metrics["Bookman"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["Bookman"]
+    fm = font_metrics["Bookman"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -4590,7 +4590,7 @@ kerning["Bookman"] = {
 --------------------------------------------------------------------------------
 -- Extended hyphenation patterns (additional patterns for better coverage)
 --------------------------------------------------------------------------------
-local extended_patterns = {
+extended_patterns = {
     -- Multi-character patterns for common English word parts
     ["abil"] = "0100",
     ["abili"] = "01010",
@@ -5385,7 +5385,7 @@ end
 --------------------------------------------------------------------------------
 -- Ligature tables (used for width adjustment in advanced layout)
 --------------------------------------------------------------------------------
-local ligatures = {}
+ligatures = {}
 
 ligatures["TimesRoman"] = {
     ["fi"] = {width = 556, chars = {102, 105}},
@@ -5775,7 +5775,7 @@ sample_texts[80] = "The invention of writing, occurring independently in Mesopot
 --------------------------------------------------------------------------------
 -- More extended hyphenation patterns (F through Z)
 --------------------------------------------------------------------------------
-local extended_patterns_2 = {
+extended_patterns_2 = {
     -- F extended patterns
     ["face"] = "0100",
     ["faci"] = "0100",
@@ -8059,7 +8059,7 @@ sample_texts[100] = "The molecular basis of heredity was established through a s
 --------------------------------------------------------------------------------
 -- Additional kerning data for multi-font completeness
 --------------------------------------------------------------------------------
-local extended_kerning = {
+extended_kerning = {
     ["TimesRoman"] = {
         -- Additional lowercase pairs
         ["ab"] = -5,
@@ -8486,7 +8486,7 @@ font_metrics["MinionPro"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["MinionPro"]
+    fm = font_metrics["MinionPro"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -8601,7 +8601,7 @@ font_metrics["CenturySchoolbook"] = {
     depths = {},
 }
 do
-    local fm = font_metrics["CenturySchoolbook"]
+    fm = font_metrics["CenturySchoolbook"]
     for i = 32, 126 do
         fm.heights[i] = font_metrics["TimesRoman"].heights[i]
         fm.depths[i] = font_metrics["TimesRoman"].depths[i]
@@ -8766,22 +8766,22 @@ kerning["CenturySchoolbook"] = {
 --------------------------------------------------------------------------------
 -- Test document builder
 --------------------------------------------------------------------------------
-local function build_test_documents()
-    local docs = {}
+function build_test_documents()
+    docs = {}
 
     -- Document 1: Simple single-font document with TimesRoman
     do
-        local doc = Document.new("The Nature of Typography")
-        local s1 = doc:add_section("Introduction to Typesetting", 1)
+        doc = Document.new("The Nature of Typography")
+        s1 = doc:add_section("Introduction to Typesetting", 1)
         s1:add_paragraph(sample_texts[1])
         s1:add_paragraph(sample_texts[2])
         s1:add_paragraph(sample_texts[3])
 
-        local s2 = doc:add_section("The Art of Line Breaking", 1)
+        s2 = doc:add_section("The Art of Line Breaking", 1)
         s2:add_paragraph(sample_texts[5])
         s2:add_paragraph(sample_texts[7])
 
-        local s3 = doc:add_section("Digital Typography", 2)
+        s3 = doc:add_section("Digital Typography", 2)
         s3:add_paragraph(sample_texts[6])
         s3:add_paragraph(sample_texts[8])
 
@@ -8790,18 +8790,18 @@ local function build_test_documents()
 
     -- Document 2: Multi-section technical document
     do
-        local doc = Document.new("Computational Methods in Text Layout")
-        local s1 = doc:add_section("Algorithms", 1)
+        doc = Document.new("Computational Methods in Text Layout")
+        s1 = doc:add_section("Algorithms", 1)
         s1:add_paragraph(sample_texts[9], {font_name = "Helvetica"})
         s1:add_paragraph(sample_texts[10], {font_name = "Helvetica"})
         s1:add_paragraph(sample_texts[12], {font_name = "Helvetica"})
 
-        local s2 = doc:add_section("Data Structures", 1)
+        s2 = doc:add_section("Data Structures", 1)
         s2:add_paragraph(sample_texts[14])
         s2:add_paragraph(sample_texts[17])
         s2:add_paragraph(sample_texts[19])
 
-        local s3 = doc:add_section("Performance Analysis", 2)
+        s3 = doc:add_section("Performance Analysis", 2)
         s3:add_paragraph(sample_texts[30])
         s3:add_paragraph(sample_texts[32])
 
@@ -8810,21 +8810,21 @@ local function build_test_documents()
 
     -- Document 3: Dense text stress test
     do
-        local doc = Document.new("Encyclopedia of Knowledge")
-        local s1 = doc:add_section("Natural Sciences", 1)
+        doc = Document.new("Encyclopedia of Knowledge")
+        s1 = doc:add_section("Natural Sciences", 1)
         s1:add_paragraph(sample_texts[11])
         s1:add_paragraph(sample_texts[13])
         s1:add_paragraph(sample_texts[15])
         s1:add_paragraph(sample_texts[21])
         s1:add_paragraph(sample_texts[22])
 
-        local s2 = doc:add_section("Mathematics and Logic", 1)
+        s2 = doc:add_section("Mathematics and Logic", 1)
         s2:add_paragraph(sample_texts[24])
         s2:add_paragraph(sample_texts[26])
         s2:add_paragraph(sample_texts[35])
         s2:add_paragraph(sample_texts[37])
 
-        local s3 = doc:add_section("History and Culture", 2)
+        s3 = doc:add_section("History and Culture", 2)
         s3:add_paragraph(sample_texts[16])
         s3:add_paragraph(sample_texts[23])
         s3:add_paragraph(sample_texts[36])
@@ -8834,18 +8834,18 @@ local function build_test_documents()
 
     -- Document 4: Mixed fonts and sizes
     do
-        local doc = Document.new("Survey of Modern Science")
-        local s1 = doc:add_section("Physics", 1)
+        doc = Document.new("Survey of Modern Science")
+        s1 = doc:add_section("Physics", 1)
         s1:add_paragraph(sample_texts[45], {font_name = "Palatino", font_size = 11})
         s1:add_paragraph(sample_texts[54], {font_name = "Palatino", font_size = 11})
         s1:add_paragraph(sample_texts[58], {font_name = "Palatino", font_size = 11})
 
-        local s2 = doc:add_section("Biology", 1)
+        s2 = doc:add_section("Biology", 1)
         s2:add_paragraph(sample_texts[29], {font_name = "Georgia", font_size = 10})
         s2:add_paragraph(sample_texts[33], {font_name = "Georgia", font_size = 10})
         s2:add_paragraph(sample_texts[48], {font_name = "Georgia", font_size = 10})
 
-        local s3 = doc:add_section("Computer Science", 2)
+        s3 = doc:add_section("Computer Science", 2)
         s3:add_paragraph(sample_texts[60], {font_name = "TimesRoman"})
         s3:add_paragraph(sample_texts[63], {font_name = "TimesRoman"})
         s3:add_paragraph(sample_texts[72], {font_name = "TimesRoman"})
@@ -8855,18 +8855,18 @@ local function build_test_documents()
 
     -- Document 5: Large document with many paragraphs (heavy stress test)
     do
-        local doc = Document.new("Comprehensive Review")
-        local s1 = doc:add_section("Part One", 1)
+        doc = Document.new("Comprehensive Review")
+        s1 = doc:add_section("Part One", 1)
         for i = 41, 55 do
             s1:add_paragraph(sample_texts[i])
         end
 
-        local s2 = doc:add_section("Part Two", 1)
+        s2 = doc:add_section("Part Two", 1)
         for i = 56, 70 do
             s2:add_paragraph(sample_texts[i])
         end
 
-        local s3 = doc:add_section("Part Three", 1)
+        s3 = doc:add_section("Part Three", 1)
         for i = 71, 80 do
             s3:add_paragraph(sample_texts[i])
         end
@@ -8876,8 +8876,8 @@ local function build_test_documents()
 
     -- Document 6: Short paragraphs and pangrams
     do
-        local doc = Document.new("Typographic Specimens")
-        local s1 = doc:add_section("Pangrams and Short Texts", 1)
+        doc = Document.new("Typographic Specimens")
+        s1 = doc:add_section("Pangrams and Short Texts", 1)
         s1:add_paragraph(sample_texts[4])
         s1:add_paragraph(sample_texts[20])
         s1:add_paragraph(sample_texts[34])
@@ -8894,19 +8894,19 @@ end
 --------------------------------------------------------------------------------
 -- Checksum computation: sum of floor(x * 1000) + floor(y * 1000) for all glyphs
 --------------------------------------------------------------------------------
-local function compute_checksum(page_layout)
-    local sum = 0
+function compute_checksum(page_layout)
+    sum = 0
     for page_idx = 1, #page_layout.pages do
-        local page = page_layout.pages[page_idx]
+        page = page_layout.pages[page_idx]
         for run_idx = 1, #page.glyph_runs do
-            local entry = page.glyph_runs[run_idx]
-            local run = entry.run
-            local base_x = entry.x
-            local base_y = entry.y
+            entry = page.glyph_runs[run_idx]
+            run = entry.run
+            base_x = entry.x
+            base_y = entry.y
             for g = 1, #run.glyphs do
-                local glyph = run.glyphs[g]
-                local x = base_x + glyph[2]
-                local y = base_y + glyph[3]
+                glyph = run.glyphs[g]
+                x = base_x + glyph[2]
+                y = base_y + glyph[3]
                 -- Use modular arithmetic to avoid floating point overflow
                 sum = sum + (floor(x * 100) % 1000000) + (floor(y * 100) % 1000000)
                 -- Keep sum bounded
@@ -8922,13 +8922,13 @@ end
 --------------------------------------------------------------------------------
 -- Single benchmark iteration
 --------------------------------------------------------------------------------
-local function run_single_iteration()
-    local docs = build_test_documents()
-    local total_checksum = 0
+function run_single_iteration()
+    docs = build_test_documents()
+    total_checksum = 0
 
     for doc_idx = 1, #docs do
-        local doc = docs[doc_idx]
-        local page_layout = PageLayout.new({
+        doc = docs[doc_idx]
+        page_layout = PageLayout.new({
             page_width = 36000,
             page_height = 50000,
             margin_top = 4000,
@@ -8937,7 +8937,7 @@ local function run_single_iteration()
             margin_right = 4000,
         })
         doc:typeset(page_layout)
-        local cs = compute_checksum(page_layout)
+        cs = compute_checksum(page_layout)
         total_checksum = total_checksum + cs
         if total_checksum > 1000000000 then
             total_checksum = total_checksum % 1000000000
@@ -8952,8 +8952,8 @@ end
 --------------------------------------------------------------------------------
 
 -- Warm up and get expected checksum
-local checksum = run_single_iteration()
-if checksum ~= 608624000 then
+checksum = run_single_iteration()
+if checksum != 608624000 then
     error("Wrong checksum " .. checksum)
 end
 
@@ -8966,7 +8966,7 @@ end
 -- Maps ASCII codes to character classes:
 -- 0=whitespace, 1=letter, 2=digit, 3=punctuation, 4=hyphen, 5=apostrophe
 --------------------------------------------------------------------------------
-local char_class = {}
+char_class = {}
 do
     for i = 0, 127 do
         char_class[i] = 3  -- default: punctuation
@@ -8996,7 +8996,7 @@ end
 --------------------------------------------------------------------------------
 -- Sentence-ending punctuation detection
 --------------------------------------------------------------------------------
-local sentence_enders = {
+sentence_enders = {
     [46] = true,   -- period
     [63] = true,   -- question mark
     [33] = true,   -- exclamation mark
@@ -9005,7 +9005,7 @@ local sentence_enders = {
 --------------------------------------------------------------------------------
 -- Opening and closing bracket pairs for balanced detection
 --------------------------------------------------------------------------------
-local bracket_pairs = {
+bracket_pairs = {
     [40] = 41,     -- ( )
     [91] = 93,     -- [ ]
     [123] = 125,   -- { }
@@ -9015,7 +9015,7 @@ local bracket_pairs = {
 -- Additional line-break classification for CJK-aware typesetting
 -- (Not actively used in this benchmark but provides realistic data bulk)
 --------------------------------------------------------------------------------
-local break_class = {}
+break_class = {}
 do
     -- ASCII break classifications based on UAX #14
     -- Class codes: 0=AL (Alphabetic), 1=NU (Numeric), 2=SP (Space),
@@ -9053,7 +9053,7 @@ end
 -- Line-break pair table (simplified): can_break[before_class][after_class]
 -- true = break allowed, false = break prohibited
 --------------------------------------------------------------------------------
-local break_pair_table = {}
+break_pair_table = {}
 do
     for i = 0, 10 do
         break_pair_table[i] = {}
@@ -9097,7 +9097,7 @@ end
 --------------------------------------------------------------------------------
 -- Script identification (for multi-script typesetting support)
 --------------------------------------------------------------------------------
-local script_table = {}
+script_table = {}
 do
     for i = 0, 127 do
         script_table[i] = "Latin"
@@ -9127,7 +9127,7 @@ end
 -- Values in 1/1000 em representing how much to shift each character
 -- when it appears at the left or right margin
 --------------------------------------------------------------------------------
-local optical_margins = {
+optical_margins = {
     ["TimesRoman"] = {
         left = {
             [40] = -80,   -- (
@@ -9342,7 +9342,7 @@ local optical_margins = {
 -- Paragraph indentation patterns for different document styles
 -- Each style defines first_indent, subsequent_indent, and spacing behavior
 --------------------------------------------------------------------------------
-local paragraph_styles = {
+paragraph_styles = {
     ["book"] = {
         first_indent = 1500,
         subsequent_indent = 0,
@@ -9404,7 +9404,7 @@ local paragraph_styles = {
 --------------------------------------------------------------------------------
 -- Section heading styles for different document types
 --------------------------------------------------------------------------------
-local heading_styles = {
+heading_styles = {
     [1] = {
         font_name = "Helvetica-Bold",
         font_size = 18,
@@ -9445,7 +9445,7 @@ local heading_styles = {
 --------------------------------------------------------------------------------
 -- Page size definitions (common paper sizes in 1/1000 inch)
 --------------------------------------------------------------------------------
-local page_sizes = {
+page_sizes = {
     ["letter"] = {width = 8500, height = 11000},
     ["legal"] = {width = 8500, height = 14000},
     ["a4"] = {width = 8268, height = 11693},
@@ -9459,7 +9459,7 @@ local page_sizes = {
 --------------------------------------------------------------------------------
 -- Margin presets for common document layouts
 --------------------------------------------------------------------------------
-local margin_presets = {
+margin_presets = {
     ["normal"] = {top = 4000, bottom = 4000, left = 4000, right = 4000},
     ["narrow"] = {top = 2500, bottom = 2500, left = 2500, right = 2500},
     ["wide"] = {top = 4000, bottom = 4000, left = 6000, right = 6000},
@@ -9471,7 +9471,7 @@ local margin_presets = {
 --------------------------------------------------------------------------------
 -- Text decoration metrics (for underline, strikethrough, overline)
 --------------------------------------------------------------------------------
-local decoration_metrics = {
+decoration_metrics = {
     ["TimesRoman"] = {
         underline_position = -100,
         underline_thickness = 50,
@@ -9549,7 +9549,7 @@ local decoration_metrics = {
 --------------------------------------------------------------------------------
 -- Superscript and subscript positioning data
 --------------------------------------------------------------------------------
-local script_positioning = {
+script_positioning = {
     ["TimesRoman"] = {
         superscript_x_offset = 0,
         superscript_y_offset = 350,
@@ -9652,7 +9652,7 @@ local script_positioning = {
 -- When a character is not found in the primary font, these define which fonts
 -- to try in order. This data supports multi-font document rendering.
 --------------------------------------------------------------------------------
-local font_fallback_chains = {
+font_fallback_chains = {
     ["TimesRoman"] = {
         "TimesRoman",
         "TimesRoman-Italic",
@@ -9735,7 +9735,7 @@ local font_fallback_chains = {
 -- Color definitions for syntax highlighting in code blocks
 -- Expressed as RGB triplets (0-255)
 --------------------------------------------------------------------------------
-local syntax_colors = {
+syntax_colors = {
     keyword = {0, 0, 180},
     string = {180, 0, 0},
     comment = {0, 128, 0},
@@ -9759,7 +9759,7 @@ local syntax_colors = {
 --------------------------------------------------------------------------------
 -- Baseline grid specifications for grid-aligned typography
 --------------------------------------------------------------------------------
-local baseline_grids = {
+baseline_grids = {
     ["10pt_12pt"] = {
         body_size = 10,
         leading = 12,
@@ -9802,7 +9802,7 @@ local baseline_grids = {
 -- Tracking (letter-spacing) adjustments by font size
 -- Values in 1/1000 em to add between all characters at given size
 --------------------------------------------------------------------------------
-local tracking_adjustments = {
+tracking_adjustments = {
     ["TimesRoman"] = {
         [6] = 40,
         [7] = 25,
@@ -9909,7 +9909,7 @@ local tracking_adjustments = {
 -- Word frequency data for optimal hyphenation cache sizing
 -- Top 100 English words that benefit from precomputed hyphenation
 --------------------------------------------------------------------------------
-local common_hyphenatable_words = {
+common_hyphenatable_words = {
     "information",
     "international",
     "development",

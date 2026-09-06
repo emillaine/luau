@@ -4,13 +4,13 @@
 -- per-function origin objects, and the direct-call alias. These templates are
 -- validated against the live runtime (see ABI-NOTES.md / hash.yolo.s).
 
-local glue = {}
+glue = {}
 
-local FUNCTION_UPPER_FLAGS = "36873221949095936" -- 0x83 << 48
+FUNCTION_UPPER_FLAGS = "36873221949095936" -- 0x83 << 48
 
 -- Function getter: returns the FO flight pointer (intval in x0, lower in x1).
 function glue.getter(out, name: string)
-	local fo = "pizlonatedFO_" .. name
+	fo = "pizlonatedFO_" .. name
 	table.insert(out, "\t.text")
 	table.insert(out, "\t.globl\tpizlonated_" .. name)
 	table.insert(out, "\t.p2align\t2")
@@ -31,10 +31,10 @@ end
 -- the return lower is copied (else zeroed).
 function glue.genericThunk(out, signature: number, argWords: number, retWords: number, retIsPtr: boolean)
 	assert(argWords <= 3, "sarcasm: >3 register args not yet supported")
-	local sym = "pizlonated2ET" .. tostring(signature)
-	local argBytes = argWords * 8
-	local retBytes = retWords * 8
-	local lend = ".LBB_2ET" .. signature
+	sym = "pizlonated2ET" .. tostring(signature)
+	argBytes = argWords * 8
+	retBytes = retWords * 8
+	lend = ".LBB_2ET" .. signature
 	table.insert(out, "\t.text")
 	table.insert(out, "\t.weak\t" .. sym)
 	table.insert(out, "\t.p2align\t2")
@@ -45,8 +45,8 @@ function glue.genericThunk(out, signature: number, argWords: number, retWords: n
 	table.insert(out, "\tb.lo\t" .. lend .. "_fail")
 	-- load args: intval reg = x2 + 2*i, lower reg = x3 + 2*i
 	for i = 0, argWords - 1 do
-		local ivReg = "x" .. tostring(2 + 2 * i)
-		local loReg = "x" .. tostring(3 + 2 * i)
+		ivReg = "x" .. tostring(2 + 2 * i)
+		loReg = "x" .. tostring(3 + 2 * i)
 		table.insert(out, "\tldr\t" .. ivReg .. ", [x0, #" .. tostring(128 + 8 * i) .. "]")
 		table.insert(out, "\tldr\t" .. loReg .. ", [x0, #" .. tostring(384 + 8 * i) .. "]")
 	end
@@ -85,11 +85,11 @@ end
 -- `dbg`, when present, is { filename = <string>, funcLine = <number> } and makes the
 -- function origin reference a filename string and carry the function's source line.
 function glue.foAndOrigins(out, name: string, signature: number, numRoots: number, dbg)
-	local fo = "pizlonatedFO_" .. name
-	local strSym = ".Lfilc_string_" .. name
-	local fileSym = ".Lfilc_filename_" .. name
-	local fnOrigin = ".Lfilc_function_origin_" .. name
-	local origin = ".Lfilc_origin_" .. name
+	fo = "pizlonatedFO_" .. name
+	strSym = ".Lfilc_string_" .. name
+	fileSym = ".Lfilc_filename_" .. name
+	fnOrigin = ".Lfilc_function_origin_" .. name
+	origin = ".Lfilc_origin_" .. name
 
 	table.insert(out, "\t.type\t" .. fo .. ",@object")
 	table.insert(out, "\t.section\t.data.rel.ro,\"aw\",@progbits")
@@ -154,7 +154,7 @@ end
 -- `dbg`, when present, is { line = <number> } and gives this access its own source-line
 -- origin (rather than sharing the function origin).
 function glue.accessOrigin(out, sym: string, size: number, align: number, funcName: string, isWrite: boolean?, dbg)
-	local origin = ".Lfilc_origin_" .. funcName
+	origin = ".Lfilc_origin_" .. funcName
 	if dbg then
 		-- per-access origin referencing the function origin, with this access's line
 		origin = sym .. "_o"
@@ -204,31 +204,31 @@ end
 -- non-function object it raises filc_check_function_call_fail. (Template: clang's
 -- pizlonatedFI<sig>_NAME in test3.c output.)
 function glue.callsiteThunk(out, callee: string, sigDesc)
-	local sig = sigDesc.signature
-	local sym = "pizlonatedFI" .. tostring(sig) .. "_" .. callee
-	local L = ".Lcsr_" .. callee .. "_" .. tostring(sig)
+	sig = sigDesc.signature
+	sym = "pizlonatedFI" .. tostring(sig) .. "_" .. callee
+	L = ".Lcsr_" .. callee .. "_" .. tostring(sig)
 
 	-- register save plan: x19 = myth; then per-arg iv (+ lo if pointer)
-	local myth = 19
-	local nextReg = 20
-	local args = {}  -- k -> { iv = reg, lo = reg|nil, isPtr = bool }
+	myth = 19
+	nextReg = 20
+	args = {}  -- k -> { iv = reg, lo = reg|nil, isPtr = bool }
 	for k = 1, sigDesc.argWords do
-		local isPtr = sigDesc.argTypes[k] == 7
-		local ent = { iv = nextReg, isPtr = isPtr }
+		isPtr = sigDesc.argTypes[k] == 7
+		ent = { iv = nextReg, isPtr = isPtr }
 		nextReg += 1
 		if isPtr then ent.lo = nextReg; nextReg += 1 end
 		args[k] = ent
 	end
-	local saved = { myth }
+	saved = { myth }
 	for k = 1, sigDesc.argWords do
 		table.insert(saved, args[k].iv)
 		if args[k].lo then table.insert(saved, args[k].lo) end
 	end
-	local total = math.floor((8 * (1 + #saved) + 15) / 16) * 16
-	local argBytes = sigDesc.argWords * 8
-	local retBytes = sigDesc.retWords * 8
+	total = math.floor((8 * (1 + #saved) + 15) / 16) * 16
+	argBytes = sigDesc.argWords * 8
+	retBytes = sigDesc.retWords * 8
 
-	local function e(s) table.insert(out, s) end
+	function e(s) table.insert(out, s) end
 	e("\t.text")
 	e("\t.weak\t" .. sym)
 	e("\t.hidden\t" .. sym)

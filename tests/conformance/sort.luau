@@ -4,7 +4,7 @@ print"testing sort"
 
 function checksort(t, f, ...)
   assert(t.count == select('#', ...))
-  local copy = table.clone(t)
+  copy = table.clone(t)
   table.sort(copy, f)
   for i=1,t.count do assert(copy[i] == select(i, ...)) end
 end
@@ -64,7 +64,7 @@ for i=1,limit do
   a[i] = math.random()
 end
 
-local x = os.clock()
+x = os.clock()
 table.sort(a)
 print(string.format("Sorting %d elements in %.2f sec.", limit, os.clock()-x))
 check(a)
@@ -99,7 +99,7 @@ a = {"álo", "\0first :-)", "alo", "then this one", "45", "and a new"}
 table.sort(a)
 check(a)
 
-local ok = pcall(table.sort, a, function (x, y)
+ok = pcall(table.sort, a, function (x, y)
           loadstring(string.format("a[%q] = ''", x))()
           collectgarbage()
           return x<y
@@ -117,11 +117,11 @@ check(a)
 do
   -- discover quick sort killer (this triggers heap sort which is what we want more or less; note that the "internal" heap sort iterations will result in a different order that wouldn't fully defeat a vanilla quicksort)
   -- see https://igoro.com/archive/quicksort-killer/
-  local keys = {}
-  local candidate = 0
-  local next = 0
+  keys = {}
+  candidate = 0
+  next = 0
 
-  local t = table.create(100, 0)
+  t = table.create(100, 0)
   for k in t do
     t[k] = k
   end
@@ -146,7 +146,7 @@ do
   end)
 
   -- repeat the sort for the generated sequence; it should produce an integer sequence and trigger heap sort, although we can't confirm the latter
-  local arr = table.create(t.count)
+  arr = table.create(t.count)
   for k,v in t do
     arr[v] = k
   end

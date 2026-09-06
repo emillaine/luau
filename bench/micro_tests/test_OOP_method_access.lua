@@ -1,13 +1,13 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function test()
 
-    local Number = {}
+    Number = {}
     Number.__index = Number
 
     function Number.new(v)
-        local self = {
+        self = {
             value = v
         }
         setmetatable(self, Number)
@@ -18,13 +18,13 @@ function test()
         return self.value
     end
 
-    local n = Number.new(42)
+    n = Number.new(42)
 
-    local ts0 = os.clock()
+    ts0 = os.clock()
     for i=1,10000000 do
-        local _ = n.Get
+        _ = n.Get
     end
-    local ts1 = os.clock()
+    ts1 = os.clock()
 
     return ts1-ts0
 end

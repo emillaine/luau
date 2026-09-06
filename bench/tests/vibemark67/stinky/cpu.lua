@@ -4,10 +4,10 @@
 -- X30 is the link register (LR). Register index 31 in most encodings means either
 -- SP or XZR depending on the instruction.
 
-local Int = require("./integer")
-local Memory = require("./memory")
+Int = require("./integer")
+Memory = require("./memory")
 
-local CPU = {}
+CPU = {}
 CPU.__index = CPU
 
 export type CPU = typeof(setmetatable({} as {
@@ -27,17 +27,17 @@ export type CPU = typeof(setmetatable({} as {
 }, CPU))
 
 function CPU.new(mem: Memory.Memory): CPU
-    local regs: { integer } = {}
+    regs = {}
     for idx = 1, 31 do
         regs[idx] = Int.ZERO
     end
-    local vlo: { integer } = {}
-    local vhi: { integer } = {}
+    vlo = {}
+    vhi = {}
     for idx = 1, 32 do
         vlo[idx] = Int.ZERO
         vhi[idx] = Int.ZERO
     end
-    local self = setmetatable({
+    self = setmetatable({
         X = regs,
         SP = Int.ZERO,
         PC = Int.ZERO,
@@ -115,15 +115,15 @@ end
 
 -- Update NZCV flags for a 32-bit result.
 function CPU.setNZ32(self: CPU, result: integer)
-    local val = Int.band(result, Int.MASK32)
+    val = Int.band(result, Int.MASK32)
     self.N = Int.toNumber(Int.shr(val, 31)) == 1
     self.Z = Int.isZero(val)
 end
 
 -- Evaluate a condition code (0-15).
 function CPU.evalCondition(self: CPU, cond: number): boolean
-    local base = bit32.rshift(cond, 1)
-    local result: boolean
+    base = bit32.rshift(cond, 1)
+    result = nil
     if base == 0 then     -- EQ/NE
         result = self.Z
     else if base == 1 then -- CS/CC (HS/LO)
@@ -142,7 +142,7 @@ function CPU.evalCondition(self: CPU, cond: number): boolean
         result = true
     end
     -- Invert if low bit of cond is 1 (and cond != 15)
-    if bit32.band(cond, 1) == 1 and cond ~= 15 then
+    if bit32.band(cond, 1) == 1 and cond != 15 then
         result = not result
     end
     return result
@@ -150,8 +150,8 @@ end
 
 -- Add with carry for 64-bit, sets NZCV.
 function CPU.addWithCarry64(self: CPU, a: integer, b: integer, carryIn: boolean): integer
-    local carry: integer = if carryIn then Int.ONE else Int.ZERO
-    local result = Int.add(Int.add(a, b), carry)
+    carry = if carryIn then Int.ONE else Int.ZERO
+    result = Int.add(Int.add(a, b), carry)
     self:setNZ64(result)
 
     -- Carry: unsigned overflow
@@ -163,23 +163,23 @@ function CPU.addWithCarry64(self: CPU, a: integer, b: integer, carryIn: boolean)
     end
 
     -- Overflow: sign of result differs from what's expected
-    local aSign = Int.isNegative(a)
-    local bSign = Int.isNegative(b)
-    local rSign = Int.isNegative(result)
-    self.V = (aSign == bSign) and (rSign ~= aSign)
+    aSign = Int.isNegative(a)
+    bSign = Int.isNegative(b)
+    rSign = Int.isNegative(result)
+    self.V = (aSign == bSign) and (rSign != aSign)
 
     return result
 end
 
 -- Add with carry for 32-bit, sets NZCV.
 function CPU.addWithCarry32(self: CPU, a: integer, b: integer, carryIn: boolean): integer
-    local a32 = Int.band(a, Int.MASK32)
-    local b32 = Int.band(b, Int.MASK32)
-    local carry: integer = if carryIn then Int.ONE else Int.ZERO
+    a32 = Int.band(a, Int.MASK32)
+    b32 = Int.band(b, Int.MASK32)
+    carry = if carryIn then Int.ONE else Int.ZERO
 
     -- Do the add in full 64-bit to detect carry
-    local full = Int.add(Int.add(a32, b32), carry)
-    local result = Int.band(full, Int.MASK32)
+    full = Int.add(Int.add(a32, b32), carry)
+    result = Int.band(full, Int.MASK32)
 
     self:setNZ32(result)
 
@@ -187,10 +187,10 @@ function CPU.addWithCarry32(self: CPU, a: integer, b: integer, carryIn: boolean)
     self.C = Int.ugt(full, Int.MASK32)
 
     -- Overflow: sign bit (bit 31) check
-    local aSign = Int.toNumber(Int.shr(a32, 31)) == 1
-    local bSign = Int.toNumber(Int.shr(b32, 31)) == 1
-    local rSign = Int.toNumber(Int.shr(result, 31)) == 1
-    self.V = (aSign == bSign) and (rSign ~= aSign)
+    aSign = Int.toNumber(Int.shr(a32, 31)) == 1
+    bSign = Int.toNumber(Int.shr(b32, 31)) == 1
+    rSign = Int.toNumber(Int.shr(result, 31)) == 1
+    self.V = (aSign == bSign) and (rSign != aSign)
 
     return result
 end

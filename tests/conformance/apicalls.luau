@@ -1,36 +1,36 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print('testing function calls through API')
 
-function add(a, b)
+_G.add = function(a, b)
   return a + b
 end
 
-local m = { __eq = function(a, b) return a.a == b.a end }
+m = { __eq = function(a, b) return a.a == b.a end }
 
-function create_with_tm(x)
+_G.create_with_tm = function(x)
   return setmetatable({ a = x }, m)
 end
 
-local gen = 0
-function incuv()
+gen = 0
+_G.incuv = function()
   gen += 1
   return gen
 end
 
-pi = 3.1415926
-function getpi()
+_G.pi = 3.1415926
+_G.getpi = function()
   return pi
 end
 
-function largealloc()
+_G.largealloc = function()
   table.create(1000000)
 end
 
-function oops()
+_G.oops = function()
   return "oops"
 end
 
-function getnresults(n)
+_G.getnresults = function(n)
   return table.unpack(table.create(n, 1))
 end
 

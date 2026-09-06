@@ -14,7 +14,7 @@ contCreate = 0
 
 print('tables')
 while contCreate <= limit do
-  local a = {}; a = nil
+  a = {}; a = nil
   contCreate = contCreate+1
 end
 
@@ -37,8 +37,8 @@ a = {}
 print('functions')
 function a:test ()
   while contCreate <= limit do
-    loadstring(string.format("function temp(a) return 'a%d' end", contCreate))()
-    assert(temp() == string.format('a%d', contCreate))
+    loadstring(string.format("function _G.temp(a) return 'a%d' end", contCreate))()
+    assert(_G.temp() == string.format('a%d', contCreate))
     contCreate = contCreate+1
   end
 end
@@ -46,7 +46,7 @@ end
 a:test()
 
 -- collection of functions without locals, globals, etc.
-do local f = function () end end
+do f = function () end end
 
 
 print('long strings')
@@ -66,28 +66,28 @@ x = nil
 assert(_G["while"] == 234)
 
 
-local bytes = gcinfo()
+bytes = gcinfo()
 while 1 do
-  local nbytes = gcinfo()
+  nbytes = gcinfo()
   if nbytes < bytes then break end   -- run until gc
   bytes = nbytes
   a = {}
 end
 
 
-local function dosteps (siz)
+function dosteps (siz)
   collectgarbage()
   collectgarbage("stop")
-  local a = {}
-  local b = nil
+  a = {}
+  b = nil
   for i=1,100 do
     a[i] = {{}}
     b = {}
   end
   assert(b)
   b = nil
-  local x = gcinfo()
-  local i = 0
+  x = gcinfo()
+  i = 0
   repeat
     i = i+1
   until collectgarbage("step", siz)
@@ -103,10 +103,10 @@ assert(dosteps(10000) == 1)
 
 
 do
-  local x = gcinfo()
+  x = gcinfo()
   collectgarbage()
   collectgarbage("stop")
-  local a = nil
+  a = nil
   repeat
     a = {}
   until gcinfo() > 1000
@@ -144,11 +144,11 @@ a = {}; setmetatable(a, {__mode = 'k'});
 -- fill a with some `collectable' indices
 for i=1,lim do a[{}] = i end
 -- and some non-collectable ones
-for i=1,lim do local t={}; a[t]=t end
+for i=1,lim do t={}; a[t]=t end
 for i=1,lim do a[i] = i end
-for i=1,lim do local s=string.rep('@', i); a[s] = s..'#' end
+for i=1,lim do s=string.rep('@', i); a[s] = s..'#' end
 collectgarbage()
-local i = 0
+i = 0
 for k,v in pairs(a) do assert(k==v or k..'#'==v); i=i+1 end
 assert(i == 3*lim)
 
@@ -161,25 +161,25 @@ a[1] = nil
 for i=1,lim do a[i] = {} end
 for i=1,lim do a[i..'x'] = {} end
 -- and some non-collectable ones
-for i=1,lim do local t={}; a[t]=t end
+for i=1,lim do t={}; a[t]=t end
 for i=1,lim do a[i+lim]=i..'x' end
 collectgarbage()
-local i = 0
+i = 0
 for k,v in pairs(a) do assert(k==v or k-lim..'x' == v); i=i+1 end
 assert(i == 2*lim)
 
 a = {}; setmetatable(a, {__mode = 'vk'});
-local x, y, z = {}, {}, {}
+x, y, z = {}, {}, {}
 -- keep only some items
 a[1], a[2], a[3] = x, y, z
 a[string.rep('$', 11)] = string.rep('$', 11)
 -- fill a with some `collectable' values
 for i=4,lim do a[i] = {} end
 for i=1,lim do a[{}] = i end
-for i=1,lim do local t={}; a[t]=t end
+for i=1,lim do t={}; a[t]=t end
 collectgarbage()
 assert(next(a) != nil)
-local i = 0
+i = 0
 for k,v in pairs(a) do
   assert((k == 1 and v == x) or
          (k == 2 and v == y) or
@@ -199,8 +199,8 @@ assert(next(a) == nil)
 
 -- shrinking a table should be robust against an OOM
 do
-    local count = 100000
-    local extra = 1000
+    count = 100000
+    extra = 1000
     a = {}
     setmetatable(a, {__mode = 'ks'})
 
@@ -219,7 +219,7 @@ end
 
 -- shrinking strings should be robust against an OOM
 do
-    local count = 100000
+    count = 100000
     a = {}
 
     for i = 1,count do a[tostring(count)] = i end
@@ -242,18 +242,18 @@ end
 
 -- testing userdata
 collectgarbage("stop")   -- stop collection
-local u = newproxy(true)
-local s = 0
-local a = {[u] = 0}; setmetatable(a, {__mode = 'vk'})
+u = newproxy(true)
+s = 0
+a = {[u] = 0}; setmetatable(a, {__mode = 'vk'})
 for i=1,10 do a[newproxy(true)] = i end
 -- for k in pairs(a) do assert(getmetatable(k) == getmetatable(u)) end
-local a1 = {}; for k,v in pairs(a) do a1[k] = v end
+a1 = {}; for k,v in pairs(a) do a1[k] = v end
 for k,v in pairs(a1) do a[v] = k end
 for i =1,10 do assert(a[i]) end
 getmetatable(u).a = a1
 getmetatable(u).u = u
 do
-  local u = u
+  u = u
   getmetatable(u).__gc = function (o)
     assert(a[o] == 10-s)
     assert(a[10-s] == nil) -- udata already removed from weak table
@@ -271,13 +271,13 @@ assert(next(a) == nil)  -- finalized keys are removed in two cycles
 
 
 -- __gc x weak tables
-local u = newproxy(true)
+u = newproxy(true)
 setmetatable(getmetatable(u), {__mode = "v"})
 getmetatable(u).__gc = function (o) os.exit(1) end  -- cannot happen
 collectgarbage()
 
-local u = newproxy(true)
-local m = getmetatable(u)
+u = newproxy(true)
+m = getmetatable(u)
 m.x = {[{0}] = 1; [0] = {1}}; setmetatable(m.x, {__mode = "kv"});
 m.__gc = function (o)
   assert(next(getmetatable(o).x) == nil)
@@ -298,7 +298,7 @@ collectgarbage()
 
 if not rawget(_G, "_soft") then
   print("deep structures")
-  local a = {}
+  a = {}
   for i = 1,200000 do
     a = {next = a}
   end
@@ -307,11 +307,11 @@ end
 
 -- create many threads with self-references and open upvalues
 do
-  local thread_id = 0
-  local threads = {}
+  thread_id = 0
+  threads = {}
 
   function fn(thread)
-      local x = {}
+      x = {}
       threads[thread_id] = function()
                                thread = x
                            end
@@ -319,7 +319,7 @@ do
   end
 
   while thread_id < 1000 do
-      local thread = coroutine.create(fn)
+      thread = coroutine.create(fn)
       coroutine.resume(thread, thread)
       thread_id = thread_id + 1
   end
@@ -332,16 +332,16 @@ end
 
 -- create a userdata to be collected when state is closed
 do
-  local newproxy,assert,type,print,getmetatable =
+  newproxy,assert,type,print,getmetatable =
         newproxy,assert,type,print,getmetatable
-  local u = newproxy(true)
-  local tt = getmetatable(u)
-  ___Glob = {u}   -- avoid udata being collected before program end
+  u = newproxy(true)
+  tt = getmetatable(u)
+  _G.___Glob = {u}   -- avoid udata being collected before program end
   tt.__gc = function (o)
     assert(getmetatable(o) == tt)
     -- create new objects during GC
-    local a = 'xuxu'..(10+3)..'joao', {}
-    ___Glob = o  -- resurrect object!
+    a = 'xuxu'..(10+3)..'joao', {}
+    _G.___Glob = o  -- resurrect object!
     newproxy(o)  -- creates a new one with same metatable
     print(">>> closing state " .. "<<<\n")
   end
@@ -349,20 +349,20 @@ end
 
 -- create several udata to raise errors when collected while closing state
 do
-  local u = newproxy(true)
+  u = newproxy(true)
   getmetatable(u).__gc = function (o) return o + 1 end
-  table.insert(___Glob, u)  -- preserve udata until the end
-  for i = 1,10 do table.insert(___Glob, newproxy(true)) end
+  table.insert(_G.___Glob, u)  -- preserve udata until the end
+  for i = 1,10 do table.insert(_G.___Glob, newproxy(true)) end
 end
 
 -- create threads that die together with their unmarked upvalues
 do
-  local t = {}
+  t = {}
 
   for i = 1,100 do
-    local c = coroutine.wrap(function()
-      local uv = {i + 1}
-      local function f()
+    c = coroutine.wrap(function()
+      uv = {i + 1}
+      function f()
         return uv[1] * 10
       end
       coroutine.yield(uv[1])
@@ -383,11 +383,11 @@ end
 
 -- create a lot of threads with upvalues to force a case where full gc happens after we've marked some upvalues
 do
-  local t = {}
+  t = {}
   for i = 1,100 do
-    local c = coroutine.wrap(function()
-      local uv = {i + 1}
-      local function f()
+    c = coroutine.wrap(function()
+      uv = {i + 1}
+      function f()
         return uv[1] * 10
       end
       coroutine.yield(uv[1])

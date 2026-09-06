@@ -1,9 +1,9 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-	local RC =
+	RC =
 	{
 		0x0000000000000001i, 0x0000000000008082i, 0x800000000000808ai, 0x8000000080008000i,
 		0x000000000000808bi, 0x0000000080000001i, 0x8000000080008081i, 0x8000000000008009i,
@@ -13,15 +13,15 @@ function test()
 		0x8000000080008081i, 0x8000000000008080i, 0x0000000080000001i, 0x8000000080008008i,
 	}
 
-	local function sha3_256(msg)
+	function sha3_256(msg)
 		-- pad10*1 with SHA-3 domain separator 0x06
-		local msgLen = #msg
-		local rateBytes = 136
+		msgLen = #msg
+		rateBytes = 136
 
-		local pad = rateBytes - (msgLen % rateBytes)
-		local paddedLen = msgLen + pad
+		pad = rateBytes - (msgLen % rateBytes)
+		paddedLen = msgLen + pad
 
-		local buf = buffer.create(paddedLen)
+		buf = buffer.create(paddedLen)
 		buffer.writestring(buf, 0, msg)
 		if pad == 1 then
 			buffer.writeu8(buf, msgLen, 0x86)
@@ -31,11 +31,11 @@ function test()
 		end
 
 		-- 25-lane state (S<col><row>), little-endian interpretation
-		local S00, S10, S20, S30, S40 = 0i, 0i, 0i, 0i, 0i
-		local S01, S11, S21, S31, S41 = 0i, 0i, 0i, 0i, 0i
-		local S02, S12, S22, S32, S42 = 0i, 0i, 0i, 0i, 0i
-		local S03, S13, S23, S33, S43 = 0i, 0i, 0i, 0i, 0i
-		local S04, S14, S24, S34, S44 = 0i, 0i, 0i, 0i, 0i
+		S00, S10, S20, S30, S40 = 0i, 0i, 0i, 0i, 0i
+		S01, S11, S21, S31, S41 = 0i, 0i, 0i, 0i, 0i
+		S02, S12, S22, S32, S42 = 0i, 0i, 0i, 0i, 0i
+		S03, S13, S23, S33, S43 = 0i, 0i, 0i, 0i, 0i
+		S04, S14, S24, S34, S44 = 0i, 0i, 0i, 0i, 0i
 
 		for blockOffset = 0, paddedLen - 1, rateBytes do
 			-- absorb 17 lanes (136 bytes) of message
@@ -59,48 +59,48 @@ function test()
 
 			for round = 1, 24 do
 				-- THETA
-				local C0 = integer.bxor(S00, S01, S02, S03, S04)
-				local C1 = integer.bxor(S10, S11, S12, S13, S14)
-				local C2 = integer.bxor(S20, S21, S22, S23, S24)
-				local C3 = integer.bxor(S30, S31, S32, S33, S34)
-				local C4 = integer.bxor(S40, S41, S42, S43, S44)
+				C0 = integer.bxor(S00, S01, S02, S03, S04)
+				C1 = integer.bxor(S10, S11, S12, S13, S14)
+				C2 = integer.bxor(S20, S21, S22, S23, S24)
+				C3 = integer.bxor(S30, S31, S32, S33, S34)
+				C4 = integer.bxor(S40, S41, S42, S43, S44)
 
-				local D0 = integer.bxor(C4, integer.lrotate(C1, 1i))
-				local D1 = integer.bxor(C0, integer.lrotate(C2, 1i))
-				local D2 = integer.bxor(C1, integer.lrotate(C3, 1i))
-				local D3 = integer.bxor(C2, integer.lrotate(C4, 1i))
-				local D4 = integer.bxor(C3, integer.lrotate(C0, 1i))
+				D0 = integer.bxor(C4, integer.lrotate(C1, 1i))
+				D1 = integer.bxor(C0, integer.lrotate(C2, 1i))
+				D2 = integer.bxor(C1, integer.lrotate(C3, 1i))
+				D3 = integer.bxor(C2, integer.lrotate(C4, 1i))
+				D4 = integer.bxor(C3, integer.lrotate(C0, 1i))
 
 				-- RHO + PI: B[X,Y] = ROT(S[(3Y+X) mod 5, X] XOR D[(3Y+X) mod 5], r[..])
-				local B00 = integer.bxor(S00, D0)
-				local B10 = integer.lrotate(integer.bxor(S11, D1), 44i)
-				local B20 = integer.lrotate(integer.bxor(S22, D2), 43i)
-				local B30 = integer.lrotate(integer.bxor(S33, D3), 21i)
-				local B40 = integer.lrotate(integer.bxor(S44, D4), 14i)
+				B00 = integer.bxor(S00, D0)
+				B10 = integer.lrotate(integer.bxor(S11, D1), 44i)
+				B20 = integer.lrotate(integer.bxor(S22, D2), 43i)
+				B30 = integer.lrotate(integer.bxor(S33, D3), 21i)
+				B40 = integer.lrotate(integer.bxor(S44, D4), 14i)
 
-				local B01 = integer.lrotate(integer.bxor(S30, D3), 28i)
-				local B11 = integer.lrotate(integer.bxor(S41, D4), 20i)
-				local B21 = integer.lrotate(integer.bxor(S02, D0), 3i)
-				local B31 = integer.lrotate(integer.bxor(S13, D1), 45i)
-				local B41 = integer.lrotate(integer.bxor(S24, D2), 61i)
+				B01 = integer.lrotate(integer.bxor(S30, D3), 28i)
+				B11 = integer.lrotate(integer.bxor(S41, D4), 20i)
+				B21 = integer.lrotate(integer.bxor(S02, D0), 3i)
+				B31 = integer.lrotate(integer.bxor(S13, D1), 45i)
+				B41 = integer.lrotate(integer.bxor(S24, D2), 61i)
 
-				local B02 = integer.lrotate(integer.bxor(S10, D1), 1i)
-				local B12 = integer.lrotate(integer.bxor(S21, D2), 6i)
-				local B22 = integer.lrotate(integer.bxor(S32, D3), 25i)
-				local B32 = integer.lrotate(integer.bxor(S43, D4), 8i)
-				local B42 = integer.lrotate(integer.bxor(S04, D0), 18i)
+				B02 = integer.lrotate(integer.bxor(S10, D1), 1i)
+				B12 = integer.lrotate(integer.bxor(S21, D2), 6i)
+				B22 = integer.lrotate(integer.bxor(S32, D3), 25i)
+				B32 = integer.lrotate(integer.bxor(S43, D4), 8i)
+				B42 = integer.lrotate(integer.bxor(S04, D0), 18i)
 
-				local B03 = integer.lrotate(integer.bxor(S40, D4), 27i)
-				local B13 = integer.lrotate(integer.bxor(S01, D0), 36i)
-				local B23 = integer.lrotate(integer.bxor(S12, D1), 10i)
-				local B33 = integer.lrotate(integer.bxor(S23, D2), 15i)
-				local B43 = integer.lrotate(integer.bxor(S34, D3), 56i)
+				B03 = integer.lrotate(integer.bxor(S40, D4), 27i)
+				B13 = integer.lrotate(integer.bxor(S01, D0), 36i)
+				B23 = integer.lrotate(integer.bxor(S12, D1), 10i)
+				B33 = integer.lrotate(integer.bxor(S23, D2), 15i)
+				B43 = integer.lrotate(integer.bxor(S34, D3), 56i)
 
-				local B04 = integer.lrotate(integer.bxor(S20, D2), 62i)
-				local B14 = integer.lrotate(integer.bxor(S31, D3), 55i)
-				local B24 = integer.lrotate(integer.bxor(S42, D4), 39i)
-				local B34 = integer.lrotate(integer.bxor(S03, D0), 41i)
-				local B44 = integer.lrotate(integer.bxor(S14, D1), 2i)
+				B04 = integer.lrotate(integer.bxor(S20, D2), 62i)
+				B14 = integer.lrotate(integer.bxor(S31, D3), 55i)
+				B24 = integer.lrotate(integer.bxor(S42, D4), 39i)
+				B34 = integer.lrotate(integer.bxor(S03, D0), 41i)
+				B44 = integer.lrotate(integer.bxor(S14, D1), 2i)
 
 				-- CHI
 				S00 = integer.bxor(B00, integer.band(integer.bnot(B10), B20))
@@ -145,16 +145,16 @@ function test()
 		)
 	end
 
-	local input = string.rep(".", 1e3)
+	input = string.rep(".", 1e3)
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = sha3_256(input)
+		res = sha3_256(input)
 		assert(res == "778f41ec28c470b1947cf8785207ca0e5829b3b04966283c93cd2f2cd37c831c")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

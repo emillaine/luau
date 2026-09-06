@@ -2,10 +2,10 @@
 print('testing vectors')
 
 -- detect vector size
-local vector_size = if pcall(function() return vector.create(0, 0, 0).w end) then 4 else 3
+vector_size = if pcall(function() return vector.create(0, 0, 0).w end) then 4 else 3
 
 function ecall(fn, ...)
-	local ok, err = pcall(fn, ...)
+	ok, err = pcall(fn, ...)
 	assert(not ok)
 	return err:sub((err:find(": ") or -1) + 2, err.count)
 end
@@ -31,7 +31,7 @@ else
 	assert(tostring(vector.create(-1, 2, 0.5)) == "-1, 2, 0.5")
 end
 
-local t = {}
+t = {}
 
 -- basic table access
 t[vector.create(1, 2, 3)] = 42
@@ -48,7 +48,7 @@ assert(t[vector.create(0, -0, 0)] == "hello")
 assert(vector.create(1, 2, 4) + vector.create(8, 16, 24) == vector.create(9, 18, 28));
 assert(vector.create(1, 2, 4) - vector.create(8, 16, 24) == vector.create(-7, -14, -20));
 
-local val = 1/'8'
+val = 1/'8'
 
 assert(vector.create(1, 2, 4) * vector.create(8, 16, 24) == vector.create(8, 32, 96));
 assert(vector.create(1, 2, 4) * 8 == vector.create(8, 16, 32));
@@ -92,7 +92,7 @@ else
 end
 
 -- test NaN comparison
-local nanv = vector.create(0/0, 0/0, 0/0)
+nanv = vector.create(0/0, 0/0, 0/0)
 assert(nanv != nanv);
 
 -- __index
@@ -105,15 +105,15 @@ assert(vector.create(1, 2, 4):Dot(vector.create(5, 6, 7)) == 45)
 assert(ecall(function() vector.create(1, 2, 4):Dot() end) == "missing argument #2 (vector expected)")
 assert(ecall(function() vector.create(1, 2, 4):Dot("a") end) == "invalid argument #2 (vector expected, got string)")
 
-local function doDot1(a: vector, b)
+function doDot1(a: vector, b)
 	return a:Dot(b)
 end
 
-local function doDot2(a: vector, b)
+function doDot2(a: vector, b)
 	return (a:Dot(b))
 end
 
-local v124 = vector.create(1, 2, 4)
+v124 = vector.create(1, 2, 4)
 
 assert(doDot1(v124, vector.create(5, 6, 7)) == 45)
 assert(doDot2(v124, vector.create(5, 6, 7)) == 45)
@@ -123,10 +123,10 @@ assert(select("#", doDot1(v124, vector.create(5, 6, 7))) == 1)
 assert(select("#", doDot2(v124, vector.create(5, 6, 7))) == 1)
 
 -- can't use vector with NaN components as table key
-assert(pcall(function() local t = {} t[vector.create(0/0, 2, 3)] = 1 end) == false)
-assert(pcall(function() local t = {} t[vector.create(1, 0/0, 3)] = 1 end) == false)
-assert(pcall(function() local t = {} t[vector.create(1, 2, 0/0)] = 1 end) == false)
-assert(pcall(function() local t = {} rawset(t, vector.create(0/0, 2, 3), 1) end) == false)
+assert(pcall(function() t = {} t[vector.create(0/0, 2, 3)] = 1 end) == false)
+assert(pcall(function() t = {} t[vector.create(1, 0/0, 3)] = 1 end) == false)
+assert(pcall(function() t = {} t[vector.create(1, 2, 0/0)] = 1 end) == false)
+assert(pcall(function() t = {} rawset(t, vector.create(0/0, 2, 3), 1) end) == false)
 
 assert(vector.create(1, 0, 0):Cross(vector.create(0, 1, 0)) == vector.create(0, 0, 1))
 assert(vector.create(0, 1, 0):Cross(vector.create(1, 0, 0)) == vector.create(0, 0, -1))
@@ -148,7 +148,7 @@ end
 -- negative zero should hash the same as zero
 -- note: our earlier test only really checks the low hash bit, so in absence of perfect avalanche it's insufficient
 do
-	local larget = {}
+	larget = {}
 	for i = 1, 2^14 do
 	    larget[vector.create(0, 0, i)] = true
 	end
@@ -161,17 +161,17 @@ do
 	assert(larget[vector.create(-0, 0, 0)] == 42)
 end
 
-local function numvectemporary()
-  local proptab = {}
+function numvectemporary()
+  proptab = {}
 
   proptab.vec3compsum = function(vec: vector)
-    local num = vec.X + vec.Y
-    local tmp = vec / num
-    local num2 = num * 2
+    num = vec.X + vec.Y
+    tmp = vec / num
+    num2 = num * 2
     return tmp, num2
   end
 
-  local a, b = proptab.vec3compsum(vector.create(2, 6, 0))
+  a, b = proptab.vec3compsum(vector.create(2, 6, 0))
 
   assert(a.X == 0.25)
   assert(a.Y == 0.75)

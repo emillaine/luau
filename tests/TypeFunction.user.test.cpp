@@ -36,7 +36,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_nil_serialization_works")
             return arg
         end
         type type_being_serialized = nil
-        local function ok(idx: serialize_nil<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_nil<type_being_serialized>): nil return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -48,14 +48,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_nil_methods_work")
 
     CheckResult result = check(R"(
         type function getnil()
-            local ty = types.singleton(nil)
+            const ty = types.singleton(nil)
             if ty:is("nil") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getnil<>): nil return idx end
+        function ok(idx: getnil<>): nil return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -70,7 +70,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_unknown_serialization_works")
             return arg
         end
         type type_being_serialized = unknown
-        local function ok(idx: serialize_unknown<type_being_serialized>): unknown return idx end
+        function ok(idx: serialize_unknown<type_being_serialized>): unknown return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -82,14 +82,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_unknown_methods_work")
 
     CheckResult result = check(R"(
         type function getunknown()
-            local ty = types.unknown
+            const ty = types.unknown
             if ty:is("unknown") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getunknown<>): unknown return idx end
+        function ok(idx: getunknown<>): unknown return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -104,7 +104,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_never_serialization_works")
             return arg
         end
         type type_being_serialized = never
-        local function ok(idx: serialize_never<type_being_serialized>): never return idx end
+        function ok(idx: serialize_never<type_being_serialized>): never return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -116,14 +116,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_never_methods_work")
 
     CheckResult result = check(R"(
         type function getnever()
-            local ty = types.never
+            const ty = types.never
             if ty:is("never") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getnever<>): never return idx end
+        function ok(idx: getnever<>): never return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -138,7 +138,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_any_serialization_works")
             return arg
         end
         type type_being_serialized = any
-        local function ok(idx: serialize_any<type_being_serialized>): any return idx end
+        function ok(idx: serialize_any<type_being_serialized>): any return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -150,14 +150,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_any_methods_work")
 
     CheckResult result = check(R"(
         type function getany()
-            local ty = types.any
+            const ty = types.any
             if ty:is("any") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getany<>): any return idx end
+        function ok(idx: getany<>): any return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -172,7 +172,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_boolean_serialization_works")
             return arg
         end
         type type_being_serialized = boolean
-        local function ok(idx: serialize_bool<type_being_serialized>): boolean return idx end
+        function ok(idx: serialize_bool<type_being_serialized>): boolean return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -184,14 +184,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_boolean_methods_work")
 
     CheckResult result = check(R"(
         type function getboolean()
-            local ty = types.boolean
+            const ty = types.boolean
             if ty:is("boolean") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getboolean<>): boolean return idx end
+        function ok(idx: getboolean<>): boolean return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -206,7 +206,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_number_serialization_works")
             return arg
         end
         type type_being_serialized = number
-        local function ok(idx: serialize_num<type_being_serialized>): number return idx end
+        function ok(idx: serialize_num<type_being_serialized>): number return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -218,14 +218,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_number_methods_work")
 
     CheckResult result = check(R"(
         type function getnumber()
-            local ty = types.number
+            const ty = types.number
             if ty:is("number") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getnumber<>): number return idx end
+        function ok(idx: getnumber<>): number return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -243,7 +243,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "thread_and_buffer_types")
             return types.string
         end
         type X = thread
-        local function ok(idx: work_with_thread<X>): thread return idx end
+        function ok(idx: work_with_thread<X>): thread return idx end
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
@@ -254,7 +254,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "thread_and_buffer_types")
             return types.string
         end
         type X = buffer
-        local function ok(idx: work_with_buffer<X>): buffer return idx end
+        function ok(idx: work_with_buffer<X>): buffer return idx end
     )"));
 }
 
@@ -267,7 +267,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_string_serialization_works")
             return arg
         end
         type type_being_serialized = string
-        local function ok(idx: serialize_str<type_being_serialized>): string return idx end
+        function ok(idx: serialize_str<type_being_serialized>): string return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -279,14 +279,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_string_methods_work")
 
     CheckResult result = check(R"(
         type function getstring()
-            local ty = types.string
+            const ty = types.string
             if ty:is("string") then
                 return ty
             end
             -- this should never be returned
             return types.boolean
         end
-        local function ok(idx: getstring<>): string return idx end
+        function ok(idx: getstring<>): string return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -301,7 +301,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_boolsingleton_serialization_works")
             return arg
         end
         type type_being_serialized = true
-        local function ok(idx: serialize_boolsingleton<type_being_serialized>): true return idx end
+        function ok(idx: serialize_boolsingleton<type_being_serialized>): true return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -313,14 +313,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_boolsingleton_methods_work")
 
     CheckResult result = check(R"(
         type function getboolsingleton()
-            local ty = types.singleton(true)
+            const ty = types.singleton(true)
             if ty:is("singleton") and ty:value() then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getboolsingleton<>): true return idx end
+        function ok(idx: getboolsingleton<>): true return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -335,7 +335,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_strsingleton_serialization_works")
             return arg
         end
         type type_being_serialized = "popcorn and movies!"
-        local function ok(idx: serialize_strsingleton<type_being_serialized>): "popcorn and movies!" return idx end
+        function ok(idx: serialize_strsingleton<type_being_serialized>): "popcorn and movies!" return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -347,14 +347,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_strsingleton_methods_work")
 
     CheckResult result = check(R"(
         type function getstrsingleton()
-            local ty = types.singleton("hungry hippo")
+            const ty = types.singleton("hungry hippo")
             if ty:is("singleton") and ty:value() == "hungry hippo" then
                 return ty
             end
             -- this should never be returned
             return types.number
         end
-        local function ok(idx: getstrsingleton<>): "hungry hippo" return idx end
+        function ok(idx: getstrsingleton<>): "hungry hippo" return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -370,7 +370,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_union_serialization_works")
         end
         type type_being_serialized = number | string | boolean
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: serialize_union<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_union<type_being_serialized>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -388,7 +388,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optional_works")
             return types.optional(types.number)
         end
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: numberhuh<>): never return idx end
+        function ok(idx: numberhuh<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -403,11 +403,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optional_works_on_unions")
 
     CheckResult result = check(R"(
         type function foobar()
-            local ty = types.unionof(types.string, types.number, types.boolean)
+            const ty = types.unionof(types.string, types.number, types.boolean)
             return types.optional(ty)
         end
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: foobar<>): never return idx end
+        function ok(idx: foobar<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -422,10 +422,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_union_methods_work")
 
     CheckResult result = check(R"(
         type function getunion()
-            local ty = types.unionof(types.string, types.number, types.boolean)
+            const ty = types.unionof(types.string, types.number, types.boolean)
             if ty:is("union") then
                 -- creating a copy of `ty`
-                local arr = {}
+                const arr = {}
                 for _, value in ty:components() do
                     table.insert(arr, value)
                 end
@@ -435,7 +435,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_union_methods_work")
             return types.number
         end
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: getunion<>): never return idx end
+        function ok(idx: getunion<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -450,15 +450,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof")
 
     CheckResult result = check(R"(
         type function foobar()
-            local tys = { types.string, types.number, types.never, types.boolean, types.singleton(nil) }
-            local result = types.never
+            const tys = { types.string, types.number, types.never, types.boolean, types.singleton(nil) }
+            result = types.never
             for _, ty in tys do
                 result = types.unionof(result, ty)
             end
             return result
         end
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: foobar<>): never return idx end
+        function ok(idx: foobar<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -476,7 +476,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof_empty")
             return types.unionof()
         end
 
-        local f: foobar<>
+        const f: foobar<> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -492,7 +492,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof_two_things")
             return types.unionof(types.string, types.never)
         end
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: foobar<>): never return idx end
+        function ok(idx: foobar<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -507,15 +507,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_intersectionof")
 
     CheckResult result = check(R"(
         type function foobar()
-            local tys = { types.string, types.number, types.unknown, types.boolean }
-            local result = types.unknown
+            const tys = { types.string, types.number, types.unknown, types.boolean }
+            result = types.unknown
             for _, ty in tys do
                 result = types.intersectionof(result, ty)
             end
             return result
         end
 
-        local f: foobar<>
+        const f: foobar<> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -531,7 +531,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_intersectionof_empty")
             return types.intersectionof()
         end
 
-        local f: foobar<>
+        const f: foobar<> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -547,7 +547,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_intersectionof_two_things")
             return types.intersectionof(types.unknown, types.string)
         end
         -- forcing an error here to check the exact type of the union
-        local function ok(idx: foobar<>): never return idx end
+        function ok(idx: foobar<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -566,7 +566,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_serialization_works")
         end
         type type_being_serialized = { boolean: boolean, number: number } & { boolean: boolean, string: string }
         -- forcing an error here to check the exact type of the intersection
-        local function ok(idx: serialize_intersection<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_intersection<type_being_serialized>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -582,16 +582,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_methods_work")
 
     CheckResult result = check(R"(
         type function getintersection()
-            local tbl1 = types.newtable(nil, nil, nil)
+            const tbl1 = types.newtable(nil, nil, nil)
             tbl1:setproperty(types.singleton("boolean"), types.boolean) -- {boolean: boolean}
             tbl1:setproperty(types.singleton("number"), types.number) -- {boolean: boolean, number: number}
-            local tbl2 = types.newtable(nil, nil, nil)
+            const tbl2 = types.newtable(nil, nil, nil)
             tbl2:setproperty(types.singleton("boolean"), types.boolean) -- {boolean: boolean}
             tbl2:setproperty(types.singleton("string"), types.string) -- {boolean: boolean, string: string}
-            local ty = types.intersectionof(tbl1, tbl2)
+            const ty = types.intersectionof(tbl1, tbl2)
             if ty:is("intersection") then
                 -- creating a copy of `ty`
-                local arr = {}
+                const arr = {}
                 for index, value in ty:components() do
                     table.insert(arr, value)
                 end
@@ -601,7 +601,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_methods_work")
             return types.string
         end
         -- forcing an error here to check the exact type of the intersection
-        local function ok(idx: getintersection<>): never return idx end
+        function ok(idx: getintersection<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -616,7 +616,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_negation_methods_work")
 
     CheckResult result = check(R"(
         type function getnegation()
-            local ty = types.negationof(types.string)
+            const ty = types.negationof(types.string)
             if ty:is("negation") then
                 return ty
             end
@@ -625,7 +625,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_negation_methods_work")
         end
 
         -- forcing an error here to check the exact type of the negation
-        local function ok(idx: getnegation<>): never return idx end
+        function ok(idx: getnegation<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -647,8 +647,8 @@ type function fail(t)
     return t:inner()
 end
 
-local function ok(idx: pass<number>): number return idx end
-local function notok(idx: fail<number>): never return idx end
+function ok(idx: pass<number>): number return idx end
+function notok(idx: fail<number>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -668,7 +668,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_negation_type_mismatch")
             return types.negationof(ty)
         end
 
-        local a: negate<number> = 5
+        const a: negate<number> = 5
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -688,8 +688,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_negation_type_mismatch_in_union")
             return types.negationof(ty)
         end
 
-        local value: number | string
-        local a: negate<number> = value
+        const value: number | string = nil as any
+        const a: negate<number> = value
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -709,8 +709,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_actual_negation_type_mismatch")
             return types.negationof(ty)
         end
 
-        local value: negate<number>
-        local a: number = value
+        const value: negate<number> = nil as any
+        const a: number = value
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -730,8 +730,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_two_negations_type_mismatch")
             return types.negationof(ty)
         end
 
-        local value: negate<number>
-        local a: negate<string> = value
+        const value: negate<number> = nil as any
+        const a: negate<string> = value
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -751,7 +751,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_serialization_works")
         end
         type type_being_serialized = { boolean: boolean, number: number, [string]: number }
         -- forcing an error here to check the exact type of the table
-        local function ok(idx: serialize_table<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_table<type_being_serialized>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -770,7 +770,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_newtable_can_do_readonly_or_writeonly_t
         end
 
         -- forcing an error here to check the exact type of the table
-        local function ok(idx: gettable<>): never return idx end
+        function ok(idx: gettable<>): never return idx end
     )");
 
     // FIXME(CLI-178738): The first error should not exist, only the one described above.
@@ -786,16 +786,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_methods_work")
 
     CheckResult result = check(R"(
         type function gettable()
-            local indexer = {
+            const indexer = {
                 index = types.number,
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            local ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number] = boolean}
             ty:setproperty(types.singleton("number"), types.string) -- {string: number, number: string, [number] = boolean}
             ty:setproperty(types.singleton("string"), nil) -- {number: string, [number] = boolean}
-            local ret = types.newtable(nil, nil, nil) -- {}
+            const ret = types.newtable(nil, nil, nil) -- {}
             -- creating a copy of `ty`
             for k, v in ty:properties() do
                 ret:setreadproperty(k, v.read)
@@ -809,7 +809,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_methods_work")
             return types.number
         end
         -- forcing an error here to check the exact type of the table
-        local function ok(idx: gettable<>): never return idx end
+        function ok(idx: gettable<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -824,16 +824,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_metatable_methods_work")
 
     CheckResult result = check(R"(
         type function getmetatable()
-            local indexer = {
+            const indexer = {
                 index = types.number,
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            local ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            local metatbl = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            const metatbl = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
             metatbl:setmetatable(types.newtable(nil, indexer, nil)) -- { {  }, @metatable { [number]: boolean } }
-            local ret = metatbl:metatable()
+            const ret = metatbl:metatable()
             if metatbl:is("table") and metatbl:metatable() then
                 return ret -- { @metatable { [number]: boolean } }
             end
@@ -841,7 +841,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_metatable_methods_work")
             return types.number
         end
         -- forcing an error here to check the exact type of the metatable
-        local function ok(idx: getmetatable<>): never return idx end
+        function ok(idx: getmetatable<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -859,7 +859,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_serialization_works")
             return arg
         end
         type type_being_serialized = (boolean, number, nil) -> (...string)
-        local function ok(idx: serialize_func<type_being_serialized>): (boolean, number, nil) -> (...string) return idx end
+        function ok(idx: serialize_func<type_being_serialized>): (boolean, number, nil) -> (...string) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -872,13 +872,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_methods_work")
 
     CheckResult result = check(R"(
         type function getfunction()
-            local ty = types.newfunction(nil, nil) -- () -> ()
+            const ty = types.newfunction(nil, nil) -- () -> ()
             ty:setparameters({types.string, types.number}, nil) -- (string, number) -> ()
             ty:setreturns(nil, types.boolean) -- (string, number) -> (...boolean)
             if ty:is("function") then
                 -- creating a copy of `ty` parameters
-                local arr: {type} = {}
-                local args = ty:parameters().head
+                const arr: {type} = {}
+                const args = ty:parameters().head
                 if args then
                     for index, val in args do
                         table.insert(arr, val)
@@ -889,7 +889,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_methods_work")
             -- this should never be returned
             return types.number
         end
-        local function ok(idx: getfunction<>): never return idx end
+        function ok(idx: getfunction<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -906,7 +906,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_class_serialization_works")
         type function serialize_class(arg)
             return arg
         end
-        local function ok(idx: serialize_class<BaseClass>): BaseClass return idx end
+        function ok(idx: serialize_class<BaseClass>): BaseClass return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -920,7 +920,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_class_serialization_works2")
         type function serialize_class(arg)
             return arg
         end
-        local function ok(idx: serialize_class<typeof(confusingBaseClassInstance)>): typeof(confusingBaseClassInstance) return idx end
+        function ok(idx: serialize_class<typeof(confusingBaseClassInstance)>): typeof(confusingBaseClassInstance) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -932,13 +932,13 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_class_methods_works")
 
     CheckResult result = check(R"(
         type function getclass(arg)
-            local props = arg:properties()
-            local indexer = arg:indexer()
-            local metatable = arg:metatable()
+            const props = arg:properties()
+            const indexer = arg:indexer()
+            const metatable = arg:metatable()
             return types.newtable(props, indexer, metatable)
         end
         -- forcing an error here to check the exact type of the metatable
-        local function ok(idx: getclass<BaseClass>): nil return idx end
+        function ok(idx: getclass<BaseClass>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -953,9 +953,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "write_of_readonly_is_nil")
 
     CheckResult result = check(R"(
         type function getclass(arg)
-            local props = arg:properties()
-            local table = types.newtable(props)
-            local singleton = types.singleton("BaseMethod")
+            const props = arg:properties()
+            const table = types.newtable(props)
+            const singleton = types.singleton("BaseMethod")
 
             if table:writeproperty(singleton) then
                 return types.singleton(true)
@@ -964,7 +964,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "write_of_readonly_is_nil")
             end
         end
         -- forcing an error here to check the exact type of the metatable
-        local function ok(idx: getclass<BaseClass>): nil return idx end
+        function ok(idx: getclass<BaseClass>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -979,14 +979,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_check_mutability")
 
     CheckResult result = check(R"(
         type function checkmut()
-            local indexer = {
+            const indexer = {
                 index = types.number,
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            local ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            local metatbl = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            const metatbl = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
             -- mutate the table
             ty:setproperty(types.singleton("string"), nil) -- {[number]: boolean}
             if metatbl:is("table") and metatbl:metatable() then
@@ -995,7 +995,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_check_mutability")
             -- this should never be returned
             return types.number
         end
-        local function ok(idx: checkmut<>): never return idx end
+        function ok(idx: checkmut<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1010,15 +1010,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_copy_works")
 
     CheckResult result = check(R"(
         type function getcopy()
-            local indexer = {
+            const indexer = {
                 index = types.number,
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            local ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            local metaty = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
-            local copy = types.copy(metaty)
+            const metaty = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            const copy = types.copy(metaty)
             -- mutate the table
             ty:setproperty(types.singleton("string"), nil) -- {[number]: boolean}
             if copy:is("table") and copy:metatable() then
@@ -1027,7 +1027,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_copy_works")
             -- this should never be returned
             return types.number
         end
-        local function ok(idx: getcopy<>): never return idx end
+        function ok(idx: getcopy<>): never return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1050,7 +1050,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_simple_cyclic_serialization_works")
         type basety2 = {
             second: basety
         }
-        local function ok(idx: serialize_cycle<basety>): basety return idx end
+        function ok(idx: serialize_cycle<basety>): basety return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1064,7 +1064,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_createtable_bad_metatable")
         type function badmetatable()
             return types.newtable(nil, nil, types.number)
         end
-        local function bad(arg: badmetatable<>) end
+        function bad(arg: badmetatable<>) end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1098,7 +1098,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_complex_cyclic_serialization_works")
             name: string,
             departments: { Department }
         }
-        local function ok(idx: serialize_cycle2<Company>): Company return idx end
+        function ok(idx: serialize_cycle2<Company>): Company return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1112,12 +1112,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_user_error_is_reported")
     CheckResult result = check(R"(
         type function errors_if_string(arg)
             if arg:is("string") then
-                local a = 1
+                const a = 1
                 error("We are in a math class! not english")
             end
             return arg
         end
-        local function ok(idx: errors_if_string<string>): nil return idx end
+        function ok(idx: errors_if_string<string>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1135,7 +1135,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_overrides_call_metamethod")
         type function hello(arg)
             error(type(arg))
         end
-        local function ok(idx: hello<string>): nil return idx end
+        function ok(idx: hello<string>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1150,12 +1150,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_overrides_eq_metamethod")
 
     CheckResult result = check(R"(
         type function hello()
-            local p1 = types.string
-            local p2 = types.string
-            local t1 = types.newtable(nil, nil, nil)
+            const p1 = types.string
+            const p2 = types.string
+            const t1 = types.newtable(nil, nil, nil)
             t1:setproperty(types.singleton("string"), types.boolean)
             t1:setmetatable(t1)
-            local t2 = types.newtable(nil, nil, nil)
+            const t2 = types.newtable(nil, nil, nil)
             t2:setproperty(types.singleton("string"), types.boolean)
             t1:setmetatable(t1)
             if p1 == p2 and t1 == t2 then
@@ -1163,7 +1163,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_overrides_eq_metamethod")
             end
             return types.unknown
         end
-        local function ok(idx: hello<>): number return idx end
+        function ok(idx: hello<>): number return idx end
     )");
 
     LUAU_CHECK_NO_ERRORS(result);
@@ -1175,9 +1175,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_type_cant_call_get_props")
 
     CheckResult result = check(R"(
         type function hello(arg)
-            local arr = arg:properties()
+            const arr = arg:properties()
         end
-        local function ok(idx: hello<() -> ()>): nil return idx end
+        function ok(idx: hello<() -> ()>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1200,7 +1200,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other")
         type function bar()
             return types.singleton(foo())
         end
-        local function ok(idx: bar<>): nil return idx end
+        function ok(idx: bar<>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1224,7 +1224,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_2")
         type function third()
             return second("hi")
         end
-        local function ok(idx: third<>): nil return idx end
+        function ok(idx: third<>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1253,7 +1253,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_3")
             type function third()
                 return second("hi")
             end
-            local function ok(idx: third<>): nil return idx end
+            function ok(idx: third<>): nil return idx end
         end
     )");
 
@@ -1273,7 +1273,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_unordered")
         type function foo()
             return "hi"
         end
-        local function ok(idx: bar<>): nil return idx end
+        function ok(idx: bar<>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1300,14 +1300,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_no_shared_state")
         type function bar(prefix)
             return types.singleton(tostring(prefix:value()) .. foo())
         end
-        local function ok1(idx: bar<'x'>): nil return idx end
-        local function ok2(idx: bar<'y'>): nil return idx end
+        function ok1(idx: bar<'x'>): nil return idx end
+        function ok2(idx: bar<'y'>): nil return idx end
     )");
 
     // We are only checking first errors, others are mostly duplicates
     LUAU_REQUIRE_ERROR_COUNT(5, result);
-    CHECK(toString(result.errors[0]) == R"(Unknown global 'glob'; consider assigning to it first)");
-    CHECK(toString(result.errors[1]) == R"('bar' type function errored at runtime: [string "foo"]:4: attempt to modify a readonly table)");
+    CHECK(toString(result.errors[0]) == R"(Undeclared variable 'glob'; assign with `=` first to declare it)");
+    CHECK(toString(result.errors[1]) == R"(Unknown global 'glob'; consider assigning to it first)");
+    CHECK(toString(result.errors[2]) == R"(Unknown global 'glob'; consider assigning to it first)");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_math_reset")
@@ -1319,7 +1320,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_math_reset")
         type function foo(x)
             return types.singleton(tostring(math.random(1, 100)))
         end
-        local x: foo<'a'> = ('' as any) as foo<'b'>
+        const x: foo<'a'> = ('' as any) as foo<'b'>
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1345,7 +1346,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optionify")
             age: number,
             alive: boolean
         }
-        local function ok(idx: optionify<Person>): nil return idx end
+        function ok(idx: optionify<Person>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1365,7 +1366,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_illegal_global")
             return arg -- this should not be reached
         end
 
-        local function ok(idx: illegal<number>): nil return idx end
+        function ok(idx: illegal<number>): nil return idx end
     )");
 
     // We are only checking first errors, others are mostly duplicates
@@ -1384,7 +1385,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_recursion_and_gc")
 
     CheckResult result = check(R"(
         type function foo(tbl)
-            local count = 0
+            count = 0
             for k,v in tbl:properties() do count += 1 end
             if count < 100 then
                 tbl:setproperty(types.singleton(`m{count}`), types.string)
@@ -1394,7 +1395,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_recursion_and_gc")
             return tbl
         end
         type Test = {}
-        local function ok(idx: foo<Test>): nil return idx end
+        function ok(idx: foo<Test>): nil return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1407,7 +1408,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_recovery_no_upvalues")
     ScopedFastFlag solverV2{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local var
+        const var = nil
 
         type function save_upvalue(arg)
             var = 1
@@ -1415,7 +1416,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_recovery_no_upvalues")
         end
 
         type test = "test"
-        local function ok(idx: save_upvalue<test>): "test"
+        function ok(idx: save_upvalue<test>): "test"
             return idx
         end
     )");
@@ -1456,7 +1457,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_strip_indexer")
 
         type map = { [number]: string, foo: string }
         -- forcing an error here to check the exact type
-        local function ok(tbl: stripindexer<map>): never return tbl end
+        function ok(tbl: stripindexer<map>): never return tbl end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1474,7 +1475,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_type_methods_on_types")
         type function test(x)
             return if (types as any).is(x, "number") then types.string else types.boolean
         end
-        local function ok(tbl: test<number>): never return tbl end
+        function ok(tbl: test<number>): never return tbl end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1489,7 +1490,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_types_functions_on_type")
         type function test(x)
             return x.singleton("a")
         end
-        local function ok(tbl: test<number>): never return tbl end
+        function ok(tbl: test<number>): never return tbl end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1502,11 +1503,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_metatable_writes")
 
     CheckResult result = check(R"(
         type function test(x)
-            local a = x.__index
+            const a = x.__index
             a.is = function() return false end
             return types.singleton(x.is("number"))
         end
-        local function ok(tbl: test<number>): never return tbl end
+        function ok(tbl: test<number>): never return tbl end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1521,7 +1522,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_eq_field")
         type function test(x)
             return types.singleton(x.__eq(x, types.number))
         end
-        local function ok(tbl: test<number>): never return tbl end
+        function ok(tbl: test<number>): never return tbl end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1537,9 +1538,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tag_field")
             return types.singleton(x.tag)
         end
 
-        local function ok1(tbl: test<number>): never return tbl end
-        local function ok2(tbl: test<string>): never return tbl end
-        local function ok3(tbl: test<{}>): never return tbl end
+        function ok1(tbl: test<number>): never return tbl end
+        function ok2(tbl: test<string>): never return tbl end
+        function ok3(tbl: test<{}>): never return tbl end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -1555,12 +1556,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_serialization")
 
     CheckResult result = check(R"(
         type function makemttbl()
-            local metaprops = {
+            const metaprops = {
                 [types.singleton("ma")] = types.boolean
             }
-            local mt = types.newtable(metaprops)
+            const mt = types.newtable(metaprops)
 
-            local props = {
+            const props = {
                 [types.singleton("a")] = types.number
             }
             return types.newtable(props, nil, mt)
@@ -1570,7 +1571,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_serialization")
             return x
         end
 
-        local a: number = {} as id<makemttbl<>>
+        const a: number = {} as id<makemttbl<>>
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1584,7 +1585,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonstrict_mode")
     CheckResult result = check(R"(
 --!nonstrict
 type function foo() return types.string end
-local a: foo<> = "a"
+const a: foo<> = "a"
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -1596,14 +1597,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "implicit_export")
 
     fileResolver.source["game/A"] = R"(
 type function concat(a: type, b: type)
-    local aString = a:value()
-    local bString = b:value()
+    const aString = a:value()
+    const bString = b:value()
     assert(typeof(aString) == "string")
     assert(typeof(bString) == "string")
     return types.singleton(aString .. bString)
 end
 export type Concat<T, U> = concat<T, U>
-local a: concat<'first', 'second'>
+const a: concat<'first', 'second'> = nil as any
 return {}
     )";
 
@@ -1613,8 +1614,8 @@ return {}
     CHECK(toString(requireType("game/A", "a")) == R"("firstsecond")");
 
     CheckResult bResult = check(R"(
-local Test = require(game.A);
-local b: Test.Concat<'third', 'fourth'>
+const Test = require(game.A);
+const b: Test.Concat<'third', 'fourth'> = nil as any
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -1629,14 +1630,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "local_scope")
 type function foo()
     return "hi"
 end
-local function test()
+function test()
     type function bar()
         return types.singleton(foo())
     end
 
     return ("" as any) as bar<>
 end
-local a = test()
+const a = test()
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -1650,13 +1651,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "explicit_export")
 
     fileResolver.source["game/A"] = R"(
 export type function concat(a: type, b: type)
-    local aString = a:value()
-    local bString = b:value()
+    const aString = a:value()
+    const bString = b:value()
     assert(typeof(aString) == "string")
     assert(typeof(bString) == "string")
     return types.singleton(aString .. bString)
 end
-local a: concat<'first', 'second'>
+const a: concat<'first', 'second'> = nil as any
 return {}
     )";
 
@@ -1666,8 +1667,8 @@ return {}
     CHECK(toString(requireType("game/A", "a")) == R"("firstsecond")");
 
     CheckResult bResult = check(R"(
-local Test = require(game.A);
-local b: Test.concat<'third', 'fourth'>
+const Test = require(game.A);
+const b: Test.concat<'third', 'fourth'> = nil as any
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -1692,8 +1693,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "explicit_export_zero_arg")
     LUAU_REQUIRE_NO_ERRORS(aResult);
 
     CheckResult bResult = check(R"(
-        local udtfs = require(game.A);
-        local x: udtfs.foo<> = 5
+        const udtfs = require(game.A);
+        const x: udtfs.foo<> = 5
     )");
 
     LUAU_REQUIRE_NO_ERRORS(bResult);
@@ -1710,7 +1711,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "print_to_error")
             print(a.tag)
             return types.any
         end
-        local a: t0<string>
+        const a: t0<string> = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1729,7 +1730,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "print_to_error_plus_error")
             print(a.tag)
             error("test")
         end
-        local a: t0<string>
+        const a: t0<string> = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -1747,7 +1748,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "print_to_error_plus_no_result")
             print("Where does this go")
             print(a.tag)
         end
-        local a: t0<string>
+        const a: t0<string> = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -1767,7 +1768,7 @@ end
 
 type test = <T, U>(T, { x: <T>(y: T) -> (), y: U }, U) -> ()
 
-local function ok(idx: pass<test>): test return idx end
+function ok(idx: pass<test>): test return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1784,7 +1785,7 @@ end
 
 type test = <T, U...>(T) -> (T, U...)
 
-local function ok(idx: pass<test>): test return idx end
+function ok(idx: pass<test>): test return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1799,13 +1800,13 @@ type function pass(arg)
     return arg
 end
 
-local function m(a, b)
+function m(a, b)
     return {x = a, y = b}
 end
 
 type test = typeof(m)
 
-local function ok(idx: pass<test>): test return idx end
+function ok(idx: pass<test>): test return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1822,7 +1823,7 @@ end
 
 type test = <T, U>(T, { x: <T>(y: T) -> (), y: U }, U) -> ()
 
-local function ok(idx: pass<test>): test return idx end
+function ok(idx: pass<test>): test return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1839,7 +1840,7 @@ end
 
 type test = <T, U...>(T) -> (T, U...)
 
-local function ok(idx: pass<test>): test return idx end
+function ok(idx: pass<test>): test return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1856,7 +1857,7 @@ end
 
 type test = <T, U...>(T) -> (T, U...)
 
-local function ok(idx: pass<test>): true return idx end
+function ok(idx: pass<test>): true return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1868,14 +1869,14 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_1")
 
     CheckResult result = check(R"(
 type function pass(arg)
-    local generics = arg:generics()
-    local T = generics[1]
+    const generics = arg:generics()
+    const T = generics[1]
     return types.newfunction({ head = {T} }, { head = {T} }, {T})
 end
 
 type test = <T, U>(T, { x: <T>(y: T) -> (), y: U }, U) -> ()
 
-local function ok(idx: pass<test>): <T>(T) -> (T) return idx end
+function ok(idx: pass<test>): <T>(T) -> (T) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1887,9 +1888,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_2")
 
     CheckResult result = check(R"(
 type function pass(arg)
-    local generics = arg:generics()
-    local T = generics[1]
-    local f = types.newfunction()
+    const generics = arg:generics()
+    const T = generics[1]
+    const f = types.newfunction()
     f:setparameters({T, T});
     f:setreturns({T});
     f:setgenerics({T});
@@ -1898,7 +1899,7 @@ end
 
 type test = <T, U>(T, { x: <T>(y: T) -> (), y: U }, U) -> ()
 
-local function ok(idx: pass<test>): <T>(T, T) -> (T) return idx end
+function ok(idx: pass<test>): <T>(T, T) -> (T) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1911,24 +1912,24 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_3")
 
     CheckResult result = check(R"(
 type function pass()
-    local T = types.generic("T")
+    const T = types.generic("T")
     assert(T.tag == "generic")
     assert(T:name() == "T")
     assert(T:ispack() == false)
 
-    local Us, Vs = types.generic("U", true), types.generic("V", true)
+    const Us, Vs = types.generic("U", true), types.generic("V", true)
     assert(Us.tag == "generic")
     assert(Us:name() == "U")
     assert(Us:ispack() == true)
 
-    local f = types.newfunction()
+    const f = types.newfunction()
     f:setparameters({T}, Us);
     f:setreturns({T}, Vs);
     f:setgenerics({T, Us, Vs});
     return f
 end
 
-local function ok(idx: pass<>): <T, U..., V...>(T, U...) -> (T, V...) return idx end
+function ok(idx: pass<>): <T, U..., V...>(T, U...) -> (T, V...) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1940,13 +1941,13 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_4")
 
     CheckResult result = check(R"(
 type function pass()
-    local T, U = types.generic("T"), types.generic("U")
+    const T, U = types.generic("T"), types.generic("U")
 
     -- <T>(T) -> ()
-    local func = types.newfunction({ head = {T} }, {}, {T});
+    const func = types.newfunction({ head = {T} }, {}, {T});
 
     -- { x: <T>(T) -> (), y: U }
-    local tbl = types.newtable({ [types.singleton("x")] = func, [types.singleton("y")] = U })
+    const tbl = types.newtable({ [types.singleton("x")] = func, [types.singleton("y")] = U })
 
     -- <T, U>(T, { x: <T>(T) -> (), y: U }, U) -> ()
     return types.newfunction({ head = {T, tbl, U } }, {}, {T, U})
@@ -1954,7 +1955,7 @@ end
 
 type test = <T, U>(T, { x: <T>(y: T) -> (), y: U }, U) -> ()
 
-local function ok(idx: pass<>): test return idx end
+function ok(idx: pass<>): test return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1966,11 +1967,11 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_5")
 
     CheckResult result = check(R"(
 type function pass()
-    local T = types.generic("T")
+    const T = types.generic("T")
     return types.newfunction({ head = {T} }, {}, {types.copy(T)})
 end
 
-local function ok(idx: pass<>): <T>(T) -> () return idx end
+function ok(idx: pass<>): <T>(T) -> () return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1982,22 +1983,22 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_6")
 
     CheckResult result = check(R"(
 type function pass(arg)
-    local generics = arg:generics()
-    local T, U = generics[1], generics[2]
-    local f = types.newfunction()
+    const generics = arg:generics()
+    const T, U = generics[1], generics[2]
+    const f = types.newfunction()
     f:setparameters({T});
     f:setreturns({U});
     f:setgenerics({T, U});
     return f
 end
 
-local function m(a, b)
+function m(a, b)
     return {x = a, y = b}
 end
 
 type test = typeof(m)
 
-local function ok(idx: pass<test>): <T, U>(T) -> (U) return idx end
+function ok(idx: pass<test>): <T, U>(T) -> (U) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2009,8 +2010,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_7")
 
     CheckResult result = check(R"(
 type function pass(arg)
-    local p, r = arg:parameters(), arg:returns()
-    local f = types.newfunction()
+    const p, r = arg:parameters(), arg:returns()
+    const f = types.newfunction()
     f:setparameters(p.head, p.tail);
     f:setreturns(r.head, r.tail);
     f:setgenerics(arg:generics());
@@ -2019,7 +2020,7 @@ end
 
 type test = <T, U...>(T, U...) -> (T, U...)
 
-local function ok(idx: pass<test>): <T, U...>(T, U...) -> (T, U...) return idx end
+function ok(idx: pass<test>): <T, U...>(T, U...) -> (T, U...) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2031,8 +2032,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_8")
 
     CheckResult result = check(R"(
 type function pass(arg)
-    local p, r = arg:parameters(), arg:returns()
-    local f = types.newfunction()
+    const p, r = arg:parameters(), arg:returns()
+    const f = types.newfunction()
     f:setparameters(p.head, p.tail);
     f:setreturns(r.head, r.tail);
     f:setgenerics(arg:generics());
@@ -2041,7 +2042,7 @@ end
 
 type test = <U...>(U...) -> (U...)
 
-local function ok(idx: pass<test>): <T>(T, T) -> (T, T) return idx end
+function ok(idx: pass<test>): <T>(T, T) -> (T, T) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2053,15 +2054,15 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_equality_2")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Us = types.generic("T"), types.generic("U", true)
+    const T, Us = types.generic("T"), types.generic("U", true)
 
-    local tbl1 = types.newtable({ [types.singleton("x")] = T })
-    local tbl2 = types.newtable({ [types.singleton("x")] = Us }) -- it is possible to have invalid types in-flight
+    const tbl1 = types.newtable({ [types.singleton("x")] = T })
+    const tbl2 = types.newtable({ [types.singleton("x")] = Us }) -- it is possible to have invalid types in-flight
 
     return types.singleton(tbl1 == tbl2)
 end
 
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2073,10 +2074,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_1")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Us = types.generic("T"), types.generic("U", true)
+    const T, Us = types.generic("T"), types.generic("U", true)
     return types.newfunction({}, {}, {Us, T})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2092,10 +2093,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_2")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Us = types.generic("T"), types.generic("U", true)
+    const T, Us = types.generic("T"), types.generic("U", true)
     return types.newfunction({ head = {T} }, {}, {})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2108,15 +2109,15 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_3")
 
     CheckResult result = check(R"(
 type function get()
-    local T, U = types.generic("T"), types.generic("U")
+    const T, U = types.generic("T"), types.generic("U")
 
     -- <U>(U) -> ()
-    local func = types.newfunction({ head = {U} }, {}, {U});
+    const func = types.newfunction({ head = {U} }, {}, {U});
 
     -- broken: <T>(T, <U>(U) -> (), U) -> ()
     return types.newfunction({ head = {T, func, U } }, {}, {T})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2129,10 +2130,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_4")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Us = types.generic("T"), types.generic("U", true)
+    const T, Us = types.generic("T"), types.generic("U", true)
     return types.newfunction({ head = {T} }, { tail = Us }, {T, T})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2145,10 +2146,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_5")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Ts = types.generic("T"), types.generic("T", true)
+    const T, Ts = types.generic("T"), types.generic("T", true)
     return types.newfunction({ head = {T} }, { tail = Ts }, {T, Ts})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2161,10 +2162,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_6")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Us = types.generic("T"), types.generic("U", true)
+    const T, Us = types.generic("T"), types.generic("U", true)
     return types.newfunction({ head = {Us} }, {}, {T, Us})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2177,10 +2178,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_7")
 
     CheckResult result = check(R"(
 type function get()
-    local T, Us = types.generic("T"), types.generic("U", true)
+    const T, Us = types.generic("T"), types.generic("U", true)
     return types.newfunction({ tail = Us }, {}, {T})
 end
-local function ok(idx: get<>): false return idx end
+function ok(idx: get<>): false return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2193,8 +2194,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_variadic_api")
 
     CheckResult result = check(R"(
 type function pass(arg)
-    local p, r = arg:parameters(), arg:returns()
-    local f = types.newfunction()
+    const p, r = arg:parameters(), arg:returns()
+    const f = types.newfunction()
     f:setparameters({p.tail}, p.head[1]);
     f:setreturns({r.tail}, r.head[1]);
     return f
@@ -2202,7 +2203,7 @@ end
 
 type test = (string, ...number) -> (number, ...string)
 
-local function ok(idx: pass<test>): (number, ...string) -> (string, ...number) return idx end
+function ok(idx: pass<test>): (number, ...string) -> (string, ...number) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2224,8 +2225,8 @@ type function compare(arg)
     return types.singleton(types.singleton(false) == arg)
 end
 
-local function ok1(idx: compare<false>): true return idx end
-local function ok2(idx: compare<true>): false return idx end
+function ok1(idx: compare<false>): true return idx end
+function ok2(idx: compare<true>): false return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2247,8 +2248,8 @@ type function compare(arg)
     return types.singleton(types.singleton("") == arg)
 end
 
-local function ok(idx: compare<"">): true return idx end
-local function ok(idx: compare<"a">): false return idx end
+function ok(idx: compare<"">): true return idx end
+function ok(idx: compare<"a">): false return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2264,7 +2265,7 @@ type function test(t)
     return t
 end
 
-local _:test<number>
+const _:test<number> = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2282,7 +2283,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_print_tab_char_fix")
             return t
         end
 
-        local _:test<number>
+        const _:test<number> = nil as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2304,8 +2305,8 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_class_parent_ops")
             return arg:writeparent()
         end
 
-        local function ok1(idx: readparentof<ChildClass>): BaseClass return idx end
-        local function ok2(idx: writeparentof<ChildClass>): BaseClass return idx end
+        function ok1(idx: readparentof<ChildClass>): BaseClass return idx end
+        function ok2(idx: writeparentof<ChildClass>): BaseClass return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2348,7 +2349,7 @@ end
 
 type wrap<T> = { a: func<T?> }
 
-local x: wrap<string> = nil as any
+const x: wrap<string> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2367,7 +2368,7 @@ end
 
 type wrap<T> = { a: func<<T>(T) -> number>, b: T }
 
-local x: wrap<string> = nil as any
+const x: wrap<string> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2387,8 +2388,8 @@ end
 
 type test<T> = { x: T, y: T? }
 type wrap<T> = { a: func<(string, keyof<test<T>>) -> number>, b: T }
-local x: wrap<string>
-local y: keyof<typeof(x)>
+const x: wrap<string> = nil as any
+const y: keyof<typeof(x)> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2406,7 +2407,7 @@ type function foo(t)
     return types.unionof(t, types.singleton(nil))
 end
 
-local x: foo<{a: foo<string>, b: foo<number>}> = nil
+const x: foo<{a: foo<string>, b: foo<number>}> = nil
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2427,7 +2428,7 @@ end
 type table<T> = { a: index<T, "a"> }
 type wrap<T> = foo<table<T>>
 
-local x: wrap<{a: number}> = { a = 2 }
+const x: wrap<{a: number}> = { a = 2 }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2461,8 +2462,8 @@ type function foo(t)
     return Test(t)
 end
 
-local x: foo<{a: number}> = { a = 2 }
-local y: foo<{b: number}> = { b = 2 }
+const x: foo<{a: number}> = { a = 2 }
+const y: foo<{b: number}> = { b = 2 }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2486,8 +2487,8 @@ type function bar(t)
     return foo(t)
 end
 
-local x: bar<{a: number}> = { a = 2 }
-local y: bar<{b: number}> = { b = 2 }
+const x: bar<{a: number}> = { a = 2 }
+const y: bar<{b: number}> = { b = 2 }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2512,8 +2513,8 @@ do
         return foo(t)
     end
 
-    local x: bar<{a: number}> = { a = 2 }
-    local y: bar<{b: number}> = { b = 2 }
+    const x: bar<{a: number}> = { a = 2 }
+    const y: bar<{b: number}> = { b = 2 }
 
     print(x, y)
 end
@@ -2536,8 +2537,8 @@ type function foo(t)
     return types.unionof(Test, t)
 end
 
-local x: foo<nil> = { a = 2 }
-local y: foo<string> = "a"
+const x: foo<nil> = { a = 2 }
+const y: foo<string> = "a"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2563,8 +2564,8 @@ type TableOf<T> = { prop: T }
 type ShouldBeNumber = foobar<number>
 type ShouldBeTableOfString = foobar<string>
 
-local x: ShouldBeNumber = 2
-local y: ShouldBeTableOfString = { prop = "a" }
+const x: ShouldBeNumber = 2
+const y: ShouldBeTableOfString = { prop = "a" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2585,8 +2586,8 @@ type function foo(t)
     return Test(t)
 end
 
-local x: foo<{ a: number }> = 2
-local y: foo<{ a: string }> = "x"
+const x: foo<{ a: number }> = 2
+const y: foo<{ a: string }> = "x"
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2606,7 +2607,7 @@ type Test<T> = rawget<T, "a">
 export type function foo(t)
     return Test(t)
 end
-local x: foo<{ a: number }> = 2
+const x: foo<{ a: number }> = 2
 return {}
     )";
 
@@ -2616,8 +2617,8 @@ return {}
     CHECK(toString(requireType("game/A", "x")) == R"(number)");
 
     CheckResult bResult = check(R"(
-local Test = require(game.A);
-local y: Test.foo<{ a: string }> = "x"
+const Test = require(game.A);
+const y: Test.foo<{ a: string }> = "x"
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -2640,7 +2641,7 @@ export type function bar(t)
     return foo(t)
 end
 
-local x: bar<{ a: number }> = 2
+const x: bar<{ a: number }> = 2
 return {}
     )";
 
@@ -2650,8 +2651,8 @@ return {}
     CHECK(toString(requireType("game/A", "x")) == R"(number)");
 
     CheckResult bResult = check(R"(
-local Test = require(game.A);
-local y: Test.bar<{ a: string }> = "x"
+const Test = require(game.A);
+const y: Test.bar<{ a: string }> = "x"
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -2666,7 +2667,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "type_alias_not_too_many_globals")
 type function get()
     return number
 end
-local function ok(idx: get<>): number return idx end
+function ok(idx: get<>): number return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -2684,7 +2685,7 @@ type function get()
     return Test(types.number)
 end
 
-local function ok(idx: get<>): number return idx end
+function ok(idx: get<>): number return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2702,7 +2703,7 @@ type function foo(t)
     return Test(types.number, types.string, t)
 end
 
-local x: foo<boolean>
+const x: foo<boolean> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2722,7 +2723,7 @@ type function get()
     return Test(types.number, types.string)
 end
 
-local function ok(idx: get<>): number return idx end
+function ok(idx: get<>): number return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2743,7 +2744,7 @@ end
 
 type Test = foo<string>
 
-local x: foo<boolean>
+const x: foo<boolean> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2798,7 +2799,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_fuzz_environment_scope_crash")
     ScopedFastFlag newSolver{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-local _, running = ...
+const _, running = ...
 type function t255() end
 if _ then
     type function t1() end
@@ -2829,11 +2830,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_udtf_with_optional_missing")
 
     CheckResult results = check(R"(
         type function create_table_with_key()
-            local tbl = types.newtable()
+            const tbl = types.newtable()
             tbl:setproperty(types.singleton "key", types.unionof(types.string, types.singleton(nil)))
             return tbl
         end
-        local a: create_table_with_key = {}
+        const a: create_table_with_key = {}
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -2846,11 +2847,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_udtf_with_optional_present")
 
     CheckResult results = check(R"(
         type function create_table_with_key()
-            local tbl = types.newtable()
+            const tbl = types.newtable()
             tbl:setproperty(types.singleton "key", types.unionof(types.string, types.singleton(nil)))
             return tbl
         end
-        local a: create_table_with_key = { key = "123" }
+        const a: create_table_with_key = { key = "123" }
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -2863,11 +2864,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_udtf_table_mismatch")
 
     CheckResult results = check(R"(
         type function create_table_with_key()
-            local tbl = types.newtable()
+            const tbl = types.newtable()
             tbl:setproperty(types.singleton "key", types.optional(types.number))
             return tbl
         end
-        local my_tbl: create_table_with_key = {key = "123"}
+        const my_tbl: create_table_with_key = {key = "123"}
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, results);
@@ -2886,7 +2887,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_basic_mismatch")
         type function foo()
             return types.number
         end
-        local f: foo = "123"
+        const f: foo = "123"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, results);
@@ -2905,7 +2906,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_basic_match")
         type function foo()
             return types.string
         end
-        local f: foo = "123"
+        const f: foo = "123"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -2921,7 +2922,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeof_into_type_function_should_not_crash")
         end
 
         type func<parameters...> = typeof(function(...: parameters...) end)
-        local whomp: <T>(arg1: T) -> identity<T>
+        const whomp: <T>(arg1: T) -> identity<T> = nil as any
         whomp(function(...) end as func<any>)
     )");
 
@@ -2960,7 +2961,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_cannot_try_to_mutate_type_ali
             myType:setproperty(types.singleton "key", types.optional(types.number))
             return myType
         end
-        local my_tbl: create_table_with_key<> = {key = "123"}
+        const my_tbl: create_table_with_key<> = {key = "123"}
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -2983,11 +2984,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_can_mutate_cloned_type_aliase
         type myType = { woof: string }
 
         type function create_table_with_key()
-            local tbl = types.copy(myType)
+            const tbl = types.copy(myType)
             tbl:setproperty(types.singleton "key", types.optional(types.number))
             return tbl
         end
-        local my_tbl: create_table_with_key<> = { key = 123, woof = "woof" }
+        const my_tbl: create_table_with_key<> = { key = 123, woof = "woof" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3001,17 +3002,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss2164_table_subtyping_bug")
     CheckResult results = check(R"(
         export type function tblpartial(tbl: type)
             assert(tbl:is("table"), "tblpartial can only be applied to tables")
-            local new = types.newtable()
+            const new = types.newtable()
 
             for k, v in tbl:properties() do
-                local read = assert(v.read, "properties cannot be write-only")
+                const read = assert(v.read, "properties cannot be write-only")
                 new:setreadproperty(k, types.optional(read))
             end
 
             return new
         end
 
-        local function tblmerge<T>(base: T, override: tblpartial<T>): T error("unimplemented") end
+        function tblmerge<T>(base: T, override: tblpartial<T>): T error("unimplemented") end
         tblmerge({ a = 1 }, {}) -- Type '{  }' could not be converted into '{ read a: number? }'
     )");
 
@@ -3027,7 +3028,7 @@ type function many(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, a
     return a0
 end
 
-local x: many<number, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any> = 1
+const x: many<number, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any, any> = 1
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3039,11 +3040,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_unsupported_type_function_application_e
     ScopedFastFlag structuredErrors{FFlag::LuauTypeFunctionStructuredErrors, true};
 
     CheckResult result = check(R"(
-local function f<D, L>(data: D & {}, index: L | "Test"): index<D, L>
+function f<D, L>(data: D & {}, index: L | "Test"): index<D, L>
     return data[index]
 end
 
-local test = f as test<typeof(f)>
+const test = f as test<typeof(f)>
 type function test(t: type) return t end
     )");
 
@@ -3102,7 +3103,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_serialize_iteration_limit_null_deref")
             g: (number, string) -> (boolean, nil),
         }
 
-        local function ok(idx: pass<Complex>): Complex return idx end
+        function ok(idx: pass<Complex>): Complex return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3129,7 +3130,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_alias_call_serialize_null_deref")
             return Big(arg)
         end
 
-        local function ok(idx: apply<number>): Big<number> return idx end
+        function ok(idx: apply<number>): Big<number> return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3159,7 +3160,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_env_alias_serialize_null_deref")
             return Alias
         end
 
-        local function ok(idx: use_alias<>): Alias return idx end
+        function ok(idx: use_alias<>): Alias return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3173,7 +3174,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_deep_copy_iteration_limit_null_deref")
 
     CheckResult result = check(R"(
         type function copy_complex(arg)
-            local t = types.newtable()
+            const t = types.newtable()
             t:setproperty(types.singleton("a"), types.number)
             t:setproperty(types.singleton("b"), types.string)
             t:setproperty(types.singleton("c"), types.boolean)
@@ -3181,11 +3182,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_deep_copy_iteration_limit_null_deref")
             t:setproperty(types.singleton("e"), types.thread)
             t:setproperty(types.singleton("f"), types.newtable())
             t:setproperty(types.singleton("g"), types.newfunction())
-            local c = types.copy(t)
+            const c = types.copy(t)
             return c
         end
 
-        local function ok(idx: copy_complex<number>): number return idx end
+        function ok(idx: copy_complex<number>): number return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3201,25 +3202,25 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_areequal_stack_overflow_on_deep_types")
 
     CheckResult result = check(R"(
         type function deep_eq()
-            local depth = 200
-            local function build()
-                local t = types.newtable()
+            const depth = 200
+            function build()
+                t = types.newtable()
                 for i = 1, depth do
-                    local outer = types.newtable()
+                    const outer = types.newtable()
                     outer:setproperty(types.singleton("x"), t)
                     t = outer
                 end
                 return t
             end
-            local a = build()
-            local b = build()
+            const a = build()
+            const b = build()
             if a == b then
                 return types.boolean
             end
             return types.string
         end
 
-        local x: deep_eq<> = true
+        const x: deep_eq<> = true
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3232,12 +3233,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_setmetatable_wrong_error_tag")
 
     CheckResult result = check(R"(
         type function foo()
-            local t = types.newtable()
+            const t = types.newtable()
             t:setmetatable(types.number)
             return t
         end
 
-        local x: foo<> = nil
+        const x: foo<> = nil
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3254,11 +3255,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_cloner_missing_integer_crashes_copy")
 
     CheckResult result = check(R"(
         type function copy_int(arg)
-            local c = types.copy(arg)
+            const c = types.copy(arg)
             return c
         end
 
-        local function ok(idx: copy_int<integer>): integer return idx end
+        function ok(idx: copy_int<integer>): integer return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3271,14 +3272,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_integer_methods_work")
 
     CheckResult result = check(R"(
         type function getinteger()
-            local ty = types.integer
+            const ty = types.integer
             if ty:is("integer") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        local function ok(idx: getinteger<>): integer return idx end
+        function ok(idx: getinteger<>): integer return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3296,8 +3297,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_integer_is_distinct_from_number")
             end
             return types.number
         end
-        local function ok(idx: pick<integer>): integer return idx end
-        local function ok2(idx: pick<number>): number return idx end
+        function ok(idx: pick<integer>): integer return idx end
+        function ok2(idx: pick<number>): number return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3312,7 +3313,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_integer_constructor_is_not_number")
         type function getinteger()
             return types.integer
         end
-        local function bad(idx: getinteger<>): number return idx end
+        function bad(idx: getinteger<>): number return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3324,13 +3325,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_setgenerics_wrong_argcount_check")
 
     CheckResult result = check(R"(
         type function extra_arg()
-            local f = types.newfunction()
-            local g = types.generic("T")
+            const f = types.newfunction()
+            const g = types.generic("T")
             f:setgenerics({g}, "extra")
             return f
         end
 
-        local x: extra_arg<> = nil
+        const x: extra_arg<> = nil
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -3353,13 +3354,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof")
             return a
         end
 
-        local x: checksubtype<nil, nil>                          -- T
-        local y: checksubtype<nil, string?>                      -- T
-        local z: checksubtype<"Hello", string>                   -- T
-        local x1: checksubtype<add<number, number>, number | vector> -- T
-        local w: checksubtype<string | vector | number, number>  -- F
-        local a: checksubtype<boolean, number>                   -- F
-        local b: checksubtype<false, nil>                        -- F
+        const x: checksubtype<nil, nil> = nil as any                          -- T
+        const y: checksubtype<nil, string?> = nil as any                      -- T
+        const z: checksubtype<"Hello", string> = nil as any                   -- T
+        const x1: checksubtype<add<number, number>, number | vector> = nil as any -- T
+        const w: checksubtype<string | vector | number, number> = nil as any  -- F
+        const a: checksubtype<boolean, number> = nil as any                   -- F
+        const b: checksubtype<false, nil> = nil as any                        -- F
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, results);
@@ -3382,15 +3383,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_top_and_bottom")
             return types.singleton(a:issubtypeof(b))
         end
 
-        local a: issub<never, number>
-        local b: issub<never, string>
-        local c: issub<never, never>
-        local d: issub<number, unknown>
-        local e: issub<string, unknown>
-        local f: issub<unknown, unknown>
-        local g: issub<never, unknown>
-        local h: issub<unknown, number>
-        local i: issub<number, never>
+        const a: issub<never, number> = nil as any
+        const b: issub<never, string> = nil as any
+        const c: issub<never, never> = nil as any
+        const d: issub<number, unknown> = nil as any
+        const e: issub<string, unknown> = nil as any
+        const f: issub<unknown, unknown> = nil as any
+        const g: issub<never, unknown> = nil as any
+        const h: issub<unknown, number> = nil as any
+        const i: issub<number, never> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3415,11 +3416,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_any")
             return types.singleton(a:issubtypeof(b))
         end
 
-        local a: issub<any, number>
-        local b: issub<number, any>
-        local c: issub<any, any>
+        const a: issub<any, number> = nil as any
+        const b: issub<number, any> = nil as any
+        const c: issub<any, any> = nil as any
         -- This is a special case: any <: unknown
-        local d: issub<any, unknown>
+        const d: issub<any, unknown> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3446,12 +3447,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_table_structural")
         type ReadNum1 = { read a: number }
         type ReadNumOrStr = { read a: number | string }
 
-        local a: issub<Wide, Narrow>
-        local b: issub<Narrow, Wide>
-        local c: issub<Wide, Wide>
-        local d: issub<Wide, Different>
-        local e: issub<Narrow, TablesSubtypeInvariantly>
-        local f: issub<ReadNum1, ReadNumOrStr>
+        const a: issub<Wide, Narrow> = nil as any
+        const b: issub<Narrow, Wide> = nil as any
+        const c: issub<Wide, Wide> = nil as any
+        const d: issub<Wide, Different> = nil as any
+        const e: issub<Narrow, TablesSubtypeInvariantly> = nil as any
+        const f: issub<ReadNum1, ReadNumOrStr> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3478,11 +3479,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_function")
         type F3 = (unknown) -> string
         type F4 = (number) -> unknown
 
-        local a: issub<F1, F2>
-        local b: issub<F3, F1>
-        local c: issub<F1, F3>
-        local d: issub<F1, F4>
-        local e: issub<F4, F1>
+        const a: issub<F1, F2> = nil as any
+        const b: issub<F3, F1> = nil as any
+        const c: issub<F1, F3> = nil as any
+        const d: issub<F1, F4> = nil as any
+        const e: issub<F4, F1> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3503,10 +3504,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_union")
             return types.singleton(a:issubtypeof(b))
         end
 
-        local a: issub<number, number | string>
-        local b: issub<number | string, number | string | boolean>
-        local c: issub<number | string, number>
-        local d: issub<number | string, number | string>
+        const a: issub<number, number | string> = nil as any
+        const b: issub<number | string, number | string | boolean> = nil as any
+        const c: issub<number | string, number> = nil as any
+        const d: issub<number | string, number | string> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3529,9 +3530,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_intersection")
         type A = { a: number }
         type B = { b: string }
 
-        local a: issub<A & B, A>
-        local b: issub<A & B, B>
-        local c: issub<A, A & B>
+        const a: issub<A & B, A> = nil as any
+        const b: issub<A & B, B> = nil as any
+        const c: issub<A, A & B> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3550,9 +3551,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "issubtypeof_extern_type_hierarchy")
             return types.singleton(a:issubtypeof(b))
         end
 
-        local a: issub<ChildClass, BaseClass>
-        local b: issub<BaseClass, ChildClass>
-        local c: issub<BaseClass, BaseClass>
+        const a: issub<ChildClass, BaseClass> = nil as any
+        const b: issub<BaseClass, ChildClass> = nil as any
+        const c: issub<BaseClass, BaseClass> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3577,9 +3578,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_table_indexer")
         type ReadArr = { read [number]: string }
         type ReadNumStrArray = { read [number]: string | number }
 
-        local a: issub<Arr, Map>
-        local b: issub<{ [number]: string }, NumStrArray>
-        local c: issub<ReadArr, ReadNumStrArray>
+        const a: issub<Arr, Map> = nil as any
+        const b: issub<{ [number]: string }, NumStrArray> = nil as any
+        const c: issub<ReadArr, ReadNumStrArray> = nil as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3626,7 +3627,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_tostring")
             t: T<U>
         }
 
-        local x: foo<T<vector>>
+        const x: foo<T<vector>> = nil as any
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, results);
 
@@ -3658,7 +3659,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "error_handling_pcall")
             return types.unionof(ty, types.singleton(nil))
         end
 
-        local x: bar<number> = 5
+        const x: bar<number> = 5
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3694,7 +3695,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_string_error_value")
             error({})
         end
 
-        local x: foo<> = 5
+        const x: foo<> = 5
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);

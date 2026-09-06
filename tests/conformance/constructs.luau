@@ -16,7 +16,7 @@ assert(not(2+1 > 3*1) and "a".."b" > "a");
 assert(not ((true or false) and nil))
 assert(      true or false  and nil)
 
-local a,b = 1,nil;
+a,b = 1,nil;
 assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75);
 x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
 x = (((2<3) or 1) == true and (2<3 and 4) == 4); assert(x);
@@ -34,7 +34,7 @@ repeat until 1; repeat until true;
 while false do end; while nil do end;
 
 do  -- test old bug (first name could not be an `upvalue')
- local a; function f(x) x={a=1}; x={x=1}; x={G=1} end
+ a = nil; function f(x) x={a=1}; x={x=1}; x={G=1} end
 end
 
 function f (i)
@@ -53,7 +53,7 @@ x = {f{}}
 assert(x[2] == 'jojo' and type(x[1]) == 'table')
 
 
-local f = function (i)
+f = function (i)
   if i < 10 then return 'a';
   else if i < 20 then return 'b';
   else if i < 30 then return 'c';
@@ -74,13 +74,13 @@ assert(a == n*(n+1)/2 and i==3);
 assert(t[1] and t[n] and not t[0] and not t[n+1])
 
 function f(b)
-  local x = 1;
+  x = 1;
   repeat
-    local a;
-    if b==1 then local b=1; x=10; break
+    a = nil;
+    if b==1 then b=1; x=10; break
     else if b==2 then x=20; break;
     else if b==3 then x=30;
-    else local a,b,c,d=math.sin(1); x=x+1;
+    else a,b,c,d=math.sin(1); x=x+1;
     end
   until x>=12;
   return x;
@@ -89,7 +89,7 @@ end;
 assert(f(1) == 10 and f(2) == 20 and f(3) == 30 and f(4)==12)
 
 
-local f = function (i)
+f = function (i)
   if i < 10 then return 'a'
   else if i < 20 then return 'b'
   else if i < 30 then return 'c'
@@ -99,7 +99,7 @@ end
 
 assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == 8)
 
-local a, b = nil, 23
+a, b = nil, 23
 x = {f(100)*2+3 or a, a or b+2}
 assert(x[1] == 19 and x[2] == 25)
 x = {f=2+3 or a, a = b+2}
@@ -127,13 +127,13 @@ f(10); g(10);
 
 do
   function f () return 1,2,3; end
-  local a, b, c = f();
+  a, b, c = f();
   assert(a==1 and b==2 and c==3)
   a, b, c = (f());
   assert(a==1 and b==nil and c==nil)
 end
 
-local a,b = 3 and f();
+a,b = 3 and f();
 assert(a==1 and b==nil)
 
 function g() f(); return; end;
@@ -147,7 +147,7 @@ print'+';
 
 f = [[
 return function ( a , b , c , d , e )
-  local x = a >= b or c or ( d and e ) or nil
+  x = a >= b or c or ( d and e ) or nil
   return x
 end , { a = 1 , b = 2 >= 1 , } or { 1 };
 ]]
@@ -183,7 +183,7 @@ x = 2<1 or (2>1 and 'a'); assert(x=='a')
 
 
 do
-  local a; if nil then a=1; else a=2; end;    -- this nil comes as PUSHNIL 2
+  a = nil; if nil then a=1; else a=2; end;    -- this nil comes as PUSHNIL 2
   assert(a==2)
 end
 
@@ -191,6 +191,7 @@ function F(a)
   -- assert(debug.getinfo(1, "n").name == 'F')
   return a,2,3
 end
+_G.F = F
 
 a,b = F(1)!=nil; assert(a == true and b == nil);
 a,b = F(nil)==nil; assert(a == true and b == nil)
@@ -200,53 +201,55 @@ a,b = F(nil)==nil; assert(a == true and b == nil)
 -- [not] ([not] arg op [not] arg)
 -- and tests each one
 function ID(x) return x end
+_G.ID = ID
 
+c = nil
 function f(t, i)
-  local b = t.n
-  local res = (math.floor(i/c)%b)+1
+  const b = t.n
+  const res = (math.floor(i/c)%b)+1
   c = c*b
   return t[res]
 end
 
-local arg = {" ( 1 < 2 ) ", " ( 1 >= 2 ) ", " F ( ) ", "  nil "; n=4}
+arg = {" ( 1 < 2 ) ", " ( 1 >= 2 ) ", " _G.F ( ) ", "  nil "; n=4}
 
-local op = {" and ", " or ", " == ", " != "; n=4}
+op = {" and ", " or ", " == ", " != "; n=4}
 
-local neg = {" ", " not "; n=2}
+neg = {" ", " not "; n=2}
 
-local i = 0
+i = 0
 repeat
   c = 1
-  local s = f(neg, i)..'ID('..f(neg, i)..f(arg, i)..f(op, i)..f(neg, i)..'ID('..f(arg, i)..'))'
-  local s1 = string.gsub(s, 'ID', '')
-  K,X,NX,WX1,WX2 = nil
+  s = f(neg, i)..'ID('..f(neg, i)..f(arg, i)..f(op, i)..f(neg, i)..'ID('..f(arg, i)..'))'
+  s1 = string.gsub(s, 'ID', '')
+  _G.K,_G.X,_G.NX,_G.WX1,_G.WX2 = nil
   s = string.format([[
-      local a = %s
-      local b = not %s
-      K = b
-      local xxx; 
-      if %s then X = a  else X = b end
-      if %s then NX = b  else NX = a end
-      while %s do WX1 = a; break end
-      while %s do WX2 = a; break end
+      a = %s
+      b = not %s
+      _G.K = b
+      xxx = nil; 
+      if %s then _G.X = a  else _G.X = b end
+      if %s then _G.NX = b  else _G.NX = a end
+      while %s do _G.WX1 = a; break end
+      while %s do _G.WX2 = a; break end
       repeat if (%s) then break end; assert(b)  until not(%s)
   ]], s1, s, s1, s, s1, s, s1, s, s)
   assert(loadstring(s))()
-  assert(X and not NX and not WX1 == K and not WX2 == K)
+  assert(_G.X and not _G.NX and not _G.WX1 == _G.K and not _G.WX2 == _G.K)
   if i%4000 == 0 then print('+') end
   i = i+1
 until i==c
 
 -- validate continue upvalue close behavior
-local function check_connected(writer, reader)
+function check_connected(writer, reader)
     writer(1)
     assert(reader() == 1)
     return true
 end
 
 repeat
-    local value = nil
-    local function write(n)
+    value = nil
+    function write(n)
         value = n
     end
     continue

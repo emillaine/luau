@@ -364,7 +364,7 @@ TEST_CASE_FIXTURE(Fixture, "visit_once")
 {
     CheckResult result = check(R"(
 type T = { a: number, b: () -> () }
-local b: (T, T, T) -> T
+const b: (T, T, T) -> T = function(a: T, b: T, c: T): T return a end
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 

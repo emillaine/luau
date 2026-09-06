@@ -56,7 +56,7 @@ TEST_SUITE_BEGIN("RequireTracerTest");
 TEST_CASE_FIXTURE(RequireTracerFixture, "trace_local")
 {
     AstStatBlock* block = parse(R"(
-        local m = workspace.Foo.Bar.Baz
+        const m = workspace.Foo.Bar.Baz
         require(m)
     )");
 
@@ -92,8 +92,8 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "trace_local")
 TEST_CASE_FIXTURE(RequireTracerFixture, "trace_transitive_local")
 {
     AstStatBlock* block = parse(R"(
-        local m = workspace.Foo.Bar.Baz
-        local n = m.Quux
+        const m = workspace.Foo.Bar.Baz
+        const n = m.Quux
         require(n)
     )");
 
@@ -112,7 +112,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "trace_transitive_local")
 TEST_CASE_FIXTURE(RequireTracerFixture, "trace_function_arguments")
 {
     AstStatBlock* block = parse(R"(
-        local M = require(workspace.Game.Thing)
+        const M = require(workspace.Game.Thing)
     )");
     REQUIRE_EQ(1, block->body.size);
 
@@ -134,7 +134,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "trace_function_arguments")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_typeof")
 {
     AstStatBlock* block = parse(R"(
-        local R: typeof(require(workspace.CoolThing).UsefulObject)
+        const R: typeof(require(workspace.CoolThing).UsefulObject) = nil
     )");
     REQUIRE_EQ(1, block->body.size);
 
@@ -172,7 +172,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_typeof_in_return_type")
 
     RequireTraceResult result = traceRequires(&fileResolver, block, "ModuleName", {});
 
-    AstStatFunction* func = block->body.data[0]->as<AstStatFunction>();
+    AstStatLocalFunction* func = block->body.data[0]->as<AstStatLocalFunction>();
     REQUIRE(func != nullptr);
 
     AstTypePack* retAnnotation = func->func->returnAnnotation;
@@ -198,7 +198,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_typeof_in_return_type")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_string_indexexpr")
 {
     AstStatBlock* block = parse(R"(
-        local R = game["Test"]
+        const R = game["Test"]
         require(R)
     )");
     REQUIRE_EQ(2, block->body.size);
@@ -214,7 +214,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_string_indexexpr")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_group")
 {
     AstStatBlock* block = parse(R"(
-        local R = (((game).Test))
+        const R = (((game).Test))
         require(R)
     )");
     REQUIRE_EQ(2, block->body.size);
@@ -230,7 +230,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_group")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation")
 {
     AstStatBlock* block = parse(R"(
-        local R = game.Test as (typeof(game.Redirect))
+        const R = game.Test as (typeof(game.Redirect))
         require(R)
     )");
     REQUIRE_EQ(2, block->body.size);
@@ -246,8 +246,8 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation_2")
 {
     AstStatBlock* block = parse(R"(
-        local R = game.Test as (typeof(game.Redirect))
-        local N = R.Nested
+        const R = game.Test as (typeof(game.Redirect))
+        const N = R.Nested
         require(N)
     )");
     REQUIRE_EQ(3, block->body.size);

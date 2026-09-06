@@ -1,26 +1,26 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
 	-- 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
-	local function add64(ah, al, bh, bl)
-		local lo = al + bl
-		local hi = ah + bh + lo // 0x100000000
+	function add64(ah, al, bh, bl)
+		lo = al + bl
+		hi = ah + bh + lo // 0x100000000
 		return bit32.bor(hi, 0), bit32.bor(lo, 0)
 	end
 
 	-- IV constants (hi, lo)
-	local IV1h, IV1l = 0x6a09e667, 0xf3bcc908
-	local IV2h, IV2l = 0xbb67ae85, 0x84caa73b
-	local IV3h, IV3l = 0x3c6ef372, 0xfe94f82b
-	local IV4h, IV4l = 0xa54ff53a, 0x5f1d36f1
-	local IV5h, IV5l = 0x510e527f, 0xade682d1
-	local IV6h, IV6l = 0x9b05688c, 0x2b3e6c1f
-	local IV7h, IV7l = 0x1f83d9ab, 0xfb41bd6b
-	local IV8h, IV8l = 0x5be0cd19, 0x137e2179
+	IV1h, IV1l = 0x6a09e667, 0xf3bcc908
+	IV2h, IV2l = 0xbb67ae85, 0x84caa73b
+	IV3h, IV3l = 0x3c6ef372, 0xfe94f82b
+	IV4h, IV4l = 0xa54ff53a, 0x5f1d36f1
+	IV5h, IV5l = 0x510e527f, 0xade682d1
+	IV6h, IV6l = 0x9b05688c, 0x2b3e6c1f
+	IV7h, IV7l = 0x1f83d9ab, 0xfb41bd6b
+	IV8h, IV8l = 0x5be0cd19, 0x137e2179
 
-	local SIGMA =
+	SIGMA =
 	{
 		{  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16 },
 		{ 15, 11,  5,  9, 10, 16, 14,  7,  2, 13,  1,  3, 12,  8,  6,  4 },
@@ -36,22 +36,22 @@ function test()
 		{ 15, 11,  5,  9, 10, 16, 14,  7,  2, 13,  1,  3, 12,  8,  6,  4 },
 	}
 
-	local function compress(hh, hl, Mh, Ml, th, tl, isLast)
-		local V0h, V0l = hh[1], hl[1]
-		local V1h, V1l = hh[2], hl[2]
-		local V2h, V2l = hh[3], hl[3]
-		local V3h, V3l = hh[4], hl[4]
-		local V4h, V4l = hh[5], hl[5]
-		local V5h, V5l = hh[6], hl[6]
-		local V6h, V6l = hh[7], hl[7]
-		local V7h, V7l = hh[8], hl[8]
-		local V8h, V8l = IV1h, IV1l
-		local V9h, V9l = IV2h, IV2l
-		local V10h, V10l = IV3h, IV3l
-		local V11h, V11l = IV4h, IV4l
-		local V12h, V12l = bit32.bxor(IV5h, th), bit32.bxor(IV5l, tl)
-		local V13h, V13l = IV6h, IV6l
-		local V14h, V14l, V15h, V15l
+	function compress(hh, hl, Mh, Ml, th, tl, isLast)
+		V0h, V0l = hh[1], hl[1]
+		V1h, V1l = hh[2], hl[2]
+		V2h, V2l = hh[3], hl[3]
+		V3h, V3l = hh[4], hl[4]
+		V4h, V4l = hh[5], hl[5]
+		V5h, V5l = hh[6], hl[6]
+		V6h, V6l = hh[7], hl[7]
+		V7h, V7l = hh[8], hl[8]
+		V8h, V8l = IV1h, IV1l
+		V9h, V9l = IV2h, IV2l
+		V10h, V10l = IV3h, IV3l
+		V11h, V11l = IV4h, IV4l
+		V12h, V12l = bit32.bxor(IV5h, th), bit32.bxor(IV5l, tl)
+		V13h, V13l = IV6h, IV6l
+		V14h, V14l, V15h, V15l = nil, nil, nil, nil
 		if isLast then
 			V14h, V14l = bit32.bxor(IV7h, 0xffffffff), bit32.bxor(IV7l, 0xffffffff)
 		else
@@ -60,7 +60,7 @@ function test()
 		V15h, V15l = IV8h, IV8l
 
 		for r = 1, 12 do
-			local s = SIGMA[r]
+			s = SIGMA[r]
 
 			-- Rotation helpers inlined for the 4 specific amounts:
 			-- rrotate by 32 = swap hi/lo
@@ -72,7 +72,7 @@ function test()
 			V0h, V0l = add64(V0h, V0l, V4h, V4l); V0h, V0l = add64(V0h, V0l, Mh[s[1]], Ml[s[1]])
 			V12h, V12l = bit32.bxor(V12l, V0l), bit32.bxor(V12h, V0h) -- rrotate 32
 			V8h, V8l = add64(V8h, V8l, V12h, V12l)
-			local xh, xl = bit32.bxor(V4h, V8h), bit32.bxor(V4l, V8l); V4h = bit32.bor(bit32.rshift(xh, 24), bit32.lshift(xl, 8)); V4l = bit32.bor(bit32.rshift(xl, 24), bit32.lshift(xh, 8)) -- rrotate 24
+			xh, xl = bit32.bxor(V4h, V8h), bit32.bxor(V4l, V8l); V4h = bit32.bor(bit32.rshift(xh, 24), bit32.lshift(xl, 8)); V4l = bit32.bor(bit32.rshift(xl, 24), bit32.lshift(xh, 8)) -- rrotate 24
 			V0h, V0l = add64(V0h, V0l, V4h, V4l); V0h, V0l = add64(V0h, V0l, Mh[s[2]], Ml[s[2]])
 			xh, xl = bit32.bxor(V12h, V0h), bit32.bxor(V12l, V0l); V12h = bit32.bor(bit32.rshift(xh, 16), bit32.lshift(xl, 16)); V12l = bit32.bor(bit32.rshift(xl, 16), bit32.lshift(xh, 16)) -- rrotate 16
 			V8h, V8l = add64(V8h, V8l, V12h, V12l)
@@ -159,36 +159,36 @@ function test()
 		hh[8] = bit32.bxor(bit32.bxor(hh[8], V7h), V15h); hl[8] = bit32.bxor(bit32.bxor(hl[8], V7l), V15l)
 	end
 
-	local function blake2b(buf)
-		local len = buffer.len(buf)
+	function blake2b(buf)
+		len = buffer.len(buf)
 
 		-- h[1] = IV1 XOR 0x01010040 (digest=64, key=0, fanout=1, depth=1)
-		local hh = { IV1h, IV2h, IV3h, IV4h, IV5h, IV6h, IV7h, IV8h }
-		local hl = { bit32.bxor(IV1l, 0x01010040), IV2l, IV3l, IV4l, IV5l, IV6l, IV7l, IV8l }
+		hh = { IV1h, IV2h, IV3h, IV4h, IV5h, IV6h, IV7h, IV8h }
+		hl = { bit32.bxor(IV1l, 0x01010040), IV2l, IV3l, IV4l, IV5l, IV6l, IV7l, IV8l }
 
-		local Mh = table.create(16, 0)
-		local Ml = table.create(16, 0)
+		Mh = table.create(16, 0)
+		Ml = table.create(16, 0)
 
-		local fullBlocks = (len - 1) // 128
+		fullBlocks = (len - 1) // 128
 		for blockIdx = 0, fullBlocks - 1 do
-			local off = blockIdx * 128
+			off = blockIdx * 128
 			for j = 1, 16 do
-				local bo = off + (j - 1) * 8
+				bo = off + (j - 1) * 8
 				Mh[j] = buffer.readu32(buf, bo + 4)
 				Ml[j] = buffer.readu32(buf, bo)
 			end
-			local byteCount = (blockIdx + 1) * 128
+			byteCount = (blockIdx + 1) * 128
 			compress(hh, hl, Mh, Ml, 0, byteCount, false)
 		end
 
-		local lastBlockStart = fullBlocks * 128
-		local lastBlockLen = len - lastBlockStart
-		local lastBuf = buffer.create(128)
+		lastBlockStart = fullBlocks * 128
+		lastBlockLen = len - lastBlockStart
+		lastBuf = buffer.create(128)
 		if lastBlockLen > 0 then
 			buffer.copy(lastBuf, 0, buf, lastBlockStart, lastBlockLen)
 		end
 		for j = 1, 16 do
-			local bo = (j - 1) * 8
+			bo = (j - 1) * 8
 			Mh[j] = buffer.readu32(lastBuf, bo + 4)
 			Ml[j] = buffer.readu32(lastBuf, bo)
 		end
@@ -202,16 +202,16 @@ function test()
 			bit32.byteswap(hl[7]), bit32.byteswap(hh[7]), bit32.byteswap(hl[8]), bit32.byteswap(hh[8]))
 	end
 
-	local input = buffer.fromstring(string.rep(".", 1e3))
+	input = buffer.fromstring(string.rep(".", 1e3))
 
-	local ts0 = os.clock()
+	ts0 = os.clock()
 
 	for i = 1, 100 do
-		local res = blake2b(input)
+		res = blake2b(input)
 		assert(res == "b9ac083b18cd6518abaed42698bbb673e9786c877a6ee89efa1c3a6508a54a20ef76f53cbcc19a18a670ea3ac668836300337c51abafca35efaac59f4396c833")
 	end
 
-	local ts1 = os.clock()
+	ts1 = os.clock()
 
 	return ts1 - ts0
 end

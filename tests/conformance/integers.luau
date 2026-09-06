@@ -1,7 +1,7 @@
 -- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing integers")
 
-local function noinline(x: integer): integer local s, r = pcall(function(y) return y end, x) return r end
+function noinline(x: integer): integer s, r = pcall(function(y) return y end, x) return r end
 
 -- Integers have the 'integer' type
 assert(type(123i)=="integer")
@@ -87,7 +87,7 @@ assert(integer.fromstring("7FFFFFFFFFFFFFFF", 16) == 0x7FFFFFFFFFFFFFFFi)
 assert(integer.fromstring("FFFFFFFFFFFFFFFF", 16) == 0xFFFFFFFFFFFFFFFFi)
 
 -- integer.neg
-local x = integer.create(3411)
+x = integer.create(3411)
 assert(integer.neg(x) == -3411i)
 assert(integer.neg(integer.minsigned) == integer.minsigned)
 assert(integer.neg(integer.maxsigned) == integer.add(integer.minsigned, 1i))
@@ -96,8 +96,8 @@ assert(integer.neg(noinline(3411i)) == -3411i)
 assert(integer.neg(noinline(integer.minsigned)) == integer.minsigned)
 
 -- integer.add
-local x = integer.create(456)
-local y = integer.create(123)
+x = integer.create(456)
+y = integer.create(123)
 assert(integer.add(x, y) == 579i)
 assert(integer.add(integer.maxsigned, 1i) == integer.minsigned)
 assert(integer.add(integer.maxsigned, integer.maxsigned) == -2i)
@@ -106,8 +106,8 @@ assert(integer.add(noinline(456i), 123i) == 579i)
 assert(integer.add(noinline(integer.maxsigned), 1i) == integer.minsigned)
 
 -- integer.sub
-local x = integer.create(999)
-local y = integer.create(777)
+x = integer.create(999)
+y = integer.create(777)
 assert(integer.sub(x, y) == 222i)
 assert(integer.sub(integer.minsigned, 1i) == integer.maxsigned)
 assert(integer.sub(integer.minsigned, integer.maxsigned) == 1i)
@@ -116,8 +116,8 @@ assert(integer.sub(noinline(999i), 777i) == 222i)
 assert(integer.sub(noinline(integer.minsigned), 1i) == integer.maxsigned)
 
 -- integer.mul
-local x = integer.create(7)
-local y = integer.create(9)
+x = integer.create(7)
+y = integer.create(9)
 assert(integer.mul(x, y) == 63i)
 assert(integer.mul(integer.maxsigned, 2i) == -2i)
 assert(integer.mul(integer.minsigned, -1i) == integer.minsigned)
@@ -132,10 +132,10 @@ assert(integer.div(-7i, 3i) == -2i)
 assert(integer.div(noinline(32i), 8i) == 4i)
 assert(integer.div(noinline(-7i), 3i) == -2i)
 
-local success,errmsg = pcall(function() integer.div(5i,0i) end)
+success,errmsg = pcall(function() integer.div(5i,0i) end)
 assert(not success)
 assert(string.find(errmsg,"division by zero"))
-local success,errmsg = pcall(function() integer.div(integer.minsigned,-1i) end)
+success,errmsg = pcall(function() integer.div(integer.minsigned,-1i) end)
 assert(not success)
 assert(string.find(errmsg,"integer overflow"))
 
@@ -146,10 +146,10 @@ assert(integer.idiv(-7i, 3i) == -3i)
 assert(integer.idiv(noinline(32i), 7i) == 4i)
 assert(integer.idiv(noinline(-7i), 3i) == -3i)
 
-local success,errmsg = pcall(function() integer.idiv(5i,0i) end)
+success,errmsg = pcall(function() integer.idiv(5i,0i) end)
 assert(not success)
 assert(string.find(errmsg,"division by zero"))
-local success,errmsg = pcall(function() integer.idiv(integer.minsigned,-1i) end)
+success,errmsg = pcall(function() integer.idiv(integer.minsigned,-1i) end)
 assert(not success)
 assert(string.find(errmsg,"integer overflow"))
 
@@ -158,7 +158,7 @@ assert(integer.udiv(32i, 7i) == 4i)
 
 assert(integer.udiv(noinline(32i), 7i) == 4i)
 
-local success,errmsg = pcall(function() integer.udiv(5i,0i) end)
+success,errmsg = pcall(function() integer.udiv(5i,0i) end)
 assert(not success)
 assert(string.find(errmsg,"division by zero"))
 
@@ -167,7 +167,7 @@ assert(integer.urem(34i, 7i) == 6i)
 
 assert(integer.urem(noinline(34i), 7i) == 6i)
 
-local success,errmsg = pcall(function() integer.urem(5i,0i) end)
+success,errmsg = pcall(function() integer.urem(5i,0i) end)
 assert(not success)
 assert(string.find(errmsg,"division by zero"))
 
@@ -182,7 +182,7 @@ assert(integer.mod(noinline(-7i), 3i) == 2i)
 assert(integer.mod(noinline(7i), -3i) == -2i)
 assert(integer.mod(noinline(-7i), -3i) == -1i)
 
-local success,errmsg = pcall(function() integer.mod(5i,0i) end)
+success,errmsg = pcall(function() integer.mod(5i,0i) end)
 assert(not success)
 assert(string.find(errmsg,"division by zero"))
 assert(integer.mod(integer.minsigned,-1i) == 0i)
@@ -194,14 +194,14 @@ assert(integer.rem(-7i, 3i) == -1i)
 assert(integer.rem(noinline(35i), 8i) == 3i)
 assert(integer.rem(noinline(-7i), 3i) == -1i)
 
-local success,errmsg = pcall(function() integer.rem(5i,0i) end)
+success,errmsg = pcall(function() integer.rem(5i,0i) end)
 assert(not success)
 assert(string.find(errmsg,"division by zero"))
 assert(integer.rem(integer.minsigned,-1i) == 0i)
 
 -- integer.min and integer.max
-local x = integer.create(99)
-local y = integer.create(5)
+x = integer.create(99)
+y = integer.create(5)
 assert(integer.min(x, y) == 5i)
 assert(integer.min(y, x) == 5i)
 assert(integer.max(x, y) == 99i)
@@ -215,11 +215,11 @@ assert(integer.min(noinline(17i), 12i, 48i, 13i, -2i) == -2i)
 assert(integer.max(noinline(17i), 12i, 48i, 13i, 94i) == 94i)
 
 -- integer.clamp
-local mi = integer.create(6)
-local mx = integer.create(18)
-local a1 = integer.create(3)
-local a2 = integer.create(11)
-local a3 = integer.create(47)
+mi = integer.create(6)
+mx = integer.create(18)
+a1 = integer.create(3)
+a2 = integer.create(11)
+a3 = integer.create(47)
 assert(integer.clamp(a1, mi, mx) == 6i)
 assert(integer.clamp(a2, mi, mx) == 11i)
 assert(integer.clamp(a3, mi, mx) == 18i)
@@ -228,7 +228,7 @@ assert(integer.clamp(noinline(3i), 6i, 18i) == 6i)
 assert(integer.clamp(noinline(11i), 6i, 18i) == 11i)
 assert(integer.clamp(noinline(47i), 6i, 18i) == 18i)
 
-local success,errmsg = pcall(function() integer.clamp(10i, 20i, 5i) end)
+success,errmsg = pcall(function() integer.clamp(10i, 20i, 5i) end)
 assert(not success)
 assert(string.find(errmsg, "max must be greater than or equal to min"))
 
@@ -375,18 +375,18 @@ assert(integer.extract(noinline(0xBADBEEFi), 3i) == 1i)
 assert(integer.extract(noinline(0xBADBEEFi), 4i) == 0i)
 assert(integer.extract(noinline(0xFFFFFFFFFFFFFFFFi), 0i, 64i) == 0xFFFFFFFFFFFFFFFFi)
 
-local success,errmsg = pcall(function() integer.extract(0xBADBEEFi, -1i) end)
+success,errmsg = pcall(function() integer.extract(0xBADBEEFi, -1i) end)
 assert(not success)
 assert(string.find(errmsg, "field cannot be negative"))
-local success,errmsg = pcall(function() integer.extract(0xBADBEEFi, 4i, -2i) end)
+success,errmsg = pcall(function() integer.extract(0xBADBEEFi, 4i, -2i) end)
 assert(not success)
 assert(string.find(errmsg, "width must be positive"))
-local success,errmsg = pcall(function() integer.extract(0xBADBEEFi, 33i, 33i) end)
+success,errmsg = pcall(function() integer.extract(0xBADBEEFi, 33i, 33i) end)
 assert(not success)
 assert(string.find(errmsg, "trying to access non%-existent bits"))
-local success,errmsg = pcall(function() integer.extract(1i, 64i, 1i) end)
+success,errmsg = pcall(function() integer.extract(1i, 64i, 1i) end)
 assert(not success)
-local success,errmsg = pcall(function() integer.extract(1i, integer.maxsigned, 1i) end)
+success,errmsg = pcall(function() integer.extract(1i, integer.maxsigned, 1i) end)
 assert(not success)
 
 -- replace
@@ -400,18 +400,18 @@ assert(integer.replace(noinline(0xFFFFFFFFFFFFi), 0xEEEi, 28i, 12i) == 0xFFEEEFF
 assert(integer.replace(noinline(0xFFFFFFFFFFFFi), 0i, 6i) == 0xFFFFFFFFFFBFi)
 assert(integer.replace(noinline(0xBADBEEFi), 0x123i, 0i, 64i) == 0x123i)
 
-local success,errmsg = pcall(function() integer.replace(1i, 2i, -3i) end)
+success,errmsg = pcall(function() integer.replace(1i, 2i, -3i) end)
 assert(not success)
 assert(string.find(errmsg, "field cannot be negative"))
-local success,errmsg = pcall(function() integer.replace(1i, 2i, 3i, -4i) end)
+success,errmsg = pcall(function() integer.replace(1i, 2i, 3i, -4i) end)
 assert(not success)
 assert(string.find(errmsg, "width must be positive"))
-local success,errmsg = pcall(function() integer.replace(1i, 2i, 40i, 50i) end)
+success,errmsg = pcall(function() integer.replace(1i, 2i, 40i, 50i) end)
 assert(not success)
 assert(string.find(errmsg, "trying to access non%-existent bits"))
-local success,errmsg = pcall(function() integer.replace(1i, 2i, 64i, 1i) end)
+success,errmsg = pcall(function() integer.replace(1i, 2i, 64i, 1i) end)
 assert(not success)
-local success,errmsg = pcall(function() integer.replace(1i, 2i, integer.maxsigned, 1i) end)
+success,errmsg = pcall(function() integer.replace(1i, 2i, integer.maxsigned, 1i) end)
 assert(not success)
 
 -- btest 
@@ -452,14 +452,14 @@ assert(integer.bswap(noinline(0x1122334455667748i)) == 0x4877665544332211i)
 assert(integer.bswap(noinline(0x0BADBEEFC001D00Di)) == 0x0DD001C0EFBEAD0Bi)
 
 -- table indexing and hashes
-local x = {}
+x = {}
 x[3i] = 5
 assert(x[3i] == 5)
 
 -- buffers (should eventually move to buffers.luau)
 
-local function simple_integer_ops()
-  local b = buffer.create(16)
+function simple_integer_ops()
+  b = buffer.create(16)
 
   buffer.writeinteger(b, 0, 0x123456789ABCDEF0i)
   buffer.writeinteger(b, 8, 0x1233211233211233i)
@@ -489,8 +489,8 @@ end
 
 simple_integer_ops()
 
-local function buffer_integer_boundary_values()
-  local b = buffer.create(64)
+function buffer_integer_boundary_values()
+  b = buffer.create(64)
 
   -- zero
   buffer.writeinteger(b, 0, 0i)
@@ -532,14 +532,14 @@ buffer_integer_boundary_values()
 -- stress tests for CHECK_BUFFER_LEN with constant offsets at exact boundaries
 -- these exercise the native codegen constant-offset lowering path and range merging
 
-local function buffer_integer_exact_boundary()
+function buffer_integer_exact_boundary()
   -- exact-fit single access: offset + 8 == buffer.len
-  local b8 = buffer.create(8)
+  b8 = buffer.create(8)
   buffer.writeinteger(b8, 0, 0xAABBCCDDEEFF0011i)
   assert(buffer.readinteger(b8, 0) == 0xAABBCCDDEEFF0011i)
 
   -- exact-fit at end of buffer: 8 + 8 == 16
-  local b16 = buffer.create(16)
+  b16 = buffer.create(16)
   buffer.writeinteger(b16, 0, 0x1111111111111111i)
   buffer.writeinteger(b16, 8, 0x2222222222222222i)
   assert(buffer.readinteger(b16, 0) == 0x1111111111111111i)
@@ -547,7 +547,7 @@ local function buffer_integer_exact_boundary()
 
   -- three adjacent writes filling buffer exactly: 0, 8, 16 in 24-byte buffer
   -- triggers range merging across all three constant offsets
-  local b24 = buffer.create(24)
+  b24 = buffer.create(24)
   buffer.writeinteger(b24, 0, 0xAAAAAAAAAAAAAAAAi)
   buffer.writeinteger(b24, 8, 0xBBBBBBBBBBBBBBBBi)
   buffer.writeinteger(b24, 16, 0xCCCCCCCCCCCCCCCCi)
@@ -557,7 +557,7 @@ local function buffer_integer_exact_boundary()
 
   -- interleaved offsets to provoke negative minOffset in range merging
   -- write at 16 first, then read at 0, then write at 24
-  local b32 = buffer.create(32)
+  b32 = buffer.create(32)
   buffer.writeinteger(b32, 16, 0x3333333333333333i)
   buffer.writeinteger(b32, 0, 0x4444444444444444i)
   buffer.writeinteger(b32, 24, 0x5555555555555555i)
@@ -568,7 +568,7 @@ local function buffer_integer_exact_boundary()
   assert(buffer.readinteger(b32, 24) == 0x5555555555555555i)
 
   -- five adjacent writes filling 40-byte buffer exactly
-  local b40 = buffer.create(40)
+  b40 = buffer.create(40)
   buffer.writeinteger(b40, 0, 1i)
   buffer.writeinteger(b40, 8, 2i)
   buffer.writeinteger(b40, 16, 3i)
@@ -585,8 +585,8 @@ end
 
 buffer_integer_exact_boundary()
 
-local function buffer_integer_variable_offset(start: number)
-  local b = buffer.create(64)
+function buffer_integer_variable_offset(start: number)
+  b = buffer.create(64)
 
   buffer.writeinteger(b, start, 0x0123456789ABCDEFi)
   buffer.writeinteger(b, start + 8, 0xFEDCBA9876543210i)
@@ -597,8 +597,8 @@ local function buffer_integer_variable_offset(start: number)
   assert(buffer.readinteger(b, start + 16) == -1i)
 
   -- buffer load-store propagation
-  local a = buffer.readinteger(b, start)
-  local c = buffer.readinteger(b, start)
+  a = buffer.readinteger(b, start)
+  c = buffer.readinteger(b, start)
   assert(a == c)
 
   assert(buffer.readu8(b, start) == 0xEF)
@@ -644,10 +644,10 @@ assert(tostring(0x8000000000000000i) == "-9223372036854775808")
 assert(tostring(0xFFFFFFFFFFFFFFFFi) == "-1")
 
 -- Unary minus can only be used on a literal directly
-local intval = 123i
-local ok, err = pcall(function() return -intval end)
+intval = 123i
+ok, err = pcall(function() return -intval end)
 assert(not ok)
-local ok2, err2 = pcall(function() return -(123i) end)
+ok2, err2 = pcall(function() return -(123i) end)
 assert(not ok2)
 
 assert(is_native_if_supported())

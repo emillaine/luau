@@ -33,8 +33,8 @@ LUAU_FASTFLAGVARIABLE(LuauCheckTypeForDeprecated)
 LUAU_FLAGVERSION(LuauCheckTypeForDeprecated, 2)
 LUAU_FASTFLAGVARIABLE(LuauUseExplicitTypeArgsInGenerics)
 
-static constexpr std::array<std::string_view, 13> kStatementStartingKeywords =
-    {"while", "if", "local", "repeat", "function", "do", "for", "return", "break", "continue", "type", "export", "const"};
+static constexpr std::array<std::string_view, 12> kStatementStartingKeywords =
+    {"while", "if", "repeat", "function", "do", "for", "return", "break", "continue", "type", "export", "const"};
 
 static constexpr std::array<std::string_view, 6> kHotComments = {"nolint", "nocheck", "nonstrict", "strict", "optimize", "native"};
 
@@ -1404,6 +1404,23 @@ static bool isBeingDefined(const std::vector<AstNode*>& ancestry, const Symbol& 
             {
                 if (symbol.local == var)
                     return true;
+            }
+        }
+        else if (auto statAssign = (*iter)->as<AstStatAssign>())
+        {
+            // Implicit locals (`a = ...` with no in-scope binding) are declared
+            // by the assignment itself. Unlike AstStatLocal (which always
+            // declares), an assignment may also reuse an existing local, so
+            // only treat the symbol as being defined when its declaration site
+            // lies within this statement (i.e. it was declared here rather
+            // than merely assigned).
+            for (auto var : statAssign->vars)
+            {
+                if (auto varLocal = var->as<AstExprLocal>())
+                {
+                    if (symbol.local == varLocal->local && statAssign->location.encloses(varLocal->local->location))
+                        return true;
+                }
             }
         }
     }

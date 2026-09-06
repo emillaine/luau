@@ -1,5 +1,5 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -7,13 +7,13 @@ function test()
     -- https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
     --contributed by Mike Pall
 
-    local PI = 3.141592653589793
-    local SOLAR_MASS = 4 * PI * PI
-    local DAYS_PER_YEAR = 365.24
+    PI = 3.141592653589793
+    SOLAR_MASS = 4 * PI * PI
+    DAYS_PER_YEAR = 365.24
 
     type Body = { pos: vector, vel: vector, mass: number }
     
-    local bodies: {Body} = {
+    bodies = {
         { --Sun
             pos = vector.create(0, 0, 0),
             vel = vector.create(0, 0, 0),
@@ -41,20 +41,20 @@ function test()
         }
     }
 
-    local function advance(bodies: {Body}, nbody: number, dt: number)
+    function advance(bodies: {Body}, nbody: number, dt: number)
         for i = 1, nbody do
-            local bi = bodies[i]
-            local bipos, bimass = bi.pos, bi.mass
-            local bivel = bi.vel
+            bi = bodies[i]
+            bipos, bimass = bi.pos, bi.mass
+            bivel = bi.vel
 
             for j = i + 1, nbody do
-                local bj = bodies[j]
+                bj = bodies[j]
 
-                local dpos = bipos - bj.pos
-                local distance = vector.magnitude(dpos)
+                dpos = bipos - bj.pos
+                distance = vector.magnitude(dpos)
 
-                local mag = dt / (distance * distance * distance)
-                local bim, bjm = bimass * mag, bj.mass * mag
+                mag = dt / (distance * distance * distance)
+                bim, bjm = bimass * mag, bj.mass * mag
 
                 bivel -= dpos * bjm
                 bj.vel += dpos * bim
@@ -64,33 +64,33 @@ function test()
         end
 
         for i = 1, nbody do
-            local bi = bodies[i]
+            bi = bodies[i]
             bi.pos += dt * bi.vel
         end
     end
 
-    local function offsetMomentum(bodies: {Body}, nbody: number)
-        local p = vector.create(0, 0, 0)
+    function offsetMomentum(bodies: {Body}, nbody: number)
+        p = vector.create(0, 0, 0)
 
         for i = 1, nbody do
-            local bi = bodies[i]
+            bi = bodies[i]
             p += bi.vel * bi.mass
         end
 
         bodies[1].vel = -p / SOLAR_MASS
     end
 
-    local function energy(bodies: {Body}, nbody: number)
-        local e = 0
+    function energy(bodies: {Body}, nbody: number)
+        e = 0
 
         for i = 1, nbody do
-            local bi = bodies[i]
-            local vel = bi.vel
+            bi = bodies[i]
+            vel = bi.vel
             e += 0.5 * bi.mass * vector.dot(vel, vel)
 
             for j = i + 1, nbody do
-                local bj = bodies[j]
-                local distance = vector.magnitude(bi.pos - bj.pos)
+                bj = bodies[j]
+                distance = vector.magnitude(bi.pos - bj.pos)
                 e -= (bi.mass * bj.mass) / distance
             end
         end
@@ -98,13 +98,13 @@ function test()
         return e
     end
 
-    local N = 20000
-    local nbody = #bodies
+    N = 20000
+    nbody = #bodies
 
-    local ts0 = os.clock()
+    ts0 = os.clock()
     offsetMomentum(bodies, nbody)
     for i = 1, N do advance(bodies, nbody, 0.01) end
-    local ts1 = os.clock()
+    ts1 = os.clock()
 
     assert(math.abs(energy(bodies, nbody) + 0.169085) < 1e-4)
 

@@ -16,9 +16,9 @@
 --                    shift = <shift?>, text = <original> }
 -- A shift is { op = "lsl"|"lsr"|"asr"|"ror"|"uxtb"|... , amount = <number?>, amountText = <string?> }
 
-local parse = {}
+parse = {}
 
-local SHIFT_OPS = {
+SHIFT_OPS = {
 	lsl = true, lsr = true, asr = true, ror = true, msl = true,
 	uxtb = true, uxth = true, uxtw = true, uxtx = true,
 	sxtb = true, sxth = true, sxtw = true, sxtx = true,
@@ -27,8 +27,8 @@ local SHIFT_OPS = {
 -- Registers ---------------------------------------------------------------
 
 -- Classify a bare register token. Returns a reg operand table, or nil.
-local function classifyReg(tok: string)
-	local low = string.lower(tok)
+function classifyReg(tok: string)
+	low = string.lower(tok)
 	if low == "sp" then
 		return { kind = "reg", name = "sp", rc = "sp", width = 64 }
 	end
@@ -41,9 +41,9 @@ local function classifyReg(tok: string)
 	if low == "wzr" then
 		return { kind = "reg", name = "wzr", rc = "zr", width = 32 }
 	end
-	local prefix, num = string.match(low, "^([a-z]+)(%d+)$")
+	prefix, num = string.match(low, "^([a-z]+)(%d+)$")
 	if prefix and num then
-		local n = tonumber(num)
+		n = tonumber(num)
 		if prefix == "x" and n <= 30 then
 			return { kind = "reg", name = low, rc = "gpr", width = 64, num = n }
 		else if prefix == "w" and n <= 30 then
@@ -68,14 +68,14 @@ end
 
 -- Split an operand string into top-level comma-separated fields, respecting
 -- [] and () nesting.
-local function splitTopLevel(s: string): { string }
-	local out = {}
-	local depth = 0
-	local cur = {}
-	local i = 1
-	local n = #s
+function splitTopLevel(s: string): { string }
+	out = {}
+	depth = 0
+	cur = {}
+	i = 1
+	n = #s
 	while i <= n do
-		local c = string.sub(s, i, i)
+		c = string.sub(s, i, i)
 		if c == "[" or c == "(" then
 			depth += 1
 			table.insert(cur, c)
@@ -100,31 +100,31 @@ end
 parse.splitTopLevel = splitTopLevel
 
 -- Parse a shift/extend field like "lsl 5", "lsl #5", "uxtb", "sxtw".
-local function parseShift(field: string)
-	local op, rest = string.match(field, "^(%a+)%s*(.*)$")
+function parseShift(field: string)
+	op, rest = string.match(field, "^(%a+)%s*(.*)$")
 	if not op or not SHIFT_OPS[string.lower(op)] then
 		return nil
 	end
 	op = string.lower(op)
 	rest = (string.gsub(rest, "^%s*(.-)%s*$", "%1"))
-	local amount, amountText
-	if rest ~= "" then
+	amount, amountText = nil, nil
+	if rest != "" then
 		amountText = rest
-		local numtxt = (string.gsub(rest, "^#", ""))
+		numtxt = (string.gsub(rest, "^#", ""))
 		amount = tonumber(numtxt)
 	end
 	return { op = op, amount = amount, amountText = amountText }
 end
 
 -- Parse a single (non-memory, non-shift) operand field.
-local function parseSimple(field: string)
+function parseSimple(field: string)
 	-- register?
-	local reg = classifyReg(field)
+	reg = classifyReg(field)
 	if reg then
 		return reg
 	end
 	-- immediate: #num, num, 0x..., -num
-	local imm = string.match(field, "^#(.+)$")
+	imm = string.match(field, "^#(.+)$")
 	if imm then
 		return { kind = "imm", text = imm, value = tonumber(imm) }
 	end
@@ -132,7 +132,7 @@ local function parseSimple(field: string)
 		return { kind = "imm", text = field, value = tonumber(field) }
 	end
 	-- reloc-decorated symbol: :lo12:sym, :got:sym, etc.
-	local reloc, sym = string.match(field, "^:(%w+):(.+)$")
+	reloc, sym = string.match(field, "^:(%w+):(.+)$")
 	if reloc then
 		return { kind = "sym", text = sym, reloc = reloc }
 	end
@@ -141,9 +141,9 @@ local function parseSimple(field: string)
 end
 
 -- Parse a memory operand starting with '['.
-local function parseMem(field: string, postIndex: string?)
-	local writeback = nil
-	local inner = field
+function parseMem(field: string, postIndex: string?)
+	writeback = nil
+	inner = field
 	if string.sub(inner, -1) == "!" then
 		writeback = "pre"
 		inner = string.sub(inner, 1, -2)
@@ -151,13 +151,13 @@ local function parseMem(field: string, postIndex: string?)
 	-- strip [ ]
 	inner = string.match(inner, "^%[(.*)%]$") or inner
 	inner = (string.gsub(inner, "^%s*(.-)%s*$", "%1"))
-	local parts = splitTopLevel(inner)
-	local base = parseSimple(parts[1])
-	local mem = { kind = "mem", base = base, text = field, writeback = writeback }
+	parts = splitTopLevel(inner)
+	base = parseSimple(parts[1])
+	mem = { kind = "mem", base = base, text = field, writeback = writeback }
 	if #parts >= 2 then
 		-- second part is index/offset; third (if any) is a shift/extend on the index
-		local idx = parts[2]
-		local sh = parseShift(idx)
+		idx = parts[2]
+		sh = parseShift(idx)
 		if sh then
 			mem.shift = sh
 		else
@@ -169,7 +169,7 @@ local function parseMem(field: string, postIndex: string?)
 	end
 	if postIndex then
 		mem.writeback = "post"
-		local sh = parseShift(postIndex)
+		sh = parseShift(postIndex)
 		if sh then
 			mem.postShift = sh
 		else
@@ -180,22 +180,22 @@ local function parseMem(field: string, postIndex: string?)
 end
 
 -- Parse the full operand list of an instruction.
-local function parseOperands(s: string)
+function parseOperands(s: string)
 	s = (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 	if s == "" then
 		return {}
 	end
-	local fields = splitTopLevel(s)
-	local operands = {}
-	local i = 1
+	fields = splitTopLevel(s)
+	operands = {}
+	i = 1
 	while i <= #fields do
-		local field = fields[i]
+		field = fields[i]
 		if field == "" then
 			i += 1
 		else if string.sub(field, 1, 1) == "[" then
 			-- memory operand; check for post-index (a following field that is
 			-- not a shift and this bracket has no '!').
-			if string.sub(field, -1) ~= "!" and i + 1 <= #fields and not parseShift(fields[i + 1]) then
+			if string.sub(field, -1) != "!" and i + 1 <= #fields and not parseShift(fields[i + 1]) then
 				table.insert(operands, parseMem(field, fields[i + 1]))
 				i += 2
 			else
@@ -203,7 +203,7 @@ local function parseOperands(s: string)
 				i += 1
 			end
 		else
-			local sh = parseShift(field)
+			sh = parseShift(field)
 			if sh and #operands > 0 then
 				-- attach to previous operand
 				operands[#operands].shift = sh
@@ -220,12 +220,12 @@ parse.parseOperands = parseOperands
 -- Line splitting ----------------------------------------------------------
 
 -- Remove a trailing // comment that is not inside a string literal.
-local function stripLineComment(s: string): string
-	local inStr = false
-	local i = 1
-	local n = #s
+function stripLineComment(s: string): string
+	inStr = false
+	i = 1
+	n = #s
 	while i <= n do
-		local c = string.sub(s, i, i)
+		c = string.sub(s, i, i)
 		if c == '"' then
 			inStr = not inStr
 		else if not inStr and c == "/" and string.sub(s, i + 1, i + 1) == "/" then
@@ -237,26 +237,26 @@ local function stripLineComment(s: string): string
 end
 
 -- Split off a ;! annotation (returns code, annotation-or-nil).
-local function splitAnnotation(s: string): (string, string?)
-	local idx = string.find(s, ";!", 1, true)
+function splitAnnotation(s: string): (string, string?)
+	idx = string.find(s, ";!", 1, true)
 	if idx then
-		local code = string.sub(s, 1, idx - 1)
-		local ann = string.sub(s, idx + 2)
+		code = string.sub(s, 1, idx - 1)
+		ann = string.sub(s, idx + 2)
 		ann = (string.gsub(ann, "^%s*(.-)%s*$", "%1"))
 		return code, ann
 	end
 	return s, nil
 end
 
-local function trim(s: string): string
+function trim(s: string): string
 	return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
 
 -- Parse one source line into zero or more statements, appending to `out`.
-local function parseLine(rawLine: string, out)
-	local code, annotation = splitAnnotation(rawLine)
+function parseLine(rawLine: string, out)
+	code, annotation = splitAnnotation(rawLine)
 	code = stripLineComment(code)
-	local trimmed = trim(code)
+	trimmed = trim(code)
 
 	if trimmed == "" then
 		if annotation then
@@ -270,7 +270,7 @@ local function parseLine(rawLine: string, out)
 
 	-- Peel labels off the front: NAME:
 	while true do
-		local name, rest = string.match(trimmed, "^([%w_.$][%w_.$@]*):%s*(.*)$")
+		name, rest = string.match(trimmed, "^([%w_.$][%w_.$@]*):%s*(.*)$")
 		if not name then
 			break
 		end
@@ -291,7 +291,7 @@ local function parseLine(rawLine: string, out)
 	end
 
 	-- Directive or instruction.
-	local mnemonic, rest = string.match(trimmed, "^([%.%w_][%w_.]*)%s*(.*)$")
+	mnemonic, rest = string.match(trimmed, "^([%.%w_][%w_.]*)%s*(.*)$")
 	if not mnemonic then
 		table.insert(out, { kind = "directive", name = trimmed, args = "", raw = trimmed, annotation = annotation })
 		return
@@ -310,7 +310,7 @@ local function parseLine(rawLine: string, out)
 	end
 
 	-- Instruction. Split optional condition suffix off branch mnemonics like b.hs.
-	local operands = parseOperands(rest)
+	operands = parseOperands(rest)
 	table.insert(out, {
 		kind = "insn",
 		mnemonic = mnemonic,
@@ -321,13 +321,13 @@ local function parseLine(rawLine: string, out)
 end
 
 function parse.parseString(text: string)
-	local out = {}
+	out = {}
 	-- normalize CRLF
 	text = (string.gsub(text, "\r\n", "\n"))
-	local lineNo = 0
+	lineNo = 0
 	for line in (text .. "\n"):gmatch("(.-)\n") do
 		lineNo += 1
-		local before = #out
+		before = #out
 		parseLine(line, out)
 		-- stamp every statement produced from this source line with its line number
 		for k = before + 1, #out do out[k].line = lineNo end

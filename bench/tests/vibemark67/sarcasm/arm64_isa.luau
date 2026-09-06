@@ -3,11 +3,11 @@
 -- defs/uses and control-flow behavior. Register operands are reported as the
 -- reg operand tables produced by parse.luau (with .num/.width/.name).
 
-local arm64 = {}
+arm64 = {}
 
 -- Data-processing mnemonics whose first operand is the destination (def) and the
 -- rest are sources (uses).
-local DST_FIRST = {}
+DST_FIRST = {}
 for _, m in {
 	"mov","movz","mvn","neg","negs","add","adds","sub","subs","adc","adcs","sbc","sbcs",
 	"and","ands","orr","orn","eor","eon","bic","bics",
@@ -19,36 +19,36 @@ for _, m in {
 } do DST_FIRST[m] = true end
 
 -- movk / bfi / bfxil read-modify-write the destination.
-local DST_RMW = { movk=true, bfi=true, bfxil=true, ins=true }
+DST_RMW = { movk=true, bfi=true, bfxil=true, ins=true }
 
 -- Flags-only (no GPR destination); all reg operands are uses.
-local FLAGS_ONLY = { cmp=true, cmn=true, tst=true, ccmp=true, ccmn=true }
+FLAGS_ONLY = { cmp=true, cmn=true, tst=true, ccmp=true, ccmn=true }
 
 -- Loads: first operand is a destination.
-local LOADS = {
+LOADS = {
 	ldr=true, ldrb=true, ldrh=true, ldrsb=true, ldrsh=true, ldrsw=true,
 	ldur=true, ldurb=true, ldurh=true, ldursb=true, ldursh=true, ldursw=true,
 	ldar=true, ldarb=true, ldarh=true, ldapr=true, ldxr=true, ldaxr=true,
 }
-local LOAD_PAIR = { ldp=true, ldpsw=true, ldnp=true, ldaxp=true, ldxp=true }
+LOAD_PAIR = { ldp=true, ldpsw=true, ldnp=true, ldaxp=true, ldxp=true }
 
 -- Stores: first operand is a source.
-local STORES = {
+STORES = {
 	str=true, strb=true, strh=true, stur=true, sturb=true, sturh=true,
 	stlr=true, stlrb=true, stlrh=true,
 }
-local STORE_PAIR = { stp=true, stnp=true }
+STORE_PAIR = { stp=true, stnp=true }
 
-local COND_BRANCH_ALIASES = {
+COND_BRANCH_ALIASES = {
 	beq=true,bne=true,bcs=true,bhs=true,bcc=true,blo=true,bmi=true,bpl=true,
 	bvs=true,bvc=true,bhi=true,bls=true,bge=true,blt=true,bgt=true,ble=true,bal=true,
 }
 
-local function isGpr(op) return op and op.kind == "reg" and op.rc == "gpr" end
+function isGpr(op) return op and op.kind == "reg" and op.rc == "gpr" end
 
 -- Collect reg uses from a memory operand (base + index), and its writeback def.
 -- Writeback bases are recorded in `rmw` (they must occupy one register for use+def).
-local function memRegs(op, uses, defs, rmw)
+function memRegs(op, uses, defs, rmw)
 	if op.base and isGpr(op.base) then table.insert(uses, op.base) end
 	if op.index and isGpr(op.index) then table.insert(uses, op.index) end
 	if op.writeback and op.base and isGpr(op.base) then
@@ -62,12 +62,12 @@ end
 --     control = "none"|"branch"|"condbranch"|"call"|"return"|"indirect"|"indcall",
 --     targets = {label...}, fallsThrough = bool, isMove = {dstIdx,srcIdx} | nil }
 function arm64.classify(insn)
-	local m = string.lower(insn.mnemonic)
-	local ops = insn.operands or {}
-	local defs, uses = {}, {}
-	local rmw = {}  -- regnums that need use+def in the same register (writeback / merge ops)
-	local control, targets, fallsThrough = "none", nil, true
-	local isMove = nil
+	m = string.lower(insn.mnemonic)
+	ops = insn.operands or {}
+	defs, uses = {}, {}
+	rmw = {}  -- regnums that need use+def in the same register (writeback / merge ops)
+	control, targets, fallsThrough = "none", nil, true
+	isMove = nil
 
 	-- Control flow first.
 	if m == "b" then
@@ -105,7 +105,7 @@ function arm64.classify(insn)
 		return { defs = defs, uses = uses, control = control, targets = targets,
 			fallsThrough = fallsThrough, isMove = isMove }
 	end
-	if control ~= "none" then
+	if control != "none" then
 		return { defs = defs, uses = uses, control = control, targets = targets,
 			fallsThrough = fallsThrough, isMove = isMove }
 	end
@@ -118,7 +118,7 @@ function arm64.classify(insn)
 	else if LOADS[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 		for i = 2, #ops do
-			local o = ops[i]
+			o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
 			else if isGpr(o) then table.insert(uses, o) end
 		end
@@ -126,14 +126,14 @@ function arm64.classify(insn)
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 		if isGpr(ops[2]) then table.insert(defs, ops[2]) end
 		for i = 3, #ops do
-			local o = ops[i]
+			o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
 			else if isGpr(o) then table.insert(uses, o) end
 		end
 	else if STORES[m] then
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
 		for i = 2, #ops do
-			local o = ops[i]
+			o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
 			else if isGpr(o) then table.insert(uses, o) end
 		end
@@ -141,7 +141,7 @@ function arm64.classify(insn)
 		if isGpr(ops[1]) then table.insert(uses, ops[1]) end
 		if isGpr(ops[2]) then table.insert(uses, ops[2]) end
 		for i = 3, #ops do
-			local o = ops[i]
+			o = ops[i]
 			if o.kind == "mem" then memRegs(o, uses, defs, rmw)
 			else if isGpr(o) then table.insert(uses, o) end
 		end
@@ -151,7 +151,7 @@ function arm64.classify(insn)
 	else if DST_FIRST[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 		for i = 2, #ops do
-			local o = ops[i]
+			o = ops[i]
 			if isGpr(o) then table.insert(uses, o) else if o.kind == "mem" then memRegs(o, uses, defs, rmw) end
 		end
 		if m == "mov" and isGpr(ops[1]) and isGpr(ops[2]) and #ops == 2 and not ops[2].shift then
@@ -159,7 +159,7 @@ function arm64.classify(insn)
 		end
 	else
 		-- Unknown mnemonic: conservatively treat first reg as def, rest as uses.
-		local first = true
+		first = true
 		for _, o in ops do
 			if isGpr(o) then
 				if first then table.insert(defs, o); first = false else table.insert(uses, o) end
@@ -177,7 +177,7 @@ end
 -- therefore bounds-check). A memory operand on any other mnemonic cannot be proven
 -- memory-safe and must be rejected.
 function arm64.isMemInsn(mnemonic)
-	local m = string.lower(mnemonic)
+	m = string.lower(mnemonic)
 	return (LOADS[m] or STORES[m] or LOAD_PAIR[m] or STORE_PAIR[m]) and true or false
 end
 

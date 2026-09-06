@@ -454,11 +454,6 @@ AstStat* Parser::parseStat()
         return parseRepeat();
     case Lexeme::ReservedFunction:
         return parseFunctionStat(AstArray<AstAttr*>({nullptr, 0}));
-    case Lexeme::ReservedLocal:
-    {
-        Location start = lexer.current().location;
-        return parseLocal(start, start.begin, {nullptr, 0}, false);
-    }
     case Lexeme::ReservedReturn:
         return parseReturn();
     case Lexeme::ReservedBreak:
@@ -502,14 +497,19 @@ AstStat* Parser::parseStat()
         return parseClassStat(start, /* exported */ false, /* open */ true);
     }
 
+    if (ident == "local")
+        return reportStatError(
+            expr->location, copy({expr}), {}, "`local` keyword has been removed; use `a = b` instead of `local a = b`"
+        );
+
     if (ident == "export")
     {
         if (FFlag::LuauExportValueSyntax)
         {
             Lexeme current = lexer.current();
 
-            bool isExportValue = current.type == Lexeme::ReservedLocal || current.type == Lexeme::ReservedFunction ||
-                                 (current.type == Lexeme::Name && AstName(current.name) == "const");
+            bool isExportValue = current.type == Lexeme::ReservedFunction ||
+                                 (current.type == Lexeme::Name && AstName(current.name) != "type");
 
             if (FFlag::DebugLuauUserDefinedClasses)
                 isExportValue |= current.type == Lexeme::Name && (AstName(current.name) == "class" || AstName(current.name) == "open");
@@ -579,9 +579,15 @@ AstStat* Parser::parseIf()
 
     nextLexeme(); // if
 
-    if (FFlag::DebugLuauIfLocalSyntax &&
-        (lexer.current().type == Lexeme::ReservedLocal || (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "const")))
+    if (FFlag::DebugLuauIfLocalSyntax && lexer.current().type == Lexeme::Name &&
+        (AstName(lexer.current().name) == "local" || AstName(lexer.current().name) == "const"))
+    {
+        if (AstName(lexer.current().name) == "local")
+            return reportStatError(
+                lexer.current().location, {}, {}, "`local` keyword has been removed; `if local` is no longer supported"
+            );
         return parseIfLocalCondition(start);
+    }
 
     AstExpr* cond = parseExpr();
 
@@ -602,25 +608,26 @@ AstStat* Parser::parseIf()
     return allocator.alloc<AstStatIf>(Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation);
 }
 
-// (`if' | `else if') (`local' | `const') binding `=' exp [then] block {else if exp [then] block} [else block] end
+// (`if' | `else if') `const' binding `=' exp [then] block {else if exp [then] block} [else block] end
 //
-// LUAU_NOINLINE keeps the `if local`/`if const` locals off parseIf's frame: parseIf recurses through
+// LUAU_NOINLINE keeps the `if const` locals off parseIf's frame: parseIf recurses through
 // long if/else-if chains and this variant is rarely taken. `start` is the location of the already-
-// consumed `if` keyword; the current lexeme is the `local`/`const` keyword.
+// consumed `if` keyword; the current lexeme is the `const` keyword.
+// (`if local` was removed with the `local` keyword.)
 LUAU_NOINLINE AstStat* Parser::parseIfLocalCondition(const Location& start)
 {
     LUAU_ASSERT(FFlag::DebugLuauIfLocalSyntax);
 
-    bool condIsConst = (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "const");
+    bool condIsConst = true;
     std::optional<Location> condKeywordLocation = lexer.current().location;
-    nextLexeme(); // consume 'local' or 'const'
+    nextLexeme(); // consume 'const'
 
     Binding binding = parseBinding(condIsConst);
 
     if (lexer.current().type == ',')
-        report(lexer.current().location, "Expected '=' after variable name in 'if local', got ','; only a single binding is allowed");
+        report(lexer.current().location, "Expected '=' after variable name in 'if const', got ','; only a single binding is allowed");
 
-    expectAndConsume('=', "if local declaration");
+    expectAndConsume('=', "if const declaration");
 
     AstExpr* cond = parseExpr();
 
@@ -999,7 +1006,7 @@ bool Parser::isExprLValue(AstExpr* expr)
 }
 
 // function funcname funcbody
-AstStatFunction* Parser::parseFunctionStat(const AstArray<AstAttr*>& attributes, TempVector<CstAttrList*>* cstAttrLists)
+AstStat* Parser::parseFunctionStat(const AstArray<AstAttr*>& attributes, TempVector<CstAttrList*>* cstAttrLists)
 {
     Location start = getAttributeStartLocation(attributes, cstAttrLists, lexer.current().location);
 
@@ -1014,6 +1021,42 @@ AstStatFunction* Parser::parseFunctionStat(const AstArray<AstAttr*>& attributes,
     {
         expr = FFlag::LuauExportValueSyntax ? reportLValueError(expr)
                                             : reportExprError(expr->location, copy({expr}), "Assigned expression must be a variable or a field");
+    }
+
+    // Bare `function f()` is an implicit-local declaration (like `f = function...`), not a global.
+    // Declare before the body so recursion (`function f() return f() end`) resolves to the new local,
+    // mirroring `local function`. Reuses existing local when one is already in scope.
+    // `function t.k()` / `function t:m()` stay field assigns.
+    if (!hasself)
+    {
+        if (AstExprGlobal* g = expr->as<AstExprGlobal>())
+        {
+            // Undeclared bare name: declare now for self-visibility, emit LocalFunction.
+            AstName fname = g->name;
+            Location floc = g->location;
+            Name localName(fname, floc);
+
+            matchRecoveryStopOnToken[Lexeme::ReservedEnd]++;
+
+            auto [body, var] = parseFunctionBody(hasself, matchFunction, debugname, &localName, attributes, false);
+
+            matchRecoveryStopOnToken[Lexeme::ReservedEnd]--;
+
+            Location location{start.begin, body->location.end};
+            AstStatLocalFunction* node = allocator.alloc<AstStatLocalFunction>(location, var, body, false, Position::missing());
+            if (options.storeCstData)
+            {
+                cstNodeMap[node] = cstAttrLists != nullptr
+                                       ? allocator.alloc<CstStatLocalFunction>(copy(*cstAttrLists), start.begin, matchFunction.location.begin)
+                                       : allocator.alloc<CstStatLocalFunction>(start.begin, matchFunction.location.begin);
+            }
+            return node;
+        }
+        else if (expr->is<AstExprLocal>())
+        {
+            // Existing local: reuse (no new declaration); body sees it as upvalue/local.
+            expr = resolveFunctionNameForAssign(expr, /* allowDeclare= */ true);
+        }
     }
 
     matchRecoveryStopOnToken[Lexeme::ReservedEnd]++;
@@ -1276,12 +1319,18 @@ AstStat* Parser::parseAttributeStat()
     {
     case Lexeme::Type::ReservedFunction:
         return parseFunctionStat(attributes, &cstAttrLists);
-    case Lexeme::Type::ReservedLocal:
-        return parseLocal(
-            getAttributeStartLocation(attributes, &cstAttrLists, startLocation), lexer.current().location.begin, attributes, false, &cstAttrLists
-        );
     case Lexeme::Type::Name:
     {
+        if (AstName(lexer.current().name) == "local")
+        {
+            return reportStatError(
+                lexer.current().location,
+                {},
+                {},
+                "`local` keyword has been removed; use `a = b` instead of `local a = b` and `function f()` instead of `local function f()`"
+            );
+        }
+
         if (FFlag::LuauExportValueSyntax && AstName(lexer.current().name) == "export")
         {
             Location keywordLoc = lexer.current().location;
@@ -1307,7 +1356,7 @@ AstStat* Parser::parseAttributeStat()
             lexer.current().location,
             {},
             {},
-            "Expected 'function', 'local function', 'const function', 'declare function' or a function type declaration after attribute, but got "
+            "Expected 'function', 'const function', 'declare function' or a function type declaration after attribute, but got "
             "%s instead",
             lexer.current().toString().c_str()
         );
@@ -1333,8 +1382,13 @@ AstStat* Parser::parseLocal(
     TempVector<CstAttrList*>* cstAttrLists
 )
 {
+    // `local` keyword has been removed; this path now only serves `const` (isConst == true).
     if (!isConst)
-        nextLexeme(); // local
+    {
+        return reportStatError(
+            start, {}, {}, "`local` keyword has been removed; use `a = b` instead of `local a = b`"
+        );
+    }
 
     if (lexer.current().type == Lexeme::ReservedFunction)
     {
@@ -1374,7 +1428,7 @@ AstStat* Parser::parseLocal(
                 lexer.current().location,
                 {},
                 {},
-                "Expected 'function' after local declaration with attribute, but got %s instead",
+                "Expected 'function' after const declaration with attribute, but got %s instead",
                 lexer.current().toString().c_str()
             );
         }
@@ -2109,7 +2163,17 @@ AstStat* Parser::parseAssignment(AstExpr* initial)
     TempVector<Position> valuesCommaPositions(scratchPosition);
     parseExprList(values, options.storeCstData ? &valuesCommaPositions : nullptr);
 
-    AstStatAssign* node = allocator.alloc<AstStatAssign>(Location(initial->location, values.back()->location), copy(vars), copy(values));
+    // RHS is parsed before declaring, so `a = a` reads the outer `a` (mirrors `local a = a`).
+    std::vector<AstExpr*> resolved;
+    resolved.reserve(vars.size());
+    for (AstExpr* v : vars)
+        resolved.push_back(resolveAssignTarget(v, /* allowDeclare= */ true));
+
+    Location end = values.empty() ? lexer.previousLocation() : values.back()->location;
+    Location begin = resolved.empty() ? initial->location : resolved[0]->location;
+    AstStatAssign* node = allocator.alloc<AstStatAssign>(
+        Location(begin, end), copy(resolved.data(), resolved.size()), copy(values)
+    );
     if (options.storeCstData)
         cstNodeMap[node] = allocator.alloc<CstStatAssign>(copy(varsCommaPositions), equalsPosition, copy(valuesCommaPositions));
     return node;
@@ -2171,18 +2235,14 @@ AstStat* Parser::parseExportValue(
         );
     }
 
-    if (lexer.current().type == Lexeme::ReservedLocal)
+    if (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "local")
     {
-        Location localKeywordLocation = lexer.current().location;
-
-        if (lexer.lookahead().type == Lexeme::ReservedFunction)
-        {
-            report(start, "'export' must be followed by an identifier or 'function'; try removing 'local'");
-            // still parse the function for error recovery
-            return parseLocal(start, localKeywordLocation.begin, {nullptr, 0}, true);
-        }
-
-        return exportLocalStat(parseLocal(start, keywordPosition, {nullptr, 0}, false), localKeywordLocation);
+        return reportStatError(
+            lexer.current().location,
+            {},
+            {},
+            "`local` keyword has been removed; use `export a = ...` instead of `export local a = ...`"
+        );
     }
     else if (lexer.current().type == Lexeme::ReservedFunction)
     {
@@ -2238,6 +2298,50 @@ AstStat* Parser::parseExportValue(
         }
         return stat;
     }
+    else if (lexer.current().type == Lexeme::Name)
+    {
+        // Bare `export a[, b] [= ...]` — implicit-local exported declaration.
+        // Mirrors `export local` without the removed keyword.
+        // Note: `class`/`open` handled above; `type` never reaches here (caller routes it to type alias).
+        TempVector<Binding> names(scratchBinding);
+        AstArray<Position> varsCommaPositions;
+        if (options.storeCstData)
+            parseBindingList(names, false, &varsCommaPositions, nullptr, nullptr, false);
+        else
+            parseBindingList(names, false, nullptr, nullptr, nullptr, false);
+
+        TempVector<AstLocal*> vars(scratchLocal);
+        TempVector<AstExpr*> values(scratchExpr);
+        TempVector<Position> valuesCommaPositions(scratchPosition);
+        std::optional<Location> equalsSignLocation;
+
+        if (lexer.current().type == '=')
+        {
+            equalsSignLocation = lexer.current().location;
+            nextLexeme();
+            parseExprList(values, options.storeCstData ? &valuesCommaPositions : nullptr);
+        }
+
+        for (size_t i = 0; i < names.size(); ++i)
+            vars.push_back(pushLocal(names[i]));
+
+        Location end = values.empty() ? lexer.previousLocation() : values.back()->location;
+        AstStatLocal* node = allocator.alloc<AstStatLocal>(Location(start, end), copy(vars), copy(values), equalsSignLocation, false);
+        if (options.storeCstData)
+        {
+            cstNodeMap[node] = allocator.alloc<CstStatLocal>(extractAnnotationColonPositions(names), varsCommaPositions, copy(valuesCommaPositions));
+        }
+
+        node->isExported = true;
+        for (AstLocal* local : node->vars)
+        {
+            if (!checkDuplicateExport(local->name, local->location))
+                report(local->location, "Duplicate exported identifier '%s'", local->name.value);
+            local->isExported = true;
+        }
+        node->keywordLocation = start;
+        return node;
+    }
 
     return reportStatError(start, {}, {}, "'export' must be followed by an identifier or 'function'");
 }
@@ -2250,6 +2354,15 @@ AstStat* Parser::parseCompoundAssignment(AstExpr* initial, AstExprBinary::Op op)
         initial = FFlag::LuauExportValueSyntax
                       ? reportLValueError(initial)
                       : reportExprError(initial->location, copy({initial}), "Assigned expression must be a variable or a field");
+    }
+    else if (initial->is<AstExprGlobal>())
+    {
+        // Compound assignment never declares; it must target an existing local/field.
+        initial = resolveAssignTarget(initial, /* allowDeclare= */ false);
+    }
+    else if (initial->is<AstExprLocal>())
+    {
+        initial = resolveAssignTarget(initial, /* allowDeclare= */ false);
     }
 
     Position opPosition = lexer.current().location.begin;
@@ -5122,6 +5235,56 @@ AstLocal* Parser::pushLocal(const Binding& binding)
     localStack.push_back(local);
 
     return local;
+}
+
+AstExpr* Parser::resolveAssignTarget(AstExpr* expr, bool allowDeclare, bool markExported)
+{
+    if (AstExprGlobal* g = expr->as<AstExprGlobal>())
+    {
+        AstName name = g->name;
+        Location loc = g->location;
+
+        if (AstLocal* const* found = localMap.find(name))
+        {
+            if (*found)
+            {
+                AstLocal* local = *found;
+                if (local->isConst)
+                {
+                    return reportLValueError(expr);
+                }
+                return allocator.alloc<AstExprLocal>(loc, local, local->functionDepth != functionStack.size() - 1);
+            }
+        }
+
+        if (!allowDeclare)
+        {
+            report(loc, "Undeclared variable '%s'; assign with `=` first to declare it", name.value);
+            return expr;
+        }
+
+        AstLocal* fresh = pushLocal(Binding(Name(name, loc), nullptr));
+        if (markExported)
+            fresh->isExported = true;
+        return allocator.alloc<AstExprLocal>(loc, fresh, false);
+    }
+
+    if (AstExprLocal* l = expr->as<AstExprLocal>())
+    {
+        if (l->local->isConst)
+            return reportLValueError(expr);
+        return expr;
+    }
+
+    return expr;
+}
+
+AstExpr* Parser::resolveFunctionNameForAssign(AstExpr* expr, bool allowDeclare)
+{
+    // Only bare names participate in implicit-local declaration; `t.k` / `t:m` stay field assigns.
+    if (expr->is<AstExprGlobal>() || expr->is<AstExprLocal>())
+        return resolveAssignTarget(expr, allowDeclare, false);
+    return expr;
 }
 
 unsigned int Parser::saveLocals()

@@ -21,14 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
-local Complex={type="package"}
+Complex={type="package"}
 
-local function complex(x,y)
+function complex(x,y)
  return setmetatable({ re=x, im=y }, Complex.metatable)
 end
 
@@ -37,7 +37,7 @@ function Complex.conj(x,y)
 end
 
 function Complex.norm2(x)
- local n=Complex.mul(x,Complex.conj(x))
+ n=Complex.mul(x,Complex.conj(x))
  return n.re
 end
 
@@ -58,7 +58,7 @@ Complex.metatable={
 	__mul = Complex.mul,
 }
 
-local function abs(x)
+function abs(x)
  return math.sqrt(Complex.norm2(x))
 end
 
@@ -66,9 +66,9 @@ xmin=-2.0	xmax=2.0	ymin=-2.0	ymax=2.0
 N=(arg and arg[1]) or 64
 
 function level(x,y)
- local c=complex(x,y)
- local l=0
- local z=c
+ c=complex(x,y)
+ l=0
+ z=c
  repeat
   z=z*z+c
   l=l+1
@@ -82,18 +82,18 @@ dy=(ymax-ymin)/N
 print("P2")
 print("# mandelbrot set",xmin,xmax,ymin,ymax,N)
 print(N,N,255)
-local S = 0
+S = 0
 for i=1,N do
- local x=xmin+(i-1)*dx
+ x=xmin+(i-1)*dx
  for j=1,N do
-  local y=ymin+(j-1)*dy
+  y=ymin+(j-1)*dy
   S = S + level(x,y)
  end
  -- if i % 10 == 0 then print(collectgarbage("count")) end
 end
 print(S)
 
-assert(N ~= 64 or S == 109250)
+assert(N != 64 or S == 109250)
 
 end
 

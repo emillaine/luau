@@ -1,5 +1,25 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
+-- forward declarations (implicit-local dialect has no hoisted globals)
+base64_decode = nil
+cache_delete = nil
+get_status_text = nil
+is_json_array = nil
+json_encode_array = nil
+json_encode_object = nil
+json_encode_string = nil
+json_parse_array = nil
+json_parse_number = nil
+json_parse_object = nil
+json_parse_string = nil
+json_parse_value = nil
+match_segments = nil
+parse_headers_and_body = nil
+parse_multipart_headers = nil
+parse_multipart_part = nil
+parse_request_line = nil
+split_path = nil
+template_lookup = nil
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
@@ -8,18 +28,18 @@ function test()
 -- Tests: request parsing, routing, middleware, response building, JSON codec
 
 -- ===== Local aliases for hot math/string functions =====
-local floor = math.floor
-local char = string.char
-local byte = string.byte
-local sub = string.sub
-local find = string.find
-local gsub = string.gsub
-local format = string.format
-local lower = string.lower
-local upper = string.upper
-local concat = table.concat
-local insert = table.insert
-local clock = os.clock
+floor = math.floor
+char = string.char
+byte = string.byte
+sub = string.sub
+find = string.find
+gsub = string.gsub
+format = string.format
+lower = string.lower
+upper = string.upper
+concat = table.concat
+insert = table.insert
+clock = os.clock
 
 -- =========================================================================
 -- URL percent-encoding / decoding
@@ -43,13 +63,13 @@ end
 -- Query string parser
 -- =========================================================================
 function parse_query_string(qs)
-    local result = {}
+    result = {}
     if not qs or qs == "" then return result end
     -- split on &
-    local pos = 1
+    pos = 1
     while pos <= #qs do
-        local amp = find(qs, "&", pos, true)
-        local segment
+        amp = find(qs, "&", pos, true)
+        segment = nil
         if amp then
             segment = sub(qs, pos, amp - 1)
             pos = amp + 1
@@ -57,10 +77,10 @@ function parse_query_string(qs)
             segment = sub(qs, pos)
             pos = #qs + 1
         end
-        local eq = find(segment, "=", 1, true)
+        eq = find(segment, "=", 1, true)
         if eq then
-            local key = url_decode(sub(segment, 1, eq - 1))
-            local val = url_decode(sub(segment, eq + 1))
+            key = url_decode(sub(segment, 1, eq - 1))
+            val = url_decode(sub(segment, eq + 1))
             result[key] = val
         else
             result[url_decode(segment)] = ""
@@ -77,7 +97,7 @@ function create_headers()
 end
 
 function headers_set(h, name, value)
-    local lname = lower(name)
+    lname = lower(name)
     if not h._store[lname] then
         insert(h._order, lname)
     end
@@ -85,7 +105,7 @@ function headers_set(h, name, value)
 end
 
 function headers_add(h, name, value)
-    local lname = lower(name)
+    lname = lower(name)
     if not h._store[lname] then
         insert(h._order, lname)
         h._store[lname] = { name = name, values = {} }
@@ -94,7 +114,7 @@ function headers_add(h, name, value)
 end
 
 function headers_get(h, name)
-    local entry = h._store[lower(name)]
+    entry = h._store[lower(name)]
     if entry and #entry.values > 0 then
         return entry.values[1]
     end
@@ -102,20 +122,20 @@ function headers_get(h, name)
 end
 
 function headers_get_all(h, name)
-    local entry = h._store[lower(name)]
+    entry = h._store[lower(name)]
     if entry then return entry.values end
     return {}
 end
 
 function headers_has(h, name)
-    return h._store[lower(name)] ~= nil
+    return h._store[lower(name)] != nil
 end
 
 function headers_serialize(h)
-    local lines = {}
+    lines = {}
     for i = 1, #h._order do
-        local lname = h._order[i]
-        local entry = h._store[lname]
+        lname = h._order[i]
+        entry = h._store[lname]
         for j = 1, #entry.values do
             insert(lines, entry.name .. ": " .. entry.values[j])
         end
@@ -127,12 +147,12 @@ end
 -- Cookie parser
 -- =========================================================================
 function parse_cookies(cookie_header)
-    local cookies = {}
+    cookies = {}
     if not cookie_header or cookie_header == "" then return cookies end
-    local pos = 1
+    pos = 1
     while pos <= #cookie_header do
-        local semi = find(cookie_header, ";", pos, true)
-        local segment
+        semi = find(cookie_header, ";", pos, true)
+        segment = nil
         if semi then
             segment = sub(cookie_header, pos, semi - 1)
             pos = semi + 1
@@ -144,10 +164,10 @@ function parse_cookies(cookie_header)
             segment = sub(cookie_header, pos)
             pos = #cookie_header + 1
         end
-        local eq = find(segment, "=", 1, true)
+        eq = find(segment, "=", 1, true)
         if eq then
-            local name = sub(segment, 1, eq - 1)
-            local val = sub(segment, eq + 1)
+            name = sub(segment, 1, eq - 1)
+            val = sub(segment, eq + 1)
             -- trim whitespace from name
             name = gsub(name, "^%s+", "")
             name = gsub(name, "%s+$", "")
@@ -161,7 +181,7 @@ end
 -- Set-Cookie builder
 -- =========================================================================
 function build_set_cookie(name, value, opts)
-    local parts = { name .. "=" .. value }
+    parts = { name .. "=" .. value }
     if opts then
         if opts.path then insert(parts, "Path=" .. opts.path) end
         if opts.domain then insert(parts, "Domain=" .. opts.domain) end
@@ -178,12 +198,12 @@ end
 -- Content negotiation (Accept header with q-values)
 -- =========================================================================
 function parse_accept_header(accept)
-    local entries = {}
+    entries = {}
     if not accept or accept == "" then return entries end
-    local pos = 1
+    pos = 1
     while pos <= #accept do
-        local comma = find(accept, ",", pos, true)
-        local segment
+        comma = find(accept, ",", pos, true)
+        segment = nil
         if comma then
             segment = sub(accept, pos, comma - 1)
             pos = comma + 1
@@ -195,16 +215,16 @@ function parse_accept_header(accept)
         segment = gsub(segment, "^%s+", "")
         segment = gsub(segment, "%s+$", "")
         -- extract q value
-        local media_type = segment
-        local q = 1.0
-        local semi = find(segment, ";", 1, true)
+        media_type = segment
+        q = 1.0
+        semi = find(segment, ";", 1, true)
         if semi then
             media_type = sub(segment, 1, semi - 1)
             media_type = gsub(media_type, "%s+$", "")
-            local qpart = sub(segment, semi + 1)
-            local qval = find(qpart, "q=", 1, true)
+            qpart = sub(segment, semi + 1)
+            qval = find(qpart, "q=", 1, true)
             if qval then
-                local qstr = sub(qpart, qval + 2)
+                qstr = sub(qpart, qval + 2)
                 qstr = gsub(qstr, "%s+", "")
                 q = tonumber(qstr) or 1.0
             end
@@ -217,17 +237,17 @@ function parse_accept_header(accept)
 end
 
 function negotiate_content_type(accept_header, available)
-    local prefs = parse_accept_header(accept_header)
+    prefs = parse_accept_header(accept_header)
     for i = 1, #prefs do
-        local wanted = prefs[i].media_type
+        wanted = prefs[i].media_type
         for j = 1, #available do
             if wanted == available[j] or wanted == "*/*" then
                 return available[j]
             end
             -- check type/* match
-            local slash = find(wanted, "/", 1, true)
+            slash = find(wanted, "/", 1, true)
             if slash then
-                local wtype = sub(wanted, 1, slash)
+                wtype = sub(wanted, 1, slash)
                 if sub(wanted, slash + 1) == "*" then
                     if sub(available[j], 1, #wtype) == wtype then
                         return available[j]
@@ -243,7 +263,7 @@ end
 -- HTTP Request Parser
 -- =========================================================================
 function parse_request(raw)
-    local req = {}
+    req = {}
     req.headers = create_headers()
     req.body = ""
     req.method = "GET"
@@ -253,18 +273,18 @@ function parse_request(raw)
     req.query = {}
 
     -- Find end of request line
-    local crlf = find(raw, "\r\n", 1, true)
+    crlf = find(raw, "\r\n", 1, true)
     if not crlf then
         -- try just \n
         crlf = find(raw, "\n", 1, true)
         if not crlf then return req end
-        local request_line = sub(raw, 1, crlf - 1)
+        request_line = sub(raw, 1, crlf - 1)
         parse_request_line(req, request_line)
         parse_headers_and_body(req, raw, crlf + 1)
         return req
     end
 
-    local request_line = sub(raw, 1, crlf - 1)
+    request_line = sub(raw, 1, crlf - 1)
     parse_request_line(req, request_line)
     parse_headers_and_body(req, raw, crlf + 2)
     return req
@@ -272,15 +292,15 @@ end
 
 function parse_request_line(req, line)
     -- METHOD PATH VERSION
-    local sp1 = find(line, " ", 1, true)
+    sp1 = find(line, " ", 1, true)
     if not sp1 then return end
     req.method = sub(line, 1, sp1 - 1)
-    local sp2 = find(line, " ", sp1 + 1, true)
+    sp2 = find(line, " ", sp1 + 1, true)
     if sp2 then
-        local full_path = sub(line, sp1 + 1, sp2 - 1)
+        full_path = sub(line, sp1 + 1, sp2 - 1)
         req.version = sub(line, sp2 + 1)
         -- split path and query
-        local qmark = find(full_path, "?", 1, true)
+        qmark = find(full_path, "?", 1, true)
         if qmark then
             req.path = sub(full_path, 1, qmark - 1)
             req.query_string = sub(full_path, qmark + 1)
@@ -294,12 +314,12 @@ function parse_request_line(req, line)
 end
 
 function parse_headers_and_body(req, raw, start)
-    local pos = start
-    local rawlen = #raw
+    pos = start
+    rawlen = #raw
     while pos <= rawlen do
         -- find end of this header line
-        local eol = find(raw, "\r\n", pos, true)
-        local next_pos
+        eol = find(raw, "\r\n", pos, true)
+        next_pos = nil
         if eol then
             next_pos = eol + 2
         else
@@ -313,7 +333,7 @@ function parse_headers_and_body(req, raw, start)
             end
         end
 
-        local line = sub(raw, pos, eol - 1)
+        line = sub(raw, pos, eol - 1)
         if line == "" then
             -- empty line = end of headers, rest is body
             req.body = sub(raw, next_pos)
@@ -321,10 +341,10 @@ function parse_headers_and_body(req, raw, start)
         end
 
         -- parse header
-        local colon = find(line, ":", 1, true)
+        colon = find(line, ":", 1, true)
         if colon then
-            local name = sub(line, 1, colon - 1)
-            local value = sub(line, colon + 1)
+            name = sub(line, 1, colon - 1)
+            value = sub(line, colon + 1)
             -- trim leading whitespace from value
             value = gsub(value, "^%s+", "")
             headers_add(req.headers, name, value)
@@ -351,12 +371,12 @@ function router_add(router, method, pattern, handler)
 end
 
 function split_path(path)
-    local segs = {}
+    segs = {}
     if path == "/" then return segs end
-    local pos = 1
+    pos = 1
     if sub(path, 1, 1) == "/" then pos = 2 end
     while pos <= #path do
-        local sl = find(path, "/", pos, true)
+        sl = find(path, "/", pos, true)
         if sl then
             insert(segs, sub(path, pos, sl - 1))
             pos = sl + 1
@@ -369,11 +389,11 @@ function split_path(path)
 end
 
 function router_match(router, method, path)
-    local path_segs = split_path(path)
+    path_segs = split_path(path)
     for i = 1, #router.routes do
-        local route = router.routes[i]
+        route = router.routes[i]
         if route.method == method or route.method == "*" then
-            local params = match_segments(route.segments, path_segs)
+            params = match_segments(route.segments, path_segs)
             if params then
                 return route.handler, params
             end
@@ -383,13 +403,13 @@ function router_match(router, method, path)
 end
 
 function match_segments(pattern_segs, path_segs)
-    local params = {}
-    local pi = 1
+    params = {}
+    pi = 1
     for i = 1, #pattern_segs do
-        local seg = pattern_segs[i]
+        seg = pattern_segs[i]
         if seg == "*" then
             -- wildcard matches rest
-            local rest = {}
+            rest = {}
             for j = pi, #path_segs do
                 insert(rest, path_segs[j])
             end
@@ -398,18 +418,18 @@ function match_segments(pattern_segs, path_segs)
         else if sub(seg, 1, 1) == ":" then
             -- parameterized segment
             if pi > #path_segs then return nil end
-            local param_name = sub(seg, 2)
+            param_name = sub(seg, 2)
             params[param_name] = path_segs[pi]
             pi = pi + 1
         else
             -- exact match
             if pi > #path_segs then return nil end
-            if path_segs[pi] ~= seg then return nil end
+            if path_segs[pi] != seg then return nil end
             pi = pi + 1
         end
     end
     -- all pattern segments consumed, check path fully consumed
-    if pi ~= #path_segs + 1 then return nil end
+    if pi != #path_segs + 1 then return nil end
     return params
 end
 
@@ -418,11 +438,11 @@ end
 -- =========================================================================
 function create_middleware_chain(middlewares, final_handler)
     -- Build chain from inside out
-    local handler = final_handler
-    local i = #middlewares
+    handler = final_handler
+    i = #middlewares
     while i >= 1 do
-        local mw = middlewares[i]
-        local next_handler = handler
+        mw = middlewares[i]
+        next_handler = handler
         handler = function(req, res)
             return mw(req, res, next_handler)
         end
@@ -439,7 +459,7 @@ end
 
 -- Auth check middleware
 function middleware_auth(req, res, next_handler)
-    local auth = headers_get(req.headers, "Authorization")
+    auth = headers_get(req.headers, "Authorization")
     if auth then
         req.authenticated = true
         req.auth_token = auth
@@ -468,7 +488,7 @@ end
 -- Response builder
 -- =========================================================================
 function create_response()
-    local res = {}
+    res = {}
     res.status = 200
     res.status_text = "OK"
     res.headers = create_headers()
@@ -515,11 +535,11 @@ function response_set_body(res, body, content_type)
 end
 
 function response_serialize(res)
-    local parts = {}
+    parts = {}
     insert(parts, "HTTP/1.1 " .. tostring(res.status) .. " " .. res.status_text)
     insert(parts, "\r\n")
-    local hdr_str = headers_serialize(res.headers)
-    if hdr_str ~= "" then
+    hdr_str = headers_serialize(res.headers)
+    if hdr_str != "" then
         insert(parts, hdr_str)
         insert(parts, "\r\n")
     end
@@ -534,13 +554,13 @@ end
 -- JSON encoder
 -- =========================================================================
 function json_encode(val)
-    local t = type(val)
+    t = type(val)
     if val == nil then
         return "null"
     else if t == "boolean" then
         return val and "true" or "false"
     else if t == "number" then
-        if val ~= val then return "null" end
+        if val != val then return "null" end
         if val == math.huge or val == -math.huge then return "null" end
         if val == floor(val) and val > -1e15 and val < 1e15 then
             return format("%d", val)
@@ -560,9 +580,9 @@ function json_encode(val)
 end
 
 function json_encode_string(s)
-    local buf = { '"' }
+    buf = { '"' }
     for i = 1, #s do
-        local c = byte(s, i)
+        c = byte(s, i)
         if c == 34 then insert(buf, '\\"')
         else if c == 92 then insert(buf, '\\\\')
         else if c == 10 then insert(buf, '\\n')
@@ -579,7 +599,7 @@ function json_encode_string(s)
 end
 
 function is_json_array(t)
-    local n = #t
+    n = #t
     if n == 0 then
         -- check if empty or object
         for _ in next, t do
@@ -591,7 +611,7 @@ function is_json_array(t)
 end
 
 function json_encode_array(arr)
-    local parts = {}
+    parts = {}
     for i = 1, #arr do
         insert(parts, json_encode(arr[i]))
     end
@@ -599,7 +619,7 @@ function json_encode_array(arr)
 end
 
 function json_encode_object(obj)
-    local parts = {}
+    parts = {}
     for k, v in next, obj do
         if type(k) == "string" then
             insert(parts, json_encode_string(k) .. ":" .. json_encode(v))
@@ -614,15 +634,15 @@ end
 -- JSON decoder
 -- =========================================================================
 function json_decode(str)
-    local pos = 1
-    local val
+    pos = 1
+    val = nil
     val, pos = json_parse_value(str, pos)
     return val
 end
 
 function json_skip_whitespace(str, pos)
     while pos <= #str do
-        local c = byte(str, pos)
+        c = byte(str, pos)
         if c == 32 or c == 9 or c == 10 or c == 13 then
             pos = pos + 1
         else
@@ -635,7 +655,7 @@ end
 function json_parse_value(str, pos)
     pos = json_skip_whitespace(str, pos)
     if pos > #str then return nil, pos end
-    local c = byte(str, pos)
+    c = byte(str, pos)
     if c == 34 then
         return json_parse_string(str, pos)
     else if c == 123 then  -- {
@@ -655,14 +675,14 @@ end
 
 function json_parse_string(str, pos)
     pos = pos + 1  -- skip opening quote
-    local buf = {}
+    buf = {}
     while pos <= #str do
-        local c = byte(str, pos)
+        c = byte(str, pos)
         if c == 34 then  -- closing quote
             return concat(buf), pos + 1
         else if c == 92 then  -- backslash
             pos = pos + 1
-            local esc = byte(str, pos)
+            esc = byte(str, pos)
             if esc == 34 then insert(buf, '"')
             else if esc == 92 then insert(buf, '\\')
             else if esc == 47 then insert(buf, '/')
@@ -672,8 +692,8 @@ function json_parse_string(str, pos)
             else if esc == 98 then insert(buf, '\b')
             else if esc == 102 then insert(buf, '\f')
             else if esc == 117 then  -- \uXXXX
-                local hex = sub(str, pos + 1, pos + 4)
-                local codepoint = tonumber(hex, 16)
+                hex = sub(str, pos + 1, pos + 4)
+                codepoint = tonumber(hex, 16)
                 if codepoint and codepoint < 128 then
                     insert(buf, char(codepoint))
                 else
@@ -691,7 +711,7 @@ function json_parse_string(str, pos)
 end
 
 function json_parse_number(str, pos)
-    local start = pos
+    start = pos
     if byte(str, pos) == 45 then pos = pos + 1 end  -- minus
     while pos <= #str and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
         pos = pos + 1
@@ -711,24 +731,24 @@ function json_parse_number(str, pos)
             pos = pos + 1
         end
     end
-    local numstr = sub(str, start, pos - 1)
+    numstr = sub(str, start, pos - 1)
     return tonumber(numstr), pos
 end
 
 function json_parse_array(str, pos)
-    local arr = {}
+    arr = {}
     pos = pos + 1  -- skip [
     pos = json_skip_whitespace(str, pos)
     if pos <= #str and byte(str, pos) == 93 then  -- ]
         return arr, pos + 1
     end
     while pos <= #str do
-        local val
+        val = nil
         val, pos = json_parse_value(str, pos)
         insert(arr, val)
         pos = json_skip_whitespace(str, pos)
         if pos > #str then break end
-        local c = byte(str, pos)
+        c = byte(str, pos)
         if c == 93 then  -- ]
             return arr, pos + 1
         else if c == 44 then  -- ,
@@ -739,7 +759,7 @@ function json_parse_array(str, pos)
 end
 
 function json_parse_object(str, pos)
-    local obj = {}
+    obj = {}
     pos = pos + 1  -- skip {
     pos = json_skip_whitespace(str, pos)
     if pos <= #str and byte(str, pos) == 125 then  -- }
@@ -747,16 +767,16 @@ function json_parse_object(str, pos)
     end
     while pos <= #str do
         pos = json_skip_whitespace(str, pos)
-        local key
+        key = nil
         key, pos = json_parse_string(str, pos)
         pos = json_skip_whitespace(str, pos)
         pos = pos + 1  -- skip :
-        local val
+        val = nil
         val, pos = json_parse_value(str, pos)
         obj[key] = val
         pos = json_skip_whitespace(str, pos)
         if pos > #str then break end
-        local c = byte(str, pos)
+        c = byte(str, pos)
         if c == 125 then  -- }
             return obj, pos + 1
         else if c == 44 then  -- ,
@@ -777,11 +797,11 @@ end
 -- Multipart form parser (simplified boundary-based)
 -- =========================================================================
 function parse_multipart(body, boundary)
-    local parts = {}
-    local delim = "--" .. boundary
-    local pos = 1
+    parts = {}
+    delim = "--" .. boundary
+    pos = 1
     -- Skip preamble - find first boundary
-    local start = find(body, delim, pos, true)
+    start = find(body, delim, pos, true)
     if not start then return parts end
     pos = start + #delim
     -- skip CRLF after boundary
@@ -791,15 +811,15 @@ function parse_multipart(body, boundary)
 
     while pos <= #body do
         -- Find the next boundary
-        local next_bound = find(body, delim, pos, true)
+        next_bound = find(body, delim, pos, true)
         if not next_bound then break end
-        local part_data = sub(body, pos, next_bound - 1)
+        part_data = sub(body, pos, next_bound - 1)
         -- Remove trailing CRLF before boundary
         if sub(part_data, -2) == "\r\n" then
             part_data = sub(part_data, 1, -3)
         end
         -- Parse part headers and body
-        local part = parse_multipart_part(part_data)
+        part = parse_multipart_part(part_data)
         if part then insert(parts, part) end
         -- Move past boundary
         pos = next_bound + #delim
@@ -814,54 +834,54 @@ function parse_multipart(body, boundary)
 end
 
 function parse_multipart_part(data)
-    local part = { headers = {}, body = "" }
+    part = { headers = {}, body = "" }
     -- Find header/body separator
-    local sep = find(data, "\r\n\r\n", 1, true)
+    sep = find(data, "\r\n\r\n", 1, true)
     if not sep then
         sep = find(data, "\n\n", 1, true)
         if not sep then
             part.body = data
             return part
         end
-        local header_section = sub(data, 1, sep - 1)
+        header_section = sub(data, 1, sep - 1)
         part.body = sub(data, sep + 2)
         parse_multipart_headers(part, header_section)
         return part
     end
-    local header_section = sub(data, 1, sep - 1)
+    header_section = sub(data, 1, sep - 1)
     part.body = sub(data, sep + 4)
     parse_multipart_headers(part, header_section)
     return part
 end
 
 function parse_multipart_headers(part, header_str)
-    local pos = 1
+    pos = 1
     while pos <= #header_str do
-        local eol = find(header_str, "\r\n", pos, true)
+        eol = find(header_str, "\r\n", pos, true)
         if not eol then
             eol = find(header_str, "\n", pos, true)
             if not eol then eol = #header_str + 1 end
         end
-        local line = sub(header_str, pos, eol - 1)
-        local colon = find(line, ":", 1, true)
+        line = sub(header_str, pos, eol - 1)
+        colon = find(line, ":", 1, true)
         if colon then
-            local name = lower(sub(line, 1, colon - 1))
-            local value = gsub(sub(line, colon + 1), "^%s+", "")
+            name = lower(sub(line, 1, colon - 1))
+            value = gsub(sub(line, colon + 1), "^%s+", "")
             part.headers[name] = value
             -- Extract name from content-disposition
             if name == "content-disposition" then
-                local nm = find(value, 'name="', 1, true)
+                nm = find(value, 'name="', 1, true)
                 if nm then
-                    local nm_start = nm + 6
-                    local nm_end = find(value, '"', nm_start, true)
+                    nm_start = nm + 6
+                    nm_end = find(value, '"', nm_start, true)
                     if nm_end then
                         part.name = sub(value, nm_start, nm_end - 1)
                     end
                 end
-                local fn = find(value, 'filename="', 1, true)
+                fn = find(value, 'filename="', 1, true)
                 if fn then
-                    local fn_start = fn + 10
-                    local fn_end = find(value, '"', fn_start, true)
+                    fn_start = fn + 10
+                    fn_end = find(value, '"', fn_start, true)
                     if fn_end then
                         part.filename = sub(value, fn_start, fn_end - 1)
                     end
@@ -880,12 +900,12 @@ end
 -- Simple template engine (mustache-like: {{variable}}, {{#if}}, {{#each}})
 -- =========================================================================
 function template_render(tmpl, context)
-    local result = tmpl
+    result = tmpl
     -- Replace simple variables {{name}}
     result = gsub(result, "{{([^#/}]+)}}", function(key)
         key = gsub(key, "^%s+", "")
         key = gsub(key, "%s+$", "")
-        local val = template_lookup(context, key)
+        val = template_lookup(context, key)
         if val == nil then return "" end
         return tostring(val)
     end)
@@ -894,11 +914,11 @@ end
 
 function template_lookup(context, key)
     -- Support dotted paths: user.name
-    local pos = 1
-    local current = context
+    pos = 1
+    current = context
     while pos <= #key do
-        local dot = find(key, ".", pos, true)
-        local segment
+        dot = find(key, ".", pos, true)
+        segment = nil
         if dot then
             segment = sub(key, pos, dot - 1)
             pos = dot + 1
@@ -906,7 +926,7 @@ function template_lookup(context, key)
             segment = sub(key, pos)
             pos = #key + 1
         end
-        if type(current) ~= "table" then return nil end
+        if type(current) != "table" then return nil end
         current = current[segment]
     end
     return current
@@ -914,11 +934,11 @@ end
 
 function template_render_loop(tmpl, context, list_key, item_var)
     -- Render template for each item in context[list_key]
-    local items = context[list_key]
+    items = context[list_key]
     if not items then return "" end
-    local parts = {}
+    parts = {}
     for i = 1, #items do
-        local item_context = {}
+        item_context = {}
         -- Copy parent context
         for k, v in next, context do
             item_context[k] = v
@@ -943,7 +963,7 @@ end
 -- =========================================================================
 function generate_etag(content)
     -- Simple FNV-1a-like hash for ETags
-    local hash = 2166136261
+    hash = 2166136261
     for i = 1, #content do
         hash = hash * 16777619
         hash = hash + byte(content, i)
@@ -958,43 +978,43 @@ end
 -- =========================================================================
 function decode_basic_auth(auth_header)
     if not auth_header then return nil, nil end
-    local scheme_end = find(auth_header, " ", 1, true)
+    scheme_end = find(auth_header, " ", 1, true)
     if not scheme_end then return nil, nil end
-    local scheme = sub(auth_header, 1, scheme_end - 1)
-    if lower(scheme) ~= "basic" then return nil, nil end
-    local encoded = sub(auth_header, scheme_end + 1)
+    scheme = sub(auth_header, 1, scheme_end - 1)
+    if lower(scheme) != "basic" then return nil, nil end
+    encoded = sub(auth_header, scheme_end + 1)
     -- Simple base64 decode (limited for benchmark purposes)
-    local decoded = base64_decode(encoded)
+    decoded = base64_decode(encoded)
     if not decoded then return nil, nil end
-    local colon = find(decoded, ":", 1, true)
+    colon = find(decoded, ":", 1, true)
     if not colon then return decoded, "" end
     return sub(decoded, 1, colon - 1), sub(decoded, colon + 1)
 end
 
 -- Simplified base64 decode
 function base64_decode(input)
-    local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    local b64lookup = {}
+    b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    b64lookup = {}
     for i = 1, 64 do
         b64lookup[byte(b64chars, i)] = i - 1
     end
     b64lookup[byte("=", 1)] = 0
 
-    local output = {}
-    local i = 1
+    output = {}
+    i = 1
     while i <= #input do
-        local c1 = b64lookup[byte(input, i)] or 0
-        local c2 = b64lookup[byte(input, i + 1)] or 0
-        local c3 = b64lookup[byte(input, i + 2)] or 0
-        local c4 = b64lookup[byte(input, i + 3)] or 0
+        c1 = b64lookup[byte(input, i)] or 0
+        c2 = b64lookup[byte(input, i + 1)] or 0
+        c3 = b64lookup[byte(input, i + 2)] or 0
+        c4 = b64lookup[byte(input, i + 3)] or 0
 
-        local n = c1 * 262144 + c2 * 4096 + c3 * 64 + c4
+        n = c1 * 262144 + c2 * 4096 + c3 * 64 + c4
 
         insert(output, char(floor(n / 65536) % 256))
-        if i + 2 <= #input and sub(input, i + 2, i + 2) ~= "=" then
+        if i + 2 <= #input and sub(input, i + 2, i + 2) != "=" then
             insert(output, char(floor(n / 256) % 256))
         end
-        if i + 3 <= #input and sub(input, i + 3, i + 3) ~= "=" then
+        if i + 3 <= #input and sub(input, i + 3, i + 3) != "=" then
             insert(output, char(n % 256))
         end
         i = i + 4
@@ -1004,15 +1024,15 @@ end
 
 -- Base64 encode
 function base64_encode(input)
-    local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    local output = {}
-    local i = 1
+    b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    output = {}
+    i = 1
     while i <= #input do
-        local b1 = byte(input, i) or 0
-        local b2 = (i + 1 <= #input) and byte(input, i + 1) or 0
-        local b3 = (i + 2 <= #input) and byte(input, i + 2) or 0
+        b1 = byte(input, i) or 0
+        b2 = (i + 1 <= #input) and byte(input, i + 1) or 0
+        b3 = (i + 2 <= #input) and byte(input, i + 2) or 0
 
-        local n = b1 * 65536 + b2 * 256 + b3
+        n = b1 * 65536 + b2 * 256 + b3
 
         insert(output, sub(b64chars, floor(n / 262144) % 64 + 1, floor(n / 262144) % 64 + 1))
         insert(output, sub(b64chars, floor(n / 4096) % 64 + 1, floor(n / 4096) % 64 + 1))
@@ -1046,8 +1066,8 @@ end
 
 function rate_limiter_allow(limiter, now)
     -- Refill tokens
-    local elapsed = now - limiter.last_refill
-    local new_tokens = elapsed * limiter.refill_rate
+    elapsed = now - limiter.last_refill
+    new_tokens = elapsed * limiter.refill_rate
     limiter.tokens = limiter.tokens + new_tokens
     if limiter.tokens > limiter.capacity then
         limiter.tokens = limiter.capacity
@@ -1074,7 +1094,7 @@ function create_cache(max_size)
 end
 
 function cache_get(cache, key)
-    local entry = cache.store[key]
+    entry = cache.store[key]
     if not entry then return nil end
     if entry.expires > 0 and entry.expires < clock() then
         cache_delete(cache, key)
@@ -1092,7 +1112,7 @@ function cache_set(cache, key, value, ttl)
     if cache.count >= cache.max_size then
         -- Evict oldest
         if #cache.order > 0 then
-            local oldest = cache.order[1]
+            oldest = cache.order[1]
             table.remove(cache.order, 1)
             cache.store[oldest] = nil
             cache.count = cache.count - 1
@@ -1121,14 +1141,14 @@ end
 -- Request validation
 -- =========================================================================
 function validate_request(req, rules)
-    local errors = {}
+    errors = {}
     for i = 1, #rules do
-        local rule = rules[i]
-        local value = nil
+        rule = rules[i]
+        value = nil
         if rule.source == "query" then
             value = req.query[rule.field]
         else if rule.source == "body" then
-            local data = json_decode(req.body)
+            data = json_decode(req.body)
             if data then value = data[rule.field] end
         else if rule.source == "header" then
             value = headers_get(req.headers, rule.field)
@@ -1159,11 +1179,11 @@ end
 -- =========================================================================
 function rle_compress(input)
     if #input == 0 then return "" end
-    local output = {}
-    local i = 1
+    output = {}
+    i = 1
     while i <= #input do
-        local ch = sub(input, i, i)
-        local count = 1
+        ch = sub(input, i, i)
+        count = 1
         while i + count <= #input and sub(input, i + count, i + count) == ch do
             count = count + 1
             if count >= 255 then break end
@@ -1183,12 +1203,12 @@ function rle_compress(input)
 end
 
 function rle_decompress(input)
-    local output = {}
-    local i = 1
+    output = {}
+    i = 1
     while i <= #input do
         if sub(input, i, i) == "#" and i + 2 <= #input then
-            local count = byte(input, i + 1)
-            local ch = sub(input, i + 2, i + 2)
+            count = byte(input, i + 1)
+            ch = sub(input, i + 2, i + 2)
             for j = 1, count do
                 insert(output, ch)
             end
@@ -1205,12 +1225,12 @@ end
 -- HTTP/1.1 chunked transfer encoding
 -- =========================================================================
 function encode_chunked(body, chunk_size)
-    local parts = {}
-    local pos = 1
+    parts = {}
+    pos = 1
     while pos <= #body do
-        local chunk_end = pos + chunk_size - 1
+        chunk_end = pos + chunk_size - 1
         if chunk_end > #body then chunk_end = #body end
-        local chunk = sub(body, pos, chunk_end)
+        chunk = sub(body, pos, chunk_end)
         insert(parts, format("%x\r\n%s\r\n", #chunk, chunk))
         pos = chunk_end + 1
     end
@@ -1219,17 +1239,17 @@ function encode_chunked(body, chunk_size)
 end
 
 function decode_chunked(encoded)
-    local parts = {}
-    local pos = 1
+    parts = {}
+    pos = 1
     while pos <= #encoded do
         -- Read chunk size line
-        local eol = find(encoded, "\r\n", pos, true)
+        eol = find(encoded, "\r\n", pos, true)
         if not eol then break end
-        local size_str = sub(encoded, pos, eol - 1)
-        local size = tonumber(size_str, 16)
+        size_str = sub(encoded, pos, eol - 1)
+        size = tonumber(size_str, 16)
         if not size or size == 0 then break end
         pos = eol + 2
-        local chunk = sub(encoded, pos, pos + size - 1)
+        chunk = sub(encoded, pos, pos + size - 1)
         insert(parts, chunk)
         pos = pos + size + 2  -- skip chunk data + CRLF
     end
@@ -1242,15 +1262,15 @@ end
 function parse_range_header(range_str, total_size)
     -- Parse: bytes=0-499 or bytes=500- or bytes=-500
     if not range_str then return nil end
-    local prefix = sub(range_str, 1, 6)
-    if prefix ~= "bytes=" then return nil end
-    local spec = sub(range_str, 7)
-    local dash = find(spec, "-", 1, true)
+    prefix = sub(range_str, 1, 6)
+    if prefix != "bytes=" then return nil end
+    spec = sub(range_str, 7)
+    dash = find(spec, "-", 1, true)
     if not dash then return nil end
-    local range_start = sub(spec, 1, dash - 1)
-    local range_end = sub(spec, dash + 1)
+    range_start = sub(spec, 1, dash - 1)
+    range_end = sub(spec, dash + 1)
 
-    local s, e
+    s, e = nil, nil
     if range_start == "" then
         -- suffix: last N bytes
         e = total_size - 1
@@ -1273,13 +1293,13 @@ end
 -- Server-Sent Events builder
 -- =========================================================================
 function build_sse_event(data, event_type, id)
-    local parts = {}
+    parts = {}
     if id then insert(parts, "id: " .. tostring(id) .. "\n") end
     if event_type then insert(parts, "event: " .. event_type .. "\n") end
     -- Split data by newlines
-    local pos = 1
+    pos = 1
     while pos <= #data do
-        local nl = find(data, "\n", pos, true)
+        nl = find(data, "\n", pos, true)
         if nl then
             insert(parts, "data: " .. sub(data, pos, nl - 1) .. "\n")
             pos = nl + 1
@@ -1297,10 +1317,10 @@ end
 -- =========================================================================
 function build_ws_frame(payload, opcode)
     opcode = opcode or 1  -- text frame
-    local frame = {}
-    local fin_and_opcode = 128 + opcode  -- FIN=1
+    frame = {}
+    fin_and_opcode = 128 + opcode  -- FIN=1
     insert(frame, char(fin_and_opcode))
-    local len = #payload
+    len = #payload
     if len <= 125 then
         insert(frame, char(len))
     else if len <= 65535 then
@@ -1325,13 +1345,13 @@ end
 
 function parse_ws_frame(data)
     if #data < 2 then return nil end
-    local b1 = byte(data, 1)
-    local b2 = byte(data, 2)
-    local fin = b1 >= 128
-    local opcode = b1 % 16
-    local masked = b2 >= 128
-    local payload_len = b2 % 128
-    local offset = 3
+    b1 = byte(data, 1)
+    b2 = byte(data, 2)
+    fin = b1 >= 128
+    opcode = b1 % 16
+    masked = b2 >= 128
+    payload_len = b2 % 128
+    offset = 3
     if payload_len == 126 then
         if #data < 4 then return nil end
         payload_len = byte(data, 3) * 256 + byte(data, 4)
@@ -1341,7 +1361,7 @@ function parse_ws_frame(data)
         payload_len = byte(data, 7) * 16777216 + byte(data, 8) * 65536 + byte(data, 9) * 256 + byte(data, 10)
         offset = 11
     end
-    local payload = sub(data, offset, offset + payload_len - 1)
+    payload = sub(data, offset, offset + payload_len - 1)
     return { fin = fin, opcode = opcode, masked = masked, payload = payload }
 end
 
@@ -1376,7 +1396,7 @@ MIME_TYPES = {
 }
 
 function get_mime_type(path)
-    local dot = nil
+    dot = nil
     for i = #path, 1, -1 do
         if sub(path, i, i) == "." then
             dot = i
@@ -1384,7 +1404,7 @@ function get_mime_type(path)
         end
     end
     if not dot then return "application/octet-stream" end
-    local ext = lower(sub(path, dot + 1))
+    ext = lower(sub(path, dot + 1))
     return MIME_TYPES[ext] or "application/octet-stream"
 end
 
@@ -1393,7 +1413,7 @@ end
 -- =========================================================================
 function generate_csrf_token(session_id)
     -- Simple hash-based CSRF token
-    local hash = 5381
+    hash = 5381
     for i = 1, #session_id do
         hash = hash * 33 + byte(session_id, i)
         hash = hash % 4294967296
@@ -1402,7 +1422,7 @@ function generate_csrf_token(session_id)
 end
 
 function validate_csrf_token(token, session_id)
-    local expected = generate_csrf_token(session_id)
+    expected = generate_csrf_token(session_id)
     return token == expected
 end
 
@@ -1410,7 +1430,7 @@ end
 -- Request context builder (combines all parsed info)
 -- =========================================================================
 function build_request_context(req)
-    local ctx = {}
+    ctx = {}
     ctx.method = req.method
     ctx.path = req.path
     ctx.query = req.query
@@ -1508,7 +1528,7 @@ HPACK_STATIC_TABLE = {
 
 function hpack_find_static(name, value)
     for i = 1, #HPACK_STATIC_TABLE do
-        local entry = HPACK_STATIC_TABLE[i]
+        entry = HPACK_STATIC_TABLE[i]
         if entry.name == name then
             if value and entry.value == value then
                 return i, true  -- full match
@@ -1520,10 +1540,10 @@ function hpack_find_static(name, value)
 end
 
 function hpack_encode_headers(headers_list)
-    local encoded = {}
+    encoded = {}
     for i = 1, #headers_list do
-        local h = headers_list[i]
-        local idx, full_match = hpack_find_static(h.name, h.value)
+        h = headers_list[i]
+        idx, full_match = hpack_find_static(h.name, h.value)
         if idx and full_match then
             -- Indexed header field
             insert(encoded, format("[I:%d]", idx))
@@ -1543,17 +1563,17 @@ end
 -- =========================================================================
 function resolve_redirect_chain(responses, max_redirects)
     max_redirects = max_redirects or 10
-    local chain = {}
-    local current = responses[1]
-    local count = 0
+    chain = {}
+    current = responses[1]
+    count = 0
     while current and count < max_redirects do
         insert(chain, { status = current.status, location = headers_get(current.headers, "Location") })
         if current.status >= 300 and current.status < 400 then
-            local loc = headers_get(current.headers, "Location")
+            loc = headers_get(current.headers, "Location")
             if loc then
                 -- Find matching response (simulated)
                 count = count + 1
-                local found = false
+                found = false
                 for i = 2, #responses do
                     if responses[i].path == loc then
                         current = responses[i]
@@ -1577,17 +1597,17 @@ end
 -- =========================================================================
 function normalize_path(path)
     -- Remove double slashes, resolve . and ..
-    local segments = split_path(path)
-    local normalized = {}
+    segments = split_path(path)
+    normalized = {}
     for i = 1, #segments do
-        local seg = segments[i]
+        seg = segments[i]
         if seg == "." then
             -- skip
         else if seg == ".." then
             if #normalized > 0 then
                 table.remove(normalized)
             end
-        else if seg ~= "" then
+        else if seg != "" then
             insert(normalized, seg)
         end
     end
@@ -1599,7 +1619,7 @@ end
 -- Framework: full request processing
 -- =========================================================================
 function create_framework()
-    local fw = {}
+    fw = {}
     fw.router = create_router()
     fw.middlewares = {}
     return fw
@@ -1614,11 +1634,11 @@ function framework_route(fw, method, pattern, handler)
 end
 
 function framework_handle_request(fw, raw_request)
-    local req = parse_request(raw_request)
-    local res = create_response()
+    req = parse_request(raw_request)
+    res = create_response()
 
     -- Parse cookies
-    local cookie_hdr = headers_get(req.headers, "Cookie")
+    cookie_hdr = headers_get(req.headers, "Cookie")
     if cookie_hdr then
         req.cookies = parse_cookies(cookie_hdr)
     else
@@ -1626,11 +1646,11 @@ function framework_handle_request(fw, raw_request)
     end
 
     -- Find handler
-    local handler, params = router_match(fw.router, req.method, req.path)
+    handler, params = router_match(fw.router, req.method, req.path)
     if handler then
         req.params = params or {}
         -- Build middleware chain
-        local chain = create_middleware_chain(fw.middlewares, handler)
+        chain = create_middleware_chain(fw.middlewares, handler)
         chain(req, res)
     else
         -- 404
@@ -1645,7 +1665,7 @@ end
 -- Setup the framework with routes and handlers
 -- =========================================================================
 function setup_framework()
-    local fw = create_framework()
+    fw = create_framework()
 
     -- Add middlewares
     framework_use(fw, middleware_logging)
@@ -1656,21 +1676,21 @@ function setup_framework()
     -- Route: GET /
     framework_route(fw, "GET", "/", function(req, res)
         response_set_status(res, 200, "OK")
-        local body = json_encode({ message = "Welcome to the API", version = "1.0.0" })
+        body = json_encode({ message = "Welcome to the API", version = "1.0.0" })
         response_set_body(res, body, "application/json")
     end)
 
     -- Route: GET /health
     framework_route(fw, "GET", "/health", function(req, res)
         response_set_status(res, 200, "OK")
-        local body = json_encode({ status = "healthy", uptime = 12345 })
+        body = json_encode({ status = "healthy", uptime = 12345 })
         response_set_body(res, body, "application/json")
     end)
 
     -- Route: GET /users
     framework_route(fw, "GET", "/users", function(req, res)
         response_set_status(res, 200, "OK")
-        local users = {
+        users = {
             { id = 1, name = "Alice", email = "alice@example.com" },
             { id = 2, name = "Bob", email = "bob@example.com" },
             { id = 3, name = "Charlie", email = "charlie@example.com" }
@@ -1680,10 +1700,10 @@ function setup_framework()
 
     -- Route: GET /users/:id
     framework_route(fw, "GET", "/users/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
+        id = tonumber(req.params.id) or 0
         if id > 0 and id <= 3 then
             response_set_status(res, 200, "OK")
-            local user = { id = id, name = "User" .. tostring(id), email = "user" .. tostring(id) .. "@example.com" }
+            user = { id = id, name = "User" .. tostring(id), email = "user" .. tostring(id) .. "@example.com" }
             response_set_body(res, json_encode(user), "application/json")
         else
             response_set_status(res, 404, "Not Found")
@@ -1693,8 +1713,8 @@ function setup_framework()
 
     -- Route: POST /users
     framework_route(fw, "POST", "/users", function(req, res)
-        local ct = headers_get(req.headers, "Content-Type") or ""
-        local data
+        ct = headers_get(req.headers, "Content-Type") or ""
+        data = nil
         if find(ct, "application/json", 1, true) then
             data = json_decode(req.body)
         else if find(ct, "application/x-www-form-urlencoded", 1, true) then
@@ -1704,7 +1724,7 @@ function setup_framework()
         end
         if data and data.name then
             response_set_status(res, 201, "Created")
-            local new_user = { id = 4, name = data.name, created = true }
+            new_user = { id = 4, name = data.name, created = true }
             response_set_body(res, json_encode(new_user), "application/json")
         else
             response_set_status(res, 400, "Bad Request")
@@ -1714,11 +1734,11 @@ function setup_framework()
 
     -- Route: PUT /users/:id
     framework_route(fw, "PUT", "/users/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
-        local data = json_decode(req.body)
+        id = tonumber(req.params.id) or 0
+        data = json_decode(req.body)
         if id > 0 and data then
             response_set_status(res, 200, "OK")
-            local updated = { id = id, name = data.name or "Updated", updated = true }
+            updated = { id = id, name = data.name or "Updated", updated = true }
             response_set_body(res, json_encode(updated), "application/json")
         else
             response_set_status(res, 400, "Bad Request")
@@ -1728,7 +1748,7 @@ function setup_framework()
 
     -- Route: DELETE /users/:id
     framework_route(fw, "DELETE", "/users/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
+        id = tonumber(req.params.id) or 0
         if id > 0 then
             response_set_status(res, 200, "OK")
             response_set_body(res, json_encode({ deleted = true, id = id }), "application/json")
@@ -1741,7 +1761,7 @@ function setup_framework()
     -- Route: GET /posts
     framework_route(fw, "GET", "/posts", function(req, res)
         response_set_status(res, 200, "OK")
-        local posts = {}
+        posts = {}
         for i = 1, 5 do
             insert(posts, { id = i, title = "Post " .. tostring(i), body = "Content of post " .. tostring(i) })
         end
@@ -1750,10 +1770,10 @@ function setup_framework()
 
     -- Route: GET /posts/:id
     framework_route(fw, "GET", "/posts/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
+        id = tonumber(req.params.id) or 0
         if id > 0 and id <= 5 then
             response_set_status(res, 200, "OK")
-            local post = { id = id, title = "Post " .. tostring(id), body = "Content of post " .. tostring(id), author_id = 1 }
+            post = { id = id, title = "Post " .. tostring(id), body = "Content of post " .. tostring(id), author_id = 1 }
             response_set_body(res, json_encode(post), "application/json")
         else
             response_set_status(res, 404, "Not Found")
@@ -1763,7 +1783,7 @@ function setup_framework()
 
     -- Route: POST /posts
     framework_route(fw, "POST", "/posts", function(req, res)
-        local data = json_decode(req.body)
+        data = json_decode(req.body)
         if data and data.title then
             response_set_status(res, 201, "Created")
             response_set_body(res, json_encode({ id = 6, title = data.title, created = true }), "application/json")
@@ -1775,20 +1795,20 @@ function setup_framework()
 
     -- Route: GET /comments/:id
     framework_route(fw, "GET", "/comments/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
+        id = tonumber(req.params.id) or 0
         response_set_status(res, 200, "OK")
-        local comment = { id = id, text = "Comment " .. tostring(id), post_id = 1, author = "User1" }
+        comment = { id = id, text = "Comment " .. tostring(id), post_id = 1, author = "User1" }
         response_set_body(res, json_encode(comment), "application/json")
     end)
 
     -- Route: POST /login
     framework_route(fw, "POST", "/login", function(req, res)
-        local data = json_decode(req.body)
+        data = json_decode(req.body)
         if data and data.username == "admin" and data.password == "secret" then
             response_set_status(res, 200, "OK")
-            local token_body = json_encode({ token = "abc123xyz", expires_in = 3600 })
+            token_body = json_encode({ token = "abc123xyz", expires_in = 3600 })
             response_set_body(res, token_body, "application/json")
-            local cookie = build_set_cookie("session", "abc123xyz", {
+            cookie = build_set_cookie("session", "abc123xyz", {
                 path = "/", httponly = true, sekure = true, max_age = 3600
             })
             headers_set(res.headers, "Set-Cookie", cookie)
@@ -1802,21 +1822,21 @@ function setup_framework()
     framework_route(fw, "POST", "/logout", function(req, res)
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ message = "Logged out" }), "application/json")
-        local cookie = build_set_cookie("session", "", { path = "/", max_age = 0 })
+        cookie = build_set_cookie("session", "", { path = "/", max_age = 0 })
         headers_set(res.headers, "Set-Cookie", cookie)
     end)
 
     -- Route: GET /search
     framework_route(fw, "GET", "/search", function(req, res)
-        local q = req.query.q or ""
-        local page = tonumber(req.query.page) or 1
-        local limit = tonumber(req.query.limit) or 10
+        q = req.query.q or ""
+        page = tonumber(req.query.page) or 1
+        limit = tonumber(req.query.limit) or 10
         response_set_status(res, 200, "OK")
-        local results = {}
+        results = {}
         for i = 1, limit do
             insert(results, { id = (page - 1) * limit + i, title = "Result for: " .. q })
         end
-        local body = json_encode({ query = q, page = page, total = 100, results = results })
+        body = json_encode({ query = q, page = page, total = 100, results = results })
         response_set_body(res, body, "application/json")
     end)
 
@@ -1829,25 +1849,25 @@ function setup_framework()
 
     -- Route: GET /files/*
     framework_route(fw, "GET", "/files/*", function(req, res)
-        local filepath = req.params["*"] or ""
+        filepath = req.params["*"] or ""
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ file = filepath, size = #filepath * 100 }), "application/json")
     end)
 
     -- Route: PATCH /users/:id
     framework_route(fw, "PATCH", "/users/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
-        local data = json_decode(req.body)
+        id = tonumber(req.params.id) or 0
+        data = json_decode(req.body)
         response_set_status(res, 200, "OK")
-        local patched = { id = id, patched = true }
+        patched = { id = id, patched = true }
         if data and data.name then patched.name = data.name end
         response_set_body(res, json_encode(patched), "application/json")
     end)
 
     -- Route: GET /negotiate
     framework_route(fw, "GET", "/negotiate", function(req, res)
-        local accept = headers_get(req.headers, "Accept") or "*/*"
-        local chosen = negotiate_content_type(accept, {
+        accept = headers_get(req.headers, "Accept") or "*/*"
+        chosen = negotiate_content_type(accept, {
             "application/json", "text/html", "text/plain"
         })
         response_set_status(res, 200, "OK")
@@ -1862,7 +1882,7 @@ function setup_framework()
 
     -- Route: POST /upload
     framework_route(fw, "POST", "/upload", function(req, res)
-        local size = #req.body
+        size = #req.body
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ uploaded = true, size = size }), "application/json")
     end)
@@ -1883,7 +1903,7 @@ function setup_framework()
     -- Route: GET /api/v1/items
     framework_route(fw, "GET", "/api/v1/items", function(req, res)
         response_set_status(res, 200, "OK")
-        local items = {}
+        items = {}
         for i = 1, 10 do
             insert(items, { id = i, name = "Item" .. tostring(i), price = i * 9.99 })
         end
@@ -1892,23 +1912,23 @@ function setup_framework()
 
     -- Route: GET /api/v1/items/:id
     framework_route(fw, "GET", "/api/v1/items/:id", function(req, res)
-        local id = tonumber(req.params.id) or 0
+        id = tonumber(req.params.id) or 0
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ id = id, name = "Item" .. tostring(id), price = id * 9.99 }), "application/json")
     end)
 
     -- Route: POST /api/v1/orders
     framework_route(fw, "POST", "/api/v1/orders", function(req, res)
-        local data = json_decode(req.body)
+        data = json_decode(req.body)
         response_set_status(res, 201, "Created")
-        local order = { id = 1001, items = data and data.items or {}, total = 49.95, status = "pending" }
+        order = { id = 1001, items = data and data.items or {}, total = 49.95, status = "pending" }
         response_set_body(res, json_encode(order), "application/json")
     end)
 
     -- Route: GET /headers
     framework_route(fw, "GET", "/headers", function(req, res)
         response_set_status(res, 200, "OK")
-        local info = {
+        info = {
             user_agent = headers_get(req.headers, "User-Agent") or "unknown",
             accept = headers_get(req.headers, "Accept") or "*/*",
             host = headers_get(req.headers, "Host") or "unknown"
@@ -1929,7 +1949,7 @@ end
 -- Test HTTP requests (raw strings)
 -- =========================================================================
 function build_test_requests()
-    local reqs = {}
+    reqs = {}
 
     -- 1. Simple GET /
     insert(reqs, "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: TestClient/1.0\r\nAccept: */*\r\n\r\n")
@@ -2088,7 +2108,7 @@ end
 -- Additional workload: URL encoding/decoding stress
 -- =========================================================================
 function url_encode_decode_workload(iterations)
-    local test_strings = {
+    test_strings = {
         "hello world",
         "foo=bar&baz=qux",
         "name=John Doe&city=New York",
@@ -2100,11 +2120,11 @@ function url_encode_decode_workload(iterations)
         "path=/api/v2/users/123/posts?page=1&limit=10",
         "data=base64+encoded/data==&format=raw"
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_strings do
-            local encoded = url_encode(test_strings[i])
-            local decoded = url_decode(encoded)
+            encoded = url_encode(test_strings[i])
+            decoded = url_decode(encoded)
             checksum = checksum + #encoded + #decoded
         end
     end
@@ -2115,7 +2135,7 @@ end
 -- Additional workload: JSON encode/decode stress
 -- =========================================================================
 function json_codec_workload(iterations)
-    local test_objects = {
+    test_objects = {
         { id = 1, name = "Alice", active = true, score = 95.5 },
         { items = { 1, 2, 3, 4, 5 }, total = 15 },
         { nested = { deep = { value = "found" } }, arr = { "a", "b", "c" } },
@@ -2125,15 +2145,15 @@ function json_codec_workload(iterations)
         { mixed = { 1, "two", true, { four = 4 } } },
         { tags = { "lua", "benchmark", "http", "json" }, count = 4 },
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_objects do
-            local encoded = json_encode(test_objects[i])
-            local decoded = json_decode(encoded)
+            encoded = json_encode(test_objects[i])
+            decoded = json_decode(encoded)
             checksum = checksum + #encoded
             if type(decoded) == "table" then
                 -- count keys
-                local n = 0
+                n = 0
                 for _ in next, decoded do n = n + 1 end
                 checksum = checksum + n
             end
@@ -2146,27 +2166,27 @@ end
 -- Additional workload: header parsing stress
 -- =========================================================================
 function header_parse_workload(iterations)
-    local raw_headers = {
+    raw_headers = {
         "Content-Type: application/json\r\nContent-Length: 256\r\nX-Request-Id: abc123\r\n",
         "Accept: text/html, application/xhtml+xml, application/xml;q=0.9\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\n",
         "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0\r\nCookie: session=abc; theme=dark; lang=en\r\n",
         "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\nX-Powered-By: Luau\r\n",
         "Host: www.example.com:443\r\nConnection: keep-alive\r\nUpgrade-Insekure-Requests: 1\r\nDNT: 1\r\n",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #raw_headers do
-            local h = create_headers()
-            local raw = raw_headers[i]
-            local pos = 1
+            h = create_headers()
+            raw = raw_headers[i]
+            pos = 1
             while pos <= #raw do
-                local eol = find(raw, "\r\n", pos, true)
+                eol = find(raw, "\r\n", pos, true)
                 if not eol then break end
-                local line = sub(raw, pos, eol - 1)
-                local colon = find(line, ":", 1, true)
+                line = sub(raw, pos, eol - 1)
+                colon = find(line, ":", 1, true)
                 if colon then
-                    local name = sub(line, 1, colon - 1)
-                    local value = gsub(sub(line, colon + 1), "^%s+", "")
+                    name = sub(line, 1, colon - 1)
+                    value = gsub(sub(line, colon + 1), "^%s+", "")
                     headers_add(h, name, value)
                 end
                 pos = eol + 2
@@ -2181,7 +2201,7 @@ end
 -- Additional workload: routing stress
 -- =========================================================================
 function routing_workload(iterations)
-    local router = create_router()
+    router = create_router()
     -- Add many routes
     router_add(router, "GET", "/", function() end)
     router_add(router, "GET", "/users", function() end)
@@ -2204,7 +2224,7 @@ function routing_workload(iterations)
     router_add(router, "GET", "/admin/users", function() end)
     router_add(router, "GET", "/admin/users/:id", function() end)
 
-    local test_paths = {
+    test_paths = {
         { "GET", "/" },
         { "GET", "/users" },
         { "GET", "/users/42" },
@@ -2225,10 +2245,10 @@ function routing_workload(iterations)
         { "GET", "/nonexistent" },
     }
 
-    local matches = 0
+    matches = 0
     for iter = 1, iterations do
         for i = 1, #test_paths do
-            local handler = router_match(router, test_paths[i][1], test_paths[i][2])
+            handler = router_match(router, test_paths[i][1], test_paths[i][2])
             if handler then matches = matches + 1 end
         end
     end
@@ -2239,7 +2259,7 @@ end
 -- Additional workload: query string parsing stress
 -- =========================================================================
 function query_string_workload(iterations)
-    local test_queries = {
+    test_queries = {
         "q=hello&page=1&limit=10",
         "name=John+Doe&email=john%40example.com&age=30",
         "filter=active&sort=created_at&order=desc&page=3&per_page=25",
@@ -2249,11 +2269,11 @@ function query_string_workload(iterations)
         "token=abc123xyz&redirect=/dashboard&remember=true",
         "q=SELECT+*+FROM+users&format=json&pretty=true",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_queries do
-            local parsed = parse_query_string(test_queries[i])
-            local count = 0
+            parsed = parse_query_string(test_queries[i])
+            count = 0
             for _ in next, parsed do count = count + 1 end
             checksum = checksum + count
         end
@@ -2265,18 +2285,18 @@ end
 -- Additional workload: cookie parsing stress
 -- =========================================================================
 function cookie_workload(iterations)
-    local test_cookies = {
+    test_cookies = {
         "session=abc123; user=alice; theme=dark",
         "id=12345; token=eyJhbG; pref=compact; lang=en-US; tz=America/New_York",
         "a=1; b=2; c=3; d=4; e=5; f=6; g=7; h=8",
         "_ga=GA1.2.123456; _gid=GA1.2.654321; _fbp=fb.1.123",
         "session=s%3Aabc123.signature; csrf=token123; remember=true",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_cookies do
-            local cookies = parse_cookies(test_cookies[i])
-            local count = 0
+            cookies = parse_cookies(test_cookies[i])
+            count = 0
             for _ in next, cookies do count = count + 1 end
             checksum = checksum + count
         end
@@ -2288,27 +2308,27 @@ end
 -- Additional workload: response building stress
 -- =========================================================================
 function response_build_workload(iterations)
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         -- Build various responses
         for code = 200, 204 do
-            local res = create_response()
+            res = create_response()
             response_set_status(res, code)
             headers_set(res.headers, "Content-Type", "application/json")
             headers_set(res.headers, "X-Request-Id", "req-" .. tostring(iter))
             headers_set(res.headers, "Cache-Control", "no-cache")
-            local body = json_encode({ status = code, iteration = iter })
+            body = json_encode({ status = code, iteration = iter })
             response_set_body(res, body, "application/json")
-            local serialized = response_serialize(res)
+            serialized = response_serialize(res)
             checksum = checksum + #serialized
         end
         -- Error responses
         for _, code in next, { 400, 401, 403, 404, 500 } do
-            local res = create_response()
+            res = create_response()
             response_set_status(res, code)
-            local body = json_encode({ error = get_status_text(code), code = code })
+            body = json_encode({ error = get_status_text(code), code = code })
             response_set_body(res, body, "application/json")
-            local serialized = response_serialize(res)
+            serialized = response_serialize(res)
             checksum = checksum + #serialized
         end
     end
@@ -2319,7 +2339,7 @@ end
 -- Additional workload: content negotiation stress
 -- =========================================================================
 function content_negotiation_workload(iterations)
-    local accept_headers = {
+    accept_headers = {
         "application/json",
         "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
         "text/plain",
@@ -2329,11 +2349,11 @@ function content_negotiation_workload(iterations)
         "text/html;q=1.0, application/json;q=0.9",
         "application/xml, application/json;q=0.9, text/plain;q=0.5",
     }
-    local available = { "application/json", "text/html", "text/plain", "application/xml" }
-    local checksum = 0
+    available = { "application/json", "text/html", "text/plain", "application/xml" }
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #accept_headers do
-            local chosen = negotiate_content_type(accept_headers[i], available)
+            chosen = negotiate_content_type(accept_headers[i], available)
             checksum = checksum + #chosen
         end
     end
@@ -2344,8 +2364,8 @@ end
 -- Additional workload: multipart parsing stress
 -- =========================================================================
 function multipart_workload(iterations)
-    local boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
-    local test_body = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
+    boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+    test_body = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
         .. "Content-Disposition: form-data; name=\"username\"\r\n\r\n"
         .. "testuser\r\n"
         .. "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
@@ -2360,9 +2380,9 @@ function multipart_workload(iterations)
         .. "A test upload with multiple fields\r\n"
         .. "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n"
 
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
-        local parts = parse_multipart(test_body, "----WebKitFormBoundary7MA4YWxkTrZu0gW")
+        parts = parse_multipart(test_body, "----WebKitFormBoundary7MA4YWxkTrZu0gW")
         checksum = checksum + #parts
         for i = 1, #parts do
             checksum = checksum + #parts[i].body
@@ -2376,30 +2396,30 @@ end
 -- Additional workload: template rendering stress
 -- =========================================================================
 function template_workload(iterations)
-    local templates = {
+    templates = {
         "<html><head><title>{{title}}</title></head><body><h1>{{heading}}</h1><p>{{content}}</p></body></html>",
         "Hello {{user.name}}, your email is {{user.email}}. You have {{count}} messages.",
         "<div class=\"card\"><h2>{{title}}</h2><p>{{description}}</p><span>{{author}}</span></div>",
         "API Response: {\"status\": {{status}}, \"message\": \"{{message}}\", \"data\": \"{{data}}\"}",
         "<tr><td>{{id}}</td><td>{{name}}</td><td>{{email}}</td><td>{{role}}</td></tr>",
     }
-    local contexts = {
+    contexts = {
         { title = "Home Page", heading = "Welcome", content = "This is the home page content." },
         { user = { name = "Alice", email = "alice@test.com" }, count = "42" },
         { title = "Product Card", description = "A great product for everyone", author = "Admin" },
         { status = "200", message = "Success", data = "result_data_here" },
         { id = "1", name = "Bob Smith", email = "bob@test.com", role = "admin" },
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #templates do
-            local ctx = contexts[((i - 1) % #contexts) + 1]
-            local rendered = template_render(templates[i], ctx)
+            ctx = contexts[((i - 1) % #contexts) + 1]
+            rendered = template_render(templates[i], ctx)
             checksum = checksum + #rendered
         end
         -- Also test loop rendering
-        local list_tmpl = "<li>{{item.name}} ({{item.id}})</li>"
-        local list_ctx = {
+        list_tmpl = "<li>{{item.name}} ({{item.id}})</li>"
+        list_ctx = {
             items = {
                 { id = "1", name = "Item One" },
                 { id = "2", name = "Item Two" },
@@ -2408,7 +2428,7 @@ function template_workload(iterations)
                 { id = "5", name = "Item Five" },
             }
         }
-        local list_result = template_render_loop(list_tmpl, list_ctx, "items", "item")
+        list_result = template_render_loop(list_tmpl, list_ctx, "items", "item")
         checksum = checksum + #list_result
     end
     return checksum
@@ -2418,7 +2438,7 @@ end
 -- Additional workload: base64 encode/decode stress
 -- =========================================================================
 function base64_workload(iterations)
-    local test_strings = {
+    test_strings = {
         "Hello, World!",
         "username:password",
         "The quick brown fox jumps over the lazy dog",
@@ -2428,11 +2448,11 @@ function base64_workload(iterations)
         "special: !@#$%^&*()_+-=[]{}|;':\",./<>?",
         string.rep("a", 100),
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_strings do
-            local encoded = base64_encode(test_strings[i])
-            local decoded = base64_decode(encoded)
+            encoded = base64_encode(test_strings[i])
+            decoded = base64_decode(encoded)
             checksum = checksum + #encoded + #decoded
         end
     end
@@ -2443,20 +2463,20 @@ end
 -- Additional workload: chunked transfer encoding stress
 -- =========================================================================
 function chunked_workload(iterations)
-    local test_bodies = {
+    test_bodies = {
         "Short body",
         string.rep("Hello World! ", 20),
         json_encode({ users = { { id = 1, name = "Alice" }, { id = 2, name = "Bob" } }, total = 2 }),
         string.rep("0123456789", 50),
         "<html><body><h1>Hello</h1><p>" .. string.rep("content ", 30) .. "</p></body></html>",
     }
-    local chunk_sizes = { 8, 16, 32, 64, 128 }
-    local checksum = 0
+    chunk_sizes = { 8, 16, 32, 64, 128 }
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_bodies do
-            local cs = chunk_sizes[((i - 1) % #chunk_sizes) + 1]
-            local encoded = encode_chunked(test_bodies[i], cs)
-            local decoded = decode_chunked(encoded)
+            cs = chunk_sizes[((i - 1) % #chunk_sizes) + 1]
+            encoded = encode_chunked(test_bodies[i], cs)
+            decoded = decode_chunked(encoded)
             checksum = checksum + #encoded + #decoded
         end
     end
@@ -2467,7 +2487,7 @@ end
 -- Additional workload: ETag and caching stress
 -- =========================================================================
 function etag_workload(iterations)
-    local test_contents = {
+    test_contents = {
         "Page content version 1",
         json_encode({ data = "response", version = 1 }),
         "<html><body>Static page</body></html>",
@@ -2475,18 +2495,18 @@ function etag_workload(iterations)
         "short",
         json_encode({ items = { 1, 2, 3, 4, 5 }, meta = { page = 1, total = 100 } }),
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
-        local cache = create_cache(50)
+        cache = create_cache(50)
         for i = 1, #test_contents do
-            local etag = generate_etag(test_contents[i])
+            etag = generate_etag(test_contents[i])
             checksum = checksum + #etag
             cache_set(cache, "page_" .. tostring(i), { etag = etag, body = test_contents[i] }, 0)
         end
         -- Test cache hits/misses
         for i = 1, 10 do
-            local key = "page_" .. tostring((i % #test_contents) + 1)
-            local cached = cache_get(cache, key)
+            key = "page_" .. tostring((i % #test_contents) + 1)
+            cached = cache_get(cache, key)
             if cached then checksum = checksum + #cached.etag end
         end
         -- Test eviction
@@ -2502,7 +2522,7 @@ end
 -- Additional workload: WebSocket frame building stress
 -- =========================================================================
 function websocket_workload(iterations)
-    local test_messages = {
+    test_messages = {
         "Hello",
         json_encode({ type = "message", content = "test", timestamp = 1234567890 }),
         string.rep("ping", 50),
@@ -2510,20 +2530,20 @@ function websocket_workload(iterations)
         json_encode({ type = "subscribe", channels = { "chat", "notifications", "updates" } }),
         string.rep("data block ", 30),
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_messages do
-            local frame = build_ws_frame(test_messages[i], 1)
+            frame = build_ws_frame(test_messages[i], 1)
             checksum = checksum + #frame
-            local parsed = parse_ws_frame(frame)
+            parsed = parse_ws_frame(frame)
             if parsed then
                 checksum = checksum + #parsed.payload
             end
         end
         -- Binary frames
         for i = 1, 3 do
-            local binary = string.rep(char(i * 37 % 256), 200)
-            local frame = build_ws_frame(binary, 2)
+            binary = string.rep(char(i * 37 % 256), 200)
+            frame = build_ws_frame(binary, 2)
             checksum = checksum + #frame
         end
     end
@@ -2534,7 +2554,7 @@ end
 -- Additional workload: HPACK header compression stress
 -- =========================================================================
 function hpack_workload(iterations)
-    local test_header_sets = {
+    test_header_sets = {
         {
             { name = ":method", value = "GET" },
             { name = ":path", value = "/" },
@@ -2564,10 +2584,10 @@ function hpack_workload(iterations)
             { name = "content-length", value = "128" },
         },
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_header_sets do
-            local encoded = hpack_encode_headers(test_header_sets[i])
+            encoded = hpack_encode_headers(test_header_sets[i])
             checksum = checksum + #encoded
         end
     end
@@ -2578,7 +2598,7 @@ end
 -- Additional workload: path normalization stress
 -- =========================================================================
 function path_normalize_workload(iterations)
-    local test_paths = {
+    test_paths = {
         "/users/../admin/./dashboard",
         "/api/v1/../../v2/items",
         "///multiple///slashes///",
@@ -2590,10 +2610,10 @@ function path_normalize_workload(iterations)
         "/../../../etc/passwd",
         "/api/v1/users/./profile/../settings",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_paths do
-            local normalized = normalize_path(test_paths[i])
+            normalized = normalize_path(test_paths[i])
             checksum = checksum + #normalized
         end
     end
@@ -2604,7 +2624,7 @@ end
 -- Additional workload: MIME type lookup stress
 -- =========================================================================
 function mime_type_workload(iterations)
-    local test_files = {
+    test_files = {
         "/static/style.css",
         "/images/logo.png",
         "/scripts/app.js",
@@ -2621,10 +2641,10 @@ function mime_type_workload(iterations)
         "/music/song.mp3",
         "/fonts/custom.ttf",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_files do
-            local mime = get_mime_type(test_files[i])
+            mime = get_mime_type(test_files[i])
             checksum = checksum + #mime
         end
     end
@@ -2635,12 +2655,12 @@ end
 -- Additional workload: rate limiter simulation stress
 -- =========================================================================
 function rate_limiter_workload(iterations)
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
-        local limiter = create_rate_limiter(10, 2.0)  -- 10 capacity, 2 tokens/sec
-        local allowed = 0
-        local denied = 0
-        local time_now = 0.0
+        limiter = create_rate_limiter(10, 2.0)  -- 10 capacity, 2 tokens/sec
+        allowed = 0
+        denied = 0
+        time_now = 0.0
         for req_num = 1, 50 do
             if rate_limiter_allow(limiter, time_now) then
                 allowed = allowed + 1
@@ -2658,7 +2678,7 @@ end
 -- Additional workload: RLE compression stress
 -- =========================================================================
 function compression_workload(iterations)
-    local test_data = {
+    test_data = {
         string.rep("A", 100) .. string.rep("B", 50) .. string.rep("C", 30),
         "ABCABCABCABC",
         string.rep("X", 255) .. string.rep("Y", 200),
@@ -2668,11 +2688,11 @@ function compression_workload(iterations)
         string.rep("1234567890", 10),
         "aaaaabbbbbcccccdddddeeeee",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_data do
-            local compressed = rle_compress(test_data[i])
-            local decompressed = rle_decompress(compressed)
+            compressed = rle_compress(test_data[i])
+            decompressed = rle_decompress(compressed)
             checksum = checksum + #compressed + #decompressed
             -- Verify roundtrip
             if decompressed == test_data[i] then
@@ -2687,18 +2707,18 @@ end
 -- Additional workload: SSE event building stress
 -- =========================================================================
 function sse_workload(iterations)
-    local events = {
+    events = {
         { data = "Hello World", event_type = "message", id = "1" },
         { data = json_encode({ user = "alice", text = "hi" }), event_type = "chat", id = "2" },
         { data = "heartbeat", event_type = "ping", id = "3" },
         { data = "line1\nline2\nline3", event_type = "multiline", id = "4" },
         { data = json_encode({ type = "update", items = { 1, 2, 3 } }), event_type = "data", id = "5" },
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #events do
-            local evt = events[i]
-            local built = build_sse_event(evt.data, evt.event_type, evt.id)
+            evt = events[i]
+            built = build_sse_event(evt.data, evt.event_type, evt.id)
             checksum = checksum + #built
         end
     end
@@ -2709,14 +2729,14 @@ end
 -- Additional workload: request validation stress
 -- =========================================================================
 function validation_workload(iterations)
-    local rules = {
+    rules = {
         { source = "body", field = "name", required = true, min_length = 2, max_length = 50 },
         { source = "body", field = "email", required = true, pattern = "@" },
         { source = "body", field = "age", required = false, min_length = 1 },
         { source = "header", field = "Authorization", required = true },
         { source = "query", field = "page", required = false },
     }
-    local test_requests_for_validation = {
+    test_requests_for_validation = {
         { body = '{"name":"Alice","email":"alice@test.com","age":"30"}', headers = create_headers(), query = { page = "1" } },
         { body = '{"name":"B","email":"noemail"}', headers = create_headers(), query = {} },
         { body = '{"email":"test@test.com"}', headers = create_headers(), query = {} },
@@ -2726,12 +2746,12 @@ function validation_workload(iterations)
     headers_set(test_requests_for_validation[1].headers, "Authorization", "Bearer token")
     headers_set(test_requests_for_validation[4].headers, "Authorization", "Bearer admin")
 
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_requests_for_validation do
-            local req = test_requests_for_validation[i]
+            req = test_requests_for_validation[i]
             req.params = {}
-            local errors = validate_request(req, rules)
+            errors = validate_request(req, rules)
             checksum = checksum + #errors
         end
     end
@@ -2742,17 +2762,17 @@ end
 -- Additional workload: CSRF token stress
 -- =========================================================================
 function csrf_workload(iterations)
-    local sessions = {
+    sessions = {
         "session_abc123",
         "session_xyz789",
         "user_session_12345",
         "admin_sess_001",
         "guest_temporary_session",
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #sessions do
-            local token = generate_csrf_token(sessions[i])
+            token = generate_csrf_token(sessions[i])
             checksum = checksum + #token
             if validate_csrf_token(token, sessions[i]) then
                 checksum = checksum + 1
@@ -2770,7 +2790,7 @@ end
 -- Additional workload: range request parsing stress
 -- =========================================================================
 function range_request_workload(iterations)
-    local test_ranges = {
+    test_ranges = {
         { header = "bytes=0-499", size = 1000 },
         { header = "bytes=500-999", size = 1000 },
         { header = "bytes=500-", size = 1000 },
@@ -2780,11 +2800,11 @@ function range_request_workload(iterations)
         { header = nil, size = 1000 },
         { header = "invalid", size = 1000 },
     }
-    local checksum = 0
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #test_ranges do
-            local r = test_ranges[i]
-            local range = parse_range_header(r.header, r.size)
+            r = test_ranges[i]
+            range = parse_range_header(r.header, r.size)
             if range then
                 checksum = checksum + range.start + range.finish + range.total
             else
@@ -2799,16 +2819,16 @@ end
 -- Additional workload: logging formatter stress
 -- =========================================================================
 function logging_workload(iterations)
-    local methods = { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" }
-    local paths = { "/", "/users", "/api/v1/items/5", "/search?q=test", "/files/doc.pdf" }
-    local statuses = { 200, 201, 204, 301, 400, 401, 403, 404, 500 }
-    local checksum = 0
+    methods = { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" }
+    paths = { "/", "/users", "/api/v1/items/5", "/search?q=test", "/files/doc.pdf" }
+    statuses = { 200, 201, 204, 301, 400, 401, 403, 404, 500 }
+    checksum = 0
     for iter = 1, iterations do
         for i = 1, #methods do
             for j = 1, #paths do
-                local req = { method = methods[i], path = paths[j] }
-                local res = { status = statuses[((i + j) % #statuses) + 1], body = string.rep("x", (i + j) * 10) }
-                local entry = format_log_entry(req, res, 12.5 + i)
+                req = { method = methods[i], path = paths[j] }
+                res = { status = statuses[((i + j) % #statuses) + 1], body = string.rep("x", (i + j) * 10) }
+                entry = format_log_entry(req, res, 12.5 + i)
                 checksum = checksum + #entry
             end
         end
@@ -2840,13 +2860,13 @@ end
 -- =========================================================================
 function parse_http_version(version_str)
     if not version_str then return 1, 1 end
-    local slash = find(version_str, "/", 1, true)
+    slash = find(version_str, "/", 1, true)
     if not slash then return 1, 1 end
-    local ver = sub(version_str, slash + 1)
-    local dot = find(ver, ".", 1, true)
+    ver = sub(version_str, slash + 1)
+    dot = find(ver, ".", 1, true)
     if not dot then return tonumber(ver) or 1, 0 end
-    local major = tonumber(sub(ver, 1, dot - 1)) or 1
-    local minor = tonumber(sub(ver, dot + 1)) or 1
+    major = tonumber(sub(ver, 1, dot - 1)) or 1
+    minor = tonumber(sub(ver, dot + 1)) or 1
     return major, minor
 end
 
@@ -2854,13 +2874,13 @@ end
 -- Connection management simulation
 -- =========================================================================
 function should_keep_alive(req)
-    local connection = headers_get(req.headers, "Connection")
+    connection = headers_get(req.headers, "Connection")
     if connection then
         if lower(connection) == "close" then return false end
         if lower(connection) == "keep-alive" then return true end
     end
     -- HTTP/1.1 defaults to keep-alive
-    local major, minor = parse_http_version(req.version)
+    major, minor = parse_http_version(req.version)
     return major >= 1 and minor >= 1
 end
 
@@ -2868,14 +2888,14 @@ end
 -- Request fingerprinting (for rate limiting / abuse detection)
 -- =========================================================================
 function fingerprint_request(req)
-    local parts = {}
+    parts = {}
     insert(parts, req.method)
     insert(parts, req.path)
     insert(parts, headers_get(req.headers, "User-Agent") or "")
     insert(parts, headers_get(req.headers, "Accept-Language") or "")
-    local combined = concat(parts, "|")
+    combined = concat(parts, "|")
     -- Simple hash
-    local hash = 0
+    hash = 0
     for i = 1, #combined do
         hash = (hash * 31 + byte(combined, i)) % 4294967296
     end
@@ -2898,12 +2918,12 @@ end
 -- Link header parser (for pagination)
 -- =========================================================================
 function parse_link_header(link_str)
-    local links = {}
+    links = {}
     if not link_str or link_str == "" then return links end
-    local pos = 1
+    pos = 1
     while pos <= #link_str do
-        local comma = find(link_str, ",", pos, true)
-        local segment
+        comma = find(link_str, ",", pos, true)
+        segment = nil
         if comma then
             segment = sub(link_str, pos, comma - 1)
             pos = comma + 1
@@ -2915,15 +2935,15 @@ function parse_link_header(link_str)
         segment = gsub(segment, "^%s+", "")
         segment = gsub(segment, "%s+$", "")
         -- Extract URL from <...>
-        local url_start = find(segment, "<", 1, true)
-        local url_end = find(segment, ">", 1, true)
+        url_start = find(segment, "<", 1, true)
+        url_end = find(segment, ">", 1, true)
         if url_start and url_end then
-            local url = sub(segment, url_start + 1, url_end - 1)
+            url = sub(segment, url_start + 1, url_end - 1)
             -- Extract rel from rel="..."
-            local rel_start = find(segment, 'rel="', 1, true)
-            local rel = "unknown"
+            rel_start = find(segment, 'rel="', 1, true)
+            rel = "unknown"
             if rel_start then
-                local rel_end = find(segment, '"', rel_start + 5, true)
+                rel_end = find(segment, '"', rel_start + 5, true)
                 if rel_end then
                     rel = sub(segment, rel_start + 5, rel_end - 1)
                 end
@@ -2938,8 +2958,8 @@ end
 -- Build Link header for pagination
 -- =========================================================================
 function build_link_header(base_url, page, per_page, total)
-    local last_page = math.ceil(total / per_page)
-    local parts = {}
+    last_page = math.ceil(total / per_page)
+    parts = {}
     if page > 1 then
         insert(parts, format('<%s?page=%d&per_page=%d>; rel="prev"', base_url, page - 1, per_page))
         insert(parts, format('<%s?page=1&per_page=%d>; rel="first"', base_url, per_page))
@@ -2955,82 +2975,82 @@ end
 -- Main benchmark
 -- =========================================================================
 function run_benchmark()
-    local fw = setup_framework()
-    local test_requests = build_test_requests()
-    local num_requests = #test_requests
+    fw = setup_framework()
+    test_requests = build_test_requests()
+    num_requests = #test_requests
 
     -- Determine iteration count to target ~200-800ms runtime
-    local ITERATIONS = 10
+    ITERATIONS = 10
 
-    local t_start = clock()
+    t_start = clock()
 
-    local total_status_checksum = 0
-    local total_body_length = 0
+    total_status_checksum = 0
+    total_body_length = 0
 
     for iter = 1, ITERATIONS do
         for i = 1, num_requests do
-            local res = framework_handle_request(fw, test_requests[i])
+            res = framework_handle_request(fw, test_requests[i])
             total_status_checksum = total_status_checksum + res.status
             total_body_length = total_body_length + #res.body
         end
     end
 
     -- Run additional workloads
-    local url_checksum = url_encode_decode_workload(500)
-    local json_checksum = json_codec_workload(400)
-    local header_checksum = header_parse_workload(500)
-    local routing_checksum = routing_workload(800)
-    local query_checksum = query_string_workload(500)
-    local cookie_checksum = cookie_workload(500)
-    local response_checksum = response_build_workload(150)
-    local negotiation_checksum = content_negotiation_workload(500)
-    local multipart_checksum = multipart_workload(300)
-    local template_checksum = template_workload(400)
-    local base64_checksum = base64_workload(400)
-    local chunked_checksum = chunked_workload(300)
-    local etag_checksum = etag_workload(200)
-    local ws_checksum = websocket_workload(400)
-    local hpack_checksum = hpack_workload(500)
-    local path_checksum = path_normalize_workload(500)
-    local mime_checksum = mime_type_workload(500)
-    local ratelimit_checksum = rate_limiter_workload(300)
-    local compress_checksum = compression_workload(300)
-    local sse_checksum = sse_workload(500)
-    local validate_checksum = validation_workload(300)
-    local csrf_checksum = csrf_workload(400)
-    local range_checksum = range_request_workload(500)
-    local log_checksum = logging_workload(300)
+    url_checksum = url_encode_decode_workload(500)
+    json_checksum = json_codec_workload(400)
+    header_checksum = header_parse_workload(500)
+    routing_checksum = routing_workload(800)
+    query_checksum = query_string_workload(500)
+    cookie_checksum = cookie_workload(500)
+    response_checksum = response_build_workload(150)
+    negotiation_checksum = content_negotiation_workload(500)
+    multipart_checksum = multipart_workload(300)
+    template_checksum = template_workload(400)
+    base64_checksum = base64_workload(400)
+    chunked_checksum = chunked_workload(300)
+    etag_checksum = etag_workload(200)
+    ws_checksum = websocket_workload(400)
+    hpack_checksum = hpack_workload(500)
+    path_checksum = path_normalize_workload(500)
+    mime_checksum = mime_type_workload(500)
+    ratelimit_checksum = rate_limiter_workload(300)
+    compress_checksum = compression_workload(300)
+    sse_checksum = sse_workload(500)
+    validate_checksum = validation_workload(300)
+    csrf_checksum = csrf_workload(400)
+    range_checksum = range_request_workload(500)
+    log_checksum = logging_workload(300)
 
-    local t_end = clock()
-    local elapsed = t_end - t_start
+    t_end = clock()
+    elapsed = t_end - t_start
 
-    local all_ok = true
-    if total_status_checksum ~= 118250 then all_ok = false end
-    if total_body_length ~= 42860 then all_ok = false end
-    if url_checksum ~= 403000 then all_ok = false end
-    if json_checksum ~= 142000 then all_ok = false end
-    if header_checksum ~= 8000 then all_ok = false end
-    if routing_checksum ~= 13600 then all_ok = false end
-    if query_checksum ~= 17500 then all_ok = false end
-    if cookie_checksum ~= 11000 then all_ok = false end
-    if response_checksum ~= 201720 then all_ok = false end
-    if negotiation_checksum ~= 53500 then all_ok = false end
-    if multipart_checksum ~= 40800 then all_ok = false end
-    if template_checksum ~= 215200 then all_ok = false end
-    if base64_checksum ~= 433200 then all_ok = false end
-    if chunked_checksum ~= 740100 then all_ok = false end
-    if etag_checksum ~= 22000 then all_ok = false end
-    if ws_checksum ~= 779200 then all_ok = false end
-    if hpack_checksum ~= 151500 then all_ok = false end
-    if path_checksum ~= 73000 then all_ok = false end
-    if mime_checksum ~= 93000 then all_ok = false end
-    if ratelimit_checksum ~= 24300 then all_ok = false end
-    if compress_checksum ~= 373200 then all_ok = false end
-    if sse_checksum ~= 124000 then all_ok = false end
-    if validate_checksum ~= 1500 then all_ok = false end
-    if csrf_checksum ~= 36000 then all_ok = false end
-    if range_checksum ~= 5198500 then all_ok = false end
-    if log_checksum ~= 483900 then all_ok = false end
+    all_ok = true
+    if total_status_checksum != 118250 then all_ok = false end
+    if total_body_length != 42860 then all_ok = false end
+    if url_checksum != 403000 then all_ok = false end
+    if json_checksum != 142000 then all_ok = false end
+    if header_checksum != 8000 then all_ok = false end
+    if routing_checksum != 13600 then all_ok = false end
+    if query_checksum != 17500 then all_ok = false end
+    if cookie_checksum != 11000 then all_ok = false end
+    if response_checksum != 201720 then all_ok = false end
+    if negotiation_checksum != 53500 then all_ok = false end
+    if multipart_checksum != 40800 then all_ok = false end
+    if template_checksum != 215200 then all_ok = false end
+    if base64_checksum != 433200 then all_ok = false end
+    if chunked_checksum != 740100 then all_ok = false end
+    if etag_checksum != 22000 then all_ok = false end
+    if ws_checksum != 779200 then all_ok = false end
+    if hpack_checksum != 151500 then all_ok = false end
+    if path_checksum != 73000 then all_ok = false end
+    if mime_checksum != 93000 then all_ok = false end
+    if ratelimit_checksum != 24300 then all_ok = false end
+    if compress_checksum != 373200 then all_ok = false end
+    if sse_checksum != 124000 then all_ok = false end
+    if validate_checksum != 1500 then all_ok = false end
+    if csrf_checksum != 36000 then all_ok = false end
+    if range_checksum != 5198500 then all_ok = false end
+    if log_checksum != 483900 then all_ok = false end
 
     if all_ok then
         print(format("HTTP benchmark: all %d iterations passed.", ITERATIONS))

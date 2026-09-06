@@ -4520,6 +4520,24 @@ struct Compiler
 
     void compileStatAssign(AstStatAssign* stat)
     {
+        // Implicit-local declarations (`a = b` with no in-scope local) allocate registers here.
+        // Parser rewrites undeclared Globals to fresh AstLocals; compiler must materialize them like
+        // compileStatLocal does. Allocated outside RegScope so registers persist for the block scope.
+        for (size_t i = 0; i < stat->vars.size; ++i)
+        {
+            if (AstExprLocal* le = stat->vars.data[i]->as<AstExprLocal>())
+            {
+                if (le->local->isExported)
+                    continue;
+                Local* l = locals.find(le->local);
+                if ((!l || !l->allocated) && !le->upvalue)
+                {
+                    uint8_t reg = allocReg(stat, 1u);
+                    pushLocal(le->local, reg, kDefaultAllocPc);
+                }
+            }
+        }
+
         RegScope rs(this);
 
         // Optimization: one to one assignments don't require complex conflict resolution machinery

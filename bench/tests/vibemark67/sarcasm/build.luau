@@ -4,7 +4,7 @@
 -- render through emit.renderInsn (which understands op.tempRef / op.fixedNum) and feed
 -- regalloc (via node.defTemps / node.useTemps / node.move / node.control).
 
-local build = {}
+build = {}
 
 -- Operand: a temp register of the given width (64 unless noted).
 function build.rt(tempId, width)
@@ -26,8 +26,8 @@ function build.sym(name, reloc) return { kind = "sym", text = name, reloc = relo
 -- Memory operand builder. base is an operand; offset is a number (immediate) or nil.
 function build.mem(base, offset, opts)
 	opts = opts or {}
-	local m = { kind = "mem", base = base, writeback = opts.writeback }
-	if offset ~= nil then
+	m = { kind = "mem", base = base, writeback = opts.writeback }
+	if offset != nil then
 		if type(offset) == "number" then
 			m.index = { kind = "imm", text = tostring(offset), value = offset }
 		else
@@ -35,7 +35,7 @@ function build.mem(base, offset, opts)
 		end
 	end
 	if opts.shift then m.shift = opts.shift end
-	if opts.postIndex ~= nil then
+	if opts.postIndex != nil then
 		m.writeback = "post"
 		m.index = { kind = "imm", text = tostring(opts.postIndex), value = opts.postIndex }
 	end
@@ -52,7 +52,7 @@ end
 
 -- Attach a shift/extend to an operand (returns the operand).
 function build.withShift(op, shOp, amount)
-	op.shift = { op = shOp, amount = amount, amountText = amount ~= nil and tostring(amount) or nil }
+	op.shift = { op = shOp, amount = amount, amountText = amount != nil and tostring(amount) or nil }
 	return op
 end
 

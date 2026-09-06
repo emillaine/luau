@@ -10,6 +10,7 @@
 
 LUAU_FASTFLAG(DebugLuauForceOldSolver)
 LUAU_FASTFLAG(DebugLuauAssertOnForcedConstraint)
+LUAU_FASTFLAG(LuauExportValueSyntax)
 LUAU_FASTFLAG(LuauRemovePrimitiveTypeConstraintAndSubtypingUnifier)
 LUAU_FASTFLAG(LuauAvoidTrivialPhis)
 LUAU_FASTFLAG(DebugLuauIfLocalSyntax)
@@ -158,9 +159,9 @@ TEST_CASE_FIXTURE(Fixture, "is_truthy_constraint")
     CheckResult result = check(R"(
         function f(v: string?)
             if v then
-                local s = v
+                const s = v
             else
-                local s = v
+                const s = v
             end
         end
     )");
@@ -176,9 +177,9 @@ TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_constraint")
     CheckResult result = check(R"(
         function f(v: string?)
             if not v then
-                local s = v
+                const s = v
             else
-                local s = v
+                const s = v
             end
         end
     )");
@@ -194,9 +195,9 @@ TEST_CASE_FIXTURE(Fixture, "parenthesized_expressions_are_followed_through")
     CheckResult result = check(R"(
         function f(v: string?)
             if (not v) then
-                local s = v
+                const s = v
             else
-                local s = v
+                const s = v
             end
         end
     )");
@@ -212,11 +213,11 @@ TEST_CASE_FIXTURE(Fixture, "and_constraint")
     CheckResult result = check(R"(
         function f(a: string?, b: number?)
             if a and b then
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             else
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             end
         end
     )");
@@ -235,11 +236,11 @@ TEST_CASE_FIXTURE(Fixture, "not_and_constraint")
     CheckResult result = check(R"(
         function f(a: string?, b: number?)
             if not (a and b) then
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             else
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             end
         end
     )");
@@ -258,11 +259,11 @@ TEST_CASE_FIXTURE(Fixture, "or_predicate_with_truthy_predicates")
     CheckResult result = check(R"(
         function f(a: string?, b: number?)
             if a or b then
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             else
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             end
         end
     )");
@@ -281,13 +282,13 @@ TEST_CASE_FIXTURE(Fixture, "a_and_b_or_a_and_c")
     CheckResult result = check(R"(
         function f(a: string?, b: number?, c: boolean)
             if (a and b) or (a and c) then
-                local foo = a
-                local bar = b
-                local baz = c
+                const foo = a
+                const bar = b
+                const baz = c
             else
-                local foo = a
-                local bar = b
-                local baz = c
+                const foo = a
+                const bar = b
+                const baz = c
             end
         end
     )");
@@ -312,8 +313,8 @@ TEST_CASE_FIXTURE(Fixture, "type_assertion_expr_carry_its_constraints")
     CheckResult result = check(R"(
         function g(a: number?, b: string?)
             if (a as any) and (b as any) then
-                local x = a
-                local y = b
+                const x = a
+                const y = b
             end
         end
     )");
@@ -338,10 +339,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_in_if_condition_position")
     CheckResult result = check(R"(
         function f(s: any, t: unknown)
             if type(s) == "number" then
-                local n = s
+                const n = s
             end
             if type(t) == "number" then
-                local n = t
+                const n = t
             end
         end
     )");
@@ -361,7 +362,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_in_assert_position")
     CheckResult result = check(R"(
         function f(a)
             assert(type(a) == "number")
-            local b = a
+            const b = a
             return b
         end
     )");
@@ -377,7 +378,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_in_assert_position")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_prop")
 {
     CheckResult result = check(R"(
-        local function f(x: unknown): string?
+        function f(x: unknown): string?
             if typeof(x) == "table" then
                 if typeof(x.foo) == "string" then
                     return x.foo
@@ -406,7 +407,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_prop")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_nested_prop")
 {
     CheckResult result = check(R"(
-        local function f(x: unknown): string?
+        function f(x: unknown): string?
             if typeof(x) == "table" then
                 -- this should error, `x.foo` is an unknown property
                 if typeof(x.foo.bar) == "string" then
@@ -441,7 +442,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_nested_p
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_tested_nested_prop")
 {
     CheckResult result = check(R"(
-        local function f(x: unknown): string?
+        function f(x: unknown): string?
             if typeof(x) == "table" then
                 if typeof(x.foo) == "table" and typeof(x.foo.bar) == "string" then
                     return x.foo.bar
@@ -474,7 +475,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_to_undefined_method_is_not_a_refinement
     };
 
     CheckResult result = check(R"(
-        local function f(x: unknown)
+        function f(x: unknown)
             if typeof(x) == "table" then
                 if x.foo() then
                 end
@@ -497,17 +498,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_to_undefined_method_is_not_a_refinement
 TEST_CASE_FIXTURE(BuiltinsFixture, "call_an_incompatible_function_after_using_typeguard")
 {
     CheckResult result = check(R"(
-        local function f(x: number)
+        function f(x: number)
             return x
         end
 
-        local function g(x: unknown)
+        function g(x: unknown)
             if type(x) == "string" then
                 f(x)
             end
         end
 
-        local function h(x: any)
+        function h(x: any)
             if type(x) == "string" then
                 f(x)
             end
@@ -538,8 +539,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "impossible_type_narrow_is_not_an_error")
     // This unit test serves as a reminder to not implement this warning until Luau is intelligent enough.
     // For instance, getting a value out of the indexer and checking whether the value exists is not an error.
     CheckResult result = check(R"(
-        local t: {string} = {"a", "b", "c"}
-        local v = t[4]
+        const t: {string} = {"a", "b", "c"}
+        const v = t[4]
         if not v then
             t[4] = "d"
         else
@@ -553,14 +554,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "impossible_type_narrow_is_not_an_error")
 TEST_CASE_FIXTURE(Fixture, "truthy_constraint_on_properties")
 {
     CheckResult result = check(R"(
-        local t: {x: number?} = {x = 1}
+        const t: {x: number?} = {x = 1}
 
         if t.x then
-            local t2 = t
-            local foo = t.x
+            const t2 = t
+            const foo = t.x
         end
 
-        local bar = t.x
+        const bar = t.x
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -577,7 +578,7 @@ TEST_CASE_FIXTURE(Fixture, "truthy_constraint_on_properties")
 TEST_CASE_FIXTURE(BuiltinsFixture, "index_on_a_refined_property")
 {
     CheckResult result = check(R"(
-        local t: {x: {y: string}?} = {x = {y = "hello!"}}
+        const t: {x: {y: string}?} = {x = {y = "hello!"}}
 
         if t.x then
             print(t.x.y)
@@ -590,9 +591,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_on_a_refined_property")
 TEST_CASE_FIXTURE(BuiltinsFixture, "assert_non_binary_expressions_actually_resolve_constraints")
 {
     CheckResult result = check(R"(
-        local foo: string? = "hello"
+        const foo: string? = "hello"
         assert(foo)
-        local bar: string = foo
+        const bar: string = foo
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -601,11 +602,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_non_binary_expressions_actually_resol
 TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_another_lvalue")
 {
     CheckResult result = check(R"(
-        local function f(a: (string | number)?, b: boolean?)
+        function f(a: (string | number)?, b: boolean?)
             if a == b then
-                local foo, bar = a, b
+                const foo, bar = a, b
             else
-                local foo, bar = a, b
+                const foo, bar = a, b
             end
         end
     )");
@@ -622,11 +623,11 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_another_lvalue")
 TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_a_term")
 {
     CheckResult result = check(R"(
-        local function f(a: (string | number)?)
+        function f(a: (string | number)?)
             if a == 1 then
-                local foo = a
+                const foo = a
             else
-                local foo = a
+                const foo = a
             end
         end
     )");
@@ -640,11 +641,11 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_equal_to_a_term")
 TEST_CASE_FIXTURE(Fixture, "term_is_equal_to_an_lvalue")
 {
     CheckResult result = check(R"(
-        local function f(a: (string | number)?)
+        function f(a: (string | number)?)
             if "hello" == a then
-                local foo = a
+                const foo = a
             else
-                local foo = a
+                const foo = a
             end
         end
     )");
@@ -666,11 +667,11 @@ TEST_CASE_FIXTURE(Fixture, "term_is_equal_to_an_lvalue")
 TEST_CASE_FIXTURE(Fixture, "lvalue_is_not_nil")
 {
     CheckResult result = check(R"(
-        local function f(a: (string | number)?)
+        function f(a: (string | number)?)
             if a != nil then
-                local foo = a
+                const foo = a
             else
-                local foo = a
+                const foo = a
             end
         end
     )");
@@ -687,9 +688,9 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_not_nil")
 TEST_CASE_FIXTURE(Fixture, "free_type_is_equal_to_an_lvalue")
 {
     CheckResult result = check(R"(
-        local function f(a, b: string?)
+        function f(a, b: string?)
             if a == b then
-                local foo, bar = a, b
+                const foo, bar = a, b
             end
         end
     )");
@@ -719,9 +720,9 @@ TEST_CASE_FIXTURE(Fixture, "free_type_is_equal_to_an_lvalue")
 TEST_CASE_FIXTURE(Fixture, "unknown_lvalue_is_not_synonymous_with_other_on_not_equal")
 {
     CheckResult result = check(R"(
-        local function f(a: any, b: {x: number}?)
+        function f(a: any, b: {x: number}?)
             if a != b then
-                local foo, bar = a, b
+                const foo, bar = a, b
             end
         end
     )");
@@ -735,14 +736,14 @@ TEST_CASE_FIXTURE(Fixture, "unknown_lvalue_is_not_synonymous_with_other_on_not_e
 TEST_CASE_FIXTURE(Fixture, "string_not_equal_to_string_or_nil")
 {
     CheckResult result = check(R"(
-        local t: {string} = {"hello"}
+        const t: {string} = {"hello"}
 
-        local a: string = t[1]
-        local b: string? = nil
+        const a: string = t[1]
+        const b: string? = nil
         if a != b then
-            local foo, bar = a, b
+            const foo, bar = a, b
         else
-            local foo, bar = a, b
+            const foo, bar = a, b
         end
     )");
 
@@ -757,13 +758,14 @@ TEST_CASE_FIXTURE(Fixture, "string_not_equal_to_string_or_nil")
 
 TEST_CASE_FIXTURE(Fixture, "narrow_property_of_a_bounded_variable")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local t
-        local u: {x: number?} = {x = nil}
+        export t = nil
+        const u: {x: number?} = {x = nil}
         t = u
 
         if t.x then
-            local foo: number = t.x
+            const foo: number = t.x
         end
     )");
 
@@ -773,9 +775,9 @@ TEST_CASE_FIXTURE(Fixture, "narrow_property_of_a_bounded_variable")
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_narrow_to_vector")
 {
     CheckResult result = check(R"(
-        local function f(x)
+        function f(x)
             if type(x) == "vector" then
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -796,18 +798,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonoptional_type_can_narrow_to_nil_if_sense_
     };
 
     CheckResult result = check(R"(
-        local t = {"hello"}
-        local v = t[2]
+        const t = {"hello"}
+        const v = t[2]
         if type(v) == "nil" then
-            local foo = v
+            const foo = v
         else
-            local foo = v
+            const foo = v
         end
 
         if not (type(v) != "nil") then
-            local foo = v
+            const foo = v
         else
-            local foo = v
+            const foo = v
         end
     )");
 
@@ -831,11 +833,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonoptional_type_can_narrow_to_nil_if_sense_
 TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_not_to_be_string")
 {
     CheckResult result = check(R"(
-        local function f(x: string | number | boolean)
+        function f(x: string | number | boolean)
             if type(x) != "string" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -849,11 +851,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_not_to_be_string")
 TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_narrows_for_table")
 {
     CheckResult result = check(R"(
-        local function f(x: string | {x: number} | {y: boolean})
+        function f(x: string | {x: number} | {y: boolean})
             if type(x) == "table" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -867,11 +869,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_narrows_for_table")
 TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_narrows_for_functions")
 {
     CheckResult result = check(R"(
-        local function weird(x: string | ((number) -> string))
+        function weird(x: string | ((number) -> string))
             if type(x) == "function" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -886,11 +888,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_intersection_of_ta
 {
     CheckResult result = check(R"(
         type XYCoord = {x: number} & {y: number}
-        local function f(t: XYCoord?)
+        function f(t: XYCoord?)
             if type(t) == "table" then
-                local foo = t
+                const foo = t
             else
-                local foo = t
+                const foo = t
             end
         end
     )");
@@ -907,11 +909,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_overloaded_functio
 {
     CheckResult result = check(R"(
         type SomeOverloadedFunction = ((number) -> string) & ((string) -> number)
-        local function f(g: SomeOverloadedFunction?)
+        function f(g: SomeOverloadedFunction?)
             if type(g) == "function" then
-                local foo = g
+                const foo = g
             else
-                local foo = g
+                const foo = g
             end
         end
     )");
@@ -925,9 +927,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_overloaded_functio
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_narrowed_into_nothingness")
 {
     CheckResult result = check(R"(
-        local function f(t: {x: number})
+        function f(t: {x: number})
             if type(t) != "table" then
-                local foo = t
+                const foo = t
                 error(("Expected a table, got %s"):format(type(t)))
             end
 
@@ -949,10 +951,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_narrowed_into_nothingness")
 TEST_CASE_FIXTURE(Fixture, "not_a_or_not_b")
 {
     CheckResult result = check(R"(
-        local function f(a: number?, b: number?)
+        function f(a: number?, b: number?)
             if (not a) or (not b) then
-                local foo = a
-                local bar = b
+                const foo = a
+                const bar = b
             end
         end
     )");
@@ -966,10 +968,10 @@ TEST_CASE_FIXTURE(Fixture, "not_a_or_not_b")
 TEST_CASE_FIXTURE(Fixture, "not_a_or_not_b2")
 {
     CheckResult result = check(R"(
-        local function f(a: number?, b: number?)
+        function f(a: number?, b: number?)
             if not (a and b) then
-                local foo = a
-                local bar = b
+                const foo = a
+                const bar = b
             end
         end
     )");
@@ -983,10 +985,10 @@ TEST_CASE_FIXTURE(Fixture, "not_a_or_not_b2")
 TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b")
 {
     CheckResult result = check(R"(
-        local function f(a: number?, b: number?)
+        function f(a: number?, b: number?)
             if (not a) and (not b) then
-                local foo = a
-                local bar = b
+                const foo = a
+                const bar = b
             end
         end
     )");
@@ -1000,10 +1002,10 @@ TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b")
 TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b2")
 {
     CheckResult result = check(R"(
-        local function f(a: number?, b: number?)
+        function f(a: number?, b: number?)
             if not (a or b) then
-                local foo = a
-                local bar = b
+                const foo = a
+                const bar = b
             end
         end
     )");
@@ -1017,12 +1019,12 @@ TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b2")
 TEST_CASE_FIXTURE(BuiltinsFixture, "either_number_or_string")
 {
     CheckResult result = check(R"(
-        local function f(x: any, y: unknown)
+        function f(x: any, y: unknown)
             if type(x) == "number" or type(x) == "string" then
-                local foo = x
+                const foo = x
             end
             if type(y) == "number" or type(y) == "string" then
-                local foo = y
+                const foo = y
             end
         end
     )");
@@ -1039,9 +1041,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "either_number_or_string")
 TEST_CASE_FIXTURE(Fixture, "not_t_or_some_prop_of_t")
 {
     CheckResult result = check(R"(
-        local function f(t: {x: boolean}?)
+        function f(t: {x: boolean}?)
             if not t or t.x then
-                local foo = t
+                const foo = t
             end
         end
     )");
@@ -1066,11 +1068,11 @@ TEST_CASE_FIXTURE(Fixture, "not_t_or_some_prop_of_t")
 TEST_CASE_FIXTURE(BuiltinsFixture, "assert_a_to_be_truthy_then_assert_a_to_be_number")
 {
     CheckResult result = check(R"(
-        local a: (number | string)?
+        const a: (number | string)? = nil as any
         assert(a)
-        local b = a
+        const b = a
         assert(type(a) == "number")
-        local c = a
+        const c = a
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1083,12 +1085,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "merge_should_be_fully_agnostic_of_hashmap_or
 {
     // This bug came up because there was a mistake in Luau::merge where zipping on two maps would produce the wrong merged result.
     CheckResult result = check(R"(
-        local function f(b: string | { x: string }, a)
+        function f(b: string | { x: string }, a)
             assert(type(a) == "string")
             assert(type(b) == "string" or type(b) == "table")
 
             if type(b) == "string" then
-                local foo = b
+                const foo = b
             end
         end
     )");
@@ -1101,11 +1103,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "merge_should_be_fully_agnostic_of_hashmap_or
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_the_correct_types_opposite_of_when_a_is_not_number_or_string")
 {
     CheckResult result = check(R"(
-        local function f(a: string | number | boolean)
+        function f(a: string | number | boolean)
             if type(a) != "number" and type(a) != "string" then
-                local foo = a
+                const foo = a
             else
-                local foo = a
+                const foo = a
             end
         end
     )");
@@ -1186,7 +1188,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "is_truthy_constraint_while_expression")
     CheckResult result = check(R"(
         function f(v:string?)
             while v do
-                local foo = v
+                const foo = v
             end
         end
     )");
@@ -1201,7 +1203,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invert_is_truthy_constraint_while_expression
     CheckResult result = check(R"(
         function f(v:string?)
             while not v do
-                local foo = v
+                const foo = v
             end
         end
     )");
@@ -1214,9 +1216,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invert_is_truthy_constraint_while_expression
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_the_correct_types_opposite_of_while_a_is_not_number_or_string")
 {
     CheckResult result = check(R"(
-        local function f(a: string | number | boolean)
+        function f(a: string | number | boolean)
             while type(a) != "number" and type(a) != "string" do
-                local foo = a
+                const foo = a
             end
         end
     )");
@@ -1229,9 +1231,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_the_correct_types_opposite_of_while_a
 TEST_CASE_FIXTURE(BuiltinsFixture, "correctly_lookup_a_shadowed_local_that_which_was_previously_refined")
 {
     CheckResult result = check(R"(
-        local foo: string? = "hi"
+        const foo: string? = "hi"
         assert(foo)
-        local foo: number = 5
+        const foo: number = 5
         print(foo:sub(1, 1))
     )");
 
@@ -1244,10 +1246,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "correctly_lookup_property_whose_base_was_pre
 {
     CheckResult result = check(R"(
         type T = {x: string | number}
-        local t: T? = {x = "hi"}
+        const t: T? = {x = "hi"}
         if t then
             if type(t.x) == "string" then
-                local foo = t.x
+                const foo = t.x
             end
         end
     )");
@@ -1262,9 +1264,9 @@ TEST_CASE_FIXTURE(Fixture, "correctly_lookup_property_whose_base_was_previously_
     CheckResult result = check(R"(
         type T = { x: { y: number }? }
 
-        local function f(t: T?)
+        function f(t: T?)
             if t and t.x then
-                local foo = t.x.y
+                const foo = t.x.y
             end
         end
     )");
@@ -1278,10 +1280,10 @@ TEST_CASE_FIXTURE(Fixture, "apply_refinements_on_astexprindexexpr_whose_subscrip
 {
     CheckResult result = check(R"(
         type T = { [string]: { prop: number }? }
-        local t: T = {}
+        const t: T = {}
 
         if t["hello"] then
-            local foo = t["hello"].prop
+            const foo = t["hello"].prop
         end
     )");
 
@@ -1293,11 +1295,11 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_from_truthiness_of_x")
     CheckResult result = check(R"(
         type T = {tag: "missing", x: nil} | {tag: "exists", x: string}
 
-        local function f(t: T)
+        function f(t: T)
             if t.x then
-                local foo = t
+                const foo = t
             else
-                local bar = t
+                const bar = t
             end
         end
     )");
@@ -1323,11 +1325,11 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_tag")
         type Dog = {tag: "Dog", name: string, dogfood: string}
         type Animal = Cat | Dog
 
-        local function f(animal: Animal)
+        function f(animal: Animal)
             if animal.tag == "Cat" then
-                local cat = animal
+                const cat = animal
             else if animal.tag == "Dog" then
-                local dog = animal
+                const dog = animal
             end
         end
     )");
@@ -1345,11 +1347,11 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_tag_with_implicit_else")
         type Dog = {tag: "Dog", name: string, dogfood: string}
         type Animal = Cat | Dog
 
-        local function f(animal: Animal)
+        function f(animal: Animal)
             if animal.tag == "Cat" then
-                local cat = animal
+                const cat = animal
             else
-                local dog = animal
+                const dog = animal
             end
         end
     )");
@@ -1363,7 +1365,7 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_tag_with_implicit_else")
 TEST_CASE_FIXTURE(Fixture, "and_or_peephole_refinement")
 {
     CheckResult result = check(R"(
-        local function len(a: {any})
+        function len(a: {any})
             return a and a.count or nil
         end
     )");
@@ -1374,11 +1376,11 @@ TEST_CASE_FIXTURE(Fixture, "and_or_peephole_refinement")
 TEST_CASE_FIXTURE(Fixture, "narrow_boolean_to_true_or_false")
 {
     CheckResult result = check(R"(
-        local function f(x: boolean)
+        function f(x: boolean)
             if x then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1396,7 +1398,7 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_on_properties_of_disjoint_tables_where_
         type Err<E> = { ok: false, error: E }
         type Result<T, E> = Ok<T> | Err<E>
 
-        local function apply<T, E>(t: Result<T, E>, f: (T) -> (), g: (E) -> ())
+        function apply<T, E>(t: Result<T, E>, f: (T) -> (), g: (E) -> ())
             if t.ok then
                 f(t.value)
             else
@@ -1412,7 +1414,7 @@ TEST_CASE_FIXTURE(Fixture, "refine_a_property_not_to_be_nil_through_an_intersect
 {
     CheckResult result = check(R"(
         type T = {} & {f: ((string) -> string)?}
-        local function f(t: T, x)
+        function f(t: T, x)
             if t.f then
                 t.f(x)
             end
@@ -1427,11 +1429,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "discriminate_from_isa_of_x")
     CheckResult result = check(R"(
         type T = {tag: "Part", x: Part} | {tag: "Folder", x: Folder}
 
-        local function f(t: T)
+        function f(t: T)
             if t.x:IsA("Part") then
-                local foo = t
+                const foo = t
             else
-                local bar = t
+                const bar = t
             end
         end
     )");
@@ -1449,15 +1451,15 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_free_table_to_vec
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
     getFrontend().setLuauSolverMode(!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old);
     CheckResult result = check(R"(
-        local function f(vec)
-            local X, Y, Z = vec.X, vec.Y, vec.Z
+        function f(vec)
+            const X, Y, Z = vec.X, vec.Y, vec.Z
 
             if type(vec) == "vector" then
-                local foo = vec
+                const foo = vec
             else if typeof(vec) == "Instance" then
-                local foo = vec
+                const foo = vec
             else
-                local foo = vec
+                const foo = vec
             end
         end
     )");
@@ -1474,11 +1476,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_free_table_to_vec
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_instance_or_vector3_to_vector")
 {
     CheckResult result = check(R"(
-        local function f(x: Instance | Vector3)
+        function f(x: Instance | Vector3)
             if typeof(x) == "Vector3" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1492,11 +1494,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeguard_cast_instance_or_vecto
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "type_narrow_for_all_the_userdata")
 {
     CheckResult result = check(R"(
-        local function f(x: string | number | Instance | Vector3)
+        function f(x: string | number | Instance | Vector3)
             if type(x) == "userdata" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1510,11 +1512,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "type_narrow_for_all_the_userdata
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "type_narrow_but_the_discriminant_type_isnt_a_class")
 {
     CheckResult result = check(R"(
-        local function f(x: string | number | Instance | Vector3)
+        function f(x: string | number | Instance | Vector3)
             if type(x) == "any" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1536,11 +1538,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "type_narrow_but_the_discriminant
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "eliminate_subclasses_of_instance")
 {
     CheckResult result = check(R"(
-        local function f(x: Part | Folder | string)
+        function f(x: Part | Folder | string)
             if typeof(x) == "Instance" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1554,11 +1556,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "eliminate_subclasses_of_instance
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "narrow_from_subclasses_of_instance_or_string_or_vector3")
 {
     CheckResult result = check(R"(
-        local function f(x: Part | Folder | string | Vector3)
+        function f(x: Part | Folder | string | Vector3)
             if typeof(x) == "Instance" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1577,11 +1579,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "x_as_any_if_x_is_instance_elseif
     CheckResult result = check(R"(
         --!nonstrict
 
-        local function f(x)
+        function f(x)
             if typeof(x) == "Instance" and x:IsA("Folder") then
-                local foo = x
+                const foo = x
             else if typeof(x) == "table" then
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1603,11 +1605,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "x_as_any_if_x_is_instance_elseif
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_param_of_type_instance_without_using_typeof")
 {
     CheckResult result = check(R"(
-        local function f(x: Instance)
+        function f(x: Instance)
             if x:IsA("Folder") then
-                local foo = x
+                const foo = x
             else if typeof(x) == "table" then
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1621,11 +1623,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_param_of_type_instance_wi
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_param_of_type_folder_or_part_without_using_typeof")
 {
     CheckResult result = check(R"(
-        local function f(x: Part | Folder)
+        function f(x: Part | Folder)
             if x:IsA("Folder") then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1639,11 +1641,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_param_of_type_folder_or_p
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "isa_type_refinement_must_be_known_ahead_of_time")
 {
     CheckResult result = check(R"(
-        local function f(x): Instance
+        function f(x): Instance
             if x:IsA("Folder") then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
 
             return x
@@ -1668,12 +1670,12 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
 {
 
     CheckResult result = check(R"(
-        local weld: WeldConstraint = nil as any
+        const weld: WeldConstraint = nil as any
         assert(weld.Part1)
         print(weld) -- hover type incorrectly becomes `never`
         assert(weld.Part1.Name == "RootPart")
-        local part1 = assert(weld.Part1)
-        local pos = part1.Position
+        const part1 = assert(weld.Part1)
+        const pos = part1.Position
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1688,12 +1690,12 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_non_existent_properties_should_not_refine_extern_types_to_never")
 {
     CheckResult result = check(R"(
-        local weld: WeldConstraint = nil as any
+        const weld: WeldConstraint = nil as any
         assert(weld.Part8)
         print(weld)
         assert(weld.Part8.Name == "RootPart")
-        local part8 = assert(weld.Part8)
-        local pos = part8.Position
+        const part8 = assert(weld.Part8)
+        const pos = part8.Position
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -1706,11 +1708,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_non_existent_propertie
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "x_is_not_instance_or_else_not_part")
 {
     CheckResult result = check(R"(
-        local function f(x: Part | Folder | string)
+        function f(x: Part | Folder | string)
             if typeof(x) != "Instance" or not x:IsA("Part") then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1726,11 +1728,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_doesnt_leak_to_elseif")
     CheckResult result = check(R"(
         function f(a)
            if type(a) == "boolean" then
-                local a1 = a
+                const a1 = a
             else if a.fn() then
-                local a2 = a
+                const a2 = a
             else
-                local a3 = a
+                const a3 = a
             end
         end
     )");
@@ -1741,11 +1743,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_doesnt_leak_to_elseif")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknowns")
 {
     CheckResult result = check(R"(
-        local function f(x: unknown)
+        function f(x: unknown)
             if type(x) == "string" then
-                local foo = x
+                const foo = x
             else
-                local bar = x
+                const bar = x
             end
         end
     )");
@@ -1767,11 +1769,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknowns")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_boolean")
 {
     CheckResult result = check(R"(
-        local function f(x: number | boolean)
+        function f(x: number | boolean)
             if typeof(x) == "boolean" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1784,11 +1786,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_boolean")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_thread")
 {
     CheckResult result = check(R"(
-        local function f(x: number | thread)
+        function f(x: number | thread)
             if typeof(x) == "thread" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1801,11 +1803,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_thread")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_buffer")
 {
     CheckResult result = check(R"(
-        local function f(x: number | buffer)
+        function f(x: number | buffer)
             if typeof(x) == "buffer" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1818,12 +1820,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_buffer")
 TEST_CASE_FIXTURE(BuiltinsFixture, "falsiness_of_TruthyPredicate_narrows_into_nil")
 {
     CheckResult result = check(R"(
-        local function f(t: {number})
-            local x = t[1]
+        function f(t: {number})
+            const x = t[1]
             if not x then
-                local foo = x
+                const foo = x
             else
-                local bar = x
+                const bar = x
             end
         end
     )");
@@ -1837,9 +1839,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "falsiness_of_TruthyPredicate_narrows_into_ni
 TEST_CASE_FIXTURE(BuiltinsFixture, "what_nonsensical_condition")
 {
     CheckResult result = check(R"(
-        local function f(x)
+        function f(x)
             if type(x) == "string" and type(x) == "number" then
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1871,9 +1873,9 @@ TEST_CASE_FIXTURE(Fixture, "else_with_no_explicit_expression_should_also_refine_
 TEST_CASE_FIXTURE(Fixture, "fuzz_filtered_refined_types_are_followed")
 {
     CheckResult result = check(R"(
-local _
+const _ = nil
 do
-local _ = _ != _ or _ or _
+const _ = _ != _ or _ or _
 end
     )");
 
@@ -1883,9 +1885,9 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_take_the_length")
 {
     CheckResult result = check(R"(
-        local function f(x: unknown)
+        function f(x: unknown)
             if typeof(x) == "table" then
-                local len = (x).count
+                const len = (x).count
             end
         end
     )");
@@ -1905,9 +1907,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_take_the_length
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_clone_it")
 {
     CheckResult result = check(R"(
-        local function f(x: unknown)
+        function f(x: unknown)
             if typeof(x) == "table" then
-                local cloned: {} = table.clone(x)
+                const cloned: {} = table.clone(x)
             end
         end
     )");
@@ -1927,11 +1929,11 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_a_param_that_got_resolved
     CheckResult result = check(R"(
         type Id<T> = T
 
-        local function f(x: Id<Id<Part | Folder> | Id<string>>)
+        function f(x: Id<Id<Part | Folder> | Id<string>>)
             if typeof(x) != "string" and x:IsA("Part") then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -1944,13 +1946,13 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_a_param_that_got_resolved
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "refine_a_param_that_got_resolved_during_constraint_solving_stage_2")
 {
     CheckResult result = check(R"(
-        local function hof(f: (Instance) -> ()) end
+        function hof(f: (Instance) -> ()) end
 
         hof(function(inst)
             if inst:IsA("Part") then
-                local foo = inst
+                const foo = inst
             else
-                local foo = inst
+                const foo = inst
             end
         end)
     )");
@@ -1969,8 +1971,10 @@ TEST_CASE_FIXTURE(Fixture, "refine_a_property_of_some_global")
         foo = { bar = 5 as number? }
 
         if foo.bar then
-            local bar = foo.bar
+            const bar = foo.bar
         end
+
+        const _ = undeclaredGlobal
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -1983,26 +1987,26 @@ TEST_CASE_FIXTURE(Fixture, "refine_a_property_of_some_global")
 TEST_CASE_FIXTURE(BuiltinsFixture, "dataflow_analysis_can_tell_refinements_when_its_appropriate_to_refine_into_nil_or_never")
 {
     CheckResult result = check(R"(
-        local function f(t: {string}, s: string)
-            local v1 = t[5]
-            local v2 = v1
+        function f(t: {string}, s: string)
+            const v1 = t[5]
+            const v2 = v1
 
             if typeof(v1) == "nil" then
-                local foo = v1
+                const foo = v1
             else
-                local foo = v1
+                const foo = v1
             end
 
             if typeof(v2) == "nil" then
-                local foo = v2
+                const foo = v2
             else
-                local foo = v2
+                const foo = v2
             end
 
             if typeof(s) == "nil" then
-                local foo = s -- line 18
+                const foo = s -- line 18
             else
-                local foo = s -- line 20
+                const foo = s -- line 20
             end
         end
     )");
@@ -2035,12 +2039,12 @@ TEST_CASE_FIXTURE(Fixture, "cat_or_dog_through_a_local")
         type Dog = { tag: "dog", dogfood: string }
         type Animal = Cat | Dog
 
-        local function f(animal: Animal)
-            local tag = animal.tag
+        function f(animal: Animal)
+            const tag = animal.tag
             if tag == "dog" then
-                local dog = animal
+                const dog = animal
             else if tag == "cat" then
-                local cat = animal
+                const cat = animal
             end
         end
     )");
@@ -2054,13 +2058,13 @@ TEST_CASE_FIXTURE(Fixture, "cat_or_dog_through_a_local")
 TEST_CASE_FIXTURE(Fixture, "prove_that_dataflow_analysis_isnt_doing_alias_tracking_yet")
 {
     CheckResult result = check(R"(
-        local function f(tag: "cat" | "dog")
-            local tag2 = tag
+        function f(tag: "cat" | "dog")
+            const tag2 = tag
 
             if tag2 == "cat" then
-                local foo = tag
+                const foo = tag
             else
-                local foo = tag
+                const foo = tag
             end
         end
     )");
@@ -2075,9 +2079,9 @@ TEST_CASE_FIXTURE(Fixture, "fail_to_refine_a_property_of_subscript_expression")
 {
     CheckResult result = check(R"(
         type Foo = { foo: number? }
-        local function f(t: {Foo})
+        function f(t: {Foo})
             if t[1].foo then
-                local foo = t[1].foo
+                const foo = t[1].foo
             end
         end
     )");
@@ -2089,15 +2093,15 @@ TEST_CASE_FIXTURE(Fixture, "fail_to_refine_a_property_of_subscript_expression")
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_annotations_arent_relevant_when_doing_dataflow_analysis")
 {
     CheckResult result = check(R"(
-        local function s() return "hello" end
+        function s() return "hello" end
 
-        local function f(t: {string})
-            local s1: string = t[5]
-            local s2: string = s()
+        function f(t: {string})
+            const s1: string = t[5]
+            const s2: string = s()
 
             if typeof(s1) == "nil" and typeof(s2) == "nil" then
-                local foo = s1
-                local bar = s2
+                const foo = s1
+                const bar = s2
             end
         end
     )");
@@ -2120,7 +2124,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_with_colon_after_refining_not_
             read complete: ((self: Observer<T>) -> ())?,
         }
 
-        local function _f(handler: Observer<any>)
+        function _f(handler: Observer<any>)
             assert(handler.complete != nil)
             handler:complete() -- incorrectly gives Value of type '((Observer<any>) -> ())?' could be nil
             handler.complete(handler) -- works fine, both forms should avoid the error
@@ -2132,8 +2136,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_with_colon_after_refining_not_
 
 TEST_CASE_FIXTURE(Fixture, "refinements_should_not_affect_assignment")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a: unknown = true
+        export a: unknown = true
         if a == true then
             a = 'not even remotely similar to a boolean'
         end
@@ -2144,9 +2149,10 @@ TEST_CASE_FIXTURE(Fixture, "refinements_should_not_affect_assignment")
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "refinements_should_preserve_error_suppression")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        local a: any = {}
-        local b
+        const a: any = {}
+        export b = nil
         if typeof(a) == "table" then
            b = a.field
         end
@@ -2158,11 +2164,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinements_should_preserve_error_suppressio
 TEST_CASE_FIXTURE(BuiltinsFixture, "many_refinements_on_val")
 {
     CheckResult result = check(R"(
-        local function is_nan(val: any): boolean
+        function is_nan(val: any): boolean
             return type(val) == "number" and val != val
         end
 
-        local function is_js_boolean(val: any): boolean
+        function is_js_boolean(val: any): boolean
             return not not val and val != 0 and val != "" and not is_nan(val)
         end
     )");
@@ -2179,7 +2185,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table")
     // this test is DCR-only as an instance of DCR fixing a bug in the old solver
 
     CheckResult result = check(R"(
-        local function f(a: unknown)
+        function f(a: unknown)
             if typeof(a) == "table" then
                 for i, v in a do
                     return i, v
@@ -2200,9 +2206,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "conditional_refinement_should_stay_error_sup
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function test(element: any?)
+        function test(element: any?)
             if element then
-                local owner = element._owner
+                const owner = element._owner
             end
         end
     )");
@@ -2214,7 +2220,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "globals_can_be_narrowed_too")
 {
     CheckResult result = check(R"(
         if typeof(string) == 'string' then
-            local foo = string
+            const foo = string
         end
     )");
 
@@ -2234,7 +2240,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_isindexkey_refine_conjunction"
     };
 
     CheckResult result = check(R"(
-        local function isIndexKey(k, contiguousLength)
+        function isIndexKey(k, contiguousLength)
             return type(k) == "number"
                 and k <= contiguousLength -- nothing out of bounds
                 and 1 <= k -- nothing illegal for array indices
@@ -2252,7 +2258,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "check_refinement_to_primitive_and_compare")
     };
 
     CheckResult result = check(R"(
-        local function comesAfterLuau(word)
+        function comesAfterLuau(word)
             return type(word) == "string" and word > "luau"
         end
     )");
@@ -2266,7 +2272,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_isindexkey_refine_conjunction_
     // FIXME CLI-141364: An underlying bug in normalization means the type of
     // `isIndexKey` is platform dependent.
     CheckResult result = check(R"(
-        local function isIndexKey(k, contiguousLength: number)
+        function isIndexKey(k, contiguousLength: number)
             return type(k) == "number"
                 and k <= contiguousLength -- nothing out of bounds
                 and 1 <= k -- nothing illegal for array indices
@@ -2280,9 +2286,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_isindexkey_refine_conjunction_
 TEST_CASE_FIXTURE(BuiltinsFixture, "ex")
 {
     CheckResult result = check(R"(
-local function f(x: string | number)
+function f(x: string | number)
     if typeof((x)) == "string" then
-        local y = x
+        const y = x
     end
 end
 )");
@@ -2293,8 +2299,8 @@ end
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "mutate_prop_of_some_refined_symbol")
 {
     CheckResult result = check(R"(
-        local function instances(): {Instance} error("") end
-        local function vec3(x, y, z): Vector3 error("") end
+        function instances(): {Instance} error("") end
+        function vec3(x, y, z): Vector3 error("") end
 
         for _, object in ipairs(instances()) do
             if object:IsA("Part") then
@@ -2313,7 +2319,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "mutate_prop_of_some_refined_symb
             | { tag: "ok", value: T }
             | { tag: "err", error: E }
 
-        local function results(): {Result<number, string>} error("") end
+        function results(): {Result<number, string>} error("") end
 
         for _, res in ipairs(results()) do
             if res.tag == "ok" then
@@ -2328,9 +2334,9 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "mutate_prop_of_some_refined_symb
 TEST_CASE_FIXTURE(BuiltinsFixture, "ensure_t_after_return_references_all_reachable_points")
 {
     CheckResult result = check(R"(
-        local t = {}
+        const t = {}
 
-        local function f(k: string)
+        function f(k: string)
             if t[k] != nil then
                 return
             end
@@ -2459,9 +2465,9 @@ type Dir = {
     m: number?, n: number?, o: number?, p: number?, q: number?, r: number?,
 }
 
-local function test(dirs: {Dir})
+function test(dirs: {Dir})
     for k, dir in dirs
-        local success, message = pcall(function()
+        const success, message = pcall(function()
             assert(dir.a == nil or type(dir.a) == "number")
             assert(dir.b == nil or type(dir.b) == "number")
             assert(dir.c == nil or type(dir.c) == "number")
@@ -2483,7 +2489,7 @@ local function test(dirs: {Dir})
             assert(dir.t == nil or type(dir.t) == "number")
             assert(dir.u == nil or type(dir.u) == "number")
             assert(dir.v == nil or type(dir.v) == "number")
-            local checkpoint = dir
+            const checkpoint = dir
 
             checkpoint.w = 1
         end)
@@ -2496,11 +2502,11 @@ end
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeof_instance_refinement")
 {
     CheckResult result = check(R"(
-        local function f(x: Instance | Vector3)
+        function f(x: Instance | Vector3)
             if typeof(x) == "Instance" then
-                local foo = x
+                const foo = x
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -2514,9 +2520,9 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeof_instance_refinement")
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeof_instance_error")
 {
     CheckResult result = check(R"(
-        local function f(x: Part)
+        function f(x: Part)
             if typeof(x) == "Instance" then
-                local foo : Folder = x
+                const foo : Folder = x
             end
         end
     )");
@@ -2527,14 +2533,14 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeof_instance_error")
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeof_instance_isa_refinement")
 {
     CheckResult result = check(R"(
-        local function f(x: Part | Folder | string)
+        function f(x: Part | Folder | string)
             if typeof(x) == "Instance" then
-                local foo = x
+                const foo = x
                 if foo:IsA("Folder") then
-                    local bar = foo
+                    const bar = foo
                 end
             else
-                local foo = x
+                const foo = x
             end
         end
     )");
@@ -2549,7 +2555,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "typeof_instance_isa_refinement")
 TEST_CASE_FIXTURE(BuiltinsFixture, "nonnil_refinement_on_generic")
 {
     CheckResult result = check(R"(
-        local function printOptional<T>(item: T?, printer: (T) -> string): string
+        function printOptional<T>(item: T?, printer: (T) -> string): string
             if item != nil then
                 return printer(item)
             else
@@ -2568,7 +2574,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonnil_refinement_on_generic")
 TEST_CASE_FIXTURE(BuiltinsFixture, "truthy_refinement_on_generic")
 {
     CheckResult result = check(R"(
-        local function printOptional<T>(item: T?, printer: (T) -> string): string
+        function printOptional<T>(item: T?, printer: (T) -> string): string
             if item then
                 return printer(item)
             else
@@ -2589,13 +2595,13 @@ TEST_CASE_FIXTURE(Fixture, "truthy_call_of_function_with_table_value_as_argument
     CheckResult result = check(R"(
         type Item = {}
 
-        local function predicate(value: Item): boolean
+        function predicate(value: Item): boolean
             return true
         end
 
-        local function checkValue(value: Item)
+        function checkValue(value: Item)
             if predicate(value) then
-                local _ = value
+                const _ = value
             end
         end
     )");
@@ -2608,9 +2614,9 @@ TEST_CASE_FIXTURE(Fixture, "truthy_call_of_function_with_table_value_as_argument
 TEST_CASE_FIXTURE(BuiltinsFixture, "function_calls_are_not_nillable")
 {
     LUAU_CHECK_NO_ERRORS(check(R"(
-        local BEFORE_SLASH_PATTERN = "^(.*)[\\/]"
+        const BEFORE_SLASH_PATTERN = "^(.*)[\\/]"
         function operateOnPath(path: string): string?
-            local fileName = string.gsub(path, BEFORE_SLASH_PATTERN, "")
+            const fileName = string.gsub(path, BEFORE_SLASH_PATTERN, "")
             if string.match(fileName, "^init%.") then
                 return "path=" .. fileName
             end
@@ -2628,8 +2634,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1528_method_calls_are_not_nillable")
         type Game = {
             GetRunService: (Game) -> RunService
         }
-        local function getServices(g: Game): RunService
-            local service = g:GetRunService()
+        function getServices(g: Game): RunService
+            const service = g:GetRunService()
             if service:IsRunning() then
                 return service
             end
@@ -2650,7 +2656,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1687_equality_shouldnt_leak_nil")
             return num==2
         end
 
-        local my_number = returns_two()
+        const my_number = returns_two()
 
         if my_number == 2 then
             is_two(my_number) --type error, my_number: number?
@@ -2667,8 +2673,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1451")
             HasTag: (Part, string) -> boolean,
             Name: string,
         }
-        local myList = {} as {Part}
-        local nextPart = (table.remove(myList)) as Part
+        const myList = {} as {Part}
+        const nextPart = (table.remove(myList)) as Part
 
         if nextPart:HasTag("foo") then
           return
@@ -2684,7 +2690,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cannot_call_a_function_single")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function invokeDisconnect(d: unknown)
+        function invokeDisconnect(d: unknown)
             if type(d) == "function" then
                 d()
             end
@@ -2699,7 +2705,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cli_140033_refine_union_of_exter
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local function getImageLabel(vars: { Instance }): Folder | Part | nil
+        function getImageLabel(vars: { Instance }): Folder | Part | nil
             for _, item in vars do
                 if item:IsA("Folder") or item:IsA("Part") then
                     return item
@@ -2723,7 +2729,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cannot_call_a_function_union")
             disconnect: (self: Disconnectable) -> (...any)
         } | ExternScriptConnection
 
-        local x: Disconnectable = workspace.ChildAdded:Connect(function()
+        const x: Disconnectable = workspace.ChildAdded:Connect(function()
             print("child added")
         end)
 
@@ -2748,28 +2754,28 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1835")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local t: {name: string}? = nil
+        const t: {name: string}? = nil
 
         function f()
-            local name = if t then t.name else "name"
+            const name = if t then t.name else "name"
         end
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local t: {name: string}? = nil
+        const t: {name: string}? = nil
 
         function f()
             if t then end
-            local name = if t then t.name else "name"
+            const name = if t then t.name else "name"
         end
     )"));
 
     CheckResult result = check(R"(
-        local t: {name: string}? = nil
+        const t: {name: string}? = nil
         if t then end
         print(t.name)
-        local name = if t then t.name else "name"
+        const name = if t then t.name else "name"
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK(get<OptionalValueAccess>(result.errors[0]));
@@ -2780,7 +2786,7 @@ TEST_CASE_FIXTURE(Fixture, "limit_complexity_of_arithmetic_type_functions" * doc
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local Hermite = {}
+        const Hermite = {}
 
         function Hermite:__init(p0, p1, m0, m1)
             self[1] = {
@@ -2820,7 +2826,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_by_no_refine_should_always_reduce")
         function foo(t): boolean return true end
 
         function select<K, V>(t: { [K]: V }, columns: { K }): { [K]: V }
-            local result = {}
+            const result = {}
             if foo(t) then
                 for k, v in t do
                     if table.find(columns, k) then
@@ -2844,19 +2850,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_by_no_refine_should_always_reduce")
 TEST_CASE_FIXTURE(Fixture, "table_name_index_without_prior_assignment_from_branch")
 {
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     // The important part of this test case is:
     // - `CharEntry` is represented as a phi node in the data flow graph;
     // - We never _set_ `CharEntry.Player` prior to accessing it.
     CheckResult results = check(R"(
-        local GetDictionary : (unknown, boolean) -> { Player: {} }? = nil as any
+        const GetDictionary : (unknown, boolean) -> { Player: {} }? = nil as any
 
-        local CharEntry = GetDictionary(nil, false)
+        export CharEntry = GetDictionary(nil, false)
         if not CharEntry then
             CharEntry = GetDictionary(nil, true)
         end
 
-        local x = CharEntry.Player
+        const x = CharEntry.Player
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -2868,12 +2875,12 @@ TEST_CASE_FIXTURE(Fixture, "cli_120460_table_access_on_phi_node")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        local function foo(bar: string): string
-            local baz: boolean = true
+        function foo(bar: string): string
+            const baz: boolean = true
             if baz then
-                local _ = (bar:sub(1))
+                const _ = (bar:sub(1))
             else
-                local _ = (bar:sub(1))
+                const _ = (bar:sub(1))
             end
             return bar:sub(2) -- previously this would be `...never`
         end
@@ -2894,8 +2901,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinements_from_and_should_not_refine_to_ne
     )");
 
     CheckResult results = check(R"(
-        local config: Config
-        local function serialize()
+        const config: Config = nil as any
+        function serialize()
             if config.KeyboardEnabled and config.MouseEnabled then
                 return 0
             else
@@ -2915,9 +2922,9 @@ TEST_CASE_FIXTURE(Fixture, "force_simplify_constraint_doesnt_drop_blocked_type")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local function track(instance): boolean
-            local isBasePart = instance:IsA("BasePart")
-            local isCharacter = false
+        function track(instance): boolean
+            const isBasePart = instance:IsA("BasePart")
+            isCharacter = false
             if not isBasePart then
                 isCharacter = instance:FindFirstChildOfClass("Humanoid") and instance:FindFirstChild("HumanoidRootPart")
             end
@@ -2941,9 +2948,9 @@ TEST_CASE_FIXTURE(Fixture, "len_operator_in_if_is_just_a_proposition")
 
     CheckResult result = check(R"(
 type Pool = { x : number }
-local pool = p as Pool
+const pool = p as Pool
 if pool.count then
-    local y = pool
+    const y = pool
 end
 )");
     TypeId ty = requireTypeAtPosition({4, 14});
@@ -2958,9 +2965,9 @@ TEST_CASE_FIXTURE(Fixture, "unm_operator_is_just_a_proposition")
 
     CheckResult result = check(R"(
 type Pool = { x : number }
-local pool = p as Pool
+const pool = p as Pool
 if -pool then
-    local y = pool
+    const y = pool
 end
 )");
     TypeId ty = requireTypeAtPosition({4, 14});
@@ -2977,7 +2984,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "inline_if_conditional_context")
             value: T
         }
 
-        local function peek<T>(state: Value<T> | T): T
+        function peek<T>(state: Value<T> | T): T
             return if typeof(state) == "table" and state.kind == "value"
                 then (state as Value<T>).value as T
                 else state as T
@@ -2992,18 +2999,18 @@ TEST_CASE_FIXTURE(Fixture, "oss_1517_equality_doesnt_add_nil")
             data: any
         }
 
-        local function createMyType(): MyType
-            local obj = { data = {} }
+        function createMyType(): MyType
+            const obj = { data = {} }
             return obj
         end
 
-        local function testTypeInference()
-            local a: MyType = createMyType()
-            local b: MyType = createMyType()
+        function testTypeInference()
+            const a: MyType = createMyType()
+            const b: MyType = createMyType()
 
             if a == b then
-                local c: MyType = b
-                local value = b.data
+                const c: MyType = b
+                const value = b.data
             end
         end
     )"));
@@ -3016,11 +3023,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeof_refinement_context")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
 
-        local x = {} as unknown
+        const x = {} as unknown
 
         if typeof(x) == "table" then
             if typeof(x.transform) == "function" then
-            	local y = x.transform
+            	const y = x.transform
             end
         end
     )"));
@@ -3033,7 +3040,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_and_typeof_refinement_context")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
 
-        local x = {} as unknown
+        const x = {} as unknown
 
         if typeof(x) == "table" then
             assert(typeof(x.transform) == "function")
@@ -3048,8 +3055,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "foo_call_should_not_refine")
     CheckResult result = check(R"(
         --!strict
 
-        local x = {} as unknown
-        local function foo(_: boolean) end
+        const x = {} as unknown
+        function foo(_: boolean) end
 
         if typeof(x) == "table" then
             foo(typeof(x.transform) == "function")
@@ -3066,11 +3073,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_call_should_not_refine_despite_typeof
 
     CheckResult result = check(R"(
         --!strict
-        local function foo(_: any)
+        function foo(_: any)
             return true
         end
 
-        local function f(x: unknown)
+        function f(x: unknown)
             if typeof(x) == "table" then
                 assert(foo(typeof(x.bar)))
             end
@@ -3086,8 +3093,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_conditional_context_in_if_should_not_ref
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local function bing(_: any) end
-        local function foobar(x: unknown)
+        function bing(_: any) end
+        function foobar(x: unknown)
             assert(typeof(x) == "table")
             if bing(x.foo) then
             end
@@ -3103,15 +3110,16 @@ TEST_CASE_FIXTURE(Fixture, "type_function_reduction_with_union_type_application"
     ScopedFastFlag sffs[] = {
         {FFlag::DebugLuauForceOldSolver, false},
         {FFlag::DebugLuauAssertOnForcedConstraint, true},
+        {FFlag::LuauExportValueSyntax, true},
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local lastTick = 0
-        local jumpAnimTime = 0
-        local toolAnimTime = 0
+        export lastTick = 0
+        export jumpAnimTime = 0
+        export toolAnimTime = 0
 
         function move(time, tool, animStringValueObject)
-            local deltaTime = time - lastTick
+            const deltaTime = time - lastTick
             lastTick = time
 
             if jumpAnimTime > 0 then
@@ -3131,9 +3139,9 @@ TEST_CASE_FIXTURE(Fixture, "type_function_reduction_with_union_type_application"
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_any_and_unknown_should_still_be_any")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local REACT_FRAGMENT_TYPE = (nil as any)
-        local function typeOf(object: any)
-            local __type = object.type
+        const REACT_FRAGMENT_TYPE = (nil as any)
+        function typeOf(object: any)
+            const __type = object.type
 
             if __type == REACT_FRAGMENT_TYPE then
                 return __type
@@ -3156,7 +3164,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181100_fast_track_refinement_against_unk
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
 
-        local Class = {}
+        const Class = {}
         Class.__index = Class
 
         type Class = setmetatable<{ A: number }, typeof(Class)>
@@ -3165,7 +3173,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181100_fast_track_refinement_against_unk
             if y == z then
                 return
             end
-            local bar = y.A
+            const bar = y.A
             print(bar)
         end
     )"));
@@ -3178,7 +3186,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181549_refined_string_should_be_subtype_
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(Mode::Nonstrict, R"(
-      local hello : string = "world"
+      const hello : string = "world"
 
       if hello == "" then
           return
@@ -3198,7 +3206,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_184413_refinement_of_union_of_read_types_is_read
             Open: (self: MyType<A>) -> (),
         }
 
-        local value = {} as MyType
+        const value = {} as MyType
 
         function value:Open()
             if self.IsOpen == true then
@@ -3219,8 +3227,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_vector_refine")
     CheckResult result = check(R"(
         function foo(x: unknown)
             if type(x) == "vector" then
-                local y = x.y
-                local z = y.bad
+                const y = x.y
+                const z = y.bad
             end
         end
     )");
@@ -3232,7 +3240,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_vector_refine")
 TEST_CASE_FIXTURE(BuiltinsFixture, "indexing_into_error_gives_error")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local function keyExtractor(item: any, index: number): string
+        function keyExtractor(item: any, index: number): string
             if typeof(item) == "table" and item.key != nil then
                 return item.key
             end
@@ -3252,9 +3260,9 @@ TEST_CASE_FIXTURE(Fixture, "cli_181894_refinement_cancelled_by_for_loop")
         --!strict
         type LightingChanger = { [string]: number, Instances: LightingChanger }
 
-        local lightingChangers: { LightingChanger } = nil as any
+        const lightingChangers: { LightingChanger } = nil as any
 
-        local closestChanger: LightingChanger?
+        closestChanger = nil as any
         if lightingChangers.count == 1 then
             closestChanger = lightingChangers[1]
         end
@@ -3265,7 +3273,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_181894_refinement_cancelled_by_for_loop")
         for _, _ in closestChanger do
         end
 
-        local _ = closestChanger.Instances
+        const _ = closestChanger.Instances
     )"));
 }
 
@@ -3279,9 +3287,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unification_with_refinements_doesnt_impact_f
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local keys: { unknown } = {}
+        const keys: { unknown } = {}
 
-        local function sorter(a, b): boolean
+        function sorter(a, b): boolean
             if type(a) == "number" and type(b) == "number" then
                 return a < b
             end
@@ -3304,9 +3312,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_local_narrows_to_truthy")
     };
 
     CheckResult result = check(R"(
-        local function f(v: string?)
-            if local x = v then
-                local s = x
+        function f(v: string?)
+            if const x = v then
+                const s = x
             end
         end
     )");
@@ -3323,9 +3331,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_local_basic_typecheck")
     };
 
     CheckResult result = check(R"(
-        local function f(v: number?)
-            if local x = v then
-                local y = x + 1
+        function f(v: number?)
+            if const x = v then
+                const y = x + 1
             end
         end
     )");
@@ -3342,7 +3350,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_local_binding_not_visible_after_block")
     };
 
     CheckResult result = check(R"(
-        if local x = math.random() then
+        if const x = math.random() then
             print(x)
         end
         print(x)
@@ -3361,9 +3369,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_local_refines_unannotated_to_truthy")
     };
 
     CheckResult result = check(R"(
-        local function f(v: number?)
-            if local x = v then
-                local s = x
+        function f(v: number?)
+            if const x = v then
+                const s = x
             end
         end
     )");
@@ -3382,9 +3390,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "if_local_refines_annotated_type")
     };
 
     CheckResult result = check(R"(
-        local function f(v: number?)
-            if local x: number? = v then
-                local s = x
+        function f(v: number?)
+            if const x: number? = v then
+                const s = x
             end
         end
     )");

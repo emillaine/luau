@@ -1,9 +1,9 @@
 -- This file is part of the Roblox luau-polyfill repository and is licensed under MIT License; see LICENSE.txt for details
 -- #region Array
 -- Array related
-local Array = {}
-local Object = {}
-local Map = {}
+Array = {}
+Object = {}
+Map = {}
 
 type Array<T> = { [number]: T }
 type callbackFn<K, V> = (element: V, key: K, map: Map<K, V>) -> ()
@@ -31,11 +31,11 @@ type Object = { [string]: any }
 type Table<T, V> = { [T]: V }
 type Tuple<T, V> = Array<T | V>
 
-local Set = {}
+Set = {}
 
 -- #region Array
 function Array.isArray(value: any): boolean
-	if typeof(value) ~= "table" then
+	if typeof(value) != "table" then
 		return false
 	end
 	if next(value) == nil then
@@ -43,19 +43,19 @@ function Array.isArray(value: any): boolean
 		return true
 	end
 
-	local length = #value
+	length = #value
 
 	if length == 0 then
 		return false
 	end
 
-	local count = 0
-	local sum = 0
+	count = 0
+	sum = 0
 	for key in pairs(value) do
-		if typeof(key) ~= "number" then
+		if typeof(key) != "number" then
 			return false
 		end
-		if key % 1 ~= 0 or key < 1 then
+		if key % 1 != 0 or key < 1 then
 			return false
 		end
 		count += 1
@@ -73,14 +73,14 @@ function Array.from<T, U>(
 	if value == nil then
 		error("cannot create array from a nil value")
 	end
-	local valueType = typeof(value)
+	valueType = typeof(value)
 
-	local array = {}
+	array = {}
 
 	if valueType == "table" and Array.isArray(value) then
 		if mapFn then
 			for i = 1, #(value as Array<T>) do
-				if thisArg ~= nil then
+				if thisArg != nil then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as Array<T>)[i], i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)((value as Array<T>)[i], i)
@@ -91,10 +91,10 @@ function Array.from<T, U>(
 				array[i] = (value as Array<any>)[i]
 			end
 		end
-	elseif instanceOf(value, Set) then
+	else if instanceOf(value, Set) then
 		if mapFn then
 			for i, v in (value as any):ipairs() do
-				if thisArg ~= nil then
+				if thisArg != nil then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, v, i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)(v, i)
@@ -105,10 +105,10 @@ function Array.from<T, U>(
 				array[i] = v
 			end
 		end
-	elseif instanceOf(value, Map) then
+	else if instanceOf(value, Map) then
 		if mapFn then
 			for i, v in (value as any):ipairs() do
-				if thisArg ~= nil then
+				if thisArg != nil then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, v, i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)(v, i)
@@ -119,10 +119,10 @@ function Array.from<T, U>(
 				array[i] = v
 			end
 		end
-	elseif valueType == "string" then
+	else if valueType == "string" then
 		if mapFn then
 			for i = 1, (value as string):len() do
-				if thisArg ~= nil then
+				if thisArg != nil then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as any):sub(i, i), i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)((value as any):sub(i, i), i)
@@ -148,24 +148,24 @@ function Array.map<T, U, V>(
 	callback: callbackFnArrayMap<T, U> | callbackFnWithThisArgArrayMap<T, U, V>,
 	thisArg: V?
 ): Array<U>
-	if typeof(t) ~= "table" then
+	if typeof(t) != "table" then
 		error(string.format("Array.map called on %s", typeof(t)))
 	end
-	if typeof(callback) ~= "function" then
+	if typeof(callback) != "function" then
 		error("callback is not a function")
 	end
 
-	local len = #t
-	local A = {}
-	local k = 1
+	len = #t
+	A = {}
+	k = 1
 
 	while k <= len do
-		local kValue = t[k]
+		kValue = t[k]
 
-		if kValue ~= nil then
-			local mappedValue
+		if kValue != nil then
+			mappedValue = nil
 
-			if thisArg ~= nil then
+			if thisArg != nil then
 				mappedValue = (callback as callbackFnWithThisArgArrayMap<T, U, V>)(thisArg, kValue, k, t)
 			else
 				mappedValue = (callback as callbackFnArrayMap<T, U>)(kValue, k, t)
@@ -184,19 +184,19 @@ type Function = (any, any, number, any) -> any
 -- Implements Javascript's `Array.prototype.reduce` as defined below
 -- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
 function Array.reduce<T>(array: Array<T>, callback: Function, initialValue: any?): any
-	if typeof(array) ~= "table" then
+	if typeof(array) != "table" then
 		error(string.format("Array.reduce called on %s", typeof(array)))
 	end
-	if typeof(callback) ~= "function" then
+	if typeof(callback) != "function" then
 		error("callback is not a function")
 	end
 
-	local length = #array
+	length = #array
 
-	local value
-	local initial = 1
+	value = nil
+	initial = 1
 
-	if initialValue ~= nil then
+	if initialValue != nil then
 		value = initialValue
 	else
 		initial = 2
@@ -223,20 +223,20 @@ function Array.forEach<T, U>(
 	callback: callbackFnArrayForEach<T> | callbackFnWithThisArgArrayForEach<T, U>,
 	thisArg: U?
 ): ()
-	if typeof(t) ~= "table" then
+	if typeof(t) != "table" then
 		error(string.format("Array.forEach called on %s", typeof(t)))
 	end
-	if typeof(callback) ~= "function" then
+	if typeof(callback) != "function" then
 		error("callback is not a function")
 	end
 
-	local len = #t
-	local k = 1
+	len = #t
+	k = 1
 
 	while k <= len do
-		local kValue = t[k]
+		kValue = t[k]
 
-		if thisArg ~= nil then
+		if thisArg != nil then
 			(callback as callbackFnWithThisArgArrayForEach<T, U>)(thisArg, kValue, k, t)
 		else
 			(callback as callbackFnArrayForEach<T>)(kValue, k, t)
@@ -271,20 +271,20 @@ export type Set<T> = {
 type Iterable = { ipairs: (any) -> any }
 
 function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | nil): Set<T>
-	local array = {}
-	local map = {}
-	if iterable ~= nil then
-		local arrayIterable: Array<any>
+	array = {}
+	map = {}
+	if iterable != nil then
+		arrayIterable = nil
 		-- ROBLOX TODO: remove type casting from (iterable as any).ipairs in next release
 		if typeof(iterable) == "table" then
 			if Array.isArray(iterable) then
 				arrayIterable = Array.from(iterable as Array<any>)
-			elseif typeof((iterable as Iterable).ipairs) == "function" then
+			else if typeof((iterable as Iterable).ipairs) == "function" then
 				-- handle in loop below
-			elseif _G.__DEV__ then
+			else if _G.__DEV__ then
 				error("cannot create array from an object-like table")
 			end
-		elseif typeof(iterable) == "string" then
+		else if typeof(iterable) == "string" then
 			arrayIterable = Array.from(iterable as string)
 		else
 			error(("cannot create array from value of type `%s`"):format(typeof(iterable)))
@@ -297,7 +297,7 @@ function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | nil): Set<
 					table.insert(array, element)
 				end
 			end
-		elseif typeof(iterable) == "table" and typeof((iterable as Iterable).ipairs) == "function" then
+		else if typeof(iterable) == "table" and typeof((iterable as Iterable).ipairs) == "function" then
 			for _, element in (iterable as Iterable):ipairs() do
 				if not map[element] then
 					map[element] = true
@@ -337,7 +337,7 @@ function Set:delete(value): boolean
 	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 	self.size = self.size as number - 1
 	self._map[value] = nil
-	local index = table.find(self._array, value)
+	index = table.find(self._array, value)
 	if index then
 		table.remove(self._array, index)
 	end
@@ -347,12 +347,12 @@ end
 -- Implements Javascript's `Map.prototype.forEach` as defined below
 -- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach
 function Set:forEach<T>(callback: callbackFnSet<T> | callbackFnWithThisArgSet<T>, thisArg: Object?): ()
-	if typeof(callback) ~= "function" then
+	if typeof(callback) != "function" then
 		error("callback is not a function")
 	end
 
 	return Array.forEach(self._array, function(value: T)
-		if thisArg ~= nil then
+		if thisArg != nil then
 			(callback as callbackFnWithThisArgSet<T>)(thisArg, value, value, self)
 		else
 			(callback as callbackFnSet<T>)(value, value, self)
@@ -361,7 +361,7 @@ function Set:forEach<T>(callback: callbackFnSet<T> | callbackFnWithThisArgSet<T>
 end
 
 function Set:has(value): boolean
-	return self._map[value] ~= nil
+	return self._map[value] != nil
 end
 
 function Set:ipairs()
@@ -372,16 +372,16 @@ end
 
 -- #region Object
 function Object.entries(value: string | Object | Array<any>): Array<any>
-	assert(value as any ~= nil, "cannot get entries from a nil value")
-	local valueType = typeof(value)
+	assert(value as any != nil, "cannot get entries from a nil value")
+	valueType = typeof(value)
 
-	local entries: Array<Tuple<string, any>> = {}
+	entries = {}
 	if valueType == "table" then
 		for key, keyValue in pairs(value as Object) do
 			-- Luau FIXME: Luau should see entries as Array<any>, given object is [string]: any, but it sees it as Array<Array<string>> despite all the manual annotation
 			table.insert(entries, { key as string, keyValue as any })
 		end
-	elseif valueType == "string" then
+	else if valueType == "string" then
 		for i = 1, string.len(value as string) do
 			entries[i] = { tostring(i), string.sub(value as string, i, i) }
 		end
@@ -399,18 +399,18 @@ end
 function instanceOf(tbl: any, class)
 	assert(typeof(class) == "table", "Received a non-table as the second argument for instanceof")
 
-	if typeof(tbl) ~= "table" then
+	if typeof(tbl) != "table" then
 		return false
 	end
 
-	local ok, hasNew = pcall(function()
-		return class.new ~= nil and tbl.new == class.new
+	ok, hasNew = pcall(function()
+		return class.new != nil and tbl.new == class.new
 	end)
 	if ok and hasNew then
 		return true
 	end
 
-	local seen = { tbl = true }
+	seen = { tbl = true }
 
 	while tbl and typeof(tbl) == "table" do
 		tbl = getmetatable(tbl)
@@ -436,13 +436,13 @@ end
 -- #endregion
 
 function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
-	local array = {}
-	local map = {}
-	if iterable ~= nil then
-		local arrayFromIterable
-		local iterableType = typeof(iterable)
+	array = {}
+	map = {}
+	if iterable != nil then
+		arrayFromIterable = nil
+		iterableType = typeof(iterable)
 		if iterableType == "table" then
-			if #iterable > 0 and typeof(iterable[1]) ~= "table" then
+			if #iterable > 0 and typeof(iterable[1]) != "table" then
 				error("cannot create Map from {K, V} form, it must be { {K, V}... }")
 			end
 
@@ -452,13 +452,13 @@ function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 		end
 
 		for _, entry in ipairs(arrayFromIterable) do
-			local key = entry[1]
+			key = entry[1]
 			if _G.__DEV__ then
 				if key == nil then
 					error("cannot create Map from a table that isn't an array.")
 				end
 			end
-			local val = entry[2]
+			val = entry[2]
 			-- only add to array if new
 			if map[key] == nil then
 				table.insert(array, key)
@@ -492,7 +492,7 @@ function Map:get(key)
 end
 
 function Map:clear()
-	local table_: any = table
+	table_ = table
 	self.size = 0
 	table_.clear(self._map)
 	table_.clear(self._array)
@@ -505,7 +505,7 @@ function Map:delete(key): boolean
 	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 	self.size = self.size as number - 1
 	self._map[key] = nil
-	local index = table.find(self._array, key)
+	index = table.find(self._array, key)
 	if index then
 		table.remove(self._array, index)
 	end
@@ -515,14 +515,14 @@ end
 -- Implements Javascript's `Map.prototype.forEach` as defined below
 -- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
 function Map:forEach<K, V>(callback: callbackFn<K, V> | callbackFnWithThisArg<K, V>, thisArg: Object?): ()
-	if typeof(callback) ~= "function" then
+	if typeof(callback) != "function" then
 		error("callback is not a function")
 	end
 
 	return Array.forEach(self._array, function(key: K)
-		local value: V = self._map[key] as V
+		value = self._map[key] as V
 
-		if thisArg ~= nil then
+		if thisArg != nil then
 			(callback as callbackFnWithThisArg<K, V>)(thisArg, value, key, self)
 		else
 			(callback as callbackFn<K, V>)(value, key, self)
@@ -531,7 +531,7 @@ function Map:forEach<K, V>(callback: callbackFn<K, V> | callbackFnWithThisArg<K,
 end
 
 function Map:has(key): boolean
-	return self._map[key] ~= nil
+	return self._map[key] != nil
 end
 
 function Map:keys()
@@ -555,8 +555,8 @@ function Map:ipairs()
 end
 
 function Map.__index(self, key)
-	local mapProp = rawget(Map, key)
-	if mapProp ~= nil then
+	mapProp = rawget(Map, key)
+	if mapProp != nil then
 		return mapProp
 	end
 
@@ -567,7 +567,7 @@ function Map.__newindex(table_, key, value)
 	table_:set(key, value)
 end
 
-local function coerceToMap(mapLike: Map<any, any> | Table<any, any>): Map<any, any>
+function coerceToMap(mapLike: Map<any, any> | Table<any, any>): Map<any, any>
 	return instanceOf(mapLike, Map) and mapLike as Map<any, any> -- ROBLOX: order is preservered
 		or Map.new(Object.entries(mapLike)) -- ROBLOX: order is not preserved
 end
@@ -585,26 +585,26 @@ end
 -- end
 
 -- #region Tests to verify it works as expected
-local function it(description: string, fn: () -> ())
-	local ok, result = pcall(fn)
+function it(description: string, fn: () -> ())
+	ok, result = pcall(fn)
 
 	if not ok then
 		error("Failed test: " .. description .. "\n" .. result)
 	end
 end
 
-local AN_ITEM = "bar"
-local ANOTHER_ITEM = "baz"
+AN_ITEM = "bar"
+ANOTHER_ITEM = "baz"
 
 -- #region [Describe] "Map"
 -- #region [Child Describe] "constructors"
 it("creates an empty array", function()
-	local foo = Map.new()
+	foo = Map.new()
 	assert(foo.size == 0)
 end)
 
 it("creates a Map from an array", function()
-	local foo = Map.new({
+	foo = Map.new({
 		{ AN_ITEM, "foo" },
 		{ ANOTHER_ITEM, "val" },
 	})
@@ -614,7 +614,7 @@ it("creates a Map from an array", function()
 end)
 
 it("creates a Map from an array with duplicate keys", function()
-	local foo = Map.new({
+	foo = Map.new({
 		{ AN_ITEM, "foo1" },
 		{ AN_ITEM, "foo2" },
 	})
@@ -631,7 +631,7 @@ it("creates a Map from an array with duplicate keys", function()
 end)
 
 it("preserves the order of keys first assignment", function()
-	local foo = Map.new({
+	foo = Map.new({
 		{ AN_ITEM, "foo1" },
 		{ ANOTHER_ITEM, "bar" },
 		{ AN_ITEM, "foo2" },
@@ -653,30 +653,30 @@ end)
 
 -- #region [Child Describe] "type"
 it("instanceOf return true for an actual Map object", function()
-	local foo = Map.new()
+	foo = Map.new()
 	assert(instanceOf(foo, Map) == true)
 end)
 
 it("instanceOf return false for an regular plain object", function()
-	local foo = {}
+	foo = {}
 	assert(instanceOf(foo, Map) == false)
 end)
 -- #endregion
 
 -- #region [Child Describe] "set"
 it("returns the Map object", function()
-	local foo = Map.new()
+	foo = Map.new()
 	assert(foo:set(1, "baz") == foo)
 end)
 
 it("increments the size if the element is added for the first time", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	assert(foo.size == 1)
 end)
 
 it("does not increment the size the second time an element is added", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:set(AN_ITEM, "val")
 	assert(foo.size == 1)
@@ -684,7 +684,7 @@ end)
 
 it("sets values correctly to true/false", function()
 	-- Luau FIXME: Luau insists that arrays can't be mixed type
-	local foo = Map.new({ { AN_ITEM, false as any } })
+	foo = Map.new({ { AN_ITEM, false as any } })
 	foo:set(AN_ITEM, false)
 	assert(foo.size == 1)
 	assert(foo:get(AN_ITEM) == false)
@@ -702,27 +702,27 @@ end)
 
 -- #region [Child Describe] "get"
 it("returns value of item from provided key", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	assert(foo:get(AN_ITEM) == "foo")
 end)
 
 it("returns nil if the item is not in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	assert(foo:get(AN_ITEM) == nil)
 end)
 -- #endregion
 
 -- #region [Child Describe] "clear"
 it("sets the size to zero", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:clear()
 	assert(foo.size == 0)
 end)
 
 it("removes the items from the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:clear()
 	assert(foo:has(AN_ITEM) == false)
@@ -731,32 +731,32 @@ end)
 
 -- #region [Child Describe] "delete"
 it("removes the items from the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:delete(AN_ITEM)
 	assert(foo:has(AN_ITEM) == false)
 end)
 
 it("returns true if the item was in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	assert(foo:delete(AN_ITEM) == true)
 end)
 
 it("returns false if the item was not in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	assert(foo:delete(AN_ITEM) == false)
 end)
 
 it("decrements the size if the item was in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:delete(AN_ITEM)
 	assert(foo.size == 0)
 end)
 
 it("does not decrement the size if the item was not in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:delete(ANOTHER_ITEM)
 	assert(foo.size == 1)
@@ -764,7 +764,7 @@ end)
 
 it("deletes value set to false", function()
 	-- Luau FIXME: Luau insists arrays can't be mixed type
-	local foo = Map.new({ { AN_ITEM, false as any } })
+	foo = Map.new({ { AN_ITEM, false as any } })
 
 	foo:delete(AN_ITEM)
 
@@ -775,19 +775,19 @@ end)
 
 -- #region [Child Describe] "has"
 it("returns true if the item is in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	assert(foo:has(AN_ITEM) == true)
 end)
 
 it("returns false if the item is not in the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	assert(foo:has(AN_ITEM) == false)
 end)
 
 it("returns correctly with value set to false", function()
 	-- Luau FIXME: Luau insists arrays can't be mixed type
-	local foo = Map.new({ { AN_ITEM, false as any } })
+	foo = Map.new({ { AN_ITEM, false as any } })
 
 	assert(foo:has(AN_ITEM) == true)
 end)
@@ -795,7 +795,7 @@ end)
 
 -- #region [Child Describe] "keys / values / entries"
 it("returns array of elements", function()
-	local myMap = Map.new()
+	myMap = Map.new()
 	myMap:set(AN_ITEM, "foo")
 	myMap:set(ANOTHER_ITEM, "val")
 
@@ -814,9 +814,9 @@ end)
 
 -- #region [Child Describe] "__index"
 it("can access fields directly without using get", function()
-	local typeName = "size"
+	typeName = "size"
 
-	local foo = Map.new({
+	foo = Map.new({
 		{ AN_ITEM, "foo" },
 		{ ANOTHER_ITEM, "val" },
 		{ typeName, "buzz" },
@@ -831,7 +831,7 @@ end)
 
 -- #region [Child Describe] "__newindex"
 it("can set fields directly without using set", function()
-	local foo = Map.new()
+	foo = Map.new()
 
 	assert(foo.size == 0)
 
@@ -847,8 +847,8 @@ end)
 -- #endregion
 
 -- #region [Child Describe] "ipairs"
-local function makeArray(...)
-	local array = {}
+function makeArray(...)
+	array = {}
 	for _, item in ... do
 		table.insert(array, item)
 	end
@@ -856,7 +856,7 @@ local function makeArray(...)
 end
 
 it("iterates on the elements by their insertion order", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:set(ANOTHER_ITEM, "val")
 	assert(makeArray(foo:ipairs())[1][1] == AN_ITEM)
@@ -866,7 +866,7 @@ it("iterates on the elements by their insertion order", function()
 end)
 
 it("does not iterate on removed elements", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:set(ANOTHER_ITEM, "val")
 	foo:delete(AN_ITEM)
@@ -875,7 +875,7 @@ it("does not iterate on removed elements", function()
 end)
 
 it("iterates on elements if the added back to the Map", function()
-	local foo = Map.new()
+	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
 	foo:set(ANOTHER_ITEM, "val")
 	foo:delete(AN_ITEM)
@@ -915,12 +915,12 @@ end)
 -- end)
 
 it("handles non-traditional keys", function()
-	local myMap = Map.new() as Map<boolean | number | string, string>
+	myMap = Map.new() as Map<boolean | number | string, string>
 
-	local falseKey = false
-	local trueKey = true
-	local negativeKey = -1
-	local emptyKey = ""
+	falseKey = false
+	trueKey = true
+	negativeKey = -1
+	emptyKey = ""
 
 	myMap:set(falseKey, "apple")
 	myMap:set(trueKey, "bear")
@@ -947,7 +947,7 @@ end)
 
 -- #region [Describe] "coerceToMap"
 it("returns the same object if instance of Map", function()
-	local map = Map.new()
+	map = Map.new()
 	assert(coerceToMap(map) == map)
 
 	map = Map.new({})

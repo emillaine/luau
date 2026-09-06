@@ -23,9 +23,9 @@ TEST_SUITE_BEGIN("TypeInferOOP");
 TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_not_defined_with_colon")
 {
     CheckResult result = check(R"(
-        local someTable = {}
+        const someTable = {}
 
-        local function abs(x: number)
+        function abs(x: number)
             if x < 0 then
                 return -x
             else
@@ -47,9 +47,9 @@ TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_not_defi
 TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_it_wont_help_2")
 {
     CheckResult result = check(R"(
-        local someTable = {}
+        const someTable = {}
 
-        local function abs(x: number)
+        function abs(x: number)
             if x < 0 then
                 return -x
             else
@@ -73,7 +73,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_another_
 {
     CheckResult result = check(R"(
         type T = {method: ((T, number) -> number) & ((number) -> number)}
-        local T: T
+        const T: T = nil as any
 
         T.method(4)
     )");
@@ -83,12 +83,14 @@ TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_another_
 
 TEST_CASE_FIXTURE(Fixture, "method_depends_on_table")
 {
+    ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         -- This catches a bug where x:m didn't count as a use of x
         -- so toposort would happily reorder a definition of
         -- function x:m before the definition of x.
+        export f
         function g() f() end
-        local x = {}
+        const x = {}
         function x:m() end
         function f() x:m() end
     )");
@@ -99,7 +101,7 @@ TEST_CASE_FIXTURE(Fixture, "method_depends_on_table")
 TEST_CASE_FIXTURE(Fixture, "methods_are_topologically_sorted")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
 
         function T:foo()
             return T:bar(999), T:bar("hi")
@@ -109,7 +111,7 @@ TEST_CASE_FIXTURE(Fixture, "methods_are_topologically_sorted")
             return i
         end
 
-        local a, b = T:foo()
+        const a, b = T:foo()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -122,7 +124,7 @@ TEST_CASE_FIXTURE(Fixture, "methods_are_topologically_sorted")
 TEST_CASE_FIXTURE(Fixture, "quantify_methods_defined_using_dot_syntax_and_explicit_self_parameter")
 {
     check(R"(
-        local T = {}
+        const T = {}
 
         function T.method(self)
             self:method()
@@ -184,7 +186,7 @@ TEST_CASE_FIXTURE(Fixture, "pass_too_many_arguments")
             }
         end
 
-        local a = makeT()
+        const a = makeT()
         a:method(5, 7)
     )");
 
@@ -207,11 +209,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
             fooConn: () -> () | nil
         }
 
-        local Foo = {}
+        const Foo = {}
         Foo.__index = Foo
 
         function Foo.new()
-            local self: Foo = {
+            const self: Foo = {
                 fooConn = nil,
             }
             setmetatable(self, Foo)
@@ -227,10 +229,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
             print("foo")
         end
 
-        local foo = Foo.new()
+        const foo = Foo.new()
 
         -- TODO This is the best our current refinement support can offer :(
-        local bar = foo.fooConn
+        const bar = foo.fooConn
         if bar then bar() end
 
         -- foo.fooConn()
@@ -242,9 +244,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
 TEST_CASE_FIXTURE(Fixture, "CheckMethodsOfSealed")
 {
     CheckResult result = check(R"(
-local x: {prop: number} = {prop=9999}
+const x: {prop: number} = {prop=9999}
 function x:y(z: number)
-    local s: string = z
+    const s: string = z
 end
 )");
 
@@ -255,7 +257,7 @@ TEST_CASE_FIXTURE(Fixture, "nonstrict_self_mismatch_tail")
 {
     CheckResult result = check(R"(
         --!nonstrict
-        local f = {}
+        const f = {}
         function f:foo(a: number, b: number) end
 
         function bar(...)
@@ -271,8 +273,8 @@ TEST_CASE_FIXTURE(Fixture, "inferred_methods_of_free_tables_have_the_same_level_
 {
     check(R"(
         function Base64FileReader(data)
-            local reader = {}
-            local index: number = 0
+            const reader = {}
+            const index: number = 0
 
             function reader:PeekByte()
                 return data:byte(index)
@@ -289,7 +291,7 @@ TEST_CASE_FIXTURE(Fixture, "inferred_methods_of_free_tables_have_the_same_level_
 
         function ReadMidiEvents(data)
 
-            local reader = Base64FileReader(data)
+            const reader = Base64FileReader(data)
 
             while reader:HasMore() do
                 (reader:Byte() % 128)
@@ -302,7 +304,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_oop")
 {
     CheckResult result = check(R"(
    --!strict
-local Class = {}
+const Class = {}
 Class.__index = Class
 
 type Class = typeof(setmetatable({} as { x: number }, Class))
@@ -316,9 +318,9 @@ function Class.getx(self: Class)
 end
 
 function test()
-    local c = Class.new(42)
-    local n = c:getx()
-    local nn = c.x
+    const c = Class.new(42)
+    const n = c:getx()
+    const nn = c.x
 
     print(string.format("%d %d", n, nn))
 end
@@ -337,7 +339,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "set_prop_of_intersection_containing_metatabl
             {}
         ))
 
-        local Set = {} as Set<any> & {}
+        const Set = {} as Set<any> & {}
 
         function Set:add(t)
             return self
@@ -349,11 +351,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "set_prop_of_intersection_containing_metatabl
 TEST_CASE_FIXTURE(Fixture, "dont_bind_free_tables_to_themselves")
 {
     CheckResult result = check(R"(
-        local T = {}
-        local b: any
+        const T = {}
+        const b: any
 
         function T:m()
-            local a = b[i]
+            const a = b[i]
             if a then
                 self:n()
                 if self:p(a) then
@@ -368,12 +370,12 @@ TEST_CASE_FIXTURE(Fixture, "dont_bind_free_tables_to_themselves")
 TEST_CASE_FIXTURE(BuiltinsFixture, "flag_when_index_metamethod_returns_0_values")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         function T.__index()
         end
 
-        local a = setmetatable({}, T)
-        local p = a.prop
+        const a = setmetatable({}, T)
+        const p = a.prop
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -384,9 +386,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "flag_when_index_metamethod_returns_0_values"
 TEST_CASE_FIXTURE(BuiltinsFixture, "augmenting_an_unsealed_table_with_a_metatable")
 {
     CheckResult result = check(R"(
-        local A = {number = 8}
+        const A = {number = 8}
 
-        local B = setmetatable({}, A)
+        const B = setmetatable({}, A)
 
         function B:method()
             return "hello!!"
@@ -402,16 +404,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "augmenting_an_unsealed_table_with_a_metatabl
 TEST_CASE_FIXTURE(BuiltinsFixture, "react_style_oo")
 {
     CheckResult result = check(R"(
-        local Prototype = {}
+        const Prototype = {}
 
-        local ClassMetatable = {
+        const ClassMetatable = {
             __index = Prototype
         }
 
-        local BaseClass = (setmetatable({}, ClassMetatable))
+        const BaseClass = (setmetatable({}, ClassMetatable))
 
         function BaseClass:extend(name)
-            local class = {
+            const class = {
                 name=name
             }
 
@@ -424,12 +426,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "react_style_oo")
             return setmetatable(class, getmetatable(self))
         end
 
-        local C = BaseClass:extend('C')
-        local i = C.ctor({hello='world'})
+        const C = BaseClass:extend('C')
+        const i = C.ctor({hello='world'})
 
-        local iName = i.name
-        local cName = C.name
-        local hello = i.props.hello
+        const iName = i.name
+        const cName = C.name
+        const hello = i.props.hello
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -442,7 +444,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "react_style_oo")
 TEST_CASE_FIXTURE(BuiltinsFixture, "cycle_between_object_constructor_and_alias")
 {
     CheckResult result = check(R"(
-        local T = {}
+        const T = {}
         T.__index = T
 
         function T.new(): T
@@ -473,7 +475,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
     CheckResult result = check(R"(
         --!strict
 
-        local Promise = {}
+        const Promise = {}
         Promise.prototype = {}
         Promise.__index = Promise.prototype
 
@@ -481,7 +483,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
             if parent != nil and not Promise.is(parent)then
             end
 
-            local self = {
+            const self = {
                 _parent = parent,
             }
 
@@ -534,8 +536,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
 
         function Promise.each(list, predicate)
             return Promise._new(debug.traceback(nil, 2), function(resolve, reject, onCancel)
-                local predicatePromise = Promise.resolve(predicate(value, index))
-                local success, result = predicatePromise:await()
+                const predicatePromise = Promise.resolve(predicate(value, index))
+                const success, result = predicatePromise:await()
             end)
         end
 
@@ -555,10 +557,10 @@ TEST_CASE_FIXTURE(Fixture, "method_should_not_create_cyclic_type")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        local Component = {}
+        const Component = {}
 
         function Component:__resolveUpdate(incomingState)
-            local oldState = self.state
+            const oldState = self.state
             incomingState = oldState
             self.state = incomingState
         end
@@ -571,7 +573,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_metatable")
 {
     fileResolver.source["game/A"] = R"(
         --!strict
-        local cls = {}
+        const cls = {}
         cls.__index = cls
         function cls:abc() return 4 end
         return cls
@@ -579,8 +581,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_metatable")
 
     fileResolver.source["game/B"] = R"(
         --!strict
-        local cls = require(game.A)
-        local tbl = {}
+        const cls = require(game.A)
+        const tbl = {}
         setmetatable(tbl, cls)
     )";
 
@@ -605,7 +607,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern")
         return;
 
     CheckResult result = check(R"(
-        local Account = {}
+        const Account = {}
         Account.__index = Account
 
         type AccountData = {
@@ -616,7 +618,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern")
         export type Account = setmetatable<AccountData, typeof(Account)>
 
         function Account.new(name, balance): Account
-            local self = {}
+            const self = {}
             self.name = name
             self.balance = balance
 
@@ -633,7 +635,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern_2")
         return;
 
     CheckResult result = check(R"(
-        local Account = {}
+        const Account = {}
         Account.__index = Account
 
         type AccountData = {
@@ -644,7 +646,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern_2")
         export type Account = setmetatable<AccountData, typeof(Account)>
 
         function Account.new(name, balance): Account
-            local self = {}
+            const self = {}
             self.name = name
             self.balance = balance
 
@@ -663,7 +665,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern_2")
             return self.balance >= amount
         end
 
-        local account = Account.new("Hina", 500)
+        const account = Account.new("Hina", 500)
 
         if account:hasBalance(123) then -- TypeError: Value of type 'unknown' could be nil
         end
@@ -675,11 +677,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern_2")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oop_invoke_with_inferred_self_type")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local ItemContainer = {}
+        const ItemContainer = {}
         ItemContainer.__index = ItemContainer
 
         function ItemContainer.new()
-            local self = {}
+            const self = {}
             setmetatable(self, ItemContainer)
             return self
         end
@@ -691,7 +693,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oop_invoke_with_inferred_self_type")
         function ItemContainer:getItem(itemId, itemType): ()
         end
 
-        local container = ItemContainer.new()
+        const container = ItemContainer.new()
 
         container:removeItem(0, "magic")
     )"));
@@ -700,11 +702,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oop_invoke_with_inferred_self_type")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oop_invoke_with_inferred_self_and_property")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local ItemContainer = {}
+        const ItemContainer = {}
         ItemContainer.__index = ItemContainer
 
         function ItemContainer.new(name)
-            local self = {name = name}
+            const self = {name = name}
             setmetatable(self, ItemContainer)
             return self
         end
@@ -717,7 +719,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oop_invoke_with_inferred_self_and_property")
         function ItemContainer:getItem(itemId, itemType): ()
         end
 
-        local container = ItemContainer.new("library")
+        const container = ItemContainer.new("library")
 
         container:removeItem(0, "magic")
     )"));
@@ -730,13 +732,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_field_allows_upcast")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        local Foobar = {}
+        const Foobar = {}
         Foobar.__index = Foobar
         Foobar.const = 42
 
-        local foobar = setmetatable({}, Foobar)
+        const foobar = setmetatable({}, Foobar)
 
-        local _: { read const: number } = foobar
+        const _: { read const: number } = foobar
     )"));
 }
 
@@ -745,13 +747,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_field_disallows_invalid_upcast")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local Foobar = {}
+        const Foobar = {}
         Foobar.__index = Foobar
         Foobar.const = 42
 
-        local foobar = setmetatable({}, Foobar)
+        const foobar = setmetatable({}, Foobar)
 
-        local _: { const: number } = foobar
+        const _: { const: number } = foobar
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, results);
@@ -766,11 +768,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_field_precedence_for_subtyping")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult results = check(R"(
-        local function foobar1(_: { read foo: number }) end
-        local function foobar2(_: { read bar: boolean }) end
-        local function foobar3(_: { read foo: string }) end
+        function foobar1(_: { read foo: number }) end
+        function foobar2(_: { read bar: boolean }) end
+        function foobar3(_: { read foo: string }) end
 
-        local t = { foo = 4 }
+        const t = { foo = 4 }
         setmetatable(t, { __index = { foo = "heh", bar = true }})
         foobar1(t)
         foobar2(t)
@@ -792,7 +794,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
     CheckResult result = check(R"(
         --!strict
 
-        local Base = {}
+        const Base = {}
         Base.__index = Base
 
         type BaseStructure = { BaseString: string }
@@ -803,7 +805,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
             return nil as any
         end
 
-        local Sub = {}
+        const Sub = {}
         Sub.__index = Sub
 
         type SubStructure = { SubString: string }
@@ -811,7 +813,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
         type Sub = setmetatable<SubStructure, typeof(Sub)> & Base
 
         function Sub.new() : Sub
-            local self: Sub = setmetatable(Base.new(), Sub) as any
+            const self: Sub = setmetatable(Base.new(), Sub) as any
 
             self.SubString = 5 -- Line 24
             self.BaseString = 5 -- Line 25
@@ -881,10 +883,10 @@ TEST_CASE_FIXTURE(Fixture, "class_decl")
             public y: number
         end
 
-        local p = Point.new { x = 2, y = 3 }
+        const p = Point.new { x = 2, y = 3 }
 
-        local x = p.x
-        local y = p.y
+        const x = p.x
+        const y = p.y
     )");
 
     LUAU_CHECK_NO_ERRORS(result);
@@ -922,8 +924,8 @@ TEST_CASE_FIXTURE(Fixture, "point_class")
             end
         end
 
-        local p = Point.new(2, 3)
-        local len = p:length()
+        const p = Point.new(2, 3)
+        const len = p:length()
     )");
 
     LUAU_CHECK_NO_ERRORS(result);
@@ -950,8 +952,8 @@ TEST_CASE_FIXTURE(Fixture, "self_argument_has_self_type")
             end
         end
 
-        local i = I.new{}
-        local i2 = i:m()
+        const i = I.new{}
+        const i2 = i:m()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1087,12 +1089,11 @@ _ = l0 {  }
 )"
     );
 
-    LUAU_REQUIRE_ERROR_COUNT(3, result);
+    LUAU_REQUIRE_ERROR_COUNT(2, result);
     auto err = get<SyntaxError>(result.errors[0]);
     REQUIRE(err);
     CHECK_EQ("A class named 'l0' has already been declared in this module", err->message);
-    REQUIRE(get<UnknownSymbol>(result.errors[1]));
-    REQUIRE(get<CannotCallNonFunction>(result.errors[2]));
+    REQUIRE(get<CannotCallNonFunction>(result.errors[1]));
 }
 
 TEST_CASE_FIXTURE(Fixture, "prop_with_typeof_reassigned_class")
@@ -1210,9 +1211,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "read_unknown_property_from_class_object_or_i
             end
         end
 
-        local p = Point.zero()
-        local a = p.z
-        local b = Point.z
+        const p = Point.zero()
+        const a = p.z
+        const b = Point.z
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1291,7 +1292,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "writes_to_unknown_class_instance_properties_
             end
         end
 
-        local p = Point.zero()
+        const p = Point.zero()
 
         p.magnitude = function(p: Point) return 3 end
         p.zero = function() return Point.new { x = 1, y = 1 } end
@@ -1369,18 +1370,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_overrides_1")
     ScopedFastFlag _{FFlag::LuauSetmetatableOverrides, true};
 
     CheckResult result = check(R"(
-        local root = {}
-        local mt1 = { __index = { propA = 42 } }
-        local mt2 = { __index = { propB = "hmm" } }
+        const root = {}
+        const mt1 = { __index = { propA = 42 } }
+        const mt2 = { __index = { propB = "hmm" } }
 
         setmetatable(root, mt1)
 
-        local getpropA = root.propA
+        const getpropA = root.propA
 
         setmetatable(root, mt2)
 
-        local getpropB = root.propB
-        local ohno = root.propA
+        const getpropB = root.propB
+        const ohno = root.propA
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1407,10 +1408,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_overrides_2")
         type MT1 = { __index: { propA: number } }
         type MT2 = { __index: { propB: string } }
 
-        local root: setmetatable<setmetatable<{ Name: string }, MT1>, MT2>
+        const root: setmetatable<setmetatable<{ Name: string }, MT1>, MT2> = nil as any
 
-        local getpropB = root.propB
-        local ohno = root.propA
+        const getpropB = root.propB
+        const ohno = root.propA
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);

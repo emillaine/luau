@@ -1,9 +1,9 @@
-local function prequire(name) local success, result = pcall(require, name); return success and result end
-local bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
+function prequire(name) success, result = pcall(require, name); return success and result end
+bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 bench.runCode(function()
-	local src = string.rep("abcdefghijklmnopqrstuvwxyz", 100)
-	local str = ""
+	src = string.rep("abcdefghijklmnopqrstuvwxyz", 100)
+	str = ""
 	for i=1,1000 do
 		str = string.upper(src)
 		str = string.reverse(str)
@@ -13,7 +13,7 @@ bench.runCode(function()
 end, "string: reverse/upper/lower (large)")
 
 bench.runCode(function()
-	local str = ""
+	str = ""
 	for i=1,100000 do
 		src = "abcdefghijklmnopqrstuvwxyz" .. i
 		str = string.upper(src)
@@ -24,7 +24,7 @@ bench.runCode(function()
 end, "string: reverse/upper/lower (unique)")
 
 bench.runCode(function()
-	local str = ""
+	str = ""
 	for i=1,1000000 do
 		str = string.rep("_", 19)
 	end
@@ -32,7 +32,7 @@ bench.runCode(function()
 end, "string: rep (small)")
 
 bench.runCode(function()
-	local str = ""
+	str = ""
 	for i=1,100 do
 		str = string.rep("abcd", 100000)
 	end

@@ -27,7 +27,7 @@ TEST_CASE_FIXTURE(DocumentationSymbolFixture, "binding")
 {
     std::optional<DocumentationSymbol> global = getDocSymbol(
         R"(
-        local a = string.sub()
+        const a = string.sub()
     )",
         Position(1, 21)
     );
@@ -39,7 +39,7 @@ TEST_CASE_FIXTURE(DocumentationSymbolFixture, "prop")
 {
     std::optional<DocumentationSymbol> substring = getDocSymbol(
         R"(
-        local a = string.sub()
+        const a = string.sub()
     )",
         Position(1, 27)
     );
@@ -94,7 +94,7 @@ TEST_CASE_FIXTURE(DocumentationSymbolFixture, "class_method")
 
     std::optional<DocumentationSymbol> symbol = getDocSymbol(
         R"(
-        local x: Foo = Foo.new()
+        const x: Foo = Foo.new()
         x:bar("asdf")
     )",
         Position(2, 11)
@@ -118,7 +118,7 @@ TEST_CASE_FIXTURE(DocumentationSymbolFixture, "overloaded_class_method")
 
     std::optional<DocumentationSymbol> symbol = getDocSymbol(
         R"(
-        local x: Foo = Foo.new()
+        const x: Foo = Foo.new()
         x:bar("asdf")
     )",
         Position(2, 11)
@@ -167,7 +167,7 @@ TEST_CASE_FIXTURE(DocumentationSymbolFixture, "string_metatable_method")
 {
     std::optional<DocumentationSymbol> symbol = getDocSymbol(
         R"(
-        local x: string = "Foo"
+        const x: string = "Foo"
         x:rep(2)
     )",
         Position(2, 12)
@@ -190,7 +190,7 @@ TEST_CASE_FIXTURE(DocumentationSymbolFixture, "parent_class_method")
 
     std::optional<DocumentationSymbol> symbol = getDocSymbol(
         R"(
-        local x: Bar = Bar.new()
+        const x: Bar = Bar.new()
         x:bar("asdf")
     )",
         Position(2, 11)
@@ -210,8 +210,8 @@ TEST_CASE_FIXTURE(Fixture, "last_argument_function_call_type")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     check(R"(
-local function foo() return 2 end
-local function bar(a: number) return -a end
+function foo() return 2 end
+function bar(a: number) return -a end
 bar(foo())
     )");
 
@@ -321,8 +321,8 @@ TEST_CASE_FIXTURE(Fixture, "Luau_nested_query_but_first_query_failed")
 TEST_CASE_FIXTURE(Fixture, "Luau_selectively_query_for_a_different_boolean")
 {
     AstStatBlock* block = parse(R"(
-        local x = false and true
-        local y = true and false
+        const x = false and true
+        const y = true and false
     )");
 
     AstExprConstantBool* fst = Luau::query<AstExprConstantBool>(block, {nth<AstStatLocal>(), nth<AstExprConstantBool>(2)});
@@ -337,8 +337,8 @@ TEST_CASE_FIXTURE(Fixture, "Luau_selectively_query_for_a_different_boolean")
 TEST_CASE_FIXTURE(Fixture, "Luau_selectively_query_for_a_different_boolean_2")
 {
     AstStatBlock* block = parse(R"(
-        local x = false and true
-        local y = true and false
+        const x = false and true
+        const y = true and false
     )");
 
     AstExprConstantBool* snd = Luau::query<AstExprConstantBool>(block, {nth<AstStatLocal>(2), nth<AstExprConstantBool>()});
@@ -348,7 +348,7 @@ TEST_CASE_FIXTURE(Fixture, "Luau_selectively_query_for_a_different_boolean_2")
 
 TEST_CASE_FIXTURE(Fixture, "include_types_ancestry")
 {
-    check("local x: number = 4;");
+    check("const x: number = 4;");
     const Position pos(0, 10);
 
     std::vector<AstNode*> ancestryNoTypes = findAstAncestryOfPosition(*getMainSourceModule(), pos);
@@ -362,7 +362,7 @@ TEST_CASE_FIXTURE(Fixture, "include_types_ancestry")
 TEST_CASE_FIXTURE(Fixture, "find_name_ancestry")
 {
     check(R"(
-        local tbl = {}
+        const tbl = {}
         function tbl:abc() end
     )");
     const Position pos(2, 18);
@@ -376,7 +376,7 @@ TEST_CASE_FIXTURE(Fixture, "find_name_ancestry")
 TEST_CASE_FIXTURE(Fixture, "find_expr_ancestry")
 {
     check(R"(
-        local tbl = {}
+        const tbl = {}
         function tbl:abc() end
     )");
     const Position pos(2, 29);
@@ -390,7 +390,7 @@ TEST_CASE_FIXTURE(Fixture, "find_expr_ancestry")
 TEST_CASE_FIXTURE(BuiltinsFixture, "find_binding_at_position_global_start_of_file")
 {
 
-    check("local x = string.char(1)");
+    check("const x = string.char(1)");
     const Position pos(0, 12);
 
     std::optional<Binding> binding = findBindingAtPosition(*getMainModule(), *getMainSourceModule(), pos);
@@ -402,7 +402,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "find_binding_at_position_global_start_of_fil
 TEST_CASE_FIXTURE(Fixture, "interior_binding_location_is_consistent_with_exterior_binding")
 {
     CheckResult result = check(R"(
-        local function abcd(arg)
+        function abcd(arg)
             abcd(arg)
         end
 
@@ -411,20 +411,20 @@ TEST_CASE_FIXTURE(Fixture, "interior_binding_location_is_consistent_with_exterio
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    std::optional<Binding> declBinding = findBindingAtPosition(*getMainModule(), *getMainSourceModule(), {1, 26});
+    std::optional<Binding> declBinding = findBindingAtPosition(*getMainModule(), *getMainSourceModule(), {1, 19});
     REQUIRE(declBinding);
 
-    CHECK(declBinding->location == Location{{1, 23}, {1, 27}});
+    CHECK(declBinding->location == Location{{1, 17}, {1, 21}});
 
     std::optional<Binding> innerCallBinding = findBindingAtPosition(*getMainModule(), *getMainSourceModule(), {2, 15});
     REQUIRE(innerCallBinding);
 
-    CHECK(innerCallBinding->location == Location{{1, 23}, {1, 27}});
+    CHECK(innerCallBinding->location == Location{{1, 17}, {1, 21}});
 
     std::optional<Binding> outerCallBinding = findBindingAtPosition(*getMainModule(), *getMainSourceModule(), {5, 8});
     REQUIRE(outerCallBinding);
 
-    CHECK(outerCallBinding->location == Location{{1, 23}, {1, 27}});
+    CHECK(outerCallBinding->location == Location{{1, 17}, {1, 21}});
 }
 
 TEST_SUITE_END();
