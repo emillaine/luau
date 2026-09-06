@@ -1365,6 +1365,11 @@ TEST_CASE("Clear")
     runConformance("clear.luau");
 }
 
+TEST_CASE("StdlibMethods")
+{
+    runConformance("stdlib_methods.luau");
+}
+
 TEST_CASE("Strings")
 {
     runConformance("strings.luau");

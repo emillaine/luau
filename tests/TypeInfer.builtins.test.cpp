@@ -418,6 +418,44 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_correctly_infers_type_of_array_
     CHECK_EQ("string", toString(requireType("s")));
 }
 
+TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_method_call")
+{
+    CheckResult result = check(R"(
+        const t = {}
+        t:insert("foo")
+        t:insert(1, "bar")
+        const s = t[1]
+    )");
+
+    LUAU_REQUIRE_NO_ERRORS(result);
+    CHECK_EQ("string", toString(requireType("s")));
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "buffer_method_call")
+{
+    CheckResult result = check(R"(
+        const b = buffer.create(8)
+        b:writeu8(0, 42)
+        const n = b:readu8(0)
+    )");
+
+    LUAU_REQUIRE_NO_ERRORS(result);
+    CHECK_EQ(getBuiltins()->numberType, requireType("n"));
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "vector_method_call")
+{
+    CheckResult result = check(R"(
+        const v = vector.create(1, 2, 3)
+        const m = v:magnitude()
+        const w = v:normalize()
+    )");
+
+    LUAU_REQUIRE_NO_ERRORS(result);
+    CHECK_EQ(getBuiltins()->numberType, requireType("m"));
+    CHECK_EQ("vector", toString(requireType("w")));
+}
+
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_pack")
 {
     CheckResult result = check(R"(
