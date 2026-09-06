@@ -15,7 +15,7 @@ function createState()
     return {
         matrix = Matrix.identity(),
         color = Color.BLACK,
-        paint = nil,
+        paint = null,
         fillRule = "nonzero",
         operator = "src-over",
         opacity = 1,
@@ -24,8 +24,8 @@ function createState()
         lineJoin = "miter",
         miterLimit = 10,
         dashOffset = 0,
-        dashArray = nil,
-        clipSpans = nil,
+        dashArray = null,
+        clipSpans = null,
         clipping = false,
     }
 end
@@ -65,7 +65,7 @@ function Canvas:restore()
     n = #self._stateStack
     if n > 0 then
         self._state = self._stateStack[n]
-        self._stateStack[n] = nil
+        self._stateStack[n] = null
     end
 end
 
@@ -73,17 +73,17 @@ end
 
 function Canvas:setRgb(r, g, b)
     self._state.color = Color.rgba(r, g, b, 1)
-    self._state.paint = nil
+    self._state.paint = null
 end
 
 function Canvas:setRgba(r, g, b, a)
     self._state.color = Color.rgba(r, g, b, a)
-    self._state.paint = nil
+    self._state.paint = null
 end
 
 function Canvas:setColor(color)
     self._state.color = color
-    self._state.paint = nil
+    self._state.paint = null
 end
 
 function Canvas:setLinearGradient(x1, y1, x2, y2, spread, stops, matrix)

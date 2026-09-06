@@ -326,7 +326,7 @@ Parser::Parser(const char* buffer, size_t bufferSize, AstNameTable& names, Alloc
     nameSelf = names.getOrAdd("self");
     nameNumber = names.getOrAdd("number");
     nameError = names.getOrAdd(kParseNameError);
-    nameNil = names.getOrAdd("nil"); // nil is a reserved keyword
+    nameNull = names.getOrAdd("null"); // null is a reserved keyword
 
     matchRecoveryStopOnToken.assign(Lexeme::Type::Reserved_END, 0);
     matchRecoveryStopOnToken[Lexeme::Type::Eof] = 1;
@@ -3214,12 +3214,12 @@ AstType* Parser::parseFunctionTypeTail(
         report(lexer.current().location, "Return types in function type annotations are written after '->' instead of ':'");
         lexer.next();
     }
-    // Users occasionally write '()' as the 'unit' type when they actually want to use 'nil', here we'll try to give a more specific error
+    // Users occasionally write '()' as the 'unit' type when they actually want to use 'null', here we'll try to give a more specific error
     else if (lexer.current().type != Lexeme::SkinnyArrow && generics.size == 0 && genericPacks.size == 0 && params.size == 0)
     {
-        report(Location(begin.location, lexer.previousLocation()), "Expected '->' after '()' when parsing function type; did you mean 'nil'?");
+        report(Location(begin.location, lexer.previousLocation()), "Expected '->' after '()' when parsing function type; did you mean 'null'?");
 
-        return allocator.alloc<AstTypeReference>(begin.location, std::nullopt, nameNil, std::nullopt, begin.location);
+        return allocator.alloc<AstTypeReference>(begin.location, std::nullopt, nameNull, std::nullopt, begin.location);
     }
     else
     {
@@ -3236,7 +3236,7 @@ AstType* Parser::parseFunctionTypeTail(
 }
 
 // Type ::=
-//      nil |
+//      null |
 //      Name[`.' Name] [`<' namelist `>'] |
 //      `{' [PropList] `}' |
 //      `(' [TypeList] `)' `->` ReturnType
@@ -3397,7 +3397,7 @@ AstType* Parser::parseType(bool inDeclarationContext)
     return typeWithSuffix;
 }
 
-// Type ::= nil | Name[`.' Name] [ `<' Type [`,' ...] `>' ] | `typeof' `(' expr `)' | `{' [PropList] `}'
+// Type ::= null | Name[`.' Name] [ `<' Type [`,' ...] `>' ] | `typeof' `(' expr `)' | `{' [PropList] `}'
 //   | [`<' varlist `>'] `(' [TypeList] `)' `->` ReturnType
 AstTypeOrPack Parser::parseSimpleType(bool allowPack, bool inDeclarationContext)
 {
@@ -3419,10 +3419,16 @@ AstTypeOrPack Parser::parseSimpleType(bool allowPack, bool inDeclarationContext)
             return parseFunctionType(allowPack, attributes);
         }
     }
-    else if (lexer.current().type == Lexeme::ReservedNil)
+    else if (lexer.current().type == Lexeme::ReservedNull)
     {
         nextLexeme();
-        return {allocator.alloc<AstTypeReference>(start, std::nullopt, nameNil, std::nullopt, start), {}};
+        return {allocator.alloc<AstTypeReference>(start, std::nullopt, nameNull, std::nullopt, start), {}};
+    }
+    else if (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "nil")
+    {
+        report(start, "Unexpected 'nil'; did you mean 'null'?");
+        nextLexeme();
+        return {allocator.alloc<AstTypeReference>(start, std::nullopt, nameNull, std::nullopt, start), {}};
     }
     else if (lexer.current().type == Lexeme::ReservedTrue)
     {
@@ -4199,7 +4205,7 @@ LUAU_NOINLINE AstExpr* Parser::parseAttributedFunction(const Location& start)
     return parseFunctionBody(false, matchFunction, AstName(), nullptr, attributes, false, &cstAttrLists).first;
 }
 
-// simpleexp -> NUMBER | STRING | NIL | true | false | ... | constructor | [attributes] FUNCTION body | primaryexp
+// simpleexp -> NUMBER | STRING | NULL | true | false | ... | constructor | [attributes] FUNCTION body | primaryexp
 AstExpr* Parser::parseSimpleExpr()
 {
     Location start = lexer.current().location;
@@ -4209,8 +4215,15 @@ AstExpr* Parser::parseSimpleExpr()
         return parseAttributedFunction(start);
     }
 
-    if (lexer.current().type == Lexeme::ReservedNil)
+    if (lexer.current().type == Lexeme::ReservedNull)
     {
+        nextLexeme();
+
+        return allocator.alloc<AstExprConstantNil>(start);
+    }
+    else if (lexer.current().type == Lexeme::Name && AstName(lexer.current().name) == "nil")
+    {
+        report(start, "Unexpected 'nil'; did you mean 'null'?");
         nextLexeme();
 
         return allocator.alloc<AstExprConstantNil>(start);

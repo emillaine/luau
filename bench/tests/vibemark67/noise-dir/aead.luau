@@ -69,7 +69,7 @@ function aead.seal(key: buffer, nonce: buffer, plaintext: buffer, aad: buffer): 
 	return ct, tag
 end
 
--- Verify the tag and decrypt. Returns the plaintext on success, or nil if
+-- Verify the tag and decrypt. Returns the plaintext on success, or null if
 -- authentication fails (in which case the plaintext is never revealed).
 function aead.open(key: buffer, nonce: buffer, ct: buffer, tag: buffer, aad: buffer): buffer?
 	assert(buffer.len(key) == 32, "AEAD key must be 32 bytes")
@@ -78,7 +78,7 @@ function aead.open(key: buffer, nonce: buffer, ct: buffer, tag: buffer, aad: buf
 	otk = polyKey(key, nonce)
 	expected = poly1305.mac(otk, macData(aad, ct))
 	if not poly1305.verify(expected, tag) then
-		return nil
+		return null
 	end
 	return chacha20.xor(key, 1, nonce, ct)
 end

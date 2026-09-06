@@ -4,7 +4,7 @@ print('testing vararg')
 
 unpack = table.unpack
 
-_G.arg = nil
+_G.arg = null
 
 function f(a, ...)
   arg = { n=select('#',...), ... }
@@ -30,7 +30,7 @@ call = function (f, args) return f(unpack(args, 1, args.n)) end
 
 assert(f() == 0)
 assert(f({1,2,3}, 1, 2, 3) == 3)
-assert(f({"alo", nil, 45, f, nil}, "alo", nil, 45, f, nil) == 5)
+assert(f({"alo", null, 45, f, null}, "alo", null, 45, f, null) == 5)
 
 assert(c12(1,2)==55)
 a,b = assert(call(c12, {1,2}))
@@ -41,13 +41,13 @@ a = call(c12, {1,2;n=1})
 assert(not a)
 assert(c12(1,2,3) == false)
 G = {foo=1,bar=2,foobar=3}
-a = vararg(call(next, {G,nil;n=2}))
+a = vararg(call(next, {G,null;n=2}))
 b,c = next(G)
 assert(a[1] == b and a[2] == c and a.n == 2)
 a = vararg(call(call, {c12, {1,2}}))
 assert(a.n == 2 and a[1] == 55 and a[2] == 2)
 a = call(print, {'+'})
-assert(a == nil)
+assert(a == null)
 
 t = {1, 10}
 function t:f (...)
@@ -87,8 +87,8 @@ print("+")
 function oneless (a, ...) return ... end
 
 function f (n, a, ...)
-  b_inner = nil
-  assert(arg == nil)
+  b_inner = null
+  assert(arg == null)
   if n == 0 then
     b_inner, c, d = ...
     return a, b_inner, c, d, oneless(oneless(oneless(...)))
@@ -103,17 +103,17 @@ a,b,c,d,e = assert(f(10,5,4,3,2,1))
 assert(a==5 and b==4 and c==3 and d==2 and e==1)
 
 a,b,c,d,e = f(4)
-assert(a==nil and b==nil and c==nil and d==nil and e==nil)
+assert(a==null and b==null and c==null and d==null and e==null)
 
 -- select tests
 a = {select(3, unpack{10,20,30,40})}
 assert(table.getn(a) == 2 and a[1] == 30 and a[2] == 40)
 a = {select(1)}
-assert(next(a) == nil)
+assert(next(a) == null)
 a = {select(-1, 3, 5, 7)}
-assert(a[1] == 7 and a[2] == nil)
+assert(a[1] == 7 and a[2] == null)
 a = {select(-2, 3, 5, 7)}
-assert(a[1] == 5 and a[2] == 7 and a[3] == nil)
+assert(a[1] == 5 and a[2] == 7 and a[3] == null)
 pcall(select, 10000)
 pcall(select, -10000)
 
@@ -142,7 +142,7 @@ assert(selectmany(2, 10, 20, 30) == "20,30")
 assert(selectone(3, 10, 20, 30) == 30)
 assert(selectmany(3, 10, 20, 30) == "30")
 
-assert(selectone(4, 10, 20, 30) == nil)
+assert(selectone(4, 10, 20, 30) == null)
 assert(selectmany(4, 10, 20, 30) == "")
 
 assert(selectone(-2, 10, 20, 30) == 20)
@@ -154,17 +154,17 @@ assert(selectmany('3', 10, 20, 30) == "30")
 -- varargs for main chunks
 f = loadstring[[ return {...} ]]
 x = f(2,3)
-assert(x[1] == 2 and x[2] == 3 and x[3] == nil)
+assert(x[1] == 2 and x[2] == 3 and x[3] == null)
 
 
 f = loadstring[[
   x = {...}
   for i=1,select('#', ...) do assert(x[i] == select(i, ...)) end
-  assert(x[select('#', ...)+1] == nil)
+  assert(x[select('#', ...)+1] == null)
   return true
 ]]
 
-assert(f("a", "b", nil, {}, assert))
+assert(f("a", "b", null, {}, assert))
 assert(f())
 
 return('OK')

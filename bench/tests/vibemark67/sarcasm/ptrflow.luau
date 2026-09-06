@@ -77,7 +77,7 @@ function ptrflow.analyze(lf, seeds, allocTemp, opts)
 						or m == "or" or m == "shl" or m == "shr" or m == "sar" then
 						-- address arithmetic / alignment: a pointer combined with integers
 						-- keeps the pointer's lower (bounds checks still guard any misuse).
-						ptrSrc, intCount = nil, 0
+						ptrSrc, intCount = null, 0
 						for _, u in us do
 							if isPtr[u] then ptrSrc = u else intCount += 1 end
 						end

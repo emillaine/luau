@@ -46,19 +46,19 @@ function timeConstruction(depth)
     for i = 1, numIters do
         tempTree = {}
         populate(depth, tempTree)
-        tempTree = nil
+        tempTree = null
     end
 
     for i = 1, numIters do
         tempTree = makeTree(depth)
-        tempTree = nil
+        tempTree = null
     end
 end
 
 function test()
     -- Stretch the memory space quickly
     _tempTree = makeTree(stretchTreeDepth)
-    _tempTree = nil
+    _tempTree = null
 
     -- Create a long lived object
     longLivedTree = {}

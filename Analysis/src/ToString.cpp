@@ -636,7 +636,7 @@ struct TypeStringifier
         switch (ptv.type)
         {
         case PrimitiveType::NilType:
-            state.emit("nil");
+            state.emit("null");
             return;
         case PrimitiveType::Boolean:
             state.emit("boolean");
@@ -1039,7 +1039,7 @@ struct TypeStringifier
                 s = ")?";
 
             if (!hasNonNilDisjunct)
-                s = "nil";
+                s = "null";
 
             state.emit(s);
         }

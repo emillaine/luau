@@ -120,9 +120,9 @@ do
 
   -- calling interation function with invalid arguments
   f = utf8.codes("")
-  assert(f("", 2) == nil)
-  assert(f("", -1) == nil)
-  assert(f("", math.mininteger) == nil)
+  assert(f("", 2) == null)
+  assert(f("", -1) == null)
+  assert(f("", math.mininteger) == null)
 
 end
 

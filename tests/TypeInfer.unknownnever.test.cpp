@@ -126,7 +126,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_containing_never_is_itself_uninhabitable"
 
         CHECK("string" == toString(requireType("x")));
         CHECK("never" == toString(requireType("y")));
-        CHECK("nil" == toString(requireType("z")));
+        CHECK("null" == toString(requireType("z")));
     }
     else
     {
@@ -197,7 +197,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_to_local_which_is_never")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     // CLI-117119 - What do we do about assigning to never?
     CheckResult result = check(R"(
-        export t: never = nil as any
+        export t: never = null as any
         t = 3
     )");
 
@@ -330,24 +330,24 @@ TEST_CASE_FIXTURE(Fixture, "length_of_never")
 TEST_CASE_FIXTURE(Fixture, "dont_unify_operands_if_one_of_the_operand_is_never_in_any_ordering_operators")
 {
     CheckResult result = check(R"(
-        function ord(x: nil, y)
-            return x != nil and x > y
+        function ord(x: null, y)
+            return x != null and x > y
         end
     )");
 
 
     LUAU_REQUIRE_NO_ERRORS(result);
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK_EQ("(nil, nil & ~nil) -> boolean", toString(requireType("ord")));
+        CHECK_EQ("(null, null & ~null) -> boolean", toString(requireType("ord")));
     else
-        CHECK_EQ("<T>(nil, T) -> boolean", toString(requireType("ord")));
+        CHECK_EQ("<T>(null, T) -> boolean", toString(requireType("ord")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "math_operators_and_never")
 {
     CheckResult result = check(R"(
-        function mul(x: nil, y)
-            return x != nil and x * y -- infers boolean | never, which is normalized into boolean
+        function mul(x: null, y)
+            return x != null and x * y -- infers boolean | never, which is normalized into boolean
         end
     )");
 
@@ -357,26 +357,26 @@ TEST_CASE_FIXTURE(Fixture, "math_operators_and_never")
         CHECK(get<ExplicitFunctionAnnotationRecommended>(result.errors[0]));
 
         // CLI-114134 Egraph-based simplification.
-        // CLI-116549 x != nil : false when x : nil
-        CHECK("<T>(nil, T) -> false | mul<nil & ~nil, T>" == toString(requireType("mul")));
+        // CLI-116549 x != null : false when x : null
+        CHECK("<T>(null, T) -> false | mul<null & ~null, T>" == toString(requireType("mul")));
     }
     else
     {
         LUAU_REQUIRE_NO_ERRORS(result);
-        CHECK_EQ("<T>(nil, T) -> boolean", toString(requireType("mul")));
+        CHECK_EQ("<T>(null, T) -> boolean", toString(requireType("mul")));
     }
 }
 
 TEST_CASE_FIXTURE(Fixture, "compare_never")
 {
     CheckResult result = check(R"(
-        function cmp(x: nil, y: number)
-            return x != nil and x > y and x < y -- infers boolean | never, which is normalized into boolean
+        function cmp(x: null, y: number)
+            return x != null and x > y and x < y -- infers boolean | never, which is normalized into boolean
         end
     )");
 
     LUAU_CHECK_NO_ERRORS(result);
-    CHECK_EQ("(nil, number) -> boolean", toString(requireType("cmp")));
+    CHECK_EQ("(null, number) -> boolean", toString(requireType("cmp")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "lti_error_at_declaration_for_never_normalizations")

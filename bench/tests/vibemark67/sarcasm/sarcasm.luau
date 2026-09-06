@@ -53,20 +53,20 @@ function makeTarget(arch, syntax)
 			glue = x86_64_glue,
 			allocatable = x86_64_codegen.ALLOCATABLE,
 			spillReload = function(f, off)
-				n = build.insn("mov", { build.rt(f), build.memx(build.rp(4), { dispVal = off != 0 and off or nil }) }, { defs = {f} })
+				n = build.insn("mov", { build.rt(f), build.memx(build.rp(4), { dispVal = off != 0 and off or null }) }, { defs = {f} })
 				n.spillReload = true; n.spillOff = off; n.spillTemp = f; return n
 			end,
 			spillStore = function(f, off)
-				n = build.insn("mov", { build.memx(build.rp(4), { dispVal = off != 0 and off or nil }), build.rt(f) }, { uses = {f} })
+				n = build.insn("mov", { build.memx(build.rp(4), { dispVal = off != 0 and off or null }), build.rt(f) }, { uses = {f} })
 				n.spillStore = true; n.spillOff = off; n.spillTemp = f; return n
 			end,
 		}
 	end
 	backend = { cg = arm64_codegen, frame = arm64_frame }
 	return {
-		arch = "arm64", syntax = nil,
+		arch = "arm64", syntax = null,
 		transformFunction = function(nm, sd, body) return transform.transformFunction(nm, sd, body, backend) end,
-		emitFip = function(out, tr, cr) return emit.emitFip(out, tr, cr, arm64_render, nil) end,
+		emitFip = function(out, tr, cr) return emit.emitFip(out, tr, cr, arm64_render, null) end,
 		glue = arm64_glue,
 		allocatable = arm64_codegen.ALLOCATABLE,
 		spillReload = function(f, off)
@@ -101,10 +101,10 @@ function splitFunctions(stmts)
 	-- pass 2: split into functions, enforcing that declared functions are annotated
 	functions = {}
 	consumed = {}
-	cur = nil
+	cur = null
 	for idx, st in stmts do
 		if st.kind == "label" then
-			hasSig = st.annotation != nil and string.find(st.annotation, "%(") != nil
+			hasSig = st.annotation != null and string.find(st.annotation, "%(") != null
 			if hasSig then
 				cur = { name = st.name, sigAnn = st.annotation, body = { st }, startIdx = idx }
 				table.insert(functions, cur)
@@ -120,7 +120,7 @@ function splitFunctions(stmts)
 			table.insert(cur.body, st)
 			consumed[idx] = cur
 			if st.kind == "directive" and st.name == ".size" then
-				cur = nil
+				cur = null
 			end
 		end
 	end
@@ -138,8 +138,8 @@ function buildRaInsns(nodes)
 			control = node.control or (node.c and node.c.control) or "none"
 			targets = node.targets or (node.c and node.c.targets)
 			fallsThrough = node.fallsThrough
-			if fallsThrough == nil then fallsThrough = node.c and node.c.fallsThrough end
-			if fallsThrough == nil then fallsThrough = true end
+			if fallsThrough == null then fallsThrough = node.c and node.c.fallsThrough end
+			if fallsThrough == null then fallsThrough = true end
 			table.insert(ra, {
 				defs = node.defTemps or {},
 				uses = node.useTemps or {},
@@ -243,8 +243,8 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 			control = node.control or (node.c and node.c.control) or "none"
 			targets = node.targets or (node.c and node.c.targets)
 			ft = node.fallsThrough
-			if ft == nil then ft = node.c and node.c.fallsThrough end
-			if ft == nil then ft = true end
+			if ft == null then ft = node.c and node.c.fallsThrough end
+			if ft == null then ft = true end
 			defs, uses = {}, {}
 			if node.spillStore then defs = { slotIdOf(node.spillOff) } end
 			if node.spillReload then uses = { slotIdOf(node.spillOff) } end
@@ -264,7 +264,7 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 	adj = {}
 	for s = 0, numSlots - 1 do adj[s] = {} end
 	for i, ins in slotInsns do
-		if ins.defs[1] != nil then
+		if ins.defs[1] != null then
 			lo = liveOut[i]
 			if lo then
 				for _, d in ins.defs do
@@ -278,7 +278,7 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 	ncolors = 0
 	for s = 0, numSlots - 1 do
 		used = {}
-		for t in adj[s] do if color[t] != nil then used[color[t]] = true end end
+		for t in adj[s] do if color[t] != null then used[color[t]] = true end end
 		c = 0
 		while used[c] do c += 1 end
 		color[s] = c
@@ -329,7 +329,7 @@ function allocateWithSpilling(tr, target)
 		spilledSet = {}
 		for _, t in cr.spilled do
 			spilledSet[t] = true
-			if slotOf[t] == nil then slotOf[t] = numSlots; numSlots += 1 end
+			if slotOf[t] == null then slotOf[t] = numSlots; numSlots += 1 end
 		end
 		tr.fipNodes = rewriteSpills(tr.fipNodes, spilledSet, slotOf, allocTemp, spillBase, target)
 	end
@@ -339,7 +339,7 @@ end
 -- Compile one parsed input into output assembly text. `debug` (from -g) makes origins
 -- carry source file/line/column (pointing at the input assembly) for runtime diagnostics.
 function sarcasm.compile(stmts, fileDirective, debug, target)
-	target = target or makeTarget("arm64", nil)
+	target = target or makeTarget("arm64", null)
 	glue = target.glue
 	functions = splitFunctions(stmts)
 	out = {}
@@ -360,7 +360,7 @@ function sarcasm.compile(stmts, fileDirective, debug, target)
 		colorResult = allocateWithSpilling(tr, target)
 
 		-- source-location info for -g origins (points at the input assembly)
-		fnDbg = debug and { filename = fileDirective or "?", funcLine = tr.funcLine or 0 } or nil
+		fnDbg = debug and { filename = fileDirective or "?", funcLine = tr.funcLine or 0 } or null
 
 		-- emit getter, FIP body, generic thunk, FO/origins, access origins, alias
 		glue.getter(out, fn.name)
@@ -369,7 +369,7 @@ function sarcasm.compile(stmts, fileDirective, debug, target)
 		glue.foAndOrigins(out, fn.name, sigDesc.signature, tr.numRoots, fnDbg)
 		for _, ao in tr.accessOrigins do
 			glue.accessOrigin(out, ao.sym, ao.size, ao.align, fn.name, ao.write,
-				debug and { line = ao.line or 0 } or nil)
+				debug and { line = ao.line or 0 } or null)
 		end
 		glue.alias(out, fn.name, sigDesc.signature)
 		definedFI["pizlonatedFI" .. sigDesc.signature .. "_" .. fn.name] = true
@@ -438,7 +438,7 @@ end
 
 -- CLI: as-like. Args: [-o OUT] [-S|--no-assemble] [--as CMD] INPUT.s
 function sarcasm.main(argv)
-	input, output, noAssemble, asCmd, debug = nil, nil, false, "as", false
+	input, output, noAssemble, asCmd, debug = null, null, false, "as", false
 	i = 2
 	while i <= #argv do
 		a = argv[i]

@@ -381,7 +381,7 @@ TEST_CASE_FIXTURE(Fixture, "generics_dont_leak_into_callback")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const func: <T>(T, (T) -> ()) -> () = nil as any
+        const func: <T>(T, (T) -> ()) -> () = null as any
         func({}, function(obj)
             const _ = obj
         end)
@@ -400,8 +400,8 @@ TEST_CASE_FIXTURE(Fixture, "generics_dont_leak_into_callback_2")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-const func: <T>(T, (T) -> ()) -> () = nil as any
-const foobar: (number) -> () = nil as any
+const func: <T>(T, (T) -> ()) -> () = null as any
+const foobar: (number) -> () = null as any
 func({}, function(obj)
     foobar(obj)
 end)
@@ -436,7 +436,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "avoid_cross_module_mutation_in_bidirectional
                     return i
                 end
             end
-            return nil
+            return null
         end
         return mod
     )";

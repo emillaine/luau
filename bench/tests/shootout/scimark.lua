@@ -77,7 +77,7 @@ format = string.format
 -- Select array type: Lua tables or native (FFI) arrays
 ------------------------------------------------------------------------------
 
-darray, iarray = nil, nil
+darray, iarray = null, null
 
 function array_init()
   if jit and jit.status and jit.status() then
@@ -97,7 +97,7 @@ end
 -- j, k, M = 5, 17, 31. Pretty weak, but same as C/Java SciMark.
 ------------------------------------------------------------------------------
 
-rand, rand_init = nil, nil
+rand, rand_init = null, null
 
 if jit and jit.status and jit.status() then
   -- LJ2 has bit operations and zero-based arrays (internally).
@@ -408,7 +408,7 @@ printf("Lua SciMark %s based on SciMark 2.0a. %s.\n\n",
 while arg and arg[1] do
   a = table.remove(arg, 1)
   if a == "-noffi" then
-    package.preload.ffi = nil
+    package.preload.ffi = null
   else if a == "-small" then
     SIZE_SELECT = "small"
   else if a == "-large" then

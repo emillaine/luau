@@ -4,5 +4,5 @@ export b = 2
 a, b = b, a
 
 export c = 10
-d = nil
+d = null
 c, d = c + 1, c + 2

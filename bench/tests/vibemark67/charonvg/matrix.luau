@@ -52,7 +52,7 @@ function Matrix:invert()
     a, b, c, d, e, f = self[1], self[2], self[3], self[4], self[5], self[6]
     det = a * d - b * c
     if det == 0 then
-        return nil
+        return null
     end
     inv_det = 1 / det
     return makeMatrix(
@@ -133,7 +133,7 @@ function parseNumber(str, pos)
     sign = 1
 
     if pos > len then
-        return nil
+        return null
     end
     c = string.byte(str, pos)
     if c == 43 then
@@ -144,11 +144,11 @@ function parseNumber(str, pos)
     end
 
     if pos > len then
-        return nil
+        return null
     end
     c = string.byte(str, pos)
     if c != 46 and not isNum(c) then
-        return nil
+        return null
     end
 
     integer = 0
@@ -166,7 +166,7 @@ function parseNumber(str, pos)
         pos = pos + 1
         if pos > len or not isNum(string.byte(str, pos)) then
             if integer == 0 and sign == 1 then
-                return nil
+                return null
             end
             return sign * integer, pos
         end
@@ -199,7 +199,7 @@ function parseNumber(str, pos)
                 end
             end
             if pos > len or not isNum(string.byte(str, pos)) then
-                return nil
+                return null
             end
             while pos <= len do
                 c = string.byte(str, pos)
@@ -222,7 +222,7 @@ end
 function parseMatrixParams(str, pos, required, optional)
     pos = skipWs(str, pos)
     if pos > #str or string.byte(str, pos) != 40 then
-        return nil
+        return null
     end
     pos = pos + 1
     pos = skipWs(str, pos)
@@ -242,15 +242,15 @@ function parseMatrixParams(str, pos, required, optional)
 
     count = #values
     if hadComma then
-        return nil
+        return null
     end
     if count != required and count != required + optional then
-        return nil
+        return null
     end
 
     pos = skipWs(str, pos)
     if pos > #str or string.byte(str, pos) != 41 then
-        return nil
+        return null
     end
     pos = pos + 1
 
@@ -260,17 +260,17 @@ end
 function matchString(str, pos, target)
     tlen = #target
     if pos + tlen - 1 > #str then
-        return nil
+        return null
     end
     if string.sub(str, pos, pos + tlen - 1) == target then
         return pos + tlen
     end
-    return nil
+    return null
 end
 
 function Matrix.parse(str)
     if type(str) != "string" or #str == 0 then
-        return nil
+        return null
     end
     result = Matrix.identity()
     pos = skipWs(str, 1)
@@ -278,33 +278,33 @@ function Matrix.parse(str)
     hadComma = false
 
     while pos <= len do
-        newPos = nil
+        newPos = null
         newPos = matchString(str, pos, "matrix")
         if newPos then
-            values = nil
+            values = null
             values, pos = parseMatrixParams(str, newPos, 6, 0)
             if not values then
-                return nil
+                return null
             end
             m = makeMatrix(values[1], values[2], values[3], values[4], values[5], values[6])
             result = m:multiply(result)
         else
             newPos = matchString(str, pos, "translate")
             if newPos then
-                values, _, count = nil, nil, nil
+                values, _, count = null, null, null
                 values, pos, count = parseMatrixParams(str, newPos, 1, 1)
                 if not values then
-                    return nil
+                    return null
                 end
                 tx, ty = values[1], count == 2 and values[2] or 0
                 result = Matrix.translate(tx, ty):multiply(result)
             else
                 newPos = matchString(str, pos, "scale")
                 if newPos then
-                    values, _, count = nil, nil, nil
+                    values, _, count = null, null, null
                     values, pos, count = parseMatrixParams(str, newPos, 1, 1)
                     if not values then
-                        return nil
+                        return null
                     end
                     sx = values[1]
                     sy = count == 2 and values[2] or sx
@@ -312,10 +312,10 @@ function Matrix.parse(str)
                 else
                     newPos = matchString(str, pos, "rotate")
                     if newPos then
-                        values, _, count = nil, nil, nil
+                        values, _, count = null, null, null
                         values, pos, count = parseMatrixParams(str, newPos, 1, 2)
                         if not values then
-                            return nil
+                            return null
                         end
                         if count == 3 then
                             result = Matrix.translate(values[2], values[3]):multiply(result)
@@ -327,23 +327,23 @@ function Matrix.parse(str)
                     else
                         newPos = matchString(str, pos, "skewX")
                         if newPos then
-                            values = nil
+                            values = null
                             values, pos = parseMatrixParams(str, newPos, 1, 0)
                             if not values then
-                                return nil
+                                return null
                             end
                             result = Matrix.shear(values[1] * DEG2RAD, 0):multiply(result)
                         else
                             newPos = matchString(str, pos, "skewY")
                             if newPos then
-                                values = nil
+                                values = null
                                 values, pos = parseMatrixParams(str, newPos, 1, 0)
                                 if not values then
-                                    return nil
+                                    return null
                                 end
                                 result = Matrix.shear(0, values[1] * DEG2RAD):multiply(result)
                             else
-                                return nil
+                                return null
                             end
                         end
                     end
@@ -355,7 +355,7 @@ function Matrix.parse(str)
     end
 
     if hadComma then
-        return nil
+        return null
     end
     return result
 end

@@ -2332,7 +2332,7 @@ void BytecodeBuilder::dumpConstant(std::string& result, int k, bool detailed) co
     switch (data.type)
     {
     case Constant::Type_Nil:
-        formatAppend(result, "nil");
+        formatAppend(result, "null");
         break;
     case Constant::Type_Boolean:
         formatAppend(result, "%s", data.valueBoolean ? "true" : "false");
@@ -3019,7 +3019,7 @@ static const char* getBaseTypeString(uint8_t type)
     switch (tag)
     {
     case LBC_TYPE_NIL:
-        return "nil";
+        return "null";
     case LBC_TYPE_BOOLEAN:
         return "boolean";
     case LBC_TYPE_NUMBER:

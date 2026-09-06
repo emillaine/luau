@@ -3,7 +3,7 @@
 -- Generate an error (i.e. throw an exception) inside a tag method which is indirectly called via pcall.
 -- This test is meant to detect a regression in handling errors inside a tag method
 
-status, result = nil, nil
+status, result = null, null
 
 testtable = {}
 setmetatable(testtable, {
@@ -16,7 +16,7 @@ status, result = pcall(function()
     testtable.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":11: Error") != nil)
+assert(string.find(result, ":11: Error") != null)
 
 --
 testtable2 = {}
@@ -26,8 +26,8 @@ setmetatable(testtable2, {
             error("Error")
         end)
         assert(status == false)
-        assert(string.find(result, ":26: Error") != nil)
-        return nil
+        assert(string.find(result, ":26: Error") != null)
+        return null
     end
 })
 
@@ -37,7 +37,7 @@ status, result = pcall(function()
     testtable2.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":37: attempt to call a nil value") != nil)
+assert(string.find(result, ":37: attempt to call a null value") != null)
 
 --
 testtable3 = {}
@@ -45,7 +45,7 @@ setmetatable(testtable3, { __index = function()
     status, result = pcall(error, "Error")
     assert(status == false)
     assert(result == "Error")
-    return nil
+    return null
 end })
 
 m3 = testtable3.missingmethod
@@ -54,7 +54,7 @@ status, result = pcall(function()
     testtable3.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":54: attempt to call a nil value") != nil)
+assert(string.find(result, ":54: attempt to call a null value") != null)
 
 --
 testtable4 = {}
@@ -62,8 +62,8 @@ setmetatable(testtable4, {
     __index = function()
         status, result = pcall(error)
         assert(status == false)
-        assert(result == nil)
-        return nil
+        assert(result == null)
+        return null
     end
 })
 
@@ -73,6 +73,6 @@ status, result = pcall(function()
     testtable4.missingmethod()
 end)
 assert(status == false)
-assert(string.find(result, ":73: attempt to call a nil value") != nil)
+assert(string.find(result, ":73: attempt to call a null value") != null)
 
 return('OK')

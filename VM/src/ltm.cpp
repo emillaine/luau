@@ -16,7 +16,7 @@
 // clang-format off
 const char* const luaT_typenames[] = {
     // ORDER TYPE
-    "nil",
+    "null",
     "boolean",
 
     "userdata",

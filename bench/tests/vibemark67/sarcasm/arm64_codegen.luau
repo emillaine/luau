@@ -28,7 +28,7 @@ M.cc = {
 -- Static operand analysis -------------------------------------------------
 function M.memOperand(stmt)
 	for _, op in stmt.operands do if op.kind == "mem" then return op end end
-	return nil
+	return null
 end
 
 ACCESS = {
@@ -55,7 +55,7 @@ function M.accessSizeAlign(stmt)
 	return 8, 8
 end
 
--- Fixed-size alloca base: `mov rd, sp` -> 0, `add rd, sp, #imm` -> imm, else nil.
+-- Fixed-size alloca base: `mov rd, sp` -> 0, `add rd, sp, #imm` -> imm, else null.
 function M.allocaRegionBase(stmt)
 	m = string.lower(stmt.mnemonic)
 	ops = stmt.operands
@@ -63,7 +63,7 @@ function M.allocaRegionBase(stmt)
 	if m == "add" and ops[2] and ops[2].name == "sp" and ops[3] and ops[3].kind == "imm" then
 		return ops[3].value or tonumber(ops[3].text)
 	end
-	return nil
+	return null
 end
 
 -- `alloca size` size operand: `sub sp, sp, X` -> X is operands[3].
@@ -86,7 +86,7 @@ function M.make(ctx)
 
 	function cg.move(dst, src, coalesce)
 		emit(build.insn("mov", { rt(dst), rt(src) },
-			{ defs = {dst}, uses = {src}, move = coalesce and { dst = dst, src = src } or nil }))
+			{ defs = {dst}, uses = {src}, move = coalesce and { dst = dst, src = src } or null }))
 	end
 	function cg.moveImm(dst, v) emit(build.insn("mov", { rt(dst), build.imm(v) }, { defs = {dst} })) end
 	function cg.moveZero(dst) emit(build.insn("mov", { rt(dst), build.xzr() }, { defs = {dst} })) end
@@ -108,7 +108,7 @@ function M.make(ctx)
 	function cg.load(dst, base, off, size)
 		m = (size == 1) and "ldrb" or ((off < 0) and "ldur" or "ldr")
 		w = (size == 8) and 64 or 32
-		emit(build.insn(m, { rt(dst, w), build.mem(rt(base), off != 0 and off or nil) }, { defs = {dst}, uses = {base} }))
+		emit(build.insn(m, { rt(dst, w), build.mem(rt(base), off != 0 and off or null) }, { defs = {dst}, uses = {base} }))
 	end
 	function cg.loadIndexed(dst, base, idx, scale, size)
 		m = (size == 1) and "ldrb" or "ldr"
@@ -119,14 +119,14 @@ function M.make(ctx)
 	end
 	function cg.store(src, base, off)
 		m = (off < 0) and "stur" or "str"
-		emit(build.insn(m, { rt(src), build.mem(rt(base), off != 0 and off or nil) }, { uses = {src, base} }))
+		emit(build.insn(m, { rt(src), build.mem(rt(base), off != 0 and off or null) }, { uses = {src, base} }))
 	end
 	function cg.storeIndexed(src, base, idx, scale)
 		idxOp = rt(idx)
 		if scale and scale > 1 then build.withShift(idxOp, "lsl", math.floor(math.log(scale) / math.log(2))) end
 		emit(build.insn("str", { rt(src), build.mem(rt(base), idxOp) }, { uses = {src, base, idx} }))
 	end
-	-- dst = base + off + idx*scale  (add/sub; base/idx are temps, may be nil)
+	-- dst = base + off + idx*scale  (add/sub; base/idx are temps, may be null)
 	function cg.effAddr(dst, base, off, idx, scale)
 		if idx then
 			idxOp = rt(idx)
@@ -182,8 +182,8 @@ function M.make(ctx)
 
 	function cg.computeAddr(node, mem)
 		baseTemp = node.opTemp[mem.base]
-		indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or nil
-		capLo = nil
+		indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or null
+		capLo = null
 		if baseTemp and pf.isPtr[baseTemp] then capLo = pf.lowerTemp[baseTemp]
 		else if indexTemp and pf.isPtr[indexTemp] then capLo = pf.lowerTemp[indexTemp] end
 		effTemp = baseTemp

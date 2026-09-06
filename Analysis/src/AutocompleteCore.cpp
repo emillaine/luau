@@ -1724,7 +1724,7 @@ static AutocompleteContext autocompleteExpression(
         result["if"] = {AutocompleteEntryKind::Keyword, std::nullopt, false, false};
         result["true"] = {AutocompleteEntryKind::Keyword, builtinTypes->booleanType, false, false, correctForTrue};
         result["false"] = {AutocompleteEntryKind::Keyword, builtinTypes->booleanType, false, false, correctForFalse};
-        result["nil"] = {AutocompleteEntryKind::Keyword, builtinTypes->nilType, false, false, correctForNil};
+        result["null"] = {AutocompleteEntryKind::Keyword, builtinTypes->nilType, false, false, correctForNil};
         result["not"] = {AutocompleteEntryKind::Keyword};
         result["function"] = {AutocompleteEntryKind::Keyword, std::nullopt, false, false, correctForFunction};
 

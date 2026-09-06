@@ -183,7 +183,7 @@ TEST_CASE_FIXTURE(Fixture, "parenthesized_varargs_returns_any")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        export value = nil
+        export value = null
 
         function f(...)
             value = ...
@@ -269,8 +269,8 @@ TEST_CASE_FIXTURE(Fixture, "type_pack_hidden_free_tail_infinite_growth")
 if _ then
     _[function(l0)end],l0 = _
 else if _ then
-    return l0(nil)
-else if 1 / l0(nil) then
+    return l0(null)
+else if 1 / l0(null) then
 else if _ then
     return _.count,l0()
 end
@@ -296,9 +296,9 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_type_packs")
 {
     CheckResult result = check(R"(
 type Packed<T...> = (T...) -> T...
-const a: Packed<> = nil as any
-const b: Packed<number> = nil as any
-const c: Packed<string, number> = nil as any
+const a: Packed<> = null as any
+const b: Packed<number> = null as any
+const c: Packed<string, number> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -313,9 +313,9 @@ const c: Packed<string, number> = nil as any
     result = check(R"(
 -- (U..., T) cannot be parsed right now
 type Packed<T, U...> = { f: (a: T, U...) -> (T, U...) }
-const a: Packed<number> = nil as any
-const b: Packed<string, number> = nil as any
-const c: Packed<string, number, boolean> = nil as any
+const a: Packed<number> = null as any
+const b: Packed<string, number> = null as any
+const c: Packed<string, number, boolean> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -368,10 +368,10 @@ return {}
 
     CheckResult bResult = check(R"(
 const Import = require(game.A)
-const a: Import.Packed<number> = nil as any
-const b: Import.Packed<string, number> = nil as any
-const c: Import.Packed<string, number, boolean> = nil as any
-const d: { a: typeof(c) } = nil as any
+const a: Import.Packed<number> = null as any
+const b: Import.Packed<string, number> = null as any
+const c: Import.Packed<string, number, boolean> = null as any
+const d: { a: typeof(c) } = null as any
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -397,7 +397,7 @@ return {}
     CheckResult cResult = check(R"(
 const Import = require(game.A)
 type Alias<S, T, R...> = Import.Packed<S, (T, R...)>
-const a: Alias<string, number, boolean> = nil as any
+const a: Alias<string, number, boolean> = null as any
 
 type B<X...> = Import.Packed<string, X...>
 type C<X...> = Import.Packed<string, (number, X...)>
@@ -536,8 +536,8 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_type_pack_explicit_multi_tostring")
     CheckResult result = check(R"(
 type Y<T..., U...> = { f: (T...) -> (U...) }
 
-const a: Y<(number, string), (boolean)> = nil as any
-const b: Y<(), ()> = nil as any
+const a: Y<(number, string), (boolean)> = null as any
+const b: Y<(), ()> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -568,7 +568,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_type_packs_errors")
 {
     CheckResult result = check(R"(
 type Packed<T, U, V...> = (T, U) -> (V...)
-const b: Packed<number> = nil as any
+const b: Packed<number> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -619,7 +619,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_instantiated_but_missing_parameter_list")
 {
     CheckResult result = check(R"(
 type Packed<T...> = (T...) -> T...
-const a: Packed = nil as any
+const a: Packed = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -675,7 +675,7 @@ const b: Y<string> = { a = "h", b = "s" }
     result = check(R"(
 type Y<T, U = (T, T) -> string> = { a: T, b: U }
 
-const a: Y<number> = nil as any
+const a: Y<number> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -688,8 +688,8 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_chained")
     CheckResult result = check(R"(
 type Y<T, U = T, V = U> = { a: T, b: U, c: V }
 
-const a: Y<number> = nil as any
-const b: Y<number, string> = nil as any
+const a: Y<number> = null as any
+const b: Y<number, string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -702,7 +702,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_pack_explicit")
 {
     CheckResult result = check(R"(
 type Y<T... = (string, number)> = { a: (T...) -> () }
-const a: Y<> = nil as any
+const a: Y<> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -715,7 +715,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_pack_self_ty")
     CheckResult result = check(R"(
 type Y<T, U... = ...T> = { a: T, b: (U...) -> T }
 
-const a: Y<number> = nil as any
+const a: Y<number> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -727,7 +727,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_pack_self_tp")
 {
     CheckResult result = check(R"(
 type Y<T..., U... = T...> = { a: (T...) -> U... }
-const a: Y<number, string> = nil as any
+const a: Y<number, string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -739,7 +739,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_pack_self_chained_tp")
 {
     CheckResult result = check(R"(
 type Y<T..., U... = T..., V... = U...> = { a: (T...) -> U..., b: (T...) -> V... }
-const a: Y<number, string> = nil as any
+const a: Y<number, string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -751,10 +751,10 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_mixed_self")
 {
     CheckResult result = check(R"(
 type Y<T, U = T, V... = ...number, W... = (T, U, V...)> = { a: (T, U, V...) -> W... }
-const a: Y<number> = nil as any
-const b: Y<number, string> = nil as any
-const c: Y<number, string, ...boolean> = nil as any
-const d: Y<number, string, ...boolean, ...() -> ()> = nil as any
+const a: Y<number> = null as any
+const b: Y<number, string> = null as any
+const c: Y<number, string, ...boolean> = null as any
+const d: Y<number, string, ...boolean, ...() -> ()> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -789,7 +789,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_errors2")
     {
         CheckResult result = check(mode, R"(
             type Y<T... = T...> = { a: (T...) -> () }
-            const a: Y<> = nil as any
+            const a: Y<> = null as any
         )");
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -801,7 +801,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_errors3")
 {
     CheckResult result = check(R"(
         type Y<T = string, U... = ...string> = { a: (T) -> U... }
-        const a: Y<...number> = nil as any
+        const a: Y<...number> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -815,7 +815,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_errors4")
 {
     CheckResult result = check(R"(
         type Packed<T> = (T) -> T
-        const a: Packed = nil as any
+        const a: Packed = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -865,15 +865,15 @@ return {}
     fileResolver.source["Module/Users"] = R"(
 const Types = require(script.Parent.Types)
 
-const a: Types.A<number> = nil as any
-const b: Types.B<number> = nil as any
-const c: Types.C<number> = nil as any
-const d: Types.D<number> = nil as any
-const e: Types.E<> = nil as any
-const eVoid: Types.E<()> = nil as any
-const f: Types.F<number> = nil as any
-const g: Types.G<...number> = nil as any
-const h: Types.H<> = nil as any
+const a: Types.A<number> = null as any
+const b: Types.B<number> = null as any
+const c: Types.C<number> = null as any
+const d: Types.D<number> = null as any
+const e: Types.E<> = null as any
+const eVoid: Types.E<()> = null as any
+const f: Types.F<number> = null as any
+const g: Types.G<...number> = null as any
+const h: Types.H<> = null as any
     )";
 
     CheckResult resultUsers = getFrontend().check("Module/Users");
@@ -894,7 +894,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_default_type_skip_brackets")
 {
     CheckResult result = check(R"(
 type Y<T... = ...string> = (T...) -> number
-const a: Y = nil as any
+const a: Y = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -932,8 +932,8 @@ TEST_CASE_FIXTURE(Fixture, "pack_tail_unification_check")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-export a: () -> (number, ...string) = nil as any
-const b: () -> (number, ...boolean) = nil as any
+export a: () -> (number, ...string) = null as any
+const b: () -> (number, ...boolean) = null as any
 a = b
     )");
 
@@ -973,7 +973,7 @@ caused by:
 TEST_CASE_FIXTURE(Fixture, "function_return_count_mismatch_reports_expected_return_pack")
 {
     CheckResult result = check(R"(
-const x: () -> number = nil as any
+const x: () -> number = null as any
 const y: () -> (string, boolean) = x
     )");
 
@@ -1007,7 +1007,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_count_mismatch_through_union_reports
     ScopedFastFlag newTypePathErrorMessages{FFlag::LuauNewTypePathErrorMessages, true};
 
     CheckResult result = check(R"(
-const x: ((number) -> number) | ((number) -> string) = nil as any
+const x: ((number) -> number) | ((number) -> string) = null as any
 const y: ((number) -> (boolean, boolean)) | ((number) -> (boolean, string)) = x
     )");
 
@@ -1024,7 +1024,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_count_mismatch_through_intersection_
     ScopedFastFlag newTypePathErrorMessages{FFlag::LuauNewTypePathErrorMessages, true};
 
     CheckResult result = check(R"(
-const x: ((number) -> number) & ((number) -> string) = nil as any
+const x: ((number) -> number) & ((number) -> string) = null as any
 const y: ((number) -> (boolean, boolean)) & ((number) -> (boolean, string)) = x
     )");
 
@@ -1037,7 +1037,7 @@ const y: ((number) -> (boolean, boolean)) & ((number) -> (boolean, string)) = x
 TEST_CASE_FIXTURE(Fixture, "nested_function_return_count_mismatch_preserves_the_function_context")
 {
     CheckResult result = check(R"(
-const x: () -> (() -> number) = nil as any
+const x: () -> (() -> number) = null as any
 const y: () -> (() -> (string, boolean)) = x
     )");
 
@@ -1245,7 +1245,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generalize_expectedTypes_with_proper_scope")
 TEST_CASE_FIXTURE(Fixture, "fuzz_typepack_iter_follow")
 {
     CheckResult result = check(R"(
-const _ = nil
+const _ = null
 const _ = _,_(),_(_)
     )");
 

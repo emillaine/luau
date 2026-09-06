@@ -30,7 +30,7 @@
 -- You can change them here
 options = {
 	-- The maximum cache size for regex so the patterns are cached so it doesn't recompile the pattern
-	-- The only accepted value are number values >= 0, strings that can be automatically coered to numbers that are >= 0, false and nil
+	-- The only accepted value are number values >= 0, strings that can be automatically coered to numbers that are >= 0, false and null
 	-- Do note that empty regex patterns (comment-only patterns included) are never cached regardless
 	-- The default is 256
 	cacheSize = 256,
@@ -49,7 +49,7 @@ chr_scripts = options.unicodeData and require(script:WaitForChild("_scripts"));
 xuc_chr = options.unicodeData and require(script:WaitForChild("_xuc"));
 proxy = setmetatable({ }, { __mode = 'k' });
 re, re_m, match_m = { }, { }, { };
-lockmsg = nil;
+lockmsg = null;
 
 --[[ Functions ]]--
 function to_str_arr(self, init)
@@ -162,7 +162,7 @@ function check_re(re_type, name, func)
 				arg0 = proxy[arg0];
 			end;
 			if name == "group" or name == "span" then
-				if arg1 == nil then
+				if arg1 == null then
 					arg1 = 0;
 				end;
 			end;
@@ -195,7 +195,7 @@ function check_re(re_type, name, func)
 		end;
 		if name != "sub" and name != "split" then
 			init_type = typeof(arg2);
-			if init_type != 'nil' then
+			if init_type != 'null' then
 				arg2 = tonumber(arg2);
 				if not arg2 then
 					error(string.format("invalid argument #3 to %q (number expected, got %s)", name, init_type), 2);
@@ -241,7 +241,7 @@ end;
 match_m.group = check_re('Match', 'group', function(self, group_id)
 	span = self.spans[type(group_id) == "number" and group_id or self.group_id[group_id]];
 	if not span then
-		return nil;
+		return null;
 	end;
 	return utf8_sub(self.spans.input, span[1], span[2]);
 end);
@@ -249,7 +249,7 @@ end);
 match_m.span = check_re('Match', 'span', function(self, group_id)
 	span = self.spans[type(group_id) == "number" and group_id or self.group_id[group_id]];
 	if not span then
-		return nil;
+		return null;
 	end;
 	return span[1], span[2] - 1;
 end);
@@ -464,7 +464,7 @@ function find_alternation(token, i, count)
 			end;
 			i = v[5][3];
 		else if not v or is_table and v[1] == 0x29 then
-			return nil, count;
+			return null, count;
 		else if count then
 			if is_table and v[1] == "quantifier" then
 				count += v[3];
@@ -514,7 +514,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 			table.insert(states, 1, { ctkn, str_i });
 			tkn_i += 1;
 		else if tkn_type == 0x28 then
-			table.insert(states, 1, { "group", tkn_i, str_i, nil, ctkn[2], ctkn[3], ctkn[4] });
+			table.insert(states, 1, { "group", tkn_i, str_i, null, ctkn[2], ctkn[3], ctkn[4] });
 			tkn_i += 1;
 			next_alt, count = find_alternation(token, tkn_i, (ctkn[4] == 0x21 or ctkn[4] == 0x3D) and ctkn[5] and 0);
 			if next_alt then
@@ -526,7 +526,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 		else if tkn_type == 0x29 and ctkn[4] != 0x21 then
 			if ctkn[4] == 0x21 or ctkn[4] == 0x3D then
 				while true do
-					selected_match_start = nil;
+					selected_match_start = null;
 					selected_state = table.remove(states, 1);
 					if selected_state[1] == "group" and selected_state[2] == ctkn[3] then
 						if (ctkn[4] == 0x21 or ctkn[4] == 0x3D) and not ctkn[5] then
@@ -557,7 +557,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 								tkn_i = ctkn[3];
 							end;
 							ctkn1 = token[ctkn[3]];
-							new_group = { "group", v[2], str_i, nil, ctkn1[5][2], ctkn1[5][3], "quantifier", ctkn1[2], ctkn1[3], v[10] + 1, v[11], ctkn1[4] };
+							new_group = { "group", v[2], str_i, null, ctkn1[5][2], ctkn1[5][3], "quantifier", ctkn1[2], ctkn1[3], v[10] + 1, v[11], ctkn1[4] };
 							table.insert(states, 1, new_group);
 							if v[11] then
 								table.insert(states, 1, { "alternation", v[11], str_i });
@@ -592,14 +592,14 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 				tkn_i = close_i;
 			end;
 		else if tkn_type == "recurmatch" then
-			table.insert(states, 1, { "group", ctkn[3], str_i, nil, nil, token[ctkn[3]][3], nil, jmp = tkn_i });
+			table.insert(states, 1, { "group", ctkn[3], str_i, null, null, token[ctkn[3]][3], null, jmp = tkn_i });
 			tkn_i = ctkn[3] + 1;
 			next_alt, count = find_alternation(token, tkn_i);
 			if next_alt then
 				table.insert(states, 1, { "alternation", next_alt, str_i });
 			end;
 		else
-			match = nil;
+			match = null;
 			if ctkn == "FAIL" then
 				match = false;
 			else if tkn_type == 0x29 then
@@ -612,13 +612,13 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 					if next_alt then
 						table.insert(states, 1, { "alternation", next_alt, str_i });
 					end;
-					table.insert(states, next_alt and 2 or 1, { "group", tkn_i, str_i, nil, ctkn[5][2], ctkn[5][3], "quantifier", ctkn[2], ctkn[3], 0, next_alt, ctkn[4] });
+					table.insert(states, next_alt and 2 or 1, { "group", tkn_i, str_i, null, ctkn[5][2], ctkn[5][3], "quantifier", ctkn[2], ctkn[3], 0, next_alt, ctkn[4] });
 					if ctkn[4] == "lazy" and ctkn[2] == 0 then
 						tkn_i = ctkn[5][3];
 					end;
 					match = true;
 				else
-					start_i, end_i = nil, nil;
+					start_i, end_i = null, null;
 					pattern_count = 1;
 					is_backref = type(ctkn[5]) == "table" and ctkn[5][1] == "backref";
 					if is_backref then
@@ -659,7 +659,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 					end;
 				end;
 			else if tkn_type == "backref" then
-				start_i, end_i = nil, nil;
+				start_i, end_i = null, null;
 				group_n = ctkn[2];
 				for _, v in ipairs(states) do
 					if v[1] == "group" and v[5] == group_n then
@@ -706,7 +706,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 							if as_bool then
 								return false;
 							end;
-							return nil;
+							return null;
 						end;
 						start_i = prev_type == "SKIP" and prev_state[2] or start_i + 1;
 						tkn_i, str_i = 0, start_i;
@@ -780,7 +780,7 @@ end);
 re_m.match = check_re('RegEx', 'match', function(self, str, init, source)
 	span = re_rawfind(self.token, to_str_arr(str, init), 1, self.flags, self.verb_flags, false);
 	if not span then
-		return nil;
+		return null;
 	end;
 	return new_match(span, self.group_id, source, str);
 end);
@@ -791,7 +791,7 @@ re_m.matchall = check_re('RegEx', 'matchall', function(self, str, init, source)
 	return function()
 		span = i <= str.n + 1 and re_rawfind(self.token, str, i, self.flags, self.verb_flags, false);
 		if not span then
-			return nil;
+			return null;
 		end;
 		i = span[0][2] + (span[0][1] >= span[0][2] and 1 or 0);
 		return new_match(span, self.group_id, source, str.s);
@@ -823,7 +823,7 @@ function insert_tokenized_sub(repl_r, str, span, tkn)
 end;
 
 re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, source)
-	if repl_flag_str != nil and type(repl_flag_str) != "number" and type(repl_flag_str) != "string" then
+	if repl_flag_str != null and type(repl_flag_str) != "number" and type(repl_flag_str) != "string" then
 		error(string.format("invalid argument #5 to 'sub' (string expected, got %s)", typeof(repl_flag_str)), 3);
 	end
 	repl_flags = {
@@ -846,7 +846,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 		if n <= -1 or n != n then
 			n = math.huge;
 		end;
-	else if n != nil then
+	else if n != null then
 		error(string.format("invalid argument #4 to 'sub' (number expected, got %s)", typeof(n)), 3);
 	else
 		n = math.huge;
@@ -878,13 +878,13 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 					end;
 					current_conditional_c[2] = table.move(repl_r, current_conditional_c[3], #repl_r, 1, table.create(#repl_r + 1 - current_conditional_c[3]));
 					for i3 = #repl_r, current_conditional_c[3], -1 do
-						repl_r[i3] = nil;
+						repl_r[i3] = null;
 					end;
 				else if repl[i2] == 0x7D then
 					current_conditional_c = table.remove(conditional_c, 1);
 					second_c = table.move(repl_r, current_conditional_c[3], #repl_r, 1, table.create(#repl_r + 1 - current_conditional_c[3]));
 					for i3 = #repl_r, current_conditional_c[3], -1 do
-						repl_r[i3] = nil;
+						repl_r[i3] = null;
 					end;
 					table.insert(repl_r, { "condition", current_conditional_c[1], current_conditional_c[2] != true and (current_conditional_c[2] or second_c), current_conditional_c[2] and second_c });
 				else if repl[i2] then
@@ -956,7 +956,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 							error("malformed substitution pattern", 3);
 						end;
 					else
-						c_escape_char = nil;
+						c_escape_char = null;
 						if repl[i2 - 1] == 0x24 then
 							if subst_c != 0x24 then
 								prev_repl_f = repl_r[#repl_r];
@@ -969,7 +969,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 						else
 							c_escape_char = escape_chars[repl[i2]];
 							if type(c_escape_char) != "number" then
-								c_escape_char = nil;
+								c_escape_char = null;
 							end;
 						end;
 						prev_repl_f = repl_r[#repl_r];
@@ -1000,14 +1000,14 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 		if not span then
 			break;
 		end;
-		repl_r = nil;
+		repl_r = null;
 		if repl_type == "string" then
 			repl_r = repl;
 		else if repl_type == "subst_string" then
 			repl_r = insert_tokenized_sub(table.create(min_repl_n), str, span, repl);
 		else
-			re_match = nil;
-			repl_c = nil;
+			re_match = null;
+			repl_c = null;
 			if repl_type == "table" then
 				re_match = utf8_sub(str.s, span[0][1], span[0][2]);
 				repl_c = repl[re_match];
@@ -1066,7 +1066,7 @@ re_m.split = check_re('RegEx', 'split', function(self, str, n)
 		if n <= -1 or n != n then
 			n = math.huge;
 		end;
-	else if n != nil then
+	else if n != null then
 		error(string.format("invalid argument #3 to 'split' (number expected, got %s)", typeof(n)), 3);
 	else
 		n = math.huge;
@@ -1123,7 +1123,7 @@ function tokenize_ptn(codes, flags)
 		c = codes[i];
 		if c == 0x28 then
 			-- Match
-			ret = nil;
+			ret = null;
 			if codes[i + 1] == 0x2A then
 				i += 2;
 				start_i = i;
@@ -1142,9 +1142,9 @@ function tokenize_ptn(codes, flags)
 				if selected_verb == "positive_lookahead:" or selected_verb == "negative_lookhead:"
 					or selected_verb == "positive_lookbehind:" or selected_verb == "negative_lookbehind:"
 					or selected_verb:find("^[pn]l[ab]:$") then
-					ret = { 0x28, nil, nil, selected_verb:find('^n') and 0x21 or 0x3D, selected_verb:find('b', 3, true) and 1 };
+					ret = { 0x28, null, null, selected_verb:find('^n') and 0x21 or 0x3D, selected_verb:find('b', 3, true) and 1 };
 				else if selected_verb == "atomic:" then
-					ret = { 0x28, nil, nil, 0x3E, nil };
+					ret = { 0x28, null, null, 0x3E, null };
 				else if selected_verb == "ACCEPT" or selected_verb == "FAIL" or selected_verb == 'F' or selected_verb == "PRUNE" or selected_verb == "SKIP" then
 					ret = selected_verb == 'F' and "FAIL" or selected_verb;
 				else
@@ -1175,10 +1175,10 @@ function tokenize_ptn(codes, flags)
 				else if not codes[i] then
 					return "unterminated parenthetical";
 				end;
-				ret = { 0x28, nil, nil, codes[i], nil };
+				ret = { 0x28, null, null, codes[i], null };
 				if codes[i] == 0x30 and codes[i + 1] == 0x29 then
 					-- recursive match entire pattern
-					ret[1], ret[2], ret[3], ret[5] = "recurmatch", 0, 0, nil;
+					ret[1], ret[2], ret[3], ret[5] = "recurmatch", 0, 0, null;
 				else if codes[i] > 0x30 and codes[i] <= 0x39 then
 					-- recursive match
 					org_i = i;
@@ -1189,7 +1189,7 @@ function tokenize_ptn(codes, flags)
 					if codes[i] != 0x29 then
 						return "invalid group structure";
 					end;
-					ret[1], ret[2], ret[4] = "recurmatch", tonumber(utf8_sub(codes.s, org_i, i)), nil;
+					ret[1], ret[2], ret[4] = "recurmatch", tonumber(utf8_sub(codes.s, org_i, i)), null;
 				else if codes[i] == 0x3C and codes[i + 1] == 0x21 or codes[i + 1] == 0x3D then
 					-- lookbehinds
 					i += 1;
@@ -1253,7 +1253,7 @@ function tokenize_ptn(codes, flags)
 							end;
 						end;
 						group_id[name] = group_n;
-						ret[2], ret[4] = group_n, nil;
+						ret[2], ret[4] = group_n, null;
 					else
 						return "invalid group structure";
 					end;
@@ -1262,7 +1262,7 @@ function tokenize_ptn(codes, flags)
 				end;
 			else
 				group_n += 1;
-				ret = { 0x28, group_n, nil, nil };
+				ret = { 0x28, group_n, null, null };
 			end;
 			if ret then
 				table.insert(outln, ret);
@@ -1286,7 +1286,7 @@ function tokenize_ptn(codes, flags)
 							group_n = v[5] + math.max(max_c, group_c);
 						end;
 						if current_lookbehind_c != lookbehind_c and lookbehind_c != -1 then
-							lookbehind_c = nil;
+							lookbehind_c = null;
 						else
 							lookbehind_c = current_lookbehind_c;
 						end;
@@ -1294,7 +1294,7 @@ function tokenize_ptn(codes, flags)
 					end;
 				else if v == alternation then
 					if current_lookbehind_c != lookbehind_c and lookbehind_c != -1 then
-						lookbehind_c, current_lookbehind_c = nil, nil;
+						lookbehind_c, current_lookbehind_c = null, null;
 					else
 						lookbehind_c, current_lookbehind_c = current_lookbehind_c, 0;
 					end;
@@ -1304,7 +1304,7 @@ function tokenize_ptn(codes, flags)
 						if v[2] == v[3] then
 							current_lookbehind_c += v[2];
 						else
-							current_lookbehind_c = nil;
+							current_lookbehind_c = null;
 						end;
 					else
 						current_lookbehind_c += 1;
@@ -1326,7 +1326,7 @@ function tokenize_ptn(codes, flags)
 			table.insert(outln, dot);
 		else if c == 0x5B then
 			-- Character set
-			negate, char_class = false, nil;
+			negate, char_class = false, null;
 			i += 1;
 			start_i = i;
 			if codes[i] == 0x5E then
@@ -1336,7 +1336,7 @@ function tokenize_ptn(codes, flags)
 				-- POSIX character classes
 				char_class = codes[i];
 			end;
-			ret = nil;
+			ret = null;
 			if codes[i] == 0x5B or codes[i] == 0x5C then
 				ret = { };
 			else
@@ -1371,7 +1371,7 @@ function tokenize_ptn(codes, flags)
 						else if ret_c == 0x5C then
 							i += 1;
 							if codes[i] == 0x78 then
-								radix0, radix1 = nil, nil;
+								radix0, radix1 = null, null;
 								i += 1;
 								if codes[i] and codes[i] >= 0x30 and codes[i] <= 0x39 or codes[i] >= 0x41 and codes[i] <= 0x46 or codes[i] >= 0x61 and codes[i] <= 0x66 then
 									radix0 = codes[i] - ((codes[i] >= 0x41 and codes[i] <= 0x5A) and 0x37 or (codes[i] >= 0x61 and codes[i] <= 0x7A) and 0x57 or 0x30);
@@ -1386,7 +1386,7 @@ function tokenize_ptn(codes, flags)
 								end;
 								ret_c = radix0 and (radix1 and 16 * radix0 + radix1 or radix0) or 0;
 							else if codes[i] >= 0x30 and codes[i] <= 0x37 then
-								radix0, radix1, radix2 = codes[i] - 0x30, nil, nil;
+								radix0, radix1, radix2 = codes[i] - 0x30, null, null;
 								i += 1;
 								if codes[i] and codes[i] >= 0x30 and codes[i] <= 0x37 then
 									radix1 = codes[i] - 0x30;
@@ -1440,7 +1440,7 @@ function tokenize_ptn(codes, flags)
 				else if codes[i] == 0x5C then
 					i += 1;
 					if codes[i] == 0x78 then
-						radix0, radix1 = nil, nil;
+						radix0, radix1 = null, null;
 						i += 1;
 						if codes[i] == 0x7B then
 							i += 1;
@@ -1472,7 +1472,7 @@ function tokenize_ptn(codes, flags)
 							table.insert(ret, 1, radix0 and (radix1 and 16 * radix0 + radix1 or radix0) or 0);
 						end;
 					else if codes[i] >= 0x30 and codes[i] <= 0x37 then
-						radix0, radix1, radix2 = codes[i] - 0x30, nil, nil;
+						radix0, radix1, radix2 = codes[i] - 0x30, null, null;
 						i += 1;
 						if codes[i] and codes[i] >= 0x30 and codes[i] <= 0x37 then
 							radix1 = codes[i] - 0x30;
@@ -1606,7 +1606,7 @@ function tokenize_ptn(codes, flags)
 				escape_d = tonumber(utf8_sub(codes.s, org_i, i + 1));
 				if escape_d > group_n and i != org_i then
 					i = org_i;
-					radix0, radix1, radix2 = nil, nil, nil;
+					radix0, radix1, radix2 = null, null, null;
 					if codes[i] <= 0x37 then
 						radix0 = codes[i] - 0x30;
 						i += 1;
@@ -1738,7 +1738,7 @@ function tokenize_ptn(codes, flags)
 				end;
 				table.insert(outln, ret_chr);
 			else if escape_c == 0x78 then
-				radix0, radix1 = nil, nil;
+				radix0, radix1 = null, null;
 				i += 1;
 				if codes[i] == 0x7B then
 					i += 1;
@@ -1775,10 +1775,10 @@ function tokenize_ptn(codes, flags)
 			end;
 		else if c == 0x2A or c == 0x2B or c == 0x3F or c == 0x7B then
 			-- Quantifier
-			start_q, end_q = nil, nil;
+			start_q, end_q = null, null;
 			if c == 0x7B then
 				org_i = i + 1;
-				start_i = nil;
+				start_i = null;
 				while codes[i + 1] and (codes[i + 1] >= 0x30 and codes[i + 1] <= 0x39 or codes[i + 1] == 0x2C and not start_i and i + 1 != org_i) do
 					i += 1;
 					if codes[i] == 0x2C then
@@ -1888,12 +1888,12 @@ if not tonumber(options.cacheSize) then
 	error(string.format("expected number for options.cacheSize, got %s", typeof(options.cacheSize)), 2);
 end;
 cacheSize = math.floor(options.cacheSize or 0) != 0 and tonumber(options.cacheSize);
-cache_pattern, cache_pattern_names = nil, nil;
+cache_pattern, cache_pattern_names = null, null;
 if not cacheSize then
 else if cacheSize < 0 or cacheSize != cacheSize then
 	error("cache size cannot be a negative number or a NaN", 2);
 else if cacheSize == math.huge then
-	cache_pattern, cache_pattern_names = { nil }, { nil };
+	cache_pattern, cache_pattern_names = { null }, { null };
 else if cacheSize >= 2 ^ 32 then
 	error("cache size too large", 2);
 else
@@ -1907,7 +1907,7 @@ if cacheSize then
 end;
 
 function new_re(str_arr, flags, flag_repr, pattern_repr)
-	tokenized_ptn, group_id, verb_flags = nil, nil, nil;
+	tokenized_ptn, group_id, verb_flags = null, null, null;
 	cache_format = cacheSize and string.format("%s|%s", str_arr.s, flag_repr);
 	cached_token = cacheSize and cache_pattern[table.find(cache_pattern_names, cache_format)];
 	if cached_token then
@@ -1955,7 +1955,7 @@ function re.new(...)
 	else if type(ptn) != "string" then
 		error(string.format("invalid argument #1 (string expected, got %s)", typeof(ptn)), 2);
 	end;
-	if type(flags_str) != "string" and type(flags_str) != "number" and flags_str != nil then
+	if type(flags_str) != "string" and type(flags_str) != "number" and flags_str != null then
 		error(string.format("invalid argument #2 (string expected, got %s)", typeof(flags_str)), 2);
 	end;
 
@@ -2041,7 +2041,7 @@ function re.escape(...)
 	else if type(str) != "string" then
 		error(string.format("invalid argument #1 to 'escape' (string expected, got %s)", typeof(str)), 2);
 	end;
-	if delimiter == nil then
+	if delimiter == null then
 		delimiter = '';
 	else if type(delimiter) == "number" then
 		delimiter ..= '';

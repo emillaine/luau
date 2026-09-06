@@ -24,12 +24,12 @@ function renderShift(sh): string
 end
 
 -- Render one operand. `numOf(op)` returns the physical reg number to use for a reg
--- operand (or nil to use its original name).
+-- operand (or null to use its original name).
 function renderOperand(op, numOf): string
 	if op.kind == "reg" then
 		num = numOf and numOf(op)
-		name = nil
-		if num != nil then name = regName(num, op.width) else name = op.name end
+		name = null
+		if num != null then name = regName(num, op.width) else name = op.name end
 		return name .. renderShift(op.shift)
 	else if op.kind == "imm" then
 		return "#" .. op.text
@@ -58,19 +58,19 @@ function renderOperand(op, numOf): string
 end
 arm64_render.renderOperand = renderOperand
 
--- Render a full instruction node. colorOf: tempId -> regNum (or nil). Handles both lifted
+-- Render a full instruction node. colorOf: tempId -> regNum (or null). Handles both lifted
 -- nodes (node.stmt + node.opTemp) and synthesized nodes (node.mnemonic + node.operands with
 -- op.tempRef / op.fixedNum). The `syntax` arg is ignored (ARM has a single output syntax).
 function arm64_render.renderInsn(node, colorOf, syntax): string
 	st = node.stmt or { mnemonic = node.mnemonic, operands = node.operands }
 	function numOf(op)
-		if op.fixedNum != nil then return op.fixedNum end
-		if op.tempRef != nil then return colorOf and colorOf(op.tempRef) end
+		if op.fixedNum != null then return op.fixedNum end
+		if op.tempRef != null then return colorOf and colorOf(op.tempRef) end
 		if node.opTemp then
 			t = node.opTemp[op]
-			if t != nil then return colorOf and colorOf(t) end
+			if t != null then return colorOf and colorOf(t) end
 		end
-		return nil
+		return null
 	end
 	function shiftText(sh)
 		if sh.amountText then return sh.op .. " " .. sh.amountText end
@@ -87,7 +87,7 @@ function arm64_render.renderInsn(node, colorOf, syntax): string
 			table.insert(ops, base .. ", " .. op.postShift.op .. " " .. (op.postShift.amountText or ""))
 		else if op.kind == "reg" and op.shift then
 			saved = op.shift
-			op.shift = nil
+			op.shift = null
 			table.insert(ops, renderOperand(op, numOf))
 			op.shift = saved
 			table.insert(ops, shiftText(saved))
@@ -104,13 +104,13 @@ function arm64_render.renderInsn(node, colorOf, syntax): string
 	return "\t" .. st.mnemonic .. "\t" .. table.concat(ops, ", ")
 end
 
--- Physical register number for a rendered operand; nil if not a plain register.
+-- Physical register number for a rendered operand; null if not a plain register.
 function physOf(node, op, colorOf)
-	if not op or op.kind != "reg" then return nil end
-	if op.fixedNum != nil then return op.fixedNum end
-	if op.tempRef != nil then return colorOf and colorOf(op.tempRef) end
-	if node.opTemp and node.opTemp[op] != nil then return colorOf and colorOf(node.opTemp[op]) end
-	return nil
+	if not op or op.kind != "reg" then return null end
+	if op.fixedNum != null then return op.fixedNum end
+	if op.tempRef != null then return colorOf and colorOf(op.tempRef) end
+	if node.opTemp and node.opTemp[op] != null then return colorOf and colorOf(node.opTemp[op]) end
+	return null
 end
 
 -- True if `node` renders to `mov Xd, Xd` (same physical register) — a no-op left behind by
@@ -125,7 +125,7 @@ function arm64_render.isSelfMove(node, colorOf)
 	if (ops[1].width or 64) != 64 or (ops[2].width or 64) != 64 then return false end
 	a = physOf(node, ops[1], colorOf)
 	b = physOf(node, ops[2], colorOf)
-	return a != nil and a == b
+	return a != null and a == b
 end
 
 -- Frame layout -----------------------------------------------------------
@@ -135,7 +135,7 @@ function align16(x) return math.floor((x + 15) / 16) * 16 end
 function arm64_render.makeColorNum(color)
 	return function(t)
 		c = color[t]
-		if not c then return nil end
+		if not c then return null end
 		if c == "sp" then return -2 else if c == "xzr" then return -1 end
 		return tonumber(string.match(c, "%d+"))
 	end

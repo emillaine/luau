@@ -339,7 +339,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "isinstance_refines_imported_class_but_not_a_c
             public x: number
         end
 
-        const notAPoint = nil
+        const notAPoint = null
 
         return { Point = Point, notAPoint = notAPoint }
     )";
@@ -359,7 +359,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "isinstance_refines_imported_class_but_not_a_c
     LUAU_REQUIRE_ERROR(modB, TypeMismatch);
     auto err = get<TypeMismatch>(modB.errors[0]);
     CHECK_EQ("class", toString(err->wantedType));
-    CHECK_EQ("nil", toString(err->givenType));
+    CHECK_EQ("null", toString(err->givenType));
 }
 
 TEST_CASE_FIXTURE(ClassesFixture, "typed_self_parameter_after_class_declaration")
@@ -481,7 +481,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public x: number
@@ -502,7 +502,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field_index_string_exp
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public x: number
@@ -523,7 +523,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "refer_to_uninitialized_field_index_computed_i
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public xy: number
@@ -547,7 +547,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "reference_to_shadowed_self_is_absurd_but_ok")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             function __init(self)
@@ -630,7 +630,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "all_fields_initialized_before_use")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public x: number
@@ -685,7 +685,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "read_nested_field_of_uninitialized")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public x: {y: number}
@@ -706,7 +706,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "partial_initialization_order")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public x: number
@@ -838,7 +838,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "read_nilable_field_before_assign")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something = nil
+        export something = null
 
         class Foo
             public x: number?
@@ -855,7 +855,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "read_error_suppressing_field_before_assign")
 {
     // TODO: CLI-222651: This shouldn't error because the annotation on x is error suppressing
     CheckResult result = check(R"(
-        const something = nil
+        const something = null
 
         class Foo
             public x: string & any
@@ -872,7 +872,7 @@ TEST_CASE_FIXTURE(ClassesFixture, "type_assertion_loophole")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export something: any = nil as any
+        export something: any = null as any
 
         class Foo
             public x: number

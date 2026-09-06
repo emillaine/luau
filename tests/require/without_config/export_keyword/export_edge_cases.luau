@@ -28,7 +28,7 @@ export t = { x = 1 }
 t = { x = t.x + 1 }
 
 export a = 1
-b = nil
+b = null
 a, b = a + 1, a + 2
 
 export closure = 0

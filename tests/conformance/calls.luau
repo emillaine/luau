@@ -6,11 +6,11 @@ print("testing functions and calls")
 
 assert(type(1<2) == 'boolean')
 assert(type(true) == 'boolean' and type(false) == 'boolean')
-assert(type(nil) == 'nil' and type(-3) == 'number' and type'x' == 'string' and
+assert(type(null) == 'null' and type(-3) == 'number' and type'x' == 'string' and
        type{} == 'table' and type(type) == 'function')
 
 assert(type(assert) == type(print))
-f = nil
+f = null
 function f (x) return a:x (x) end
 assert(type(f) == 'function')
 
@@ -58,12 +58,12 @@ a.b.c:f2('k', 12); assert(a.b.c.k == 12)
 
 print('+')
 
-t = nil   -- 'declare' t
+t = null   -- 'declare' t
 function f(a,b,c) d = 'a'; t={a,b,c,d} end
 
 f(      -- this line change must be valid
   1,2)
-assert(t[1] == 1 and t[2] == 2 and t[3] == nil and t[4] == 'a')
+assert(t[1] == 1 and t[2] == 2 and t[3] == null and t[4] == 'a')
 f(1,2,   -- this one too
       3,4)
 assert(t[1] == 1 and t[2] == 2 and t[3] == 3 and t[4] == 'a')
@@ -112,12 +112,12 @@ assert(a:deep(10000) == 101)
 print('+')
 
 
-a = nil
+a = null
 (function (x) a=x end)(23)
 assert(a == 23 and (function (x) return x*2 end)(20) == 40)
 
 
-x,y,z,a = nil, nil, nil, nil
+x,y,z,a = null, null, null, null
 a = {}; lim = 2000
 for i=1, lim do a[i]=i end
 assert(select(lim, unpack(a)) == lim and select('#', unpack(a)) == lim)
@@ -128,17 +128,17 @@ assert(table.getn(x) == lim and x[1] == 1 and x[lim] == lim)
 x = {unpack(a, lim-2)}
 assert(table.getn(x) == 3 and x[1] == lim-2 and x[3] == lim)
 x = {unpack(a, 10, 6)}
-assert(next(x) == nil)   -- no elements
+assert(next(x) == null)   -- no elements
 x = {unpack(a, 11, 10)}
-assert(next(x) == nil)   -- no elements
+assert(next(x) == null)   -- no elements
 x,y = unpack(a, 10, 10)
-assert(x == 10 and y == nil)
+assert(x == 10 and y == null)
 x,y,z = unpack(a, 10, 11)
-assert(x == 10 and y == 11 and z == nil)
+assert(x == 10 and y == 11 and z == null)
 a,x = unpack{1}
-assert(a==1 and x==nil)
+assert(a==1 and x==null)
 a,x = unpack({1,2}, 1, 1)
-assert(a==1 and x==nil)
+assert(a==1 and x==null)
 
 
 -- testing closures
@@ -175,7 +175,7 @@ end
 f = g(10)
 assert(f(9, 16) == 10+11+12+13+10+9+16+10)
 
-Y, F, f = nil
+Y, F, f = null
 print('+')
 
 -- testing multiple returns
@@ -198,16 +198,16 @@ function f() return 1,2,30,4 end
 function ret2 (a,b) return a,b end
 
 a,b,c,d = unlpack{1,2,3}
-assert(a==1 and b==2 and c==3 and d==nil)
+assert(a==1 and b==2 and c==3 and d==null)
 a = {1,2,3,4,false,10,'alo',false,assert}
 equaltab(pack(unlpack(a)), a)
 equaltab(pack(unlpack(a), -1), {1,-1})
 a,b,c,d = ret2(f()), ret2(f())
-assert(a==1 and b==1 and c==2 and d==nil)
+assert(a==1 and b==1 and c==2 and d==null)
 a,b,c,d = unlpack(pack(ret2(f()), ret2(f())))
-assert(a==1 and b==1 and c==2 and d==nil)
+assert(a==1 and b==1 and c==2 and d==null)
 a,b,c,d = unlpack(pack(ret2(f()), (ret2(f()))))
-assert(a==1 and b==1 and c==nil and d==nil)
+assert(a==1 and b==1 and c==null and d==null)
 
 a = ret2{ unlpack{1,2,3}, unlpack{3,2,1}, unlpack{"a", "b"}}
 assert(a[1] == 1 and a[2] == 3 and a[3] == "a" and a[4] == "b")
@@ -221,9 +221,9 @@ table.sort({10,9,8,4,19,23,0,0}, function (a,b) return a<b end, "extra arg")
 
 
 -- test for bug in parameter adjustment
-assert((function () return nil end)(4) == nil)
-assert((function () a = nil; return a end)(4) == nil)
-assert((function (a) return a end)() == nil)
+assert((function () return null end)(4) == null)
+assert((function () a = null; return a end)(4) == null)
+assert((function (a) return a end)() == null)
 
  -- test for a bug in clobbering stack variables 
  -- this call to print will clobber x and y if the call to f is not properly setup

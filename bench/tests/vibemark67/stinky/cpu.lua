@@ -123,7 +123,7 @@ end
 -- Evaluate a condition code (0-15).
 function CPU.evalCondition(self: CPU, cond: number): boolean
     base = bit32.rshift(cond, 1)
-    result = nil
+    result = null
     if base == 0 then     -- EQ/NE
         result = self.Z
     else if base == 1 then -- CS/CC (HS/LO)

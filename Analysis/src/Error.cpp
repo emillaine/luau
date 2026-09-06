@@ -606,7 +606,7 @@ struct ErrorConverter
 
     std::string operator()(const Luau::OptionalValueAccess& e) const
     {
-        return "Value of type '" + toString(e.optional) + "' could be nil";
+        return "Value of type '" + toString(e.optional) + "' could be null";
     }
 
     std::string operator()(const Luau::MissingUnionProperty& e) const

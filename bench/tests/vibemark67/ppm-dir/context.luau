@@ -34,13 +34,13 @@ function getContext(model: PPMModel, history: {number}, order: number): ContextN
     node = model.root
     histLen = #history
     startIdx = histLen - order + 1
-    if startIdx < 1 then return nil end
+    if startIdx < 1 then return null end
 
     for i = startIdx, histLen do
         sym = history[i]
         child = node.children[sym]
         if not child then
-            return nil
+            return null
         end
         node = child
     end

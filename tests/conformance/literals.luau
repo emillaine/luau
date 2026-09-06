@@ -30,7 +30,7 @@ var = string.rep('a', 15000)
 prog = string.format("_G.%s = 5", var)
 dostring(prog)
 assert(dostring("return _G." .. var) == 5)
-var = nil
+var = null
 print('+')
 
 -- escapes --
@@ -91,13 +91,13 @@ _G.x = 1
 ]=]
 
 print('+')
-_G.x = nil
+_G.x = null
 dostring(prog)
 assert(_G.x)
 
-prog = nil
-a = nil
-b = nil
+prog = null
+a = null
+b = null
 
 
 -- testing line ends
@@ -163,7 +163,7 @@ end
 --[[
 -- testing decimal point locale
 if os.setlocale("pt_BR") or os.setlocale("ptb") then
-  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == nil)
+  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == null)
   assert(assert(loadstring("return 3.4"))() == 3.4)
   assert(assert(loadstring("return .4,3"))() == .4)
   assert(assert(loadstring("return 4."))() == 4.)

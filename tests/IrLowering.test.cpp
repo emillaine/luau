@@ -680,7 +680,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "DseInitialStackState")
 function foo()
     while {} do
         _ = not _,{}
-        _ = nil
+        _ = null
     end
 end
 )"),
@@ -695,7 +695,7 @@ bb_bytecode_0:
   JUMP bb_2
 bb_2:
   implicit CHECK_SAFE_ENV exit(3)
-  GET_CACHED_IMPORT R1, K1 (nil), 1073741824u ('_'), 4u
+  GET_CACHED_IMPORT R1, K1 (null), 1073741824u ('_'), 4u
   SET_SAVEDPC 7u
   %14 = NEW_TABLE 0u, 0u
   STORE_POINTER R1, %14
@@ -792,7 +792,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NilCompare")
         "\n" + getCodegenAssembly(
                    R"(
 function foo(a)
-    return a == nil
+    return a == null
 end
 )"
                ),
@@ -1071,7 +1071,7 @@ function foo(a, b)
     if type(a) == "number" then
         return a + b
     end
-    return nil
+    return null
 end
 )"
                ),
@@ -1111,7 +1111,7 @@ function foo(a, b)
     if type(a) == "number" and type(b) == "number" then
         return a + b
     end
-    return nil
+    return null
 end
 )"
                ),
@@ -2011,7 +2011,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "EntryBlockChecksWithOptional1")
         "\n" + getCodegenAssembly(
                    R"(
 function eq(a: number?, b: number)
-  return if a != nil then a + b else b
+  return if a != null then a + b else b
 end
 )"
                ),
@@ -2053,7 +2053,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "EntryBlockChecksWithOptional2")
         "\n" + getCodegenAssembly(
                    R"(
 function eq(a: number, b: number?)
-  return if b != nil then a + b else a
+  return if b != null then a + b else a
 end
 )"
                ),
@@ -2583,7 +2583,7 @@ bb_linear_11:
 }
 
 // This test checks that loads from the same keys are removed
-// Note that CHECK_SLOT_MATCH ensures that key is in mainposition and not nil, so metatable is not triggered
+// Note that CHECK_SLOT_MATCH ensures that key is in mainposition and not null, so metatable is not triggered
 TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp1")
 {
     CHECK_EQ(
@@ -2653,8 +2653,8 @@ bb_linear_23:
 
 // This test checks that stores to distinct keys do not interfere with each other
 // If the table pointers were different, they cannot have the same storage, if they are the same, slots are different
-// Additionally, because we know that 'nil' is not stored, we do not have to recheck that with CHECK_NODE_VALUE
-// Note that CHECK_SLOT_MATCH ensures that key is in mainposition and not nil, so metatable is not triggered
+// Additionally, because we know that 'null' is not stored, we do not have to recheck that with CHECK_NODE_VALUE
+// Note that CHECK_SLOT_MATCH ensures that key is in mainposition and not null, so metatable is not triggered
 TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp2")
 {
     CHECK_EQ(
@@ -2776,7 +2776,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp4")
                    R"(
 function test(t: { x: number, y: number }, a: string)
     t.x = 2
-    t[1] = nil
+    t[1] = null
     return t.x * 2
 end
 )",
@@ -2965,7 +2965,7 @@ bb_linear_15:
 }
 
 // This test shows a table key swap
-// Invalidating CHECK_SLOT_MATCH of one key with nil does not cause CHECK_NODE_VALUE of the other
+// Invalidating CHECK_SLOT_MATCH of one key with null does not cause CHECK_NODE_VALUE of the other
 TEST_CASE_FIXTURE(LoweringFixture, "TableNodeLoadStoreProp7")
 {
     // TODO: opportunity - table barrier is not needed when values come from the same table
@@ -3912,7 +3912,7 @@ bb_bytecode_1:
   implicit CHECK_SAFE_ENV exit(0)
   STORE_DOUBLE R1, 0
   STORE_TAG R1, tnumber
-  GET_CACHED_IMPORT R2, K1 (nil), 1073741824u ('ipairs'), 2u
+  GET_CACHED_IMPORT R2, K1 (null), 1073741824u ('ipairs'), 2u
   %8 = LOAD_TVALUE R0, 0i, ttable
   STORE_TVALUE R3, %8
   INTERRUPT 4u
@@ -4455,10 +4455,10 @@ bb_2:
   JUMP bb_bytecode_1
 bb_bytecode_1:
   implicit CHECK_SAFE_ENV exit(0)
-  GET_CACHED_IMPORT R1, K1 (nil), 1073741824u ('print'), 1u
+  GET_CACHED_IMPORT R1, K1 (null), 1073741824u ('print'), 1u
   %6 = LOAD_TVALUE R0, 0i, tuserdata
   STORE_TVALUE R2, %6
-  GET_CACHED_IMPORT R3, K4 (nil), 2149583872u ('vec2'.'create'), 4u
+  GET_CACHED_IMPORT R3, K4 (null), 2149583872u ('vec2'.'create'), 4u
   STORE_DOUBLE R4, 0
   STORE_TAG R4, tnumber
   STORE_DOUBLE R5, 0
@@ -5380,7 +5380,7 @@ bb_bytecode_1:
   STORE_TAG R2, tnumber
   STORE_DOUBLE R5, 0
   STORE_TAG R5, tnumber
-  GET_CACHED_IMPORT R6, K3 (nil), 2148534272u ('buffer'.'len'), 3u
+  GET_CACHED_IMPORT R6, K3 (null), 2148534272u ('buffer'.'len'), 3u
   %12 = LOAD_TVALUE R0, 0i, tbuffer
   STORE_TVALUE R7, %12
   INTERRUPT 5u
@@ -6420,7 +6420,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval2")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-_ = nil
+_ = null
 
 for l0={[1]=(_),},_ do
     _ += _
@@ -6439,7 +6439,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "RecursiveRemoval3")
     CHECK(
         getCodegenAssembly(R"(
 while {_,} do
-    _ = nil
+    _ = null
     repeat
         _ = "x",_ or {}
     until "x"
@@ -6460,8 +6460,8 @@ while "" do
     _ += bit32.replace(_,function() end,0)
     for l0=_,{_,} do
         do
-            _ += bit32.replace(_,nil,0)
-            _ = nil
+            _ += bit32.replace(_,null,0)
+            _ = null
         end
     end
 end
@@ -6498,7 +6498,7 @@ bb_4:
   RETURN R0, 0i
 bb_bytecode_1:
   implicit CHECK_SAFE_ENV exit(12)
-  GET_CACHED_IMPORT R3, K6 (nil), 1078984704u ('_'), 15u
+  GET_CACHED_IMPORT R3, K6 (null), 1078984704u ('_'), 15u
   CHECK_TAG R3, tnumber, bb_exit_6
    ; exit sync: R5, R4, R2, R1, {}
   STORE_INT R0, 0i
@@ -6534,13 +6534,13 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest2")
     // Check that this compiles with no assertions
     CHECK(
         getCodegenAssembly(R"(
-_ = nil
+_ = null
 while true != _ do
-    _ = nil
+    _ = null
 end
 _ = _,{},16711935 != _,{["" != _]=16711935,},_ != _
 while {} != _ do
-    _ = nil
+    _ = null
 end
 )")
             .size() > 0
@@ -6568,11 +6568,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest4")
     CHECK(
         getCodegenAssembly(R"(
 _ = math.exp,_(),_
-_ = math._,_(_(_),_(_ and _),_(_(_),_,_,_()),`{nil}`),_
+_ = math._,_(_(_),_(_ and _),_(_(_),_,_,_()),`{null}`),_
 for l41=_,_ do
 end
-l0 = nil
-l0 -= _(0,_(_.count,_(_),_(_(_),_(_),_,_()),`{nil}`))
+l0 = null
+l0 -= _(0,_(_.count,_(_),_(_(_),_(_),_,_()),`{null}`))
 )")
             .size() > 0
     );
@@ -6586,7 +6586,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest5")
     CHECK(
         getCodegenAssembly(R"(
 _ = 32768
-n0 = nil
+n0 = null
 while "" do
     n0 ..= 0
     for l0=`{-2013233152}`,65535 do
@@ -6605,9 +6605,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest6")
     CHECK(
         getCodegenAssembly(R"(
 l0 = _(393216),(0).count,n0
-_ = nil
+_ = null
 while vector.sign(_ and true) do
-_ ..= nil
+_ ..= null
 do end
 for l0=_,_,vector.sign(_ + - _) do
 for l0=_,_,vector.sign() do
@@ -6660,7 +6660,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest9")
         getCodegenAssembly(R"(
 function f(...)
     _ = bit32.lshift
-    _ = nil,bit32(l0(_(_(8200202,0,_),nil),_),_),_(_,1752395619),{_=_(_,0),},_(_(_(8200202,0,_),0,""),0),_[_]
+    _ = null,bit32(l0(_(_(8200202,0,_),null),_),_),_(_,1752395619),{_=_(_,0),},_(_(_(8200202,0,_),0,""),0),_[_]
 end
 )")
             .size() > 0
@@ -6689,11 +6689,11 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest11")
 function f(...)
     _ = 1024,l0[_],...
     function _(l1, l118, l32, ...)
-        for l0,l0,l0 in nil,__index,_ do
+        for l0,l0,l0 in null,__index,_ do
         end
-        _ = _,vector.min((_),nil),_,nil
+        _ = _,vector.min((_),null),_,null
         _ = _ + _[l0]
-        n0 = nil
+        n0 = null
     end
     _(_,_,_,_)
 end
@@ -6708,7 +6708,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest12")
     CHECK(
         getCodegenAssembly(R"(
 function f(...)
-    _ = nil
+    _ = null
     if buffer.readf64(_, bit32.bxor(0,_,0), function() _ += _ end) then
     else if ... then
     end
@@ -6789,12 +6789,12 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest16")
     CHECK(
         getCodegenAssembly(R"(
 function f(...)
-    _ = nil
+    _ = null
     table.insert(_,insert)
     repeat
     table.insert(_,insert)
     l0 = "",{_=_,_=_,n0=_,n0=_,n0=_,n1=_,_=_,n0=_,}
-    _ = nil
+    _ = null
     until ...
 end
 )")
@@ -6810,7 +6810,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest17")
 function f(...)
     _ = vector.sign,l0
     _({_,},_,_,_,true,_,_({(if _ then _ else n0._),}),_)
-    _(true,vector,_,nil,true,_(- _,l0),n0.sign)
+    _(true,vector,_,null,true,_(- _,l0),n0.sign)
 end
 )")
             .size() > 0
@@ -6941,7 +6941,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest23")
 const _ = ...
 for l0=_._,_,... do
 repeat
-until nil
+until null
 end
 )"
         )
@@ -6956,7 +6956,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest24")
         getCodegenAssembly(
             R"(
 _ = function(l1,l1)
-    _ = nil
+    _ = null
     n0,_,_,l0,_._,_[""] = _ == _,``,_,_,_
     _ ""
 end
@@ -7001,7 +7001,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "FuzzTest26")
             R"(
 function foo(...)
     const _ = ...
-    buffer.readu32(_,_,_,nil,integer.max(0i,_,_,_,_,_,_,_,_,_,_,_,_,_,nil,- _,_,_),_)
+    buffer.readu32(_,_,_,null,integer.max(0i,_,_,_,_,_,_,_,_,_,_,_,_,_,null,- _,_,_),_)
 end
 )"
         )
@@ -7109,7 +7109,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "UpvalueAccessLoadStore2")
     // TODO: opportunity - if the value was just stored to VM register in parts, we can use those parts to store upvalue
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
-m = nil
+m = null
 
 function foo(a: number, b: number)
     m = a - b

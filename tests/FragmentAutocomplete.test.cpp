@@ -3166,7 +3166,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "free_type_in_old_solver_
 {
 
     const std::string source = R"(--!strict
-foo = nil
+foo = null
 a, z = foo()
 
 e = foo().x
@@ -3177,7 +3177,7 @@ z
 )";
 
     const std::string dest = R"(--!strict
-foo = nil
+foo = null
 a, z = foo()
 
 e = foo().x
@@ -3193,7 +3193,7 @@ z:a@1
 TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "interior_free_types_assertion_caused_by_free_type_inheriting_null_scope_from_table")
 {
     const std::string source = R"(--!strict
-foo = nil
+foo = null
 a = foo()
 
 e = foo().x
@@ -3204,7 +3204,7 @@ f = foo().y
 )";
 
     const std::string dest = R"(--!strict
-foo = nil
+foo = null
 a = foo()
 
 e = foo().x
@@ -3220,7 +3220,7 @@ z = a.P.E@1
 TEST_CASE_FIXTURE(FragmentAutocompleteBuiltinsFixture, "NotNull_nil_scope_assertion_caused_by_free_type_inheriting_null_scope_from_table")
 {
     const std::string source = R"(--!strict
-foo = nil
+foo = null
 a = foo()
 
 e = foo().x
@@ -3231,7 +3231,7 @@ f = foo().y
 )";
 
     const std::string dest = R"(--!strict
-foo = nil
+foo = null
 a = foo()
 
 e = foo().x
@@ -3251,7 +3251,7 @@ type function foo(x: type): type
     if x.tag == "singleton" then
         t = x:value()
 
-        return types.unionof(types.singleton(t), types.singleton(nil))
+        return types.unionof(types.singleton(t), types.singleton(null))
     end
 
     return types.number
@@ -3263,7 +3263,7 @@ type function foo(x: type): type
     if x.tag == "singleton" then
         t = x:value()
         x
-        return types.unionof(types.singleton(t), types.singleton(nil))
+        return types.unionof(types.singleton(t), types.singleton(null))
     end
 
     return types.number
@@ -4434,7 +4434,7 @@ type Type1 = { Type: "Type1", CommonKey: string, Type1Key: string }
 type Type2 = { Type: "Type2", CommonKey: string, Type2Key: string }
 type UnionType = Type1 | Type2
 
-const foo: UnionType? = nil
+const foo: UnionType? = null
 if foo then
     if foo.Type == "Type2" then
     end
@@ -4447,7 +4447,7 @@ type Type1 = { Type: "Type1", CommonKey: string, Type1Key: string }
 type Type2 = { Type: "Type2", CommonKey: string, Type2Key: string }
 type UnionType = Type1 | Type2
 
-const foo: UnionType? = nil
+const foo: UnionType? = null
 if foo then
     if foo.Type == "Type2" then
         foo.@1
@@ -4922,7 +4922,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_prop
         type ReactElement<P, T> = any
 
         type React_StatelessFunctionalComponent<Props> = (props: Props, context: any) -> React_Node
-        type React_Component<Props, State = nil> = {}
+        type React_Component<Props, State = null> = {}
         type createElementFn = <P, T>(
             type_:
               | React_StatelessFunctionalComponent<P>
@@ -4932,10 +4932,10 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_prop
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        const createElement: createElementFn = nil as any
+        const createElement: createElementFn = null as any
 
         function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
-        	return nil
+        	return null
         end
 
     )";
@@ -4945,7 +4945,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_prop
         type ReactElement<P, T> = any
 
         type React_StatelessFunctionalComponent<Props> = (props: Props, context: any) -> React_Node
-        type React_Component<Props, State = nil> = {}
+        type React_Component<Props, State = null> = {}
         type createElementFn = <P, T>(
             type_:
               | React_StatelessFunctionalComponent<P>
@@ -4955,10 +4955,10 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_prop
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        const createElement: createElementFn = nil as any
+        const createElement: createElementFn = null as any
 
         function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
-        	return nil
+        	return null
         end
 
         createElement(MyComponent, { f@1 })
@@ -5007,7 +5007,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_narr
         type ReactElement<P, T> = any
 
         type React_StatelessFunctionalComponent<Props> = (props: Props, context: any) -> React_Node
-        type React_Component<Props, State = nil> = {}
+        type React_Component<Props, State = null> = {}
         type createElementFn = <P, T>(
             type_:
               | React_StatelessFunctionalComponent<P>
@@ -5017,10 +5017,10 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_narr
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        const createElement: createElementFn = nil as any
+        const createElement: createElementFn = null as any
 
         function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
-        	return nil
+        	return null
         end
 
         createElement(MyComponent, { })
@@ -5031,7 +5031,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_narr
         type ReactElement<P, T> = any
 
         type React_StatelessFunctionalComponent<Props> = (props: Props, context: any) -> React_Node
-        type React_Component<Props, State = nil> = {}
+        type React_Component<Props, State = null> = {}
         type createElementFn = <P, T>(
             type_:
               | React_StatelessFunctionalComponent<P>
@@ -5041,10 +5041,10 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_autocomplete_react_narr
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        const createElement: createElementFn = nil as any
+        const createElement: createElementFn = null as any
 
         function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
-        	return nil
+        	return null
         end
 
         createElement(MyComponent, { f@1 })
@@ -5507,7 +5507,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_ac_on_nonexistent_table
     const std::string source = R"(
         const mygame = {}
 
-        const char = (nil as any) as {
+        const char = (null as any) as {
             Humanoid: {
                 Animator: number
             }
@@ -5517,7 +5517,7 @@ TEST_CASE_FIXTURE(FragmentAutocompleteFixture, "fragment_ac_on_nonexistent_table
     const std::string updated = R"(
         const mygame = {}
 
-        const char = (nil as any) as {
+        const char = (null as any) as {
             Humanoid: {
                 Animator: number
             }

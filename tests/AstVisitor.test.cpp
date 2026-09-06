@@ -55,7 +55,7 @@ TEST_SUITE_BEGIN("AstVisitorTest");
 TEST_CASE_FIXTURE(Fixture, "TypeAnnotationsAreNotVisited")
 {
     AstStatBlock* block = parse(R"(
-        const a: A<number> = nil
+        const a: A<number> = null
     )");
 
     AstVisitorTracking v;
@@ -71,7 +71,7 @@ TEST_CASE_FIXTURE(Fixture, "TypeAnnotationsAreNotVisited")
 TEST_CASE_FIXTURE(Fixture, "LocalTwoBindings")
 {
     AstStatBlock* block = parse(R"(
-        const a, b = nil, nil
+        const a, b = null, null
     )");
 
     AstVisitorTracking v;
@@ -86,7 +86,7 @@ TEST_CASE_FIXTURE(Fixture, "LocalTwoBindings")
 TEST_CASE_FIXTURE(Fixture, "LocalTwoAnnotatedBindings")
 {
     AstStatBlock* block = parse(R"(
-        const a: A, b: B<number> = nil, nil
+        const a: A, b: B<number> = null, null
     )");
 
     AstTypeVisitorTrackingWiths v;

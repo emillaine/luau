@@ -80,7 +80,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require")
         fileResolver.source["game/B"] = R"(
             const Hooty = require(game.A)
 
-            const h  = nil-- free!
+            const h  = null-- free!
             const i = Hooty.hooty(h)
         )";
     }
@@ -117,7 +117,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_types")
     fileResolver.source["workspace/B"] = R"(
         const Hooty = require(workspace.A)
 
-        const h: Hooty.Point = nil as any
+        const h: Hooty.Point = null as any
     )";
 
     CheckResult bResult = getFrontend().check("workspace/B");
@@ -141,7 +141,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_types_via_implicit_local")
     fileResolver.source["workspace/B"] = R"(
         Hooty = require(workspace.A)
 
-        const h: Hooty.Point = nil as any
+        const h: Hooty.Point = null as any
     )";
 
     CheckResult bResult = getFrontend().check("workspace/B");
@@ -223,7 +223,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_table_freeze")
 TEST_CASE_FIXTURE(Fixture, "type_error_of_unknown_qualified_type")
 {
     CheckResult result = check(R"(
-        const p: SomeModule.DoesNotExist = nil as any
+        const p: SomeModule.DoesNotExist = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -756,7 +756,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
                 return false
             end
 
-            if Cache.data[req_id] != nil then
+            if Cache.data[req_id] != null then
                 return true
             end
 
@@ -887,7 +887,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "internal_types_are_scrubbed_from_module")
     };
 
     fileResolver.source["game/A"] = R"(
-return function(): _luau_blocked_type return nil as any end
+return function(): _luau_blocked_type return null as any end
     )";
 
     CheckResult result = getFrontend().check("game/A");
@@ -906,7 +906,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "internal_type_errors_are_only_reported_once"
     };
 
     fileResolver.source["game/A"] = R"(
-return function(): { X: _luau_blocked_type, Y: _luau_blocked_type } return nil as any end
+return function(): { X: _luau_blocked_type, Y: _luau_blocked_type } return null as any end
     )";
 
     CheckResult result = getFrontend().check("game/A");
@@ -957,7 +957,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invalid_local_alias_shouldnt_shadow_imported
         const a_mod = require(game.A)
         type bad<T> = {bad<{T}>}
         type fine<T> = a_mod.bad<T>
-        const f: fine<number> = nil as any
+        const f: fine<number> = null as any
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -981,7 +981,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invalid_alias_should_export_as_error_type")
 
     fileResolver.source["game/B"] = R"(
         const a_mod = require(game.A)
-        const f: a_mod.bad<number> = nil as any
+        const f: a_mod.bad<number> = null as any
     )";
 
     CheckResult result = getFrontend().check("game/B");
@@ -1030,7 +1030,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_194463_modify_bounds_of_visited_generic_
 
     fileResolver.source["game/Main"] = R"(
         const Container = require(game.Container)
-        const states: Container.Container<any, any> = Container.new(nil as any)
+        const states: Container.Container<any, any> = Container.new(null as any)
         return {}
     )";
 
@@ -1189,7 +1189,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_unassigned_local_stays_nil")
         --!strict
         export a
         export b = function() return 1 end
-        b = nil
+        b = null
     )";
 
     fileResolver.source["game/B"] = R"(
@@ -1207,8 +1207,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_unassigned_local_stays_nil")
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
     ModulePtr b = getFrontend().moduleResolver.getModule("game/B");
-    CHECK_EQ("nil", toString(requireType(b, "a")));
-    CHECK_EQ("nil", toString(requireType(b, "b")));
+    CHECK_EQ("null", toString(requireType(b, "a")));
+    CHECK_EQ("null", toString(requireType(b, "b")));
 }
 
 // maintain consistency with exported_module_unassigned_local_stays_nil
@@ -1218,9 +1218,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "returned_module_unassigned_local_stays_nil")
 
     fileResolver.source["game/A"] = R"(
         --!strict
-        const a = nil
+        const a = null
         b = function() return 1 end
-        b = nil
+        b = null
         return {a = a, b = b}
     )";
 
@@ -1239,8 +1239,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "returned_module_unassigned_local_stays_nil")
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
     ModulePtr b = getFrontend().moduleResolver.getModule("game/B");
-    CHECK_EQ("nil", toString(requireType(b, "a")));
-    CHECK_EQ("nil", toString(requireType(b, "b")));
+    CHECK_EQ("null", toString(requireType(b, "a")));
+    CHECK_EQ("null", toString(requireType(b, "b")));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_function")

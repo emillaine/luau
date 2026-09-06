@@ -46,7 +46,7 @@ TEST_CASE_FIXTURE(Fixture, "primitive")
 {
     CHECK_EQ(
         R"(digraph graphname {
-n1 [label="nil"];
+n1 [label="null"];
 })",
         toDot(getBuiltins()->nilType)
     );
@@ -194,7 +194,7 @@ n7 -> n3;
 TEST_CASE_FIXTURE(Fixture, "union")
 {
     CheckResult result = check(R"(
-const a: string | number = nil as any
+const a: string | number = null as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -236,7 +236,7 @@ TEST_CASE_FIXTURE(Fixture, "table")
 {
     CheckResult result = check(R"(
 type A<T, U...> = { x: T, y: (U...) -> (), [string]: any }
-const a: A<number, ...string> = nil as any
+const a: A<number, ...string> = null as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -302,7 +302,7 @@ n1 -> n4 [label="typePackParam"];
 TEST_CASE_FIXTURE(BuiltinsFixture, "metatable")
 {
     CheckResult result = check(R"(
-const a: typeof(setmetatable({}, {})) = nil as any
+const a: typeof(setmetatable({}, {})) = null as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -351,7 +351,7 @@ n3 [label="UnionType 3"];
 n3 -> n4;
 n4 [label="number"];
 n3 -> n5;
-n5 [label="nil"];
+n5 [label="null"];
 })",
         toDot(&type, opts)
     );
@@ -388,7 +388,7 @@ n1 [label="GenericType T"];
 TEST_CASE_FIXTURE(ToDotClassFixture, "class")
 {
     CheckResult result = check(R"(
-const a: ChildClass = nil as any
+const a: ChildClass = null as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -510,7 +510,7 @@ n3 [label="number"];
 TEST_CASE_FIXTURE(Fixture, "builtintypes")
 {
     CheckResult result = check(R"(
-        const x: "hi" | "\"hello\"" | true | false = nil as any
+        const x: "hi" | "\"hello\"" | true | false = null as any
     )");
 
     ToDotOptions opts;

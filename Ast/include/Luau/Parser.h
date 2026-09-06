@@ -270,7 +270,7 @@ private:
     // PropList ::= (TableProp | TableIndexer) [`,' PropList]
     // Type
     //      ::= Name
-    //      |   `nil`
+    //      |   `null`
     //      |   `{' [PropList] `}'
     //      |   `(' [TypeList] `)' `->` ReturnType
 
@@ -548,7 +548,7 @@ private:
     AstName nameSelf;
     AstName nameNumber;
     AstName nameError;
-    AstName nameNil;
+    AstName nameNull;
 
     MatchLexeme endMismatchSuspect;
 

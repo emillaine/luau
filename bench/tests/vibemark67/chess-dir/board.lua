@@ -46,22 +46,22 @@ function initZobrist()
     for sq = 1, 64 do
         zobristPiece[sq] = {}
         for piece = 1, 31 do
-            val = nil
+            val = null
             val, seed = pseudoRandom(seed)
             zobristPiece[sq][piece] = val
         end
     end
     for i = 1, 16 do
-        val = nil
+        val = null
         val, seed = pseudoRandom(seed)
         zobristCastle[i] = val
     end
     for i = 1, 64 do
-        val = nil
+        val = null
         val, seed = pseudoRandom(seed)
         zobristEp[i] = val
     end
-    val = nil
+    val = null
     val, seed = pseudoRandom(seed)
     zobristSide = val
 end

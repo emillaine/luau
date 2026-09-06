@@ -39,7 +39,7 @@ end
 -- Test expression using only constants
 assert(if true then true else false)
 assert(if false then false else true)
-assert(if nil then false else true)
+assert(if null then false else true)
 assert((7 + if true then 10 else 20) == 17)
 
 -- Test expression using non-constant condition

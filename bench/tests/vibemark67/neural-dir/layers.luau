@@ -41,7 +41,7 @@ function createDense(inputSize: number, outputSize: number, seed: number): (Dens
         bias = bias,
         dWeights = Tensor.new(inputSize, outputSize),
         dBias = Tensor.new(1, outputSize),
-        input = nil,
+        input = null,
         mW = Tensor.new(inputSize, outputSize),
         vW = Tensor.new(inputSize, outputSize),
         mB = Tensor.new(1, outputSize),
@@ -57,7 +57,7 @@ function createConv1D(inputChannels: number, numFilters: number, kernelSize: num
     mF = {}
     vF = {}
     for f = 1, numFilters do
-        w = nil
+        w = null
         w, seed = Tensor.randomNormal(inputChannels, kernelSize, seed, scale)
         filters[f] = w
         mF[f] = Tensor.new(inputChannels, kernelSize)
@@ -76,7 +76,7 @@ function createConv1D(inputChannels: number, numFilters: number, kernelSize: num
         biases = biases,
         dFilters = dFilters,
         dBiases = dBiases,
-        input = nil,
+        input = null,
         mF = mF,
         vF = vF,
         mB = mB,

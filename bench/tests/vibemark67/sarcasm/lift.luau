@@ -6,7 +6,7 @@
 -- Input: `body` = array of parsed statements (labels + insns) for one function.
 -- Output: {
 --   nodes = { <node>... },       -- one per statement, in order (labels kept as markers)
---   temps = { tempId -> {reg=num, precolor=nil} },
+--   temps = { tempId -> {reg=num, precolor=null} },
 --   insnDefTemps/UseTemps via node.defTemps / node.useTemps
 --   node fields: kind="insn"/"label", stmt=<parsed>, defTemps={}, useTemps={},
 --                opTemps = { <operand occurrence> -> tempId } keyed by identity
@@ -41,7 +41,7 @@ function makeUF()
 		if ra != rb then parent[rb] = ra end
 		return find(a)
 	end
-	function ensure(x) if parent[x] == nil then parent[x] = x end end
+	function ensure(x) if parent[x] == null then parent[x] = x end end
 	return { find = find, union = union, ensure = ensure, parent = parent }
 end
 
@@ -75,7 +75,7 @@ function lift.liftFunction(body, opts)
 					for _, rn in (ci.argRegs or {}) do
 						table.insert(c.uses, { kind = "reg", rc = "gpr", num = rn, width = 64, name = "x" .. rn, argReg = true })
 					end
-					if ci.resultReg != nil then
+					if ci.resultReg != null then
 						table.insert(c.defs, { kind = "reg", rc = "gpr", num = ci.resultReg, width = 64, name = "x" .. ci.resultReg, resultReg = true })
 					end
 				end

@@ -1,16 +1,16 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-btreeCollectKeys = nil
-btreeCount = nil
-btreeHeight = nil
-btreeInsertNonFull = nil
-btreeKeyLess = nil
-btreeRangeScan = nil
-btreeSearch = nil
-btreeSplitChild = nil
-compareValues = nil
-evalComparison = nil
-evalLike = nil
-resolveColumn = nil
+btreeCollectKeys = null
+btreeCount = null
+btreeHeight = null
+btreeInsertNonFull = null
+btreeKeyLess = null
+btreeRangeScan = null
+btreeSearch = null
+btreeSplitChild = null
+compareValues = null
+evalComparison = null
+evalLike = null
+resolveColumn = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -136,7 +136,7 @@ function Tokenizer.new(sql)
 end
 
 function Tokenizer:peek()
-    if self.pos > self.len then return nil end
+    if self.pos > self.len then return null end
     return sbyte(self.src, self.pos)
 end
 
@@ -226,7 +226,7 @@ function Tokenizer:tokenize()
     while true do
         self:skipWhitespace()
         if self.pos > self.len then
-            tinsert(self.tokens, Token.new(TK_EOF, nil, self.pos))
+            tinsert(self.tokens, Token.new(TK_EOF, null, self.pos))
             break
         end
         startPos = self.pos
@@ -345,7 +345,7 @@ end
 
 function Parser:current()
     if self.pos > self.len then
-        return Token.new(TK_EOF, nil, 0)
+        return Token.new(TK_EOF, null, 0)
     end
     return self.tokens[self.pos]
 end
@@ -382,11 +382,11 @@ end
 
 function Parser:match(typ, val)
     t = self:current()
-    if t.type == typ and (val == nil or t.value == val) then
+    if t.type == typ and (val == null or t.value == val) then
         self.pos = self.pos + 1
         return t
     end
-    return nil
+    return null
 end
 
 function Parser:matchKeyword(kw)
@@ -435,14 +435,14 @@ function Parser:parseSelect()
         distinct = true
     end
     columns = self:parseSelectColumns()
-    from = nil
+    from = null
     joins = {}
-    whereClause = nil
-    groupBy = nil
-    having = nil
-    orderBy = nil
-    limitVal = nil
-    offsetVal = nil
+    whereClause = null
+    groupBy = null
+    having = null
+    orderBy = null
+    limitVal = null
+    offsetVal = null
 
     if self:matchKeyword("FROM") then
         from = self:parseTableRef()
@@ -500,7 +500,7 @@ function Parser:parseSelectColumns()
     end
     while true do
         expr = self:parseExpr()
-        alias = nil
+        alias = null
         if self:matchKeyword("AS") then
             alias = self:expect(TK_IDENT).value
         else if self:peekType() == TK_IDENT and not self:isKeyword("FROM") and not self:isKeyword("WHERE") then
@@ -515,7 +515,7 @@ end
 
 function Parser:parseTableRef()
     name = self:expect(TK_IDENT).value
-    alias = nil
+    alias = null
     if self:matchKeyword("AS") then
         alias = self:expect(TK_IDENT).value
     else if self:peekType() == TK_IDENT and not self:isKeyword("WHERE") and not self:isKeyword("ON")
@@ -539,7 +539,7 @@ function Parser:parseJoin()
     end
     self:expect(TK_KEYWORD, "JOIN")
     tableRef = self:parseTableRef()
-    onExpr = nil
+    onExpr = null
     if self:matchKeyword("ON") then
         onExpr = self:parseExpr()
     end
@@ -712,7 +712,7 @@ function Parser:parsePrimary()
         funcName = t.value
         self:advance()
         self:expect(TK_LPAREN)
-        argExpr = nil
+        argExpr = null
         isStar = false
         if self:current().type == TK_STAR then
             self:advance()
@@ -747,7 +747,7 @@ function Parser:parsePrimary()
             self:expect(TK_RPAREN)
             return mkNode("FUNC_CALL", { name = name, args = args })
         end
-        return mkNode("COLUMN_REF", { table_name = nil, column = name })
+        return mkNode("COLUMN_REF", { table_name = null, column = name })
     else if t.type == TK_STAR then
         self:advance()
         return mkNode("STAR_COL")
@@ -760,7 +760,7 @@ function Parser:parseInsert()
     self:expect(TK_KEYWORD, "INSERT")
     self:expect(TK_KEYWORD, "INTO")
     tableName = self:expect(TK_IDENT).value
-    columns = nil
+    columns = null
     if self:current().type == TK_LPAREN then
         self:advance()
         columns = {}
@@ -838,7 +838,7 @@ function Parser:parseDelete()
     self:expect(TK_KEYWORD, "DELETE")
     self:expect(TK_KEYWORD, "FROM")
     tableName = self:expect(TK_IDENT).value
-    whereClause = nil
+    whereClause = null
     if self:matchKeyword("WHERE") then
         whereClause = self:parseExpr()
     end
@@ -857,7 +857,7 @@ function Parser:parseUpdate()
         tinsert(assignments, { column = col, value = val })
         if not self:match(TK_COMMA) then break end
     end
-    whereClause = nil
+    whereClause = null
     if self:matchKeyword("WHERE") then
         whereClause = self:parseExpr()
     end
@@ -910,7 +910,7 @@ function btreeSplitChild(parent, idx)
     j = 1
     for i = mid + 1, fullChild.numKeys do
         newNode.keys[j] = fullChild.keys[i]
-        fullChild.keys[i] = nil
+        fullChild.keys[i] = null
         j = j + 1
     end
     newNode.numKeys = j - 1
@@ -920,13 +920,13 @@ function btreeSplitChild(parent, idx)
         j = 1
         for i = mid + 1, fullChild.numKeys + 1 do
             newNode.children[j] = fullChild.children[i]
-            fullChild.children[i] = nil
+            fullChild.children[i] = null
             j = j + 1
         end
     end
 
     midKey = fullChild.keys[mid]
-    fullChild.keys[mid] = nil
+    fullChild.keys[mid] = null
     fullChild.numKeys = mid - 1
 
     -- shift parent's children and keys
@@ -987,7 +987,7 @@ end
 
 function btreeSearch(node, key)
     results = {}
-    if node == nil then return results end
+    if node == null then return results end
 
     i = 1
     while i <= node.numKeys and btreeKeyLess(node.keys[i][1], key) do
@@ -1021,25 +1021,25 @@ function BTree:rangeScan(lo, hi)
 end
 
 function btreeRangeScan(node, lo, hi, results)
-    if node == nil then return end
+    if node == null then return end
 
     for i = 1, node.numKeys do
         k = node.keys[i][1]
         if not node.isLeaf then
-            if lo == nil or not btreeKeyLess(k, lo) then
+            if lo == null or not btreeKeyLess(k, lo) then
                 btreeRangeScan(node.children[i], lo, hi, results)
             end
         end
         inRange = true
-        if lo != nil and btreeKeyLess(k, lo) then inRange = false end
-        if hi != nil and btreeKeyLess(hi, k) then inRange = false end
+        if lo != null and btreeKeyLess(k, lo) then inRange = false end
+        if hi != null and btreeKeyLess(hi, k) then inRange = false end
         if inRange then
             tinsert(results, node.keys[i][2])
         end
     end
     if not node.isLeaf then
         lastKey = node.keys[node.numKeys]
-        if lastKey and (hi == nil or not btreeKeyLess(hi, lastKey[1])) then
+        if lastKey and (hi == null or not btreeKeyLess(hi, lastKey[1])) then
             btreeRangeScan(node.children[node.numKeys + 1], lo, hi, results)
         end
     end
@@ -1072,7 +1072,7 @@ function TableStore:insertRow(values)
     -- update indexes
     for colName, idx in next, self.indexes do
         colIdx = self.colMap[colName]
-        if colIdx and values[colIdx] != nil then
+        if colIdx and values[colIdx] != null then
             idx:insert(values[colIdx], rowId)
         end
     end
@@ -1084,7 +1084,7 @@ function TableStore:createIndex(colName)
     colIdx = self.colMap[colName]
     if colIdx then
         for rowId, row in next, self.rows do
-            if row[colIdx] != nil then
+            if row[colIdx] != null then
                 tree:insert(row[colIdx], rowId)
             end
         end
@@ -1097,7 +1097,7 @@ function TableStore:getColumnIndex(colName)
 end
 
 function TableStore:deleteRow(rowId)
-    self.rows[rowId] = nil
+    self.rows[rowId] = null
 end
 
 -- ===== Database =====
@@ -1121,7 +1121,7 @@ function Database:getTable(name)
 end
 
 function Database:dropTable(name)
-    self.tables[name] = nil
+    self.tables[name] = null
 end
 
 -- ===== Query Executor =====
@@ -1139,7 +1139,7 @@ function Executor:execute(sql)
     tokens = tokenizer:tokenize()
     parser = Parser.new(tokens)
     stmts = parser:parse()
-    lastResult = nil
+    lastResult = null
     for _, stmt in next, stmts do
         lastResult = self:executeStatement(stmt)
     end
@@ -1211,13 +1211,13 @@ end
 function Executor:evalLiteral(expr)
     if expr.kind == "NUMBER_LIT" then return expr.value
     else if expr.kind == "STRING_LIT" then return expr.value
-    else if expr.kind == "NULL_LIT" then return nil
+    else if expr.kind == "NULL_LIT" then return null
     else if expr.kind == "UNOP" and expr.op == "NEG" then
         v = self:evalLiteral(expr.operand)
         if type(v) == "number" then return -v end
-        return nil
+        return null
     end
-    return nil
+    return null
 end
 
 function Executor:execDelete(stmt)
@@ -1226,8 +1226,8 @@ function Executor:execDelete(stmt)
     count = 0
     toDelete = {}
     for rowId, row in next, tbl.rows do
-        ctx = self:makeRowContext(tbl, row, nil, nil)
-        if stmt.where == nil or self:evalExpr(stmt.where, ctx) then
+        ctx = self:makeRowContext(tbl, row, null, null)
+        if stmt.where == null or self:evalExpr(stmt.where, ctx) then
             tinsert(toDelete, rowId)
         end
     end
@@ -1243,8 +1243,8 @@ function Executor:execUpdate(stmt)
     if not tbl then error("Table not found: " .. stmt.table_name) end
     count = 0
     for rowId, row in next, tbl.rows do
-        ctx = self:makeRowContext(tbl, row, nil, nil)
-        if stmt.where == nil or self:evalExpr(stmt.where, ctx) then
+        ctx = self:makeRowContext(tbl, row, null, null)
+        if stmt.where == null or self:evalExpr(stmt.where, ctx) then
             for _, assign in next, stmt.assignments do
                 colIdx = tbl:getColumnIndex(assign.column)
                 if colIdx then
@@ -1283,7 +1283,7 @@ function resolveColumn(ctx, tableName, colName)
                 return entry.row[colIdx]
             end
         end
-        return nil
+        return null
     end
     -- search all tables
     for _, entry in next, ctx.tables do
@@ -1294,13 +1294,13 @@ function resolveColumn(ctx, tableName, colName)
             end
         end
     end
-    return nil
+    return null
 end
 
 function Executor:execSelect(stmt)
     -- Get base table rows
-    tbl = nil
-    baseAlias = nil
+    tbl = null
+    baseAlias = null
     rows = {}
 
     if stmt.from then
@@ -1314,7 +1314,7 @@ function Executor:execSelect(stmt)
             indexCol = self:getIndexableColumn(stmt.where, tbl)
             if indexCol then
                 val = self:getCompareValue(stmt.where, indexCol.colName)
-                if val != nil then
+                if val != null then
                     idx = tbl.indexes[indexCol.colName]
                     if idx then
                         rowIds = idx:search(val)
@@ -1454,7 +1454,7 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
             if not matched and jinfo.join.joinType == "LEFT" then
                 newJoins = {}
                 for k, v in next, cr.joins do newJoins[k] = v end
-                newJoins[ji] = nil
+                newJoins[ji] = null
                 tinsert(newRows, { base = cr.base, joins = newJoins })
             end
         end
@@ -1493,7 +1493,7 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
 end
 
 function Executor:getIndexableColumn(whereNode, tbl)
-    if whereNode.kind != "BINOP" or whereNode.op != "=" then return nil end
+    if whereNode.kind != "BINOP" or whereNode.op != "=" then return null end
     left = whereNode.left
     right = whereNode.right
     if left.kind == "COLUMN_REF" and (right.kind == "NUMBER_LIT" or right.kind == "STRING_LIT") then
@@ -1506,7 +1506,7 @@ function Executor:getIndexableColumn(whereNode, tbl)
             return { colName = right.column, side = "right" }
         end
     end
-    return nil
+    return null
 end
 
 function Executor:getCompareValue(whereNode, colName)
@@ -1520,7 +1520,7 @@ function Executor:getCompareValue(whereNode, colName)
         if left.kind == "NUMBER_LIT" then return left.value end
         if left.kind == "STRING_LIT" then return left.value end
     end
-    return nil
+    return null
 end
 
 function Executor:hasAggregates(columns)
@@ -1548,12 +1548,12 @@ function Executor:execAggregateNoGroup(stmt, tbl, baseAlias, rows, joinTableInfo
                     ctx = self:makeCtxForRow(rows[1], tbl, baseAlias, joinTableInfo)
                     tinsert(resultRow, self:evalExpr(col.expr, ctx))
                 else
-                    tinsert(resultRow, nil)
+                    tinsert(resultRow, null)
                 end
             end
         else if col.kind == "STAR_COL" then
             tinsert(resultCols, "*")
-            tinsert(resultRow, nil)
+            tinsert(resultRow, null)
         end
     end
     return { type = "RESULT_SET", columns = resultCols, rows = { resultRow } }
@@ -1656,7 +1656,7 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
         for _, row in next, groupRows do
             ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
             val = self:evalExpr(aggNode.arg, ctx)
-            if val != nil then count = count + 1 end
+            if val != null then count = count + 1 end
         end
         return count
     else if fn == "SUM" then
@@ -1678,30 +1678,30 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
                 count = count + 1
             end
         end
-        if count == 0 then return nil end
+        if count == 0 then return null end
         return sum / count
     else if fn == "MIN" then
-        result = nil
+        result = null
         for _, row in next, groupRows do
             ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
             val = self:evalExpr(aggNode.arg, ctx)
-            if val != nil and (result == nil or val < result) then
+            if val != null and (result == null or val < result) then
                 result = val
             end
         end
         return result
     else if fn == "MAX" then
-        result = nil
+        result = null
         for _, row in next, groupRows do
             ctx = self:makeCtxForRow(row, tbl, baseAlias, joinTableInfo)
             val = self:evalExpr(aggNode.arg, ctx)
-            if val != nil and (result == nil or val > result) then
+            if val != null and (result == null or val > result) then
                 result = val
             end
         end
         return result
     end
-    return nil
+    return null
 end
 
 function Executor:evalExprWithAgg(expr, groupRows, tbl, baseAlias, joinTableInfo, ctx)
@@ -1762,7 +1762,7 @@ function Executor:applyOrderByResult(orderBy, resultRows, resultCols, stmt)
 
     tsort(sorted, function(a, b)
         for _, item in next, orderBy do
-            colIdx = nil
+            colIdx = null
             if item.expr.kind == "COLUMN_REF" then
                 colIdx = colIndexMap[item.expr.column] or colIndexMap[slower(item.expr.column)]
             end
@@ -1799,9 +1799,9 @@ function Executor:applyDistinct(stmt, rows, tbl, baseAlias, joinTableInfo)
 end
 
 function compareValues(a, b)
-    if a == nil and b == nil then return 0 end
-    if a == nil then return -1 end
-    if b == nil then return 1 end
+    if a == null and b == null then return 0 end
+    if a == null then return -1 end
+    if b == null then return 1 end
     if type(a) == "number" and type(b) == "number" then
         if a < b then return -1 else if a > b then return 1 else return 0 end
     end
@@ -1864,7 +1864,7 @@ function Executor:projectRow(columns, row, tbl, baseAlias, joinTableInfo, allRow
                         end
                     else
                         for _ = 1, #jinfo.tbl.columns do
-                            tinsert(result, nil)
+                            tinsert(result, null)
                         end
                     end
                 end
@@ -1882,14 +1882,14 @@ function Executor:projectRow(columns, row, tbl, baseAlias, joinTableInfo, allRow
 end
 
 function Executor:evalExpr(expr, ctx)
-    if expr == nil then return nil end
+    if expr == null then return null end
 
     if expr.kind == "NUMBER_LIT" then
         return expr.value
     else if expr.kind == "STRING_LIT" then
         return expr.value
     else if expr.kind == "NULL_LIT" then
-        return nil
+        return null
     else if expr.kind == "COLUMN_REF" then
         return ctx:resolve(expr.table_name, expr.column)
     else if expr.kind == "BINOP" then
@@ -1907,18 +1907,18 @@ function Executor:evalExpr(expr, ctx)
         val = self:evalExpr(expr.expr, ctx)
         lo = self:evalExpr(expr.lo, ctx)
         hi = self:evalExpr(expr.hi, ctx)
-        if val == nil or lo == nil or hi == nil then return false end
+        if val == null or lo == null or hi == null then return false end
         return val >= lo and val <= hi
     else if expr.kind == "FUNC_CALL" then
         return self:evalFuncCall(expr, ctx)
     else if expr.kind == "AGG_FUNC" then
-        -- When evaluated in a non-aggregate context, just return nil or column value
+        -- When evaluated in a non-aggregate context, just return null or column value
         if expr.arg then
             return self:evalExpr(expr.arg, ctx)
         end
-        return nil
+        return null
     end
-    return nil
+    return null
 end
 
 function Executor:evalBinop(expr, ctx)
@@ -1938,19 +1938,19 @@ function Executor:evalBinop(expr, ctx)
 
     if op == "+" then
         if type(left) == "number" and type(right) == "number" then return left + right end
-        return nil
+        return null
     else if op == "-" then
         if type(left) == "number" and type(right) == "number" then return left - right end
-        return nil
+        return null
     else if op == "*" then
         if type(left) == "number" and type(right) == "number" then return left * right end
-        return nil
+        return null
     else if op == "/" then
         if type(left) == "number" and type(right) == "number" and right != 0 then return left / right end
-        return nil
+        return null
     else if op == "%" then
         if type(left) == "number" and type(right) == "number" and right != 0 then return left % right end
-        return nil
+        return null
     end
 
     return evalComparison(op, left, right)
@@ -1958,35 +1958,35 @@ end
 
 function evalComparison(op, left, right)
     if op == "=" then
-        if left == nil and right == nil then return true end
+        if left == null and right == null then return true end
         return left == right
     else if op == "!=" then
-        if left == nil and right == nil then return false end
+        if left == null and right == null then return false end
         return left != right
     else if op == "<" then
-        if left == nil or right == nil then return false end
+        if left == null or right == null then return false end
         return left < right
     else if op == ">" then
-        if left == nil or right == nil then return false end
+        if left == null or right == null then return false end
         return left > right
     else if op == "<=" then
-        if left == nil or right == nil then return false end
+        if left == null or right == null then return false end
         return left <= right
     else if op == ">=" then
-        if left == nil or right == nil then return false end
+        if left == null or right == null then return false end
         return left >= right
     else if op == "LIKE" then
         return evalLike(left, right)
     else if op == "IS NULL" then
-        return left == nil
+        return left == null
     else if op == "IS NOT NULL" then
-        return left != nil
+        return left != null
     end
     return false
 end
 
 function evalLike(str, pattern)
-    if str == nil or pattern == nil then return false end
+    if str == null or pattern == null then return false end
     str = tostring(str)
     pattern = tostring(pattern)
     -- Convert SQL LIKE pattern to Lua pattern
@@ -2004,7 +2004,7 @@ function evalLike(str, pattern)
         end
     end
     luaPat = luaPat .. "$"
-    return sfind(str, luaPat) != nil
+    return sfind(str, luaPat) != null
 end
 
 function Executor:evalUnop(expr, ctx)
@@ -2013,9 +2013,9 @@ function Executor:evalUnop(expr, ctx)
         return not val
     else if expr.op == "NEG" then
         if type(val) == "number" then return -val end
-        return nil
+        return null
     end
-    return nil
+    return null
 end
 
 function Executor:evalFuncCall(expr, ctx)
@@ -2042,11 +2042,11 @@ function Executor:evalFuncCall(expr, ctx)
         return ssub(s, start)
     else if name == "COALESCE" then
         for _, v in next, args do
-            if v != nil then return v end
+            if v != null then return v end
         end
-        return nil
+        return null
     else if name == "IFNULL" then
-        if args[1] != nil then return args[1] end
+        if args[1] != null then return args[1] end
         return args[2]
     else if name == "ROUND" then
         n = args[1] or 0
@@ -2059,7 +2059,7 @@ function Executor:evalFuncCall(expr, ctx)
         new = tostring(args[3] or "")
         return string.gsub(s, old, new)
     end
-    return nil
+    return null
 end
 
 -- ===== Data Generation =====
@@ -2166,7 +2166,7 @@ end
 
 -- ===== Checksum Utility =====
 function checksumResult(result)
-    if result == nil then return 0 end
+    if result == null then return 0 end
     if result.type == "OK" then
         return slen(result.message)
     end
@@ -2438,7 +2438,7 @@ end
 
 function StatsCollector:analyze(tableName)
     tbl = self.db:getTable(tableName)
-    if not tbl then return nil end
+    if not tbl then return null end
 
     tblStats = {
         rowCount = 0,
@@ -2456,9 +2456,9 @@ function StatsCollector:analyze(tableName)
             name = col.name,
             nullCount = 0,
             distinctCount = 0,
-            minVal = nil,
-            maxVal = nil,
-            avgVal = nil
+            minVal = null,
+            maxVal = null,
+            avgVal = null
         }
 
         distinct = {}
@@ -2467,24 +2467,24 @@ function StatsCollector:analyze(tableName)
 
         for _, row in next, tbl.rows do
             val = row[ci]
-            if val == nil then
+            if val == null then
                 colStats.nullCount = colStats.nullCount + 1
             else
                 distinct[tostring(val)] = true
                 if type(val) == "number" then
                     sum = sum + val
                     numCount = numCount + 1
-                    if colStats.minVal == nil or val < colStats.minVal then
+                    if colStats.minVal == null or val < colStats.minVal then
                         colStats.minVal = val
                     end
-                    if colStats.maxVal == nil or val > colStats.maxVal then
+                    if colStats.maxVal == null or val > colStats.maxVal then
                         colStats.maxVal = val
                     end
                 else if type(val) == "string" then
-                    if colStats.minVal == nil or val < colStats.minVal then
+                    if colStats.minVal == null or val < colStats.minVal then
                         colStats.minVal = val
                     end
-                    if colStats.maxVal == nil or val > colStats.maxVal then
+                    if colStats.maxVal == null or val > colStats.maxVal then
                         colStats.maxVal = val
                     end
                 end
@@ -2514,13 +2514,13 @@ function StatsCollector:getSelectivity(tableName, colName, op, value)
         if colStats.distinctCount == 0 then return 0 end
         return 1.0 / colStats.distinctCount
     else if op == "<" or op == "<=" then
-        if colStats.minVal == nil or colStats.maxVal == nil then return 0.5 end
+        if colStats.minVal == null or colStats.maxVal == null then return 0.5 end
         if type(value) != "number" then return 0.5 end
         range = colStats.maxVal - colStats.minVal
         if range == 0 then return 0.5 end
         return (value - colStats.minVal) / range
     else if op == ">" or op == ">=" then
-        if colStats.minVal == nil or colStats.maxVal == nil then return 0.5 end
+        if colStats.minVal == null or colStats.maxVal == null then return 0.5 end
         if type(value) != "number" then return 0.5 end
         range = colStats.maxVal - colStats.minVal
         if range == 0 then return 0.5 end
@@ -2563,15 +2563,15 @@ function ExprCache:getKey(expr)
     else if expr.kind == "STRING_LIT" then
         return "S:" .. expr.value
     end
-    return nil  -- not cacheable
+    return null  -- not cacheable
 end
 
 function ExprCache:get(expr)
     key = self:getKey(expr)
-    if key and self.cache[key] != nil then
+    if key and self.cache[key] != null then
         return self.cache[key], true
     end
-    return nil, false
+    return null, false
 end
 
 function ExprCache:set(expr, value)
@@ -2599,7 +2599,7 @@ function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     hashTable = {}
     for _, rrow in next, rightRows do
         key = rightKeyFn(rrow)
-        if key != nil then
+        if key != null then
             keyStr = tostring(key)
             if not hashTable[keyStr] then
                 hashTable[keyStr] = {}
@@ -2612,7 +2612,7 @@ function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     results = {}
     for _, lrow in next, leftRows do
         key = leftKeyFn(lrow)
-        if key != nil then
+        if key != null then
             keyStr = tostring(key)
             matches = hashTable[keyStr]
             if matches then
@@ -2703,7 +2703,7 @@ function BufferPool:get(pageId)
         return self.pages[pageId]
     end
     self.missCount = self.missCount + 1
-    return nil
+    return null
 end
 
 function BufferPool:put(pageId, data)
@@ -2737,7 +2737,7 @@ function BufferPool:evictLRU()
     if #self.accessOrder > 0 then
         evictId = self.accessOrder[1]
         tremove(self.accessOrder, 1)
-        self.pages[evictId] = nil
+        self.pages[evictId] = null
     end
 end
 
@@ -2838,14 +2838,14 @@ function TxManager:commit(txId)
     for _, lsn in next, tx.operations do
         self.wal:commit(lsn)
     end
-    self.activeTx[txId] = nil
+    self.activeTx[txId] = null
 end
 
 function TxManager:rollback(txId)
     tx = self.activeTx[txId]
     if not tx then return end
     -- Mark operations as rolled back (just remove from WAL perspective)
-    self.activeTx[txId] = nil
+    self.activeTx[txId] = null
 end
 
 -- ===== Extended B-Tree with bulk loading =====
@@ -2862,7 +2862,7 @@ function BTree:count()
 end
 
 function btreeCount(node)
-    if node == nil then return 0 end
+    if node == null then return 0 end
     c = node.numKeys
     if not node.isLeaf then
         for i = 1, node.numKeys + 1 do
@@ -2879,7 +2879,7 @@ function BTree:height()
 end
 
 function btreeHeight(node)
-    if node == nil then return 0 end
+    if node == null then return 0 end
     if node.isLeaf then return 1 end
     return 1 + btreeHeight(node.children[1])
 end
@@ -2891,7 +2891,7 @@ function BTree:getAllKeys()
 end
 
 function btreeCollectKeys(node, result)
-    if node == nil then return end
+    if node == null then return end
     if node.isLeaf then
         for i = 1, node.numKeys do
             tinsert(result, node.keys[i])
@@ -3077,7 +3077,7 @@ function bufferPoolStressTest(rng)
 
     -- Simulate page accesses with locality
     for i = 1, 1000 do
-        pageId = nil
+        pageId = null
         if rng:nextFloat() < 0.7 then
             -- Access recently used page (locality)
             pageId = sfmt("page_%d", rng:nextInt(mmax(1, i - 20), i))
@@ -3087,7 +3087,7 @@ function bufferPoolStressTest(rng)
         end
 
         data = pool:get(pageId)
-        if data == nil then
+        if data == null then
             -- Simulate loading page
             data = { id = pageId, content = srep("x", 64), accessed = i }
             pool:put(pageId, data)
@@ -3248,7 +3248,7 @@ end
 function runBenchmark()
     numIterations = 5
     totalChecksum = 0
-    expectedChecksum = nil
+    expectedChecksum = null
 
     for iter = 1, numIterations do
         rng = PRNG.new(42)
@@ -3320,7 +3320,7 @@ function runBenchmark()
         stCS = statsBenchmark(db)
         iterChecksum = (iterChecksum + stCS) % 1000000007
 
-        if expectedChecksum == nil then
+        if expectedChecksum == null then
             expectedChecksum = iterChecksum
         else
             if iterChecksum != expectedChecksum then

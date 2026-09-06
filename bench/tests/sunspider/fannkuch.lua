@@ -34,7 +34,7 @@ function fannkuch(n)
          for i = 1,n do perm[i] = perm1[i]; end
 
          flipsCount = 0;
-         k = nil;
+         k = null;
 
          k = perm[1]
 

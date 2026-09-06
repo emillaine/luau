@@ -11,7 +11,7 @@ a = {}
 
 -- make sure table has lots of space in hash part
 for i=1,100 do a[i.."+"] = true end
-for i=1,100 do a[i.."+"] = nil end
+for i=1,100 do a[i.."+"] = null end
 -- fill hash part with numeric indices testing size operator
 for i=1,100 do
   a[i] = true
@@ -51,7 +51,7 @@ function check (t, na, nh)
   a, h = T.querytab(t)
   if a != na or h != nh then
     print(na, nh, a, h)
-    assert(nil)
+    assert(null)
   end
 end
 
@@ -113,14 +113,14 @@ do
   a = {}
   for i=1,16 do a[i] = i end
   check(a, 16, 0)
-  for i=1,11 do a[i] = nil end
-  for i=30,40 do a[i] = nil end   -- force a rehash (?)
+  for i=1,11 do a[i] = null end
+  for i=30,40 do a[i] = null end   -- force a rehash (?)
   check(a, 0, 8)
   a[10] = 1
-  for i=30,40 do a[i] = nil end   -- force a rehash (?)
+  for i=30,40 do a[i] = null end   -- force a rehash (?)
   check(a, 0, 8)
-  for i=1,14 do a[i] = nil end
-  for i=30,50 do a[i] = nil end   -- force a rehash (?)
+  for i=1,14 do a[i] = null end
+  for i=30,50 do a[i] = null end   -- force a rehash (?)
   check(a, 0, 4)
 end
 
@@ -129,14 +129,14 @@ do   -- rehash moving elements from array to hash
   for i = 1, 100 do a[i] = i end
   check(a, 128, 0)
 
-  for i = 5, 95 do a[i] = nil end
+  for i = 5, 95 do a[i] = null end
   check(a, 128, 0)
 
   a.x = 1     -- force a re-hash
   check(a, 4, 8)
 
   for i = 1, 4 do assert(a[i] == i) end
-  for i = 5, 95 do assert(a[i] == nil) end
+  for i = 5, 95 do assert(a[i] == null) end
   for i = 96, 100 do assert(a[i] == i) end
   assert(a.x == 1)
 end
@@ -167,24 +167,24 @@ end
 
 -- test size operation on empty tables
 assert(({}).count == 0)
-assert(({nil}).count == 0)
-assert(({nil, nil}).count == 0)
-assert(({nil, nil, nil}).count == 0)
-assert(({nil, nil, nil, nil}).count == 0)
+assert(({null}).count == 0)
+assert(({null, null}).count == 0)
+assert(({null, null, null}).count == 0)
+assert(({null, null, null, null}).count == 0)
 print'+'
 
 
 nofind = {}
 
 a,b,c = 1,2,3
-a,b,c = nil
+a,b,c = null
 
 function find (name)
-  n,v = nil, nil
+  n,v = null, null
   while 1 do
     n,v = next(_G, n)
     if not n then return nofind end
-    assert(v != nil)
+    assert(v != null)
     if n == name then return v end
   end
 end
@@ -193,7 +193,7 @@ function find1 (name)
   for n,v in pairs(_G) do
     if n==name then return v end
   end
-  return nil  -- not found
+  return null  -- not found
 end
 
 do   -- create 10000 new global variables
@@ -203,7 +203,7 @@ end
 
 a = {x=90, y=8, z=23}
 assert(table.foreach(a, function(i,v) if i=='x' then return v end end) == 90)
-assert(table.foreach(a, function(i,v) if i=='a' then return v end end) == nil)
+assert(table.foreach(a, function(i,v) if i=='a' then return v end end) == null)
 table.foreach({}, error)
 
 table.foreachi({x=10, y=20}, error)
@@ -212,7 +212,7 @@ table.foreachi({n=3}, function (i, v)
   assert(a.n == i and not v)
   a.n=a.n+1
 end)
-a = {10,20,30,nil,50}
+a = {10,20,30,null,50}
 table.foreachi(a, function (i,v) assert(a[i] == v) end)
 assert(table.foreachi({'a', 'b', 'c'}, function (i,v)
          if i==2 then return v end
@@ -224,7 +224,7 @@ assert(table.foreachi({'a', 'b', 'c'}, function (i,v)
 -- assert(assert==find1("assert"))
 assert(nofind==find("return"))
 assert(not find1("return"))
-_G["ret" .. "urn"] = nil
+_G["ret" .. "urn"] = null
 assert(nofind==find("return"))
 _G["xxx"] = 1
 -- assert(xxx==find("xxx"))
@@ -243,10 +243,10 @@ for i,v in pairs(a) do
   assert(i and v and a[i] == v)
 end
 assert(n.n == 9000)
-a = nil
+a = null
 
 -- remove those 10000 new global variables
-for i=1,10000 do _G[i] = nil end
+for i=1,10000 do _G[i] = null end
 
 do   -- clear global table
   a = {}
@@ -256,7 +256,7 @@ do   -- clear global table
   for n,v in pairs(a) do
     if not preserve[n] and type(v) != "function" and
        not string.find(n, "^[%u_]") then
-     _G[n] = nil
+     _G[n] = null
     end
     collectgarbage()
   end
@@ -269,10 +269,10 @@ function foo ()
   setfenv(foo, n)
   assert(getfenv(foo) == getfenv(1))
   assert(getfenv(foo) == n)
-  assert(print == nil and gl1 == 3)
-  n.gl1 = nil
+  assert(print == null and gl1 == 3)
+  n.gl1 = null
   n.gl = 1
-  assert(n.gl == 1 and next(n, 'gl') == nil)
+  assert(n.gl == 1 and next(n, 'gl') == null)
 end
 foo()
 
@@ -297,7 +297,7 @@ checknext{1,2,3,4,5,x=1,y=2,z=3}
 
 assert(table.getn{} == 0)
 assert(table.getn{[-1] = 2} == 0)
-assert(table.getn{1,2,3,nil,nil} == 3)
+assert(table.getn{1,2,3,null,null} == 3)
 for i=0,40 do
   a = {}
   for j=1,i do a[j]=j end
@@ -312,7 +312,7 @@ assert(table.maxn{["1000"] = true, [24.5] = 3} == 24.5)
 assert(table.maxn{[1000] = true} == 1000)
 assert(table.maxn{[10] = true, [100*math.pi] = print} == 100*math.pi)
 a = {[10] = 1, [20] = 2}
-a[20] = nil
+a[20] = null
 assert(table.maxn(a) == 10)
 
 
@@ -332,9 +332,9 @@ n = 0
 for k, v in pairs( t ) do
   n = n+1
   assert(t[k] == v)
-  t[k] = nil
+  t[k] = null
   collectgarbage()
-  assert(t[k] == nil)
+  assert(t[k] == null)
 end
 assert(n == 5)
 
@@ -350,7 +350,7 @@ function test (a)
   assert(table.remove(a,1) == 20)
   assert(table.remove(a,1) == 40)
   assert(table.remove(a,1) == 50)
-  assert(table.remove(a,1) == nil)
+  assert(table.remove(a,1) == null)
 end
 
 a = {n=0, [-7] = "ban"}
@@ -359,7 +359,7 @@ assert(a.n == 0 and a[-7] == "ban")
 
 a = {[-7] = "ban"};
 test(a)
-assert(a.n == nil and table.getn(a) == 0 and a[-7] == "ban")
+assert(a.n == null and table.getn(a) == 0 and a[-7] == "ban")
 
 
 table.insert(a, 1, 10); table.insert(a, 1, 20); table.insert(a, 1, -1)
@@ -374,7 +374,7 @@ assert(table.remove(a, 1) == 'c')
 assert(table.remove(a, 1) == 'd')
 assert(table.remove(a, 1) == 'a')
 assert(table.remove(a, 1) == 'b')
-assert(table.getn(a) == 0 and a.n == nil)
+assert(table.getn(a) == 0 and a.n == null)
 print("+")
 
 -- out of range insertion
@@ -389,17 +389,17 @@ table.insert(a, 0 / 0, 42) -- platform-dependent behavior atm so hard to validat
 
 a = {}
 for i=1,1000 do
-  a[i] = i; a[i-1] = nil
+  a[i] = i; a[i-1] = null
 end
-assert(next(a,nil) == 1000 and next(a,1000) == nil)
+assert(next(a,null) == 1000 and next(a,1000) == null)
 
-assert(next({}) == nil)
-assert(next({}, nil) == nil)
+assert(next({}) == null)
+assert(next({}, null) == null)
 
 -- testing table.create and table.find
 do
   t = table.create(5)
-  assert(t.count == 0) -- filled with nil!
+  assert(t.count == 0) -- filled with null!
   t[5] = 5
   assert(t.count == 5) -- magic
 
@@ -408,7 +408,7 @@ do
 
   assert(table.find(t2, "nice") == 1)
   assert(table.find(t2, "nice", 5) == 5)
-  assert(table.find(t2, "nice", 6) == nil)
+  assert(table.find(t2, "nice", 6) == null)
 
   assert(table.find({false, true}, true) == 2)
 
@@ -452,7 +452,7 @@ do
   t4 = {o, o, o, o, o, o, o, o}
 
   assert(table.find(t4, makeobjb(20)) == 1)
-  assert(table.find(t4, makeobjb(500)) == nil)
+  assert(table.find(t4, makeobjb(500)) == null)
 end
 
 -- test table.concat
@@ -528,12 +528,12 @@ end
 do
   t = table.create(10, 1)
   assert(t.count == 10)
-  t[5] = nil
+  t[5] = null
   assert(t.count == 10)
-  t[10] = nil
+  t[10] = null
   assert(t.count == 9)
-  t[9] = nil
-  t[8] = nil
+  t[9] = null
+  t[8] = null
   assert(t.count == 7)
 
   t = table.create(10)
@@ -574,7 +574,7 @@ do
   assert(tt.a == 1 and tt.b == 2)
 
   t.c = 3
-  assert(tt.c == nil)
+  assert(tt.c == null)
 
   t = table.freeze({"test"})
   tt = table.clone(t)
@@ -607,7 +607,7 @@ end
 do
   arr = table.create(5, 42)
 
-  arr[1] = nil
+  arr[1] = null
   arr.a = 'a' -- trigger rehash
 
   assert(arr.count == 5) -- technically 0 is also valid, but it happens to be 5 because array capacity is 5
@@ -617,7 +617,7 @@ end
 do
   arr = {}
   arr.a = 'a'
-  arr.a = nil
+  arr.a = null
   arr[1] = 1 -- should rehash and resize array part, otherwise # won't find the boundary in array part
 
   assert(arr.count == 1)
@@ -659,7 +659,7 @@ do
       t1 = obscuredalloc() -- to avoid NEWTABLE guessing correct size
 
       for k = 1, bits do
-          t1[k] = if bit32.extract(i, k - 1) == 1 then true else nil
+          t1[k] = if bit32.extract(i, k - 1) == 1 then true else null
       end
   end
 end
@@ -719,7 +719,7 @@ do
   child = setmetatable({}, parent)
   child.foo = 10
 
-  assert(hit and child.foo == nil and parent.foo == nil)
+  assert(hit and child.foo == null and parent.foo == null)
 end
 
 -- testing next x GC of deleted keys
@@ -728,7 +728,7 @@ do
     for k, v in pairs(t) do
         k1 = next(t)    -- all previous keys were deleted
         assert(k == k1)       -- current key is the first in the table
-        t[k] = nil
+        t[k] = null
         expected = (type(k) == "table" and k[1] or
                           type(k) == "function" and k() or
                           string.sub(k, 1, 1))
@@ -749,7 +749,7 @@ do
     collectgarbage("collect")   -- collect dead keys
     count = count - 1
   end
-  assert(count == 0 and next(t) == nil)    -- traversed the whole table
+  assert(count == 0 and next(t) == null)    -- traversed the whole table
 end
   
 -- test error cases for table functions
@@ -791,7 +791,7 @@ assert((function ()
   t = {}
   t[makelud("hi")] = "no"
   return t.hi
-end)() == nil)
+end)() == null)
 
 
 -- check that tables with constant keys maintain their insertion/iteration order
@@ -898,7 +898,7 @@ end
 do
   function incnext(t, key)
     k, v = next(t, key)
-    if k != nil then t[k] = v + 1 end
+    if k != null then t[k] = v + 1 end
     return k, v
   end
   t = { a = 1 }

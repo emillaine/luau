@@ -4,12 +4,12 @@
 
 detect = {}
 
--- Returns arch ("arm64"|"x86_64"), syntax ("att"|"intel"|nil).
+-- Returns arch ("arm64"|"x86_64"), syntax ("att"|"intel"|null).
 function detect.detect(text)
 	-- Strong, unambiguous markers first.
 	if string.find(text, "%.intel_syntax") then return "x86_64", "intel" end
 	if string.find(text, "%.att_syntax") then return "x86_64", "att" end
-	if string.find(text, "%.arch%s+armv8") then return "arm64", nil end
+	if string.find(text, "%.arch%s+armv8") then return "arm64", null end
 
 	-- AT&T uses % register prefixes; x86 also has endbr64 / RIP-relative.
 	if string.find(text, "%%r[a-z0-9]") or string.find(text, "%%e[a-z][a-z]")
@@ -31,7 +31,7 @@ function detect.detect(text)
 	end
 
 	-- Default: ARM64 (x0..x30 / w0.. / sp / xzr).
-	return "arm64", nil
+	return "arm64", null
 end
 
 return detect

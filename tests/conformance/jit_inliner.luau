@@ -89,14 +89,14 @@ end
 _G.fuzzfail_infinite1 = function()
     function foo(x)
         repeat
-            x = nil
+            x = null
             (function(...) end)()
         until x
 
         -- unreachable SCC that closes upvalues
         repeat
             y = {}
-        until not function() y = nil end
+        until not function() y = null end
     end
 
     for _ in foo do end

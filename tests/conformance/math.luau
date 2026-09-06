@@ -27,29 +27,29 @@ function f(...)
 end
 
 assert(pcall(tonumber) == false)
-assert(tonumber{} == nil)
+assert(tonumber{} == null)
 assert(tonumber'+0.01' == 1/100 and tonumber'+.01' == 0.01 and
        tonumber'.01' == 0.01    and tonumber'-1.' == -1 and
        tonumber'+1.' == 1)
-assert(tonumber'+ 0.01' == nil and tonumber'+.e1' == nil and
-       tonumber'1e' == nil     and tonumber'1.0e+' == nil and
-       tonumber'.' == nil)
+assert(tonumber'+ 0.01' == null and tonumber'+.e1' == null and
+       tonumber'1e' == null     and tonumber'1.0e+' == null and
+       tonumber'.' == null)
 assert(tonumber('-12') == -10-2)
 assert(tonumber('-1.2e2') == - - -120)
-assert(f(tonumber('1  a')) == nil)
-assert(f(tonumber('e1')) == nil)
-assert(f(tonumber('e  1')) == nil)
-assert(f(tonumber(' 3.4.5 ')) == nil)
-assert(f(tonumber('')) == nil)
-assert(f(tonumber('', 8)) == nil)
-assert(f(tonumber('  ')) == nil)
-assert(f(tonumber('  ', 9)) == nil)
-assert(f(tonumber('99', 8)) == nil)
+assert(f(tonumber('1  a')) == null)
+assert(f(tonumber('e1')) == null)
+assert(f(tonumber('e  1')) == null)
+assert(f(tonumber(' 3.4.5 ')) == null)
+assert(f(tonumber('')) == null)
+assert(f(tonumber('', 8)) == null)
+assert(f(tonumber('  ')) == null)
+assert(f(tonumber('  ', 9)) == null)
+assert(f(tonumber('99', 8)) == null)
 assert(tonumber('  1010  ', 2) == 10)
 assert(tonumber('10', 36) == 36)
 --assert(tonumber('\n  -10  \n', 36) == -36)
 --assert(tonumber('-fFfa', 16) == -(10+(16*(15+(16*(15+(16*15)))))))
-assert(tonumber('fFfa', 15) == nil)
+assert(tonumber('fFfa', 15) == null)
 --assert(tonumber(string.rep('1', 42), 2) + 1 == 2^42)
 assert(tonumber(string.rep('1', 32), 2) + 1 == 2^32)
 --assert(tonumber('-fffffFFFFF', 16)-1 == -2^40)
@@ -83,7 +83,7 @@ assert(not(1>1) and not(1>2) and (2>1))
 assert(not('a'>'a') and not('a'>'b') and ('b'>'a'))
 assert((1>=1) and not(1>=2) and (2>=1))
 assert(('a'>='a') and not('a'>='b') and ('b'>='a'))
-assert((unk and unk > 0) == nil) -- validate precedence between and and >
+assert((unk and unk > 0) == null) -- validate precedence between and and >
 
 -- testing mod operator
 assert(-4%3 == 2)
@@ -154,7 +154,7 @@ assert(eq(_G.a[1000][3], 1000/3, 0.001))
 print('+')
 
 do   -- testing NaN
-  NaN  = nil-- to avoid constant folding
+  NaN  = null-- to avoid constant folding
   NaN = 10e500 - 10e400
 
   assert(NaN != NaN)
@@ -184,10 +184,10 @@ do   -- testing NaN
 
   a = {}
   assert(not pcall(function () a[NaN] = 1 end))
-  assert(a[NaN] == nil)
+  assert(a[NaN] == null)
   a[1] = 1
   assert(not pcall(function () a[NaN] = 1 end))
-  assert(a[NaN] == nil)
+  assert(a[NaN] == null)
 end
 
 -- extra NaN tests, hidden in a function
@@ -199,7 +199,7 @@ do
   function gt(a) return a > a end
   function ge(a) return a >= a end
 
-  NaN  = nil-- to avoid constant folding
+  NaN  = null-- to avoid constant folding
   NaN = 10e500 - 10e400
 
   assert(neq(NaN))
@@ -213,7 +213,7 @@ end
 -- require "checktable"
 -- stat(a)
 
-a = nil
+a = null
 
 -- testing implicit conversions
 
@@ -227,7 +227,7 @@ math.randomseed(0)
 i = 0
 Max = 0
 Min = 2
-flag = nil
+flag = null
 repeat
   t = math.random()
   Max = math.max(Max, t)
@@ -276,7 +276,7 @@ assert(math.max(1, 2, -1) == 2)
 assert(math.max(1, -1, 2) == 2)
 assert(math.max(1, -1, 2, -2) == 2)
 
-ma, mb, mc, md = nil, nil, nil, nil
+ma, mb, mc, md = null, null, null, null
 
 assert(pcall(function()
   ma = 1

@@ -26,7 +26,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any")
             return true
         end
 
-        export a = nil
+        export a = null
         for b in bar do
             a = b
         end
@@ -35,7 +35,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("(*error-type* | ~nil)?" == toString(requireType("a")));
+        CHECK("(*error-type* | ~null)?" == toString(requireType("a")));
     else
         CHECK(getBuiltins()->anyType == requireType("a"));
 }
@@ -48,7 +48,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any2")
             return true
         end
 
-        export a = nil
+        export a = null
         for b in bar() do
             a = b
         end
@@ -57,7 +57,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_returns_any2")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("(*error-type* | ~nil)?" == toString(requireType("a")));
+        CHECK("(*error-type* | ~null)?" == toString(requireType("a")));
     else
         CHECK("any" == toString(requireType("a")));
 }
@@ -66,9 +66,9 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        const bar = nil as any
+        const bar = null as any
 
-        export a = nil
+        export a = null
         for b in bar do
             a = b
         end
@@ -77,7 +77,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("(*error-type* | ~nil)?" == toString(requireType("a")));
+        CHECK("(*error-type* | ~null)?" == toString(requireType("a")));
     else
         CHECK("any" == toString(requireType("a")));
 }
@@ -86,16 +86,16 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any2")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        const bar = nil as any
+        const bar = null as any
 
-        export a = nil
+        export a = null
         for b in bar() do
             a = b
         end
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("(*error-type* | ~nil)?" == toString(requireType("a")));
+        CHECK("(*error-type* | ~null)?" == toString(requireType("a")));
     else
         CHECK("any" == toString(requireType("a")));
 }
@@ -106,7 +106,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any_pack")
     CheckResult result = check(R"(
         function bar(): ...any end
 
-        export a = nil
+        export a = null
         for b in bar() do
             a = b
         end
@@ -115,7 +115,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_any_pack")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("(*error-type* | ~nil)?" == toString(requireType("a")));
+        CHECK("(*error-type* | ~null)?" == toString(requireType("a")));
     else
         CHECK("any" == toString(requireType("a")));
 }
@@ -124,7 +124,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export a = nil
+        export a = null
         for b in bar do
             a = b
         end
@@ -150,7 +150,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error2")
     CheckResult result = check(R"(
         function bar(c) return c end
 
-        export a = nil
+        export a = null
         for b in bar() do
             a = b
         end
@@ -158,8 +158,8 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_iterator_is_error2")
 
     if (!FFlag::DebugLuauForceOldSolver)
     {
-        // CLI-97375(awe): `bar()` is returning `nil` here, which isn't wrong necessarily,
-        // but then we're signaling an additional error for the access on `nil`.
+        // CLI-97375(awe): `bar()` is returning `null` here, which isn't wrong necessarily,
+        // but then we're signaling an additional error for the access on `null`.
         LUAU_REQUIRE_ERROR_COUNT(2, result);
 
         // Bug: We do not simplify at the right time
@@ -203,7 +203,7 @@ TEST_CASE_FIXTURE(Fixture, "dot_on_error_type_does_not_produce_an_error")
 TEST_CASE_FIXTURE(Fixture, "any_type_propagates")
 {
     CheckResult result = check(R"(
-        const foo: any = nil as any
+        const foo: any = null as any
         const bar = foo:method("argument")
     )");
 
@@ -215,7 +215,7 @@ TEST_CASE_FIXTURE(Fixture, "any_type_propagates")
 TEST_CASE_FIXTURE(Fixture, "can_subscript_any")
 {
     CheckResult result = check(R"(
-        const foo: any = nil as any
+        const foo: any = null as any
         const bar = foo[5]
     )");
 
@@ -240,7 +240,7 @@ TEST_CASE_FIXTURE(Fixture, "can_get_length_of_any")
 TEST_CASE_FIXTURE(Fixture, "assign_prop_to_table_by_calling_any_yields_any")
 {
     CheckResult result = check(R"(
-        const f: any = nil as any
+        const f: any = null as any
         const T = {}
 
         T.prop = f()
@@ -261,7 +261,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_prop_to_table_by_calling_any_yields_any")
 TEST_CASE_FIXTURE(Fixture, "quantify_any_does_not_bind_to_itself")
 {
     CheckResult result = check(R"(
-        const A : any = nil as any
+        const A : any = null as any
         function A.B() end
         A:C()
     )");
@@ -300,8 +300,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "replace_every_free_type_when_unifying_a_comp
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        const a: any = nil as any
-        export b = nil
+        const a: any = null as any
+        export b = null
         for _, i in pairs(a) do
             b = i
         end
@@ -350,7 +350,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_of_any_can_be_a_table")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
 --!strict
-export T: any = nil as any
+export T: any = null as any
 T = {}
 T.__index = T
 function T.new(...)
@@ -398,7 +398,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_types_regression_test")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
 --!strict
-export stat = nil
+export stat = null
 stat = stat and tonumber(stat) or stat
     )");
 

@@ -3,7 +3,7 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-    sqrt = nil or math.sqrt -- breaks fastcall analysis
+    sqrt = null or math.sqrt -- breaks fastcall analysis
     ts0 = os.clock()
     sum = 0
     for i=0,500000 do sum = sum + sqrt(i) end

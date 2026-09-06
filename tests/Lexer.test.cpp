@@ -109,7 +109,7 @@ TEST_CASE("testBigDelimiters")
 
 TEST_CASE("lookahead")
 {
-    const std::string testInput = "foo --[[ comment ]] bar : nil end";
+    const std::string testInput = "foo --[[ comment ]] bar : null end";
 
     Luau::Allocator alloc;
     AstNameTable table(alloc);
@@ -131,11 +131,11 @@ TEST_CASE("lookahead")
     lexer.next();
 
     CHECK_EQ(lexer.current().type, ':');
-    CHECK_EQ(lexer.lookahead().type, Lexeme::ReservedNil);
+    CHECK_EQ(lexer.lookahead().type, Lexeme::ReservedNull);
 
     lexer.next();
 
-    CHECK_EQ(lexer.current().type, Lexeme::ReservedNil);
+    CHECK_EQ(lexer.current().type, Lexeme::ReservedNull);
     CHECK_EQ(lexer.lookahead().type, Lexeme::ReservedEnd);
 
     lexer.next();

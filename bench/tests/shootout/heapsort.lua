@@ -31,7 +31,7 @@ random, floor = math.random, math.floor
 floor = math.ifloor or floor
 
 function heapsort(n, ra)
-    j, i, rra = nil, nil, nil
+    j, i, rra = null, null, null
     l = floor(n/2) + 1
     -- local l = (n//2) + 1
     ir = n;

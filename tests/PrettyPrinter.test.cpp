@@ -268,7 +268,7 @@ TEST_CASE("local_assignment")
     const std::string two = R"( x, y, z = 1, 2, 3 )";
     CHECK_EQ(two, prettyPrint(two).code);
 
-    const std::string three = R"( x  = nil)";
+    const std::string three = R"( x  = null)";
     CHECK_EQ(three, prettyPrint(three).code);
 }
 
@@ -511,7 +511,7 @@ TEST_CASE("table_literal_with_numeric_key")
 
 TEST_CASE("table_literal_with_keyword_key")
 {
-    const std::string code = R"( t={['nil']=nil,['true']=true} )";
+    const std::string code = R"( t={['null']=null,['true']=true} )";
     CHECK_EQ(code, prettyPrint(code).code);
 }
 
@@ -890,12 +890,12 @@ TEST_CASE("roundtrip_types")
 {
     const std::string code = R"(
         const s:string='str'
-        const t:{a:string,b:number,[string]:number}=nil
-        const fn:(string,string)->(number,number)=nil
+        const t:{a:string,b:number,[string]:number}=null
+        const fn:(string,string)->(number,number)=null
         const s2:typeof(s)='foo'
-        const os:string?=nil
-        const sn:string|number=nil
-        const it:{x:number}&{y:number}=nil
+        const os:string?=null
+        const sn:string|number=null
+        const it:{x:number}&{y:number}=null
     )";
     auto allocator = Allocator{};
     auto names = AstNameTable{allocator};
@@ -1086,12 +1086,12 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_if_then_else_multiple_conditions_2")
 {
     std::string code = R"(
         x = if yes
-            then nil
+            then null
             else if no
                 then if this
                     then that
                     else other
-                else nil
+                else null
     )";
 
     CHECK_EQ(code, prettyPrint(code).code);
@@ -1154,7 +1154,7 @@ return {}
 
     std::string code = R"(
 Import = require(game.A)
-const a: Import.Type = nil
+const a: Import.Type = null
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1162,46 +1162,46 @@ const a: Import.Type = nil
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_reference_spaces_around_tokens")
 {
-    std::string code = R"( const _: Foo.Type = nil )";
+    std::string code = R"( const _: Foo.Type = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Foo   .Type = nil )";
+    code = R"( const _: Foo   .Type = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Foo.   Type = nil )";
+    code = R"( const _: Foo.   Type = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Type  <> = nil )";
+    code = R"( const _: Type  <> = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Type<  > = nil )";
+    code = R"( const _: Type<  > = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Type<  number> = nil )";
+    code = R"( const _: Type<  number> = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Type<number  ,string> = nil )";
+    code = R"( const _: Type<number  ,string> = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _: Type<number,  string  > = nil )";
+    code = R"( const _: Type<number,  string  > = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_annotation_spaces_around_tokens")
 {
-    std::string code = R"( const _: Type = nil )";
+    std::string code = R"( const _: Type = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _  : Type = nil )";
+    code = R"( const _  : Type = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const _:   Type = nil )";
+    code = R"( const _:   Type = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const x: Type, y = nil, 1 )";
+    code = R"( const x: Type, y = null, 1 )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = R"( const x  : Type, y = nil, 1 )";
+    code = R"( const x  : Type, y = null, 1 )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -1236,8 +1236,8 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_packs")
 {
     std::string code = R"(
 type Packed<T...> = (T...)->(T...)
-const a: Packed<> = nil
-const b: Packed<(number, string)> = nil
+const a: Packed<> = null
+const b: Packed<(number, string)> = null
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -1287,34 +1287,34 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_spaces_around_tokens")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_type_nested")
 {
-    std::string code = "const a: ((number)->(string))|((string)->(string)) = nil";
+    std::string code = "const a: ((number)->(string))|((string)->(string)) = null";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_type_nested_2")
 {
-    std::string code = "const a: (number&string)|(string&boolean) = nil";
+    std::string code = "const a: (number&string)|(string&boolean) = null";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_type_nested_3")
 {
-    std::string code = "const a: nil | (string & number) = nil";
+    std::string code = "const a: null | (string & number) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_type_nested")
 {
-    std::string code = "const a: ((number)->(string))&((string)->(string)) = nil";
+    std::string code = "const a: ((number)->(string))&((string)->(string)) = null";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_type_nested_2")
 {
-    std::string code = "const a: (number|string)&(string|boolean) = nil";
+    std::string code = "const a: (number|string)&(string|boolean) = null";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
@@ -1328,85 +1328,85 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_type_with_function")
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_leading_union_pipe")
 {
-    std::string code = "const a: | string | number = nil";
+    std::string code = "const a: | string | number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: | string = nil";
+    code = "const a: | string = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_spaces_around_tokens")
 {
-    std::string code = "const a: string   | number = nil";
+    std::string code = "const a: string   | number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string |   number = nil";
+    code = "const a: string |   number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_leading_intersection_ampersand")
 {
-    std::string code = "const a: & string & number = nil";
+    std::string code = "const a: & string & number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: & string = nil";
+    code = "const a: & string = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_intersection_spaces_around_tokens")
 {
-    std::string code = "const a: string   & number = nil";
+    std::string code = "const a: string   & number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string &   number = nil";
+    code = "const a: string &   number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_mixed_union_intersection")
 {
-    std::string code = "const a: string | (Foo & Bar) = nil";
+    std::string code = "const a: string | (Foo & Bar) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string |   (Foo & Bar) = nil";
+    code = "const a: string |   (Foo & Bar) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string | (  Foo & Bar) = nil";
+    code = "const a: string | (  Foo & Bar) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string | (Foo & Bar  ) = nil";
+    code = "const a: string | (Foo & Bar  ) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string &   (Foo | Bar) = nil";
+    code = "const a: string &   (Foo | Bar) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string & (  Foo | Bar) = nil";
+    code = "const a: string & (  Foo | Bar) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string & (Foo | Bar  ) = nil";
+    code = "const a: string & (Foo | Bar  ) = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_preserve_union_optional_style")
 {
-    std::string code = "const a: string | nil = nil";
+    std::string code = "const a: string | null = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string? = nil";
+    code = "const a: string? = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string??? = nil";
+    code = "const a: string??? = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string? | nil = nil";
+    code = "const a: string? | null = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string | nil | number = nil";
+    code = "const a: string | null | number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string | nil | number? = nil";
+    code = "const a: string | null | number? = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 
-    code = "const a: string? | number? = nil";
+    code = "const a: string? | number? = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -1499,7 +1499,7 @@ _ = 1+   1
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_break_continue")
 {
     std::string code = R"(
-a, b, c = nil, nil, nil
+a, b, c = null, null, null
 repeat
     if a then break end
     if b then continue end
@@ -1578,7 +1578,7 @@ const f: <T,S...>(T, S...)->(number) = foo
 
 TEST_CASE_FIXTURE(Fixture, "prettyPrint_union_reverse")
 {
-    std::string code = "const a: nil | number = nil";
+    std::string code = "const a: null | number = null";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 
@@ -1673,7 +1673,7 @@ TEST_CASE_FIXTURE(Fixture, "prettyPrint_type_alias_default_type_parameters")
 {
     std::string code = R"(
 type Packed<T = string, U = T, V... = ...boolean, W... = (T, U, V...)> = (T, U, V...)->(W...)
-const a: Packed<number> = nil
+const a: Packed<number> = null
     )";
 
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
@@ -2144,7 +2144,7 @@ TEST_CASE("prettyPrint_chained_function_types")
 
 TEST_CASE("fuzzer_nil_optional")
 {
-    const std::string code = R"( const x: nil? = nil )";
+    const std::string code = R"( const x: null? = null )";
     CHECK_EQ(code, prettyPrint(code, {}, true).code);
 }
 

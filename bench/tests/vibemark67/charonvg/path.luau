@@ -426,7 +426,7 @@ function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
         dy = by4 - by1
         l = math.sqrt(dx * dx + dy * dy)
 
-        flat = nil
+        flat = null
         if l > 1 then
             d1 = math.abs(dx * (by2 - by1) - dy * (bx2 - bx1))
             d2 = math.abs(dx * (by3 - by1) - dy * (bx3 - bx1))
@@ -641,7 +641,7 @@ function Path:extents(tight)
     minX, minY = math.huge, math.huge
     maxX, maxY = -math.huge, -math.huge
     totalLength = 0
-    prevX, prevY = nil, nil
+    prevX, prevY = null, null
 
     function processPoint(x, y)
         if x < minX then
@@ -738,7 +738,7 @@ function parseNumber(str, pos)
     sign = 1
 
     if pos > len then
-        return nil
+        return null
     end
     c = string.byte(str, pos)
     if c == 43 then
@@ -749,11 +749,11 @@ function parseNumber(str, pos)
     end
 
     if pos > len then
-        return nil
+        return null
     end
     c = string.byte(str, pos)
     if c != 46 and not isNum(c) then
-        return nil
+        return null
     end
 
     integer = 0
@@ -798,7 +798,7 @@ function parseNumber(str, pos)
                 end
             end
             if pos > len or not isNum(string.byte(str, pos)) then
-                return nil
+                return null
             end
             while pos <= len do
                 c = string.byte(str, pos)
@@ -821,7 +821,7 @@ end
 function parseFlag(str, pos)
     pos = skipWsOrComma(str, pos)
     if pos > #str then
-        return nil
+        return null
     end
     c = string.byte(str, pos)
     if c == 48 then
@@ -830,12 +830,12 @@ function parseFlag(str, pos)
     if c == 49 then
         return true, pos + 1
     end
-    return nil
+    return null
 end
 
 function Path.parse(str)
     if type(str) != "string" or #str == 0 then
-        return nil
+        return null
     end
 
     p = Path.create()
@@ -844,11 +844,11 @@ function Path.parse(str)
     curX, curY = 0, 0
     startX, startY = 0, 0
     lastCpX, lastCpY = 0, 0
-    lastCmd = nil
+    lastCmd = null
 
     while pos <= len do
         c = string.byte(str, pos)
-        cmd = nil
+        cmd = null
 
         if (c >= 65 and c <= 90) or (c >= 97 and c <= 122) then
             cmd = string.char(c)
@@ -863,21 +863,21 @@ function Path.parse(str)
                 cmd = lastCmd
             end
         else
-            return nil
+            return null
         end
 
         pos = skipWsOrComma(str, pos)
 
         if cmd == "M" or cmd == "m" then
-            x, y = nil, nil
+            x, y = null, null
             x, pos = parseNumber(str, pos)
             if not x then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y, pos = parseNumber(str, pos)
             if not y then
-                return nil
+                return null
             end
             if cmd == "m" then
                 x, y = curX + x, curY + y
@@ -887,15 +887,15 @@ function Path.parse(str)
             startX, startY = x, y
             lastCpX, lastCpY = curX, curY
         else if cmd == "L" or cmd == "l" then
-            x, y = nil, nil
+            x, y = null, null
             x, pos = parseNumber(str, pos)
             if not x then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y, pos = parseNumber(str, pos)
             if not y then
-                return nil
+                return null
             end
             if cmd == "l" then
                 x, y = curX + x, curY + y
@@ -904,10 +904,10 @@ function Path.parse(str)
             curX, curY = x, y
             lastCpX, lastCpY = curX, curY
         else if cmd == "H" or cmd == "h" then
-            x = nil
+            x = null
             x, pos = parseNumber(str, pos)
             if not x then
-                return nil
+                return null
             end
             if cmd == "h" then
                 x = curX + x
@@ -916,10 +916,10 @@ function Path.parse(str)
             curX = x
             lastCpX, lastCpY = curX, curY
         else if cmd == "V" or cmd == "v" then
-            y = nil
+            y = null
             y, pos = parseNumber(str, pos)
             if not y then
-                return nil
+                return null
             end
             if cmd == "v" then
                 y = curY + y
@@ -928,35 +928,35 @@ function Path.parse(str)
             curY = y
             lastCpX, lastCpY = curX, curY
         else if cmd == "C" or cmd == "c" then
-            x1, y1, x2, y2, x3, y3 = nil, nil, nil, nil, nil, nil
+            x1, y1, x2, y2, x3, y3 = null, null, null, null, null, null
             x1, pos = parseNumber(str, pos)
             if not x1 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y1, pos = parseNumber(str, pos)
             if not y1 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             x2, pos = parseNumber(str, pos)
             if not x2 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y2, pos = parseNumber(str, pos)
             if not y2 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             x3, pos = parseNumber(str, pos)
             if not x3 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y3, pos = parseNumber(str, pos)
             if not y3 then
-                return nil
+                return null
             end
             if cmd == "c" then
                 x1, y1 = curX + x1, curY + y1
@@ -967,25 +967,25 @@ function Path.parse(str)
             lastCpX, lastCpY = x2, y2
             curX, curY = x3, y3
         else if cmd == "S" or cmd == "s" then
-            x2, y2, x3, y3 = nil, nil, nil, nil
+            x2, y2, x3, y3 = null, null, null, null
             x2, pos = parseNumber(str, pos)
             if not x2 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y2, pos = parseNumber(str, pos)
             if not y2 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             x3, pos = parseNumber(str, pos)
             if not x3 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y3, pos = parseNumber(str, pos)
             if not y3 then
-                return nil
+                return null
             end
             if cmd == "s" then
                 x2, y2 = curX + x2, curY + y2
@@ -997,25 +997,25 @@ function Path.parse(str)
             lastCpX, lastCpY = x2, y2
             curX, curY = x3, y3
         else if cmd == "Q" or cmd == "q" then
-            x1, y1, x2, y2 = nil, nil, nil, nil
+            x1, y1, x2, y2 = null, null, null, null
             x1, pos = parseNumber(str, pos)
             if not x1 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y1, pos = parseNumber(str, pos)
             if not y1 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             x2, pos = parseNumber(str, pos)
             if not x2 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y2, pos = parseNumber(str, pos)
             if not y2 then
-                return nil
+                return null
             end
             if cmd == "q" then
                 x1, y1 = curX + x1, curY + y1
@@ -1025,15 +1025,15 @@ function Path.parse(str)
             lastCpX, lastCpY = x1, y1
             curX, curY = x2, y2
         else if cmd == "T" or cmd == "t" then
-            x2, y2 = nil, nil
+            x2, y2 = null, null
             x2, pos = parseNumber(str, pos)
             if not x2 then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y2, pos = parseNumber(str, pos)
             if not y2 then
-                return nil
+                return null
             end
             if cmd == "t" then
                 x2, y2 = curX + x2, curY + y2
@@ -1044,38 +1044,38 @@ function Path.parse(str)
             lastCpX, lastCpY = x1, y1
             curX, curY = x2, y2
         else if cmd == "A" or cmd == "a" then
-            rx, ry, angle, largeArc, sweep, x, y = nil, nil, nil, nil, nil, nil, nil
+            rx, ry, angle, largeArc, sweep, x, y = null, null, null, null, null, null, null
             rx, pos = parseNumber(str, pos)
             if not rx then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             ry, pos = parseNumber(str, pos)
             if not ry then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             angle, pos = parseNumber(str, pos)
             if not angle then
-                return nil
+                return null
             end
             largeArc, pos = parseFlag(str, pos)
-            if largeArc == nil then
-                return nil
+            if largeArc == null then
+                return null
             end
             sweep, pos = parseFlag(str, pos)
-            if sweep == nil then
-                return nil
+            if sweep == null then
+                return null
             end
             pos = skipWsOrComma(str, pos)
             x, pos = parseNumber(str, pos)
             if not x then
-                return nil
+                return null
             end
             pos = skipWsOrComma(str, pos)
             y, pos = parseNumber(str, pos)
             if not y then
-                return nil
+                return null
             end
             if cmd == "a" then
                 x, y = curX + x, curY + y
@@ -1088,7 +1088,7 @@ function Path.parse(str)
             curX, curY = startX, startY
             lastCpX, lastCpY = curX, curY
         else
-            return nil
+            return null
         end
 
         lastCmd = cmd

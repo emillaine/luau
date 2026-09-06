@@ -35,8 +35,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_nil_serialization_works")
         type function serialize_nil(arg)
             return arg
         end
-        type type_being_serialized = nil
-        function ok(idx: serialize_nil<type_being_serialized>): nil return idx end
+        type type_being_serialized = null
+        function ok(idx: serialize_nil<type_being_serialized>): null return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -48,14 +48,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_nil_methods_work")
 
     CheckResult result = check(R"(
         type function getnil()
-            const ty = types.singleton(nil)
-            if ty:is("nil") then
+            const ty = types.singleton(null)
+            if ty:is("null") then
                 return ty
             end
             -- this should never be returned
             return types.string
         end
-        function ok(idx: getnil<>): nil return idx end
+        function ok(idx: getnil<>): null return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -370,7 +370,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_union_serialization_works")
         end
         type type_being_serialized = number | string | boolean
         -- forcing an error here to check the exact type of the union
-        function ok(idx: serialize_union<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_union<type_being_serialized>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -450,7 +450,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof")
 
     CheckResult result = check(R"(
         type function foobar()
-            const tys = { types.string, types.number, types.never, types.boolean, types.singleton(nil) }
+            const tys = { types.string, types.number, types.never, types.boolean, types.singleton(null) }
             result = types.never
             for _, ty in tys do
                 result = types.unionof(result, ty)
@@ -476,7 +476,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof_empty")
             return types.unionof()
         end
 
-        const f: foobar<> = nil as any
+        const f: foobar<> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -515,7 +515,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_intersectionof")
             return result
         end
 
-        const f: foobar<> = nil as any
+        const f: foobar<> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -531,7 +531,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_intersectionof_empty")
             return types.intersectionof()
         end
 
-        const f: foobar<> = nil as any
+        const f: foobar<> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -566,7 +566,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_serialization_works")
         end
         type type_being_serialized = { boolean: boolean, number: number } & { boolean: boolean, string: string }
         -- forcing an error here to check the exact type of the intersection
-        function ok(idx: serialize_intersection<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_intersection<type_being_serialized>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -582,10 +582,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_methods_work")
 
     CheckResult result = check(R"(
         type function getintersection()
-            const tbl1 = types.newtable(nil, nil, nil)
+            const tbl1 = types.newtable(null, null, null)
             tbl1:setproperty(types.singleton("boolean"), types.boolean) -- {boolean: boolean}
             tbl1:setproperty(types.singleton("number"), types.number) -- {boolean: boolean, number: number}
-            const tbl2 = types.newtable(nil, nil, nil)
+            const tbl2 = types.newtable(null, null, null)
             tbl2:setproperty(types.singleton("boolean"), types.boolean) -- {boolean: boolean}
             tbl2:setproperty(types.singleton("string"), types.string) -- {boolean: boolean, string: string}
             const ty = types.intersectionof(tbl1, tbl2)
@@ -688,7 +688,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_negation_type_mismatch_in_union")
             return types.negationof(ty)
         end
 
-        const value: number | string = nil as any
+        const value: number | string = null as any
         const a: negate<number> = value
     )");
 
@@ -709,7 +709,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_actual_negation_type_mismatch")
             return types.negationof(ty)
         end
 
-        const value: negate<number> = nil as any
+        const value: negate<number> = null as any
         const a: number = value
     )");
 
@@ -730,7 +730,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_two_negations_type_mismatch")
             return types.negationof(ty)
         end
 
-        const value: negate<number> = nil as any
+        const value: negate<number> = null as any
         const a: negate<string> = value
     )");
 
@@ -751,7 +751,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_serialization_works")
         end
         type type_being_serialized = { boolean: boolean, number: number, [string]: number }
         -- forcing an error here to check the exact type of the table
-        function ok(idx: serialize_table<type_being_serialized>): nil return idx end
+        function ok(idx: serialize_table<type_being_serialized>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -791,11 +791,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_methods_work")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number] = boolean}
             ty:setproperty(types.singleton("number"), types.string) -- {string: number, number: string, [number] = boolean}
-            ty:setproperty(types.singleton("string"), nil) -- {number: string, [number] = boolean}
-            const ret = types.newtable(nil, nil, nil) -- {}
+            ty:setproperty(types.singleton("string"), null) -- {number: string, [number] = boolean}
+            const ret = types.newtable(null, null, null) -- {}
             -- creating a copy of `ty`
             for k, v in ty:properties() do
                 ret:setreadproperty(k, v.read)
@@ -829,10 +829,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_metatable_methods_work")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            const metatbl = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
-            metatbl:setmetatable(types.newtable(nil, indexer, nil)) -- { {  }, @metatable { [number]: boolean } }
+            const metatbl = types.newtable(null, null, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            metatbl:setmetatable(types.newtable(null, indexer, null)) -- { {  }, @metatable { [number]: boolean } }
             const ret = metatbl:metatable()
             if metatbl:is("table") and metatbl:metatable() then
                 return ret -- { @metatable { [number]: boolean } }
@@ -858,8 +858,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_serialization_works")
         type function serialize_func(arg)
             return arg
         end
-        type type_being_serialized = (boolean, number, nil) -> (...string)
-        function ok(idx: serialize_func<type_being_serialized>): (boolean, number, nil) -> (...string) return idx end
+        type type_being_serialized = (boolean, number, null) -> (...string)
+        function ok(idx: serialize_func<type_being_serialized>): (boolean, number, null) -> (...string) return idx end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -872,9 +872,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_methods_work")
 
     CheckResult result = check(R"(
         type function getfunction()
-            const ty = types.newfunction(nil, nil) -- () -> ()
-            ty:setparameters({types.string, types.number}, nil) -- (string, number) -> ()
-            ty:setreturns(nil, types.boolean) -- (string, number) -> (...boolean)
+            const ty = types.newfunction(null, null) -- () -> ()
+            ty:setparameters({types.string, types.number}, null) -- (string, number) -> ()
+            ty:setreturns(null, types.boolean) -- (string, number) -> (...boolean)
             if ty:is("function") then
                 -- creating a copy of `ty` parameters
                 const arr: {type} = {}
@@ -938,7 +938,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_class_methods_works")
             return types.newtable(props, indexer, metatable)
         end
         -- forcing an error here to check the exact type of the metatable
-        function ok(idx: getclass<BaseClass>): nil return idx end
+        function ok(idx: getclass<BaseClass>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -964,7 +964,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "write_of_readonly_is_nil")
             end
         end
         -- forcing an error here to check the exact type of the metatable
-        function ok(idx: getclass<BaseClass>): nil return idx end
+        function ok(idx: getclass<BaseClass>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -984,11 +984,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_check_mutability")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            const metatbl = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            const metatbl = types.newtable(null, null, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
             -- mutate the table
-            ty:setproperty(types.singleton("string"), nil) -- {[number]: boolean}
+            ty:setproperty(types.singleton("string"), null) -- {[number]: boolean}
             if metatbl:is("table") and metatbl:metatable() then
                 return metatbl -- { @metatable { [number]: boolean }, { } }
             end
@@ -1015,12 +1015,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_copy_works")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(nil, indexer, nil) -- {[number]: boolean}
+            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
             ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            const metaty = types.newtable(nil, nil, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            const metaty = types.newtable(null, null, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
             const copy = types.copy(metaty)
             -- mutate the table
-            ty:setproperty(types.singleton("string"), nil) -- {[number]: boolean}
+            ty:setproperty(types.singleton("string"), null) -- {[number]: boolean}
             if copy:is("table") and copy:metatable() then
                 return copy -- { {  }, @metatable { [number]: boolean, string: number } }
             end
@@ -1062,7 +1062,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_createtable_bad_metatable")
 
     CheckResult result = check(R"(
         type function badmetatable()
-            return types.newtable(nil, nil, types.number)
+            return types.newtable(null, null, types.number)
         end
         function bad(arg: badmetatable<>) end
     )");
@@ -1117,7 +1117,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_user_error_is_reported")
             end
             return arg
         end
-        function ok(idx: errors_if_string<string>): nil return idx end
+        function ok(idx: errors_if_string<string>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1135,7 +1135,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_overrides_call_metamethod")
         type function hello(arg)
             error(type(arg))
         end
-        function ok(idx: hello<string>): nil return idx end
+        function ok(idx: hello<string>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1152,10 +1152,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_overrides_eq_metamethod")
         type function hello()
             const p1 = types.string
             const p2 = types.string
-            const t1 = types.newtable(nil, nil, nil)
+            const t1 = types.newtable(null, null, null)
             t1:setproperty(types.singleton("string"), types.boolean)
             t1:setmetatable(t1)
-            const t2 = types.newtable(nil, nil, nil)
+            const t2 = types.newtable(null, null, null)
             t2:setproperty(types.singleton("string"), types.boolean)
             t1:setmetatable(t1)
             if p1 == p2 and t1 == t2 then
@@ -1177,7 +1177,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_type_cant_call_get_props")
         type function hello(arg)
             const arr = arg:properties()
         end
-        function ok(idx: hello<() -> ()>): nil return idx end
+        function ok(idx: hello<() -> ()>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1200,7 +1200,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other")
         type function bar()
             return types.singleton(foo())
         end
-        function ok(idx: bar<>): nil return idx end
+        function ok(idx: bar<>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1224,7 +1224,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_2")
         type function third()
             return second("hi")
         end
-        function ok(idx: third<>): nil return idx end
+        function ok(idx: third<>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1253,13 +1253,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_3")
             type function third()
                 return second("hi")
             end
-            function ok(idx: third<>): nil return idx end
+            function ok(idx: third<>): null return idx end
         end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
     CHECK(toString(result.errors[0]) == R"(Unknown global 'fourth'; consider assigning to it first)");
-    CHECK(toString(result.errors[1]) == R"('third' type function errored at runtime: [string "first"]:4: attempt to call a nil value)");
+    CHECK(toString(result.errors[1]) == R"('third' type function errored at runtime: [string "first"]:4: attempt to call a null value)");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_unordered")
@@ -1273,7 +1273,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_unordered")
         type function foo()
             return "hi"
         end
-        function ok(idx: bar<>): nil return idx end
+        function ok(idx: bar<>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1300,8 +1300,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_no_shared_state")
         type function bar(prefix)
             return types.singleton(tostring(prefix:value()) .. foo())
         end
-        function ok1(idx: bar<'x'>): nil return idx end
-        function ok2(idx: bar<'y'>): nil return idx end
+        function ok1(idx: bar<'x'>): null return idx end
+        function ok2(idx: bar<'y'>): null return idx end
     )");
 
     // We are only checking first errors, others are mostly duplicates
@@ -1337,7 +1337,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optionify")
                 error("Argument is not a table")
             end
             for k, v in tbl:properties() do
-                tbl:setproperty(k, types.unionof(v.read, types.singleton(nil)))
+                tbl:setproperty(k, types.unionof(v.read, types.singleton(null)))
             end
             return tbl
         end
@@ -1346,7 +1346,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optionify")
             age: number,
             alive: boolean
         }
-        function ok(idx: optionify<Person>): nil return idx end
+        function ok(idx: optionify<Person>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1366,7 +1366,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_illegal_global")
             return arg -- this should not be reached
         end
 
-        function ok(idx: illegal<number>): nil return idx end
+        function ok(idx: illegal<number>): null return idx end
     )");
 
     // We are only checking first errors, others are mostly duplicates
@@ -1395,7 +1395,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_recursion_and_gc")
             return tbl
         end
         type Test = {}
-        function ok(idx: foo<Test>): nil return idx end
+        function ok(idx: foo<Test>): null return idx end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1408,7 +1408,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_recovery_no_upvalues")
     ScopedFastFlag solverV2{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        const var = nil
+        const var = null
 
         type function save_upvalue(arg)
             var = 1
@@ -1479,7 +1479,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_type_methods_on_types")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
-    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:3: attempt to call a nil value)");
+    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:3: attempt to call a null value)");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "no_types_functions_on_type")
@@ -1494,7 +1494,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_types_functions_on_type")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
-    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:3: attempt to call a nil value)");
+    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:3: attempt to call a null value)");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "no_metatable_writes")
@@ -1511,7 +1511,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_metatable_writes")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
-    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:4: attempt to index nil with 'is')");
+    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:4: attempt to index null with 'is')");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "no_eq_field")
@@ -1526,7 +1526,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_eq_field")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
-    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:3: attempt to call a nil value)");
+    CHECK(toString(result.errors[0]) == R"('test' type function errored at runtime: [string "test"]:3: attempt to call a null value)");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "tag_field")
@@ -1564,7 +1564,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_serialization")
             const props = {
                 [types.singleton("a")] = types.number
             }
-            return types.newtable(props, nil, mt)
+            return types.newtable(props, null, mt)
         end
 
         type function id(x)
@@ -1604,7 +1604,7 @@ type function concat(a: type, b: type)
     return types.singleton(aString .. bString)
 end
 export type Concat<T, U> = concat<T, U>
-const a: concat<'first', 'second'> = nil as any
+const a: concat<'first', 'second'> = null as any
 return {}
     )";
 
@@ -1615,7 +1615,7 @@ return {}
 
     CheckResult bResult = check(R"(
 const Test = require(game.A);
-const b: Test.Concat<'third', 'fourth'> = nil as any
+const b: Test.Concat<'third', 'fourth'> = null as any
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -1657,7 +1657,7 @@ export type function concat(a: type, b: type)
     assert(typeof(bString) == "string")
     return types.singleton(aString .. bString)
 end
-const a: concat<'first', 'second'> = nil as any
+const a: concat<'first', 'second'> = null as any
 return {}
     )";
 
@@ -1668,7 +1668,7 @@ return {}
 
     CheckResult bResult = check(R"(
 const Test = require(game.A);
-const b: Test.concat<'third', 'fourth'> = nil as any
+const b: Test.concat<'third', 'fourth'> = null as any
     )");
     LUAU_REQUIRE_NO_ERRORS(bResult);
 
@@ -1686,7 +1686,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "explicit_export_zero_arg")
         export type function foo()
             return types.number
         end
-        return nil
+        return null
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1711,7 +1711,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "print_to_error")
             print(a.tag)
             return types.any
         end
-        const a: t0<string> = nil as any
+        const a: t0<string> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1730,7 +1730,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "print_to_error_plus_error")
             print(a.tag)
             error("test")
         end
-        const a: t0<string> = nil as any
+        const a: t0<string> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -1748,7 +1748,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "print_to_error_plus_no_result")
             print("Where does this go")
             print(a.tag)
         end
-        const a: t0<string> = nil as any
+        const a: t0<string> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -2265,7 +2265,7 @@ type function test(t)
     return t
 end
 
-const _:test<number> = nil as any
+const _:test<number> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2283,7 +2283,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_print_tab_char_fix")
             return t
         end
 
-        const _:test<number> = nil as any
+        const _:test<number> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2349,7 +2349,7 @@ end
 
 type wrap<T> = { a: func<T?> }
 
-const x: wrap<string> = nil as any
+const x: wrap<string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2368,7 +2368,7 @@ end
 
 type wrap<T> = { a: func<<T>(T) -> number>, b: T }
 
-const x: wrap<string> = nil as any
+const x: wrap<string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2388,8 +2388,8 @@ end
 
 type test<T> = { x: T, y: T? }
 type wrap<T> = { a: func<(string, keyof<test<T>>) -> number>, b: T }
-const x: wrap<string> = nil as any
-const y: keyof<typeof(x)> = nil as any
+const x: wrap<string> = null as any
+const y: keyof<typeof(x)> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2404,10 +2404,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "blocking_nested_pending_expansions_2")
 
     CheckResult result = check(R"(
 type function foo(t)
-    return types.unionof(t, types.singleton(nil))
+    return types.unionof(t, types.singleton(null))
 end
 
-const x: foo<{a: foo<string>, b: foo<number>}> = nil
+const x: foo<{a: foo<string>, b: foo<number>}> = null
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2422,7 +2422,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "irreducible_pending_expansions")
 
     CheckResult result = check(R"(
 type function foo(t)
-    return types.unionof(t, types.singleton(nil))
+    return types.unionof(t, types.singleton(null))
 end
 
 type table<T> = { a: index<T, "a"> }
@@ -2537,7 +2537,7 @@ type function foo(t)
     return types.unionof(Test, t)
 end
 
-const x: foo<nil> = { a = 2 }
+const x: foo<null> = { a = 2 }
 const y: foo<string> = "a"
     )");
 
@@ -2703,7 +2703,7 @@ type function foo(t)
     return Test(types.number, types.string, t)
 end
 
-const x: foo<boolean> = nil as any
+const x: foo<boolean> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2744,7 +2744,7 @@ end
 
 type Test = foo<string>
 
-const x: foo<boolean> = nil as any
+const x: foo<boolean> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -2831,7 +2831,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_udtf_with_optional_missing")
     CheckResult results = check(R"(
         type function create_table_with_key()
             const tbl = types.newtable()
-            tbl:setproperty(types.singleton "key", types.unionof(types.string, types.singleton(nil)))
+            tbl:setproperty(types.singleton "key", types.unionof(types.string, types.singleton(null)))
             return tbl
         end
         const a: create_table_with_key = {}
@@ -2848,7 +2848,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1887_udtf_with_optional_present")
     CheckResult results = check(R"(
         type function create_table_with_key()
             const tbl = types.newtable()
-            tbl:setproperty(types.singleton "key", types.unionof(types.string, types.singleton(nil)))
+            tbl:setproperty(types.singleton "key", types.unionof(types.string, types.singleton(null)))
             return tbl
         end
         const a: create_table_with_key = { key = "123" }
@@ -2922,7 +2922,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeof_into_type_function_should_not_crash")
         end
 
         type func<parameters...> = typeof(function(...: parameters...) end)
-        const whomp: <T>(arg1: T) -> identity<T> = nil as any
+        const whomp: <T>(arg1: T) -> identity<T> = null as any
         whomp(function(...) end as func<any>)
     )");
 
@@ -3097,10 +3097,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_serialize_iteration_limit_null_deref")
             a: number,
             b: string,
             c: boolean,
-            d: nil,
+            d: null,
             e: buffer,
             f: thread,
-            g: (number, string) -> (boolean, nil),
+            g: (number, string) -> (boolean, null),
         }
 
         function ok(idx: pass<Complex>): Complex return idx end
@@ -3120,10 +3120,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_type_alias_call_serialize_null_deref")
             a: T,
             b: string,
             c: boolean,
-            d: nil,
+            d: null,
             e: buffer,
             f: thread,
-            g: (T, string) -> (boolean, nil),
+            g: (T, string) -> (boolean, null),
         }
 
         type function apply(arg)
@@ -3150,10 +3150,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_env_alias_serialize_null_deref")
             a: number,
             b: string,
             c: boolean,
-            d: nil,
+            d: null,
             e: buffer,
             f: thread,
-            g: (number, string) -> (boolean, nil),
+            g: (number, string) -> (boolean, null),
         }
 
         type function use_alias()
@@ -3238,7 +3238,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_setmetatable_wrong_error_tag")
             return t
         end
 
-        const x: foo<> = nil
+        const x: foo<> = null
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -3331,7 +3331,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_setgenerics_wrong_argcount_check")
             return f
         end
 
-        const x: extra_arg<> = nil
+        const x: extra_arg<> = null
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -3354,13 +3354,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof")
             return a
         end
 
-        const x: checksubtype<nil, nil> = nil as any                          -- T
-        const y: checksubtype<nil, string?> = nil as any                      -- T
-        const z: checksubtype<"Hello", string> = nil as any                   -- T
-        const x1: checksubtype<add<number, number>, number | vector> = nil as any -- T
-        const w: checksubtype<string | vector | number, number> = nil as any  -- F
-        const a: checksubtype<boolean, number> = nil as any                   -- F
-        const b: checksubtype<false, nil> = nil as any                        -- F
+        const x: checksubtype<null, null> = null as any                          -- T
+        const y: checksubtype<null, string?> = null as any                      -- T
+        const z: checksubtype<"Hello", string> = null as any                   -- T
+        const x1: checksubtype<add<number, number>, number | vector> = null as any -- T
+        const w: checksubtype<string | vector | number, number> = null as any  -- F
+        const a: checksubtype<boolean, number> = null as any                   -- F
+        const b: checksubtype<false, null> = null as any                        -- F
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, results);
@@ -3383,15 +3383,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_top_and_bottom")
             return types.singleton(a:issubtypeof(b))
         end
 
-        const a: issub<never, number> = nil as any
-        const b: issub<never, string> = nil as any
-        const c: issub<never, never> = nil as any
-        const d: issub<number, unknown> = nil as any
-        const e: issub<string, unknown> = nil as any
-        const f: issub<unknown, unknown> = nil as any
-        const g: issub<never, unknown> = nil as any
-        const h: issub<unknown, number> = nil as any
-        const i: issub<number, never> = nil as any
+        const a: issub<never, number> = null as any
+        const b: issub<never, string> = null as any
+        const c: issub<never, never> = null as any
+        const d: issub<number, unknown> = null as any
+        const e: issub<string, unknown> = null as any
+        const f: issub<unknown, unknown> = null as any
+        const g: issub<never, unknown> = null as any
+        const h: issub<unknown, number> = null as any
+        const i: issub<number, never> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3416,11 +3416,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_any")
             return types.singleton(a:issubtypeof(b))
         end
 
-        const a: issub<any, number> = nil as any
-        const b: issub<number, any> = nil as any
-        const c: issub<any, any> = nil as any
+        const a: issub<any, number> = null as any
+        const b: issub<number, any> = null as any
+        const c: issub<any, any> = null as any
         -- This is a special case: any <: unknown
-        const d: issub<any, unknown> = nil as any
+        const d: issub<any, unknown> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3447,12 +3447,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_table_structural")
         type ReadNum1 = { read a: number }
         type ReadNumOrStr = { read a: number | string }
 
-        const a: issub<Wide, Narrow> = nil as any
-        const b: issub<Narrow, Wide> = nil as any
-        const c: issub<Wide, Wide> = nil as any
-        const d: issub<Wide, Different> = nil as any
-        const e: issub<Narrow, TablesSubtypeInvariantly> = nil as any
-        const f: issub<ReadNum1, ReadNumOrStr> = nil as any
+        const a: issub<Wide, Narrow> = null as any
+        const b: issub<Narrow, Wide> = null as any
+        const c: issub<Wide, Wide> = null as any
+        const d: issub<Wide, Different> = null as any
+        const e: issub<Narrow, TablesSubtypeInvariantly> = null as any
+        const f: issub<ReadNum1, ReadNumOrStr> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3479,11 +3479,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_function")
         type F3 = (unknown) -> string
         type F4 = (number) -> unknown
 
-        const a: issub<F1, F2> = nil as any
-        const b: issub<F3, F1> = nil as any
-        const c: issub<F1, F3> = nil as any
-        const d: issub<F1, F4> = nil as any
-        const e: issub<F4, F1> = nil as any
+        const a: issub<F1, F2> = null as any
+        const b: issub<F3, F1> = null as any
+        const c: issub<F1, F3> = null as any
+        const d: issub<F1, F4> = null as any
+        const e: issub<F4, F1> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3504,10 +3504,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_union")
             return types.singleton(a:issubtypeof(b))
         end
 
-        const a: issub<number, number | string> = nil as any
-        const b: issub<number | string, number | string | boolean> = nil as any
-        const c: issub<number | string, number> = nil as any
-        const d: issub<number | string, number | string> = nil as any
+        const a: issub<number, number | string> = null as any
+        const b: issub<number | string, number | string | boolean> = null as any
+        const c: issub<number | string, number> = null as any
+        const d: issub<number | string, number | string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3530,9 +3530,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_intersection")
         type A = { a: number }
         type B = { b: string }
 
-        const a: issub<A & B, A> = nil as any
-        const b: issub<A & B, B> = nil as any
-        const c: issub<A, A & B> = nil as any
+        const a: issub<A & B, A> = null as any
+        const b: issub<A & B, B> = null as any
+        const c: issub<A, A & B> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3551,9 +3551,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "issubtypeof_extern_type_hierarchy")
             return types.singleton(a:issubtypeof(b))
         end
 
-        const a: issub<ChildClass, BaseClass> = nil as any
-        const b: issub<BaseClass, ChildClass> = nil as any
-        const c: issub<BaseClass, BaseClass> = nil as any
+        const a: issub<ChildClass, BaseClass> = null as any
+        const b: issub<BaseClass, ChildClass> = null as any
+        const c: issub<BaseClass, BaseClass> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3578,9 +3578,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_table_indexer")
         type ReadArr = { read [number]: string }
         type ReadNumStrArray = { read [number]: string | number }
 
-        const a: issub<Arr, Map> = nil as any
-        const b: issub<{ [number]: string }, NumStrArray> = nil as any
-        const c: issub<ReadArr, ReadNumStrArray> = nil as any
+        const a: issub<Arr, Map> = null as any
+        const b: issub<{ [number]: string }, NumStrArray> = null as any
+        const c: issub<ReadArr, ReadNumStrArray> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3627,7 +3627,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_tostring")
             t: T<U>
         }
 
-        const x: foo<T<vector>> = nil as any
+        const x: foo<T<vector>> = null as any
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, results);
 
@@ -3646,7 +3646,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "error_handling_pcall")
 
     CheckResult result = check(R"(
         type function foo(ty: type)
-            if ty:is("nil") then
+            if ty:is("null") then
                 return ty
             else
                 error('oh no')
@@ -3656,7 +3656,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "error_handling_pcall")
         type function bar(ty)
             assert(not pcall(foo, ty))
             assert(not xpcall(foo, function(e) return e end, ty))
-            return types.unionof(ty, types.singleton(nil))
+            return types.unionof(ty, types.singleton(null))
         end
 
         const x: bar<number> = 5

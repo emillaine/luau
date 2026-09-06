@@ -10,7 +10,7 @@ end, "tonumber")
 
 bench.runCode(function()
     for j=1,1e6 do
-        tostring(nil)
+        tostring(null)
         tostring("test")
         tostring(42)
     end

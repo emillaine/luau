@@ -19,14 +19,14 @@ function add(a: number, b: number, native: boolean)
 end
 
 call(add, 1, 3, true)
-ecall(add, nil, 2, false)
+ecall(add, null, 2, false)
 
-function isnil(x: nil)
+function isnil(x: null)
   assert(is_native())
   return not x
 end
 
-call(isnil, nil)
+call(isnil, null)
 ecall(isnil, 2)
 
 function isany(x: any, y: number)
@@ -34,7 +34,7 @@ function isany(x: any, y: number)
   return not not x
 end
 
-call(isany, nil, 1)
+call(isany, null, 1)
 call(isany, 2, 1)
 call(isany, {}, 1)
 
@@ -43,7 +43,7 @@ function optstring(s: string?)
   return if s then s..'2' else '3'
 end
 
-assert(call(optstring, nil) == '3')
+assert(call(optstring, null) == '3')
 assert(call(optstring, 'two: ') == 'two: 2')
 ecall(optstring, 2)
 
@@ -73,7 +73,7 @@ ecall(checkvector, 2)
 call(checkbuffer, buffer.create(10))
 ecall(checkbuffer, 2)
 call(checkoptbuffer, buffer.create(10))
-call(checkoptbuffer, nil)
+call(checkoptbuffer, null)
 ecall(checkoptbuffer, 2)
 
 function mutation_causes_bad_exit(a: number, count: number, sum: number)

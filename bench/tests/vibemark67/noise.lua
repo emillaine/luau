@@ -157,8 +157,8 @@ function runConnection(connIndex: number)
 	-- nonce counters are exercised.
 	for i = 0, MSGS_PER_CONN - 1 do
 		plaintext = makeMessage(MSG_SIZE, connIndex * 131 + i)
-		ct = nil
-		pt = nil
+		ct = null
+		pt = null
 		if i % 2 == 0 then
 			ct = noise.encrypt(aliceSend, plaintext)
 			pt = noise.decrypt(bobRecv, ct)

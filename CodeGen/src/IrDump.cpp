@@ -686,7 +686,7 @@ static void appendVmConstant(std::string& result, Proto* proto, int index)
 
     if (constant.tt == LUA_TNIL)
     {
-        append(result, "nil");
+        append(result, "null");
     }
     else if (constant.tt == LUA_TBOOLEAN)
     {
@@ -850,7 +850,7 @@ const char* getBytecodeTypeName(uint8_t type, const char* const* userdataTypes)
     switch (type)
     {
     case LBC_TYPE_NIL:
-        return "nil";
+        return "null";
     case LBC_TYPE_BOOLEAN:
         return "boolean";
     case LBC_TYPE_NUMBER:

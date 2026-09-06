@@ -21,7 +21,7 @@ TEST_SUITE_BEGIN("TypeStatesTest");
 TEST_CASE_FIXTURE(TypeStateFixture, "initialize_x_of_type_string_or_nil_with_nil")
 {
     CheckResult result = check(R"(
-        const x: string? = nil
+        const x: string? = null
         const a = x
     )");
 
@@ -43,14 +43,14 @@ TEST_CASE_FIXTURE(TypeStateFixture, "extraneous_lvalues_are_populated_with_nil")
     CHECK("Function only returns 2 values, but 3 are required here" == toString(result.errors[0]));
     CHECK("string" == toString(requireType("x")));
     CHECK("number" == toString(requireType("y")));
-    CHECK("nil" == toString(requireType("z")));
+    CHECK("null" == toString(requireType("z")));
 }
 
 TEST_CASE_FIXTURE(TypeStateFixture, "assign_different_values_to_x")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export x: string? = nil
+        export x: string? = null
         const a = x
         x = "hello!"
         const b = x
@@ -113,10 +113,10 @@ TEST_CASE_FIXTURE(TypeStateFixture, "refine_a_local_and_then_assign_it")
     CheckResult result = check(R"(
         function f(x: string?)
             if typeof(x) == "string" then
-                x = nil
+                x = null
             end
 
-            const y: nil = x
+            const y: null = x
         end
     )");
 
@@ -128,7 +128,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "assign_a_local_and_then_refine_it")
 {
     CheckResult result = check(R"(
         function f(x: string?)
-            x = nil
+            x = null
 
             if typeof(x) == "string" then
                 const y: typeof(x) = "hello"
@@ -208,19 +208,19 @@ TEST_CASE_FIXTURE(TypeStateFixture, "parameter_x_was_constrained_by_two_types_2"
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export y: string? = nil  -- 'y <: string?
+        export y: string? = null  -- 'y <: string?
 
         function f(x): number?
             y = x                   -- 'y ~ 'x
             return y                -- 'y <: number?
 
-                                    -- We therefore infer 'y <: (string | nil) & (number | nil)
-                                    -- or 'y <: nil
+                                    -- We therefore infer 'y <: (string | null) & (number | null)
+                                    -- or 'y <: null
         end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
-    CHECK("(nil) -> number?" == toString(requireType("f")));
+    CHECK("(null) -> number?" == toString(requireType("f")));
 }
 
 TEST_CASE_FIXTURE(TypeStateFixture, "parameter_x_is_some_type_or_optional_then_assigned_with_alternate_value")
@@ -240,7 +240,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "local_assigned_in_either_branches_that_fall
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export x = nil
+        export x = null
         if math.random() > 0.5 then
             x = 5
         else
@@ -257,7 +257,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "local_assigned_in_only_one_branch_that_fall
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export x = nil
+        export x = null
         if math.random() > 0.5 then
             x = 5
         end
@@ -271,7 +271,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "local_assigned_in_only_one_branch_that_fall
 TEST_CASE_FIXTURE(TypeStateFixture, "then_branch_assigns_and_else_branch_also_assigns_but_is_met_with_return")
 {
     CheckResult result = check(R"(
-        x = nil
+        x = null
         if math.random() > 0.5 then
             x = 5
         else
@@ -288,7 +288,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "then_branch_assigns_and_else_branch_also_as
 TEST_CASE_FIXTURE(TypeStateFixture, "then_branch_assigns_but_is_met_with_return_and_else_branch_assigns")
 {
     CheckResult result = check(R"(
-        x = nil
+        x = null
         if math.random() > 0.5 then
             x = 5
             return
@@ -324,7 +324,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "invalidate_type_refinements_upon_assignment
 TEST_CASE_FIXTURE(TypeStateFixture, "local_t_is_assigned_a_fresh_table_with_x_assigned_a_union_and_then_assert_restricts_actual_outflow_of_types")
 {
     CheckResult result = check(R"(
-        const t = nil
+        const t = null
 
         if math.random() > 0.5 then
             t = {}
@@ -349,7 +349,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "captured_locals_do_not_mutate_upvalue_type"
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export x = nil
+        export x = null
 
         function f()
             print(x)
@@ -373,7 +373,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "captured_locals_do_not_mutate_upvalue_type_
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        export t = {x = nil}
+        export t = {x = null}
 
         function f()
             print(t.x)
@@ -386,9 +386,9 @@ TEST_CASE_FIXTURE(TypeStateFixture, "captured_locals_do_not_mutate_upvalue_type_
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     auto err = get<TypeMismatch>(result.errors[0]);
-    CHECK_EQ("{ x: nil } | { x: number }", toString(err->wantedType, {/* exhaustive */ true}));
+    CHECK_EQ("{ x: null } | { x: number }", toString(err->wantedType, {/* exhaustive */ true}));
     CHECK_EQ("{ x: string }", toString(err->givenType));
-    CHECK("{ x: nil } | { x: number }" == toString(requireTypeAtPosition({4, 18}), {true}));
+    CHECK("{ x: null } | { x: number }" == toString(requireTypeAtPosition({4, 18}), {true}));
     CHECK("number?" == toString(requireTypeAtPosition({4, 20})));
 }
 
@@ -396,7 +396,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "prototyped_recursive_functions")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export f = nil
+        export f = null
         function f()
             if math.random() > 0.5 then
                 f()
@@ -416,7 +416,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "prototyped_recursive_functions_but_has_futur
     };
 
     CheckResult result = check(R"(
-        export f = nil
+        export f = null
         function f()
             if math.random() > 0.5 then
                 f()
@@ -434,7 +434,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "prototyped_recursive_functions_but_has_prev
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export f = nil
+        export f = null
         f = 5
         function f()
             if math.random() > 0.5 then
@@ -451,7 +451,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "multiple_assignments_in_loops")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export x = nil
+        export x = null
 
         for i = 1, 10 do
             x = 5
@@ -533,27 +533,27 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_normalized_type_variables_are_bad" * 
     // We do not care about the errors here, only that this finishes typing
     // in a sensible amount of time.
     LUAU_REQUIRE_ERRORS(check(R"(
-        const _ = nil
+        const _ = null
         while _[""] do
-            _, _ = nil
+            _, _ = null
             while _.n0 do
-                _, _ = nil
+                _, _ = null
             end
-            _, _ = nil
+            _, _ = null
         end
         while _[""] do
             while if _ then if _ then _ else "" else "" do
-                _, _ = nil
+                _, _ = null
                 do
                 end
-                _, _, _ = nil
+                _, _, _ = null
             end
-            _, _ = nil
-            _, _, _ = nil
+            _, _ = null
+            _, _, _ = null
             while _.readi16 do
-                _, _ = nil
+                _, _ = null
             end
-            _, _ = nil
+            _, _ = null
         end
     )"));
 }
@@ -667,8 +667,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_else_branch")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        export x = nil
-        const coinflip : () -> boolean = (nil as any)
+        export x = null
+        const coinflip : () -> boolean = (null as any)
 
         if coinflip () then
             x = "I win."
@@ -689,8 +689,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        export x = nil
-        const coinflip : () -> boolean = (nil as any)
+        export x = null
+        const coinflip : () -> boolean = (null as any)
 
         if coinflip () then
             error("You lose.")
@@ -714,7 +714,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring")
         type Payload = { payload: number }
 
         function decode(s: string): Payload?
-            return (nil as any)
+            return (null as any)
         end
 
         function decodeEx(s: string): Payload
@@ -737,7 +737,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring_in_loop")
     CheckResult result = check(R"(
         --!strict
 
-        x = nil
+        x = null
 
         while math.random() > 0.5 do
             x = 42
@@ -748,7 +748,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring_in_loop")
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
-    CHECK_EQ("nil", toString(requireTypeAtPosition({10, 14})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({10, 14})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_refinement_in_loop")
@@ -777,8 +777,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch_and_do_nothing_in_else")
 
     CheckResult result = check(R"(
         --!strict
-        const x = nil
-        const coinflip : () -> boolean = (nil as any)
+        const x = null
+        const coinflip : () -> boolean = (null as any)
 
         if coinflip () then
             error("You lose.")
@@ -790,7 +790,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch_and_do_nothing_in_else")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({10, 14})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({10, 14})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "assign_in_an_if_branch_without_else")
@@ -800,8 +800,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_in_an_if_branch_without_else")
 
     CheckResult result = check(R"(
         --!strict
-        export x = nil
-        const coinflip : () -> boolean = (nil as any)
+        export x = null
+        const coinflip : () -> boolean = (null as any)
 
         if coinflip () then
             x = "I win."
@@ -820,7 +820,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_table_freeze_in_binary_expr")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        const _ = nil
+        const _ = null
         if _ or table.freeze(_,_) or table.freeze(_,_) then
         end
     )");
@@ -828,7 +828,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_table_freeze_in_binary_expr")
     LUAU_REQUIRE_ERROR_COUNT(4, result);
     auto err0 = get<TypeMismatch>(result.errors[0]);
     CHECK(err0);
-    CHECK_EQ("nil", toString(err0->givenType));
+    CHECK_EQ("null", toString(err0->givenType));
     CHECK_EQ("table", toString(err0->wantedType));
     auto err1 = get<CountMismatch>(result.errors[1]);
     CHECK(err1);
@@ -836,7 +836,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_table_freeze_in_binary_expr")
     CHECK_EQ(2, err1->actual);
     auto err2 = get<TypeMismatch>(result.errors[0]);
     CHECK(err2);
-    CHECK_EQ("nil", toString(err2->givenType));
+    CHECK_EQ("null", toString(err2->givenType));
     CHECK_EQ("table", toString(err2->wantedType));
     auto err3 = get<CountMismatch>(result.errors[1]);
     CHECK(err3);
@@ -864,7 +864,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_table_freeze_in_conditional_expr")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        const _ = nil
+        const _ = null
         if
             if table.freeze(_,_) then _ else _
         then
@@ -874,7 +874,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_table_freeze_in_conditional_expr")
     LUAU_REQUIRE_ERROR_COUNT(2, result);
     auto err0 = get<TypeMismatch>(result.errors[0]);
     CHECK(err0);
-    CHECK_EQ("nil", toString(err0->givenType));
+    CHECK_EQ("null", toString(err0->givenType));
     CHECK_EQ("table", toString(err0->wantedType));
     auto err1 = get<CountMismatch>(result.errors[1]);
     CHECK(err1);

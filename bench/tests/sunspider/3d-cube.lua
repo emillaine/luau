@@ -13,7 +13,7 @@ MQube = {}  -- position information of qube
 I = {}      -- entity matrix
 Origin = {}
 Testing = {}
-LoopTimer = nil;
+LoopTimer = null;
 
 validation = {
  [20] = 2889,
@@ -35,12 +35,12 @@ function DrawLine(From, To)
   dy = math.abs(y2 - y1);
   x = x1;
   y = y1;
-  IncX1, IncY1 = nil, nil;
-  IncX2, IncY2 = nil, nil;  
-  Den = nil;
-  Num = nil;
-  NumAdd = nil;
-  NumPix = nil;
+  IncX1, IncY1 = null, null;
+  IncX2, IncY2 = null, null;  
+  Den = null;
+  Num = null;
+  NumAdd = null;
+  NumPix = null;
 
   if (x2 >= x1) then  IncX1 = 1; IncX2 = 1;
   else IncX1 = -1; IncX2 = -1; end
@@ -362,14 +362,14 @@ while i <= 160 do
   i = i * 2
 end
 
-Q = nil;
-MTrans = nil;
-MQube = nil;
-I = nil;
-Origin = nil;
-Testing = nil;
-LoopTime = nil;
-DisplArea = nil;
+Q = null;
+MTrans = null;
+MQube = null;
+I = null;
+Origin = null;
+Testing = null;
+LoopTime = null;
+DisplArea = null;
 
 end
 

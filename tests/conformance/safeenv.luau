@@ -3,7 +3,7 @@ print("safeenv reset")
 
 function envChangeInMetamethod()
 	-- declare constant so that at O2 this test doesn't interfere with constant folding which we can't deoptimize
-	ten = nil
+	ten = null
 	ten = 10
 
 	a = setmetatable({}, {

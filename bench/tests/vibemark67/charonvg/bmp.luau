@@ -89,7 +89,7 @@ function Bmp.write(surface, filename)
     end
     f = iolib(filename, "wb")
     if not f then
-        return nil
+        return null
     end
     f:write(buffer.tostring(buf))
     f:close()
@@ -97,7 +97,7 @@ function Bmp.write(surface, filename)
 end
 
 function Bmp.encode(surface)
-    return Bmp.write(surface, nil)
+    return Bmp.write(surface, null)
 end
 
 return Bmp

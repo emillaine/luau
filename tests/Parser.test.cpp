@@ -176,7 +176,7 @@ TEST_CASE_FIXTURE(Fixture, "local_with_annotation")
 TEST_CASE_FIXTURE(Fixture, "type_names_can_contain_dots")
 {
     AstStatBlock* block = parse(R"(
-        const foo: SomeModule.CoolType = nil
+        const foo: SomeModule.CoolType = null
     )");
 
     REQUIRE(block != nullptr);
@@ -204,7 +204,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_have_return_annotations")
 TEST_CASE_FIXTURE(Fixture, "functions_can_have_a_function_type_annotation")
 {
     AstStatBlock* block = parse(R"(
-        function f(): (number) -> nil return nil end
+        function f(): (number) -> null return null end
     )");
 
     REQUIRE(block != nullptr);
@@ -255,7 +255,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_type_should_disambiguate_from_functi
 TEST_CASE_FIXTURE(Fixture, "function_return_type_should_parse_as_function_type_annotation_with_no_args")
 {
     AstStatBlock* block = parse(R"(
-        function f(): () -> nil return nil end
+        function f(): () -> null return null end
     )");
 
     REQUIRE(block != nullptr);
@@ -282,14 +282,14 @@ TEST_CASE_FIXTURE(Fixture, "function_return_type_should_parse_as_function_type_a
 
     AstTypeReference* ty = funReturnPack->typeList.types.data[0]->as<AstTypeReference>();
     REQUIRE(ty != nullptr);
-    REQUIRE(ty->name == "nil");
+    REQUIRE(ty->name == "null");
 }
 
 TEST_CASE_FIXTURE(Fixture, "annotations_can_be_tables")
 {
     AstStatBlock* stat = parse(R"(
-        const zero: number = nil
-        const one: {x: number, y: string} = nil
+        const zero: number = null
+        const one: {x: number, y: string} = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -300,8 +300,8 @@ TEST_CASE_FIXTURE(Fixture, "tables_should_have_an_indexer_and_keys")
     AstStatBlock* stat = parse(R"(
         const t: {
             [string]: number,
-            f: () -> nil
-        } = nil
+            f: () -> null
+        } = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -310,8 +310,8 @@ TEST_CASE_FIXTURE(Fixture, "tables_should_have_an_indexer_and_keys")
 TEST_CASE_FIXTURE(Fixture, "tables_can_have_trailing_separator")
 {
     AstStatBlock* stat = parse(R"(
-        const zero: number = nil
-        const one: {x: number, y: string, } = nil
+        const zero: number = null
+        const one: {x: number, y: string, } = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -320,8 +320,8 @@ TEST_CASE_FIXTURE(Fixture, "tables_can_have_trailing_separator")
 TEST_CASE_FIXTURE(Fixture, "tables_can_use_semicolons")
 {
     AstStatBlock* stat = parse(R"(
-        const zero: number = nil
-        const one: {x: number; y: string; } = nil
+        const zero: number = null
+        const one: {x: number; y: string; } = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -340,7 +340,7 @@ TEST_CASE_FIXTURE(Fixture, "other_places_where_type_annotations_are_allowed")
 TEST_CASE_FIXTURE(Fixture, "nil_is_a_valid_type_name")
 {
     AstStatBlock* stat = parse(R"(
-        const n: nil = nil
+        const n: null = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -349,7 +349,7 @@ TEST_CASE_FIXTURE(Fixture, "nil_is_a_valid_type_name")
 TEST_CASE_FIXTURE(Fixture, "function_type_annotation")
 {
     AstStatBlock* stat = parse(R"(
-        const f: (number, string) -> nil = nil
+        const f: (number, string) -> null = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -358,7 +358,7 @@ TEST_CASE_FIXTURE(Fixture, "function_type_annotation")
 TEST_CASE_FIXTURE(Fixture, "functions_can_return_multiple_values")
 {
     AstStatBlock* stat = parse(R"(
-        const f: (number) -> (number, number) = nil
+        const f: (number) -> (number, number) = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -367,7 +367,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_return_multiple_values")
 TEST_CASE_FIXTURE(Fixture, "functions_can_have_0_arguments")
 {
     AstStatBlock* stat = parse(R"(
-        const f: () -> number = nil
+        const f: () -> number = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -376,7 +376,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_have_0_arguments")
 TEST_CASE_FIXTURE(Fixture, "functions_can_return_0_values")
 {
     AstStatBlock* block = parse(R"(
-        const f: (number) -> () = nil
+        const f: (number) -> () = null
     )");
 
     REQUIRE(block != nullptr);
@@ -385,7 +385,7 @@ TEST_CASE_FIXTURE(Fixture, "functions_can_return_0_values")
 TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_no_returns")
 {
     AstStatBlock* block = parse(R"(
-        const f: (string) -> () & (number) -> () = nil
+        const f: (string) -> () & (number) -> () = null
     )");
 
     REQUIRE(block != nullptr);
@@ -400,7 +400,7 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_no_returns")
 TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_two_or_more_returns")
 {
     AstStatBlock* block = parse(R"(
-        const f: (string) -> (string, number) & (number) -> (number, string) = nil
+        const f: (string) -> (string, number) & (number) -> (number, string) = null
     )");
 
     REQUIRE(block != nullptr);
@@ -415,7 +415,7 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_two_function_types_if_two_or_more_re
 TEST_CASE_FIXTURE(Fixture, "return_type_is_an_intersection_type_if_led_with_one_parenthesized_type")
 {
     AstStatBlock* block = parse(R"(
-        const f: (string) -> (string) & (number) -> (number) = nil
+        const f: (string) -> (string) & (number) -> (number) = null
     )");
 
     REQUIRE(block != nullptr);
@@ -461,7 +461,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_should_not_interfere_with_type_function_c
 {
     AstStatBlock* block = parse(R"(
         type("a")
-        type = nil
+        type = null
     )");
 
     REQUIRE(block != nullptr);
@@ -477,7 +477,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_should_not_interfere_with_type_function_c
 TEST_CASE_FIXTURE(Fixture, "type_alias_should_work_when_name_is_also_local")
 {
     AstStatBlock* block = parse(R"(
-        A = nil
+        A = null
         type A = string
     )");
 
@@ -510,7 +510,7 @@ TEST_CASE_FIXTURE(Fixture, "prefixed_type_reference_links_to_local")
     ScopedFastFlag sff{FFlag::LuauTrackPrefixLocal, true};
 
     AstStatBlock* block = parse(R"(
-        const Types = nil
+        const Types = null
         type Foo = Types.Bar
     )");
 
@@ -559,9 +559,9 @@ TEST_CASE_FIXTURE(Fixture, "prefixed_type_reference_shadowing")
     ScopedFastFlag sff{FFlag::LuauTrackPrefixLocal, true};
 
     AstStatBlock* block = parse(R"(
-        const Types = nil
+        const Types = null
         do
-            const Types = nil
+            const Types = null
             type Foo = Types.Bar
         end
         type Bar = Types.Baz
@@ -646,7 +646,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_messages")
 
     matchParseError(
         R"(
-        const a: { [string]: number, [number]: string } = nil
+        const a: { [string]: number, [number]: string } = null
     )",
         "Cannot have more than one table indexer"
     );
@@ -793,7 +793,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_type_name")
 {
     matchParseError(
         R"(
-        const a: Foo.= = nil
+        const a: Foo.= = null
     )",
         "Expected identifier when parsing field name, got '='"
     );
@@ -1574,7 +1574,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_with_too_many_nested_type_group")
     matchParseError("const f: ((((((((((Fail))))))))))", "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
 
     matchParseError(
-        "const t: a & (b & (c & (d & (e & (f & (g & (h & (i & (j & nil)))))))))",
+        "const t: a & (b & (c & (d & (e & (f & (g & (h & (i & (j & null)))))))))",
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -1597,17 +1597,17 @@ const f:
 |
 ((number))
 |
-(a & (b & nil))
+(a & (b & null))
 |
-(a & (b & nil)) = nil
+(a & (b & null)) = null
 )");
 
     parse(R"(
-const f: a? | b? | c? | d? | e? | f? | g? | h? = nil
+const f: a? | b? | c? | d? | e? | f? | g? | h? = null
 )");
 
     matchParseError(
-        "const t: a & b & c & d & e & f & g & h & i & j & nil", "Exceeded allowed type length; simplify your type annotation to make the code compile"
+        "const t: a & b & c & d & e & f & g & h & i & j & null", "Exceeded allowed type length; simplify your type annotation to make the code compile"
     );
 }
 
@@ -1677,7 +1677,7 @@ TEST_CASE_FIXTURE(Fixture, "unparenthesized_function_return_type_list")
 TEST_CASE_FIXTURE(Fixture, "short_array_types")
 {
     AstStatBlock* stat = parse(R"(
-        const n: {string} = nil
+        const n: {string} = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -1697,13 +1697,13 @@ TEST_CASE_FIXTURE(Fixture, "short_array_types_must_be_alone")
     matchParseError("const n: {string, number}", "Expected '}' (to close '{' at column 10), got ','");
     matchParseError("const n: {[number]: string, number}", "Expected ':' when parsing table field, got '}'");
     matchParseError("const n: {x: string, number}", "Expected ':' when parsing table field, got '}'");
-    matchParseError("const n: {x: string, nil}", "Expected identifier when parsing table field, got 'nil'");
+    matchParseError("const n: {x: string, null}", "Expected identifier when parsing table field, got 'null'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "short_array_types_do_not_break_field_names")
 {
     AstStatBlock* stat = parse(R"(
-        const n: {string: number} = nil
+        const n: {string: number} = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -1724,7 +1724,7 @@ TEST_CASE_FIXTURE(Fixture, "short_array_types_are_not_field_names_when_complex")
 
 TEST_CASE_FIXTURE(Fixture, "nil_can_not_be_a_field_name")
 {
-    matchParseError("const n: {nil: number}", "Expected '}' (to close '{' at column 10), got ':'");
+    matchParseError("const n: {null: number}", "Expected '}' (to close '{' at column 10), got ':'");
 }
 
 TEST_CASE_FIXTURE(Fixture, "string_literal_call")
@@ -2054,7 +2054,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_assignment_lvalue")
 {
     matchParseError(
         R"(
-        a, b = nil, nil
+        a, b = null, null
         (2), b = b, a
     )",
         "Assigned expression must be a variable or a field"
@@ -2062,7 +2062,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_assignment_lvalue")
 
     matchParseError(
         R"(
-        a, b = nil, nil
+        a, b = null, null
         a, (3) = b, a
     )",
         "Assigned expression must be a variable or a field"
@@ -3223,7 +3223,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_const_function_with_attr")
 TEST_CASE_FIXTURE(Fixture, "parse_local_const")
 {
     AstStatBlock* stat = parse(R"(
-        const const = nil
+        const const = null
     )");
 
     REQUIRE(stat != nullptr);
@@ -3243,7 +3243,7 @@ TEST_CASE_FIXTURE(Fixture, "error_const_not_initialized")
 {
     matchParseError("const c", "Missing initializer in const declaration");
 
-    matchParseError("const a, b = nil", "Missing initializer in const declaration");
+    matchParseError("const a, b = null", "Missing initializer in const declaration");
 
     matchParseError("const a, b, c = f(), 42", "Missing initializer in const declaration");
 
@@ -3257,11 +3257,11 @@ TEST_CASE_FIXTURE(Fixture, "error_const_reassignment")
 
     matchParseError("const a = 42; a = 43", "Variable 'a' is constant and may not be reassigned");
 
-    matchParseError("b = nil; const a = 42; a, b = 43", "Variable 'a' is constant and may not be reassigned");
+    matchParseError("b = null; const a = 42; a, b = 43", "Variable 'a' is constant and may not be reassigned");
 
-    matchParseError("b = nil; const a = 42; b, a = 43", "Variable 'a' is constant and may not be reassigned");
+    matchParseError("b = null; const a = 42; b, a = 43", "Variable 'a' is constant and may not be reassigned");
 
-    matchParseError("b = nil; const a = 42; b, a = ...", "Variable 'a' is constant and may not be reassigned");
+    matchParseError("b = null; const a = 42; b, a = ...", "Variable 'a' is constant and may not be reassigned");
 
     matchParseError("const a = 42; function a() end", "Variable 'a' is constant and may not be reassigned");
 }
@@ -3742,7 +3742,7 @@ TEST_CASE_FIXTURE(Fixture, "reassigned_class")
     matchParseError(
         R"(
 class Animal end
-Animal = nil
+Animal = null
         )",
         "'Animal' refers to a class and cannot be used as a variable name (defined on line 2)" // const reassignment msg
     );
@@ -4022,7 +4022,7 @@ TEST_CASE_FIXTURE(Fixture, "classes_cannot_be_shadowed_by_classes_with_local_bet
         class Foobar
         end
 
-        const Foobar = nil
+        const Foobar = null
 
         class Foobar
         end
@@ -4041,7 +4041,7 @@ TEST_CASE_FIXTURE(Fixture, "classes_can_be_shadowed_by_locals")
 
         -- This is legal: the rule is that there is exactly one class with a
         -- given name, but we can shadow it with a local.
-        const Foobar = nil
+        const Foobar = null
     )");
 
     CHECK(result.errors.empty());
@@ -4211,7 +4211,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_return_type_pack_with_cst_func_return")
     parseOptions.storeCstData = true;
 
     // `(string | number)?` as a return type is a single optional type:
-    //     union( group( union(string, number) ), nil )
+    //     union( group( union(string, number) ), null )
     // The one pair of parens belongs to the GROUP, so the enclosing return
     // type pack is implicit and must NOT record any parenthesis positions.
     ParseResult result = parseEx("type T = () -> (string | number)?", parseOptions);
@@ -4353,7 +4353,7 @@ TEST_CASE_FIXTURE(Fixture, "extra_table_indexer_recovery")
     try
     {
         parse(R"(
-const a : { [string] : number, [number] : string, count: number } = nil
+const a : { [string] : number, [number] : string, count: number } = null
 )");
         FAIL("Expected ParseErrors to be thrown");
     }
@@ -4642,7 +4642,7 @@ type Fn = (
     }
     catch (const Luau::ParseErrors& e)
     {
-        CHECK_EQ("Expected '->' after '()' when parsing function type; did you mean 'nil'?", e.getErrors().front().getMessage());
+        CHECK_EQ("Expected '->' after '()' when parsing function type; did you mean 'null'?", e.getErrors().front().getMessage());
     }
 
     // If we have arguments or generics, don't use special case
@@ -4707,13 +4707,13 @@ return foo(1, 2 -- to check for a second error after recovery
 TEST_CASE_FIXTURE(Fixture, "recover_index_name_keyword")
 {
     ParseResult result = tryParse(R"(
-const b = nil
+const b = null
 const a = b.do
     )");
     CHECK_EQ(1, result.errors.size());
 
     result = tryParse(R"(
-const b = nil
+const b = null
 const a = b.
 do end
     )");
@@ -4723,13 +4723,13 @@ do end
 TEST_CASE_FIXTURE(Fixture, "recover_self_call_keyword")
 {
     ParseResult result = tryParse(R"(
-const b = nil
+const b = null
 const a = b:do
     )");
     CHECK_EQ(2, result.errors.size());
 
     result = tryParse(R"(
-const b = nil
+const b = null
 const a = b:
 do end
     )");
@@ -4739,14 +4739,14 @@ do end
 TEST_CASE_FIXTURE(Fixture, "recover_type_index_name_keyword")
 {
     ParseResult result = tryParse(R"(
-const A = nil
-const b : A.do = nil
+const A = null
+const b : A.do = null
     )");
     CHECK_EQ(1, result.errors.size());
 
     result = tryParse(R"(
-const A = nil
-const b : A.do = nil
+const A = null
+const b : A.do = null
 do end
     )");
     CHECK_EQ(1, result.errors.size());
@@ -4895,7 +4895,7 @@ TEST_CASE_FIXTURE(Fixture, "get_a_nice_error_when_there_is_no_comma_after_last_t
 TEST_CASE_FIXTURE(Fixture, "missing_default_type_pack_argument_after_variadic_type_parameter")
 {
     ParseResult result = tryParse(R"(
-        type Foo<T... = > = nil
+        type Foo<T... = > = null
     )");
 
     REQUIRE_EQ(2, result.errors.size());
@@ -5675,7 +5675,7 @@ TEST_CASE_FIXTURE(Fixture, "grouped_function_type")
 {
     const auto root = parse(R"(
         type X<T> = T
-        const x: X<(() -> ())?> = nil
+        const x: X<(() -> ())?> = null
     )");
     LUAU_ASSERT(root);
     CHECK_EQ(root->body.size, 2);
@@ -5707,7 +5707,7 @@ TEST_CASE_FIXTURE(Fixture, "complex_union_in_generic_ty")
             | number
             | boolean
             | string
-        > = nil
+        > = null
     )");
     LUAU_ASSERT(root);
     CHECK_EQ(root->body.size, 2);

@@ -27,7 +27,7 @@ assertEq(`Welcome to {
 nameNotConstantEvaluated = (function() return "Luau" end)()
 assertEq(`Welcome to {nameNotConstantEvaluated}!`, "Welcome to Luau!")
 
-assertEq(`This {localName} does not exist`, "This nil does not exist")
+assertEq(`This {localName} does not exist`, "This null does not exist")
 
 assertEq(`Welcome to \
 {name}!`, "Welcome to \nLuau!")

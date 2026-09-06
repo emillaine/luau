@@ -94,10 +94,10 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 self.errValue = errValue
             end
             function Result:ok(val)
-                return Result.new(val, nil)
+                return Result.new(val, null)
             end
             function Result:err(val)
-                return Result.new(nil, val)
+                return Result.new(null, val)
             end
             function Result:fromCallback(c)
                 const _0 = c
@@ -145,10 +145,10 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
                 end
             end)
             function Result:isOk()
-                return self.okValue != nil
+                return self.okValue != null
             end
             function Result:isErr()
-                return self.errValue != nil
+                return self.errValue != null
             end
             function Result:contains(x)
                 return self.okValue == x
@@ -255,7 +255,7 @@ TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
             end
             function Result:asPtr()
                 const _0 = (self.okValue)
-                if _0 == nil then
+                if _0 == null then
                     _0 = (self.errValue)
                 end
                 return _0
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(LimitFixture, "Signal_exerpt" * doctest::timeout(LUAU_TIMEOUT)
             {} as typeof({ __index = Signal })
         ))
         function Signal.new<T...>(): Signal<T...>
-            return nil as any
+            return null as any
         end
 
         function Signal.Connect<T...>(self: Signal<T...>)
@@ -373,11 +373,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 
     type _Transaction = (c: _ApolloCache) -> ()
     type _ApolloCache = {
-	    read: <T, TVariables>(self: _ApolloCache, query: Cache_ReadOptions<TVariables, T>) -> T | nil,
-	    write: <TResult, TVariables>(self: _ApolloCache, write: Cache_WriteOptions<TResult, TVariables>) -> Reference | nil,
+	    read: <T, TVariables>(self: _ApolloCache, query: Cache_ReadOptions<TVariables, T>) -> T | null,
+	    write: <TResult, TVariables>(self: _ApolloCache, write: Cache_WriteOptions<TResult, TVariables>) -> Reference | null,
 	    diff: <T>(self: _ApolloCache, query: Cache_DiffOptions) -> Cache_DiffResult<T>,
 	    watch: (self: _ApolloCache, watch: Cache_WatchOptions<Record<string, any>>) -> (),
-	    reset: (self: _ApolloCache) -> Promise<nil>,
+	    reset: (self: _ApolloCache) -> Promise<null>,
 	    evict: (self: _ApolloCache, options: Cache_EvictOptions) -> boolean,
 	    restore: (self: _ApolloCache, serializedState: TSerialized_) -> _ApolloCache,
 	    extract: (self: _ApolloCache, optimistic: boolean?) -> any,
@@ -386,7 +386,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 	    performTransaction: (self: _ApolloCache, transaction: _Transaction, optimisticId: string) -> (),
 	    recordOptimisticTransaction: (self: _ApolloCache, transaction: _Transaction, optimisticId: string) -> (),
 	    transformDocument: (self: _ApolloCache, document: DocumentNode) -> DocumentNode,
-	    identify: (self: _ApolloCache, object: StoreObject | Reference) -> string | nil,
+	    identify: (self: _ApolloCache, object: StoreObject | Reference) -> string | null,
 	    gc: (self: _ApolloCache) -> Array<string>,
 	    modify: (self: _ApolloCache, options: Cache_ModifyOptions) -> boolean,
 	    transformForLink: (self: _ApolloCache, document: DocumentNode) -> DocumentNode,
@@ -394,29 +394,29 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 		    self: _ApolloCache,
 		    options: Cache_ReadQueryOptions<QueryType, TVariables>,
 		    optimistic: boolean?
-	    ) -> QueryType | nil,
+	    ) -> QueryType | null,
 	    readFragment: <FragmentType, TVariables>(
 		    self: _ApolloCache,
 		    options: Cache_ReadFragmentOptions<FragmentType, TVariables>,
 		    optimistic: boolean?
-	    ) -> FragmentType | nil,
-	    writeQuery: <TData, TVariables>(self: _ApolloCache, Cache_WriteQueryOptions<TData, TVariables>) -> Reference | nil,
+	    ) -> FragmentType | null,
+	    writeQuery: <TData, TVariables>(self: _ApolloCache, Cache_WriteQueryOptions<TData, TVariables>) -> Reference | null,
 	    writeFragment: <TData, TVariables>(
 		    self: _ApolloCache,
 		    Cache_WriteFragmentOptions<TData, TVariables>
-	    ) -> Reference | nil,
+	    ) -> Reference | null,
     }
 
     export type ApolloCache<TSerialized> = {
 	    -- something here needed
-	    read: <T, TVariables>(self: ApolloCache<TSerialized>, query: Cache_ReadOptions<TVariables, T>) -> T | nil,
+	    read: <T, TVariables>(self: ApolloCache<TSerialized>, query: Cache_ReadOptions<TVariables, T>) -> T | null,
 	    write: <TResult, TVariables>(
 		    self: ApolloCache<TSerialized>,
 		    write: Cache_WriteOptions<TResult, TVariables>
-	    ) -> Reference | nil,
+	    ) -> Reference | null,
 	    diff: <T>(self: ApolloCache<TSerialized>, query: Cache_DiffOptions) -> Cache_DiffResult<T>,
 	    watch: (self: ApolloCache<TSerialized>, watch: Cache_WatchOptions<Record<string, any>>) -> (() -> ()),
-	    reset: (self: ApolloCache<TSerialized>) -> Promise<nil>,
+	    reset: (self: ApolloCache<TSerialized>) -> Promise<null>,
 	    evict: (self: ApolloCache<TSerialized>, options: Cache_EvictOptions) -> boolean,
 	    restore: (self: ApolloCache<TSerialized>, serializedState: TSerialized_) -> _ApolloCache,
 	    extract: (self: ApolloCache<TSerialized>, optimistic: boolean?) -> TSerialized,
@@ -431,7 +431,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 		    optimisticId: string
 	    ) -> (),
 	    transformDocument: (self: ApolloCache<TSerialized>, document: DocumentNode) -> DocumentNode,
-	    identify: (self: ApolloCache<TSerialized>, object: StoreObject | Reference) -> string | nil,
+	    identify: (self: ApolloCache<TSerialized>, object: StoreObject | Reference) -> string | null,
 	    gc: (self: ApolloCache<TSerialized>) -> Array<string>,
 	    modify: (self: ApolloCache<TSerialized>, options: Cache_ModifyOptions) -> boolean,
 	    -- BOTTOM
@@ -441,20 +441,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 		    self: ApolloCache<TSerialized>,
 		    options: Cache_ReadQueryOptions<QueryType, TVariables>,
 		    optimistic: boolean?
-	    ) -> QueryType | nil,
+	    ) -> QueryType | null,
 	    readFragment: <FragmentType, TVariables>(
 		    self: ApolloCache<TSerialized>,
 		    options: Cache_ReadFragmentOptions<FragmentType, TVariables>,
 		    optimistic: boolean?
-	    ) -> FragmentType | nil,
+	    ) -> FragmentType | null,
 	    writeQuery: <TData, TVariables>(
 		    self: ApolloCache<TSerialized>,
 		    Cache_WriteQueryOptions<TData, TVariables>
-	    ) -> Reference | nil,
+	    ) -> Reference | null,
 	    writeFragment: <TData, TVariables>(
 		    self: ApolloCache<TSerialized>,
 		    Cache_WriteFragmentOptions<TData, TVariables>
-	    ) -> Reference | nil,
+	    ) -> Reference | null,
     }
 
 
@@ -472,7 +472,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
     const InMemoryCache = {}
     InMemoryCache.__index = InMemoryCache
 
-    -- InMemoryCache.batch = nil as any
+    -- InMemoryCache.batch = null as any
     function InMemoryCache:batch()
 	    self = self as InMemoryCachePrivate
 
@@ -519,7 +519,7 @@ type T2<X> = T1<T1<X>> & {f2: (X) -> X}
 type T3<X> = T2<T2<X>> & {f3: (X) -> X}
 type T4<X> = T3<T3<X>> & {f4: (X) -> X}
 type T5 = T4<T4<T4<string>>>
-const x: T5 = nil as any
+const x: T5 = null as any
 const y: T5 = x
 const z: string = y.f1(y).f2(y).f3(y).f4(y)
     )");
@@ -589,7 +589,7 @@ export type DeriveScopeConstructor = (<S>(Scope<S>) -> Scope<S>)
     & (<S, A, B, C, D, E, F, G, H, I, J, K>(Scope<S>, A & {}, B & {}, C & {}, D & {}, E & {}, F & {}, G & {}, H & {}, I & {}, J & {}, K & {}) -> Scope<S & A & B & C & D & E & F & G & H & I & J & K>)
     & (<S, A, B, C, D, E, F, G, H, I, J, K, L>(Scope<S>, A & {}, B & {}, C & {}, D & {}, E & {}, F & {}, G & {}, H & {}, I & {}, J & {}, K & {}, L & {}) -> Scope<S & A & B & C & D & E & F & G & H & I & J & K & L>)
 
-const deriveScopeImpl : DeriveScopeConstructor = (nil as any)
+const deriveScopeImpl : DeriveScopeConstructor = (null as any)
 
 const function innerScope<T>(
     existing: Types.Scope<T>,
@@ -607,7 +607,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_stepwise_normalization_works" * docte
         _ = if _ then {n0=# _,[_]=_,``,[function(l0,l0,l0)
         do end
         end]=_,setmetatable,[l0(_ + _)]=_,} else _(),_,_
-        _[_](_,_(coroutine,_,_,nil),_(0,_()),function()
+        _[_](_,_(coroutine,_,_,null),_(0,_()),function()
         end)
     )"));
 }
@@ -616,7 +616,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_oom_unions" * doctest::timeout(LUAU_T
 {
     LUAU_REQUIRE_ERRORS(check(R"(
         const _ = true,l0
-        _ = if _ then _ else _._,if _[_] then nil else if _ then `` else _._,...
+        _ = if _ then _ else _._,if _[_] then null else if _ then `` else _._,...
         _ = if _ then _ else if _ then `` else _.n0,true,...
         _G = if "" then _ else _.n0,_
         _ = if _[_] then _ else if _ then _ + n0 else _._,32804,...
@@ -637,7 +637,7 @@ TEST_CASE_FIXTURE(Fixture, "comparison_to_nil_when_normalization_fails_should_no
         type U = { oof: number } | { rab: number } | { zab: number }
         type TU = T & U
         const function check(t: TU): boolean
-            return t == nil
+            return t == null
         end
     )"));
 }

@@ -74,7 +74,7 @@ expectpass("class_first_arg_is_not_instance", function()
 end)
 
 expectpass("class_first_arg_is_not_instance_and_isnt_class", function()
-    assert(not class.isinstance(nil, Point))
+    assert(not class.isinstance(null, Point))
     assert(not class.isinstance(false, Point))
     assert(not class.isinstance(true, Point))
     assert(not class.isinstance("hello", Point))
@@ -83,7 +83,7 @@ expectpass("class_first_arg_is_not_instance_and_isnt_class", function()
 end)
 
 expectfail("class_second_arg_is_not_classobject", "invalid argument #2 to 'isinstance' (class expected, got string)", function()
-    class.isinstance(nil, "not a class")
+    class.isinstance(null, "not a class")
 end)
 
 expectfail("class_second_arg_is_not_classobject", "invalid argument #2 to 'isinstance' (class expected, got string)", function()
@@ -95,17 +95,17 @@ expectfail("classof raises on missing first argument", "missing argument #1", fu
 end)
 
 expectfail("classof raises on missing second argument", "missing argument #2", function()
-    class.isinstance(nil)
+    class.isinstance(null)
 end)
 
-expectpass("classof returns nil for non-classinstance values", function()
-    assert(class.classof(nil) == nil)
-    assert(class.classof(false) == nil)
-    assert(class.classof(42) == nil)
-    assert(class.classof("hello") == nil)
-    assert(class.classof({}) == nil)
+expectpass("classof returns null for non-classinstance values", function()
+    assert(class.classof(null) == null)
+    assert(class.classof(false) == null)
+    assert(class.classof(42) == null)
+    assert(class.classof("hello") == null)
+    assert(class.classof({}) == null)
     -- A class object is not itself a class instance.
-    assert(class.classof(Point) == nil)
+    assert(class.classof(Point) == null)
 end)
 
 expectfail("classof raises on missing argument", "missing argument #1", function()
@@ -328,12 +328,12 @@ end)
 expectpass("classinstance without __tostring uses default format", function ()
     b = Box.new({ item = "sword" })
     s = tostring(b)
-    assert(string.match(s, "^object:") != nil, `expected default format, got: {s}`)
+    assert(string.match(s, "^object:") != null, `expected default format, got: {s}`)
 end)
 
 expectpass("classobject tostring uses default format", function ()
     s = tostring(Point)
-    assert(string.match(s, "^class:") != nil, `expected default format, got: {s}`)
+    assert(string.match(s, "^class:") != null, `expected default format, got: {s}`)
 end)
 
 class BadToString
@@ -435,7 +435,7 @@ expectpass("instance survives GC during __index construction", function()
             if key == "a" then return 1 end
             if key == "b" then return 2 end
             if key == "c" then return 3 end
-            return nil
+            return null
         end
     })
 
@@ -540,8 +540,8 @@ expectpass("explicitly_invoke_default_constructor", function()
     assert(f.z == 1)
 end)
 
-expectpass("hoisting: read before declaration is nil", function()
-    assert(typeof(Hoisted) == "nil")
+expectpass("hoisting: read before declaration is null", function()
+    assert(typeof(Hoisted) == "null")
 end)
 
 class Hoisted
@@ -652,7 +652,7 @@ end
 expectpass("constructor_partial_init", function()
     p = Partial.new(10)
     assert(p.a == 10)
-    assert(p.b == nil)
+    assert(p.b == null)
 end)
 
 expectfail("constructor_class_not_callable", "attempt to call a class value", function()
@@ -724,12 +724,12 @@ expectpass("class inheritance basic fields and methods", function()
     assert(tostring(c) == "I am an animal. I am a Siamese cat.")
 end)
 
-expectpass("class inheritance nil fields", function()
+expectpass("class inheritance null fields", function()
     c = Cat.new({})
-    assert(c.species == nil)
-    assert(c.breed == nil)
+    assert(c.species == null)
+    assert(c.breed == null)
     assert(c:live() == "I am alive")
-    assert(tostring(c) == "I am an animal. I am a nil cat.")
+    assert(tostring(c) == "I am an animal. I am a null cat.")
 end)
 
 expectpass("class inheritance classof returns most specific class", function()
@@ -760,7 +760,7 @@ expectpass("class inheritance isinstance parent is not child", function()
 end)
 
 expectpass("class inheritance static method accessible on child", function()
-    assert(Cat.live != nil)
+    assert(Cat.live != null)
     assert(typeof(Cat.live) == "function")
     c = Cat.new({ species = "Felis catus", breed = "Tabby" })
     assert(Cat.live(c) == "I am alive")

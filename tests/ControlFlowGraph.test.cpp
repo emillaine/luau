@@ -279,7 +279,7 @@ TEST_CASE_FIXTURE(CFGFixture, "basic_join")
 TEST_CASE_FIXTURE(CFGFixture, "while_loop")
 {
     auto cfg = build(R"(
-        x = nil
+        x = null
         while not x do
             x = 5
         end
@@ -323,7 +323,7 @@ TEST_CASE_FIXTURE(CFGFixture, "while_loop")
 TEST_CASE_FIXTURE(CFGFixture, "call_expression_records_uses")
 {
     auto cfg = build(R"(
-        f = nil
+        f = null
         x = 1
         y = f(x)
     )");
@@ -401,7 +401,7 @@ TEST_SUITE_BEGIN("CFGRefinement");
 TEST_CASE_FIXTURE(CFGFixture, "if_truthy_both_branches")
 {
     auto cfg = build(R"(
-        x = nil
+        x = null
         if x then
             y = x
         else
@@ -430,7 +430,7 @@ TEST_CASE_FIXTURE(CFGFixture, "if_truthy_both_branches")
 TEST_CASE_FIXTURE(CFGFixture, "if_falsy_single_branch")
 {
     auto cfg = build(R"(
-        x = nil
+        x = null
         if not x then
             y = x
         end
@@ -454,7 +454,7 @@ TEST_CASE_FIXTURE(CFGFixture, "if_falsy_single_branch")
 TEST_CASE_FIXTURE(CFGFixture, "typeof_guard_emits_type_proposition")
 {
     auto cfg = build(R"(
-        x = nil
+        x = null
         if typeof(x) == "string" then
             y = x
         end
@@ -474,7 +474,7 @@ TEST_CASE_FIXTURE(CFGFixture, "dump_renders_type_guard_as_a_call")
     // a `typeof(x) == "string"` guard must be rendered with call syntax
     // `typeof(x-0) == "string"`, not as the malformed `x-0 typeof == "string"`.
     auto cfg = build(R"(
-        x = nil
+        x = null
         if typeof(x) == "string" then
             y = x
         end
@@ -492,7 +492,7 @@ TEST_CASE_FIXTURE(CFGFixture, "dump_renders_type_guard_as_a_call")
 TEST_CASE_FIXTURE(CFGFixture, "type_guard_inequality_flips_sense")
 {
     auto cfg = build(R"(
-        x = nil
+        x = null
         if type(x) != "string" then
             y = x
         end
@@ -509,8 +509,8 @@ TEST_CASE_FIXTURE(CFGFixture, "type_guard_inequality_flips_sense")
 TEST_CASE_FIXTURE(CFGFixture, "conjunction_emits_flow_per_side")
 {
     auto cfg = build(R"(
-        x = nil
-        y = nil
+        x = null
+        y = null
         if x and y then
             z = x
         end
@@ -534,7 +534,7 @@ TEST_CASE_FIXTURE(Fixture, "is_truthy_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const v : string? = nil
+const v : string? = null
 if v then
     const s = v
 else
@@ -542,7 +542,7 @@ else
 end
 )");
     CHECK_EQ("string", toString(requireTypeAtPosition({3, 14})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({5, 14})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({5, 14})));
     LUAU_REQUIRE_NO_ERRORS(result);
 }
 
@@ -550,14 +550,14 @@ TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const v : string? = nil
+const v : string? = null
 if not v then
     const s = v
 else
     const s = v
 end
 )");
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 14})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 14})));
     CHECK_EQ("string", toString(requireTypeAtPosition({5, 14})));
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -566,14 +566,14 @@ TEST_CASE_FIXTURE(Fixture, "parenthesized_expressions_are_followed_through")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const v : string? = nil
+const v : string? = null
 if (not v) then
     const s = v
 else
     const s = v
 end
 )");
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 14})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 14})));
     CHECK_EQ("string", toString(requireTypeAtPosition({5, 14})));
     LUAU_REQUIRE_NO_ERRORS(result);
 }
@@ -582,8 +582,8 @@ TEST_CASE_FIXTURE(Fixture, "and_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const a : string? = nil
-const b : number? = nil
+const a : string? = null
+const b : number? = null
 if a and b then
     const x = a
     const y = b
@@ -603,8 +603,8 @@ TEST_CASE_FIXTURE(Fixture, "not_and_constraint")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const a : string? = nil
-const b : number? = nil
+const a : string? = null
+const b : number? = null
 if not (a and b) then
     const x = a
     const y = b
@@ -624,7 +624,7 @@ TEST_CASE_FIXTURE(Fixture, "is_truthy_while_loop")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const v : string? = nil
+const v : string? = null
 while v do
     const s = v
 end
@@ -637,12 +637,12 @@ TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_while_loop")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const v : string? = nil
+const v : string? = null
 while not v do
     const s = v
 end
 )");
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 14})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 14})));
     LUAU_REQUIRE_NO_ERRORS(result);
 }
 
@@ -650,7 +650,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_truthy")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const foo : string? = nil
+const foo : string? = null
 assert(foo)
 const bar : string = foo
 )");
@@ -661,7 +661,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_truthy_then_type_guard")
 {
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-const a : (number | string)? = nil
+const a : (number | string)? = null
 assert(a)
 const b = a
 assert(type(a) == "number")
@@ -678,7 +678,7 @@ TEST_CASE_FIXTURE(Fixture, "interesting_refinement")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
     ScopedFastFlag sff{FFlag::DebugLuauCFG, true};
     CheckResult result = check(R"(
-x = nil
+x = null
 if not x then
     x = 0
 end

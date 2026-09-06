@@ -272,7 +272,7 @@ void toString(ToStringContext& ctx, BcFunction<BcVmConst>& function, const BcVmC
     switch (data.kind)
     {
     case BcVmConstKind::Nil:
-        append(ctx.result, "nil");
+        append(ctx.result, "null");
         break;
     case BcVmConstKind::Boolean:
         append(ctx.result, "%s", data.valueBoolean ? "true" : "false");

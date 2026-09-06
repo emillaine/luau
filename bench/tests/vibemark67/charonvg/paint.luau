@@ -61,7 +61,7 @@ function buildColorTable(stops)
         s0 = stops[si]
         s1 = stops[si + 1] or stops[si]
         range = s1.offset - s0.offset
-        t = nil
+        t = null
         if range <= 0 then
             t = 0
         else
@@ -195,7 +195,7 @@ function Paint:fetchRadial(x, y)
     b = dx * dcx + dy * dcy + self.fr * dr
     c = dx * dx + dy * dy - self.fr * self.fr
 
-    t = nil
+    t = null
     if math.abs(a) < 1e-10 then
         if math.abs(b) < 1e-10 then
             t = 0

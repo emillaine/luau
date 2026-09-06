@@ -292,14 +292,14 @@ function sphere_intersect(sphere, ray, t_min, t_max)
     c = oc_x * oc_x + oc_y * oc_y + oc_z * oc_z - sphere.radius_sq
 
     discriminant = half_b * half_b - a * c
-    if discriminant < 0 then return nil end
+    if discriminant < 0 then return null end
 
     sqrt_disc = math_sqrt(discriminant)
     inv_a = 1.0 / a
     t = (-half_b - sqrt_disc) * inv_a
     if t < t_min or t > t_max then
         t = (-half_b + sqrt_disc) * inv_a
-        if t < t_min or t > t_max then return nil end
+        if t < t_min or t > t_max then return null end
     end
 
     px = ray.origin.x + dir.x * t
@@ -328,17 +328,17 @@ function plane_new(point, normal, mat)
         point = point,
         normal = vec3_normalize(normal),
         material = mat,
-        bounds = nil -- planes have infinite extent, not in BVH
+        bounds = null -- planes have infinite extent, not in BVH
     }
 end
 
 function plane_intersect(pl, ray, t_min, t_max)
     denom = vec3_dot(pl.normal, ray.direction)
-    if math_abs(denom) < 1e-8 then return nil end
+    if math_abs(denom) < 1e-8 then return null end
 
     diff = vec3_sub(pl.point, ray.origin)
     t = vec3_dot(diff, pl.normal) / denom
-    if t < t_min or t > t_max then return nil end
+    if t < t_min or t > t_max then return null end
 
     point = ray_point_at(ray, t)
     normal = pl.normal
@@ -388,19 +388,19 @@ end
 function triangle_intersect(tri, ray, t_min, t_max)
     h = vec3_cross(ray.direction, tri.edge2)
     a = vec3_dot(tri.edge1, h)
-    if a > -1e-8 and a < 1e-8 then return nil end
+    if a > -1e-8 and a < 1e-8 then return null end
 
     f = 1.0 / a
     s = vec3_sub(ray.origin, tri.v0)
     u = f * vec3_dot(s, h)
-    if u < 0.0 or u > 1.0 then return nil end
+    if u < 0.0 or u > 1.0 then return null end
 
     q = vec3_cross(s, tri.edge1)
     v = f * vec3_dot(ray.direction, q)
-    if v < 0.0 or u + v > 1.0 then return nil end
+    if v < 0.0 or u + v > 1.0 then return null end
 
     t = f * vec3_dot(tri.edge2, q)
-    if t < t_min or t > t_max then return nil end
+    if t < t_min or t > t_max then return null end
 
     point = ray_point_at(ray, t)
     normal = tri.normal
@@ -494,15 +494,15 @@ end
 
 function bvh_build(objects)
     if #objects == 0 then
-        return nil
+        return null
     end
 
     if #objects == 1 then
         return {
             bounds = objects[1].bounds,
             object = objects[1],
-            left = nil,
-            right = nil
+            left = null,
+            right = null
         }
     end
 
@@ -510,9 +510,9 @@ function bvh_build(objects)
         combined = aabb_union(objects[1].bounds, objects[2].bounds)
         return {
             bounds = combined,
-            object = nil,
-            left = {bounds = objects[1].bounds, object = objects[1], left = nil, right = nil},
-            right = {bounds = objects[2].bounds, object = objects[2], left = nil, right = nil}
+            object = null,
+            left = {bounds = objects[1].bounds, object = objects[1], left = null, right = null},
+            right = {bounds = objects[2].bounds, object = objects[2], left = null, right = null}
         }
     end
 
@@ -556,7 +556,7 @@ function bvh_build(objects)
 
     return {
         bounds = combined,
-        object = nil,
+        object = null,
         left = left_node,
         right = right_node
     }
@@ -564,7 +564,7 @@ end
 
 -- Stack-based BVH traversal
 function bvh_intersect(node, ray, t_min, t_max)
-    if node == nil then return nil end
+    if node == null then return null end
 
     dir = ray.direction
     dir_inv = {
@@ -576,20 +576,20 @@ function bvh_intersect(node, ray, t_min, t_max)
     stack = {}
     stack_top = 1
     stack[1] = node
-    closest_hit = nil
+    closest_hit = null
     closest_t = t_max
 
     while stack_top > 0 do
         current = stack[stack_top]
         stack_top = stack_top - 1
 
-        if current.bounds == nil then
+        if current.bounds == null then
             -- skip
         else if not aabb_intersect(current.bounds, ray.origin, dir_inv, t_min, closest_t) then
             -- skip
-        else if current.object != nil then
+        else if current.object != null then
             -- Leaf node
-            hit = nil
+            hit = null
             obj = current.object
             if obj.type == "sphere" then
                 hit = sphere_intersect(obj, ray, t_min, closest_t)
@@ -627,7 +627,7 @@ function scene_new()
         lights = {},       -- point lights
         ambient = color_new(0.05, 0.05, 0.05),
         background = color_new(0.0, 0.0, 0.0),
-        bvh = nil
+        bvh = null
     }
 end
 
@@ -658,7 +658,7 @@ end
 -- ============================================================================
 
 function scene_intersect(scene, ray, t_min, t_max)
-    closest_hit = nil
+    closest_hit = null
     closest_t = t_max
 
     -- Check BVH
@@ -759,7 +759,7 @@ end
 function refract_ray(incident, normal, ior_ratio)
     cos_i = -vec3_dot(incident, normal)
     sin2_t = ior_ratio * ior_ratio * (1.0 - cos_i * cos_i)
-    if sin2_t > 1.0 then return nil end -- Total internal reflection
+    if sin2_t > 1.0 then return null end -- Total internal reflection
     cos_t = math_sqrt(1.0 - sin2_t)
     return vec3_add(
         vec3_mul(incident, ior_ratio),
@@ -815,7 +815,7 @@ function trace_ray(scene, ray, depth, max_depth)
         cos_i = -vec3_dot(ray.direction, normal)
         entering = cos_i > 0
         n = normal
-        ior_ratio = nil
+        ior_ratio = null
 
         if entering then
             ior_ratio = 1.0 / mat.ior
@@ -1163,7 +1163,7 @@ function create_icosphere(center, radius, subdivisions, mat)
         midpoint_cache = {}
 
         function get_midpoint(i1, i2)
-            key = nil
+            key = null
             if i1 < i2 then key = i1 * 10000 + i2
             else key = i2 * 10000 + i1 end
 
@@ -1486,7 +1486,7 @@ end
 
 function pattern_gradient(point, color1, color2, axis, scale)
     scale = scale or 1.0
-    t = nil
+    t = null
     if axis == "x" then t = point.x * scale
     else if axis == "y" then t = point.y * scale
     else t = point.z * scale end
@@ -1737,7 +1737,7 @@ function create_multilight_scene()
         x = 4.0 * math_cos(angle)
         z = 4.0 * math_sin(angle)
         r = (i % 3 == 0) and 0.6 or 0.4
-        mat = nil
+        mat = null
         if i % 3 == 0 then
             mat = material_diffuse(0.8, 0.2, 0.2)
         else if i % 3 == 1 then

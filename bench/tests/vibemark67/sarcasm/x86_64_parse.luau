@@ -6,7 +6,7 @@
 -- Operand model (shared with the ARM64 parser):
 --   { kind="reg",  num, width, name, rc="gpr"|"sp"|"rip", indirect=<bool?> }
 --   { kind="imm",  value, text }
---   { kind="sym",  text, reloc=<@PLT/@GOTPCREL/nil> }
+--   { kind="sym",  text, reloc=<@PLT/@GOTPCREL/null> }
 --   { kind="mem",  base=<reg?>, index=<reg?>, scale=<1|2|4|8>, dispVal=<num?>,
 --                  dispSym=<str?>, size=<bytes?>, indirect=<bool?> }
 
@@ -36,7 +36,7 @@ function classifyReg(name)
 	low = string.lower(name)
 	if low == "rip" then return { kind = "reg", rc = "rip", name = "rip", width = 64 } end
 	r = REG[low]
-	if not r then return nil end
+	if not r then return null end
 	rc = (r.num == 4) and "sp" or "gpr"  -- rsp is the stack pointer
 	return { kind = "reg", rc = rc, num = r.num, width = r.width, name = low }
 end
@@ -76,7 +76,7 @@ end
 
 -- Parse a symbol reference possibly decorated with @PLT/@GOTPCREL and +disp.
 function parseSym(text)
-	reloc = nil
+	reloc = null
 	at = string.find(text, "@", 1, true)
 	if at then reloc = string.sub(text, at + 1); text = string.sub(text, 1, at - 1) end
 	return { kind = "sym", text = text, reloc = reloc }
@@ -96,7 +96,7 @@ function parseAttOperand(field)
 	end
 	-- memory: disp(base, index, scale)  [disp and any component optional]
 	pre, inside = string.match(field, "^(.-)%((.*)%)$")
-	if inside != nil then
+	if inside != null then
 		mem = { kind = "mem", scale = 1, indirect = indirect }
 		pre = trim(pre)
 		if pre != "" then
@@ -120,13 +120,13 @@ end
 -- Intel operand -----------------------------------------------------------
 function parseIntelOperand(field)
 	indirect = false
-	size = nil
+	size = null
 	-- size specifier: BYTE PTR / WORD PTR / ...
 	sz, rest = string.match(field, "^(%a+)%s+PTR%s+(.*)$")
 	if sz and PTRSIZE[string.lower(sz)] then size = PTRSIZE[string.lower(sz)]; field = trim(rest) end
 	-- memory: optional leading disp then [ ... ]  (GAS Intel: `8[rbx]`, `[rbx+8]`, `[rip+sym]`)
 	pre, inside = string.match(field, "^(.-)%[(.*)%]$")
-	if inside != nil then
+	if inside != null then
 		mem = { kind = "mem", scale = 1, size = size }
 		pre = trim(pre)
 		if pre != "" then
@@ -188,7 +188,7 @@ function attMnemonic(m)
 	if base and ATT_SUFFIX[suf] and #base >= 2 then
 		return base, ATT_SUFFIX[suf]
 	end
-	return m, nil
+	return m, null
 end
 
 -- comments: strip `#` to end of line (not inside strings); `;!` handled separately.
@@ -205,7 +205,7 @@ end
 function splitAnnotation(s)
 	idx = string.find(s, ";!", 1, true)
 	if idx then return string.sub(s, 1, idx - 1), trim(string.sub(s, idx + 2)) end
-	return s, nil
+	return s, null
 end
 
 function x86parse.parseString(text, syntax)
@@ -235,8 +235,8 @@ function x86parse.parseString(text, syntax)
 				if string.sub(mnem, 1, 1) == "." then
 					table.insert(out, { kind = "directive", name = mnem, args = rest, raw = t })
 				else
-					opsize = nil
-					if syntax == "att" then _ = nil; _, opsize = attMnemonic(mnem) end
+					opsize = null
+					if syntax == "att" then _ = null; _, opsize = attMnemonic(mnem) end
 					ops = {}
 					for _, f in splitOperands(rest) do
 						if f != "" then

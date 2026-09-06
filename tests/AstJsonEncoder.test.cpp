@@ -58,7 +58,7 @@ TEST_SUITE_BEGIN("JsonEncoderTests");
 
 TEST_CASE("encode_constants")
 {
-    AstExprConstantNil nil{Location()};
+    AstExprConstantNil null{Location()};
     AstExprConstantBool b{Location(), true};
     AstExprConstantNumber n{Location(), 8.2};
     AstExprConstantNumber bigNum{Location(), 0.1677721600000003};
@@ -78,7 +78,7 @@ TEST_CASE("encode_constants")
     char utf8Raw[] = "e\xc3\xa9\xf0\x9f\x98\x80";
     AstExprConstantString hasUtf8{Location(), {utf8Raw, sizeof(utf8Raw) - 1}, AstExprConstantString::QuoteStyle::QuotedSimple};
 
-    CHECK_EQ(R"({"type":"AstExprConstantNil","location":"0,0 - 0,0"})", toJson(&nil));
+    CHECK_EQ(R"({"type":"AstExprConstantNil","location":"0,0 - 0,0"})", toJson(&null));
     CHECK_EQ(R"({"type":"AstExprConstantBool","location":"0,0 - 0,0","value":true})", toJson(&b));
     CHECK_EQ(R"({"type":"AstExprConstantNumber","location":"0,0 - 0,0","value":8.1999999999999993})", toJson(&n));
     CHECK_EQ(R"({"type":"AstExprConstantNumber","location":"0,0 - 0,0","value":0.16777216000000031})", toJson(&bigNum));
@@ -485,10 +485,10 @@ TEST_CASE_FIXTURE(JsonEncoderFixture, "encode_annotation")
 {
     ScopedFastFlag sff{FFlag::LuauSingleTypeOptionalPackReturnsAttributeParens, true};
 
-    AstStat* statement = expectParseStatement("type T = ((number) -> (string | nil)) & ((string) -> ())");
+    AstStat* statement = expectParseStatement("type T = ((number) -> (string | null)) & ((string) -> ())");
 
     std::string_view expected =
-        R"({"type":"AstStatTypeAlias","location":"0,0 - 0,56","name":"T","generics":[],"genericPacks":[],"value":{"type":"AstTypeIntersection","location":"0,9 - 0,56","types":[{"type":"AstTypeGroup","location":"0,9 - 0,37","inner":{"type":"AstTypeFunction","location":"0,10 - 0,36","attributes":[],"generics":[],"genericPacks":[],"argTypes":{"type":"AstTypeList","types":[{"type":"AstTypeReference","location":"0,11 - 0,17","name":"number","nameLocation":"0,11 - 0,17","parameters":[]}]},"argNames":[],"returnTypes":{"type":"AstTypePackExplicit","location":"0,22 - 0,36","typeList":{"type":"AstTypeList","types":[{"type":"AstTypeUnion","location":"0,23 - 0,35","types":[{"type":"AstTypeReference","location":"0,23 - 0,29","name":"string","nameLocation":"0,23 - 0,29","parameters":[]},{"type":"AstTypeReference","location":"0,32 - 0,35","name":"nil","nameLocation":"0,32 - 0,35","parameters":[]}]}]}}}},{"type":"AstTypeGroup","location":"0,40 - 0,56","inner":{"type":"AstTypeFunction","location":"0,41 - 0,55","attributes":[],"generics":[],"genericPacks":[],"argTypes":{"type":"AstTypeList","types":[{"type":"AstTypeReference","location":"0,42 - 0,48","name":"string","nameLocation":"0,42 - 0,48","parameters":[]}]},"argNames":[],"returnTypes":{"type":"AstTypePackExplicit","location":"0,53 - 0,55","typeList":{"type":"AstTypeList","types":[]}}}}]},"exported":false})";
+        R"({"type":"AstStatTypeAlias","location":"0,0 - 0,57","name":"T","generics":[],"genericPacks":[],"value":{"type":"AstTypeIntersection","location":"0,9 - 0,57","types":[{"type":"AstTypeGroup","location":"0,9 - 0,38","inner":{"type":"AstTypeFunction","location":"0,10 - 0,37","attributes":[],"generics":[],"genericPacks":[],"argTypes":{"type":"AstTypeList","types":[{"type":"AstTypeReference","location":"0,11 - 0,17","name":"number","nameLocation":"0,11 - 0,17","parameters":[]}]},"argNames":[],"returnTypes":{"type":"AstTypePackExplicit","location":"0,22 - 0,37","typeList":{"type":"AstTypeList","types":[{"type":"AstTypeUnion","location":"0,23 - 0,36","types":[{"type":"AstTypeReference","location":"0,23 - 0,29","name":"string","nameLocation":"0,23 - 0,29","parameters":[]},{"type":"AstTypeReference","location":"0,32 - 0,36","name":"null","nameLocation":"0,32 - 0,36","parameters":[]}]}]}}}},{"type":"AstTypeGroup","location":"0,41 - 0,57","inner":{"type":"AstTypeFunction","location":"0,42 - 0,56","attributes":[],"generics":[],"genericPacks":[],"argTypes":{"type":"AstTypeList","types":[{"type":"AstTypeReference","location":"0,43 - 0,49","name":"string","nameLocation":"0,43 - 0,49","parameters":[]}]},"argNames":[],"returnTypes":{"type":"AstTypePackExplicit","location":"0,54 - 0,56","typeList":{"type":"AstTypeList","types":[]}}}}]},"exported":false})";
     CHECK(toJson(statement) == expected);
 }
 
@@ -540,13 +540,13 @@ TEST_CASE_FIXTURE(JsonEncoderFixture, "encode_AstTypePackExplicit")
 {
     AstStatBlock* root = expectParse(R"(
         type A<T...> = () -> T...
-        const a: A<(number, string)> = nil
+        const a: A<(number, string)> = null
     )");
 
     CHECK(2 == root->body.size);
 
     std::string_view expected =
-        R"({"type":"AstStatLocal","location":"2,8 - 2,42","vars":[{"luauType":{"type":"AstTypeReference","location":"2,17 - 2,36","name":"A","nameLocation":"2,17 - 2,18","parameters":[{"type":"AstTypePackExplicit","location":"2,19 - 2,20","typeList":{"type":"AstTypeList","types":[{"type":"AstTypeReference","location":"2,20 - 2,26","name":"number","nameLocation":"2,20 - 2,26","parameters":[]},{"type":"AstTypeReference","location":"2,28 - 2,34","name":"string","nameLocation":"2,28 - 2,34","parameters":[]}]}}]},"name":"a","isConst":true,"type":"AstLocal","location":"2,14 - 2,15"}],"values":[{"type":"AstExprConstantNil","location":"2,39 - 2,42"}]})";
+        R"({"type":"AstStatLocal","location":"2,8 - 2,43","vars":[{"luauType":{"type":"AstTypeReference","location":"2,17 - 2,36","name":"A","nameLocation":"2,17 - 2,18","parameters":[{"type":"AstTypePackExplicit","location":"2,19 - 2,20","typeList":{"type":"AstTypeList","types":[{"type":"AstTypeReference","location":"2,20 - 2,26","name":"number","nameLocation":"2,20 - 2,26","parameters":[]},{"type":"AstTypeReference","location":"2,28 - 2,34","name":"string","nameLocation":"2,28 - 2,34","parameters":[]}]}}]},"name":"a","isConst":true,"type":"AstLocal","location":"2,14 - 2,15"}],"values":[{"type":"AstExprConstantNil","location":"2,39 - 2,43"}]})";
 
     CHECK(toJson(root->body.data[1]) == expected);
 }

@@ -68,7 +68,7 @@ struct ExprPrinter : AstVisitor
 
     bool visit(AstExprConstantNil*) override
     {
-        result += "nil";
+        result += "null";
         return false;
     }
 

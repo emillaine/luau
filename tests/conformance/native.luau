@@ -15,7 +15,7 @@ assert((function(x, y)
 end)(5, 10) == 50)
 
 assert((function(x)
-  oops  = nil-- split to prevent inlining
+  oops  = null-- split to prevent inlining
   function oops()
   end
 
@@ -27,7 +27,7 @@ end)("42") == 1764)
 
 function fuzzfail1(...)
   repeat
-    _ = nil
+    _ = null
   until not {}
   for _ in ... do
     for l0=_,_ do
@@ -37,7 +37,7 @@ function fuzzfail1(...)
 end
 
 function fuzzfail2()
-  _ = nil
+  _ = null
   do
     repeat
       _ = typeof(_),{_=_,}
@@ -86,11 +86,11 @@ assert(pcall(fuzzfail7, 1) == false)
 
 function fuzzfail8(...)
   _ = _,_
-  _.n0,_,_,_,_,_,_,_,_._,_,_,_[...],_,_,_ = nil
-  _,n0,_,_,_,_,_,_,_,_,l0,_,_,_,_ = nil
+  _.n0,_,_,_,_,_,_,_,_._,_,_,_[...],_,_,_ = null
+  _,n0,_,_,_,_,_,_,_,_,l0,_,_,_,_ = null
   function _()
   end
-  _._,_,_,_,_,_,_,_,_,_,_[...],_,n0[l0],_ = nil
+  _._,_,_,_,_,_,_,_,_,_,_[...],_,n0[l0],_ = null
   _[...],_,_,_,_,_,_,_,_()[_],_,_,_,_,_ = _(),...
 end
 
@@ -104,7 +104,7 @@ end
 assert(pcall(fuzzfail9) == false)
 
 function fuzzfail10()
-  _ = nil
+  _ = null
   _ = false,if _ then _ else _
   _ = not _
   l0,_[l0] = not _
@@ -142,12 +142,12 @@ end
 assert(pcall(fuzzfail14) == false)
 
 function fuzzfail15()
-  a = nil
+  a = null
   if a then
     repeat until a
   else
     b = `{a}`
-    a = nil
+    a = null
   end
 end
 
@@ -189,7 +189,7 @@ assert(pcall(fuzzfail19) == false)
 function fuzzfail20()
   assert(true)
   assert(false,(_),true)
-  _ = nil
+  _ = null
 end
 
 assert(pcall(fuzzfail20) == false)
@@ -212,7 +212,7 @@ function fuzzfail22(...)
   _ = {false,},true,...,l0
   while _ do
   _ = true,{unpack(0,_),},l0
-  _.n126 = nil
+  _.n126 = null
   _ = {not _,_=not _,n0=_,_,n0=not _,},_ < _
   return _ > _
   end
@@ -225,7 +225,7 @@ function fuzzfail23(...)
   _ = {false,},_,...,l0
   while _ do
   _ = true,{unpack(_),},l0
-  _ = {{[_]=nil,_=not _,_,true,_=nil,},not _,not _,_,bxor=- _,}
+  _ = {{[_]=null,_=not _,_,true,_=null,},not _,not _,_,bxor=- _,}
   do end
   break
   end
@@ -300,7 +300,7 @@ end
 assert(fuzzfail29() == false)
 
 function arraySizeInv1()
-  t = {1, 2, nil, nil, nil, nil, nil, nil, nil, true}
+  t = {1, 2, null, null, null, null, null, null, null, true}
 
   table.insert(t, 3)
 
@@ -310,7 +310,7 @@ end
 assert(arraySizeInv1() == true)
 
 function arraySizeInv2()
-  t = {1, 2, nil, nil, nil, nil, nil, nil, nil, true}
+  t = {1, 2, null, null, null, null, null, null, null, true}
 
   u = {a = t}
   table.insert(u.a, 3) -- aliased modifiction of 't' register through other value
@@ -331,7 +331,7 @@ function nilInvalidatesSlot()
 
   for i=1,2 do
     a = t1.x
-    t2.x = nil
+    t2.x = null
     b = t1.x
     t2.x = 1
     assert(a == 1 and b == 42)
@@ -422,11 +422,11 @@ assert(loopIteratorProtocol(0, table.create(100, 5)) == 5058)
 function valueTrackingIssue1()
   b = buffer.create(1)
   buffer.writeu8(b, 0, 0)
-  v1 = nil
+  v1 = null
 
   function closure()
     assert(type(b) == "buffer") -- b is the first upvalue
-    v1 = nil -- v1 is the second upvalue
+    v1 = null -- v1 is the second upvalue
 
     -- prevent inlining
     for i = 1, 100 do print(`{b} is {b}`) end
@@ -771,21 +771,21 @@ do
 end
 
 function splitStoreRestore(x)
-  c1 = nil; c1 = function() return 1 + x end
-  c2 = nil; c2 = function() return 2 + x end
-  c3 = nil; c3 = function() return 3 + x end
-  c4 = nil; c4 = function() return 4 + x end
-  c5 = nil; c5 = function() return 5 + x end
-  c6 = nil; c6 = function() return 6 + x end
-  c7 = nil; c7 = function() return 7 + x end
-  c8 = nil; c8 = function() return 8 + x end
-  c9 = nil; c9 = function() return 9 + x end
-  ca = nil; ca = function() return 10 + x end
-  cb = nil; cb = function() return 11 + x end
-  cc = nil; cc = function() return 12 + x end
-  cd = nil; cd = function() return 13 + x end
-  ce = nil; ce = function() return 14 + x end
-  cf = nil; cf = function() return 15 + x end
+  c1 = null; c1 = function() return 1 + x end
+  c2 = null; c2 = function() return 2 + x end
+  c3 = null; c3 = function() return 3 + x end
+  c4 = null; c4 = function() return 4 + x end
+  c5 = null; c5 = function() return 5 + x end
+  c6 = null; c6 = function() return 6 + x end
+  c7 = null; c7 = function() return 7 + x end
+  c8 = null; c8 = function() return 8 + x end
+  c9 = null; c9 = function() return 9 + x end
+  ca = null; ca = function() return 10 + x end
+  cb = null; cb = function() return 11 + x end
+  cc = null; cc = function() return 12 + x end
+  cd = null; cd = function() return 13 + x end
+  ce = null; ce = function() return 14 + x end
+  cf = null; cf = function() return 15 + x end
 
   t = {}
 

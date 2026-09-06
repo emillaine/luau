@@ -190,7 +190,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_reorder_assigns")
 TEST_CASE_FIXTURE(Fixture, "dont_reorder_function_after_assignment_to_global")
 {
     AstStatBlock* program = parse(R"(
-        f = nil
+        f = null
 
         function g()
             f()
@@ -211,7 +211,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_reorder_function_after_assignment_to_global")
 TEST_CASE_FIXTURE(Fixture, "local_functions_need_sorting_too")
 {
     AstStatBlock* program = parse(R"(
-        a = nil                       -- 0
+        a = null                       -- 0
 
         function f()                  -- 1 depends on 4
             a.c = 4
@@ -222,7 +222,7 @@ TEST_CASE_FIXTURE(Fixture, "local_functions_need_sorting_too")
         end
 
         a = {}                              -- 3
-        a.c = nil                           -- 4
+        a.c = null                           -- 4
     )");
 
     auto sorted = toposort(*program);
@@ -248,7 +248,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_force_checking_until_an_AstExprCall_needs_the_s
         function _G.C(player)
         end
 
-        const D = _G.A(nil)        -- The real dependency on A is here, where A is invoked.
+        const D = _G.A(null)        -- The real dependency on A is here, where A is invoked.
     )");
 
     auto sorted = toposort(*program);

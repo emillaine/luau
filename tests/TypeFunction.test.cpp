@@ -95,7 +95,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "function_as_fn_ret")
         return;
 
     CheckResult result = check(R"(
-        const swapper: <T>(T) -> Swap<T> = nil as any
+        const swapper: <T>(T) -> Swap<T> = null as any
         const a = swapper(123)
         const b = swapper("foo")
         const c = swapper(false)
@@ -114,7 +114,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "function_as_fn_arg")
         return;
 
     CheckResult result = check(R"(
-        const swapper: <T>(Swap<T>) -> T = nil as any
+        const swapper: <T>(Swap<T>) -> T = null as any
         const a = swapper(123)
         const b = swapper(false)
     )");
@@ -132,7 +132,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "resolve_deep_functions")
         return;
 
     CheckResult result = check(R"(
-        const x: Swap<Swap<Swap<string>>> = nil as any
+        const x: Swap<Swap<Swap<string>>> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -145,7 +145,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "unsolvable_function")
         return;
 
     CheckResult result = check(R"(
-        const impossible: <T>(Swap<T>) -> Swap<Swap<T>> = nil as any
+        const impossible: <T>(Swap<T>) -> Swap<Swap<T>> = null as any
         const a = impossible(123)
         const b = impossible(true)
     )");
@@ -161,7 +161,7 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "table_internal_functions")
         return;
 
     CheckResult result = check(R"(
-        const t: <T>({T}) -> {Swap<T>} = nil as any
+        const t: <T>({T}) -> {Swap<T>} = null as any
         const a = t({1, 2, 3})
         const b = t({"a", "b", "c"})
         const c = t({true, false, true})
@@ -180,8 +180,8 @@ TEST_CASE_FIXTURE(TypeFunctionFixture, "function_internal_functions")
         return;
 
     CheckResult result = check(R"(
-        const f0: <T>(T) -> (() -> T) = nil as any
-        const f: <T>(T) -> (() -> Swap<T>) = nil as any
+        const f0: <T>(T) -> (() -> T) = null as any
+        const f: <T>(T) -> (() -> Swap<T>) = null as any
         const a = f(1)
         const b = f("a")
         const c = f(true)
@@ -329,7 +329,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_inhabited_with_normalization"
         return;
 
     CheckResult result = check(R"(
-        const useGridConfig : any = nil as any
+        const useGridConfig : any = null as any
         const columns = useGridConfig("columns", {}) or 1
         const gutter = useGridConfig('gutter', {}) or 0
         const margin = useGridConfig('margin', {}) or 0
@@ -392,7 +392,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_single_entry_no_uniontype")
 
     CheckResult result = check(R"(
         const tbl_A = { abc = "value" }
-        const tbl_B = { a1 = nil, ["a2"] = nil }
+        const tbl_B = { a1 = null, ["a2"] = null }
 
         type keyof_A = keyof<typeof(tbl_A)>
         type keyof_B = keyof<typeof(tbl_B)>
@@ -479,7 +479,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_type_function_never_for_empty_table")
     CheckResult result = check(R"(
         type KeyofEmpty = keyof<{}>
 
-        const foo = ((nil as any) as KeyofEmpty)
+        const foo = ((null as any) as KeyofEmpty)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -577,7 +577,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawkeyof_type_function_never_for_empty_table
     CheckResult result = check(R"(
         type RawkeyofEmpty = rawkeyof<{}>
 
-        const foo = ((nil as any) as RawkeyofEmpty)
+        const foo = ((null as any) as RawkeyofEmpty)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -883,7 +883,7 @@ export Active = false
 
 function Use(Mode)
 
-	if Mode != nil then
+	if Mode != null then
 
 		if Mode == false and Active == false then
 			return
@@ -1372,7 +1372,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works_w_index_metatable
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
-    CHECK(toString(requireTypeAlias("nilType")) == "nil");
+    CHECK(toString(requireTypeAlias("nilType")) == "null");
     CHECK(toString(requireTypeAlias("numberType")) == "number?");
 }
 
@@ -1400,14 +1400,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rawget_type_function_works_w_queried_key_abs
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
-    CHECK(toString(requireTypeAlias("T")) == "nil");
+    CHECK(toString(requireTypeAlias("T")) == "null");
 }
 
 TEST_CASE_FIXTURE(Fixture, "fuzz_len_type_function_follow")
 {
     // Should not fail assertions
     check(R"(
-        const _ = nil
+        const _ = null
         _ = true
         for l0=_,_,# _ do
         end
@@ -1520,16 +1520,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "getmetatable_type_function_returns_nil_if_no
     LUAU_REQUIRE_NO_ERRORS(result);
 
     auto tableResult = requireTypeAlias("TableWithNoMetatable");
-    CHECK_EQ(toString(tableResult), "nil");
+    CHECK_EQ(toString(tableResult), "null");
 
     auto numberResult = requireTypeAlias("NumberWithNoMetatable");
-    CHECK_EQ(toString(numberResult), "nil");
+    CHECK_EQ(toString(numberResult), "null");
 
     auto booleanResult = requireTypeAlias("BooleanWithNoMetatable");
-    CHECK_EQ(toString(booleanResult), "nil");
+    CHECK_EQ(toString(booleanResult), "null");
 
     auto booleanLiteralResult = requireTypeAlias("BooleanLiteralWithNoMetatable");
-    CHECK_EQ(toString(booleanLiteralResult), "nil");
+    CHECK_EQ(toString(booleanLiteralResult), "null");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "getmetatable_returns_correct_metatable")
@@ -1681,7 +1681,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fully_dispatch_type_function_that_is_paramet
 {
     // In this test, we infer
     //
-    // (c + d) : add<add<nil, nil>, *error-type*>
+    // (c + d) : add<add<null, null>, *error-type*>
     //
     // This type function is stuck because it is parameterized on a stuck type
     // function.  The call constraint must be able to dispatch.
@@ -1690,8 +1690,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fully_dispatch_type_function_that_is_paramet
         --!strict
 
         function f()
-            const a = nil
-            const b = nil
+            const a = null
+            const b = null
 
             const c = a + b
 
@@ -2033,7 +2033,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2114_type_instantiation_on_type_function
         end
 
         function fn<T>(): id<T>
-            return nil as any
+            return null as any
         end
 
         const y = fn<<number>>()
@@ -2130,7 +2130,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_negation_of_nontestable_type_doesnt_cras
             const dn = types.negationof(types.unionof(types.newfunction(), types.number))
             return types.intersectionof(types.number, types.negationof(types.unionof(dn, types.string)))
         end
-        const x: tf<> = nil as any
+        const x: tf<> = null as any
         print(x)
     )");
 
@@ -2169,7 +2169,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2634_negation_of_nontestable_type_doesnt
             const dn = types.negationof(types.unionof(types.newfunction(), types.number))
             return types.negationof(types.unionof(dn, types.string))
         end
-        const f: tf<> = nil as any
+        const f: tf<> = null as any
         f()
     )");
 

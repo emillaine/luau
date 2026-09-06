@@ -102,7 +102,7 @@ function renderScanline(ras, ey, x1, y1, x2, y2)
 
     dx = x2 - x1
     dy = y2 - y1
-    p, first, incr = nil, nil, nil
+    p, first, incr = null, null, null
 
     if dx > 0 then
         p = (ONE_PIXEL - fx1) * dy
@@ -190,7 +190,7 @@ function renderLine(ras, fromX, fromY, toX, toY)
     if dx == 0 then
         ex = trunc(fromX)
         twoFx = fract(fromX) * 2
-        first, delta = nil, nil
+        first, delta = null, null
 
         if dy > 0 then
             first = ONE_PIXEL
@@ -231,7 +231,7 @@ function renderLine(ras, fromX, fromY, toX, toY)
         return
     end
 
-    p, first, incr = nil, nil, nil
+    p, first, incr = null, null, null
 
     if dy > 0 then
         p = (ONE_PIXEL - fy1) * dx

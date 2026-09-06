@@ -31,8 +31,8 @@ function emit.emitFip(out, tr, colorResult, render, syntax)
 	-- reset at every control-flow boundary (labels, branches, calls, prologue/epilogue).
 	avail = {}  -- spillOff -> physReg num
 	function invalidateReg(r)
-		if r == nil then return end
-		for off, reg in avail do if reg == r then avail[off] = nil end end
+		if r == null then return end
+		for off, reg in avail do if reg == r then avail[off] = null end end
 	end
 
 	for _, node in tr.fipNodes do

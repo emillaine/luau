@@ -20,15 +20,15 @@ TEST_SUITE_BEGIN("ToString");
 
 TEST_CASE_FIXTURE(Fixture, "primitive")
 {
-    CheckResult result = check("const a = nil    const b = 44    const c = 'lalala'    const d = true");
+    CheckResult result = check("const a = null    const b = 44    const c = 'lalala'    const d = true");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("nil" == toString(requireType("a")));
+        CHECK("null" == toString(requireType("a")));
     else
     {
-        // A variable without an annotation and with a nil literal should infer as 'free', not 'nil'
-        CHECK_NE("nil", toString(requireType("a")));
+        // A variable without an annotation and with a null literal should infer as 'free', not 'null'
+        CHECK_NE("null", toString(requireType("a")));
     }
 
     CHECK_EQ("number", toString(requireType("b")));
@@ -124,23 +124,23 @@ TEST_CASE_FIXTURE(Fixture, "table_respects_use_line_break")
 TEST_CASE_FIXTURE(Fixture, "nil_or_nil_is_nil_not_question_mark")
 {
     CheckResult result = check(R"(
-      type nil_ty = nil | nil
-      const a : nil_ty = nil
+      type nil_ty = null | null
+      const a : nil_ty = null
   )");
     ToStringOptions opts;
     opts.useLineBreaks = false;
-    CHECK_EQ("nil", toString(requireType("a"), opts));
+    CHECK_EQ("null", toString(requireType("a"), opts));
 }
 
 TEST_CASE_FIXTURE(Fixture, "long_disjunct_of_nil_is_nil_not_question_mark")
 {
     CheckResult result = check(R"(
-      type nil_ty = nil | nil | nil | nil | nil
-      const a : nil_ty = nil
+      type nil_ty = null | null | null | null | null
+      const a : nil_ty = null
   )");
     ToStringOptions opts;
     opts.useLineBreaks = false;
-    CHECK_EQ("nil", toString(requireType("a"), opts));
+    CHECK_EQ("null", toString(requireType("a"), opts));
 }
 
 TEST_CASE_FIXTURE(Fixture, "metatable")
@@ -495,7 +495,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_packs_are_stringified_differently_from_gener
 
 TEST_CASE_FIXTURE(Fixture, "function_type_with_argument_names")
 {
-    CheckResult result = check("type MyFunc = (a: number, string, c: number) -> string; const a : MyFunc = nil as any");
+    CheckResult result = check("type MyFunc = (a: number, string, c: number) -> string; const a : MyFunc = null as any");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     ToStringOptions opts;
@@ -521,7 +521,7 @@ tbl.a = 2
 function tbl:foo(b: number, c: number) return (self.a as number) + b + c end
 type Table = typeof(tbl)
 type Foo = typeof(tbl.foo)
-const u: Foo = nil as any
+const u: Foo = null as any
 )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -586,11 +586,11 @@ TEST_CASE_FIXTURE(Fixture, "toStringDetailed")
 TEST_CASE_FIXTURE(Fixture, "toStringErrorPack")
 {
     CheckResult result = check(R"(
-function target(callback: nil) return callback(4, "hello") end
+function target(callback: null) return callback(4, "hello") end
     )");
 
     LUAU_REQUIRE_ERRORS(result);
-    CHECK_EQ("(nil) -> (*error-type*)", toString(requireType("target")));
+    CHECK_EQ("(null) -> (*error-type*)", toString(requireType("target")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "toStringGenericPack")
@@ -656,7 +656,7 @@ TEST_CASE_FIXTURE(Fixture, "no_parentheses_around_cyclic_function_type_in_inters
 {
     CheckResult result = check(R"(
         function f() return f end
-        const a: ((number) -> ()) & typeof(f) = nil as any
+        const a: ((number) -> ()) & typeof(f) = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -830,10 +830,10 @@ TEST_CASE_FIXTURE(Fixture, "pick_distinct_names_for_mixed_explicit_and_implicit_
 TEST_CASE_FIXTURE(Fixture, "tostring_unsee_ttv_if_array")
 {
     CheckResult result = check(R"(
-        const x: {string} = nil as any
+        const x: {string} = null as any
         -- This code is constructed very specifically to use the same (by pointer
         -- identity) type in the function twice.
-        const y: (typeof(x), typeof(x)) -> () = nil as any
+        const y: (typeof(x), typeof(x)) -> () = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1047,7 +1047,7 @@ TEST_CASE_FIXTURE(Fixture, "record_type_compositions_generic")
         type Object = {}
         type Box<T> = { inner: T }
 
-        const x: Box<Object> = nil as any
+        const x: Box<Object> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(checkResult);

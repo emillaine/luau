@@ -54,10 +54,10 @@ Angles = {
 Target = 28.027;
 
 function cordicsincos(Target)
-    X = nil;
-    Y = nil;
-    TargetAngle = nil;
-    CurrAngle = nil;
+    X = null;
+    Y = null;
+    TargetAngle = null;
+    CurrAngle = null;
 
     X = FIXED(AG_CONST);         -- AG_CONST * cos(0)
     Y = 0;                       -- AG_CONST * sin(0)
@@ -65,7 +65,7 @@ function cordicsincos(Target)
     TargetAngle = FIXED(Target);
     CurrAngle = 0;
     for Step = 0,11 do
-        NewX = nil;
+        NewX = null;
         if (TargetAngle > CurrAngle) then
             NewX = X - bit32.rshift(math.floor(Y), Step) -- (Y >> Step);
             Y = bit32.rshift(math.floor(X), Step) + Y;

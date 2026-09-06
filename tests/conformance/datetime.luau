@@ -16,12 +16,12 @@ D = os.date("*t", t)
 assert(os.date(string.rep("%d", 1000), t) ==
        string.rep(os.date("%d", t), 1000))
 assert(os.date(string.rep("%", 200)) == string.rep("%", 100))
-assert(os.date("", -1) == nil)
+assert(os.date("", -1) == null)
 
-assert(os.time({ year = 1969, month = 12, day = 31, hour = 23, min = 59, sec = 59}) == nil) -- just before start
+assert(os.time({ year = 1969, month = 12, day = 31, hour = 23, min = 59, sec = 59}) == null) -- just before start
 assert(os.time({ year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = 0}) == 0) -- start
 assert(os.time({ year = 3000, month = 12, day = 31, hour = 23, min = 59, sec = 59}) == 32535215999) -- just before Windows max range
-assert(os.time({ year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = -1}) == nil) -- going before using time fields
+assert(os.time({ year = 1970, month = 1, day = 1, hour = 0, min = 0, sec = -1}) == null) -- going before using time fields
 
 assert(os.time({ year = 2000, month = 6, day = 10, hour = 0, min = 0, sec = 0}) == 960595200)
 assert(os.time({ year = 2000, month = 6, day = 10, hour = 0, min = 0, sec = -86400}) == 960508800)
@@ -72,12 +72,12 @@ checkerr("missing", os.time, {hour = 12})   -- missing date
 do
   D = os.date("*t")
   t = os.time(D)
-  if D.isdst == nil then
+  if D.isdst == null then
     print("no daylight saving information")
   else
     assert(type(D.isdst) == 'boolean')
   end
-  D.isdst = nil
+  D.isdst = null
   t1 = os.time(D)
   assert(t == t1)   -- if isdst is absent uses correct default
 end

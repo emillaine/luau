@@ -1,31 +1,31 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-callClosure = nil
-callFunction = nil
-evalArgList = nil
-evalBinop = nil
-evalCall = nil
-evalExprMulti = nil
-evalMethodCall = nil
-evalTableConstructor = nil
-evalUnop = nil
-execAssign = nil
-execBlock = nil
-execFuncDef = nil
-execGenFor = nil
-execIf = nil
-execLocal = nil
-execLocalFunc = nil
-execNumFor = nil
-execRepeat = nil
-execReturn = nil
-execStat = nil
-execWhile = nil
-interpToString = nil
-lexCountLongBracket = nil
-lexSkipLongString = nil
-parseCallArgs = nil
-parseFuncBody = nil
-parseTableConstructor = nil
+callClosure = null
+callFunction = null
+evalArgList = null
+evalBinop = null
+evalCall = null
+evalExprMulti = null
+evalMethodCall = null
+evalTableConstructor = null
+evalUnop = null
+execAssign = null
+execBlock = null
+execFuncDef = null
+execGenFor = null
+execIf = null
+execLocal = null
+execLocalFunc = null
+execNumFor = null
+execRepeat = null
+execReturn = null
+execStat = null
+execWhile = null
+interpToString = null
+lexCountLongBracket = null
+lexSkipLongString = null
+parseCallArgs = null
+parseFuncBody = null
+parseTableConstructor = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -122,7 +122,7 @@ TK_DO = "do"
 TK_FOR = "for"
 TK_IN = "in"
 TK_RETURN = "return"
-TK_NIL = "nil"
+TK_NIL = "null"
 TK_TRUE = "true"
 TK_FALSE = "false"
 TK_AND = "and"
@@ -147,7 +147,7 @@ KEYWORDS["do"] = TK_DO
 KEYWORDS["for"] = TK_FOR
 KEYWORDS["in"] = TK_IN
 KEYWORDS["return"] = TK_RETURN
-KEYWORDS["nil"] = TK_NIL
+KEYWORDS["null"] = TK_NIL
 KEYWORDS["true"] = TK_TRUE
 KEYWORDS["false"] = TK_FALSE
 KEYWORDS["and"] = TK_AND
@@ -168,13 +168,13 @@ function newLexer(source)
     lex.pos = 1
     lex.len = slen(source)
     lex.line = 1
-    lex.token = nil
-    lex.value = nil
+    lex.token = null
+    lex.value = null
     return lex
 end
 
 function lexPeekChar(lex)
-    if lex.pos > lex.len then return nil end
+    if lex.pos > lex.len then return null end
     return ssub(lex.source, lex.pos, lex.pos)
 end
 
@@ -434,7 +434,7 @@ function lexNext(lex)
     lexSkipWhitespace(lex)
     if lex.pos > lex.len then
         lex.token = TK_EOF
-        lex.value = nil
+        lex.value = null
         return
     end
     ch = ssub(lex.source, lex.pos, lex.pos)
@@ -483,36 +483,36 @@ function lexNext(lex)
 
     -- Operators and punctuation
     lex.pos = lex.pos + 1
-    if ch == "+" then lex.token = TK_PLUS; lex.value = nil
-    else if ch == "*" then lex.token = TK_STAR; lex.value = nil
-    else if ch == "%" then lex.token = TK_PERCENT; lex.value = nil
-    else if ch == "^" then lex.token = TK_CARET; lex.value = nil
-    else if ch == "#" then lex.token = TK_HASH; lex.value = nil
-    else if ch == "," then lex.token = TK_COMMA; lex.value = nil
-    else if ch == ";" then lex.token = TK_SEMI; lex.value = nil
-    else if ch == "(" then lex.token = TK_LPAREN; lex.value = nil
-    else if ch == ")" then lex.token = TK_RPAREN; lex.value = nil
-    else if ch == "{" then lex.token = TK_LBRACE; lex.value = nil
-    else if ch == "}" then lex.token = TK_RBRACE; lex.value = nil
-    else if ch == "]" then lex.token = TK_RBRACKET; lex.value = nil
-    else if ch == "[" then lex.token = TK_LBRACKET; lex.value = nil
+    if ch == "+" then lex.token = TK_PLUS; lex.value = null
+    else if ch == "*" then lex.token = TK_STAR; lex.value = null
+    else if ch == "%" then lex.token = TK_PERCENT; lex.value = null
+    else if ch == "^" then lex.token = TK_CARET; lex.value = null
+    else if ch == "#" then lex.token = TK_HASH; lex.value = null
+    else if ch == "," then lex.token = TK_COMMA; lex.value = null
+    else if ch == ";" then lex.token = TK_SEMI; lex.value = null
+    else if ch == "(" then lex.token = TK_LPAREN; lex.value = null
+    else if ch == ")" then lex.token = TK_RPAREN; lex.value = null
+    else if ch == "{" then lex.token = TK_LBRACE; lex.value = null
+    else if ch == "}" then lex.token = TK_RBRACE; lex.value = null
+    else if ch == "]" then lex.token = TK_RBRACKET; lex.value = null
+    else if ch == "[" then lex.token = TK_LBRACKET; lex.value = null
     else if ch == "-" then
-        lex.token = TK_MINUS; lex.value = nil
+        lex.token = TK_MINUS; lex.value = null
     else if ch == "/" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "/" then
             lex.pos = lex.pos + 1
-            lex.token = TK_DSLASH; lex.value = nil
+            lex.token = TK_DSLASH; lex.value = null
         else
-            lex.token = TK_SLASH; lex.value = nil
+            lex.token = TK_SLASH; lex.value = null
         end
     else if ch == "." then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "." then
             lex.pos = lex.pos + 1
             if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "." then
                 lex.pos = lex.pos + 1
-                lex.token = TK_DOTS; lex.value = nil
+                lex.token = TK_DOTS; lex.value = null
             else
-                lex.token = TK_DOTDOT; lex.value = nil
+                lex.token = TK_DOTDOT; lex.value = null
             end
         else if lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) then
             -- number starting with dot like .5
@@ -539,37 +539,37 @@ function lexNext(lex)
             lex.value = tonumber(ssub(lex.source, start, lex.pos - 1))
             lex.token = TK_NUMBER
         else
-            lex.token = TK_DOT; lex.value = nil
+            lex.token = TK_DOT; lex.value = null
         end
     else if ch == ":" then
-        lex.token = TK_COLON; lex.value = nil
+        lex.token = TK_COLON; lex.value = null
     else if ch == "=" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
-            lex.token = TK_EQ; lex.value = nil
+            lex.token = TK_EQ; lex.value = null
         else
-            lex.token = TK_ASSIGN; lex.value = nil
+            lex.token = TK_ASSIGN; lex.value = null
         end
     else if ch == "~" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
-            lex.token = TK_NEQ; lex.value = nil
+            lex.token = TK_NEQ; lex.value = null
         else
             error("unexpected character '~' at line " .. lex.line)
         end
     else if ch == "<" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
-            lex.token = TK_LE; lex.value = nil
+            lex.token = TK_LE; lex.value = null
         else
-            lex.token = TK_LT; lex.value = nil
+            lex.token = TK_LT; lex.value = null
         end
     else if ch == ">" then
         if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "=" then
             lex.pos = lex.pos + 1
-            lex.token = TK_GE; lex.value = nil
+            lex.token = TK_GE; lex.value = null
         else
-            lex.token = TK_GT; lex.value = nil
+            lex.token = TK_GT; lex.value = null
         end
     else
         error("unexpected character '" .. ch .. "' at line " .. lex.line)
@@ -619,17 +619,17 @@ function parserMatch(parser, tk)
         lexNext(parser.lex)
         return true, val
     end
-    return false, nil
+    return false, null
 end
 
 -- Forward declarations
-parseExpr = nil
-parseBlock = nil
-parseStat = nil
+parseExpr = null
+parseBlock = null
+parseStat = null
 
 function parsePrimaryExpr(parser)
     tk = parser.lex.token
-    node = nil
+    node = null
     if tk == TK_NAME then
         node = astNode("Var", {name = parser.lex.value})
         lexNext(parser.lex)
@@ -830,7 +830,7 @@ function parseBinopExpr(parser, minPrec)
         if prec < minPrec then break end
         op = tk
         lexNext(parser.lex)
-        nextMinPrec = nil
+        nextMinPrec = null
         if isRightAssoc(op) then
             nextMinPrec = prec
         else
@@ -915,7 +915,7 @@ parseStat = function(parser)
             return astNode("LocalFunc", {name = name, func = func})
         else
             names = parseNameList(parser)
-            values = nil
+            values = null
             if parserMatch(parser, TK_ASSIGN) then
                 values = parseExprList(parser)
             end
@@ -952,7 +952,7 @@ parseStat = function(parser)
             body = parseBlock(parser)
             tinsert(clauses, {cond = cond, body = body})
         end
-        elseBody = nil
+        elseBody = null
         if parserMatch(parser, TK_ELSE) then
             elseBody = parseBlock(parser)
         end
@@ -980,7 +980,7 @@ parseStat = function(parser)
             start = parseExpr(parser)
             parserExpect(parser, TK_COMMA)
             limit = parseExpr(parser)
-            step = nil
+            step = null
             if parserMatch(parser, TK_COMMA) then
                 step = parseExpr(parser)
             end
@@ -1086,18 +1086,18 @@ function envGet(env, name)
     e = env
     while e do
         v = e.vars[name]
-        if v != nil then
-            return v[1] -- stored as {value} to allow nil distinction
+        if v != null then
+            return v[1] -- stored as {value} to allow null distinction
         end
         e = e.parent
     end
-    return nil
+    return null
 end
 
 function envSet(env, name, value)
     e = env
     while e do
-        if e.vars[name] != nil then
+        if e.vars[name] != null then
             e.vars[name] = {value}
             return true
         end
@@ -1137,12 +1137,12 @@ function getMetafield(interp, val, field)
             return handler
         end
     end
-    return nil
+    return null
 end
 
 -- Arithmetic metamethod helper
 function arith(interp, op, a, b)
-    metafield = nil
+    metafield = null
     if op == "+" then metafield = "__add"
     else if op == "-" then metafield = "__sub"
     else if op == "*" then metafield = "__mul"
@@ -1155,7 +1155,7 @@ function arith(interp, op, a, b)
     if handler then
         results = callFunction(interp, handler, {a, b})
         if results and #results > 0 then return results[1] end
-        return nil
+        return null
     end
     error("attempt to perform arithmetic on a " .. type(a) .. " value")
 end
@@ -1163,34 +1163,34 @@ end
 -- Table indexing with __index metamethod
 function tableIndex(interp, tbl, key)
     val = rawget(tbl, key)
-    if val != nil then return val end
+    if val != null then return val end
     mt = interp.metatables[tbl]
     if mt then
         idx = rawget(mt, "__index")
-        if idx != nil then
+        if idx != null then
             if type(idx) == "table" then
                 return tableIndex(interp, idx, key)
             else if type(idx) == "function" or (type(idx) == "table" and idx._isClosure) then
                 results = callFunction(interp, idx, {tbl, key})
                 if results and #results > 0 then return results[1] end
-                return nil
+                return null
             end
         end
     end
-    return nil
+    return null
 end
 
 -- Table newindex with __newindex metamethod
 function tableNewIndex(interp, tbl, key, value)
     existing = rawget(tbl, key)
-    if existing != nil then
+    if existing != null then
         rawset(tbl, key, value)
         return
     end
     mt = interp.metatables[tbl]
     if mt then
         ni = rawget(mt, "__newindex")
-        if ni != nil then
+        if ni != null then
             if type(ni) == "function" or (type(ni) == "table" and ni._isClosure) then
                 callFunction(interp, ni, {tbl, key, value})
                 return
@@ -1241,7 +1241,7 @@ function callClosure(interp, closure, args)
     -- Bind parameters
     paramCount = #funcNode.params
     for i = 1, paramCount do
-        argVal = nil
+        argVal = null
         if args and i <= #args then argVal = args[i] end
         envDefine(localEnv, funcNode.params[i], argVal)
     end
@@ -1267,7 +1267,7 @@ end
 function evalExpr(interp, node, env)
     results = evalExprMulti(interp, node, env)
     if results and #results > 0 then return results[1] end
-    return nil
+    return null
 end
 
 -- Evaluate expression - returns multiple values (only for last position)
@@ -1278,7 +1278,7 @@ function evalExprMulti(interp, node, env)
     else if tag == "String" then
         return {node.value}
     else if tag == "Nil" then
-        return {nil}
+        return {null}
     else if tag == "Bool" then
         return {node.value}
     else if tag == "Dots" then
@@ -1287,7 +1287,7 @@ function evalExprMulti(interp, node, env)
         return {}
     else if tag == "Var" then
         val = envGet(env, node.name)
-        if val == nil then
+        if val == null then
             val = interp.globals[node.name]
         end
         return {val}
@@ -1329,7 +1329,7 @@ function evalUnop(interp, node, env)
         if handler then
             r = callFunction(interp, handler, {val})
             if r and #r > 0 then return r[1] end
-            return nil
+            return null
         end
         error("attempt to perform arithmetic on a " .. type(val) .. " value")
     else if op == "#" then
@@ -1339,7 +1339,7 @@ function evalUnop(interp, node, env)
             if handler then
                 r = callFunction(interp, handler, {val})
                 if r and #r > 0 then return r[1] end
-                return nil
+                return null
             end
             return #val
         end
@@ -1395,7 +1395,7 @@ function evalBinop(interp, node, env)
         if handler then
             r = callFunction(interp, handler, {left, right})
             if r and #r > 0 then return r[1] end
-            return nil
+            return null
         end
         error("attempt to concatenate a " .. type(left) .. " value")
     else if op == TK_EQ then
@@ -1470,7 +1470,7 @@ end
 
 function evalMethodCall(interp, node, env)
     obj = evalExpr(interp, node.obj, env)
-    method = nil
+    method = null
     if type(obj) == "table" then
         method = tableIndex(interp, obj, node.method)
     else
@@ -1506,10 +1506,10 @@ function evalTableConstructor(interp, node, env)
         field = fields[i]
         if field.kind == "bracket" then
             key = evalExpr(interp, field.key, env)
-            val = nil
+            val = null
             if i == #fields then
                 multi = evalExprMulti(interp, field.value, env)
-                val = multi and multi[1] or nil
+                val = multi and multi[1] or null
             else
                 val = evalExpr(interp, field.value, env)
             end
@@ -1539,13 +1539,13 @@ function evalTableConstructor(interp, node, env)
     return tbl
 end
 
--- Execute a block, return a signal or nil
+-- Execute a block, return a signal or null
 function execBlock(interp, stmts, env)
     for i = 1, #stmts do
         result = execStat(interp, stmts[i], env)
         if result then return result end
     end
-    return nil
+    return null
 end
 
 -- Execute a statement
@@ -1581,7 +1581,7 @@ function execStat(interp, node, env)
         return SIGNAL_CONTINUE
     else if tag == "ExprStat" then
         evalExprMulti(interp, node.expr, env)
-        return nil
+        return null
     else
         error("unknown statement: " .. tostring(tag))
     end
@@ -1610,19 +1610,19 @@ function execLocal(interp, node, env)
         end
     else
         for i = 1, #names do
-            envDefine(env, names[i], nil)
+            envDefine(env, names[i], null)
         end
     end
-    return nil
+    return null
 end
 
 function execLocalFunc(interp, node, env)
     -- Define name first (for recursion)
-    envDefine(env, node.name, nil)
+    envDefine(env, node.name, null)
     cl = newClosure(node.func, env, interp.globals)
     cl._isClosure = true
     envDefine(env, node.name, cl)
-    return nil
+    return null
 end
 
 function execAssign(interp, node, env)
@@ -1661,7 +1661,7 @@ function execAssign(interp, node, env)
             error("invalid assignment target: " .. tostring(target.tag))
         end
     end
-    return nil
+    return null
 end
 
 function execFuncDef(interp, node, env)
@@ -1685,16 +1685,16 @@ function execFuncDef(interp, node, env)
         end
     else
         -- Dot chain: function a.b.c()
-        obj = nil
+        obj = null
         v = envGet(env, names[1])
-        if v == nil then v = interp.globals[names[1]] end
+        if v == null then v = interp.globals[names[1]] end
         obj = v
         for i = 2, #names - 1 do
             obj = tableIndex(interp, obj, names[i])
         end
         tableNewIndex(interp, obj, names[#names], cl)
     end
-    return nil
+    return null
 end
 
 function execIf(interp, node, env)
@@ -1710,7 +1710,7 @@ function execIf(interp, node, env)
         blockEnv = newEnv(env)
         return execBlock(interp, node.elseBody, blockEnv)
     end
-    return nil
+    return null
 end
 
 function execWhile(interp, node, env)
@@ -1728,7 +1728,7 @@ function execWhile(interp, node, env)
             end
         end
     end
-    return nil
+    return null
 end
 
 function execRepeat(interp, node, env)
@@ -1749,7 +1749,7 @@ function execRepeat(interp, node, env)
             if cond and cond != false then break end
         end
     end
-    return nil
+    return null
 end
 
 function execNumFor(interp, node, env)
@@ -1782,7 +1782,7 @@ function execNumFor(interp, node, env)
         end
         i = i + stepVal
     end
-    return nil
+    return null
 end
 
 function execGenFor(interp, node, env)
@@ -1793,7 +1793,7 @@ function execGenFor(interp, node, env)
 
     while true do
         results = callFunction(interp, iterFunc, {state, control})
-        if not results or results[1] == nil then break end
+        if not results or results[1] == null then break end
         control = results[1]
         blockEnv = newEnv(env)
         for i = 1, #node.names do
@@ -1809,7 +1809,7 @@ function execGenFor(interp, node, env)
             end
         end
     end
-    return nil
+    return null
 end
 
 function execReturn(interp, node, env)
@@ -1919,11 +1919,11 @@ function setupStdlib(interp)
             mt = interp.metatables[t]
             if mt then
                 mtmt = rawget(mt, "__metatable")
-                if mtmt != nil then return mtmt end
+                if mtmt != null then return mtmt end
                 return mt
             end
         end
-        return nil
+        return null
     end
 
     G["pcall"] = function(f, ...)
@@ -1948,16 +1948,16 @@ function setupStdlib(interp)
         return function(tbl, idx)
             i = i + 1
             v = rawget(t, i)
-            if v != nil then
+            if v != null then
                 return i, v
             end
-            return nil
+            return null
         end, t, 0
     end
 
     G["pairs"] = function(t)
-        -- We return next, t, nil for generic for
-        return G["next"], t, nil
+        -- We return next, t, null for generic for
+        return G["next"], t, null
     end
 
     G["next"] = function(t, k)
@@ -2072,15 +2072,15 @@ function setupStdlib(interp)
     mathLib.log = mlog
     mathLib.exp = mexp
     mathLib.random = function(m, n)
-        if m == nil then return mrandom() end
-        if n == nil then return mrandom(m) end
+        if m == null then return mrandom() end
+        if n == null then return mrandom(m) end
         return mrandom(m, n)
     end
     G["math"] = mathLib
 end
 
 function interpToString(interp, val)
-    if val == nil then return "nil" end
+    if val == null then return "null" end
     if type(val) == "boolean" then
         if val then return "true" else return "false" end
     end
@@ -2113,7 +2113,7 @@ function runProgram(source)
     interp = newInterp()
     setupStdlib(interp)
     ast = parseProgram(source)
-    env = newEnv(nil)
+    env = newEnv(null)
     execBlock(interp, ast, env)
     return interp.output
 end
@@ -2344,9 +2344,9 @@ local function range(start, stop, step)
     return function()
         current = current + step
         if step > 0 then
-            if current > stop then return nil end
+            if current > stop then return null end
         else
-            if current < stop then return nil end
+            if current < stop then return null end
         end
         return current
     end
@@ -2357,7 +2357,7 @@ local function filter(iter, pred)
     return function()
         while true do
             local val = iter()
-            if val == nil then return nil end
+            if val == null then return null end
             if pred(val) then return val end
         end
     end
@@ -2367,7 +2367,7 @@ end
 local function map(iter, func)
     return function()
         local val = iter()
-        if val == nil then return nil end
+        if val == null then return null end
         return func(val)
     end
 end
@@ -2377,7 +2377,7 @@ local function collect(iter)
     local result = {}
     while true do
         local val = iter()
-        if val == nil then break end
+        if val == null then break end
         table.insert(result, val)
     end
     return result
@@ -2436,7 +2436,7 @@ List.__index = List
 
 function List.new()
     local self = setmetatable({}, List)
-    self.head = nil
+    self.head = null
     self.size = 0
     return self
 end
@@ -2447,7 +2447,7 @@ function List:push(val)
 end
 
 function List:pop()
-    if not self.head then return nil end
+    if not self.head then return null end
     local val = self.head.value
     self.head = self.head.next
     self.size = self.size - 1

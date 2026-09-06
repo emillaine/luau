@@ -86,7 +86,7 @@ class NBodySystem
     end
 
     function advance(self, dt)
-        dx, dy, dz, distance, mag = nil, nil, nil, nil, nil
+        dx, dy, dz, distance, mag = null, null, null, null, null
         size = #self.bodies
 
         for i=1, size do
@@ -119,7 +119,7 @@ class NBodySystem
     end
 
     function energy(self)
-        dx, dy, dz, distance = nil, nil, nil, nil
+        dx, dy, dz, distance = null, null, null, null
         e = 0.0
         size = #self.bodies
 

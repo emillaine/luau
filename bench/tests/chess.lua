@@ -344,11 +344,11 @@ function Board.fromFen(fen )
 		if p == '/' then
 			rank = rank - 1
 			file = 0
-		else if tonumber(p) != nil then
+		else if tonumber(p) != null then
 			file = file + tonumber(p)
 		else
 			pidx = PieceSymbols:find(p)
-			if pidx == nil then break end
+			if pidx == null then break end
 			b[pidx] = b[pidx]:set(rank*8+file, 1)
 			file = file + 1
 		end
@@ -356,7 +356,7 @@ function Board.fromFen(fen )
 
 
 	move, castle, ep, hm, m = string.match(fen, "^ ([bw]) ([KQkq-]*) ([a-h-][0-9]?) (%d*) (%d*)", i)
-	if move == nil then print(fen:sub(i)) end
+	if move == null then print(fen:sub(i)) end
 	b.toMove = move == 'w' and 1 or 2
 
 	if ep != "-" then
@@ -547,7 +547,7 @@ function Board:generate(idx)
 		end
 	else
 		-- Sliders (Rook, Bishop, Queen)
-		slides = nil
+		slides = null
 		if type == 1 then
 			slides = ROOK_SLIDES
 		else if type == 3 then
@@ -602,9 +602,9 @@ function Board:toString(mark )
 				-- out = out .. PieceSymbols:sub(i,i)
 				table.insert(out, UnicodePieces[i])
 			end
-			if mark != nil and mark:index(n) != 0 then
+			if mark != null and mark:index(n) != 0 then
 				table.insert(out, ')')
-			else if mark != nil and n < 63 and y < 8 and mark:index(n+1) != 0 then
+			else if mark != null and n < 63 and y < 8 and mark:index(n+1) != 0 then
 				table.insert(out, '(')
 			else
 				table.insert(out, ' ')

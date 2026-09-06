@@ -2,10 +2,10 @@
 -- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print "testing coroutines"
 
-f = nil
+f = null
 
 main = coroutine.running()
-assert(main == nil)
+assert(main == null)
 -- assert(not coroutine.resume(main))
 assert(coroutine.isyieldable()) -- note: we run this in context of a yieldable thread like all other Lua code
 --assert(not pcall(coroutine.yield))
@@ -26,7 +26,7 @@ function eqtab (t1, t2)
   end
 end
 
-_G.x = nil   -- declare x
+_G.x = null   -- declare x
 function foo (a, ...)
   x = coroutine.running()
   assert(x == f)
@@ -45,18 +45,18 @@ end
 f = coroutine.create(foo)
 assert(type(f) == "thread" and coroutine.status(f) == "suspended")
 assert(string.find(tostring(f), "thread"))
-s,a,b,c,d = nil, nil, nil, nil, nil
+s,a,b,c,d = null, null, null, null, null
 s,a,b,c,d = coroutine.resume(f, {1,2,3}, {}, {1}, {'a', 'b', 'c'})
-assert(s and a == nil and coroutine.status(f) == "suspended")
+assert(s and a == null and coroutine.status(f) == "suspended")
 s,a,b,c,d = coroutine.resume(f)
 eqtab(_G.x, {})
-assert(s and a == 1 and b == nil)
+assert(s and a == 1 and b == null)
 s,a,b,c,d = coroutine.resume(f, 1, 2, 3)
 eqtab(_G.x, {1, 2, 3})
-assert(s and a == 'a' and b == 'b' and c == 'c' and d == nil)
+assert(s and a == 'a' and b == 'b' and c == 'c' and d == null)
 s,a,b,c,d = coroutine.resume(f, "xuxu")
 eqtab(_G.x, {"xuxu"})
-assert(s and a == 1 and b == 2 and c == 3 and d == nil)
+assert(s and a == 1 and b == 2 and c == 3 and d == null)
 assert(coroutine.status(f) == "dead")
 s, a = coroutine.resume(f, "xuxu")
 assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
@@ -98,7 +98,7 @@ function filter (p, g)
   return coroutine.wrap(function ()
     while 1 do
       n = g()
-      if n == nil then return end
+      if n == null then return end
       if math.fmod(n, p) != 0 then coroutine.yield(n) end
     end
   end)
@@ -108,13 +108,13 @@ x = gen(80)
 a = {}
 while 1 do
   n = x()
-  if n == nil then break end
+  if n == null then break end
   table.insert(a, n)
   x = filter(n, x)
 end
 
 assert(a.count == 22 and a[a.count] == 79)
-x, a = nil
+x, a = null
 
 
 -- yielding across C boundaries
@@ -200,7 +200,7 @@ C[1] = x;
 
 f = x()
 assert(f() == 21 and x()() == 32 and x() == f)
-x = nil
+x = null
 collectgarbage()
 assert(C[1] == undef)
 assert(f() == 43 and f() == 53)
@@ -229,7 +229,7 @@ assert(coroutine.resume(co, co) == false)
 
 
 -- attempt to resume 'normal' coroutine
-co1, co2 = nil, nil
+co1, co2 = null, null
 co1 = coroutine.create(function () return co2() end)
 co2 = coroutine.wrap(function ()
         assert(coroutine.status(co1) == 'normal')
@@ -245,7 +245,7 @@ if not limitedstack then
   -- infinite recursion of coroutines
   a = function(a) coroutine.wrap(a)(a) end
   assert(not pcall(a, a))
-  a = nil
+  a = null
 end
 
 -- access to locals of erroneous coroutines
@@ -286,7 +286,7 @@ if not limitedstack then
     r, msg = coroutine.resume(co)
     assert(not r)
   end
-  co = nil
+  co = null
 end
 
 
@@ -326,10 +326,10 @@ do
   assert(coroutine.resume(co, "testing 'coroutine.close'"))
   assert(coroutine.status(co) == "dead")
   st, msg = coroutine.close(co)
-  assert(st and msg == nil)
+  assert(st and msg == null)
   -- also ok to close it again
   st, msg = coroutine.close(co)
-  assert(st and msg == nil)
+  assert(st and msg == null)
 
 
   -- cannot close the running coroutine
@@ -356,10 +356,10 @@ do
   assert(not st and msg == obj)
   -- after closing, no more errors
   st, msg = coroutine.close(co)
-  assert(st and msg == nil)
+  assert(st and msg == null)
 
   -- closing a coroutine that has outstanding upvalues
-  f = nil
+  f = null
   co = coroutine.create(function()
     a = 42
     f = function() return a end
@@ -369,7 +369,7 @@ do
   coroutine.resume(co)
   assert(f() == 42)
   st, msg = coroutine.close(co)
-  assert(st and msg == nil)
+  assert(st and msg == null)
   assert(f() == 42)
 
   -- closing a coroutine with a large stack
@@ -379,7 +379,7 @@ do
   end)
   assert(coroutine.resume(co))
   st, msg = coroutine.close(co)
-  assert(st and msg == nil)
+  assert(st and msg == null)
 end
 
 -- xpcall is non-yieldable
@@ -396,7 +396,7 @@ end
 do
   function test()
       coroutine.yield()
-      xpcall(test, nil) -- argument error
+      xpcall(test, null) -- argument error
   end
 
   co = coroutine.wrap(xpcall)

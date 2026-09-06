@@ -743,7 +743,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_does_not_leak_out")
 
     CHECK_EQ("Unknown type 'Foo'", toString(result.errors[0]));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({8, 29})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({8, 29})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_does_not_leak_out_breaking")
@@ -766,7 +766,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_does_not_leak_out_breaking")
 
     CHECK_EQ("Unknown type 'Foo'", toString(result.errors[0]));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({9, 43})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({9, 43})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_does_not_leak_out_continuing")
@@ -789,7 +789,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_alias_does_not_leak_out_continuing")
 
     CHECK_EQ("Unknown type 'Foo'", toString(result.errors[0]));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({9, 43})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({9, 43})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "prototyping_and_visiting_alias_has_the_same_scope")
@@ -811,9 +811,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "prototyping_and_visiting_alias_has_the_same_
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
-    CHECK_EQ("Expected this to be 'number', but got 'nil'", toString(result.errors[0]));
+    CHECK_EQ("Expected this to be 'number', but got 'null'", toString(result.errors[0]));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({8, 29})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({8, 29})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "prototyping_and_visiting_alias_has_the_same_scope_breaking")
@@ -834,9 +834,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "prototyping_and_visiting_alias_has_the_same_
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
-    CHECK_EQ("Expected this to be 'number', but got 'nil'", toString(result.errors[0]));
+    CHECK_EQ("Expected this to be 'number', but got 'null'", toString(result.errors[0]));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({9, 43})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({9, 43})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "prototyping_and_visiting_alias_has_the_same_scope_continuing")
@@ -857,9 +857,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "prototyping_and_visiting_alias_has_the_same_
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
-    CHECK_EQ("Expected this to be 'number', but got 'nil'", toString(result.errors[0]));
+    CHECK_EQ("Expected this to be 'number', but got 'null'", toString(result.errors[0]));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({9, 43})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({9, 43})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "tagged_unions")

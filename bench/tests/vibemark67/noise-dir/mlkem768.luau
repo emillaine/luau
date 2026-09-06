@@ -580,12 +580,12 @@ function mlkem.decaps(dk: buffer, c: buffer): buffer
 end
 
 -- Randomness source: injected so both a real RNG and tests can drive it.
--- Defaults to nil; callers must set mlkem.randomBytes for the non-derand API.
-mlkem.randomBytes = (nil as any) as ((n: number) -> buffer)?
+-- Defaults to null; callers must set mlkem.randomBytes for the non-derand API.
+mlkem.randomBytes = (null as any) as ((n: number) -> buffer)?
 
 function randBytes(n: number): buffer
 	rng = mlkem.randomBytes
-	assert(rng != nil, "mlkem.randomBytes must be set to use the randomized API")
+	assert(rng != null, "mlkem.randomBytes must be set to use the randomized API")
 	return rng(n)
 end
 

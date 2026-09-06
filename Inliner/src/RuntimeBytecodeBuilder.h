@@ -109,7 +109,7 @@ struct RuntimeBytecodeBuilder : public BytecodeBuilder
         switch (c->tt)
         {
         case LUA_TNIL:
-            formatAppend(result, "nil");
+            formatAppend(result, "null");
             break;
         case LUA_TBOOLEAN:
             formatAppend(result, "%s", bvalue(c) ? "true" : "false");

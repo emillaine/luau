@@ -51,7 +51,7 @@ function test()
 		V11h, V11l = IV4h, IV4l
 		V12h, V12l = bit32.bxor(IV5h, th), bit32.bxor(IV5l, tl)
 		V13h, V13l = IV6h, IV6l
-		V14h, V14l, V15h, V15l = nil, nil, nil, nil
+		V14h, V14l, V15h, V15l = null, null, null, null
 		if isLast then
 			V14h, V14l = bit32.bxor(IV7h, 0xffffffff), bit32.bxor(IV7l, 0xffffffff)
 		else

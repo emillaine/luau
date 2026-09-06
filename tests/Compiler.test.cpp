@@ -285,7 +285,7 @@ TEST_CASE("CompileError")
 
 TEST_CASE("LocalsDirectReference")
 {
-    CHECK_EQ("\n" + compileFunction0("const a = nil return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = null return a"), R"(
 LOADNIL R0
 RETURN R0 1
 )");
@@ -342,7 +342,7 @@ RETURN R0 0
 )");
 
     // can't directly call into local since foo might be used as arguments of caller
-    CHECK_EQ("\n" + compileFunction0("foo = nil foo = math.foo(foo)"), R"(
+    CHECK_EQ("\n" + compileFunction0("foo = null foo = math.foo(foo)"), R"(
 LOADNIL R0
 GETIMPORT R1 2 [math.foo]
 MOVE R2 R0
@@ -453,7 +453,7 @@ RETURN R0 -1
 
 TEST_CASE("AssignmentLocal")
 {
-    CHECK_EQ("\n" + compileFunction0("a = nil a = 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a = 2"), R"(
 LOADNIL R0
 LOADN R0 2
 RETURN R0 0
@@ -561,7 +561,7 @@ RETURN R0 1
 
 TEST_CASE("RepeatLocals")
 {
-    CHECK_EQ("\n" + compileFunction0("repeat a = nil a = 5 until a - 4 < 0 or a - 4 >= 0"), R"(
+    CHECK_EQ("\n" + compileFunction0("repeat a = null a = 5 until a - 4 < 0 or a - 4 >= 0"), R"(
 L0: LOADNIL R0
 LOADN R0 5
 SUBK R1 R0 K0 [4]
@@ -739,7 +739,7 @@ RETURN R0 1
 )");
 
     // we can't compute directly to target since that'd overwrite the local
-    CHECK_EQ("\n" + compileFunction0("a = nil a = {a} return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a = {a} return a"), R"(
 LOADNIL R0
 NEWTABLE R1 0 1
 MOVE R2 R0
@@ -1211,15 +1211,15 @@ TEST_CASE("TableSizePredictionSetMetatable")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-const t = setmetatable({}, nil)
+const t = setmetatable({}, null)
 t.field1 = 1
 t.field2 = 2
 return t
 )"),
         R"(
 NEWTABLE R1 2 0
-FASTCALL2K 61 R1 K0 L0 [nil]
-LOADK R2 K0 [nil]
+FASTCALL2K 61 R1 K0 L0 [null]
+LOADK R2 K0 [null]
 GETIMPORT R0 2 [setmetatable]
 CALL R0 2 1
 L0: LOADN R1 1
@@ -1584,8 +1584,8 @@ NEWTABLE R0 0 0
 RETURN R0 1
 )");
 
-    // codegen for a false (in this case 'nil') constant condition
-    CHECK_EQ("\n" + compileFunction0("return if nil then 10 else 20"), R"(
+    // codegen for a false (in this case 'null') constant condition
+    CHECK_EQ("\n" + compileFunction0("return if null then 10 else 20"), R"(
 LOADN R0 20
 RETURN R0 1
 )");
@@ -1690,7 +1690,7 @@ TEST_CASE("InterpStringRegisterCleanup")
 {
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-            a, b, c = nil, "um", "uh oh"
+            a, b, c = null, "um", "uh oh"
             a = `foo{42}`
             print(a)
         )"),
@@ -2000,7 +2000,7 @@ RETURN R0 2
 )");
 
     // equality comparisons
-    CHECK_EQ("\n" + compileFunction0("return nil == 1, nil != 1, nil == nil, nil != nil"), R"(
+    CHECK_EQ("\n" + compileFunction0("return null == 1, null != 1, null == null, null != null"), R"(
 LOADB R0 0
 LOADB R1 1
 LOADB R2 1
@@ -2060,7 +2060,7 @@ RETURN R0 1
 )");
 
     // local values for multiple assignments
-    CHECK_EQ("\n" + compileFunction0("const a = nil return a"), R"(
+    CHECK_EQ("\n" + compileFunction0("const a = null return a"), R"(
 LOADNIL R0
 RETURN R0 1
 )");
@@ -2111,7 +2111,7 @@ LOADB R0 0
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("return nil and 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("return null and 2"), R"(
 LOADNIL R0
 RETURN R0 1
 )");
@@ -2126,7 +2126,7 @@ LOADN R0 2
 RETURN R0 1
 )");
 
-    CHECK_EQ("\n" + compileFunction0("return nil or 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("return null or 2"), R"(
 LOADN R0 2
 RETURN R0 1
 )");
@@ -2603,7 +2603,7 @@ TEST_CASE("LoopContinueIgnoresImplicitConstant")
     // this used to crash the compiler :(
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-const _ = nil
+const _ = null
 repeat
 continue
 until not _
@@ -2731,7 +2731,7 @@ function outer(x)
     if x then
         return
     else
-        y = nil
+        y = null
         const _ = function() y = 1 end
         return
     end
@@ -2754,7 +2754,7 @@ RETURN R0 0
         "\n" + compileFunction(
                    R"(
 do
-    _ = nil
+    _ = null
     function _(...) _ += _ end
     return
 end
@@ -2779,11 +2779,11 @@ TEST_CASE("LoopContinueUntilCapture")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-a = nil a = 0
+a = null a = 0
 repeat
-    b = nil b = 0
+    b = null b = 0
     if a then
-        c = nil
+        c = null
         print(function() c = 0 end)
         if a then
             continue -- must close c but not a/b
@@ -2828,9 +2828,9 @@ RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-a = nil a = 0
+a = null a = 0
 repeat
-    b = nil b = 0
+    b = null b = 0
     if a then
         continue -- must not close a/b
     end
@@ -2913,11 +2913,11 @@ TEST_CASE("LoopContinueEarlyCleanup")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-y = nil
+y = null
 repeat
-    a, b = nil, nil
+    a, b = null, null
     do continue end
-    c, d = nil, nil
+    c, d = null, null
     function x()
         return a + b + c + d
     end
@@ -3271,7 +3271,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationGroup")
     // NOTE(2025-11-25) Limit of 1650 on VS2022 optimized build
 
     checkLimit(
-        "f = nil: " + rep("(", reps) + "nil" + rep(")", reps),
+        "f = null: " + rep("(", reps) + "null" + rep(")", reps),
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -3280,7 +3280,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationFunction")
 {
     // NOTE(2025-11-25) Limit of 2810 on VS2022 optimized build
 
-    checkLimit("f = nil: () " + rep("-> ()", reps), "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
+    checkLimit("f = null: () " + rep("-> ()", reps), "Exceeded allowed recursion depth; simplify your type annotation to make the code compile");
 }
 
 TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationTable")
@@ -3288,7 +3288,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationTable")
     // NOTE(2025-11-25) Limit of 2000 on VS2022 optimized build
 
     checkLimit(
-        "f = nil: " + rep("{x:", reps) + "nil" + rep("}", reps),
+        "f = null: " + rep("{x:", reps) + "null" + rep("}", reps),
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -3298,7 +3298,7 @@ TEST_CASE_FIXTURE(RecursionLimitFixture, "RecursionParseTypeAnnotationIntersecti
     // NOTE(2025-11-25) Limit of 1990 on VS2022 optimized build
 
     checkLimit(
-        "f = nil: " + rep("(nil & ", reps) + "nil" + rep(")", reps),
+        "f = null: " + rep("(null & ", reps) + "null" + rep(")", reps),
         "Exceeded allowed recursion depth; simplify your type annotation to make the code compile"
     );
 }
@@ -3428,7 +3428,7 @@ RETURN R0 1
 function test()
     i = 0
     while i < 5 do
-        j = nil
+        j = null
         j = i
         foo(function() return j end)
         i = i + 1
@@ -3469,7 +3469,7 @@ RETURN R1 1
 function test()
     i = 0
     repeat
-        j = nil
+        j = null
         j = i
         foo(function() return j end)
         i = i + 1
@@ -3986,7 +3986,7 @@ TEST_CASE("DebugLocals2")
     const char* source = R"(
 function foo(x)
     repeat
-        const a, b = nil, nil
+        const a, b = null, null
     until true
 end
 )";
@@ -4015,9 +4015,9 @@ TEST_CASE("DebugLocals3")
     const char* source = R"(
 function foo(x)
     repeat
-        const a, b = nil, nil
+        const a, b = null, null
         do continue end
-        const c, d = 2, nil
+        const c, d = 2, null
     until true
 end
 )";
@@ -4357,7 +4357,7 @@ return b
 TEST_CASE("AssignmentConflict")
 {
     // assignments are left to right
-    CHECK_EQ("\n" + compileFunction0("a, b = nil, nil a, b = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a, b = null, null a, b = 1, 2"), R"(
 LOADNIL R0
 LOADNIL R1
 LOADN R0 1
@@ -4366,7 +4366,7 @@ RETURN R0 0
 )");
 
     // if assignment of a local invalidates a direct register reference in later assignments, the value is assigned to a temp register first
-    CHECK_EQ("\n" + compileFunction0("a = nil a, a[1] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a, a[1] = 1, 2"), R"(
 LOADNIL R0
 LOADN R1 1
 LOADN R2 2
@@ -4376,7 +4376,7 @@ RETURN R0 0
 )");
 
     // note that this doesn't happen if the local assignment happens last naturally
-    CHECK_EQ("\n" + compileFunction0("a = nil a[1], a = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a[1], a = 1, 2"), R"(
 LOADNIL R0
 LOADN R2 1
 LOADN R1 2
@@ -4386,7 +4386,7 @@ RETURN R0 0
 )");
 
     // this will happen if assigned register is used in any table expression, including as an object...
-    CHECK_EQ("\n" + compileFunction0("a = nil a, a.foo = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a, a.foo = 1, 2"), R"(
 LOADNIL R0
 LOADN R1 1
 LOADN R2 2
@@ -4396,7 +4396,7 @@ RETURN R0 0
 )");
 
     // ... or a table index ...
-    CHECK_EQ("\n" + compileFunction0("a = nil a, foo[a] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a, foo[a] = 1, 2"), R"(
 LOADNIL R0
 GETIMPORT R1 1 [foo]
 LOADN R2 1
@@ -4407,7 +4407,7 @@ RETURN R0 0
 )");
 
     // ... or both ...
-    CHECK_EQ("\n" + compileFunction0("a = nil a, a[a] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a, a[a] = 1, 2"), R"(
 LOADNIL R0
 LOADN R1 1
 LOADN R2 2
@@ -4417,7 +4417,7 @@ RETURN R0 0
 )");
 
     // ... or both with two different locals ...
-    CHECK_EQ("\n" + compileFunction0("a, b = nil, nil a, b, a[b] = 1, 2, 3"), R"(
+    CHECK_EQ("\n" + compileFunction0("a, b = null, null a, b, a[b] = 1, 2, 3"), R"(
 LOADNIL R0
 LOADNIL R1
 LOADN R2 1
@@ -4431,7 +4431,7 @@ RETURN R0 0
 
     // however note that if it participates in an expression on the left hand side, there's no point reassigning it since we'd compute the expr value
     // into a temp register
-    CHECK_EQ("\n" + compileFunction0("a = nil a, foo[a + 1] = 1, 2"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a, foo[a + 1] = 1, 2"), R"(
 LOADNIL R0
 GETIMPORT R1 1 [foo]
 ADDK R2 R0 K2 [1]
@@ -4482,7 +4482,7 @@ RETURN R1 -1
 )");
 
     // mutating the local in the script breaks the optimization
-    CHECK_EQ("\n" + compileFunction0("abs = math.abs abs = nil return abs(-5)"), R"(
+    CHECK_EQ("\n" + compileFunction0("abs = math.abs abs = null return abs(-5)"), R"(
 GETIMPORT R0 2 [math.abs]
 LOADNIL R0
 MOVE R1 R0
@@ -4841,10 +4841,10 @@ TEST_CASE("OutOfLocals")
 
     for (int i = 0; i < 200; ++i)
     {
-        formatAppend(source, "const foo%d = nil\n", i);
+        formatAppend(source, "const foo%d = null\n", i);
     }
 
-    source += "const bar = nil\n";
+    source += "const bar = null\n";
 
     Luau::CompileOptions options;
     options.debugLevel = 2; // make sure locals aren't elided by requesting their debug info
@@ -4869,7 +4869,7 @@ TEST_CASE("OutOfUpvalues")
 
     for (int i = 0; i < 150; ++i)
     {
-        formatAppend(source, "foo%d = nil\n", i);
+        formatAppend(source, "foo%d = null\n", i);
         formatAppend(source, "foo%d = 42\n", i);
     }
 
@@ -4877,7 +4877,7 @@ TEST_CASE("OutOfUpvalues")
 
     for (int i = 0; i < 150; ++i)
     {
-        formatAppend(source, "bar%d = nil\n", i);
+        formatAppend(source, "bar%d = null\n", i);
         formatAppend(source, "bar%d = 42\n", i);
     }
 
@@ -5326,7 +5326,7 @@ L1: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 const obj = ...
-const b = nil == obj
+const b = null == obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5354,7 +5354,7 @@ L1: RETURN R0 0
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 const obj = ...
-const b = nil != obj
+const b = null != obj
 )"),
         R"(
 GETVARARGS R0 1
@@ -5897,7 +5897,7 @@ RETURN R0 0
 
 TEST_CASE("ConstantsNoFolding")
 {
-    const char* source = "return nil, true, 42, 'hello'";
+    const char* source = "return null, true, 42, 'hello'";
 
     Luau::BytecodeBuilder bcb;
     bcb.setDumpFlags(Luau::BytecodeBuilder::Dump_Code);
@@ -7255,7 +7255,7 @@ function foo(a)
 end
 
 x = ...
-x = nil
+x = null
 const y = foo(x)
 return y
 )",
@@ -7439,7 +7439,7 @@ function foo(a)
     return function() return a end
 end
 
-x = nil x = 42
+x = null x = 42
 const y = foo(x)
 return y
 )",
@@ -7521,7 +7521,7 @@ RETURN R2 1
                    R"(
 function foo(a)
     if not a then
-        b = nil b = 42
+        b = null b = 42
         return function() return b end
     end
 end
@@ -7553,7 +7553,7 @@ RETURN R3 2
 
 TEST_CASE("InlineFallthrough")
 {
-    // if the function doesn't return, we still fill the results with nil
+    // if the function doesn't return, we still fill the results with null
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
@@ -8129,7 +8129,7 @@ TEST_CASE("InlineExprIndexK")
         "\n" + compileFunction(
                    R"(
 _ = function(l0)
-_ = nil
+_ = null
 while _(_)[_] do
 end
 end
@@ -8140,7 +8140,7 @@ for l0=0,8 do
 end
 end
 else if _ then
-_ = nil
+_ = null
 do
 for l0=0,8 do
 return true
@@ -8937,8 +8937,8 @@ function perform(name, valueType, updateFunction)
 end
 
 function performAll()
-    perform("InitialElevation", "NumberValue", nil)
-    perform("InitialDistance", "NumberValue", nil)
+    perform("InitialElevation", "NumberValue", null)
+    perform("InitialDistance", "NumberValue", null)
 
     print("done");
 end
@@ -10214,7 +10214,7 @@ return
     bit32.extract(-1, 31),
     bit32.replace(100, 1, 0),
     math.log(100, 10),
-    typeof(nil),
+    typeof(null),
     type(vector.create(1, 0, 0)),
     (type("fin")),
     math.isnan(0/0),
@@ -10278,7 +10278,7 @@ LOADN R46 8
 LOADN R47 1
 LOADN R48 101
 LOADN R49 2
-LOADK R50 K3 ['nil']
+LOADK R50 K3 ['null']
 LOADK R51 K4 ['vector']
 LOADK R52 K5 ['string']
 LOADB R53 1
@@ -10594,7 +10594,7 @@ TEST_CASE("MultipleAssignments")
     // order of assignments is left to right
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        a, b = nil, nil
+        a, b = null, null
         a, b = f(1), f(2)
     )"),
         R"(
@@ -10615,7 +10615,7 @@ RETURN R0 0
     // this includes table assignments
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-        const t = nil
+        const t = null
         t[1], t[2] = 3, 4
     )"),
         R"(
@@ -10801,7 +10801,7 @@ RETURN R0 0
 )"
     );
 
-    // multiple assignments with multcall handling - foo evaluates to a single argument so all remaining locals are assigned to nil
+    // multiple assignments with multcall handling - foo evaluates to a single argument so all remaining locals are assigned to null
     // note that here we don't assign the locals directly, as this case is very rare so we use the similar code path as above
     CHECK_EQ(
         "\n" + compileFunction0(R"(
@@ -10919,23 +10919,23 @@ L0: RETURN R1 -1
 
 TEST_CASE("SkipSelfAssignment")
 {
-    CHECK_EQ("\n" + compileFunction0("a = nil a = a"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a = a"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("a = nil a = a as number"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a = a as number"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
 
-    CHECK_EQ("\n" + compileFunction0("a = nil a = (((a)))"), R"(
+    CHECK_EQ("\n" + compileFunction0("a = null a = (((a)))"), R"(
 LOADNIL R0
 RETURN R0 0
 )");
 
     // Keep it on optimization level 0
-    CHECK_EQ("\n" + compileFunction("a = nil a = a", 0, 0), R"(
+    CHECK_EQ("\n" + compileFunction("a = null a = a", 0, 0), R"(
 LOADNIL R0
 MOVE R0 R0
 RETURN R0 0
@@ -11083,7 +11083,7 @@ L0: RETURN R0 1
     );
 
     // some builtins are not variadic and have a fixed number of arguments but are not none-safe, meaning that we can't replace calls that may
-    // return none with calls that will return nil
+    // return none with calls that will return null
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
@@ -11360,23 +11360,23 @@ TEST_CASE("TypeUnionIntersection")
 {
     CHECK_EQ(
         "\n" + compileTypeTable(R"(
-function myfunc(test: string | nil, foo: nil)
+function myfunc(test: string | null, foo: null)
 end
 
-function myfunc2(test: string & nil, foo: nil)
+function myfunc2(test: string & null, foo: null)
 end
 
-function myfunc3(test: string | number, foo: nil)
+function myfunc3(test: string | number, foo: null)
 end
 
-function myfunc4(test: string & number, foo: nil)
+function myfunc4(test: string & number, foo: null)
 end
 )"),
         R"(
-0: function(string?, nil)
-1: function(any, nil)
-2: function(any, nil)
-3: function(any, nil)
+0: function(string?, null)
+1: function(any, null)
+2: function(any, null)
+3: function(any, null)
 )"
     );
 }
@@ -11385,15 +11385,15 @@ TEST_CASE("TypeGroup")
 {
     CHECK_EQ(
         "\n" + compileTypeTable(R"(
-function myfunc(test: (string), foo: nil)
+function myfunc(test: (string), foo: null)
 end
 
-function myfunc2(test: (string | nil), foo: nil)
+function myfunc2(test: (string | null), foo: null)
 end
 )"),
         R"(
-0: function(string, nil)
-1: function(string?, nil)
+0: function(string, null)
+1: function(string?, null)
 )"
     );
 }
@@ -12278,7 +12278,7 @@ TEST_CASE("ClassDeclHoistingForwardWriteProducesError")
         class Point
         public x
         end
-        Point = nil
+        Point = null
     )";
 
     try
@@ -12862,7 +12862,7 @@ RETURN R1 1
     // and with falsy left
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-const t = { a = nil, b = 42 }
+const t = { a = null, b = 42 }
 return t.a and t.b
 )"),
         R"(
@@ -12875,7 +12875,7 @@ RETURN R1 1
     // nested
     CHECK_EQ(
         "\n" + compileFunction0(R"(
-const t = { a = nil, b = false, c = 99 }
+const t = { a = null, b = false, c = 99 }
 return t.a or t.b or t.c
 )"),
         R"(
@@ -13511,7 +13511,7 @@ TEST_CASE("ExtendShadowedClass")
     CHECK_EQ(
         "\n" + compileFunction0(R"(
 class _ end
-const _ = nil
+const _ = null
 class l0 extends _
 end
 )"),
@@ -13602,7 +13602,7 @@ TEST_CASE("IfLocalElse")
             if const x = getValue() then
                 print(x)
             else
-                print("nil")
+                print("null")
             end
         )"),
         R"(
@@ -13614,7 +13614,7 @@ MOVE R2 R0
 CALL R1 1 0
 RETURN R0 0
 L0: GETIMPORT R0 3 [print]
-LOADK R1 K4 ['nil']
+LOADK R1 K4 ['null']
 CALL R0 1 0
 RETURN R0 0
 )"
@@ -13632,7 +13632,7 @@ TEST_CASE("IfLocalElseif")
             else if const x = getValue2() then
                 print(-x)
             else
-                print("nil")
+                print("null")
             end
         )"),
         R"(
@@ -13651,7 +13651,7 @@ MINUS R2 R0
 CALL R1 1 0
 RETURN R0 0
 L1: GETIMPORT R0 3 [print]
-LOADK R1 K6 ['nil']
+LOADK R1 K6 ['null']
 CALL R0 1 0
 RETURN R0 0
 )"
@@ -13692,7 +13692,7 @@ TEST_CASE("IfLocalElseTrailingCode")
             if const x = getValue() then
                 print(x)
             else
-                print("nil")
+                print("null")
             end
             print("after")
         )"),
@@ -13705,7 +13705,7 @@ MOVE R2 R0
 CALL R1 1 0
 JUMP L1
 L0: GETIMPORT R0 3 [print]
-LOADK R1 K4 ['nil']
+LOADK R1 K4 ['null']
 CALL R0 1 0
 L1: GETIMPORT R0 3 [print]
 LOADK R1 K5 ['after']
@@ -13724,7 +13724,7 @@ TEST_CASE("IfLocalThenReturns")
             if const x = getValue() then
                 return x
             else
-                print("nil")
+                print("null")
             end
         )"),
         R"(
@@ -13733,7 +13733,7 @@ CALL R0 0 1
 JUMPIFNOT R0 L0
 RETURN R0 1
 L0: GETIMPORT R0 3 [print]
-LOADK R1 K4 ['nil']
+LOADK R1 K4 ['null']
 CALL R0 1 0
 RETURN R0 0
 )"
@@ -13857,8 +13857,8 @@ TEST_CASE("IfLocalEarlyTerminateNoClose")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-            f = nil
-            x = nil
+            f = null
+            x = null
             for i = 1, 10 do
                 if const y = foo() then
                     x = y

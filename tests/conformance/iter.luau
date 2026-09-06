@@ -4,18 +4,18 @@ print('testing iteration')
 
 -- basic for loop tests
 do
-  a = nil
+  a = null
   for a,b in pairs{} do error("not here") end
   for i=1,0 do error("not here") end
   for i=0,1,-1 do error("not here") end
-  a = nil; for i=1,1 do assert(not a); a=1 end; assert(a)
-  a = nil; for i=1,1,-1 do assert(not a); a=1 end; assert(a)
+  a = null; for i=1,1 do assert(not a); a=1 end; assert(a)
+  a = null; for i=1,1,-1 do assert(not a); a=1 end; assert(a)
   a = 0; for i=0, 1, 0.1 do a=a+1 end; assert(a==11)
 end
 
 -- precision tests for for loops
 do
-  a = nil
+  a = null
   --a = 0; for i=1, 0, -0.01 do a=a+1 end; assert(a==101)
   a = 0; for i=0, 0.999999999, 0.1 do a=a+1 end; assert(a==10)
   a = 0; for i=1, 1, 1 do a=a+1 end; assert(a==1)
@@ -42,13 +42,13 @@ do
                n = n-1
                return n, unpack(t)
              end
-           end, nil, n
+           end, null, n
   end
 
   x = 0
   for n,a,b,c,d in f(5,3) do
     x = x+1
-    assert(a == 10 and b == 20 and c == 30 and d == nil)
+    assert(a == 10 and b == 20 and c == 30 and d == null)
   end
   assert(x == 5)
 end
@@ -59,7 +59,7 @@ do
   setmetatable(f, { __call = function(_, _, n) if n > 0 then return n - 1 end end })
 
   x = 0
-  for n in f, nil, 5 do
+  for n in f, null, 5 do
     x += n
   end
   assert(x == 10)
@@ -71,7 +71,7 @@ do
   getmetatable(f).__call = function(_, _, n) if n > 0 then return n - 1 end end
 
   x = 0
-  for n in f, nil, 5 do
+  for n in f, null, 5 do
     x += n
   end
   assert(x == 10)
@@ -89,7 +89,7 @@ end
 -- generic for with pairs with holes
 do
   x = 0
-  for k, v in pairs({1, 2, 3, nil, 5}) do
+  for k, v in pairs({1, 2, 3, null, 5}) do
     x += v
   end
   assert(x == 11)
@@ -98,7 +98,7 @@ end
 -- generic for with ipairs
 do
   x = 0
-  for k, v in ipairs({1, 2, 3, nil, 5}) do
+  for k, v in ipairs({1, 2, 3, null, 5}) do
     x += v
   end
   assert(x == 6)
@@ -147,7 +147,7 @@ end
 -- generic for with tables (arrays)
 do
   x = ''
-  for k, v in {1, 2, 3, nil, 5} do
+  for k, v in {1, 2, 3, null, 5} do
     x ..= tostring(v)
   end
   assert(x == "1235")
@@ -156,7 +156,7 @@ end
 -- generic for with tables (mixed)
 do
   x = 0
-  for k, v in {1, 2, 3, nil, 5, a = 1, b = 2, c = 3} do
+  for k, v in {1, 2, 3, null, 5, a = 1, b = 2, c = 3} do
     x += v
   end
   assert(x == 17)
@@ -174,7 +174,7 @@ do
   setmetatable(obj, { __iter = function() end })
 
   ok, err = pcall(function() for x in obj do end end)
-  assert(not ok and err:match("attempt to call a nil value"))
+  assert(not ok and err:match("attempt to call a null value"))
 end
 
 -- it's okay to iterate through a table with a single variable
@@ -186,12 +186,12 @@ do
   assert(x == 15)
 end
 
--- all extra variables should be set to nil during builtin traversal
+-- all extra variables should be set to null during builtin traversal
 do
   x = 0
   for k,v,a,b,c,d,e in {1, 2, 3, 4, 5} do
     x += k
-    assert(a == nil and b == nil and c == nil and d == nil and e == nil)
+    assert(a == null and b == null and c == null and d == null and e == null)
   end
   assert(x == 15)
 end
@@ -200,7 +200,7 @@ end
 do
   function yielding_iter(state, index)
     if index >= state then
-      return nil
+      return null
     end
     coroutine.yield()
     return index + 1, index + 1
@@ -216,7 +216,7 @@ do
 
   for i = 1, 4 do
     ok, val = coroutine.resume(co)
-    assert(ok and val == nil) -- yield produces no values
+    assert(ok and val == null) -- yield produces no values
   end
 
   ok, val = coroutine.resume(co)
@@ -234,7 +234,7 @@ do
     i = 0
     return function()
       i += 1
-      if i > keys.count then return nil end
+      if i > keys.count then return null end
       coroutine.yield()
       return keys[i], t[keys[i]]
     end
@@ -260,7 +260,7 @@ end
 -- yielding generalized iteration: iterator yields multiple times per call
 do
   function multi_yield_iter(max, index)
-    if index >= max then return nil end
+    if index >= max then return null end
     coroutine.yield("first")
     coroutine.yield("second")
     return index + 1
@@ -274,7 +274,7 @@ do
     return sum
   end)
 
-  -- 3 successful iterations yield twice each; the 4th call returns nil without yielding
+  -- 3 successful iterations yield twice each; the 4th call returns null without yielding
   yields = {}
   while coroutine.status(co) != "dead" do
     ok, val = coroutine.resume(co)
@@ -288,11 +288,11 @@ do
   assert(yields[7] == 6) -- final return value is the sum
 end
 
--- yielding generalized iteration: empty iteration (iterator returns nil immediately)
+-- yielding generalized iteration: empty iteration (iterator returns null immediately)
 do
   function empty_iter()
     coroutine.yield("before")
-    return nil
+    return null
   end
 
   co = coroutine.create(function()
@@ -317,7 +317,7 @@ do
       i = 0
       return function()
         i += 1
-        if i > 3 then return nil end
+        if i > 3 then return null end
         coroutine.yield(i)
         return i, i * 10
       end
@@ -349,7 +349,7 @@ do
       i = 0
       return function()
         i += 1
-        if i > n then return nil end
+        if i > n then return null end
         coroutine.yield()
         return i
       end
@@ -375,7 +375,7 @@ do
   co = coroutine.create(function()
     last = 0
     function iter(max, index)
-      if index >= max then return nil end
+      if index >= max then return null end
       coroutine.yield()
       return index + 1
     end
@@ -400,7 +400,7 @@ end
 do
   co = coroutine.create(function()
     function yiter(n, i)
-      if i >= n then return nil end
+      if i >= n then return null end
       coroutine.yield()
       return i + 1
     end
@@ -451,7 +451,7 @@ do
     i = 0
     function iter()
       i += 1
-      if i > 3 then return nil end
+      if i > 3 then return null end
       coroutine.yield("yielded " .. i)
       return i
     end
@@ -474,7 +474,7 @@ end
 -- yielding generalized iteration: error from yielding iterator propagates correctly
 do
   function err_iter(max, i)
-    if i >= max then return nil end
+    if i >= max then return null end
     coroutine.yield()
     if i == 1 then
       error("iterator broke")
@@ -501,7 +501,7 @@ end
 -- yielding generalized iteration: pcall catches error from yielding iterator
 do
   function err_iter(max, i)
-    if i >= max then return nil end
+    if i >= max then return null end
     coroutine.yield()
     error("pcall test error")
   end
@@ -525,7 +525,7 @@ end
 do
   callable = setmetatable({}, {
     __call = function(self, state, index)
-      if index >= state then return nil end
+      if index >= state then return null end
       coroutine.yield(index)
       return index + 1, (index + 1) * 100
     end
@@ -555,9 +555,9 @@ end
 -- yielding generalized iteration: check that C call limit is respected
 if not limitedstack then
   function recursive_iter(_, i)
-    if i >= 1 then return nil end
+    if i >= 1 then return null end
     sum = 0
-    for v in recursive_iter, nil, 0 do
+    for v in recursive_iter, null, 0 do
       sum += 1
     end
     return i + 1
@@ -565,7 +565,7 @@ if not limitedstack then
 
   co = coroutine.create(function()
     ok, msg = pcall(function()
-      for v in recursive_iter, nil, 0 do end
+      for v in recursive_iter, null, 0 do end
     end)
     assert(not ok)
     assert(string.find(msg, "stack overflow"))
@@ -578,7 +578,7 @@ end
 
 -- call stack relocation test
 do
-  function iter() coroutine.yield() return nil end
+  function iter() coroutine.yield() return null end
   function recurse() for _ in iter do end recurse() end
   co = coroutine.create(function() pcall(recurse) end)
   while coroutine.status(co) != "dead" do coroutine.resume(co) end

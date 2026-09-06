@@ -21,7 +21,7 @@ function classifyType(tok: string): number?
 	tok = (string.gsub(tok, "^%s*(.-)%s*$", "%1"))
 	low = string.lower(tok)
 	if low == "void" or low == "" then
-		return nil
+		return null
 	end
 	if low == "ptr" or string.find(low, "%*") then
 		return TYPE_PTR
@@ -81,14 +81,14 @@ function sig.parseSignature(ann: string)
 	end
 	retTypes = {}
 	rc = classifyType(retStr)
-	if rc != nil then
+	if rc != null then
 		table.insert(retTypes, rc)
 	end
 	argTypes = {}
 	for _, a in splitArgs(argStr) do
 		c = classifyType(a)
 		-- void as a lone arg means no args
-		if c != nil then
+		if c != null then
 			table.insert(argTypes, c)
 		end
 	end

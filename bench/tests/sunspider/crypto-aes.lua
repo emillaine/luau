@@ -219,7 +219,7 @@ function AESEncryptCtr(plaintext, password, nBits)
     cipherCntr = Cipher(counterBlock, keySchedule);  -- -- encrypt counter block --
     
     -- calculate length of final block:
-    blockLength = nil
+    blockLength = null
     
     if b<blockCount-1 then
       blockLength = blockSize;

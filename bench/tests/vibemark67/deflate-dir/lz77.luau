@@ -29,7 +29,7 @@ function findMatch(data: {number}, pos: number, head: {number}, prev: {number}, 
     dataLen = #data
     maxLen = math.min(MAX_MATCH, dataLen - pos + 1)
 
-    if maxLen < MIN_MATCH then return nil end
+    if maxLen < MIN_MATCH then return null end
 
     hash = hashFunc(data, pos)
     chainPos = head[hash + 1]
@@ -57,7 +57,7 @@ function findMatch(data: {number}, pos: number, head: {number}, prev: {number}, 
     if bestLen >= MIN_MATCH then
         return {length = bestLen, distance = bestDist}
     end
-    return nil
+    return null
 end
 
 function compress(data: {number}): {LZ77Token}
@@ -68,13 +68,13 @@ function compress(data: {number}): {LZ77Token}
     dataLen = #data
 
     while pos <= dataLen do
-        match = nil
+        match = null
         if pos + MIN_MATCH - 1 <= dataLen then
             match = findMatch(data, pos, head, prev, 64)
         end
 
         if match then
-            table.insert(tokens, {literal = nil, match = match})
+            table.insert(tokens, {literal = null, match = match})
             for i = 0, match.length - 1 do
                 if pos + i + 2 <= dataLen then
                     hash = hashFunc(data, pos + i)
@@ -85,7 +85,7 @@ function compress(data: {number}): {LZ77Token}
             end
             pos += match.length
         else
-            table.insert(tokens, {literal = data[pos], match = nil})
+            table.insert(tokens, {literal = data[pos], match = null})
             if pos + 2 <= dataLen then
                 hash = hashFunc(data, pos)
                 idx = ((pos - 1) % WINDOW_SIZE) + 1

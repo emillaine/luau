@@ -3023,7 +3023,7 @@ function knuth_plass_break(items, line_lengths, options)
 
     -- Active node list
     active = {
-        Breakpoint.new(0, 0, 1, 0, 0, 0, 0, nil, 0)
+        Breakpoint.new(0, 0, 1, 0, 0, 0, 0, null, 0)
     }
 
     function get_line_length(line_num)
@@ -3099,7 +3099,7 @@ function knuth_plass_break(items, line_lengths, options)
                             pen = item.penalty
                         end
 
-                        demerits = nil
+                        demerits = null
                         if pen >= 0 then
                             demerits = (1 + badness + pen) * (1 + badness + pen)
                         else if pen > Penalty.NEG_INFINITY then
@@ -3250,7 +3250,7 @@ function ParagraphLayout:build_items(text)
     end
 
     i = 1
-    word_start = nil
+    word_start = null
     in_word = false
 
     while i <= text_len do
@@ -3365,7 +3365,7 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
     for b = 1, #breaks do
         bp = breaks[b]
         line_num = b
-        target_width = nil
+        target_width = null
         if type(line_lengths) == "number" then
             target_width = line_lengths
         else if type(line_lengths) == "table" then
@@ -3483,7 +3483,7 @@ function PageLayout.new(options)
         margin_left = options.margin_left or 4000,
         margin_right = options.margin_right or 4000,
         pages = {},
-        current_page = nil,
+        current_page = null,
         current_y = 0,
     }, PageLayout)
 end

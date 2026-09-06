@@ -31,8 +31,8 @@ function test()
 --require"julia" local f=f
 
 io=io
-root,exterior = nil, nil
-cx,cy = nil, nil
+root,exterior = null, null
+cx,cy = null, null
 Rxmin,Rxmax,Rymin,Rymax=-2.0,2.0,-2.0,2.0
 white=1.0
 black=0.0
@@ -82,7 +82,7 @@ function f(xmin,xmax,ymin,ymax)
 end
 
 function outside(xmin,xmax,ymin,ymax)
-	x,y = nil, nil
+	x,y = null, null
 	if 0.0<xmin then x=xmin else if 0.0<xmax then x=0.0 else x=xmax end
 	if 0.0<ymin then y=ymin else if 0.0<ymax then y=0.0 else y=ymax end
 	return x^2+y^2>4.0
@@ -94,7 +94,7 @@ function inside(xmin,xmax,ymin,ymax)
 end
 
 function newcell()
-	return {nil,nil,nil,nil,color=gray}
+	return {null,null,null,null,color=gray}
 end
 
 function addedge(a,b)
@@ -104,7 +104,7 @@ end
 
 function refine(q)
 	if q.color==gray then
-		if q[1]==nil then
+		if q[1]==null then
 			q[1]=newcell()
 			q[2]=newcell()
 			q[3]=newcell()
@@ -119,7 +119,7 @@ function refine(q)
 end
 
 function clip(q,xmin,xmax,ymin,ymax,o,oxmin,oxmax,oymin,oymax)
-	ixmin,ixmax,iymin,iymax = nil, nil, nil, nil
+	ixmin,ixmax,iymin,iymax = null, null, null, null
 	if xmin>oxmin then ixmin=xmin else ixmin=oxmin end
 	if xmax<oxmax then ixmax=xmax else ixmax=oxmax end
 	if ixmin>=ixmax then return end
@@ -127,7 +127,7 @@ function clip(q,xmin,xmax,ymin,ymax,o,oxmin,oxmax,oymin,oymax)
 	if ymax<oymax then iymax=ymax else iymax=oymax end
 	--if ixmin<=ixmax and iymin<=iymax then
 	if iymin<iymax then
-		if q[1]==nil then
+		if q[1]==null then
 			addedge(o,q)
 		else
 			xmid=(xmin+xmax)/2.0
@@ -153,7 +153,7 @@ end
 
 function update(q,xmin,xmax,ymin,ymax)
 	if q.color==gray then
-		if q[1]==nil then
+		if q[1]==null then
 			b=nE
 			q[2]=nE+1
 			map(q,xmin,xmax,ymin,ymax)
@@ -171,7 +171,7 @@ end
 
 function color(q)
 	if q.color==gray then
-		if q[1]==nil then
+		if q[1]==null then
 			for i=q[2],q[3] do
 				if E[i].color!=white then return end
 			end
@@ -187,7 +187,7 @@ end
 
 function prewhite(q)
 	if q.color==gray then
-		if q[1]==nil then
+		if q[1]==null then
 			for i=q[2],q[3] do
 				c=E[i].color
 				if c==white or c==-gray then
@@ -209,7 +209,7 @@ function recolor(q)
 	if q.color==-gray then
 		q.color=gray
 	else if q.color==gray then
-		if q[1]==nil then
+		if q[1]==null then
 			q.color=black
 		else
 			recolor(q[1])
@@ -221,7 +221,7 @@ function recolor(q)
 end
 
 function area(q)
-	if q[1]==nil then
+	if q[1]==null then
 		if q.color==white then return 0.0,0.0
 		else if q.color==black then return 0.0,1.0
 		else return 1.0,0.0 end
@@ -235,14 +235,14 @@ function area(q)
 end
 
 function colorup(q)
-	if q[1]!=nil and q.color==gray then
+	if q[1]!=null and q.color==gray then
 		c1=colorup(q[1])
 		c2=colorup(q[2])
 		c3=colorup(q[3])
 		c4=colorup(q[4])
 		if c1==c2 and c1==c3 and c1==c4 then
 if c1!=gray then
-			q[1]=nil; --q[2]=nil; q[3]=nil; q[4]=nil
+			q[1]=null; --q[2]=null; q[3]=null; q[4]=null
 N=N+1 end
 			q.color=c1
 		end
@@ -251,7 +251,7 @@ N=N+1 end
 end
 
 function save(q,xmin,ymin,N)
-	if q[1]==nil or N==1 then
+	if q[1]==null or N==1 then
 		output(xmin,ymin,N,q.color)
 	else
 		N=N/2

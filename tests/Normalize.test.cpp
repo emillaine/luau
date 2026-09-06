@@ -160,7 +160,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "intersection")
         const a: number & string
         const b: number
         const c: string
-        const d: number & nil
+        const d: number & null
     )");
 
     TypeId a = requireType("a");
@@ -183,7 +183,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "union_and_intersection")
 {
     check(R"(
             const a: number & string
-            const b: number | nil
+            const b: number | null
     )");
 
     TypeId a = requireType("a");
@@ -611,14 +611,14 @@ TEST_CASE_FIXTURE(NormalizeFixture, "union_of_negation")
 TEST_CASE_FIXTURE(NormalizeFixture, "intersect_truthy")
 {
     CHECK("number | string | true" == toString(normal(R"(
-        (string | number | boolean | nil) & Not<false | nil>
+        (string | number | boolean | null) & Not<false | null>
     )")));
 }
 
 TEST_CASE_FIXTURE(NormalizeFixture, "intersect_truthy_expressed_as_intersection")
 {
     CHECK("number | string | true" == toString(normal(R"(
-        (string | number | boolean | nil) & Not<false> & Not<nil>
+        (string | number | boolean | null) & Not<false> & Not<null>
     )")));
 }
 
@@ -1235,7 +1235,7 @@ type Map<K, V> = typeof(setmetatable(
 		size: number,
 		-- method definitions
 		set: (self: Map<K, V>, K, V) -> Map<K, V>,
-		get: (self: Map<K, V>, K) -> V | nil,
+		get: (self: Map<K, V>, K) -> V | null,
 		clear: (self: Map<K, V>) -> (),
 		delete: (self: Map<K, V>, K) -> boolean,
 		[K]: V,
@@ -1290,8 +1290,8 @@ return function<T, U>(
 	thisArg: Object?
 	-- FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
 ): Array<U> | Array<T> | Array<string>
-	if value == nil then
-		error("cannot create array from a nil value")
+	if value == null then
+		error("cannot create array from a null value")
 	end
 	const array: Array<U> | Array<T> | Array<string>
 
@@ -1333,7 +1333,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_union_type_pack_cycle")
     CHECK_THROWS_AS(
         check(R"(
 function _(_).n0(l32,...)
-return ({n0=_,[_(if _ then _,nil)]=- _,[_(_(_))]=_,})[_],_(_)
+return ({n0=_,[_(if _ then _,null)]=- _,[_(_(_))]=_,})[_],_(_)
 end
 _[_] ^= _(_(_))
     )"),

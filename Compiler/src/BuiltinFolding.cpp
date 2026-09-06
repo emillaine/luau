@@ -85,7 +85,7 @@ static Constant ctype(const Constant& c)
     switch (c.type)
     {
     case Constant::Type_Nil:
-        return cstring("nil");
+        return cstring("null");
 
     case Constant::Type_Boolean:
         return cstring("boolean");
@@ -116,7 +116,7 @@ static Constant ctypeof(const Constant& c)
     switch (c.type)
     {
     case Constant::Type_Nil:
-        return cstring("nil");
+        return cstring("null");
 
     case Constant::Type_Boolean:
         return cstring("boolean");

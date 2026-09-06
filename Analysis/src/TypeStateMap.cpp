@@ -164,7 +164,7 @@ TypeId TypeStateMap::getDiscriminantOf(const Refine& refine)
     const std::string& name = *refine.type;
 
     TypeId discriminantTy = builtinTypes->neverType;
-    if (name == "nil")
+    if (name == "null")
         discriminantTy = builtinTypes->nilType;
     else if (name == "string")
         discriminantTy = builtinTypes->stringType;

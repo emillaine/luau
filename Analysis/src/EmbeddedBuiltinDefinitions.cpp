@@ -429,14 +429,14 @@ std::string getBuiltinDefinitionSource()
 static constexpr const char* kBuiltinDefinitionTypeMethodSrc = R"BUILTIN_SRC(
 
 export type type = {
-    tag: "nil" | "unknown" | "never" | "any" | "boolean" | "number" | "integer" | "string" | "buffer" | "thread" |
+    tag: "null" | "unknown" | "never" | "any" | "boolean" | "number" | "integer" | "string" | "buffer" | "thread" |
          "singleton" | "negation" | "union" | "intersection" | "table" | "function" | "extern" | "generic",
 
     is: (self: type, arg: string) -> boolean,
     issubtypeof: (self: type, arg: type) -> boolean,
 
     -- for singleton type
-    value: (self: type) -> (string | boolean | nil),
+    value: (self: type) -> (string | boolean | null),
 
     -- for negation type
     inner: (self: type) -> type,
@@ -483,14 +483,14 @@ export type type = {
 static constexpr const char* kBuiltinDefinitionTypeMethodSrc_NOINTEGER = R"BUILTIN_SRC(
 
 export type type = {
-    tag: "nil" | "unknown" | "never" | "any" | "boolean" | "number" | "string" | "buffer" | "thread" |
+    tag: "null" | "unknown" | "never" | "any" | "boolean" | "number" | "string" | "buffer" | "thread" |
          "singleton" | "negation" | "union" | "intersection" | "table" | "function" | "extern" | "generic",
 
     is: (self: type, arg: string) -> boolean,
     issubtypeof: (self: type, arg: type) -> boolean,
 
     -- for singleton type
-    value: (self: type) -> (string | boolean | nil),
+    value: (self: type) -> (string | boolean | null),
 
     -- for negation type
     inner: (self: type) -> type,
@@ -547,7 +547,7 @@ declare types: {
     buffer: type,
     integer: type,
 
-    singleton: @checked (arg: string | boolean | nil) -> type,
+    singleton: @checked (arg: string | boolean | null) -> type,
     optional: @checked (arg: type) -> type,
     generic: @checked (name: string, ispack: boolean?) -> type,
     negationof: @checked (arg: type) -> type,
@@ -571,7 +571,7 @@ declare types: {
     thread: type,
     buffer: type,
 
-    singleton: @checked (arg: string | boolean | nil) -> type,
+    singleton: @checked (arg: string | boolean | null) -> type,
     optional: @checked (arg: type) -> type,
     generic: @checked (name: string, ispack: boolean?) -> type,
     negationof: @checked (arg: type) -> type,

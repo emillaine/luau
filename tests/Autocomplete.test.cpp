@@ -1350,7 +1350,7 @@ const b: string = "don't trip"
 
     auto ac = autocomplete('1');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
     CHECK_EQ(ac.context, AutocompleteContext::Type);
 }
@@ -1458,7 +1458,7 @@ const b: string = "don't trip"
 
     auto ac = autocomplete('1');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
     CHECK_EQ(ac.context, AutocompleteContext::Type);
 }
@@ -1472,7 +1472,7 @@ const b: string = "don't trip"
 
     auto ac = autocomplete('1');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
     CHECK_EQ(ac.context, AutocompleteContext::Type);
 }
@@ -1486,7 +1486,7 @@ const b: number = (a as n@1
 
     auto ac = autocomplete('1');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
     CHECK_EQ(ac.context, AutocompleteContext::Type);
 }
@@ -1494,36 +1494,36 @@ const b: number = (a as n@1
 TEST_CASE_FIXTURE(ACFixture, "function_type_types")
 {
     check(R"(
-const a: (n@1) = nil
-const b: (number, (n@2)) = nil
-const c: (number, (number) -> n@3) = nil
-const d: (number, (number) -> (number, n@4)) = nil
-const e: (n: n@5) = nil
+const a: (n@1) = null
+const b: (number, (n@2)) = null
+const c: (number, (number) -> n@3) = null
+const d: (number, (number) -> (number, n@4)) = null
+const e: (n: n@5) = null
     )");
 
     auto ac = autocomplete('1');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
 
     ac = autocomplete('2');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
 
     ac = autocomplete('3');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
 
     ac = autocomplete('4');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
 
     ac = autocomplete('5');
 
-    CHECK(ac.entryMap.count("nil"));
+    CHECK(ac.entryMap.count("null"));
     CHECK(ac.entryMap.count("number"));
 }
 
@@ -2042,7 +2042,7 @@ end
 TEST_CASE_FIXTURE(ACFixture, "type_correct_expected_argument_type_suggestion_optional")
 {
     check(R"(
-function target(callback: nil | (a: number, b: string) -> number) return callback(4, "hello") end
+function target(callback: null | (a: number, b: string) -> number) return callback(4, "hello") end
 
 x = target(function(a: @1
     )");
@@ -2257,7 +2257,7 @@ const ec = e(f@5)
     ac = autocomplete('2');
     CHECK(ac.entryMap.count("ni"));
     CHECK(ac.entryMap["ni"].typeCorrect == TypeCorrectKind::None);
-    CHECK(ac.entryMap["nil"].typeCorrect == TypeCorrectKind::Correct);
+    CHECK(ac.entryMap["null"].typeCorrect == TypeCorrectKind::Correct);
 
     ac = autocomplete('3');
     CHECK(ac.entryMap.count("false"));
@@ -2336,7 +2336,7 @@ return b.@1
     check(R"(
 a = { x = 2, y = 3 }
 type A = typeof(a)
-const b: nil | A = a
+const b: null | A = a
 return b.@1
     )");
 
@@ -2347,7 +2347,7 @@ return b.@1
     CHECK(ac.entryMap.count("y"));
 
     check(R"(
-const b: nil | nil
+const b: null | null
 return b.@1
     )");
 
@@ -2902,7 +2902,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_if_else_regression")
 const abcdef = 0;
 const temp = false
 const even = true;
-const a = nil
+const a = null
 const a = if temp then even else@1
 const a = if temp then even else @2
 const a = if temp then even else abc@3
@@ -4086,8 +4086,8 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_subtyping_recursion_limit")
 
     std::string prefix;
     for (int i = 0; i < parts; i++)
-        formatAppend(prefix, "(nil|({a%d:number}&", i);
-    formatAppend(prefix, "(nil|{a%d:number})", parts);
+        formatAppend(prefix, "(null|({a%d:number}&", i);
+    formatAppend(prefix, "(null|{a%d:number})", parts);
     for (int i = 0; i < parts; i++)
         formatAppend(prefix, "))");
 
@@ -4141,7 +4141,7 @@ TEST_CASE_FIXTURE(ACFixture, "getFrontend().use_correct_global_scope")
     )");
 
     CheckResult result = check(R"(
-        const a: unknown = nil
+        const a: unknown = null
         if typeof(a) == "Instance" then
             b = a.@1
         end
@@ -4880,7 +4880,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "type_function_eval_in_autocomplete")
 
     check(R"(
 type function foo(x)
-    tbl = types.newtable(nil, nil, nil)
+    tbl = types.newtable(null, null, null)
     tbl:setproperty(types.singleton("boolean"), x)
     tbl:setproperty(types.singleton("number"), types.number)
     return tbl
@@ -5654,7 +5654,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "autocomplete_metatable_fill_writeonly_prop
 t0 = { thing = 5 }
 
 type function evil(x)
-    tbl = types.newtable(nil, nil, nil)
+    tbl = types.newtable(null, null, null)
     tbl:setwriteproperty(types.singleton("__index"), types.any)
     return tbl
 end
@@ -5665,7 +5665,7 @@ function foo(t : BadMTType)
         return t2
 end
 
-x = foo(nil as any)
+x = foo(null as any)
 x.@1
     )");
 
@@ -5711,7 +5711,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_react")
         type ReactElement<P, T> = any
 
         type React_StatelessFunctionalComponent<Props> = (props: Props, context: any) -> React_Node
-        type React_Component<Props, State = nil> = {}
+        type React_Component<Props, State = null> = {}
         type createElementFn = <P, T>(
             type_:
               | React_StatelessFunctionalComponent<P>
@@ -5721,10 +5721,10 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_react")
             ...(React_Node | (...any) -> React_Node)
         ) -> ReactElement<P, T>
 
-        const createElement: createElementFn = nil as any
+        const createElement: createElementFn = null as any
 
         function MyComponent(props: { foobar: string, barbaz: { bazquxx: string } })
-        	return nil
+        	return null
         end
 
         createElement(MyComponent, { f@1 })
@@ -5751,7 +5751,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "cli_197197_autocomplete_generic_keyof")
             -- don't need to do anything here.
         end
 
-        const tbl: { Changed: bool, RemoveTag: bool } = nil as any
+        const tbl: { Changed: bool, RemoveTag: bool } = null as any
 
         ToggleButton(tbl, "@1")
     )");
@@ -5853,7 +5853,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_on_nonexistent_table")
     check(R"(
         mygame = {}
 
-        char = (nil as any) as {
+        char = (null as any) as {
             Humanoid: {
                 Animator: number
             }
@@ -5895,12 +5895,12 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_deprecated_on_recursive_intersection"
             prop: number
         }
         function make(): MakeT
-            return nil as any
+            return null as any
         end
 
         type MakeT = typeof(make()) & T
 
-        const var: MakeT = nil as any
+        const var: MakeT = null as any
 
         @1
     )");

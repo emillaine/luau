@@ -1,5 +1,5 @@
 -- forward declaration (no hoisted globals)
-findContactPoints_PolygonPolygon = nil
+findContactPoints_PolygonPolygon = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -261,7 +261,7 @@ bodyIdCounter = 0
 
 function createBody(shape, x, y, density, isStatic)
     bodyIdCounter = bodyIdCounter + 1
-    mass, invMass, inertia, invInertia = nil, nil, nil, nil
+    mass, invMass, inertia, invInertia = null, null, null, null
     if isStatic then
         mass = 0
         invMass = 0
@@ -298,7 +298,7 @@ function createBody(shape, x, y, density, isStatic)
         linearDamping = 0.01,
         angularDamping = 0.01,
         gravityScale = 1.0,
-        userData = nil
+        userData = null
     }
 end
 
@@ -326,7 +326,7 @@ end
 
 function bodyGetTransformedVertices(body)
     shape = body.shape
-    if shape.type != SHAPE_POLYGON then return nil end
+    if shape.type != SHAPE_POLYGON then return null end
     rot = mat2(body.angle)
     transformed = {}
     for i = 1, shape.vertexCount do
@@ -338,7 +338,7 @@ end
 
 function bodyGetTransformedNormals(body)
     shape = body.shape
-    if shape.type != SHAPE_POLYGON then return nil end
+    if shape.type != SHAPE_POLYGON then return null end
     rot = mat2(body.angle)
     transformed = {}
     for i = 1, shape.vertexCount do
@@ -469,7 +469,7 @@ function spatialHashFindPairs(hash, bodies)
                 a = cell[i]
                 b = cell[j]
                 if not (a.isStatic and b.isStatic) then
-                    pairKey = nil
+                    pairKey = null
                     if a.id < b.id then
                         pairKey = a.id * 100000 + b.id
                     else
@@ -528,9 +528,9 @@ function findPolygonPolygonContacts(bodyA, bodyB)
     normalsB = bodyGetTransformedNormals(bodyB)
 
     minOverlap = M.huge
-    separatingNormal = nil
-    referenceBody = nil
-    incidentBody = nil
+    separatingNormal = null
+    referenceBody = null
+    incidentBody = null
 
     for i = 1, #normalsA do
         axis = normalsA[i]
@@ -538,7 +538,7 @@ function findPolygonPolygonContacts(bodyA, bodyB)
         minB, maxB = projectPolygonOnAxis(vertsB, axis)
 
         if maxA < minB or maxB < minA then
-            return nil
+            return null
         end
 
         overlap = M.min(maxA - minB, maxB - minA)
@@ -556,7 +556,7 @@ function findPolygonPolygonContacts(bodyA, bodyB)
         minB, maxB = projectPolygonOnAxis(vertsB, axis)
 
         if maxA < minB or maxB < minA then
-            return nil
+            return null
         end
 
         overlap = M.min(maxA - minB, maxB - minA)
@@ -591,7 +591,7 @@ function findContactPoints_PolygonPolygon(vertsA, vertsB, normal)
 
     function findSupport(vertices, direction)
         maxProj = -M.huge
-        best = nil
+        best = null
         for i = 1, #vertices do
             proj = vecDot(vertices[i], direction)
             if proj > maxProj then
@@ -689,9 +689,9 @@ function findCircleCircleContacts(bodyA, bodyB)
     dist = vecLen(diff)
     radiusSum = bodyA.shape.radius + bodyB.shape.radius
 
-    if dist >= radiusSum then return nil end
+    if dist >= radiusSum then return null end
 
-    normal = nil
+    normal = null
     if dist < 1e-10 then
         normal = vec(1, 0)
     else
@@ -720,14 +720,14 @@ function findCirclePolygonContacts(circleBody, polyBody)
     radius = circleBody.shape.radius
 
     minOverlap = M.huge
-    separatingNormal = nil
-    axisType = nil
+    separatingNormal = null
+    axisType = null
 
     for i = 1, #normals do
         axis = normals[i]
         minP, maxP = projectPolygonOnAxis(verts, axis)
         minC, maxC = projectCircleOnAxis(center, radius, axis)
-        if maxP < minC or maxC < minP then return nil end
+        if maxP < minC or maxC < minP then return null end
         overlap = M.min(maxP - minC, maxC - minP)
         if overlap < minOverlap then
             minOverlap = overlap
@@ -737,7 +737,7 @@ function findCirclePolygonContacts(circleBody, polyBody)
     end
 
     closestDist = M.huge
-    closestVertex = nil
+    closestVertex = null
     for i = 1, #verts do
         d = vecDistSq(center, verts[i])
         if d < closestDist then
@@ -749,7 +749,7 @@ function findCirclePolygonContacts(circleBody, polyBody)
     vertexAxis = vecNormalize(vecSub(center, closestVertex))
     minP, maxP = projectPolygonOnAxis(verts, vertexAxis)
     minC, maxC = projectCircleOnAxis(center, radius, vertexAxis)
-    if maxP < minC or maxC < minP then return nil end
+    if maxP < minC or maxC < minP then return null end
     overlap = M.min(maxP - minC, maxC - minP)
     if overlap < minOverlap then
         minOverlap = overlap
@@ -794,7 +794,7 @@ function detectCollision(bodyA, bodyB)
         end
         return manifold
     end
-    return nil
+    return null
 end
 
 -- ============================================================================
@@ -1189,11 +1189,11 @@ function raycastCircle(origin, direction, maxDist, body)
     b = 2 * vecDot(oc, direction)
     c = vecDot(oc, oc) - radius * radius
     discriminant = b * b - 4 * a * c
-    if discriminant < 0 then return nil end
+    if discriminant < 0 then return null end
     sqrtD = M.sqrt(discriminant)
     t = (-b - sqrtD) / (2 * a)
     if t < 0 then t = (-b + sqrtD) / (2 * a) end
-    if t < 0 or t > maxDist then return nil end
+    if t < 0 or t > maxDist then return null end
     point = vecAdd(origin, vecMul(direction, t))
     normal = vecNormalize(vecSub(point, center))
     return {t = t, point = point, normal = normal, body = body}
@@ -1203,7 +1203,7 @@ function raycastPolygon(origin, direction, maxDist, body)
     verts = bodyGetTransformedVertices(body)
     n = #verts
     tMin = maxDist
-    hitNormal = nil
+    hitNormal = null
     hit = false
 
     for i = 1, n do
@@ -1227,17 +1227,17 @@ function raycastPolygon(origin, direction, maxDist, body)
         end
     end
 
-    if not hit then return nil end
+    if not hit then return null end
     point = vecAdd(origin, vecMul(direction, tMin))
     return {t = tMin, point = point, normal = hitNormal, body = body}
 end
 
 function worldRaycast(world, origin, direction, maxDist)
     maxDist = maxDist or 1000
-    closest = nil
+    closest = null
     for i = 1, #world.bodies do
         body = world.bodies[i]
-        result = nil
+        result = null
         if body.shape.type == SHAPE_CIRCLE then
             result = raycastCircle(origin, direction, maxDist, body)
         else
@@ -1257,7 +1257,7 @@ function worldRaycastAll(world, origin, direction, maxDist)
     results = {}
     for i = 1, #world.bodies do
         body = world.bodies[i]
-        result = nil
+        result = null
         if body.shape.type == SHAPE_CIRCLE then
             result = raycastCircle(origin, direction, maxDist, body)
         else
@@ -1290,7 +1290,7 @@ function computeTOI(bodyA, bodyB, dt)
         posA = vecAdd(bodyA.position, vecMul(bodyA.velocity, tMid * dt))
         posB = vecAdd(bodyB.position, vecMul(bodyB.velocity, tMid * dt))
 
-        dist = nil
+        dist = null
         if bodyA.shape.type == SHAPE_CIRCLE and bodyB.shape.type == SHAPE_CIRCLE then
             dist = vecDist(posA, posB) - bodyA.shape.radius - bodyB.shape.radius
         else
@@ -1359,7 +1359,7 @@ function buildIslands(bodies, manifolds)
 
             while #stack > 0 do
                 body = stack[#stack]
-                stack[#stack] = nil
+                stack[#stack] = null
                 island.bodies[#island.bodies + 1] = body
 
                 ms = bodyToManifolds[body.id]
@@ -1373,7 +1373,7 @@ function buildIslands(bodies, manifolds)
                         if not seenManifold then
                             island.manifolds[#island.manifolds + 1] = m
                         end
-                        other = nil
+                        other = null
                         if m.bodyA.id == body.id then other = m.bodyB else other = m.bodyA end
                         if not visited[other.id] and not other.isStatic then
                             visited[other.id] = true
@@ -2171,7 +2171,7 @@ function createTumblerScenario()
         shapeType = M.floor(random() * 4)
         x = randomRange(-6, 6)
         y = randomRange(-4, 6)
-        body = nil
+        body = null
 
         if shapeType == 0 then
             body = createBody(createCircle(randomRange(0.3, 0.7)), x, y, 2.0, false)
@@ -2560,7 +2560,7 @@ function createConveyorScenario()
         shapeChoice = M.floor(random() * 3)
         x = randomRange(-8, -4)
         y = randomRange(9, 14)
-        body = nil
+        body = null
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.5)), x, y, 2.0, false)
         else if shapeChoice == 1 then
@@ -2985,7 +2985,7 @@ function createMixedStackScenario()
         for item = 0, numItems - 1 do
             x = startX + item * 1.8 + 0.9
             shapeChoice = M.floor(random() * 4)
-            body = nil
+            body = null
 
             if shapeChoice == 0 then
                 body = createBody(createCircle(randomRange(0.3, 0.6)), x, y + 0.5, 2.0, false)
@@ -3021,7 +3021,7 @@ function createRaycastTestScenario()
         x = randomRange(-15, 15)
         y = randomRange(-10, 10)
         shapeChoice = M.floor(random() * 3)
-        body = nil
+        body = null
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.5, 1.5)), x, y, 1.0, true)
         else if shapeChoice == 1 then
@@ -3385,7 +3385,7 @@ function createBuoyancyScenario()
         shapeChoice = M.floor(random() * 3)
         x = randomRange(-6, 6)
         y = randomRange(3, 8)
-        body = nil
+        body = null
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.3, 0.8)), x, y, randomRange(0.3, 1.5), false)
         else if shapeChoice == 1 then
@@ -3428,7 +3428,7 @@ function createTornadoScenario()
     for i = 1, 40 do
         x = randomRange(-8, 8)
         y = randomRange(0.5, 3)
-        body = nil
+        body = null
         sc = M.floor(random() * 3)
         if sc == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.5)), x, y, 1.5, false)
@@ -3524,7 +3524,7 @@ function createMarbleRunScenario()
 
     for i = 1, #obstacles do
         o = obstacles[i]
-        body = nil
+        body = null
         if o.type == "circle" then
             body = createBody(createCircle(o.r), o.x, o.y, 1, true)
         else if o.type == "triangle" then
@@ -3974,7 +3974,7 @@ function createStressTestScenario()
         x = randomRange(-9, 9)
         y = randomRange(1, 25)
         shapeChoice = M.floor(random() * 4)
-        body = nil
+        body = null
         if shapeChoice == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.5)), x, y, 2.0, false)
         else if shapeChoice == 1 then
@@ -4368,7 +4368,7 @@ function createWindmillScenario()
         x = randomRange(-8, 8)
         y = randomRange(14, 22)
         sc = M.floor(random() * 3)
-        body = nil
+        body = null
         if sc == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.4)), x, y, 2.0, false)
         else if sc == 1 then
@@ -4771,7 +4771,7 @@ function createWreckingYardScenario()
         x = randomRange(-15, 15)
         y = randomRange(0.5, 2)
         sc = M.floor(random() * 4)
-        body = nil
+        body = null
         if sc == 0 then
             body = createBody(createCircle(randomRange(0.1, 0.4)), x, y, randomRange(1, 5), false)
         else if sc == 1 then
@@ -5126,7 +5126,7 @@ function createAssemblyLineScenario()
         x = -15 + randomRange(-1, 1)
         y = 4 + i * 0.8
         choice = M.floor(random() * 4)
-        body = nil
+        body = null
         if choice == 0 then
             body = createBody(createCircle(randomRange(0.2, 0.4)), x, y, 2.0, false)
         else if choice == 1 then
@@ -5171,7 +5171,7 @@ function createSuspensionBridgeScenario()
     worldAddBody(world, rightAnchor)
 
     deckSegs = {}
-    prevSeg = nil
+    prevSeg = null
     for i = 1, numDeckSegs do
         x = startX + (i - 0.5) * segWidth
         seg = createBody(createBox(segWidth / 2 - 0.02, 0.12), x, bridgeY, 3.0, false)
@@ -5281,7 +5281,7 @@ function createObstacleCourseScenario()
 
     for i = 1, #D.obstacleCourseData do
         d = D.obstacleCourseData[i]
-        body = nil
+        body = null
         if d.type == "box" then
             body = createBody(createBox(d.w, d.h), d.x, d.y, 1, d.static)
             if d.angle then body.angle = d.angle end
@@ -5447,7 +5447,7 @@ function createHillTerrainScenario()
         x = randomRange(-18, -10)
         y = 5 + randomRange(0, 3)
         choice = M.floor(random() * 3)
-        body = nil
+        body = null
         if choice == 0 then
             body = createBody(createCircle(randomRange(0.3, 0.7)), x, y, 2.0, false)
         else if choice == 1 then

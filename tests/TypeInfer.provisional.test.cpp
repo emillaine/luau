@@ -69,7 +69,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
             if type(a) == 'boolean' then
                 const a1:{fn:()->(unknown,...unknown)}&boolean=a
             else if a.fn() then
-                const a2:{fn:()->(unknown,...unknown)}&(userdata|function|nil|number|integer|string|thread|buffer|table)=a
+                const a2:{fn:()->(unknown,...unknown)}&(userdata|function|null|number|integer|string|thread|buffer|table)=a
             end
         end
     )";
@@ -80,7 +80,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
             if type(a) == 'boolean' then
                 const a1:{fn:()->(unknown,...unknown)}&boolean=a
             else if a.fn() then
-                const a2:{fn:()->(unknown,...unknown)}&(userdata|function|nil|number|string|thread|buffer|table)=a
+                const a2:{fn:()->(unknown,...unknown)}&(userdata|function|null|number|string|thread|buffer|table)=a
             end
         end
     )";
@@ -99,7 +99,7 @@ TEST_CASE_FIXTURE(Fixture, "typeguard_inference_incomplete")
 TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.Array.filter")
 {
     // This test exercises the fact that we should reduce sealed/unsealed/free tables
-    // res is a unsealed table with type {((T & ~nil)?) & any}
+    // res is a unsealed table with type {((T & ~null)?) & any}
     // Because we do not reduce it fully, we cannot unify it with `Array<T> = { [number] : T}
     // TLDR; reduction needs to reduce the indexer on res so it unifies with Array<T>
     CheckResult result = check(R"(
@@ -114,10 +114,10 @@ return function<T, U>(t: Array<T>, callback: callbackFn<T> | callbackFnWithThisA
 
 	const len = t.count
 	const res = {}
-	if thisArg == nil then
+	if thisArg == null then
 		for i = 1, len do
 			const kValue = t[i]
-			if kValue != nil then
+			if kValue != null then
 				if (callback as callbackFn<T>)(kValue, i, t) then
 					res[i] = kValue
 				end
@@ -200,7 +200,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_constrains_free_type_into_free_
 
     CheckResult result = check(R"(
         const a = {}
-        export b = nil
+        export b = null
         setmetatable(a, b)
         b = 1
     )");
@@ -226,7 +226,7 @@ TEST_CASE_FIXTURE(Fixture, "while_body_are_also_refined")
 
             while current do
                 f(current.value)
-                current = current.child -- TODO: Can't work just yet. It thinks 'current' can never be nil. :(
+                current = current.child -- TODO: Can't work just yet. It thinks 'current' can never be null. :(
             end
         end
     )");
@@ -287,10 +287,10 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_equals_another_lvalue_with_no_overlap")
 TEST_CASE_FIXTURE(Fixture, "discriminate_from_x_not_equal_to_nil")
 {
     CheckResult result = check(R"(
-        type T = {x: string, y: number} | {x: nil, y: nil}
+        type T = {x: string, y: number} | {x: null, y: null}
 
         function f(t: T)
-            if t.x != nil then
+            if t.x != null then
                 const foo = t
             else
                 const bar = t
@@ -303,14 +303,14 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_from_x_not_equal_to_nil")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CHECK_EQ("{ x: string, y: number }", toString(requireTypeAtPosition({5, 28})));
-        CHECK_EQ("{ x: nil, y: nil }", toString(requireTypeAtPosition({7, 28})));
+        CHECK_EQ("{ x: null, y: null }", toString(requireTypeAtPosition({7, 28})));
     }
     else
     {
         CHECK_EQ("{ x: string, y: number }", toString(requireTypeAtPosition({5, 28})));
 
-        // Should be {| x: nil, y: nil |}
-        CHECK_EQ("{ x: nil, y: nil } | { x: string, y: number }", toString(requireTypeAtPosition({7, 28})));
+        // Should be {| x: null, y: null |}
+        CHECK_EQ("{ x: null, y: null } | { x: string, y: number }", toString(requireTypeAtPosition({7, 28})));
     }
 }
 
@@ -324,7 +324,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bail_early_if_unification_is_too_complicated
     ScopedFastInt sffi{FInt::LuauTarjanChildLimit, 1};
     ScopedFastInt sffi2{FInt::LuauTypeInferIterationLimit, 1};
     CheckResult result = check(R"LUA(
-        const Result = nil
+        const Result = null
         Result = setmetatable({}, {})
         Result.__index = Result
         function Result.new(okValue)
@@ -390,7 +390,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_ice_when_trying_to_pick_first_of_generic_type
     {
         CHECK("() -> ()" == toString(requireType("f")));
         CHECK("() -> ()" == toString(requireType("g")));
-        CHECK("nil" == toString(requireType("x")));
+        CHECK("null" == toString(requireType("x")));
     }
     else
     {
@@ -574,7 +574,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_zero_iterators")
 TEST_CASE_FIXTURE(BuiltinsFixture, "generic_type_leak_to_module_interface")
 {
     fileResolver.source["game/A"] = R"(
-const wrapStrictTable = nil
+const wrapStrictTable = null
 
 const metatable = {
     __index = function(self, key)
@@ -618,7 +618,7 @@ return wrapStrictTable(Constants, "Constants")
 TEST_CASE_FIXTURE(BuiltinsFixture, "generic_type_leak_to_module_interface_variadic")
 {
     fileResolver.source["game/A"] = R"(
-const wrapStrictTable = nil
+const wrapStrictTable = null
 
 const metatable = {
     __index = function<T>(self, key, ...: T)
@@ -727,7 +727,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "functions_with_mismatching_arity_but_option
 
     /*
      * (number) -> () </: (number?) -> ()
-     *      because number? </: number (because number <: number, but nil </: number)
+     *      because number? </: number (because number <: number, but null </: number)
      */
     CHECK(!isSubtype(b, a));
 
@@ -777,7 +777,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "functions_with_mismatching_arity_but_any_is
 
     /*
      * (number) -> () </: (number?) -> ()
-     *      because number? </: number (because number <: number, but nil </: number)
+     *      because number? </: number (because number <: number, but null </: number)
      */
     CHECK(!isSubtype(b, a));
 
@@ -815,7 +815,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "functions_with_mismatching_arity_but_any_is
 TEST_CASE_FIXTURE(Fixture, "assign_table_with_refined_property_with_a_similar_type_is_illegal")
 {
     CheckResult result = check(R"(
-        const t: {x: number?} = {x = nil}
+        const t: {x: number?} = {x = null}
 
         if t.x then
             const u: {x: number} = t
@@ -895,7 +895,7 @@ TEST_CASE_FIXTURE(Fixture, "expected_type_should_be_a_helpful_deduction_guide_fo
             return { val = x }
         end
 
-        const x: Ref<number?> = useRef(nil)
+        const x: Ref<number?> = useRef(null)
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -906,9 +906,9 @@ TEST_CASE_FIXTURE(Fixture, "expected_type_should_be_a_helpful_deduction_guide_fo
     else
     {
         // This is actually wrong! Sort of. It's doing the wrong thing, it's actually asking whether
-        //  `{| val: number? |} <: {| val: nil |}`
+        //  `{| val: number? |} <: {| val: null |}`
         // instead of the correct way, which is
-        //  `{| val: nil |} <: {| val: number? |}`
+        //  `{| val: null |} <: {| val: number? |}`
         LUAU_REQUIRE_NO_ERRORS(result);
     }
 }
@@ -918,14 +918,14 @@ TEST_CASE_FIXTURE(Fixture, "floating_generics_should_not_be_allowed")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        const assign : <T, U, V, W>(target: T, source0: U?, source1: V?, source2: W?, ...any) -> T & U & V & W = (nil as any)
+        const assign : <T, U, V, W>(target: T, source0: U?, source1: V?, source2: W?, ...any) -> T & U & V & W = (null as any)
 
         -- We have a big problem here: The generics U, V, and W are not bound to anything!
         -- Things get strange because of this.
         const benchmark = assign({})
         const options = benchmark.options
         do
-            const resolve2: any = nil
+            const resolve2: any = null
             options.fn({
                 resolve = function(...)
                     resolve2(...)
@@ -973,7 +973,7 @@ TEST_CASE_FIXTURE(Fixture, "unify_more_complex_unions_that_include_nil")
     CheckResult result = check(R"(
         type Record = {prop: (string | boolean)?}
 
-        function concatPagination(prop: (string | boolean | nil)?): Record
+        function concatPagination(prop: (string | boolean | null)?): Record
             return {prop = prop}
         end
     )");
@@ -1034,7 +1034,7 @@ export type Map<K, V> = {
 	size: number,
 	-- method definitions
 	set: (self: Map<K, V>, K, V) -> Map<K, V>,
-	get: (self: Map<K, V>, K) -> V | nil,
+	get: (self: Map<K, V>, K) -> V | null,
 	clear: (self: Map<K, V>) -> (),
 	delete: (self: Map<K, V>, K) -> boolean,
 	has: (self: Map<K, V>, K) -> boolean,
@@ -1147,7 +1147,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_roact_useState_nilable_state_1")
 
         type ScriptConnection = { Disconnect: (ScriptConnection) -> () }
 
-        const blah = nil as any
+        const blah = null as any
 
         function useState<S>(
             initialState: (() -> S) | S,
@@ -1156,11 +1156,11 @@ TEST_CASE_FIXTURE(Fixture, "luau_roact_useState_nilable_state_1")
             return blah, blah
         end
 
-        const a, b = useState(nil as ScriptConnection?)
+        const a, b = useState(null as ScriptConnection?)
 
         if a then
             a:Disconnect()
-            b(nil as ScriptConnection?)
+            b(null as ScriptConnection?)
         end
     )");
 
@@ -1197,9 +1197,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_roact_useState_minimization")
             end
         end
 
-        const test, setTest = useState(nil as string?)
+        const test, setTest = useState(null as string?)
 
-        setTest(nil) -- this line causes the type to be narrowed in the old solver!!!
+        setTest(null) -- this line causes the type to be narrowed in the old solver!!!
 
         function update(value: string)
             print(test)
@@ -1228,7 +1228,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bin_prov")
                 const item = self.head.item
                 if type(item) == "function" then
                     item()
-                else if item.Destroy != nil then
+                else if item.Destroy != null then
                 end
                 self.head = self.head.next
             end
@@ -1239,7 +1239,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bin_prov")
 TEST_CASE_FIXTURE(BuiltinsFixture, "update_phonemes_minimized")
 {
     CheckResult result = check(R"(
-        const video = nil
+        const video = null
         function(response)
             for index = 1, response.count do
                 video = video
@@ -1284,7 +1284,7 @@ TEST_CASE_FIXTURE(Fixture, "we_cannot_infer_functions_that_return_inconsistently
                     return i
                 end
             end
-            return nil
+            return null
         end
     )");
 
@@ -1407,7 +1407,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_and_many_nested_typeof_contexts")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        const foo: unknown = nil as any
+        const foo: unknown = null as any
         assert(typeof(foo) == "table")
         if typeof(typeof(foo.x)) == "string" then
         end
@@ -1571,7 +1571,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pcall_calling_pcall")
 // `1` alone should fully determine T. The ideal inferred type for `a` would be `number`.
 //
 // The over-constraining is sound (wider types, not false errors) and benign for the common case
-// (`T | nil` has only one free member).
+// (`T | null` has only one free member).
 TEST_CASE_FIXTURE(BuiltinsFixture, "union_super_with_multiple_free_members_over_constrains_lower_bounds")
 {
     ScopedFastFlag sffs[] = {
@@ -1597,8 +1597,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181248_intersection_of_indexers_should_e
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        const tbl: { good: boolean } & { bad: boolean } = nil as any
-        const key: string = nil as any
+        const tbl: { good: boolean } & { bad: boolean } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )");
 
@@ -1612,8 +1612,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181248_union_of_indexers_should_error")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        const tbl: { good: boolean } | { bad: boolean } = nil as any
-        const key: string = nil as any
+        const tbl: { good: boolean } | { bad: boolean } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )");
 
@@ -1627,8 +1627,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181248_union_of_indexers_with_one_good_o
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        const tbl: { good: boolean } | { [string]: string } = nil as any
-        const key: string = nil as any
+        const tbl: { good: boolean } | { [string]: string } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )");
 
@@ -1643,8 +1643,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181248_unreduced_intersection_of_indexer
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string]: string | number } & { [string]: string | boolean } = nil as any
-        const key: string = nil as any
+        const tbl: { [string]: string | number } & { [string]: string | boolean } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -1657,8 +1657,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181248_unreduced_union_of_indexers")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string]: "hi" } | { [string]: string} = nil as any
-        const key: string = nil as any
+        const tbl: { [string]: "hi" } | { [string]: string} = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 

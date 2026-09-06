@@ -23,7 +23,7 @@ NUM_BATCHES = 5
 seed = 42424242
 
 function generateBatch(batchSize: number, inputSize: number, outputSize: number): (typeof(Tensor.new(1,1)), typeof(Tensor.new(1,1)), number)
-    input = nil
+    input = null
     input, seed = Tensor.randomNormal(batchSize, inputSize, seed, 1.0)
     targets = Tensor.new(batchSize, outputSize)
     for i = 1, batchSize do
@@ -38,11 +38,11 @@ function generateBatch(batchSize: number, inputSize: number, outputSize: number)
     return input, targets, seed
 end
 
-dense1 = nil
+dense1 = null
 dense1, seed = layers.createDense(INPUT_SIZE, HIDDEN1_SIZE, seed)
-dense2 = nil
+dense2 = null
 dense2, seed = layers.createDense(HIDDEN1_SIZE, HIDDEN2_SIZE, seed)
-dense3 = nil
+dense3 = null
 dense3, seed = layers.createDense(HIDDEN2_SIZE, OUTPUT_SIZE, seed)
 
 adam1 = optimizer.createAdam(0.001)
@@ -56,7 +56,7 @@ for epoch = 1, NUM_EPOCHS do
     epochLoss = 0
 
     for batch = 1, NUM_BATCHES do
-        input, targets = nil, nil
+        input, targets = null, null
         input, targets, seed = generateBatch(BATCH_SIZE, INPUT_SIZE, OUTPUT_SIZE)
 
         -- Forward pass

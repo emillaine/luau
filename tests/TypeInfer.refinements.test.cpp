@@ -169,7 +169,7 @@ TEST_CASE_FIXTURE(Fixture, "is_truthy_constraint")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("string", toString(requireTypeAtPosition({3, 26})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({5, 26})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({5, 26})));
 }
 
 TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_constraint")
@@ -186,7 +186,7 @@ TEST_CASE_FIXTURE(Fixture, "invert_is_truthy_constraint")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 26})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 26})));
     CHECK_EQ("string", toString(requireTypeAtPosition({5, 26})));
 }
 
@@ -204,7 +204,7 @@ TEST_CASE_FIXTURE(Fixture, "parenthesized_expressions_are_followed_through")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 26})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 26})));
     CHECK_EQ("string", toString(requireTypeAtPosition({5, 26})));
 }
 
@@ -273,8 +273,8 @@ TEST_CASE_FIXTURE(Fixture, "or_predicate_with_truthy_predicates")
     CHECK_EQ("string?", toString(requireTypeAtPosition({3, 26})));
     CHECK_EQ("number?", toString(requireTypeAtPosition({4, 26})));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({6, 26})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({7, 26})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({6, 26})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({7, 26})));
 }
 
 TEST_CASE_FIXTURE(Fixture, "a_and_b_or_a_and_c")
@@ -385,7 +385,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_prop")
                 end
             end
 
-            return nil
+            return null
         end
     )");
 
@@ -415,7 +415,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_nested_p
                 end
             end
 
-            return nil
+            return null
         end
     )");
 
@@ -449,7 +449,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_tested_n
                 end
             end
 
-            return nil
+            return null
         end
     )");
 
@@ -480,7 +480,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_to_undefined_method_is_not_a_refinement
                 if x.foo() then
                 end
             end
-            return (nil as never)
+            return (null as never)
         end
     )");
 
@@ -668,7 +668,7 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_not_nil")
 {
     CheckResult result = check(R"(
         function f(a: (string | number)?)
-            if a != nil then
+            if a != null then
                 const foo = a
             else
                 const foo = a
@@ -678,11 +678,11 @@ TEST_CASE_FIXTURE(Fixture, "lvalue_is_not_nil")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ(toString(requireTypeAtPosition({3, 28})), "number | string"); // a != nil
+    CHECK_EQ(toString(requireTypeAtPosition({3, 28})), "number | string"); // a != null
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "nil"); // a == nil :)
+        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "null"); // a == null :)
     else
-        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "(number | string)?"); // a == nil
+        CHECK_EQ(toString(requireTypeAtPosition({5, 28})), "(number | string)?"); // a == null
 }
 
 TEST_CASE_FIXTURE(Fixture, "free_type_is_equal_to_an_lvalue")
@@ -739,7 +739,7 @@ TEST_CASE_FIXTURE(Fixture, "string_not_equal_to_string_or_nil")
         const t: {string} = {"hello"}
 
         const a: string = t[1]
-        const b: string? = nil
+        const b: string? = null
         if a != b then
             const foo, bar = a, b
         else
@@ -760,8 +760,8 @@ TEST_CASE_FIXTURE(Fixture, "narrow_property_of_a_bounded_variable")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export t = nil
-        const u: {x: number?} = {x = nil}
+        export t = null
+        const u: {x: number?} = {x = null}
         t = u
 
         if t.x then
@@ -800,13 +800,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonoptional_type_can_narrow_to_nil_if_sense_
     CheckResult result = check(R"(
         const t = {"hello"}
         const v = t[2]
-        if type(v) == "nil" then
+        if type(v) == "null" then
             const foo = v
         else
             const foo = v
         end
 
-        if not (type(v) != "nil") then
+        if not (type(v) != "null") then
             const foo = v
         else
             const foo = v
@@ -817,17 +817,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonoptional_type_can_narrow_to_nil_if_sense_
 
     if (!FFlag::DebugLuauForceOldSolver)
     {
-        CHECK("nil & string" == toString(requireTypeAtPosition({4, 24})));  // type(v) == "nil"
-        CHECK("string & ~nil" == toString(requireTypeAtPosition({6, 24}))); // type(v) != "nil"
+        CHECK("null & string" == toString(requireTypeAtPosition({4, 24})));  // type(v) == "null"
+        CHECK("string & ~null" == toString(requireTypeAtPosition({6, 24}))); // type(v) != "null"
     }
     else
     {
-        CHECK_EQ("nil", toString(requireTypeAtPosition({4, 24})));    // type(v) == "nil"
-        CHECK_EQ("string", toString(requireTypeAtPosition({6, 24}))); // type(v) != "nil"
+        CHECK_EQ("null", toString(requireTypeAtPosition({4, 24})));    // type(v) == "null"
+        CHECK_EQ("string", toString(requireTypeAtPosition({6, 24}))); // type(v) != "null"
     }
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({10, 24})));    // equivalent to type(v) == "nil"
-    CHECK_EQ("string", toString(requireTypeAtPosition({12, 24}))); // equivalent to type(v) != "nil"
+    CHECK_EQ("null", toString(requireTypeAtPosition({10, 24})));    // equivalent to type(v) == "null"
+    CHECK_EQ("string", toString(requireTypeAtPosition({12, 24}))); // equivalent to type(v) != "null"
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "typeguard_not_to_be_string")
@@ -902,7 +902,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_intersection_of_ta
     ToStringOptions opts;
     opts.exhaustive = true;
     CHECK_EQ("{ x: number } & { y: number }", toString(requireTypeAtPosition({4, 28}), opts));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({6, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({6, 28})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_overloaded_function")
@@ -921,7 +921,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_can_filter_for_overloaded_functio
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("((number) -> string) & ((string) -> number)", toString(requireTypeAtPosition({4, 28})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({6, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({6, 28})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_guard_narrowed_into_nothingness")
@@ -995,8 +995,8 @@ TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 28})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({4, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({4, 28})));
 }
 
 TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b2")
@@ -1012,8 +1012,8 @@ TEST_CASE_FIXTURE(Fixture, "not_a_and_not_b2")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 28})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({4, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({4, 28})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "either_number_or_string")
@@ -1054,11 +1054,11 @@ TEST_CASE_FIXTURE(Fixture, "not_t_or_some_prop_of_t")
     {
         // CLI-115281 Types produced by refinements do not consistently get simplified: we are minting a type like:
         //
-        //  intersect<{ x: boolean } | nil, { read x: ~(false?) } | false | nil>
+        //  intersect<{ x: boolean } | null, { read x: ~(false?) } | false | null>
         //
         // ... which we can't _quite_ refine into the type it ought to be:
         //
-        //  { write x: boolean, read x: true } | nil
+        //  { write x: boolean, read x: true } | null
         CHECK_EQ("({ read x: ~(false?) } & { x: boolean })?", toString(requireTypeAtPosition({3, 28})));
     }
     else
@@ -1068,7 +1068,7 @@ TEST_CASE_FIXTURE(Fixture, "not_t_or_some_prop_of_t")
 TEST_CASE_FIXTURE(BuiltinsFixture, "assert_a_to_be_truthy_then_assert_a_to_be_number")
 {
     CheckResult result = check(R"(
-        const a: (number | string)? = nil as any
+        const a: (number | string)? = null as any
         assert(a)
         const b = a
         assert(type(a) == "number")
@@ -1129,7 +1129,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "is_truthy_constraint_ifelse_expression")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("string", toString(requireTypeAtPosition({2, 29})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({2, 45})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({2, 45})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "invert_is_truthy_constraint_ifelse_expression")
@@ -1142,7 +1142,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invert_is_truthy_constraint_ifelse_expressio
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({2, 42})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({2, 42})));
     CHECK_EQ("string", toString(requireTypeAtPosition({2, 50})));
 }
 
@@ -1210,7 +1210,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "invert_is_truthy_constraint_while_expression
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({3, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({3, 28})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_the_correct_types_opposite_of_while_a_is_not_number_or_string")
@@ -1293,7 +1293,7 @@ TEST_CASE_FIXTURE(Fixture, "apply_refinements_on_astexprindexexpr_whose_subscrip
 TEST_CASE_FIXTURE(Fixture, "discriminate_from_truthiness_of_x")
 {
     CheckResult result = check(R"(
-        type T = {tag: "missing", x: nil} | {tag: "exists", x: string}
+        type T = {tag: "missing", x: null} | {tag: "exists", x: string}
 
         function f(t: T)
             if t.x then
@@ -1309,12 +1309,12 @@ TEST_CASE_FIXTURE(Fixture, "discriminate_from_truthiness_of_x")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CHECK(R"({ tag: "exists", x: string })" == toString(requireTypeAtPosition({5, 28})));
-        CHECK(R"({ tag: "missing", x: nil })" == toString(requireTypeAtPosition({7, 28})));
+        CHECK(R"({ tag: "missing", x: null })" == toString(requireTypeAtPosition({7, 28})));
     }
     else
     {
         CHECK_EQ(R"({ tag: "exists", x: string })", toString(requireTypeAtPosition({5, 28})));
-        CHECK_EQ(R"({ tag: "exists", x: string } | { tag: "missing", x: nil })", toString(requireTypeAtPosition({7, 28})));
+        CHECK_EQ(R"({ tag: "exists", x: string } | { tag: "missing", x: null })", toString(requireTypeAtPosition({7, 28})));
     }
 }
 
@@ -1366,7 +1366,7 @@ TEST_CASE_FIXTURE(Fixture, "and_or_peephole_refinement")
 {
     CheckResult result = check(R"(
         function len(a: {any})
-            return a and a.count or nil
+            return a and a.count or null
         end
     )");
 
@@ -1670,7 +1670,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
 {
 
     CheckResult result = check(R"(
-        const weld: WeldConstraint = nil as any
+        const weld: WeldConstraint = null as any
         assert(weld.Part1)
         print(weld) -- hover type incorrectly becomes `never`
         assert(weld.Part1.Name == "RootPart")
@@ -1690,7 +1690,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_non_existent_properties_should_not_refine_extern_types_to_never")
 {
     CheckResult result = check(R"(
-        const weld: WeldConstraint = nil as any
+        const weld: WeldConstraint = null as any
         assert(weld.Part8)
         print(weld)
         assert(weld.Part8.Name == "RootPart")
@@ -1832,7 +1832,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "falsiness_of_TruthyPredicate_narrows_into_ni
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({4, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({4, 28})));
     CHECK_EQ("number", toString(requireTypeAtPosition({6, 28})));
 }
 
@@ -1873,7 +1873,7 @@ TEST_CASE_FIXTURE(Fixture, "else_with_no_explicit_expression_should_also_refine_
 TEST_CASE_FIXTURE(Fixture, "fuzz_filtered_refined_types_are_followed")
 {
     CheckResult result = check(R"(
-const _ = nil
+const _ = null
 do
 const _ = _ != _ or _ or _
 end
@@ -1991,19 +1991,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dataflow_analysis_can_tell_refinements_when_
             const v1 = t[5]
             const v2 = v1
 
-            if typeof(v1) == "nil" then
+            if typeof(v1) == "null" then
                 const foo = v1
             else
                 const foo = v1
             end
 
-            if typeof(v2) == "nil" then
+            if typeof(v2) == "null" then
                 const foo = v2
             else
                 const foo = v2
             end
 
-            if typeof(s) == "nil" then
+            if typeof(s) == "null" then
                 const foo = s -- line 18
             else
                 const foo = s -- line 20
@@ -2013,21 +2013,21 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dataflow_analysis_can_tell_refinements_when_
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({6, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({6, 28})));
     CHECK_EQ("string", toString(requireTypeAtPosition({8, 28})));
 
-    CHECK_EQ("nil", toString(requireTypeAtPosition({12, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({12, 28})));
     CHECK_EQ("string", toString(requireTypeAtPosition({14, 28})));
 
     if (!FFlag::DebugLuauForceOldSolver)
     {
         // CLI-115281 - Types produced by refinements don't always get simplified
-        CHECK_EQ("nil & string", toString(requireTypeAtPosition({18, 28})));
+        CHECK_EQ("null & string", toString(requireTypeAtPosition({18, 28})));
         CHECK_EQ("string", toString(requireTypeAtPosition({20, 28})));
     }
     else
     {
-        CHECK_EQ("nil", toString(requireTypeAtPosition({18, 28})));
+        CHECK_EQ("null", toString(requireTypeAtPosition({18, 28})));
         CHECK_EQ("string", toString(requireTypeAtPosition({20, 28})));
     }
 }
@@ -2099,7 +2099,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_annotations_arent_relevant_when_doing_d
             const s1: string = t[5]
             const s2: string = s()
 
-            if typeof(s1) == "nil" and typeof(s2) == "nil" then
+            if typeof(s1) == "null" and typeof(s2) == "null" then
                 const foo = s1
                 const bar = s2
             end
@@ -2108,10 +2108,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_annotations_arent_relevant_when_doing_d
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    // Function calls are treated as (potentially) `nil`, the same as table
+    // Function calls are treated as (potentially) `null`, the same as table
     // access, for UX.
-    CHECK_EQ("nil", toString(requireTypeAtPosition({8, 28})));
-    CHECK_EQ("nil", toString(requireTypeAtPosition({9, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({8, 28})));
+    CHECK_EQ("null", toString(requireTypeAtPosition({9, 28})));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_with_colon_after_refining_not_to_be_nil")
@@ -2125,8 +2125,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_with_colon_after_refining_not_
         }
 
         function _f(handler: Observer<any>)
-            assert(handler.complete != nil)
-            handler:complete() -- incorrectly gives Value of type '((Observer<any>) -> ())?' could be nil
+            assert(handler.complete != null)
+            handler:complete() -- incorrectly gives Value of type '((Observer<any>) -> ())?' could be null
             handler.complete(handler) -- works fine, both forms should avoid the error
         end
     )");
@@ -2152,7 +2152,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinements_should_preserve_error_suppressio
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         const a: any = {}
-        export b = nil
+        export b = null
         if typeof(a) == "table" then
            b = a.field
         end
@@ -2198,7 +2198,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK_EQ("(unknown) -> (~nil, unknown)", toString(requireType("f")));
+    CHECK_EQ("(unknown) -> (~null, unknown)", toString(requireType("f")));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "conditional_refinement_should_stay_error_suppressing")
@@ -2337,7 +2337,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ensure_t_after_return_references_all_reachab
         const t = {}
 
         function f(k: string)
-            if t[k] != nil then
+            if t[k] != null then
                 return
             end
 
@@ -2468,27 +2468,27 @@ type Dir = {
 function test(dirs: {Dir})
     for k, dir in dirs
         const success, message = pcall(function()
-            assert(dir.a == nil or type(dir.a) == "number")
-            assert(dir.b == nil or type(dir.b) == "number")
-            assert(dir.c == nil or type(dir.c) == "number")
-            assert(dir.d == nil or type(dir.d) == "number")
-            assert(dir.e == nil or type(dir.e) == "number")
-            assert(dir.f == nil or type(dir.f) == "number")
-            assert(dir.g == nil or type(dir.g) == "number")
-            assert(dir.h == nil or type(dir.h) == "number")
-            assert(dir.i == nil or type(dir.i) == "number")
-            assert(dir.j == nil or type(dir.j) == "number")
-            assert(dir.k == nil or type(dir.k) == "number")
-            assert(dir.l == nil or type(dir.l) == "number")
-            assert(dir.m == nil or type(dir.m) == "number")
-            assert(dir.n == nil or type(dir.n) == "number")
-            assert(dir.o == nil or type(dir.o) == "number")
-            assert(dir.p == nil or type(dir.p) == "number")
-            assert(dir.q == nil or type(dir.q) == "number")
-            assert(dir.r == nil or type(dir.r) == "number")
-            assert(dir.t == nil or type(dir.t) == "number")
-            assert(dir.u == nil or type(dir.u) == "number")
-            assert(dir.v == nil or type(dir.v) == "number")
+            assert(dir.a == null or type(dir.a) == "number")
+            assert(dir.b == null or type(dir.b) == "number")
+            assert(dir.c == null or type(dir.c) == "number")
+            assert(dir.d == null or type(dir.d) == "number")
+            assert(dir.e == null or type(dir.e) == "number")
+            assert(dir.f == null or type(dir.f) == "number")
+            assert(dir.g == null or type(dir.g) == "number")
+            assert(dir.h == null or type(dir.h) == "number")
+            assert(dir.i == null or type(dir.i) == "number")
+            assert(dir.j == null or type(dir.j) == "number")
+            assert(dir.k == null or type(dir.k) == "number")
+            assert(dir.l == null or type(dir.l) == "number")
+            assert(dir.m == null or type(dir.m) == "number")
+            assert(dir.n == null or type(dir.n) == "number")
+            assert(dir.o == null or type(dir.o) == "number")
+            assert(dir.p == null or type(dir.p) == "number")
+            assert(dir.q == null or type(dir.q) == "number")
+            assert(dir.r == null or type(dir.r) == "number")
+            assert(dir.t == null or type(dir.t) == "number")
+            assert(dir.u == null or type(dir.u) == "number")
+            assert(dir.v == null or type(dir.v) == "number")
             const checkpoint = dir
 
             checkpoint.w = 1
@@ -2556,7 +2556,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonnil_refinement_on_generic")
 {
     CheckResult result = check(R"(
         function printOptional<T>(item: T?, printer: (T) -> string): string
-            if item != nil then
+            if item != null then
                 return printer(item)
             else
                 return ""
@@ -2566,7 +2566,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonnil_refinement_on_generic")
 
     LUAU_REQUIRE_NO_ERRORS(result);
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK_EQ("T & ~nil", toString(requireTypeAtPosition({3, 31})));
+        CHECK_EQ("T & ~null", toString(requireTypeAtPosition({3, 31})));
     else
         CHECK_EQ("T", toString(requireTypeAtPosition({3, 31})));
 }
@@ -2620,7 +2620,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_calls_are_not_nillable")
             if string.match(fileName, "^init%.") then
                 return "path=" .. fileName
             end
-            return nil
+            return null
         end
     )"));
 }
@@ -2705,13 +2705,13 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cli_140033_refine_union_of_exter
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        function getImageLabel(vars: { Instance }): Folder | Part | nil
+        function getImageLabel(vars: { Instance }): Folder | Part | null
             for _, item in vars do
                 if item:IsA("Folder") or item:IsA("Part") then
                     return item
                 end
             end
-            return nil
+            return null
         end
     )"));
 
@@ -2754,7 +2754,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1835")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        const t: {name: string}? = nil
+        const t: {name: string}? = null
 
         function f()
             const name = if t then t.name else "name"
@@ -2763,7 +2763,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1835")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        const t: {name: string}? = nil
+        const t: {name: string}? = null
 
         function f()
             if t then end
@@ -2772,7 +2772,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1835")
     )"));
 
     CheckResult result = check(R"(
-        const t: {name: string}? = nil
+        const t: {name: string}? = null
         if t then end
         print(t.name)
         const name = if t then t.name else "name"
@@ -2830,7 +2830,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_by_no_refine_should_always_reduce")
             if foo(t) then
                 for k, v in t do
                     if table.find(columns, k) then
-                        result[k] = v -- was TypeError: Type function instance refine<intersect<K, ~nil>, *no-refine*> is uninhabited
+                        result[k] = v -- was TypeError: Type function instance refine<intersect<K, ~null>, *no-refine*> is uninhabited
                     end
                 end
             else
@@ -2856,11 +2856,11 @@ TEST_CASE_FIXTURE(Fixture, "table_name_index_without_prior_assignment_from_branc
     // - `CharEntry` is represented as a phi node in the data flow graph;
     // - We never _set_ `CharEntry.Player` prior to accessing it.
     CheckResult results = check(R"(
-        const GetDictionary : (unknown, boolean) -> { Player: {} }? = nil as any
+        const GetDictionary : (unknown, boolean) -> { Player: {} }? = null as any
 
-        export CharEntry = GetDictionary(nil, false)
+        export CharEntry = GetDictionary(null, false)
         if not CharEntry then
-            CharEntry = GetDictionary(nil, true)
+            CharEntry = GetDictionary(null, true)
         end
 
         const x = CharEntry.Player
@@ -2901,7 +2901,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinements_from_and_should_not_refine_to_ne
     )");
 
     CheckResult results = check(R"(
-        const config: Config = nil as any
+        const config: Config = null as any
         function serialize()
             if config.KeyboardEnabled and config.MouseEnabled then
                 return 0
@@ -3139,7 +3139,7 @@ TEST_CASE_FIXTURE(Fixture, "type_function_reduction_with_union_type_application"
 TEST_CASE_FIXTURE(BuiltinsFixture, "refine_any_and_unknown_should_still_be_any")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const REACT_FRAGMENT_TYPE = (nil as any)
+        const REACT_FRAGMENT_TYPE = (null as any)
         function typeOf(object: any)
             const __type = object.type
 
@@ -3241,10 +3241,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "indexing_into_error_gives_error")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function keyExtractor(item: any, index: number): string
-            if typeof(item) == "table" and item.key != nil then
+            if typeof(item) == "table" and item.key != null then
                 return item.key
             end
-            if typeof(item) == "table" and item.id != nil then
+            if typeof(item) == "table" and item.id != null then
                 return item.id
             end
             return tostring(index)
@@ -3260,13 +3260,13 @@ TEST_CASE_FIXTURE(Fixture, "cli_181894_refinement_cancelled_by_for_loop")
         --!strict
         type LightingChanger = { [string]: number, Instances: LightingChanger }
 
-        const lightingChangers: { LightingChanger } = nil as any
+        const lightingChangers: { LightingChanger } = null as any
 
-        closestChanger = nil as any
+        closestChanger = null as any
         if lightingChangers.count == 1 then
             closestChanger = lightingChangers[1]
         end
-        if closestChanger == nil then
+        if closestChanger == null then
             return
         end
 

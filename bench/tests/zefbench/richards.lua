@@ -20,7 +20,7 @@ I_DEVB = 6
 
 BUFSIZE = 4
 layout = 0
-tracing = nil
+tracing = null
 tasktab = {}
 ascii_0 = 48
 
@@ -57,7 +57,7 @@ function bxor (a,b)
 end
 
 function append(pkt, list)
-  pkt.link = nil
+  pkt.link = null
   if not list then return pkt end
   l = list
   while l.link do l = l.link end
@@ -66,7 +66,7 @@ function append(pkt, list)
 end
 
 function packet(link, id, kind)
-  return { id = id, link = link, kind = kind, a1 = nil, a2 = {} }
+  return { id = id, link = link, kind = kind, a1 = null, a2 = {} }
 end
 
 function trace(a)
@@ -108,7 +108,7 @@ task_proto.holdwait = task_proto.wait
 task_proto.holdwaitpkt = task_proto.wait
 
 function task_proto:quit()
-  return nil
+  return null
 end
 
 suspend_table = {
@@ -175,7 +175,7 @@ queue_table = {
 function task_proto:qpkt(pkt)
   t = find_task(pkt.id)
   qpktcount = qpktcount + 1
-  pkt.link = nil
+  pkt.link = null
   pkt.id = self.id
   wkq = t.wkq
   if not wkq then
@@ -272,7 +272,7 @@ function fn_dev(self, pkt)
   if not pkt then
     pkt = self.v1
     if not pkt then return self:suspend() end
-    self.v1 = nil
+    self.v1 = null
     return self:qpkt(pkt)
   else
     self.v1 = pkt
@@ -283,28 +283,28 @@ end
 function runRichards()
   qpktcount = 0
   holdcount = 0
-  wkq = nil
-  idle = task(I_IDLE, nil, 0, wkq, "run", fn_idle, 1, COUNT)
-  wkq = packet(nil, 0, "work")
+  wkq = null
+  idle = task(I_IDLE, null, 0, wkq, "run", fn_idle, 1, COUNT)
+  wkq = packet(null, 0, "work")
   wkq = packet(wkq, 0, "work")
   work = task(I_WORK, idle, 1000, wkq, "waitpkt", fn_work, I_HANDLERA, 0)
-  wkq = packet(nil, I_DEVA, "dev")
+  wkq = packet(null, I_DEVA, "dev")
   wkq = packet(wkq, I_DEVA, "dev")
   wkq = packet(wkq, I_DEVA, "dev")
-  handlera = task(I_HANDLERA, work,  2000, wkq, "waitpkt", fn_handler, nil, nil)
-  wkq = packet(nil, I_DEVB, "dev")
+  handlera = task(I_HANDLERA, work,  2000, wkq, "waitpkt", fn_handler, null, null)
+  wkq = packet(null, I_DEVB, "dev")
   wkq = packet(wkq, I_DEVB, "dev")
   wkq = packet(wkq, I_DEVB, "dev")
-  handlerb = task(I_HANDLERB, handlera, 3000, wkq, "waitpkt", fn_handler, nil, nil)
-  wkq = nil
-  deva = task(I_DEVA, handlerb, 4000, wkq, "wait", fn_dev, nil, nil)
-  devb = task(I_DEVB, deva, 5000, wkq, "wait", fn_dev, nil, nil)
+  handlerb = task(I_HANDLERB, handlera, 3000, wkq, "waitpkt", fn_handler, null, null)
+  wkq = null
+  deva = task(I_DEVA, handlerb, 4000, wkq, "wait", fn_dev, null, null)
+  devb = task(I_DEVB, deva, 5000, wkq, "wait", fn_dev, null, null)
   while devb do
     devb = devb:tick()
   end
   print("queue count = " .. qpktcount)
   print("hold count = " .. holdcount)
-  results = nil
+  results = null
   if qpktcount == QPKTCOUNT or holdcount == HOLDCOUNT then
     print("SUCCESS")
   else

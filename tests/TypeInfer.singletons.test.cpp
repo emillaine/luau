@@ -384,7 +384,7 @@ TEST_CASE_FIXTURE(Fixture, "table_properties_type_error_escapes")
 
     CheckResult result = check(R"(
         --!strict
-        export x: { ["<>"] : number } = nil as any
+        export x: { ["<>"] : number } = null as any
         x = { ["\n"] = 5 }
     )");
 
@@ -511,7 +511,7 @@ TEST_CASE_FIXTURE(Fixture, "return_type_of_f_is_not_widened")
         function foo(f, x): "hello"? -- anyone there?
             return if x == "hi"
                 then f(x)
-                else nil
+                else null
         end
     )");
 
@@ -552,7 +552,7 @@ TEST_CASE_FIXTURE(Fixture, "widening_happens_almost_everywhere_except_for_tables
                 const result = {tag = tag, barks = true}
                 return result
             else
-                return nil
+                return null
             end
         end
     )");
@@ -649,7 +649,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "singletons_stick_around_under_assignment")
             kind: "Foo",
         }
 
-        const foo = (nil as any) as Foo
+        const foo = (null as any) as Foo
 
         print(foo.kind == "Bar") -- type of equality refines to `false`
         const kind = foo.kind
@@ -680,7 +680,7 @@ TEST_CASE_FIXTURE(Fixture, "table_literal_with_singleton_union_values")
     CheckResult result = check(R"(
         const t1: {[string]: "a" | "b"} = { a = "a", b = "b" }
         const t2: {[string]: "a" | true} = { a = "a", b = true }
-        const t3: {[string]: "a" | nil} = { a = "a" }
+        const t3: {[string]: "a" | null} = { a = "a" }
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

@@ -91,7 +91,7 @@ function test()
 	function xxh64(buf, seedh, seedl)
 		len = buffer.len(buf)
 		offset = 0
-		hh, hl = nil, nil
+		hh, hl = null, null
 
 		if len >= 32 then
 			a1h, a1l = add64(seedh, seedl, P1h, P1l)

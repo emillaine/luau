@@ -180,7 +180,7 @@ function Triangle(p1, p2, p3)
         t = (self.nd - orig[self.axis + 1] - self.nu * orig[u + 1] - self.nv * orig[v + 1]) / d;
 
         if (t < near or t > far) then
-            return nil;
+            return null;
         end
 
         Pu = orig[u + 1] + t * dir[u + 1] - self.eu;
@@ -188,16 +188,16 @@ function Triangle(p1, p2, p3)
         a2 = Pv * self.nu1 + Pu * self.nv1;
 
         if (a2 < 0) then
-            return nil;
+            return null;
         end
 
         a3 = Pu * self.nu2 + Pv * self.nv2;
         if (a3 < 0) then
-            return nil;
+            return null;
         end
 
         if ((a2 + a3) > 1) then
-            return nil;
+            return null;
         end
 
         return t;
@@ -214,11 +214,11 @@ function Scene(a_triangles)
     this.background = {0.8,0.8,1};
 
     this.intersect = function(self, origin, dir, near, far)
-        closest = nil;
+        closest = null;
         for i = 0,#self.triangles-1 do
             triangle = self.triangles[i + 1];   
             d = triangle:intersect(origin, dir, near, far);
-            if (d == nil or d > far or d < near) then
+            if (d == null or d > far or d < near) then
                 -- continue;
             else
                 far = d;
@@ -236,7 +236,7 @@ function Scene(a_triangles)
             normal = { -normal[1], -normal[2], -normal[3] };
         end
 
-        colour = nil;
+        colour = null;
         if (closest.shader) then
             colour = closest.shader(closest, hit, dir);
         else
@@ -244,7 +244,7 @@ function Scene(a_triangles)
         end
         
         -- do reflection
-        reflected = nil;
+        reflected = null;
         if (colour.reflection or 0 > 0.001) then
             reflection = addVector(scale(normal, -2*dot(dir, normal)), dir);
             reflected = self:intersect(hit, reflection, 0.0001, 1000000);
@@ -282,11 +282,11 @@ function Scene(a_triangles)
 
     this.blocked = function(self, O, D, far)
         near = 0.0001;
-        closest = nil;
+        closest = null;
         for i = 0,#self.triangles-1 do
             triangle = self.triangles[i + 1];   
             d = triangle:intersect(O, D, near, far);
-            if (d == nil or d > far or d < near) then
+            if (d == null or d > far or d < near) then
                 --continue;
             else
                 return true;

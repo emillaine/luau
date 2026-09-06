@@ -23,11 +23,11 @@ function build.wzr() return { kind = "reg", fixedNum = -1, width = 32, rc = "zr"
 function build.imm(n) return { kind = "imm", text = tostring(n) } end
 function build.sym(name, reloc) return { kind = "sym", text = name, reloc = reloc } end
 
--- Memory operand builder. base is an operand; offset is a number (immediate) or nil.
+-- Memory operand builder. base is an operand; offset is a number (immediate) or null.
 function build.mem(base, offset, opts)
 	opts = opts or {}
 	m = { kind = "mem", base = base, writeback = opts.writeback }
-	if offset != nil then
+	if offset != null then
 		if type(offset) == "number" then
 			m.index = { kind = "imm", text = tostring(offset), value = offset }
 		else
@@ -35,7 +35,7 @@ function build.mem(base, offset, opts)
 		end
 	end
 	if opts.shift then m.shift = opts.shift end
-	if opts.postIndex != nil then
+	if opts.postIndex != null then
 		m.writeback = "post"
 		m.index = { kind = "imm", text = tostring(opts.postIndex), value = opts.postIndex }
 	end
@@ -52,7 +52,7 @@ end
 
 -- Attach a shift/extend to an operand (returns the operand).
 function build.withShift(op, shOp, amount)
-	op.shift = { op = shOp, amount = amount, amountText = amount != nil and tostring(amount) or nil }
+	op.shift = { op = shOp, amount = amount, amountText = amount != null and tostring(amount) or null }
 	return op
 end
 

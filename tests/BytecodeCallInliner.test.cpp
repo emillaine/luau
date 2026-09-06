@@ -1299,7 +1299,7 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_constants_nil_argument")
     std::string result = inlineAndPrint(
         R"(
         function inlinee(a)
-            if a == nil then
+            if a == null then
                 return 0
             end
             return 1
@@ -1368,15 +1368,15 @@ RETURN R2 1
 
 // Regression for the SCCP loop-exit phi fix
 // A register defined inside a loop and used several blocks downstream of the loop exit must resolve through a loop-exit phi, not the pre-loop LOADNIL
-// Without the phi, SCCP sees a constant nil for `y` and folds `if not y` the wrong way
+// Without the phi, SCCP sees a constant null for `y` and folds `if not y` the wrong way
 // In the cdx benchmark this caused infinite recursion
 TEST_CASE_FIXTURE(BytecodeInlinerFixture, "graph_builds_loop_exit_phi_for_downstream_use")
 {
-    // `y` is initialized to nil before the loop, reassigned inside it, and tested only after several intervening blocks (`local z`, `if flag`), so
+    // `y` is initialized to null before the loop, reassigned inside it, and tested only after several intervening blocks (`local z`, `if flag`), so
     // the use is downstream of the loop exit rather than in an immediate successor
     std::vector<CompTimeBcFunction> graphs = buildGraphs(R"(
         function treeInsertLike(root, key, flag)
-            y = nil
+            y = null
             x = root
             while x do
                 y = x
@@ -1438,7 +1438,7 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "graph_builds_loop_exit_phi_for_downst
     }
     CHECK(headerHasExitPhi);
 
-    // the only LOADNIL is `y = nil`, and should not exist after the fix
+    // the only LOADNIL is `y = null`, and should not exist after the fix
     for (uint32_t bi = 0; bi < loopFn->blocks.size(); bi++)
         for (BcOp instOp : loopFn->blocks[bi].ops)
         {
@@ -1626,13 +1626,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "fold_removes_unreachable_closeupvals_
     std::vector<CompTimeBcFunction> graphs = buildGraphs(R"(
         function caller(x)
             repeat
-                const x = nil
+                const x = null
                 (function(...) end)()
             until x
 
             repeat
                 y = {}
-            until function() y = nil end
+            until function() y = null end
         end
         caller()
     )");

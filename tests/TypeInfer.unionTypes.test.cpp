@@ -17,7 +17,7 @@ TEST_SUITE_BEGIN("UnionTypes");
 TEST_CASE_FIXTURE(Fixture, "fuzzer_union_with_one_part_assertion")
 {
     CheckResult result = check(R"(
-const _ = {},nil
+const _ = {},null
 repeat
 
 _,_ = if _.number == "" or _.number or _._ then
@@ -43,7 +43,7 @@ TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint")
                 count = count + 1
                 return count
             else
-                return nil
+                return null
             end
         end
     )");
@@ -65,7 +65,7 @@ TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint_using_compound_assignme
                 count += 1
                 return count
             else
-                return nil
+                return null
             end
         end
     )");
@@ -122,7 +122,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_arguments_table")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export a:{a:string, b:string?} = nil as any
+        export a:{a:string, b:string?} = null as any
         a = {a="ok"}
     )");
 
@@ -258,8 +258,8 @@ TEST_CASE_FIXTURE(Fixture, "index_on_a_union_type_with_one_property_of_type_any"
 TEST_CASE_FIXTURE(Fixture, "union_equality_comparisons")
 {
     CheckResult result = check(R"(
-        type A = number | string | nil
-        type B = number | nil
+        type A = number | string | null
+        type B = number | null
         type C = number | boolean
 
         function f(a: A, b: B, c: C)
@@ -286,7 +286,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_union_members")
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[0]));
     CHECK_EQ("(A?) -> number", toString(requireType("f")));
 }
 
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_union_functions")
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[0]));
     CHECK_EQ("(A?) -> number", toString(requireType("f")));
 }
 
@@ -320,7 +320,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_union_methods")
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[0]));
     CHECK_EQ("(A?) -> number", toString(requireType("f")));
 }
 
@@ -353,8 +353,8 @@ TEST_CASE_FIXTURE(Fixture, "optional_field_access_error")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[0]));
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[1]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[0]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[1]));
     CHECK_EQ("Key 'y' not found in table 'A'", toString(result.errors[2]));
 }
 
@@ -368,7 +368,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_index_error")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[0]));
 }
 
 TEST_CASE_FIXTURE(Fixture, "optional_call_error")
@@ -381,7 +381,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_call_error")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ("Value of type '((number) -> number)?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type '((number) -> number)?' could be null", toString(result.errors[0]));
 }
 
 TEST_CASE_FIXTURE(Fixture, "optional_assignment_errors")
@@ -394,7 +394,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_assignment_errors")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ("Value of type 'A?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type 'A?' could be null", toString(result.errors[0]));
 }
 
 TEST_CASE_FIXTURE(Fixture, "optional_assignment_errors_2")
@@ -408,7 +408,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_assignment_errors_2")
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     auto s = toString(result.errors[0]);
-    CHECK_EQ("Value of type '({ x: number } & { y: number })?' could be nil", s);
+    CHECK_EQ("Value of type '({ x: number } & { y: number })?' could be null", s);
 }
 
 TEST_CASE_FIXTURE(Fixture, "optional_length_error")
@@ -439,7 +439,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_missing_key_error_details")
             const z = a.z
         end
 
-        function g(c: A | B | C | D | nil)
+        function g(c: A | B | C | D | null)
             const d = c.y
         end
     )");
@@ -448,7 +448,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_missing_key_error_details")
     CHECK_EQ("Key 'y' is missing from 'C', 'D' in the type 'A | B | C | D'", toString(result.errors[0]));
     CHECK_EQ("Type 'A | B | C | D' does not have key 'z'", toString(result.errors[1]));
 
-    CHECK_EQ("Value of type '(A | B | C | D)?' could be nil", toString(result.errors[2]));
+    CHECK_EQ("Value of type '(A | B | C | D)?' could be null", toString(result.errors[2]));
     CHECK_EQ("Key 'y' is missing from 'C', 'D' in the type 'A | B | C | D'", toString(result.errors[3]));
 }
 
@@ -464,7 +464,7 @@ end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ("Value of type '{number}?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type '{number}?' could be null", toString(result.errors[0]));
 }
 
 TEST_CASE_FIXTURE(Fixture, "unify_unsealed_table_union_check")
@@ -476,7 +476,7 @@ TEST_CASE_FIXTURE(Fixture, "unify_unsealed_table_union_check")
 const x = { x = 3 }
 type A = number?
 type B = string?
-export y: { x: number, y: A | B } = nil as any
+export y: { x: number, y: A | B } = null as any
 y = x
     )");
 
@@ -742,8 +742,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generics")
     CheckResult result = check(R"(
         function f<a,b>()
             function g(x : (a) -> a?)
-                const y : ((a?) -> nil) | ((a) -> a) = x -- OK
-                const z : ((b?) -> nil) | ((b) -> b) = x -- Not OK
+                const y : ((a?) -> null) | ((a) -> a) = x -- OK
+                const z : ((b?) -> null) | ((b) -> b) = x -- Not OK
             end
         end
     )");
@@ -751,7 +751,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generics")
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
     CHECK_EQ(
-        toString(result.errors[0]), "Expected this to be '((b) -> b) | ((b?) -> nil)', but got '(a) -> a?'; none of the union options are compatible"
+        toString(result.errors[0]), "Expected this to be '((b) -> b) | ((b?) -> null)', but got '(a) -> a?'; none of the union options are compatible"
     );
 }
 
@@ -762,7 +762,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generic_typepacks")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : (number, a...) -> (number?, a...))
-                const y : ((number | string, a...) -> (number, a...)) | ((number?, a...) -> (nil, a...)) = x -- OK
+                const y : ((number | string, a...) -> (number, a...)) | ((number?, a...) -> (null, a...)) = x -- OK
                 const z : ((number) -> number) | ((number?, a...) -> (number?, a...)) = x -- Not OK
             end
         end
@@ -784,15 +784,15 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_arg_arities")
 
     CheckResult result = check(R"(
         function f(x : (number) -> number?)
-            const y : ((number?) -> number) | ((number | string) -> nil) = x -- OK
-            const z : ((number, string?) -> number) | ((number) -> nil) = x -- Not OK
+            const y : ((number?) -> number) | ((number | string) -> null) = x -- OK
+            const z : ((number, string?) -> number) | ((number) -> null) = x -- Not OK
         end
      )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
     const std::string expected = "Expected this to be\n\t"
-                                 "'((number) -> nil) | ((number, string?) -> number)'"
+                                 "'((number) -> null) | ((number, string?) -> number)'"
                                  "\nbut got\n\t"
                                  "'(number) -> number?'"
                                  "; none of the union options are compatible";
@@ -825,18 +825,18 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_variadics")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        function f(x : (...nil) -> (...number?))
-            const y : ((...string?) -> (...number)) | ((...number?) -> nil) = x -- OK
-            const z : ((...string?) -> (...number)) | ((...string?) -> nil) = x -- OK
+        function f(x : (...null) -> (...number?))
+            const y : ((...string?) -> (...number)) | ((...number?) -> null) = x -- OK
+            const z : ((...string?) -> (...number)) | ((...string?) -> null) = x -- OK
         end
      )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
 
     const std::string expected = "Expected this to be\n\t"
-                                 "'((...string?) -> (...number)) | ((...string?) -> nil)'"
+                                 "'((...string?) -> (...number)) | ((...string?) -> null)'"
                                  "\nbut got\n\t"
-                                 "'(...nil) -> (...number?)'"
+                                 "'(...null) -> (...number?)'"
                                  "; none of the union options are compatible";
     CHECK_EQ(expected, toString(result.errors[0]));
 }
@@ -879,7 +879,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_result_variadics
 
     CheckResult result = check(R"(
         function f(x : () -> (number?, ...number))
-            const y : (() -> (...number)) | (() -> nil) = x -- OK
+            const y : (() -> (...number)) | (() -> null) = x -- OK
             const z : (() -> (...number)) | (() -> number) = x -- OK
         end
      )");
@@ -933,9 +933,9 @@ TEST_CASE_FIXTURE(Fixture, "union_table_any_property")
         function f(x)
             -- x : X
             -- sup : { p : { q : X } }?
-            sup = if true then { p = { q = x } } else nil
-            const sub : { p : any } = nil as any
-            sup = nil
+            sup = if true then { p = { q = x } } else null
+            const sub : { p : any } = null as any
+            sup = null
             sup = sub
         end
     )");
@@ -979,7 +979,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_function_with_optional_arg")
             end
             return result
         end
-        const t : {string} = f(nil)
+        const t : {string} = f(null)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1008,7 +1008,7 @@ TEST_CASE_FIXTURE(Fixture, "suppress_errors_for_prop_lookup_of_a_union_that_incl
     registerHiddenTypes(getFrontend());
 
     CheckResult result = check(R"(
-        function f(a: err | Not<nil>)
+        function f(a: err | Not<null>)
             const b = a.foo
         end
     )");
@@ -1033,12 +1033,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "handle_multiple_optionals")
 TEST_CASE_FIXTURE(BuiltinsFixture, "bounds_propagate_into_free_union_bounds")
 {
     /*
-     * When unifying 'a <: T | nil in a context where T substituted for 't, we must constrain the lower bound of 't by 'a.
+     * When unifying 'a <: T | null in a context where T substituted for 't, we must constrain the lower bound of 't by 'a.
      */
     CheckResult result = check(R"(
         function unwrap<T>(a: T?): T
-            if a == nil then
-                error("Unexpected nil!")
+            if a == null then
+                error("Unexpected null!")
             end
             return a
         end

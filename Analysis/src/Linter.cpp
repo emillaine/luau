@@ -1172,7 +1172,7 @@ private:
 
     TypeKind getTypeKind(const std::string& name)
     {
-        if (name == "nil" || name == "boolean" || name == "userdata" || name == "number" || name == "string" || name == "table" ||
+        if (name == "null" || name == "boolean" || name == "userdata" || name == "number" || name == "string" || name == "table" ||
             name == "function" || name == "thread" || name == "buffer")
             return Kind_Primitive;
 
@@ -1355,7 +1355,7 @@ private:
                     *context,
                     LintWarning::Code_UnbalancedAssignment,
                     location,
-                    "Assigning %d values to %d variables initializes extra variables with nil; add 'nil' to value list to silence",
+                    "Assigning %d values to %d variables initializes extra variables with null; add 'null' to value list to silence",
                     int(values.size),
                     int(vars)
                 );
@@ -2126,7 +2126,7 @@ private:
                     *context,
                     LintWarning::Code_UninitializedLocal,
                     l.firstUse->location,
-                    "Variable '%s' defined at line %d is never initialized or assigned; initialize with 'nil' to silence",
+                    "Variable '%s' defined at line %d is never initialized or assigned; initialize with 'null' to silence",
                     local->name.value,
                     local->location.begin.line + 1
                 );
@@ -3128,7 +3128,7 @@ private:
         const char* alt = nullptr;
 
         if (and_->right->is<AstExprConstantNil>())
-            alt = "nil";
+            alt = "null";
         else if (AstExprConstantBool* c = and_->right->as<AstExprConstantBool>(); c && c->value == false)
             alt = "false";
 

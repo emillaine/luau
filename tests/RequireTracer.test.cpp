@@ -134,7 +134,7 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "trace_function_arguments")
 TEST_CASE_FIXTURE(RequireTracerFixture, "follow_typeof")
 {
     AstStatBlock* block = parse(R"(
-        const R: typeof(require(workspace.CoolThing).UsefulObject) = nil
+        const R: typeof(require(workspace.CoolThing).UsefulObject) = null
     )");
     REQUIRE_EQ(1, block->body.size);
 

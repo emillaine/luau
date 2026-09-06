@@ -23,24 +23,24 @@ x86_64_render.regName = regName
 
 -- physical number for an operand (fixed, tempRef, or lifted opTemp).
 function physOf(node, op, colorNum)
-	if not op or op.kind != "reg" then return nil end
-	if op.fixedNum != nil then return op.fixedNum end
-	if op.tempRef != nil then return colorNum and colorNum(op.tempRef) end
-	if node.opTemp and node.opTemp[op] != nil then return colorNum and colorNum(node.opTemp[op]) end
-	return nil
+	if not op or op.kind != "reg" then return null end
+	if op.fixedNum != null then return op.fixedNum end
+	if op.tempRef != null then return colorNum and colorNum(op.tempRef) end
+	if node.opTemp and node.opTemp[op] != null then return colorNum and colorNum(node.opTemp[op]) end
+	return null
 end
 
 function renderOperand(node, op, colorNum, syntax)
 	function numOf(o)
-		if o.fixedNum != nil then return o.fixedNum end
-		if o.tempRef != nil then return colorNum and colorNum(o.tempRef) end
-		if node.opTemp then t = node.opTemp[o]; if t != nil then return colorNum and colorNum(t) end end
-		return nil
+		if o.fixedNum != null then return o.fixedNum end
+		if o.tempRef != null then return colorNum and colorNum(o.tempRef) end
+		if node.opTemp then t = node.opTemp[o]; if t != null then return colorNum and colorNum(t) end end
+		return null
 	end
 	if op.kind == "reg" then
 		if op.rc == "rip" then return syntax == "att" and "%rip" or "rip" end
 		num = numOf(op)
-		name = (num != nil) and regName(num, op.width or 64) or op.name
+		name = (num != null) and regName(num, op.width or 64) or op.name
 		return syntax == "att" and ("%" .. name) or name
 	else if op.kind == "imm" then
 		return syntax == "att" and ("$" .. op.text) or op.text
@@ -93,7 +93,7 @@ x86_64_render.renderOperand = renderOperand
 
 -- operation size (bytes) for a synthesized instruction (widest reg, or mem.size).
 function opSize(node, colorNum)
-	w = nil
+	w = null
 	for _, op in (node.operands or {}) do
 		if op.kind == "reg" and op.rc != "rip" then w = math.max(w or 0, op.width or 64)
 		else if op.kind == "mem" and op.size then w = math.max(w or 0, op.size * 8) end
@@ -124,7 +124,7 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 			outMnem = low  -- already a full AT&T form (movzbl, movslq, ...): render verbatim
 		else if base == "movzx" or base == "movsx" then
 			letter = string.match(low, "^mov[zs]([bw])")
-			srcBytes = letter and ({ b = 1, w = 2 })[letter] or nil
+			srcBytes = letter and ({ b = 1, w = 2 })[letter] or null
 			if not srcBytes then for _, op in ops do if op.kind == "mem" and op.size then srcBytes = op.size end end end
 			if not srcBytes and ops[2] and ops[2].kind == "reg" and ops[2].rc != "rip" then
 				srcBytes = math.floor((ops[2].width or 16) / 8)
@@ -148,7 +148,7 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 	end
 
 	-- determine a memory size for intel PTR prefixes (imm+mem ambiguity)
-	memSize = nil
+	memSize = null
 	do
 		w = 0
 		hasMem = false
@@ -190,7 +190,7 @@ function x86_64_render.isSelfMove(node, colorNum)
 	if (ops[1].width or 64) != 64 or (ops[2].width or 64) != 64 then return false end
 	a = physOf(node, ops[1], colorNum)
 	b = physOf(node, ops[2], colorNum)
-	return a != nil and a == b
+	return a != null and a == b
 end
 
 -- Frame layout -----------------------------------------------------------
@@ -210,9 +210,9 @@ x86_64_render.computeLayout = computeLayout
 function x86_64_render.makeColorNum(color)
 	return function(t)
 		c = color[t]
-		if not c then return nil end
+		if not c then return null end
 		r = x86parse.classifyReg(c)
-		return r and r.num or nil
+		return r and r.num or null
 	end
 end
 

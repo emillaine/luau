@@ -21,11 +21,11 @@ assert(type(assert({})) == 'table')
 
 -- fails correctly
 assert(ecall(function() assert() end) == "missing argument #1")
-assert(ecall(function() assert(nil) end) == "assertion failed!")
+assert(ecall(function() assert(null) end) == "assertion failed!")
 assert(ecall(function() assert(false) end) == "assertion failed!")
 
 -- fails with a message
-assert(ecall(function() assert(nil, "epic fail") end) == "epic fail")
+assert(ecall(function() assert(null, "epic fail") end) == "epic fail")
 
 -- returns all arguments for multi-arg calls
 assert(select('#', assert(1, 2, 3)) == 3)

@@ -48,7 +48,7 @@ for i=1,10 do
   a[i] = {set = function(x) i=x end, get = function () return i end}
   if i == 3 then break end
 end
-assert(a[4] == nil)
+assert(a[4] == null)
 a[1].set(10)
 assert(a[2].get() == 2)
 a[2].set('a')
@@ -88,7 +88,7 @@ assert(({f()})[2] == "a")
 
 -- testing closure x break x return x errors
 
-b = nil
+b = null
 function f(x)
   first = 1
   while 1 do
@@ -105,7 +105,7 @@ function f(x)
     else if x == 2 then return
     else do if x != 3 then error() end end
     end
-    first = nil
+    first = null
   end
 end
 
@@ -113,7 +113,7 @@ for i=1,3 do
   f(i)
   assert(b('get') == 'xuxu')
   b('set', 10); assert(b('get') == 10+i)
-  b = nil
+  b = null
 end
 
 pcall(f, 4);
@@ -121,7 +121,7 @@ assert(b('get') == 'xuxu')
 b('set', 10); assert(b('get') == 14)
 
 
-w = nil
+w = null
 -- testing multi-level closure
 function f(x)
   return function (y)
@@ -158,9 +158,9 @@ t()
 
 -- coroutine tests
 
-f = nil
+f = null
 
--- assert(coroutine.running() == nil)
+-- assert(coroutine.running() == null)
 
 
 -- tests for global environment
@@ -191,7 +191,7 @@ function eqtab (t1, t2)
   end
 end
 
-_G.x = nil   -- declare x
+_G.x = null   -- declare x
 function foo (a, ...)
   assert(coroutine.running() == f)
   assert(coroutine.status(f) == "running")
@@ -205,18 +205,18 @@ end
 f = coroutine.create(foo)
 assert(type(f) == "thread" and coroutine.status(f) == "suspended")
 assert(string.find(tostring(f), "thread"))
-s,a,b,c,d = nil, nil, nil, nil, nil
+s,a,b,c,d = null, null, null, null, null
 s,a,b,c,d = coroutine.resume(f, {1,2,3}, {}, {1}, {'a', 'b', 'c'})
-assert(s and a == nil and coroutine.status(f) == "suspended")
+assert(s and a == null and coroutine.status(f) == "suspended")
 s,a,b,c,d = coroutine.resume(f)
 eqtab(_G.x, {})
-assert(s and a == 1 and b == nil)
+assert(s and a == 1 and b == null)
 s,a,b,c,d = coroutine.resume(f, 1, 2, 3)
 eqtab(_G.x, {1, 2, 3})
-assert(s and a == 'a' and b == 'b' and c == 'c' and d == nil)
+assert(s and a == 'a' and b == 'b' and c == 'c' and d == null)
 s,a,b,c,d = coroutine.resume(f, "xuxu")
 eqtab(_G.x, {"xuxu"})
-assert(s and a == 1 and b == 2 and c == 3 and d == nil)
+assert(s and a == 1 and b == 2 and c == 3 and d == null)
 assert(coroutine.status(f) == "dead")
 s, a = coroutine.resume(f, "xuxu")
 assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
@@ -258,7 +258,7 @@ function filter (p, g)
   return coroutine.wrap(function ()
     while 1 do
       n = g()
-      if n == nil then return end
+      if n == null then return end
       if n%p != 0 then coroutine.yield(n) end
     end
   end)
@@ -268,7 +268,7 @@ x = gen(100)
 a = {}
 while 1 do
   n = x()
-  if n == nil then break end
+  if n == null then break end
   table.insert(a, n)
   x = filter(n, x)
 end
@@ -334,9 +334,9 @@ C[1] = x;
 
 f = x()
 assert(f() == 21 and x()() == 32 and x() == f)
-x = nil
+x = null
 collectgarbage()
--- assert(C[1] == nil)
+-- assert(C[1] == null)
 assert(f() == 43 and f() == 53)
 
 
@@ -387,10 +387,10 @@ co = coroutine.create(function ()
 
 -- large closure size
 do
-  a1, a2, a3, a4, a5, a6, a7, a8, a9, a0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
-  b1, b2, b3, b4, b5, b6, b7, b8, b9, b0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
-  c1, c2, c3, c4, c5, c6, c7, c8, c9, c0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
-  d1, d2, d3, d4, d5, d6, d7, d8, d9, d0 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+  a1, a2, a3, a4, a5, a6, a7, a8, a9, a0 = null, null, null, null, null, null, null, null, null, null
+  b1, b2, b3, b4, b5, b6, b7, b8, b9, b0 = null, null, null, null, null, null, null, null, null, null
+  c1, c2, c3, c4, c5, c6, c7, c8, c9, c0 = null, null, null, null, null, null, null, null, null, null
+  d1, d2, d3, d4, d5, d6, d7, d8, d9, d0 = null, null, null, null, null, null, null, null, null, null
 
   f = function()
     return

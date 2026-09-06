@@ -12,7 +12,7 @@ type Map<K, V> = {
 	size: number,
 	-- method definitions
 	set: (self: Map<K, V>, K, V) -> Map<K, V>,
-	get: (self: Map<K, V>, K) -> V | nil,
+	get: (self: Map<K, V>, K) -> V | null,
 	clear: (self: Map<K, V>) -> (),
 	delete: (self: Map<K, V>, K) -> boolean,
 	forEach: (self: Map<K, V>, callback: callbackFn<K, V> | callbackFnWithThisArg<K, V>, thisArg: Object?) -> (),
@@ -38,7 +38,7 @@ function Array.isArray(value: any): boolean
 	if typeof(value) != "table" then
 		return false
 	end
-	if next(value) == nil then
+	if next(value) == null then
 		-- an empty table is an empty array
 		return true
 	end
@@ -70,8 +70,8 @@ function Array.from<T, U>(
 	mapFn: (mapFn<T, U> | mapFnWithThisArg<T, U>)?,
 	thisArg: Object?
 ): Array<U>
-	if value == nil then
-		error("cannot create array from a nil value")
+	if value == null then
+		error("cannot create array from a null value")
 	end
 	valueType = typeof(value)
 
@@ -80,7 +80,7 @@ function Array.from<T, U>(
 	if valueType == "table" and Array.isArray(value) then
 		if mapFn then
 			for i = 1, #(value as Array<T>) do
-				if thisArg != nil then
+				if thisArg != null then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as Array<T>)[i], i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)((value as Array<T>)[i], i)
@@ -94,7 +94,7 @@ function Array.from<T, U>(
 	else if instanceOf(value, Set) then
 		if mapFn then
 			for i, v in (value as any):ipairs() do
-				if thisArg != nil then
+				if thisArg != null then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, v, i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)(v, i)
@@ -108,7 +108,7 @@ function Array.from<T, U>(
 	else if instanceOf(value, Map) then
 		if mapFn then
 			for i, v in (value as any):ipairs() do
-				if thisArg != nil then
+				if thisArg != null then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, v, i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)(v, i)
@@ -122,7 +122,7 @@ function Array.from<T, U>(
 	else if valueType == "string" then
 		if mapFn then
 			for i = 1, (value as string):len() do
-				if thisArg != nil then
+				if thisArg != null then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as any):sub(i, i), i)
 				else
 					array[i] = (mapFn as mapFn<T, U>)((value as any):sub(i, i), i)
@@ -162,10 +162,10 @@ function Array.map<T, U, V>(
 	while k <= len do
 		kValue = t[k]
 
-		if kValue != nil then
-			mappedValue = nil
+		if kValue != null then
+			mappedValue = null
 
-			if thisArg != nil then
+			if thisArg != null then
 				mappedValue = (callback as callbackFnWithThisArgArrayMap<T, U, V>)(thisArg, kValue, k, t)
 			else
 				mappedValue = (callback as callbackFnArrayMap<T, U>)(kValue, k, t)
@@ -193,10 +193,10 @@ function Array.reduce<T>(array: Array<T>, callback: Function, initialValue: any?
 
 	length = #array
 
-	value = nil
+	value = null
 	initial = 1
 
-	if initialValue != nil then
+	if initialValue != null then
 		value = initialValue
 	else
 		initial = 2
@@ -236,7 +236,7 @@ function Array.forEach<T, U>(
 	while k <= len do
 		kValue = t[k]
 
-		if thisArg != nil then
+		if thisArg != null then
 			(callback as callbackFnWithThisArgArrayForEach<T, U>)(thisArg, kValue, k, t)
 		else
 			(callback as callbackFnArrayForEach<T>)(kValue, k, t)
@@ -270,11 +270,11 @@ export type Set<T> = {
 
 type Iterable = { ipairs: (any) -> any }
 
-function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | nil): Set<T>
+function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | null): Set<T>
 	array = {}
 	map = {}
-	if iterable != nil then
-		arrayIterable = nil
+	if iterable != null then
+		arrayIterable = null
 		-- ROBLOX TODO: remove type casting from (iterable as any).ipairs in next release
 		if typeof(iterable) == "table" then
 			if Array.isArray(iterable) then
@@ -336,7 +336,7 @@ function Set:delete(value): boolean
 	end
 	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 	self.size = self.size as number - 1
-	self._map[value] = nil
+	self._map[value] = null
 	index = table.find(self._array, value)
 	if index then
 		table.remove(self._array, index)
@@ -352,7 +352,7 @@ function Set:forEach<T>(callback: callbackFnSet<T> | callbackFnWithThisArgSet<T>
 	end
 
 	return Array.forEach(self._array, function(value: T)
-		if thisArg != nil then
+		if thisArg != null then
 			(callback as callbackFnWithThisArgSet<T>)(thisArg, value, value, self)
 		else
 			(callback as callbackFnSet<T>)(value, value, self)
@@ -361,7 +361,7 @@ function Set:forEach<T>(callback: callbackFnSet<T> | callbackFnWithThisArgSet<T>
 end
 
 function Set:has(value): boolean
-	return self._map[value] != nil
+	return self._map[value] != null
 end
 
 function Set:ipairs()
@@ -372,7 +372,7 @@ end
 
 -- #region Object
 function Object.entries(value: string | Object | Array<any>): Array<any>
-	assert(value as any != nil, "cannot get entries from a nil value")
+	assert(value as any != null, "cannot get entries from a null value")
 	valueType = typeof(value)
 
 	entries = {}
@@ -404,7 +404,7 @@ function instanceOf(tbl: any, class)
 	end
 
 	ok, hasNew = pcall(function()
-		return class.new != nil and tbl.new == class.new
+		return class.new != null and tbl.new == class.new
 	end)
 	if ok and hasNew then
 		return true
@@ -438,8 +438,8 @@ end
 function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 	array = {}
 	map = {}
-	if iterable != nil then
-		arrayFromIterable = nil
+	if iterable != null then
+		arrayFromIterable = null
 		iterableType = typeof(iterable)
 		if iterableType == "table" then
 			if #iterable > 0 and typeof(iterable[1]) != "table" then
@@ -454,13 +454,13 @@ function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 		for _, entry in ipairs(arrayFromIterable) do
 			key = entry[1]
 			if _G.__DEV__ then
-				if key == nil then
+				if key == null then
 					error("cannot create Map from a table that isn't an array.")
 				end
 			end
 			val = entry[2]
 			-- only add to array if new
-			if map[key] == nil then
+			if map[key] == null then
 				table.insert(array, key)
 			end
 			-- always assign
@@ -477,7 +477,7 @@ end
 
 function Map:set<K, V>(key: K, value: V): Map<K, V>
 	-- preserve initial insertion order
-	if self._map[key] == nil then
+	if self._map[key] == null then
 		-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 		self.size = self.size as number + 1
 		table.insert(self._array, key)
@@ -499,12 +499,12 @@ function Map:clear()
 end
 
 function Map:delete(key): boolean
-	if self._map[key] == nil then
+	if self._map[key] == null then
 		return false
 	end
 	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 	self.size = self.size as number - 1
-	self._map[key] = nil
+	self._map[key] = null
 	index = table.find(self._array, key)
 	if index then
 		table.remove(self._array, index)
@@ -522,7 +522,7 @@ function Map:forEach<K, V>(callback: callbackFn<K, V> | callbackFnWithThisArg<K,
 	return Array.forEach(self._array, function(key: K)
 		value = self._map[key] as V
 
-		if thisArg != nil then
+		if thisArg != null then
 			(callback as callbackFnWithThisArg<K, V>)(thisArg, value, key, self)
 		else
 			(callback as callbackFn<K, V>)(value, key, self)
@@ -531,7 +531,7 @@ function Map:forEach<K, V>(callback: callbackFn<K, V> | callbackFnWithThisArg<K,
 end
 
 function Map:has(key): boolean
-	return self._map[key] != nil
+	return self._map[key] != null
 end
 
 function Map:keys()
@@ -556,7 +556,7 @@ end
 
 function Map.__index(self, key)
 	mapProp = rawget(Map, key)
-	if mapProp != nil then
+	if mapProp != null then
 		return mapProp
 	end
 
@@ -707,9 +707,9 @@ it("returns value of item from provided key", function()
 	assert(foo:get(AN_ITEM) == "foo")
 end)
 
-it("returns nil if the item is not in the Map", function()
+it("returns null if the item is not in the Map", function()
 	foo = Map.new()
-	assert(foo:get(AN_ITEM) == nil)
+	assert(foo:get(AN_ITEM) == null)
 end)
 -- #endregion
 
@@ -769,7 +769,7 @@ it("deletes value set to false", function()
 	foo:delete(AN_ITEM)
 
 	assert(foo.size == 0)
-	assert(foo:get(AN_ITEM) == nil)
+	assert(foo:get(AN_ITEM) == null)
 end)
 -- #endregion
 
@@ -909,9 +909,9 @@ end)
 
 -- 	assert(myMap:get("a string") == "value associated with 'a string'")
 
--- 	assert(myMap:get({}) == nil) -- nil, because keyObj !== {}
--- 	assert(myMap:get(function() -- nil because keyFunc !== function () {}
--- 	end) == nil)
+-- 	assert(myMap:get({}) == null) -- null, because keyObj !== {}
+-- 	assert(myMap:get(function() -- null because keyFunc !== function () {}
+-- 	end) == null)
 -- end)
 
 it("handles non-traditional keys", function()

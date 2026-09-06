@@ -10,25 +10,25 @@ function checksort(t, f, ...)
 end
 
 -- basic edge cases
-checksort({}, nil)
-checksort({1}, nil, 1)
+checksort({}, null)
+checksort({1}, null, 1)
 
 -- small inputs
-checksort({1, 2}, nil, 1, 2)
-checksort({2, 1}, nil, 1, 2)
+checksort({1, 2}, null, 1, 2)
+checksort({2, 1}, null, 1, 2)
 
-checksort({1, 2, 3}, nil, 1, 2, 3)
-checksort({2, 1, 3}, nil, 1, 2, 3)
-checksort({1, 3, 2}, nil, 1, 2, 3)
-checksort({3, 2, 1}, nil, 1, 2, 3)
-checksort({3, 1, 2}, nil, 1, 2, 3)
+checksort({1, 2, 3}, null, 1, 2, 3)
+checksort({2, 1, 3}, null, 1, 2, 3)
+checksort({1, 3, 2}, null, 1, 2, 3)
+checksort({3, 2, 1}, null, 1, 2, 3)
+checksort({3, 1, 2}, null, 1, 2, 3)
 
 -- "large" input
-checksort({3, 8, 1, 7, 10, 2, 5, 4, 9, 6}, nil, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-checksort({"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}, nil, "Apr", "Aug", "Dec", "Feb", "Jan", "Jul", "Jun", "Mar", "May", "Nov", "Oct", "Sep")
+checksort({3, 8, 1, 7, 10, 2, 5, 4, 9, 6}, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+checksort({"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}, null, "Apr", "Aug", "Dec", "Feb", "Jan", "Jul", "Jun", "Mar", "May", "Nov", "Oct", "Sep")
 
 -- duplicates
-checksort({3, 1, 1, 7, 1, 3, 5, 1, 9, 3}, nil, 1, 1, 1, 1, 3, 3, 3, 5, 7, 9)
+checksort({3, 1, 1, 7, 1, 3, 5, 1, 9, 3}, null, 1, 1, 1, 1, 3, 3, 3, 5, 7, 9)
 
 -- predicates
 checksort({3, 8, 1, 7, 10, 2, 5, 4, 9, 6}, function (a, b) return a > b end, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
@@ -36,7 +36,7 @@ checksort({3, 8, 1, 7, 10, 2, 5, 4, 9, 6}, function (a, b) return a > b end, 10,
 -- can't sort readonly tables
 assert(pcall(table.sort, table.freeze({2, 1})) == false)
 
--- first argument must be a table, second argument must be nil or function
+-- first argument must be a table, second argument must be null or function
 assert(pcall(table.sort) == false)
 assert(pcall(table.sort, "abc") == false)
 assert(pcall(table.sort, {}, 42) == false)
@@ -90,9 +90,9 @@ table.sort{}  -- empty array
 
 for i=1,limit do a[i] = false end
 x = os.clock();
-table.sort(a, function(x,y) return nil end)
+table.sort(a, function(x,y) return null end)
 print(string.format("Sorting %d equal elements in %.2f sec.", limit, os.clock()-x))
-check(a, function(x,y) return nil end)
+check(a, function(x,y) return null end)
 for i,v in pairs(a) do assert(not v or i=='n' and v==limit) end
 
 a = {"álo", "\0first :-)", "alo", "then this one", "45", "and a new"}
@@ -127,17 +127,17 @@ do
   end
 
   table.sort(t, function (x, y)
-    if keys[x] == nil and keys[y] == nil then
+    if keys[x] == null and keys[y] == null then
       if x == candidate then keys[x] = next else keys[y] = next end
       next += 1
     end
 
-    if keys[x] == nil then
+    if keys[x] == null then
       candidate = x
       return true
     end
 
-    if keys[y] == nil then
+    if keys[y] == null then
       candidate = y
       return false
     end

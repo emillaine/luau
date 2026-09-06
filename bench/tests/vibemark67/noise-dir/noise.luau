@@ -81,7 +81,7 @@ function hkdf(chainingKey: buffer, ikm: buffer, numOutputs: number): (buffer, bu
 	out1 = sha256.hmac(tempKey, oneByte(0x01))
 	out2 = sha256.hmac(tempKey, concat({ out1, oneByte(0x02) }))
 	if numOutputs == 2 then
-		return out1, out2, nil
+		return out1, out2, null
 	end
 	out3 = sha256.hmac(tempKey, concat({ out2, oneByte(0x03) }))
 	return out1, out2, out3
@@ -111,7 +111,7 @@ end
 -- plaintext passes through unchanged, per the Noise spec.
 function encryptWithAd(cs: CipherState, ad: buffer, plaintext: buffer): buffer
 	k = cs.k
-	if k == nil then
+	if k == null then
 		return plaintext
 	end
 	ct, tag = aead.seal(k, nonceBuffer(cs.n), plaintext, ad)
@@ -122,7 +122,7 @@ end
 -- Decrypt with associated data. Returns plaintext, or errors on auth failure.
 function decryptWithAd(cs: CipherState, ad: buffer, ciphertext: buffer): buffer
 	k = cs.k
-	if k == nil then
+	if k == null then
 		return ciphertext
 	end
 	n = buffer.len(ciphertext)
@@ -130,7 +130,7 @@ function decryptWithAd(cs: CipherState, ad: buffer, ciphertext: buffer): buffer
 	ct = slice(ciphertext, 0, n - TAGLEN)
 	tag = slice(ciphertext, n - TAGLEN, TAGLEN)
 	pt = aead.open(k, nonceBuffer(cs.n), ct, tag, ad)
-	assert(pt != nil, "Noise: decryption failed (authentication)")
+	assert(pt != null, "Noise: decryption failed (authentication)")
 	cs.n += 1
 	return pt as buffer
 end
@@ -155,14 +155,14 @@ type SymmetricState = {
 
 function newSymmetricState(protocolName: string): SymmetricState
 	nameBuf = buffer.fromstring(protocolName)
-	h = nil
+	h = null
 	if buffer.len(nameBuf) <= HASHLEN then
 		h = buffer.create(HASHLEN) -- zero-padded
 		buffer.copy(h, 0, nameBuf, 0, buffer.len(nameBuf))
 	else
 		h = sha256.hash(nameBuf)
 	end
-	return { ck = slice(h, 0, HASHLEN), h = h, cs = newCipherState(nil) }
+	return { ck = slice(h, 0, HASHLEN), h = h, cs = newCipherState(null) }
 end
 
 function mixKey(ss: SymmetricState, ikm: buffer)
@@ -229,14 +229,14 @@ function initialize(initiator: boolean, staticKeys: KeyPair, prologue: buffer?):
 		ss = ss,
 		initiator = initiator,
 		s = staticKeys,
-		e = nil,
-		rs = nil,
-		re = nil,
-		kem = nil,
-		remoteEk = nil,
+		e = null,
+		rs = null,
+		re = null,
+		kem = null,
+		remoteEk = null,
 		msgIndex = 0,
-		sendCS = nil,
-		recvCS = nil,
+		sendCS = null,
+		recvCS = null,
 	}
 end
 
@@ -380,7 +380,7 @@ end
 -- message bytes to transmit.
 function noise.writeMessage(hs: Handshake, payload: buffer?): buffer
 	pl = payload or EMPTY
-	msg = nil
+	msg = null
 	if hs.initiator and hs.msgIndex == 0 then
 		msg = writeMsg1(hs, pl)
 	else if not hs.initiator and hs.msgIndex == 1 then
@@ -398,7 +398,7 @@ end
 
 -- Read the next handshake message. Returns the decrypted payload.
 function noise.readMessage(hs: Handshake, message: buffer): buffer
-	payload = nil
+	payload = null
 	if not hs.initiator and hs.msgIndex == 0 then
 		payload = readMsg1(hs, message)
 	else if hs.initiator and hs.msgIndex == 1 then
@@ -415,7 +415,7 @@ end
 
 -- True once the three-message handshake is complete and transport keys exist.
 function noise.handshakeFinished(hs: Handshake): boolean
-	return hs.sendCS != nil and hs.recvCS != nil
+	return hs.sendCS != null and hs.recvCS != null
 end
 
 -- Expose the handshake hash (channel binding value) after completion.

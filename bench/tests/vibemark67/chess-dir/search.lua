@@ -22,7 +22,7 @@ type TTEntry = {
 
 ttSize = 65536
 ttMask = ttSize - 1
-tt = table.create(ttSize, nil)
+tt = table.create(ttSize, null)
 
 nodesSearched = 0
 
@@ -39,9 +39,9 @@ function ttProbe(hash: number, depth: number, alpha: number, beta: number): (num
                 return beta, entry.bestFrom, entry.bestTo
             end
         end
-        return nil, entry.bestFrom, entry.bestTo
+        return null, entry.bestFrom, entry.bestTo
     end
-    return nil, nil, nil
+    return null, null, null
 end
 
 function ttStore(hash: number, depth: number, score: number, flag: number, bestFrom: number, bestTo: number)
@@ -160,7 +160,7 @@ end
 
 function search(board: boardMod.Board, maxDepth: number): (movegen.Move?, number, number)
     nodesSearched = 0
-    bestMove = nil
+    bestMove = null
     bestScore = -INFINITY
 
     for depth = 1, maxDepth do
@@ -172,7 +172,7 @@ function search(board: boardMod.Board, maxDepth: number): (movegen.Move?, number
 
         alpha = -INFINITY
         beta = INFINITY
-        currentBest = nil
+        currentBest = null
         currentScore = -INFINITY
 
         for _, move in moves do
@@ -199,7 +199,7 @@ end
 
 function clearTT()
     for i = 1, ttSize do
-        tt[i] = nil
+        tt[i] = null
     end
 end
 

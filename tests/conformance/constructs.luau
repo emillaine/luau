@@ -7,16 +7,16 @@ print "testing syntax"
 assert(2^3^2 == 2^(3^2));
 assert(2^3*4 == (2^3)*4);
 assert(2^-2 == 1/4 and -2^- -2 == - - -4);
-assert(not nil and 2 and not(2>3 or 3<2));
+assert(not null and 2 and not(2>3 or 3<2));
 assert(-3-1-5 == 0+0-9);
 assert(-2^2 == -4 and (-2)^2 == 4 and 2*2-3-1 == 0);
 assert(2*1+3/3 == 3 and 1+2 .. 3*1 == "33");
 assert(not(2+1 > 3*1) and "a".."b" > "a");
 
-assert(not ((true or false) and nil))
-assert(      true or false  and nil)
+assert(not ((true or false) and null))
+assert(      true or false  and null)
 
-a,b = 1,nil;
+a,b = 1,null;
 assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75);
 x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
 x = (((2<3) or 1) == true and (2<3 and 4) == 4); assert(x);
@@ -31,10 +31,10 @@ assert(1234567890 == tonumber('1234567890') and 1234567890+1 == 1234567891)
 
 -- silly loops
 repeat until 1; repeat until true;
-while false do end; while nil do end;
+while false do end; while null do end;
 
 do  -- test old bug (first name could not be an `upvalue')
- a = nil; function f(x) x={a=1}; x={x=1}; x={G=1} end
+ a = null; function f(x) x={a=1}; x={x=1}; x={G=1} end
 end
 
 function f (i)
@@ -44,9 +44,9 @@ end
 
 x = {f(3), f(5), f(10);};
 assert(x[1] == 3 and x[2] == 5 and x[3] == 10 and x[4] == 9 and x[12] == 1);
-assert(x[nil] == nil)
-x = {f'alo', f'xixi', nil};
-assert(x[1] == 'alo' and x[2] == 'xixi' and x[3] == nil);
+assert(x[null] == null)
+x = {f'alo', f'xixi', null};
+assert(x[1] == 'alo' and x[2] == 'xixi' and x[3] == null);
 x = {f'alo'..'xixi'};
 assert(x[1] == 'aloxixi')
 x = {f{}}
@@ -60,13 +60,13 @@ f = function (i)
   end;
 end
 
-assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == nil)
+assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == null)
 
 for i=1,1000 do break; end;
 n=100;
 i=3;
 t = {};
-a=nil
+a=null
 while not a do
   a=0; for i=1,n do for i=i,1,-1 do a=a+1; t[i]=1; end; end;
 end
@@ -76,7 +76,7 @@ assert(t[1] and t[n] and not t[0] and not t[n+1])
 function f(b)
   x = 1;
   repeat
-    a = nil;
+    a = null;
     if b==1 then b=1; x=10; break
     else if b==2 then x=20; break;
     else if b==3 then x=30;
@@ -99,7 +99,7 @@ end
 
 assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == 8)
 
-a, b = nil, 23
+a, b = null, 23
 x = {f(100)*2+3 or a, a or b+2}
 assert(x[1] == 19 and x[2] == 25)
 x = {f=2+3 or a, a = b+2}
@@ -130,24 +130,24 @@ do
   a, b, c = f();
   assert(a==1 and b==2 and c==3)
   a, b, c = (f());
-  assert(a==1 and b==nil and c==nil)
+  assert(a==1 and b==null and c==null)
 end
 
 a,b = 3 and f();
-assert(a==1 and b==nil)
+assert(a==1 and b==null)
 
 function g() f(); return; end;
-assert(g() == nil)
-function g() return nil or f() end
+assert(g() == null)
+function g() return null or f() end
 a,b = g()
-assert(a==1 and b==nil)
+assert(a==1 and b==null)
 
 print'+';
 
 
 f = [[
 return function ( a , b , c , d , e )
-  x = a >= b or c or ( d and e ) or nil
+  x = a >= b or c or ( d and e ) or null
   return x
 end , { a = 1 , b = 2 >= 1 , } or { 1 };
 ]]
@@ -156,26 +156,26 @@ f,a = loadstring(f)();
 assert(a.a == 1 and a.b)
 
 function g (a,b,c,d,e)
-  if not (a>=b or c or d and e or nil) then return 0; else return 1; end;
+  if not (a>=b or c or d and e or null) then return 0; else return 1; end;
 end
 
 function h (a,b,c,d,e)
-  while (a>=b or c or (d and e) or nil) do return 1; end;
+  while (a>=b or c or (d and e) or null) do return 1; end;
   return 0;
 end;
 
 assert(f(2,1) == true and g(2,1) == 1 and h(2,1) == 1)
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
 assert(f(1,2,'a')
-!=          -- force SETLINE before nil
-nil, "")
+!=          -- force SETLINE before null
+null, "")
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
-assert(f(1,2,nil,1,'x') == 'x' and g(1,2,nil,1,'x') == 1 and
-                                   h(1,2,nil,1,'x') == 1)
-assert(f(1,2,nil,nil,'x') == nil and g(1,2,nil,nil,'x') == 0 and
-                                     h(1,2,nil,nil,'x') == 0)
-assert(f(1,2,nil,1,nil) == nil and g(1,2,nil,1,nil) == 0 and
-                                   h(1,2,nil,1,nil) == 0)
+assert(f(1,2,null,1,'x') == 'x' and g(1,2,null,1,'x') == 1 and
+                                   h(1,2,null,1,'x') == 1)
+assert(f(1,2,null,null,'x') == null and g(1,2,null,null,'x') == 0 and
+                                     h(1,2,null,null,'x') == 0)
+assert(f(1,2,null,1,null) == null and g(1,2,null,1,null) == 0 and
+                                   h(1,2,null,1,null) == 0)
 
 assert(1 and 2<3 == true and 2<3 and 'a'<'b' == true)
 x = 2<3 and not 3; assert(x==false)
@@ -183,7 +183,7 @@ x = 2<1 or (2>1 and 'a'); assert(x=='a')
 
 
 do
-  a = nil; if nil then a=1; else a=2; end;    -- this nil comes as PUSHNIL 2
+  a = null; if null then a=1; else a=2; end;    -- this null comes as PUSHNIL 2
   assert(a==2)
 end
 
@@ -193,8 +193,8 @@ function F(a)
 end
 _G.F = F
 
-a,b = F(1)!=nil; assert(a == true and b == nil);
-a,b = F(nil)==nil; assert(a == true and b == nil)
+a,b = F(1)!=null; assert(a == true and b == null);
+a,b = F(null)==null; assert(a == true and b == null)
 
 ----------------------------------------------------------------
 -- creates all combinations of 
@@ -203,7 +203,7 @@ a,b = F(nil)==nil; assert(a == true and b == nil)
 function ID(x) return x end
 _G.ID = ID
 
-c = nil
+c = null
 function f(t, i)
   const b = t.n
   const res = (math.floor(i/c)%b)+1
@@ -211,7 +211,7 @@ function f(t, i)
   return t[res]
 end
 
-arg = {" ( 1 < 2 ) ", " ( 1 >= 2 ) ", " _G.F ( ) ", "  nil "; n=4}
+arg = {" ( 1 < 2 ) ", " ( 1 >= 2 ) ", " _G.F ( ) ", "  null "; n=4}
 
 op = {" and ", " or ", " == ", " != "; n=4}
 
@@ -222,12 +222,12 @@ repeat
   c = 1
   s = f(neg, i)..'ID('..f(neg, i)..f(arg, i)..f(op, i)..f(neg, i)..'ID('..f(arg, i)..'))'
   s1 = string.gsub(s, 'ID', '')
-  _G.K,_G.X,_G.NX,_G.WX1,_G.WX2 = nil
+  _G.K,_G.X,_G.NX,_G.WX1,_G.WX2 = null
   s = string.format([[
       a = %s
       b = not %s
       _G.K = b
-      xxx = nil; 
+      xxx = null; 
       if %s then _G.X = a  else _G.X = b end
       if %s then _G.NX = b  else _G.NX = a end
       while %s do _G.WX1 = a; break end
@@ -248,7 +248,7 @@ function check_connected(writer, reader)
 end
 
 repeat
-    value = nil
+    value = null
     function write(n)
         value = n
     end

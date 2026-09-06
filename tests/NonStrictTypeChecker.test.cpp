@@ -149,7 +149,7 @@ mixedArgs("a", 1, 2)
 mixedArgs(1, 1, 1)
 mixedArgs("a", true)
 
-optionalArg(nil)
+optionalArg(null)
 optionalArg("a")
 optionalArg(3)
 )");
@@ -197,7 +197,7 @@ abs("hi")
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "nested_function_calls_constant")
 {
     CheckResult result = checkNonStrict(R"(
-const x = nil
+const x = null
 abs(lower(x))
 )");
 
@@ -210,7 +210,7 @@ abs(lower(x))
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "if_then_else_does_not_warn_with_never_local")
 {
     CheckResult result = checkNonStrict(R"(
-const x : never = nil as never
+const x : never = null as never
 if cond() then
     abs(x)
 else
@@ -224,7 +224,7 @@ end
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "if_then_else_warns_nil_branches")
 {
     auto result = checkNonStrict(R"(
-const x = nil
+const x = null
 if cond() then
     abs(x)
 else
@@ -291,7 +291,7 @@ const y = if cond() then abs(x) else lower(x)
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "if_then_else_expr_should_not_warn_for_never")
 {
     CheckResult result = checkNonStrict(R"(
-const x : never = nil as never
+const x : never = null as never
 const y = if cond() then abs(x) else lower(x)
 )");
 
@@ -316,7 +316,7 @@ export x
 if cond() then
   x = 5
 else
-  x = nil
+  x = null
 end
 lower(x)
 )");
@@ -452,7 +452,7 @@ function f(x)
     if cond() then
         x = 5
     else
-        x = nil
+        x = null
     end
     lower(x)
 end
@@ -520,7 +520,7 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "phi_node_assignment_err")
 {
     ScopedFastFlag sff{FFlag::LuauExportValueSyntax, true};
     CheckResult result = checkNonStrict(R"(
-export x = nil
+export x = null
 if cond() then
     if cond() then
         x = 5
@@ -594,7 +594,7 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "optionals_in_checked_function_ca
     CheckResult result = checkNonStrict(R"(
 optionalArgsAtTheEnd1("a")
 optionalArgsAtTheEnd1("a", 3)
-optionalArgsAtTheEnd1("a", nil, 3)
+optionalArgsAtTheEnd1("a", null, 3)
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -604,7 +604,7 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "generic_type_packs_in_non_strict
 {
     CheckResult result = checkNonStrict(R"(
         --!nonstrict
-        const test: <T...>(T...) -> () = nil as any -- TypeError: Unknown type 'T'
+        const test: <T...>(T...) -> () = null as any -- TypeError: Unknown type 'T'
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -614,7 +614,7 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "optionals_in_checked_function_in
 {
     CheckResult result = checkNonStrict(R"(
 optionalArgsAtTheEnd2("a", "a") -- error
-optionalArgsAtTheEnd2("a", nil, "b")
+optionalArgsAtTheEnd2("a", null, "b")
 optionalArgsAtTheEnd2("a", 3, "b")
 optionalArgsAtTheEnd2("a", "b", "c") -- error
 )");
@@ -631,7 +631,7 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "non_testable_type_throws_ice")
 {
     CHECK_THROWS_AS(
         checkNonStrict(R"(
-os.time({year = 0, month = 0, day = 0, min = 0, isdst = nil})
+os.time({year = 0, month = 0, day = 0, min = 0, isdst = null})
 )"),
         Luau::InternalCompilerError
     );

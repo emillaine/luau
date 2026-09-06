@@ -1,23 +1,23 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-base64_decode = nil
-cache_delete = nil
-get_status_text = nil
-is_json_array = nil
-json_encode_array = nil
-json_encode_object = nil
-json_encode_string = nil
-json_parse_array = nil
-json_parse_number = nil
-json_parse_object = nil
-json_parse_string = nil
-json_parse_value = nil
-match_segments = nil
-parse_headers_and_body = nil
-parse_multipart_headers = nil
-parse_multipart_part = nil
-parse_request_line = nil
-split_path = nil
-template_lookup = nil
+base64_decode = null
+cache_delete = null
+get_status_text = null
+is_json_array = null
+json_encode_array = null
+json_encode_object = null
+json_encode_string = null
+json_parse_array = null
+json_parse_number = null
+json_parse_object = null
+json_parse_string = null
+json_parse_value = null
+match_segments = null
+parse_headers_and_body = null
+parse_multipart_headers = null
+parse_multipart_part = null
+parse_request_line = null
+split_path = null
+template_lookup = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -69,7 +69,7 @@ function parse_query_string(qs)
     pos = 1
     while pos <= #qs do
         amp = find(qs, "&", pos, true)
-        segment = nil
+        segment = null
         if amp then
             segment = sub(qs, pos, amp - 1)
             pos = amp + 1
@@ -118,7 +118,7 @@ function headers_get(h, name)
     if entry and #entry.values > 0 then
         return entry.values[1]
     end
-    return nil
+    return null
 end
 
 function headers_get_all(h, name)
@@ -128,7 +128,7 @@ function headers_get_all(h, name)
 end
 
 function headers_has(h, name)
-    return h._store[lower(name)] != nil
+    return h._store[lower(name)] != null
 end
 
 function headers_serialize(h)
@@ -152,7 +152,7 @@ function parse_cookies(cookie_header)
     pos = 1
     while pos <= #cookie_header do
         semi = find(cookie_header, ";", pos, true)
-        segment = nil
+        segment = null
         if semi then
             segment = sub(cookie_header, pos, semi - 1)
             pos = semi + 1
@@ -203,7 +203,7 @@ function parse_accept_header(accept)
     pos = 1
     while pos <= #accept do
         comma = find(accept, ",", pos, true)
-        segment = nil
+        segment = null
         if comma then
             segment = sub(accept, pos, comma - 1)
             pos = comma + 1
@@ -319,7 +319,7 @@ function parse_headers_and_body(req, raw, start)
     while pos <= rawlen do
         -- find end of this header line
         eol = find(raw, "\r\n", pos, true)
-        next_pos = nil
+        next_pos = null
         if eol then
             next_pos = eol + 2
         else
@@ -399,7 +399,7 @@ function router_match(router, method, path)
             end
         end
     end
-    return nil, nil
+    return null, null
 end
 
 function match_segments(pattern_segs, path_segs)
@@ -417,19 +417,19 @@ function match_segments(pattern_segs, path_segs)
             return params
         else if sub(seg, 1, 1) == ":" then
             -- parameterized segment
-            if pi > #path_segs then return nil end
+            if pi > #path_segs then return null end
             param_name = sub(seg, 2)
             params[param_name] = path_segs[pi]
             pi = pi + 1
         else
             -- exact match
-            if pi > #path_segs then return nil end
-            if path_segs[pi] != seg then return nil end
+            if pi > #path_segs then return null end
+            if path_segs[pi] != seg then return null end
             pi = pi + 1
         end
     end
     -- all pattern segments consumed, check path fully consumed
-    if pi != #path_segs + 1 then return nil end
+    if pi != #path_segs + 1 then return null end
     return params
 end
 
@@ -555,7 +555,7 @@ end
 -- =========================================================================
 function json_encode(val)
     t = type(val)
-    if val == nil then
+    if val == null then
         return "null"
     else if t == "boolean" then
         return val and "true" or "false"
@@ -635,7 +635,7 @@ end
 -- =========================================================================
 function json_decode(str)
     pos = 1
-    val = nil
+    val = null
     val, pos = json_parse_value(str, pos)
     return val
 end
@@ -654,7 +654,7 @@ end
 
 function json_parse_value(str, pos)
     pos = json_skip_whitespace(str, pos)
-    if pos > #str then return nil, pos end
+    if pos > #str then return null, pos end
     c = byte(str, pos)
     if c == 34 then
         return json_parse_string(str, pos)
@@ -667,7 +667,7 @@ function json_parse_value(str, pos)
     else if c == 102 then  -- f (false)
         return false, pos + 5
     else if c == 110 then  -- n (null)
-        return nil, pos + 4
+        return null, pos + 4
     else
         return json_parse_number(str, pos)
     end
@@ -743,7 +743,7 @@ function json_parse_array(str, pos)
         return arr, pos + 1
     end
     while pos <= #str do
-        val = nil
+        val = null
         val, pos = json_parse_value(str, pos)
         insert(arr, val)
         pos = json_skip_whitespace(str, pos)
@@ -767,11 +767,11 @@ function json_parse_object(str, pos)
     end
     while pos <= #str do
         pos = json_skip_whitespace(str, pos)
-        key = nil
+        key = null
         key, pos = json_parse_string(str, pos)
         pos = json_skip_whitespace(str, pos)
         pos = pos + 1  -- skip :
-        val = nil
+        val = null
         val, pos = json_parse_value(str, pos)
         obj[key] = val
         pos = json_skip_whitespace(str, pos)
@@ -906,7 +906,7 @@ function template_render(tmpl, context)
         key = gsub(key, "^%s+", "")
         key = gsub(key, "%s+$", "")
         val = template_lookup(context, key)
-        if val == nil then return "" end
+        if val == null then return "" end
         return tostring(val)
     end)
     return result
@@ -918,7 +918,7 @@ function template_lookup(context, key)
     current = context
     while pos <= #key do
         dot = find(key, ".", pos, true)
-        segment = nil
+        segment = null
         if dot then
             segment = sub(key, pos, dot - 1)
             pos = dot + 1
@@ -926,7 +926,7 @@ function template_lookup(context, key)
             segment = sub(key, pos)
             pos = #key + 1
         end
-        if type(current) != "table" then return nil end
+        if type(current) != "table" then return null end
         current = current[segment]
     end
     return current
@@ -977,15 +977,15 @@ end
 -- Basic auth decoder
 -- =========================================================================
 function decode_basic_auth(auth_header)
-    if not auth_header then return nil, nil end
+    if not auth_header then return null, null end
     scheme_end = find(auth_header, " ", 1, true)
-    if not scheme_end then return nil, nil end
+    if not scheme_end then return null, null end
     scheme = sub(auth_header, 1, scheme_end - 1)
-    if lower(scheme) != "basic" then return nil, nil end
+    if lower(scheme) != "basic" then return null, null end
     encoded = sub(auth_header, scheme_end + 1)
     -- Simple base64 decode (limited for benchmark purposes)
     decoded = base64_decode(encoded)
-    if not decoded then return nil, nil end
+    if not decoded then return null, null end
     colon = find(decoded, ":", 1, true)
     if not colon then return decoded, "" end
     return sub(decoded, 1, colon - 1), sub(decoded, colon + 1)
@@ -1095,10 +1095,10 @@ end
 
 function cache_get(cache, key)
     entry = cache.store[key]
-    if not entry then return nil end
+    if not entry then return null end
     if entry.expires > 0 and entry.expires < clock() then
         cache_delete(cache, key)
-        return nil
+        return null
     end
     return entry.value
 end
@@ -1114,7 +1114,7 @@ function cache_set(cache, key, value, ttl)
         if #cache.order > 0 then
             oldest = cache.order[1]
             table.remove(cache.order, 1)
-            cache.store[oldest] = nil
+            cache.store[oldest] = null
             cache.count = cache.count - 1
         end
     end
@@ -1125,7 +1125,7 @@ end
 
 function cache_delete(cache, key)
     if cache.store[key] then
-        cache.store[key] = nil
+        cache.store[key] = null
         cache.count = cache.count - 1
         -- Remove from order
         for i = 1, #cache.order do
@@ -1144,7 +1144,7 @@ function validate_request(req, rules)
     errors = {}
     for i = 1, #rules do
         rule = rules[i]
-        value = nil
+        value = null
         if rule.source == "query" then
             value = req.query[rule.field]
         else if rule.source == "body" then
@@ -1156,7 +1156,7 @@ function validate_request(req, rules)
             value = req.params[rule.field]
         end
 
-        if rule.required and (value == nil or value == "") then
+        if rule.required and (value == null or value == "") then
             insert(errors, rule.field .. " is required")
         end
         if rule.min_length and value and #tostring(value) < rule.min_length then
@@ -1261,16 +1261,16 @@ end
 -- =========================================================================
 function parse_range_header(range_str, total_size)
     -- Parse: bytes=0-499 or bytes=500- or bytes=-500
-    if not range_str then return nil end
+    if not range_str then return null end
     prefix = sub(range_str, 1, 6)
-    if prefix != "bytes=" then return nil end
+    if prefix != "bytes=" then return null end
     spec = sub(range_str, 7)
     dash = find(spec, "-", 1, true)
-    if not dash then return nil end
+    if not dash then return null end
     range_start = sub(spec, 1, dash - 1)
     range_end = sub(spec, dash + 1)
 
-    s, e = nil, nil
+    s, e = null, null
     if range_start == "" then
         -- suffix: last N bytes
         e = total_size - 1
@@ -1284,7 +1284,7 @@ function parse_range_header(range_str, total_size)
         e = tonumber(range_end) or (total_size - 1)
     end
 
-    if s > e or s >= total_size then return nil end
+    if s > e or s >= total_size then return null end
     if e >= total_size then e = total_size - 1 end
     return { start = s, finish = e, total = total_size }
 end
@@ -1344,7 +1344,7 @@ function build_ws_frame(payload, opcode)
 end
 
 function parse_ws_frame(data)
-    if #data < 2 then return nil end
+    if #data < 2 then return null end
     b1 = byte(data, 1)
     b2 = byte(data, 2)
     fin = b1 >= 128
@@ -1353,11 +1353,11 @@ function parse_ws_frame(data)
     payload_len = b2 % 128
     offset = 3
     if payload_len == 126 then
-        if #data < 4 then return nil end
+        if #data < 4 then return null end
         payload_len = byte(data, 3) * 256 + byte(data, 4)
         offset = 5
     else if payload_len == 127 then
-        if #data < 10 then return nil end
+        if #data < 10 then return null end
         payload_len = byte(data, 7) * 16777216 + byte(data, 8) * 65536 + byte(data, 9) * 256 + byte(data, 10)
         offset = 11
     end
@@ -1396,7 +1396,7 @@ MIME_TYPES = {
 }
 
 function get_mime_type(path)
-    dot = nil
+    dot = null
     for i = #path, 1, -1 do
         if sub(path, i, i) == "." then
             dot = i
@@ -1536,7 +1536,7 @@ function hpack_find_static(name, value)
             return i, false  -- name match only
         end
     end
-    return nil, false
+    return null, false
 end
 
 function hpack_encode_headers(headers_list)
@@ -1714,7 +1714,7 @@ function setup_framework()
     -- Route: POST /users
     framework_route(fw, "POST", "/users", function(req, res)
         ct = headers_get(req.headers, "Content-Type") or ""
-        data = nil
+        data = null
         if find(ct, "application/json", 1, true) then
             data = json_decode(req.body)
         else if find(ct, "application/x-www-form-urlencoded", 1, true) then
@@ -2797,7 +2797,7 @@ function range_request_workload(iterations)
         { header = "bytes=-200", size = 1000 },
         { header = "bytes=0-0", size = 100 },
         { header = "bytes=0-99999", size = 500 },
-        { header = nil, size = 1000 },
+        { header = null, size = 1000 },
         { header = "invalid", size = 1000 },
     }
     checksum = 0
@@ -2923,7 +2923,7 @@ function parse_link_header(link_str)
     pos = 1
     while pos <= #link_str do
         comma = find(link_str, ",", pos, true)
-        segment = nil
+        segment = null
         if comma then
             segment = sub(link_str, pos, comma - 1)
             pos = comma + 1

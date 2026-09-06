@@ -53,7 +53,7 @@ TEST_CASE_FIXTURE(Fixture, "empty_domain_is_ok")
     auto err = get<SyntaxError>(results.errors[0]);
     REQUIRE(err);
     CHECK_EQ("Missing initializer in const declaration", err->message);
-    CHECK_EQ("nil", toString(requireType("PI")));
+    CHECK_EQ("null", toString(requireType("PI")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "const_extra_lvalues_are_nil_and_syntax_error_from_call")
@@ -77,7 +77,7 @@ TEST_CASE_FIXTURE(Fixture, "const_extra_lvalues_are_nil_and_syntax_error_from_ca
     CHECK_EQ(err->expected, 2);
     CHECK_EQ("number", toString(requireType("X")));
     CHECK_EQ("number", toString(requireType("Y")));
-    CHECK_EQ("nil", toString(requireType("Z")));
+    CHECK_EQ("null", toString(requireType("Z")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "const_extra_lvalues_are_nil_and_syntax_error_from_underfill")
@@ -120,7 +120,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_different_values_to_const_x")
     ScopedFastFlag _[1]{{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        const x: string? = nil
+        const x: string? = null
         const a = x
         x = "hello!"
         const b = x

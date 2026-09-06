@@ -33,7 +33,7 @@ TEST_CASE_FIXTURE(NegationFixture, "negated_string_is_a_subtype_of_string")
 {
     CheckResult result = check(R"(
         function foo(arg: string) end
-        const a: string & Not<"Hello"> = nil as any
+        const a: string & Not<"Hello"> = null as any
         foo(a)
     )");
 
@@ -44,7 +44,7 @@ TEST_CASE_FIXTURE(NegationFixture, "string_is_not_a_subtype_of_negated_string")
 {
     CheckResult result = check(R"(
         function foo(arg: string & Not<"hello">) end
-        const a: string = nil as any
+        const a: string = null as any
         foo(a)
     )");
 
@@ -72,8 +72,8 @@ TEST_CASE_FIXTURE(Fixture, "cofinite_strings_can_be_compared_for_equality")
 TEST_CASE_FIXTURE(NegationFixture, "compare_cofinite_strings")
 {
     CheckResult result = check(R"(
-const u : Not<"a"> = nil as any
-const v : "b" = nil as any
+const u : Not<"a"> = null as any
+const v : "b" = null as any
 if u == v then
 end
 )");

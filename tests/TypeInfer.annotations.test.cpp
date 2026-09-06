@@ -129,7 +129,7 @@ TEST_CASE_FIXTURE(Fixture, "assignment_also_checks_subtyping")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         function f(): number?
-            return nil
+            return null
         end
         export x: number = 1
         export y: number? = f()
@@ -204,7 +204,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_multret_annotations_are_checked")
 TEST_CASE_FIXTURE(Fixture, "function_return_annotation_should_disambiguate_into_function_type_return_and_checked")
 {
     CheckResult result = check(R"(
-        function foo(): (number, string) -> nil
+        function foo(): (number, string) -> null
             return function(a: number, b: string): number return 1 end
         end
     )");
@@ -215,9 +215,9 @@ TEST_CASE_FIXTURE(Fixture, "function_return_annotation_should_disambiguate_into_
 TEST_CASE_FIXTURE(Fixture, "function_return_annotation_should_continuously_parse_return_annotation_and_checked")
 {
     CheckResult result = check(R"(
-        function foo(): (number, string) -> (number) -> nil
-            return function(a: number, b: string): (number) -> nil
-                return function(a: number): nil
+        function foo(): (number, string) -> (number) -> null
+            return function(a: number, b: string): (number) -> null
+                return function(a: number): null
                     return 1
                 end
             end
@@ -230,7 +230,7 @@ TEST_CASE_FIXTURE(Fixture, "function_return_annotation_should_continuously_parse
 TEST_CASE_FIXTURE(Fixture, "unknown_type_reference_generates_error")
 {
     CheckResult result = check(R"(
-        const x: IDoNotExist = nil as any
+        const x: IDoNotExist = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -323,7 +323,7 @@ TEST_CASE_FIXTURE(Fixture, "typeof_variable_type_annotation_should_return_its_ty
 
         type Foo = typeof(foo)
 
-        const foo2: Foo = nil as any
+        const foo2: Foo = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -334,7 +334,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_of_value_a_via_typeof_with_assignment")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export a = nil
+        export a = null
         const b: typeof(a) = 1
 
         a = "foo"
@@ -343,7 +343,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_type_of_value_a_via_typeof_with_assignment")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         CHECK("string?" == toString(requireType("a")));
-        CHECK("nil" == toString(requireType("b")));
+        CHECK("null" == toString(requireType("b")));
 
         LUAU_REQUIRE_ERROR_COUNT(1, result);
         CHECK(
@@ -380,7 +380,7 @@ TEST_CASE_FIXTURE(Fixture, "table_annotation")
 TEST_CASE_FIXTURE(Fixture, "function_annotation")
 {
     CheckResult result = check(R"(
-        const f: (number, string) -> number = nil as any
+        const f: (number, string) -> number = null as any
     )");
     LUAU_REQUIRE_NO_ERRORS(result);
 
@@ -618,7 +618,7 @@ TEST_CASE_FIXTURE(Fixture, "typeof_expr")
     CheckResult result = check(R"(
         function id(i) return i end
 
-        const m: typeof(id(77)) = nil as any
+        const m: typeof(id(77)) = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -631,8 +631,8 @@ TEST_CASE_FIXTURE(Fixture, "corecursive_types_error_on_tight_loop")
         type A = B
         type B = A
 
-        const aa:A = nil as any
-        const bb:B = nil as any
+        const aa:A = null as any
+        const bb:B = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -648,7 +648,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_always_resolve_to_a_real_type")
         type B = C
         type C = number
 
-        const aa:A = nil as any
+        const aa:A = null as any
     )");
 
     TypeId fType = requireType("aa");
@@ -921,7 +921,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_print_is_magic_if_the_flag_is_set")
     ScopedFastFlag sffs{FFlag::DebugLuauMagicTypes, true};
 
     CheckResult result = check(R"(
-        const a: _luau_print<typeof(math.abs)> = nil as any
+        const a: _luau_print<typeof(math.abs)> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -934,7 +934,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_print_is_not_special_without_the_flag")
     ScopedFastFlag sffs{FFlag::DebugLuauMagicTypes, false};
 
     CheckResult result = check(R"(
-        const a: _luau_print<number> = nil as any
+        const a: _luau_print<number> = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -945,7 +945,7 @@ TEST_CASE_FIXTURE(Fixture, "luau_print_incomplete")
     ScopedFastFlag sffs{FFlag::DebugLuauMagicTypes, true};
 
     CheckResult result = check(R"(
-        const a: _luau_print = nil as any
+        const a: _luau_print = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -956,7 +956,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_type_fun_should_not_trip_rbxassert")
 {
     CheckResult result = check(R"(
         type Foo<T> = typeof(function(x) return x end)
-        const foo: Foo<number> = nil as any
+        const foo: Foo<number> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -982,7 +982,7 @@ TEST_CASE_FIXTURE(Fixture, "occurs_check_on_cyclic_union_type")
 {
     CheckResult result = check(R"(
         type T = T | T
-        const x : T = nil as any
+        const x : T = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1066,7 +1066,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "react_use_state_partial_annotation")
         type BasicStateAction<S> = ((S) -> S) | S
         type Dispatch<A> = (A) -> ()
 
-        const useState: <S>( (() -> S) | S ) -> (S, Dispatch<BasicStateAction<S>>) = nil as any
+        const useState: <S>( (() -> S) | S ) -> (S, Dispatch<BasicStateAction<S>>) = null as any
 
         const v: number, setV = useState(0)
         const w, setW = useState(0 as number?)

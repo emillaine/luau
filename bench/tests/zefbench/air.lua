@@ -1,6 +1,6 @@
 -- forward declarations (no hoisted globals)
-Inst_forEachArg = nil
-Inst_hash = nil
+Inst_forEachArg = null
+Inst_hash = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -329,7 +329,7 @@ Reg_stackPointerRegister= Reg_rsp
 -- StackSlot
 -- -------------------------------------------------------------------------
 function StackSlot_new(index, byteSize, kind)
-    return {index=index, byteSize=byteSize, kind=kind, offsetFromFP=nil}
+    return {index=index, byteSize=byteSize, kind=kind, offsetFromFP=null}
 end
 function StackSlot_alignment(slot)
     b = slot.byteSize
@@ -349,12 +349,12 @@ end
 
 -- StackSlot.forEach: only acts on Stack args
 function StackSlot_forEach(arg, role, type, width, func)
-    if arg.kind != C.ArgStack then return nil end
+    if arg.kind != C.ArgStack then return null end
     replacement = func(arg.slot, role, type, width)
     if replacement then
         return {kind=C.ArgStack, slot=replacement, offset=arg.offset}
     end
-    return nil
+    return null
 end
 
 -- -------------------------------------------------------------------------
@@ -365,8 +365,8 @@ function BasicBlock_new(index, frequency)
 end
 function BasicBlock_size(bb) return #bb.insts end
 function BasicBlock_at(bb, idx) return bb.insts[idx+1] end  -- 0-based
-function BasicBlock_get(bb, idx)  -- 0-based, returns nil if out of range
-    if idx < 0 or idx >= #bb.insts then return nil end
+function BasicBlock_get(bb, idx)  -- 0-based, returns null if out of range
+    if idx < 0 or idx >= #bb.insts then return null end
     return bb.insts[idx+1]
 end
 function BasicBlock_last(bb) return bb.insts[#bb.insts] end
@@ -1752,13 +1752,13 @@ function Liveness_new(code)
     dirtyBlocks = {}
     for _, b in ipairs(code.blocks) do dirtyBlocks[b] = true end
 
-    changed = nil
+    changed = null
     repeat
         changed = false
         for blockIndex = #code.blocks, 1, -1 do
             block = code.blocks[blockIndex]
             if dirtyBlocks[block] then
-                dirtyBlocks[block] = nil
+                dirtyBlocks[block] = null
 
                 -- Build local liveSet starting from liveAtTail
                 liveSet = {}
@@ -1772,13 +1772,13 @@ function Liveness_new(code)
                     nextInst = block.insts[instIndex + 1]
                     if nextInst then
                         Inst_forEach_StackSlot(nextInst, function(value, role, type, width)
-                            if Arg_isEarlyDef(role) then liveSet[value] = nil end
+                            if Arg_isEarlyDef(role) then liveSet[value] = null end
                         end)
                     end
 
                     -- Late defs of current instruction kill from liveSet
                     Inst_forEach_StackSlot(inst, function(value, role, type, width)
-                        if Arg_isLateDef(role) then liveSet[value] = nil end
+                        if Arg_isLateDef(role) then liveSet[value] = null end
                     end)
 
                     -- Early uses of current instruction add to liveSet
@@ -1825,11 +1825,11 @@ function Liveness_new(code)
 
                         if nextInst then
                             Inst_forEach_StackSlot(nextInst, function(value, role, type, width)
-                                if Arg_isEarlyDef(role) then lcSelf.liveSet[value] = nil end
+                                if Arg_isEarlyDef(role) then lcSelf.liveSet[value] = null end
                             end)
                         end
                         Inst_forEach_StackSlot(inst, function(value, role, type, width)
-                            if Arg_isLateDef(role) then lcSelf.liveSet[value] = nil end
+                            if Arg_isLateDef(role) then lcSelf.liveSet[value] = null end
                         end)
                         Inst_forEach_StackSlot(inst, function(value, role, type, width)
                             if Arg_isEarlyUse(role) then lcSelf.liveSet[value] = true end
@@ -1936,7 +1936,7 @@ function removeAllMatching(array, pred)
             dst = dst + 1
         end
     end
-    while #array >= dst do array[#array] = nil end
+    while #array >= dst do array[#array] = null end
 end
 
 -- -------------------------------------------------------------------------
@@ -2099,7 +2099,7 @@ function allocateStack(code)
                 else if arg.kind == C.ArgCallArg then
                     return Arg_createStackAddr(arg.offset - code.frameSize, code.frameSize, width)
                 end
-                return nil
+                return null
             end)
         end
         InsertionSet_execute(insertionSet, block.insts)
@@ -2387,8 +2387,8 @@ function createPayloadGbemuExecuteIteration()
     T.ftmp2 = Code_newTmp(code, C.FP)
     T.ftmp1 = Code_newTmp(code, C.FP)
     T.ftmp0 = Code_newTmp(code, C.FP)
-    inst = nil
-    arg = nil
+    inst = null
+    arg = null
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb2, C.Normal)
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb1, C.Normal)
     inst = Inst_new(C.Move)
@@ -5379,8 +5379,8 @@ function createPayloadImagingGaussianBlurGaussianBlur()
     T.ftmp2 = Code_newTmp(code, C.FP)
     T.ftmp1 = Code_newTmp(code, C.FP)
     T.ftmp0 = Code_newTmp(code, C.FP)
-    inst = nil
-    arg = nil
+    inst = null
+    arg = null
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb2, C.Normal)
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb1, C.Rare)
     inst = Inst_new(C.Move)
@@ -8284,8 +8284,8 @@ function createPayloadTypescriptScanIdentifier()
     T.tmp2 = Code_newTmp(code, C.GP)
     T.tmp1 = Code_newTmp(code, C.GP)
     T.tmp0 = Code_newTmp(code, C.GP)
-    inst = nil
-    arg = nil
+    inst = null
+    arg = null
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb5, C.Normal)
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb4, C.Normal)
     inst = Inst_new(C.Move)
@@ -9924,8 +9924,8 @@ function createPayloadAirJSACLj8C()
     T.tmp2 = Code_newTmp(code, C.GP)
     T.tmp1 = Code_newTmp(code, C.GP)
     T.tmp0 = Code_newTmp(code, C.GP)
-    inst = nil
-    arg = nil
+    inst = null
+    arg = null
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb1, C.Normal)
     bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb15, C.Normal)
     inst = Inst_new(C.Move)

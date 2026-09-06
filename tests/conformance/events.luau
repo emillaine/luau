@@ -4,9 +4,9 @@ print('testing metatables')
 
 unpack = table.unpack
 
-assert(getmetatable{} == nil)
-assert(getmetatable(4) == nil)
-assert(getmetatable(nil) == nil)
+assert(getmetatable{} == null)
+assert(getmetatable(4) == null)
+assert(getmetatable(null) == null)
 a={}; setmetatable(a, {__metatable = "xuxu",
                     __tostring=function(x) return x.name end})
 assert(getmetatable(a) == "xuxu")
@@ -15,7 +15,7 @@ assert(getmetatable(ud) == "xuxu")
 
 assert(pcall(getmetatable) == false)
 assert(pcall(function() return getmetatable() end) == false)
-assert(select(2, pcall(getmetatable, {})) == nil)
+assert(select(2, pcall(getmetatable, {})) == null)
 assert(select(2, pcall(getmetatable, ud)) == "xuxu")
 
 res,err = pcall(tostring, a)
@@ -28,8 +28,8 @@ assert(tostring(a) == "gororoba")
 a, t = {10,20,30; x="10", y="20"}, {}
 assert(setmetatable(a,t) == a)
 assert(getmetatable(a) == t)
-assert(setmetatable(a,nil) == a)
-assert(getmetatable(a) == nil)
+assert(setmetatable(a,null) == a)
+assert(getmetatable(a) == null)
 assert(setmetatable(a,t) == a)
 
 
@@ -61,7 +61,7 @@ assert(c[1] == 10 and c[2] == 20 and c[3] == 90)
 
 
 do
-  a_inner = nil;
+  a_inner = null;
   a_inner = setmetatable({}, {__index = setmetatable({},
                      {__index = setmetatable({},
                      {__index = function (_,n) return a_inner[n-3]+4, "lixo" end})})})
@@ -73,7 +73,7 @@ end
 
 
 do  -- newindex
-  foi = nil
+  foi = null
   a_newindex = {}
   for i=1,10 do a_newindex[i] = 0; a_newindex['a'..i] = 0; end
   setmetatable(a_newindex, {__newindex = function (t,k,v) foi=true; rawset(t,k,v) end})
@@ -81,8 +81,8 @@ do  -- newindex
   foi = false; a_newindex['a1']=0; assert(not foi)
   foi = false; a_newindex['a11']=0; assert(foi)
   foi = false; a_newindex[11]=0; assert(foi)
-  foi = false; a_newindex[1]=nil; assert(not foi)
-  foi = false; a_newindex[1]=nil; assert(foi)
+  foi = false; a_newindex[1]=null; assert(not foi)
+  foi = false; a_newindex[1]=null; assert(foi)
 end
 
 
@@ -91,9 +91,9 @@ t.__call = f
 
 do
   x,y = a(unpack{'a', 1})
-  assert(x==a and y[1]=='a' and y[2]==1 and y[3]==nil)
+  assert(x==a and y[1]=='a' and y[2]==1 and y[3]==null)
   x,y = a()
-  assert(x==a and y[1]==nil)
+  assert(x==a and y[1]==null)
 end
 
 
@@ -113,42 +113,42 @@ t.__unm = f("unm")
 t.__pow = f("pow")
 
 assert(b+5 == b)
-assert(_G.cap[0] == "add" and _G.cap[1] == b and _G.cap[2] == 5 and _G.cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == b and _G.cap[2] == 5 and _G.cap[3]==null)
 assert(b+'5' == b)
-assert(_G.cap[0] == "add" and _G.cap[1] == b and _G.cap[2] == '5' and _G.cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == b and _G.cap[2] == '5' and _G.cap[3]==null)
 assert(5+b == 5)
-assert(_G.cap[0] == "add" and _G.cap[1] == 5 and _G.cap[2] == b and _G.cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == 5 and _G.cap[2] == b and _G.cap[3]==null)
 assert('5'+b == '5')
-assert(_G.cap[0] == "add" and _G.cap[1] == '5' and _G.cap[2] == b and _G.cap[3]==nil)
+assert(_G.cap[0] == "add" and _G.cap[1] == '5' and _G.cap[2] == b and _G.cap[3]==null)
 b=b-3; assert(getmetatable(b) == t)
 assert(5-a == 5)
-assert(_G.cap[0] == "sub" and _G.cap[1] == 5 and _G.cap[2] == a and _G.cap[3]==nil)
+assert(_G.cap[0] == "sub" and _G.cap[1] == 5 and _G.cap[2] == a and _G.cap[3]==null)
 assert('5'-a == '5')
-assert(_G.cap[0] == "sub" and _G.cap[1] == '5' and _G.cap[2] == a and _G.cap[3]==nil)
+assert(_G.cap[0] == "sub" and _G.cap[1] == '5' and _G.cap[2] == a and _G.cap[3]==null)
 assert(a*a == a)
-assert(_G.cap[0] == "mul" and _G.cap[1] == a and _G.cap[2] == a and _G.cap[3]==nil)
+assert(_G.cap[0] == "mul" and _G.cap[1] == a and _G.cap[2] == a and _G.cap[3]==null)
 assert(a/0 == a)
-assert(_G.cap[0] == "div" and _G.cap[1] == a and _G.cap[2] == 0 and _G.cap[3]==nil)
+assert(_G.cap[0] == "div" and _G.cap[1] == a and _G.cap[2] == 0 and _G.cap[3]==null)
 assert(a//0 == a)
-assert(_G.cap[0] == "idiv" and _G.cap[1] == a and _G.cap[2] == 0 and _G.cap[3]==nil)
+assert(_G.cap[0] == "idiv" and _G.cap[1] == a and _G.cap[2] == 0 and _G.cap[3]==null)
 assert(a%2 == a)
-assert(_G.cap[0] == "mod" and _G.cap[1] == a and _G.cap[2] == 2 and _G.cap[3]==nil)
+assert(_G.cap[0] == "mod" and _G.cap[1] == a and _G.cap[2] == 2 and _G.cap[3]==null)
 assert(-a == a)
 assert(_G.cap[0] == "unm" and _G.cap[1] == a)
 assert(a^4 == a)
-assert(_G.cap[0] == "pow" and _G.cap[1] == a and _G.cap[2] == 4 and _G.cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == a and _G.cap[2] == 4 and _G.cap[3]==null)
 assert(a^'4' == a)
-assert(_G.cap[0] == "pow" and _G.cap[1] == a and _G.cap[2] == '4' and _G.cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == a and _G.cap[2] == '4' and _G.cap[3]==null)
 assert(4^a == 4)
-assert(_G.cap[0] == "pow" and _G.cap[1] == 4 and _G.cap[2] == a and _G.cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == 4 and _G.cap[2] == a and _G.cap[3]==null)
 assert('4'^a == '4')
-assert(_G.cap[0] == "pow" and _G.cap[1] == '4' and _G.cap[2] == a and _G.cap[3]==nil)
+assert(_G.cap[0] == "pow" and _G.cap[1] == '4' and _G.cap[2] == a and _G.cap[3]==null)
 
 
 t = {}
 t.__lt = function (a,b,c)
   collectgarbage()
-  assert(c == nil)
+  assert(c == null)
   if type(a) == 'table' then a = a.x end
   if type(b) == 'table' then b = b.x end
  return a<b, "dummy"
@@ -170,7 +170,7 @@ end
 test()
 
 t.__le = function (a,b,c)
-  assert(c == nil)
+  assert(c == null)
   if type(a) == 'table' then a = a.x end
   if type(b) == 'table' then b = b.x end
  return a<=b, "dummy"
@@ -190,12 +190,12 @@ end
 t.__lt = function (a,b)
   for k in pairs(a) do
     if not b[k] then return false end
-    b[k] = nil
+    b[k] = null
   end
-  return next(b) != nil
+  return next(b) != null
 end
 
-t.__le = nil
+t.__le = null
 
 assert(Set{1,2,3} < Set{1,2,3,4})
 assert(not(Set{1,2,3,4} < Set{1,2,3,4}))
@@ -217,9 +217,9 @@ assert(not(Set{1,3} >= Set{3,5}))
 t.__eq = function (a,b)
   for k in pairs(a) do
     if not b[k] then return false end
-    b[k] = nil
+    b[k] = null
   end
-  return next(b) == nil
+  return next(b) == null
 end
 
 s = Set{1,3,5}
@@ -229,11 +229,11 @@ assert(rawequal(s, s))
 assert(Set{1,3,5,1} == Set{3,5,1})
 assert(Set{1,3,5} != Set{3,5,1,6})
 t[Set{1,3,5}] = 1
-assert(t[Set{1,3,5}] == nil)   -- `__eq' is not valid for table accesses
+assert(t[Set{1,3,5}] == null)   -- `__eq' is not valid for table accesses
 
 
 t.__concat = function (a,b,c)
-  assert(c == nil)
+  assert(c == null)
   if type(a) == 'table' then a = a.val end
   if type(b) == 'table' then b = b.val end
   if _G.A then return a..b
@@ -257,7 +257,7 @@ assert(x.val == "0abcdefg")
 
 
 -- test comparison compatibilities
-t1, t2, c, d = nil, nil, nil, nil
+t1, t2, c, d = null, null, null, null
 t1 = {};  c = {}; setmetatable(c, t1)
 d = {}
 t1.__eq = function () return true end
@@ -274,7 +274,7 @@ assert(c == d and c < d and not(d <= c))
 
 
 -- test for several levels of calls
-i = nil
+i = null
 tt = {
   __call = function (t, ...)
     i = i+1
@@ -296,9 +296,9 @@ assert(i == 3 and x[1] == 3 and x[3] == 5)
 print'+'
 
 -- testing proxies
-assert(getmetatable(newproxy()) == nil)
-assert(getmetatable(newproxy(false)) == nil)
-assert(getmetatable(newproxy(nil)) == nil)
+assert(getmetatable(newproxy()) == null)
+assert(getmetatable(newproxy(false)) == null)
+assert(getmetatable(newproxy(null)) == null)
 
 u = newproxy(true)
 
@@ -331,27 +331,27 @@ assert(getmetatable(-2) == mt)
 mt.__index = function (a,b) return a+b end
 assert((10)[3] == 13)
 assert((10)["3"] == 13)
-debug.setmetatable(23, nil)
-assert(getmetatable(-2) == nil)
+debug.setmetatable(23, null)
+assert(getmetatable(-2) == null)
 
 debug.setmetatable(true, mt)
 assert(getmetatable(false) == mt)
 mt.__index = function (a,b) return a or b end
 assert((true)[false] == true)
 assert((false)[false] == false)
-debug.setmetatable(false, nil)
-assert(getmetatable(true) == nil)
+debug.setmetatable(false, null)
+assert(getmetatable(true) == null)
 
-debug.setmetatable(nil, mt)
-assert(getmetatable(nil) == mt)
+debug.setmetatable(null, mt)
+assert(getmetatable(null) == mt)
 mt.__add = function (a,b) return (a or 0) + (b or 0) end
-assert(10 + nil == 10)
-assert(nil + 23 == 23)
-assert(nil + nil == 0)
-debug.setmetatable(nil, nil)
-assert(getmetatable(nil) == nil)
+assert(10 + null == 10)
+assert(null + 23 == 23)
+assert(null + null == 0)
+debug.setmetatable(null, null)
+assert(getmetatable(null) == null)
 
-debug.setmetatable(nil, {})
+debug.setmetatable(null, {})
 ]]--
 
 do
@@ -359,7 +359,7 @@ do
   t = {}
   u = newproxy(true)
 
-  -- print() returns nil which is converted to false
+  -- print() returns null which is converted to false
   setmetatable(t, { __eq = print })
   getmetatable(u).__eq = print
 
@@ -415,11 +415,11 @@ do
   assert(not ok and err:match("table or string expected"))
 end
 
--- verify that NaN/nil keys are passed to __newindex even though table assignment with them anywhere in the chain fails
+-- verify that NaN/null keys are passed to __newindex even though table assignment with them anywhere in the chain fails
 do
-  assert(pcall(function() t = {} t[nil] = 5 end) == false)
-  assert(pcall(function() t = {} setmetatable(t, { __newindex = {} }) t[nil] = 5 end) == false)
-  assert(pcall(function() t = {} setmetatable(t, { __newindex = function() end }) t[nil] = 5 end) == true)
+  assert(pcall(function() t = {} t[null] = 5 end) == false)
+  assert(pcall(function() t = {} setmetatable(t, { __newindex = {} }) t[null] = 5 end) == false)
+  assert(pcall(function() t = {} setmetatable(t, { __newindex = function() end }) t[null] = 5 end) == true)
 
   assert(pcall(function() t = {} t[0/0] = 5 end) == false)
   assert(pcall(function() t = {} setmetatable(t, { __newindex = {} }) t[0/0] = 5 end) == false)
@@ -436,7 +436,7 @@ do
 
   t.a = 1
   t.b = 2
-  t.b = nil -- this sets 'b' value to nil but leaves key as is to exercise more internal paths -- no observable behavior change expected between b and other absent keys
+  t.b = null -- this sets 'b' value to null but leaves key as is to exercise more internal paths -- no observable behavior change expected between b and other absent keys
 
   setmetatable(t, { __newindex = function(_, k, v)
     assert(v == 42)
@@ -480,10 +480,10 @@ function testfenv()
   assert(X == 30)
   B = false
   assert(B == false)
-  B = nil
-  assert(B == nil)
+  B = null
+  assert(B == null)
 
-  assert(_G_saved != nil)
+  assert(_G_saved != null)
 
   assert(pcall(getfenv, 10) == false)
   assert(pcall(setfenv, setfenv, {}) == false)

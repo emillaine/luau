@@ -15,7 +15,7 @@ function test()
 
         -- remove old entries
         if i > max then
-            t[tostring(i - max)] = nil
+            t[tostring(i - max)] = null
         end
     end
 end

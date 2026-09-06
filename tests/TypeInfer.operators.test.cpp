@@ -564,7 +564,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "compound_assign_result_must_be_compatible_wi
         }
 
         export x = setmetatable({}, mt)
-        export v: number = nil as any
+        export v: number = null as any
 
         v += x -- okay: number + x -> number
         x += v -- not okay: x </: number
@@ -631,7 +631,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_unary_minus")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        export foo = nil
+        export foo = null
         const mt = {}
 
         mt.__unm = function(val): string
@@ -986,7 +986,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_38355_recursive_union")
 
     CheckResult result = check(R"(
         --!strict
-        export _ = nil
+        export _ = null
         _ += _ and _ or _ and _ or _ and _
     )");
 
@@ -1043,7 +1043,7 @@ TEST_CASE_FIXTURE(Fixture, "strip_nil_from_lhs_or_operator")
 {
     CheckResult result = check(R"(
 --!strict
-const a: number? = nil
+const a: number? = null
 const b: number = a or 1
     )");
 
@@ -1054,7 +1054,7 @@ TEST_CASE_FIXTURE(Fixture, "strip_nil_from_lhs_or_operator2")
 {
     CheckResult result = check(R"(
 --!nonstrict
-const a: number? = nil
+const a: number? = null
 const b: number = a or 1
     )");
 
@@ -1065,7 +1065,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_strip_nil_from_rhs_or_operator")
 {
     CheckResult result = check(R"(
 --!strict
-const a: number? = nil
+const a: number? = null
 const b: number = 1 or a
     )");
 
@@ -1082,9 +1082,9 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_verifies_types_do_intersect")
     CheckResult result = check(R"(
         type Array<T> = { [number]: T }
         type Fiber = { id: number }
-        type null = {}
+        type Empty = {}
 
-        const fiberStack: Array<Fiber | null> = {}
+        const fiberStack: Array<Fiber | Empty> = {}
         const index = 0
 
         function f(fiber: Fiber)
@@ -1127,7 +1127,7 @@ TEST_CASE_FIXTURE(Fixture, "operator_eq_completely_incompatible")
 TEST_CASE_FIXTURE(Fixture, "refine_and_or")
 {
     CheckResult result = check(R"(
-        const t: {x: number?}? = {x = nil}
+        const t: {x: number?}? = {x = null}
         const u = t and t.x or 5
     )");
 
@@ -1313,8 +1313,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "equality_operations_succeed_if_any_union_bra
     CheckResult result = check(R"(
         const mm = {}
         type Foo = typeof(setmetatable({}, mm))
-        const x: Foo = nil as any
-        const y: Foo? = nil as any
+        const x: Foo = null as any
+        const y: Foo? = null as any
 
         const v1 = x == y
         const v2 = y == x
@@ -1336,10 +1336,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "equality_operations_succeed_if_any_union_bra
         type Foo = typeof(setmetatable({}, mm1))
         type Bar = typeof(setmetatable({}, mm2))
 
-        const x1: Foo = nil as any
-        const x2: Foo? = nil as any
-        const y1: Bar = nil as any
-        const y2: Bar? = nil as any
+        const x1: Foo = null as any
+        const x2: Foo? = null as any
+        const y1: Bar = null as any
+        const y2: Bar? = null as any
 
         const v1 = x1 == y1
         const v2 = x2 == y2
@@ -1434,7 +1434,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "reworked_and")
     CheckResult result = check(R"(
 const a: number? = 5
 const b: boolean = (a or 1) > 10
-const c  = nil-- free
+const c  = null-- free
 
 const x = a and 1
 const y = 'a' and 1
@@ -1463,7 +1463,7 @@ const b: number? = 6
 const c: boolean = true
 const d: true = true
 const e: false = false
-const f: nil = false
+const f: null = false
 
 const a1 = a or 'a'
 const b1 = b or 4
@@ -1496,11 +1496,11 @@ type Foo = { name: string?, flag: boolean? }
 const arr: {Foo} = {}
 
 function foo(arg: {name: string}?)
-    const name = if arg and arg.name then arg.name else nil
+    const name = if arg and arg.name then arg.name else null
 
     table.insert(arr, {
         name = name or "",
-        flag = name != nil and name != "",
+        flag = name != null and name != "",
     })
 end
     )");
@@ -1534,7 +1534,7 @@ return function(value: any): boolean
     if typeof(value) != "table" then
         return false
     end
-    if next(value) == nil then
+    if next(value) == null then
         -- an empty table is an empty array
         return true
     end
@@ -1572,7 +1572,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.String.slice")
 --!strict
 function slice(str: string, startIndexStr: string | number, lastIndexStr: (string | number)?): string
 	const strLen, invalidBytePosition = utf8.len(str)
-	assert(strLen != nil, ("string `%s` has an invalid byte at position %s"):format(str, tostring(invalidBytePosition)))
+	assert(strLen != null, ("string `%s` has an invalid byte at position %s"):format(str, tostring(invalidBytePosition)))
     const startIndex = tonumber(startIndexStr)
 
 
@@ -1605,8 +1605,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.Array.startswith")
 --!strict
 function startsWith(value: string, substring: string, position: number?): boolean
  	-- Luau FIXME: we have to use a tmp variable, as Luau doesn't understand the logic below narrow position to `number`
- 	position_ = nil
- 	if position == nil or position < 1 then
+ 	position_ = null
+ 	if position == null or position < 1 then
 		position_ = 1
 	else
 		position_ = position

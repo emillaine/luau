@@ -148,7 +148,7 @@ print(1); print(2) print(3)
 TEST_CASE_FIXTURE(Fixture, "MultilineBlockLocalDo")
 {
     LintResult result = lint(R"(
-_x = nil
+_x = null
 do
     _x = 5
 end
@@ -298,18 +298,18 @@ createFunction = function(configValue)
     -- that closed over the passed-in configValue, but this is actually being
     -- declared at module scope!
     function moreInternalLogic()
-        print(configValue) -- nil!!!
+        print(configValue) -- null!!!
     end
     return function()
         internalLogic()
         moreInternalLogic()
-        return nil
+        return null
     end
 end
 fnA = createFunction(true)
 fnB = createFunction(false)
-fnA() -- prints "true", "nil"
-fnB() -- prints "false", "nil"
+fnA() -- prints "true", "null"
+fnB() -- prints "false", "null"
 )");
 
     // Bare `function` declares function-locals (not globals), so no GlobalAsLocal warning.
@@ -733,13 +733,13 @@ do
 _a,_b,_c = pcall(), 5, 6, 7
 end
 do
-_a,_b,_c = pcall(), nil
+_a,_b,_c = pcall(), null
 end
 )");
 
     REQUIRE(2 == result.warnings.size());
     CHECK_EQ(result.warnings[0].location.begin.line, 5);
-    CHECK_EQ(result.warnings[0].text, "Assigning 2 values to 3 variables initializes extra variables with nil; add 'nil' to value list to silence");
+    CHECK_EQ(result.warnings[0].text, "Assigning 2 values to 3 variables initializes extra variables with null; add 'null' to value list to silence");
     CHECK_EQ(result.warnings[1].location.begin.line, 11);
     CHECK_EQ(result.warnings[1].text, "Assigning 4 values to 3 variables leaves some values unused");
 }
@@ -797,7 +797,7 @@ end
 function f7(a)
     repeat
         return 10
-    until a != nil
+    until a != null
 end
 
 return f1,f2,f3,f4,f5,f6,f7
@@ -1235,7 +1235,7 @@ const _t: {
     first: number,
     second: string,
     first: boolean
-} = nil
+} = null
 
 const _5 = {
     1, 2, 3,
@@ -1367,7 +1367,7 @@ TEST_CASE_FIXTURE(Fixture, "DeadLocalsUsed")
     LintResult result = lint(R"(
 --!nolint LocalShadow
 do
-    x = nil
+    x = null
     for x in pairs({}) do
         print(x)
     end
@@ -1385,16 +1385,16 @@ do
 end
     )");
 
-    // Bare `x = nil` is initialized (no never-initialized warning); bare multi-assign
-    // still warns about unbalanced count, but `c` gets nil so no never-initialized warning.
+    // Bare `x = null` is initialized (no never-initialized warning); bare multi-assign
+    // still warns about unbalanced count, but `c` gets null so no never-initialized warning.
     REQUIRE(1 == result.warnings.size());
-    CHECK_EQ(result.warnings[0].text, "Assigning 2 values to 3 variables initializes extra variables with nil; add 'nil' to value list to silence");
+    CHECK_EQ(result.warnings[0].text, "Assigning 2 values to 3 variables initializes extra variables with null; add 'null' to value list to silence");
 }
 
 TEST_CASE_FIXTURE(Fixture, "LocalFunctionNotDead")
 {
     LintResult result = lint(R"(
-foo = nil
+foo = null
 function foo() end
     )");
 
@@ -2333,7 +2333,7 @@ TEST_CASE_FIXTURE(Fixture, "MisleadingAndOr")
     LintResult result = lint(R"(
 _ = math.random() < 0.5 and true or 42
 _ = math.random() < 0.5 and false or 42 -- misleading
-_ = math.random() < 0.5 and nil or 42 -- misleading
+_ = math.random() < 0.5 and null or 42 -- misleading
 _ = math.random() < 0.5 and 0 or 42
 _ = (math.random() < 0.5 and false) or 42 -- currently ignored
 )");
@@ -2346,7 +2346,7 @@ _ = (math.random() < 0.5 and false) or 42 -- currently ignored
     );
     CHECK_EQ(
         result.warnings[1].text,
-        "The and-or expression always evaluates to the second alternative because the first alternative is nil; "
+        "The and-or expression always evaluates to the second alternative because the first alternative is null; "
         "consider using if-then-else expression instead"
     );
 }

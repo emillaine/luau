@@ -33,7 +33,7 @@ bool isIdentifierChar(char c)
 }
 
 const std::vector<std::string> keywords = {"and",   "as",    "break", "do",  "else", "end",    "false", "for",  "function", "if",   "in",
-                                           "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
+                                           "not",   "null", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 } // namespace
 
@@ -482,7 +482,7 @@ struct Printer
         }
         else if (expr.is<AstExprConstantNil>())
         {
-            writer.keyword("nil");
+            writer.keyword("null");
         }
         else if (const auto& a = expr.as<AstExprConstantBool>())
         {
@@ -2001,12 +2001,12 @@ struct Printer
                 AstType* r = a->types.data[1];
 
                 auto lta = l->as<AstTypeReference>();
-                if (lta && lta->name == "nil" && !r->is<AstTypeOptional>())
+                if (lta && lta->name == "null" && !r->is<AstTypeOptional>())
                     std::swap(l, r);
 
-                // it's still possible that we had a (T | U) or (T | nil) and not (nil | T)
+                // it's still possible that we had a (T | U) or (T | null) and not (null | T)
                 auto rta = r->as<AstTypeReference>();
-                if (rta && rta->name == "nil")
+                if (rta && rta->name == "null")
                 {
                     bool wrap = l->as<AstTypeIntersection>() || l->as<AstTypeFunction>();
 

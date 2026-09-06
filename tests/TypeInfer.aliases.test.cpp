@@ -49,7 +49,7 @@ TEST_CASE_FIXTURE(Fixture, "names_are_ascribed")
 {
     CheckResult result = check(R"(
         type T = { x: number }
-        const x: T = nil as any
+        const x: T = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -151,7 +151,7 @@ TEST_CASE_FIXTURE(Fixture, "default_pack_parameter")
 {
     CheckResult result = check(R"(
         type T<A... = (number, string)> = { fn: (A...) -> () }
-        const x: T = nil as any
+        const x: T = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -162,7 +162,7 @@ TEST_CASE_FIXTURE(Fixture, "saturate_to_first_type_pack")
 {
     CheckResult result = check(R"(
         type T<A, B, C...> = { fn: (A, B) -> C... }
-        const x: T<string, number, string, boolean> = nil as any
+        const x: T<string, number, string, boolean> = null as any
         const f = x.fn
     )");
 
@@ -196,9 +196,9 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_aliases")
         --!strict
         type T = { f: number, g: U }
         type U = { h: number, i: T? }
-        const x: T = { f = 37, g = { h = 5, i = nil } }
+        const x: T = { f = 37, g = { h = 5, i = null } }
         x.g.i = x
-        const y: T = { f = 3, g = { h = 5, i = nil } }
+        const y: T = { f = 3, g = { h = 5, i = null } }
         y.g.i = y
     )");
 
@@ -243,9 +243,9 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_generic_aliases")
         --!strict
         type T<a> = { f: a, g: U<a> }
         type U<a> = { h: a, i: T<a>? }
-        const x: T<number> = { f = 37, g = { h = 5, i = nil } }
+        const x: T<number> = { f = 37, g = { h = 5, i = null } }
         x.g.i = x
-        const y: T<string> = { f = "hi", g = { h = "lo", i = nil } }
+        const y: T<string> = { f = "hi", g = { h = "lo", i = null } }
         y.g.i = y
     )");
 
@@ -258,9 +258,9 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_errors")
         --!strict
         type T<a> = { f: a, g: U<a> }
         type U<b> = { h: b, i: T<b>? }
-        const x: T<number> = { f = 37, g = { h = 5, i = nil } }
+        const x: T<number> = { f = 37, g = { h = 5, i = null } }
         x.g.i = x
-        const y: T<string> = { f = "hi", g = { h = 5, i = nil } }
+        const y: T<string> = { f = "hi", g = { h = 5, i = null } }
         y.g.i = y
     )");
 
@@ -284,8 +284,8 @@ TEST_CASE_FIXTURE(Fixture, "use_table_name_and_generic_params_in_errors")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         type Pair<T, U> = {first: T, second: U}
-        export a: Pair<string, number> = nil as any
-        const b: Pair<string, string> = nil as any
+        export a: Pair<string, number> = null as any
+        const b: Pair<string, string> = null as any
 
         a = b
     )");
@@ -493,8 +493,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "general_require_multi_assign")
     fileResolver.source["workspace/C"] = R"(
         const Foo, Bar = require(workspace.A), require(workspace.B)
 
-        const a: Foo.myvec2 = nil as any
-        const b: Bar.myvec3 = nil as any
+        const a: Foo.myvec2 = null as any
+        const b: Bar.myvec3 = null as any
     )";
 
     CheckResult result = getFrontend().check("workspace/C");
@@ -757,7 +757,7 @@ TEST_CASE_FIXTURE(Fixture, "non_recursive_aliases_that_reuse_a_generic_name")
         type Array<T> = { [number]: T }
         type Tuple<T, V> = Array<T | V>
 
-        const p: Tuple<number, string> = nil as any
+        const p: Tuple<number, string> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -961,7 +961,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_lose_track_of_PendingExpansionTypes_aft
         const RCD = require(script.Parent.Parent.Parent.ReactCurrentDispatcher)
 
         function resolveDispatcher(): RCD.Dispatcher
-            return (nil as any) as RCD.Dispatcher
+            return (null as any) as RCD.Dispatcher
         end
 
         function useState<S>(
@@ -984,15 +984,15 @@ TEST_CASE_FIXTURE(Fixture, "another_thing_from_roact")
         type Set<T> = { [T]: boolean }
 
         type FiberRoot = {
-            pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | nil,
+            pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | null,
         }
 
         type Wakeable = {
-            andThen: (self: Wakeable) -> nil | Wakeable,
+            andThen: (self: Wakeable) -> null | Wakeable,
         }
 
         function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: number)
-            const pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | nil = root.pingCache
+            const pingCache: Map<Wakeable, (Set<any> | Map<Wakeable, Set<any>>)> | null = root.pingCache
         end
     )");
 
@@ -1021,7 +1021,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "alias_expands_to_bare_reference_to_imported_
         type ReadOnly<T> = T
 
         function f(): ReadOnly<Object>
-            return nil as any
+            return null as any
         end
     )";
 
@@ -1036,7 +1036,7 @@ TEST_CASE_FIXTURE(Fixture, "table_types_record_the_property_locations")
             create: () -> ()
         }
 
-        const x: Table = nil as any
+        const x: Table = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1239,7 +1239,7 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_dont_crash_on_bad_name")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        type typeof = typeof(nil as any)
+        type typeof = typeof(null as any)
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK(get<ReservedIdentifier>(result.errors[0]));
@@ -1253,8 +1253,8 @@ TEST_CASE_FIXTURE(Fixture, "type_alias_dont_crash_on_duplicate_with_typeof")
     //  type Foo = typeof(setmetatable({} as SomeType, {} as SomeMetatableType))
     //
     CheckResult result = check(R"(
-        type A = typeof(nil as any)
-        type A = typeof(nil as any)
+        type A = typeof(null as any)
+        type A = typeof(null as any)
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK(get<DuplicateTypeDefinition>(result.errors[0]));
@@ -1480,7 +1480,7 @@ type Alias<Generic> = typeof(getmetatable(... as Generic))
 type Value = { x: number, y: number }
 type Meta = setmetatable<Value, { __len : (Value) -> number }>
 
-const foo: Alias<Meta> = nil as any
+const foo: Alias<Meta> = null as any
 
 const x: number = foo.__len({ x = 1, y = 2})
 

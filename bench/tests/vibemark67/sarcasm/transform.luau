@@ -19,7 +19,7 @@ transform = {}
 
 -- `;! alloca ...` annotation parser (architecture-independent).
 function parseAlloca(ann)
-	if not ann then return nil end
+	if not ann then return null end
 	n = string.match(ann, "^alloca%s+size%s*%(%s*(.-)%s*%)$")
 	if n then return { kind = "size", name = n } end
 	rn = string.match(ann, "^alloca%s+result%s*%(%s*(.-)%s*%)$")
@@ -33,7 +33,7 @@ function parseAlloca(ann)
 	if string.find(ann, "alloca", 1, true) then
 		error("sarcasm: unrecognized alloca annotation: " .. ann)
 	end
-	return nil
+	return null
 end
 
 -- The register operand of a store that is not the memory operand (the stored value).
@@ -41,7 +41,7 @@ function storeValueOperand(stmt, mem)
 	for _, op in stmt.operands do
 		if op.kind == "reg" and op != mem then return op end
 	end
-	return nil
+	return null
 end
 
 function transform.transformFunction(name, sigDesc, body, backend)
@@ -69,7 +69,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		for _, r in allocaRegions do
 			if spOff >= r.base and spOff < r.base + r.size then return r end
 		end
-		return nil
+		return null
 	end
 
 	body = framePass.preprocess(body, allocaRegions, framePolicy)
@@ -78,16 +78,16 @@ function transform.transformFunction(name, sigDesc, body, backend)
 	callSigCache = {}
 	function callSigOf(stmt)
 		ann = stmt.annotation
-		if not ann then return nil end
-		if callSigCache[stmt] == nil then callSigCache[stmt] = sig.parseSignature(ann) end
+		if not ann then return null end
+		if callSigCache[stmt] == null then callSigCache[stmt] = sig.parseSignature(ann) end
 		return callSigCache[stmt]
 	end
 	function callInfo(stmt)
 		cs = callSigOf(stmt)
-		if not cs then return nil end
+		if not cs then return null end
 		argRegs = {}
 		for k = 1, cs.argWords do table.insert(argRegs, cc.yoloArg(k)) end
-		return { argRegs = argRegs, resultReg = cs.isVoid and nil or 0 }
+		return { argRegs = argRegs, resultReg = cs.isVoid and null or 0 }
 	end
 
 	lf = lift.liftFunction(body, { classify = cgm.classify, returnRegs = returnRegs, callInfo = callInfo })
@@ -190,7 +190,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 	-- GC root slots
 	rootTemps, loToSlot = {}, {}
 	function rootSlotFor(loT)
-		if loToSlot[loT] == nil then
+		if loToSlot[loT] == null then
 			table.insert(rootTemps, loT)
 			loToSlot[loT] = #rootTemps - 1
 			if temps[loT] then temps[loT].spillCost = 1e9 end
@@ -224,10 +224,10 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		return lbl
 	end
 
-	-- access check for a precomputed effective address (capLo==nil => null cap, always traps).
+	-- access check for a precomputed effective address (capLo==null => null cap, always traps).
 	function emitAccessCheck(effTemp, capLo, size, align, isWrite)
-		if capLo == nil then
-			cg.jump(failLabelFor(effTemp, nil, size, align, isWrite))
+		if capLo == null then
+			cg.jump(failLabelFor(effTemp, null, size, align, isWrite))
 			return
 		end
 		lbl = failLabelFor(effTemp, capLo, size, align, isWrite)
@@ -252,7 +252,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		tag = name .. "_" .. ptrldCounter
 		effTemp, baseLo = cg.computeAddr(node, mem)
 		emitAccessCheck(effTemp, baseLo, 8, 8)
-		if baseLo == nil then cg.moveZero(dstLo); cg.moveZero(dstIv); return end
+		if baseLo == null then cg.moveZero(dstLo); cg.moveZero(dstIv); return end
 		offInObj = allocTemp({ role = "offobj" })
 		cg.subReg(offInObj, effTemp, baseLo)                       -- offInObj = eff - lower
 		aux = allocTemp({ role = "aux" })
@@ -276,8 +276,8 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		ptrstCounter += 1
 		tag = name .. "_st_" .. ptrstCounter
 		effTemp, baseLo = cg.computeAddr(node, mem)
-		if baseLo == nil then emitAccessCheck(effTemp, nil, 8, 8, true); return end
-		if valLo == nil then valLo = allocTemp({ role = "nulllo" }); cg.moveZero(valLo) end
+		if baseLo == null then emitAccessCheck(effTemp, null, 8, 8, true); return end
+		if valLo == null then valLo = allocTemp({ role = "nulllo" }); cg.moveZero(valLo) end
 		lbl = failLabelFor(effTemp, baseLo, 8, 8, true)
 		cg.branchZero(baseLo, lbl)
 		cg.testMaskBranch(effTemp, 7, "ne", lbl)                   -- alignment
@@ -334,7 +334,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		cg.label(okLbl)
 	end
 
-	excLabel = nil
+	excLabel = null
 	function ensureExcLabel() if not excLabel then excLabel = ".Lexc_" .. name end return excLabel end
 	calledExterns = {}
 
@@ -432,7 +432,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 				emitAlloca(node, allocaNodes[node])
 			else if c.control == "return" then
 				if not sigDesc.isVoid then
-					retTemp = nil
+					retTemp = null
 					for _, r in c.uses do if r.retReg then retTemp = node.opTemp[r] end end
 					if retTemp then cg.move(pColored(cc.retIv), retTemp) end
 					if sigDesc.retIsPtr then emitCapMove(cc.retLo, retTemp) end
@@ -455,8 +455,8 @@ function transform.transformFunction(name, sigDesc, body, backend)
 					emitRootStore(dstLo)
 				else if storePtrNodes[node] then
 					valOp = storeValueOperand(node.stmt, mem)
-					valIv = valOp and node.opTemp[valOp] or nil
-					valLo = valIv and pf.lowerTemp[valIv] or nil
+					valIv = valOp and node.opTemp[valOp] or null
+					valLo = valIv and pf.lowerTemp[valIv] or null
 					emitPtrStore(node, mem, valIv, valLo)
 				else if mem then
 					cg.checkMemInsn(node, mem)

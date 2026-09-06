@@ -36,10 +36,10 @@ t = {}
 -- basic table access
 t[vector.create(1, 2, 3)] = 42
 assert(t[vector.create(1, 2, 3)] == 42)
-assert(t[vector.create(1, 2, 4)] == nil)
+assert(t[vector.create(1, 2, 4)] == null)
 
 -- negative zero should hash the same as zero
-assert(t[vector.create(0, 0, 0)] == nil)
+assert(t[vector.create(0, 0, 0)] == null)
 t[vector.create(0, 0, 0)] = "hello"
 assert(t[vector.create(0, 0, 0)] == "hello")
 assert(t[vector.create(0, -0, 0)] == "hello")

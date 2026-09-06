@@ -29,10 +29,10 @@ a,b = string.find('a\0a\0a\0a\0\0ab', '\0ab', 2);  -- finds at the end
 assert(a == 9 and b == 11);
 a,b = string.find('a\0a\0a\0a\0\0ab', 'b')    -- last position
 assert(a == 11 and b == 11)
-assert(string.find('a\0a\0a\0a\0\0ab', 'b\0') == nil)   -- check ending
-assert(string.find('', '\0') == nil)
+assert(string.find('a\0a\0a\0a\0\0ab', 'b\0') == null)   -- check ending
+assert(string.find('', '\0') == null)
 assert(string.find('alo123alo', '12') == 4)
-assert(string.find('alo123alo', '^12') == nil)
+assert(string.find('alo123alo', '^12') == null)
 
 assert(f('aloALO', '%l*') == 'alo')
 assert(f('aLo_ALO', '%a*') == 'aLo')
@@ -46,17 +46,17 @@ assert(f('aaa', 'ab*a') == 'aa')
 assert(f('aba', 'ab*a') == 'aba')
 assert(f('aaab', 'a+') == 'aaa')
 assert(f('aaa', '^.+$') == 'aaa')
-assert(f('aaa', 'b+') == nil)
-assert(f('aaa', 'ab+a') == nil)
+assert(f('aaa', 'b+') == null)
+assert(f('aaa', 'ab+a') == null)
 assert(f('aba', 'ab+a') == 'aba')
 assert(f('a$a', '.$') == 'a')
 assert(f('a$a', '.%$') == 'a$')
 assert(f('a$a', '.$.') == 'a$a')
-assert(f('a$a', '$$') == nil)
-assert(f('a$b', 'a$') == nil)
+assert(f('a$a', '$$') == null)
+assert(f('a$b', 'a$') == null)
 assert(f('a$a', '$') == '')
 assert(f('', 'b*') == '')
-assert(f('aaa', 'bb*') == nil)
+assert(f('aaa', 'bb*') == null)
 assert(f('aaab', 'a-') == '')
 assert(f('aaa', '^.-$') == 'aaa')
 assert(f('aabaaabaaabaaaba', 'b.*b') == 'baaabaaabaaab')
@@ -79,7 +79,7 @@ print('+')
 assert(f1('alo alx 123 b\0o b\0o', '(..*) %1') == "b\0o b\0o")
 assert(f1('axz123= 4= 4 34', '(.+)=(.*)=%2 %1') == '3= 4= 4 3')
 assert(f1('=======', '^(=*)=%1$') == '=======')
-assert(string.match('==========', '^([=]*)=%1$') == nil)
+assert(string.match('==========', '^([=]*)=%1$') == null)
 
 function range (i, j)
   if i <= j then
@@ -113,12 +113,12 @@ print('+');
 assert(string.match("alo xyzK", "(%w+)K") == "xyz")
 assert(string.match("254 K", "(%d*)K") == "")
 assert(string.match("alo ", "(%w*)$") == "")
-assert(string.match("alo ", "(%w+)$") == nil)
+assert(string.match("alo ", "(%w+)$") == null)
 assert(string.find("(álo)", "%(á") == 1)
 a, b, c, d, e = string.match("âlo alo", "^(((.).).* (%w*))$")
-assert(a == 'âlo alo' and b == 'âl' and c == 'â' and d == 'alo' and e == nil)
+assert(a == 'âlo alo' and b == 'âl' and c == 'â' and d == 'alo' and e == null)
 a, b, c, d  = string.match('0123456789', '(.+(.?)())')
-assert(a == '0123456789' and b == '' and c == 11 and d == nil)
+assert(a == '0123456789' and b == '' and c == 11 and d == null)
 print('+')
 
 assert(string.gsub('ülo ülo', 'ü', 'x') == 'xlo xlo')
@@ -171,7 +171,7 @@ assert(s == r and t[1] == 1 and t[3] == 3 and t[7] == 4 and t[13] == 4)
 
 
 function isbalanced (s)
-  return string.find(string.gsub(s, "%b()", ""), "[()]") == nil
+  return string.find(string.gsub(s, "%b()", ""), "[()]") == null
 end
 
 assert(isbalanced("(9 ((8))(\0) 7) \0\0 a b ()(c)() a"))
@@ -190,7 +190,7 @@ assert(t[1] == "first" and t[2] == "second" and t[3] == "word" and t.n == 3)
 t = {n=0}
 assert(string.gsub("first second word", "%w+",
          function (w) t.n=t.n+1; t[t.n] = w end, 2) == "first second word")
-assert(t[1] == "first" and t[2] == "second" and t[3] == nil)
+assert(t[1] == "first" and t[2] == "second" and t[3] == null)
 
 assert(not pcall(string.gsub, "alo", "(.", print))
 assert(not pcall(string.gsub, "alo", ".)", print))

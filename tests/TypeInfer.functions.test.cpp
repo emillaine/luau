@@ -244,7 +244,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "vararg_function_is_quantified")
 TEST_CASE_FIXTURE(Fixture, "list_only_alternative_overloads_that_match_argument_count")
 {
     CheckResult result = check(R"(
-        const multiply: ((number)->number) & ((number)->string) & ((number, number)->number) = nil as any
+        const multiply: ((number)->number) & ((number)->string) & ((number, number)->number) = null as any
         multiply("")
     )");
 
@@ -279,7 +279,7 @@ TEST_CASE_FIXTURE(Fixture, "list_only_alternative_overloads_that_match_argument_
 TEST_CASE_FIXTURE(Fixture, "list_all_overloads_if_no_overload_takes_given_argument_count")
 {
     CheckResult result = check(R"(
-        const multiply: ((number)->number) & ((number)->string) & ((number, number)->number) = nil as any
+        const multiply: ((number)->number) & ((number)->string) & ((number, number)->number) = null as any
         multiply()
     )");
 
@@ -297,7 +297,7 @@ TEST_CASE_FIXTURE(Fixture, "list_all_overloads_if_no_overload_takes_given_argume
 TEST_CASE_FIXTURE(Fixture, "dont_give_other_overloads_message_if_only_one_argument_matching_overload_exists")
 {
     CheckResult result = check(R"(
-        const multiply: ((number)->number) & ((number)->string) & ((number, number)->number) = nil as any
+        const multiply: ((number)->number) & ((number)->string) & ((number, number)->number) = null as any
         multiply(1, "")
     )");
 
@@ -313,7 +313,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_return_type_from_selected_overload")
 {
     CheckResult result = check(R"(
         type T = {method: ((T, number) -> number) & ((number) -> string)}
-        const T: T = nil as any
+        const T: T = null as any
 
         const a = T.method(T, 4)
         const b = T.method(5)
@@ -433,7 +433,7 @@ TEST_CASE_FIXTURE(Fixture, "another_recursive_local_function")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export count = nil
+        export count = null
         function count(n: number)
             if n == 0 then
                 return 0
@@ -478,7 +478,7 @@ TEST_CASE_FIXTURE(Fixture, "another_higher_order_function")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export Get_des = nil
+        export Get_des = null
         function Get_des(func)
             Get_des(func)
         end
@@ -511,7 +511,7 @@ TEST_CASE_FIXTURE(Fixture, "another_other_higher_order_function")
     else
     {
         CheckResult result = check(R"(
-            const d = nil
+            const d = null
             d:foo()
             d:foo()
         )");
@@ -654,7 +654,7 @@ TEST_CASE_FIXTURE(Fixture, "complicated_return_types_require_an_explicit_annotat
                 i += 1
                 return i
             else
-                return nil
+                return null
             end
         end
     )");
@@ -737,7 +737,7 @@ TEST_CASE_FIXTURE(Fixture, "higher_order_function_3")
             const t = p[0]
             p[0] = p[1]
             p[1] = t
-            return nil
+            return null
         end
 
         function swapTwice(p)
@@ -834,7 +834,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "mutual_recursion")
         --!strict
 
         export startGui
-        export characterAddedConnection: any = nil as any
+        export characterAddedConnection: any = null as any
 
         function newPlayerCharacter()
             startGui()
@@ -853,7 +853,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "toposort_doesnt_break_mutual_recursion")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         --!strict
-        export x = nil
+        export x = null
         export g
         function f() g() end
         -- make sure print(x) doesn't get toposorted here, breaking the mutual block
@@ -897,7 +897,7 @@ TEST_CASE_FIXTURE(Fixture, "another_indirect_function_case_where_it_is_ok_to_pro
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export mycb: (number, number) -> () = nil as any
+        export mycb: (number, number) -> () = null as any
 
         function f() end
 
@@ -1216,7 +1216,7 @@ TEST_CASE_FIXTURE(Fixture, "record_matching_overload")
 {
     CheckResult result = check(R"(
         type Overload = ((string) -> string) & ((number) -> number)
-        const abc: Overload = nil as any
+        const abc: Overload = null as any
         abc(1)
     )");
 
@@ -1271,7 +1271,7 @@ f(function(a) return a.x + a.y end)
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    // An optional function is accepted, but since we already provide a function, nil can be ignored
+    // An optional function is accepted, but since we already provide a function, null can be ignored
     result = check(R"(
 type Table = { x: number, y: number }
 function f(a: ((Table) -> number)?) if a then return a({x = 1, y = 2}) else return 0 end end
@@ -1367,9 +1367,9 @@ f(function(x) return x * 2 end)
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK_EQ("Expected this to be 'Table', but got 'number'", toString(result.errors[0]));
 
-    // Return type doesn't inference 'nil'
+    // Return type doesn't inference 'null'
     result = check(R"(
-        function f(a: (number) -> nil) return a(4) end
+        function f(a: (number) -> null) return a(4) end
         f(function(x) print(x) end)
     )");
 
@@ -1416,7 +1416,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_argument_overloaded"
 function g1<T>(a: T, f: (T) -> T) return f(a) end
 function g2<T>(a: T, b: T, f: (T, T) -> T) return f(a, b) end
 
-const g12: typeof(g1) & typeof(g2) = nil as any
+const g12: typeof(g1) & typeof(g2) = null as any
 
 g12(1, function(x) return x + x end)
 g12(1, 2, function(x, y) return x + y end)
@@ -1428,7 +1428,7 @@ g12(1, 2, function(x, y) return x + y end)
 function g1<T>(a: T, f: (T) -> T) return f(a) end
 function g2<T>(a: T, b: T, f: (T, T) -> T) return f(a, b) end
 
-const g12: typeof(g1) & typeof(g2) = nil as any
+const g12: typeof(g1) & typeof(g2) = null as any
 
 g12({x=1}, function(x) return {x=-x.x} end)
 g12({x=1}, {x=2}, function(x, y) return {x=x.x + y.x} end)
@@ -1530,7 +1530,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_arg_count")
 type A = (number, number) -> string
 type B = (number) -> string
 
-const a: A = nil as any
+const a: A = null as any
 const b: B = a
     )");
 
@@ -1553,7 +1553,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_arg")
 type A = (number, number) -> string
 type B = (number, string) -> string
 
-const a: A = nil as any
+const a: A = null as any
 const b: B = a
     )");
 
@@ -1577,7 +1577,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_ret_count")
 type A = (number, number) -> (number)
 type B = (number, number) -> (number, boolean)
 
-const a: A = nil as any
+const a: A = null as any
 const b: B = a
     )");
 
@@ -1600,7 +1600,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_ret")
 type A = (number, number) -> string
 type B = (number, number) -> number
 
-const a: A = nil as any
+const a: A = null as any
 const b: B = a
     )");
 
@@ -1624,7 +1624,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_ret_mult")
 type A = (number, number) -> (number, string)
 type B = (number, number) -> (number, boolean)
 
-const a: A = nil as any
+const a: A = null as any
 const b: B = a
     )");
 
@@ -1719,10 +1719,10 @@ TEST_CASE_FIXTURE(Fixture, "inferred_higher_order_functions_are_quantified_at_th
         --!strict
 
         function resolveDispatcher()
-            return (nil as any) as {useContext: (number?) -> any}
+            return (null as any) as {useContext: (number?) -> any}
         end
 
-        export useContext = nil
+        export useContext = null
         useContext = function(unstable_observedBits: number?)
             resolveDispatcher().useContext(unstable_observedBits)
         end
@@ -1741,12 +1741,12 @@ TEST_CASE_FIXTURE(Fixture, "inferred_higher_order_functions_are_quantified_at_th
 
 TEST_CASE_FIXTURE(Fixture, "inferred_higher_order_functions_are_quantified_at_the_right_time3")
 {
-    // This test regresses in the new solver, but is sort of nonsensical insofar as `foo` is known to be `nil`, so it's "right" to not be able to call
+    // This test regresses in the new solver, but is sort of nonsensical insofar as `foo` is known to be `null`, so it's "right" to not be able to call
     // it.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        const foo = nil
+        const foo = null
 
         foo():bar(function()
             return foo()
@@ -1761,7 +1761,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_decl_non_self_unsealed_overwrite")
     ScopedFastFlag _{FFlag::LuauCheckFunctionStatementTypes, true};
 
     CheckResult result = check(R"(
-const t = { f = nil as ((x: number) -> number)? }
+const t = { f = null as ((x: number) -> number)? }
 
 function t.f(x: string): string -- 1st error: new function value type is incompatible
     return x .. "asd"
@@ -1950,8 +1950,8 @@ TEST_CASE_FIXTURE(Fixture, "dont_infer_parameter_types_for_functions_from_their_
         t.__index = t
 
         function g(s)
-            const q = s.p and s.p.q or nil
-            return q and t.f(q) or nil
+            const q = s.p and s.p.q or null
+            return q and t.f(q) or null
         end
 
         const f = t.f
@@ -1969,7 +1969,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_infer_parameter_types_for_functions_from_their_
     else
     {
         LUAU_REQUIRE_NO_ERRORS(result);
-        CHECK_EQ("({+ p: {+ q: nil +} +}) -> nil", toString(requireType("g")));
+        CHECK_EQ("({+ p: {+ q: null +} +}) -> null", toString(requireType("g")));
     }
 }
 
@@ -2088,9 +2088,9 @@ type Triangle = Line
   & ((Red) -> (Color) -> (Red) -> false)
   & ((Blue) -> (Color) -> (Blue) -> false)
 
-const x : Triangle = nil as any
-const y : Line = nil as any
-export z : Uncolorable = nil as any
+const x : Triangle = null as any
+const y : Line = null as any
+export z : Uncolorable = null as any
 z = x -- OK, so the triangle is uncolorable
 z = y -- Not OK, so the line is colorable
     )");
@@ -2206,7 +2206,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiated_type_packs_must_have_a_non_null_scope")
 {
     CheckResult result = check(R"(
         function pcall<A..., R...>(...: (A...) -> R...): (boolean, R...)
-            return nil as any
+            return null as any
         end
 
         type Dispatch<A> = (A) -> ()
@@ -2216,7 +2216,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiated_type_packs_must_have_a_non_null_scope")
 
         function mountReducer()
             dispatchAction()
-            return nil as any
+            return null as any
         end
 
         function useReducer(): Dispatch<any>
@@ -2250,8 +2250,8 @@ TEST_CASE_FIXTURE(Fixture, "function_exprs_are_generalized_at_signature_scope_no
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export foo = nil
-        const bar = nil
+        export foo = null
+        const bar = null
 
         -- foo being a function expression is deliberate: the bug we're testing
         -- only existed for function expressions, not for function statements.
@@ -2262,7 +2262,7 @@ TEST_CASE_FIXTURE(Fixture, "function_exprs_are_generalized_at_signature_scope_no
 
     LUAU_REQUIRE_NO_ERRORS(result);
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK(toString(requireType("foo")) == "((unknown) -> nil)?");
+        CHECK(toString(requireType("foo")) == "((unknown) -> null)?");
     else
     {
         // note that b is not in the generic list; it is free, the unconstrained type of `bar`.
@@ -2399,7 +2399,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_checks_argument_types")
 
     CheckResult result = check(R"(
         type Callable = typeof(setmetatable({}, {} as { __call: (Callable, number) -> string }))
-        const f = (nil as any) as Callable
+        const f = (null as any) as Callable
 
         const ok: string = f(1)
         const bad: string = f("wrong")
@@ -2415,7 +2415,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_checks_variadic_argument_typ
 
     CheckResult result = check(R"(
         type Callable = typeof(setmetatable({}, {} as { __call: (Callable, ...number) -> () }))
-        const f = (nil as any) as Callable
+        const f = (null as any) as Callable
 
         f(1, 2, 3)
         f(1, "wrong")
@@ -2432,7 +2432,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_variadic_blames_the_offendin
 
     CheckResult result = check(R"(
         type Callable = typeof(setmetatable({}, {} as { __call: (Callable, ...number) -> () }))
-        const f = (nil as any) as Callable
+        const f = (null as any) as Callable
 
         f(1, "wrong", 3)
     )");
@@ -2450,7 +2450,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "call_metamethod_variadic_blames_each_offendi
 
     CheckResult result = check(R"(
         type Callable = typeof(setmetatable({}, {} as { __call: (Callable, ...number) -> () }))
-        const f = (nil as any) as Callable
+        const f = (null as any) as Callable
 
         f("a", 2, "b")
     )");
@@ -2565,10 +2565,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "apply_of_lambda_with_inferred_and_explicit_t
 TEST_CASE_FIXTURE(BuiltinsFixture, "regex_benchmark_string_format_minimization")
 {
     CheckResult result = check(R"(
-        (nil as any)(function(n)
+        (null as any)(function(n)
             if tonumber(n) then
                 n = tonumber(n)
-            else if n != nil then
+            else if n != null then
                 string.format("invalid argument #4 to 'sub': number expected, got %s", typeof(n))
             end
         end);
@@ -2744,7 +2744,7 @@ TEST_CASE_FIXTURE(Fixture, "local_function_fwd_decl_doesnt_crash")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export foo = nil
+        export foo = null
 
         function bar()
             foo()
@@ -2902,7 +2902,7 @@ TEST_CASE_FIXTURE(Fixture, "function_definition_in_a_do_block")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export f = nil
+        export f = null
         do
             function f()
             end
@@ -2961,7 +2961,7 @@ return _
 TEST_CASE_FIXTURE(Fixture, "cannot_call_union_of_functions")
 {
     CheckResult result = check(R"(
-         const f: (() -> ()) | (() -> () -> ()) = nil as any
+         const f: (() -> ()) | (() -> () -> ()) = null as any
          f()
      )");
 
@@ -2985,13 +2985,13 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_missing_follow_in_ast_stat_fun")
         end != _
 
         while (_) do
-            _,_,_,_,_,_,_,_,_,_._,_ = nil
+            _,_,_,_,_,_,_,_,_,_._,_ = null
             function _(...):<t0...>()->()
             end
             function _<t0...>(...):any
                 _ ..= ...
             end
-            _,_,_,_,_,_,_,_,_,_,_ = nil
+            _,_,_,_,_,_,_,_,_,_,_ = null
         end
     )");
 }
@@ -3042,7 +3042,7 @@ TEST_CASE_FIXTURE(Fixture, "captured_local_is_assigned_a_function")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export f = nil
+        export f = null
 
         function g()
             f()
@@ -3106,7 +3106,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "overload_resolution_crash_when_argExprs_is_s
 {
     CheckResult result = check(R"(
 --!strict
-const parseError = nil
+const parseError = null
 type Set<T> = {[T]: any}
 function captureDependencies(
 	saveToSet: Set<PubTypes.Dependency>,
@@ -3173,7 +3173,7 @@ TEST_CASE_FIXTURE(Fixture, "recursive_function_calls_should_not_use_the_generali
             return true -- chosen by fair coin toss
         end
 
-        export f = nil
+        export f = null
         f = 5
         function f()
             if random() then f() end
@@ -3237,7 +3237,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_pack")
 TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_pack_variadic")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const foo : () -> (...string) = (nil as any)
+        const foo : () -> (...string) = (null as any)
         print(string.format("%s %s %s", foo()))
     )"));
 }
@@ -3383,7 +3383,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unnecessary_nil_in_lower_bound_of_generic")
         function isAnArray(value)
             if type(value) == "table" then
                 for index, _ in next, value do
-                    -- assert index is not nil
+                    -- assert index is not null
                     math.max(0, index)
                 end
                 return true
@@ -3472,7 +3472,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2065_bidirectional_inference_function_call")
 
         foo(function()
             if someCondition then
-                return nil
+                return null
             end
             return function() end
         end)
@@ -3521,7 +3521,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_one_ok_one_potential")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        const f: ((number) -> "one") & ((string) -> "two") = nil as any
+        const f: ((number) -> "one") & ((string) -> "two") = null as any
 
         const g = f(42)
         const h = f("huh")
@@ -3537,7 +3537,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_ambiguous_call")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        const f: ((number | string) -> "one") & ((number | boolean) -> "two") = nil as any
+        const f: ((number | string) -> "one") & ((number | boolean) -> "two") = null as any
         const g = f(42)
     )");
 
@@ -3555,7 +3555,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_pick_better_arity")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        const f: ((number) -> "one") & ((number, number) -> "two") = nil as any
+        const f: ((number) -> "one") & ((number, number) -> "two") = null as any
         -- Casting here so that we always hit the case in overload selection
         -- where one part has the correct arity but incorrect argument types,
         -- and the other has the incorrect arity.
@@ -3575,7 +3575,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_no_compatible_option")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        const f: ((number) -> "one") & ((boolean) -> "two") = nil as any
+        const f: ((number) -> "one") & ((boolean) -> "two") = null as any
         const g = f("s" as string)
     )");
 
@@ -3616,7 +3616,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_union_of_functions")
             return f()
         end
 
-        const g = foo(nil as any)
+        const g = foo(null as any)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -3636,7 +3636,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_needs_to_retry")
 
     auto results = check(R"(
         type RGB = { r: number, b: number, g: number }
-        const BrickColor: ((number) -> RGB) & ((number, number, number) -> RGB) & ((string) -> RGB) = nil as any
+        const BrickColor: ((number) -> RGB) & ((number, number, number) -> RGB) & ((string) -> RGB) = null as any
         function Lightning(li, Color)
             li.BrickColor = BrickColor(Color)
         end
@@ -3654,7 +3654,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_unambiguous_with_constraint")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const f: ((string, number) -> string) & ((number, boolean) -> number) = nil as any
+        const f: ((string, number) -> string) & ((number, boolean) -> number) = null as any
         function g(x)
             -- When selecting an overload at this point, we'll reject the
             -- second overload, and claim that this is the only possible
@@ -3669,7 +3669,7 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_unambiguous_with_constraint")
 TEST_CASE_FIXTURE(Fixture, "oss_2118")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const foo: <P>(constructor: (P) -> any) -> (P) -> any = (nil as any)
+        const foo: <P>(constructor: (P) -> any) -> (P) -> any = (null as any)
         const fn = foo(function (value: { test: true })
             return value.test
         end)
@@ -3746,7 +3746,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bidirectional_lambda_inference_applies_nilab
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const listdir: (string, ((string) -> boolean)?) -> { string } = nil as any
+        const listdir: (string, ((string) -> boolean)?) -> { string } = null as any
         listdir("my_directory", function (path)
             print(path)
             return true
@@ -3785,7 +3785,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_inference_allow_internal_generics")
     CheckResult result = check(R"(
         type testsuite = { case: (self: testsuite, <T>(T) -> T) -> () }
 
-        const test1: { suite: (string, (testsuite) -> ()) -> () } = nil as any
+        const test1: { suite: (string, (testsuite) -> ()) -> () } = null as any
 
         test1.suite("LuteTestCommand", function(suite)
             suite:case(42)
@@ -3806,7 +3806,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2143")
         end
 
         function fn(a: number): { number }
-            return nil as any
+            return null as any
         end
 
         function fn2<T>(b: { T }, x: (T) -> ())
@@ -3830,10 +3830,10 @@ TEST_CASE_FIXTURE(Fixture, "apply_example_from_oss")
         type something = { Something: number }
         type example = { Example: number }
         function test(a: something): example
-            return nil as any
+            return null as any
         end
         function apply<T..., U...>(func: (T...) -> U..., ...: T...): (boolean, U...)
-            return nil as any
+            return null as any
         end
         const b, result = apply(test, {
             Something = 1
@@ -3854,7 +3854,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2109")
             Function: (T...) -> (K...),
             ...: T...
         ): K...
-            Results = nil
+            Results = null
             CurrentRetry = 0
 
             repeat
@@ -3985,7 +3985,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "recursive_static_method_must_refer_to_the_un
             for innerToken, innerContent in lexer.scan(subContent) do
                 table.insert(innerToken, innerContent)
             end
-            return {}, nil, nil
+            return {}, null, null
         end
     )");
 
@@ -4084,7 +4084,7 @@ type interface = {
 	create: <state>(default: state) -> <actions>(actions: actions) -> producer<state, actions>,
 }
 
-const a: interface = nil as any
+const a: interface = null as any
 a.create()
     )");
 
@@ -4126,12 +4126,12 @@ TEST_CASE_FIXTURE(Fixture, "global_function_blocked")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        const addInstanceToState: any = nil
-        const inst: any = nil
+        const addInstanceToState: any = null
+        const inst: any = null
 
         function ingestAllInstances(...): ()
             const id: number = addInstanceToState()
-            const child: any = nil
+            const child: any = null
             ingestAllInstances(child)
         end
 
@@ -4150,7 +4150,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_polarity_of_annotated_code")
     // This test is _just_ for checking the polarity of the generic in the
     // annotation.
     check(R"(
-        const f: <T>(T) -> T = nil as any
+        const f: <T>(T) -> T = null as any
     )");
 
     auto ftv = get<FunctionType>(requireType("f"));
@@ -4279,7 +4279,7 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_functions_complete_ex")
         }
 
         function useRemoteEvent<T...>(remoteEventName: string, isUnreliable: boolean?): RemoteEventWrapper<T...>
-            return nil as any
+            return null as any
         end
 
         type Payload = {
@@ -4362,7 +4362,7 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_union_of_functions_4")
 {
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
-    // Works with `nil`.
+    // Works with `null`.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function f(_: ((string) -> ())?)
         end
@@ -4378,7 +4378,7 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_union_of_functions_4")
 TEST_CASE_FIXTURE(BuiltinsFixture, "bidi_inference_variadic_inner_lambda")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const f: ({ (number, ...string) -> () }) -> () = nil as any
+        const f: ({ (number, ...string) -> () }) -> () = null as any
         f(
             {
                 function (alpha, beta, gamma)
@@ -4478,8 +4478,8 @@ TEST_CASE_FIXTURE(Fixture, "call_with_any_arg_and_optional_return_arg")
     auto result = check(R"(
         --!strict
         const hrp : any = true
-        const boo : () -> number? = (nil as any)
-        const bad : (x : number, y : number) -> () = (nil as any)
+        const boo : () -> number? = (null as any)
+        const bad : (x : number, y : number) -> () = (null as any)
         bad(hrp, boo())
     )");
     LUAU_CHECK_ERROR_COUNT(1, result);
@@ -4496,7 +4496,7 @@ TEST_CASE_FIXTURE(Fixture, "semantic_subtyping_not_working")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
-        function s(x: string | boolean | nil) end
+        function s(x: string | boolean | null) end
         function f(a) return a end
         function g(a) s(f(a)) end
     )"));
@@ -4527,7 +4527,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2670_generic_leaking_indexer_1")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function setDefault<K, V>(t: { [K]: V? }): V
-            return nil as any
+            return null as any
         end
 
         const t = {hello = "world"}
@@ -4549,7 +4549,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2670_generic_leaking_indexer_2")
     ScopedFastFlag _{FFlag::LuauDoNotLeakGenericsInIndexer, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const set: <K, V>({ [K | number]: V | string }) -> V = nil as any
+        const set: <K, V>({ [K | number]: V | string }) -> V = null as any
 
         const t = {hello = "world"}
         set(t)
@@ -4667,7 +4667,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "let_generalization_assign_statement")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        export Func = nil
+        export Func = null
         Func = function(x, y)
             return x * y
         end

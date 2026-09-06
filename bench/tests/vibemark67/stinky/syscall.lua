@@ -34,7 +34,7 @@ function Syscall.handle(cpu: CPU.CPU)
     x4 = cpu:readX(4)
     x5 = cpu:readX(5)
 
-    result = nil
+    result = null
 
     if sysno == 64 then -- write
         result = Syscall.sysWrite(cpu, x0, x1, x2)
@@ -280,7 +280,7 @@ function Syscall.sysMmap(cpu: CPU.CPU, addr: integer, length: integer, prot: int
     -- Align size to page boundary
     size = math.ceil(size / 4096) * 4096
 
-    mapAddr = nil
+    mapAddr = null
     if not Int.isZero(addr) and Int.toNumber(Int.band(flags, Int.from(0x10))) != 0 then
         -- MAP_FIXED: use the requested address
         mapAddr = addr

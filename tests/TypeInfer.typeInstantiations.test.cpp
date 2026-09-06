@@ -22,7 +22,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_correct")
         CheckResult result = check(R"(
         --!strict
         function f<T>(): T
-            return nil as any
+            return null as any
         end
 
         const correct = f<<number>>() + 5
@@ -39,7 +39,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_incorrect")
         CheckResult result = check(R"(
         --!strict
         function f<T>(): T
-            return nil as any
+            return null as any
         end
 
         const incorrect = f<<string>>() + 5
@@ -68,7 +68,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_correct")
         CheckResult result = check(R"(
         --!strict
         function f<T>(a: T, b: T)
-            return nil as any
+            return null as any
         end
 
         f<<number | string>>(1, "a")
@@ -85,7 +85,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_incorrect")
         CheckResult result = check(R"(
         --!strict
         function f<T>(a: T, b: T)
-            return nil as any
+            return null as any
         end
 
         f<<number | boolean>>(1, "a")
@@ -113,7 +113,7 @@ TEST_CASE_FIXTURE(Fixture, "multiple_calls")
         CheckResult result = check(R"(
         --!strict
         function f<T>(): T
-            return nil as any
+            return null as any
         end
 
         const a: number = f<<number>>()
@@ -131,7 +131,7 @@ TEST_CASE_FIXTURE(Fixture, "anonymous_type_inferred")
         CheckResult result = check(R"(
         --!strict
         function f<T, U>(): { a: T, b: U }
-            return nil as any
+            return null as any
         end
 
         const correct: { a: number, b: string } = f<<number>>()
@@ -171,7 +171,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_method")
     --!strict
     const t: {
         f: <T..., U...>(self: any, T...) -> U...,
-    } = nil as any
+    } = null as any
 
     const a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, {})
     )");
@@ -205,7 +205,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_incorrect_method")
     --!strict
     const t: {
         f: <T..., U...>(self: any, T...) -> U...,
-    } = nil as any
+    } = null as any
 
     const a: number, b: string = t:f<<(boolean, {}), (number, string)>>(true, "uh oh")
     )");
@@ -221,7 +221,7 @@ TEST_CASE_FIXTURE(Fixture, "dot_index_call")
         --!strict
         const t = {
             f = function<T>(): T
-                return nil as any
+                return null as any
             end,
         }
 
@@ -242,7 +242,7 @@ TEST_CASE_FIXTURE(Fixture, "method_index_call")
         --!strict
         const t = {
             f = function<T>(self: any): T
-                return nil as any
+                return null as any
             end,
         }
 
@@ -263,7 +263,7 @@ TEST_CASE_FIXTURE(Fixture, "stored_as_variable")
         CheckResult result = check(R"(
         --!strict
         function f<T>(): T
-            return nil as any
+            return null as any
         end
 
         const fNumber = f<<number>>
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_call")
         --!strict
         const t = setmetatable({}, {
             __call = function<T>(self): T
-                return nil as any
+                return null as any
             end,
         })
 
@@ -325,7 +325,7 @@ TEST_CASE_FIXTURE(Fixture, "method_call_incomplete")
         --!strict
         const t = {
             f = function<T, U>(self: any): T | U
-                return nil as any
+                return null as any
             end,
         }
 
@@ -475,7 +475,7 @@ TEST_CASE_FIXTURE(Fixture, "function_intersections")
     {
         CheckResult result = check(R"(
         --!strict
-        const f: (<T>(T) -> T) & (<T>(T?) -> T) = nil as any
+        const f: (<T>(T) -> T) & (<T>(T?) -> T) = null as any
         f<<number>>()
         )");
 
@@ -491,7 +491,7 @@ TEST_CASE_FIXTURE(Fixture, "incomplete_type_packs")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-            const f: <A, T...>() -> (A, T...) = nil as any
+            const f: <A, T...>() -> (A, T...) = null as any
             const correct: string, b: number, c: boolean = f<<string>>()
             const incorrect: number, b: number, c: boolean = f<<string>>()
         )");
@@ -510,7 +510,7 @@ TEST_CASE_FIXTURE(Fixture, "replacing_generic_with_generic")
     };
 
     CheckResult result = check(R"(
-        const foo: <A, B>() -> (A, B) = nil as any
+        const foo: <A, B>() -> (A, B) = null as any
 
         function bar<T>()
             return foo<<T, number>>()

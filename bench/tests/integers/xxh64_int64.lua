@@ -12,7 +12,7 @@ function test()
 	function xxh64(buf, seed)
 		len = buffer.len(buf)
 		offset = 0
-		hash = nil
+		hash = null
 
 		if len >= 32 then
 			a1 = integer.add(integer.add(seed, PRIME64_1), PRIME64_2)

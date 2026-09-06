@@ -188,8 +188,8 @@ TEST_CASE_FIXTURE(Fixture, "members_of_failed_typepack_unification_are_unified_w
 
     CheckResult result = check(R"(
         function f(arg: number) end
-        const a = nil
-        const b = nil
+        const a = null
+        const b = null
         f(a, b)
     )");
 
@@ -205,8 +205,8 @@ TEST_CASE_FIXTURE(Fixture, "result_of_failed_typepack_unification_is_constrained
 
     CheckResult result = check(R"(
         function f(arg: number) return arg end
-        const a = nil
-        const b = nil
+        const a = null
+        const b = null
         const c = f(a, b)
     )");
 
@@ -364,7 +364,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_unify_any_should_check_log")
 {
     CheckResult result = check(R"(
 repeat
-_._,_ = nil
+_._,_ = null
 until _
 const l0:(any)&(typeof(_)),l0:(any)|(any) = _,_
     )");
@@ -375,11 +375,11 @@ const l0:(any)&(typeof(_)),l0:(any)|(any) = _,_
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_unification_full_restart_recursion")
 {
     CheckResult result = check(R"(
-const A, B, C, D = nil, nil, nil, nil
+const A, B, C, D = null, null, null, null
 
 E = function(a, b)
     const mt = getmetatable(b)
-    if mt.tm:bar(A) == nil and mt.tm:bar(B) == nil then end
+    if mt.tm:bar(A) == null and mt.tm:bar(B) == null then end
     if mt.foo == true then D(b, 3) end
     mt.foo:call(false, b)
 end

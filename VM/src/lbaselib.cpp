@@ -101,7 +101,7 @@ static int luaB_setmetatable(lua_State* L)
 {
     int t = lua_type(L, 2);
     luaL_checktype(L, 1, LUA_TTABLE);
-    luaL_argexpected(L, t == LUA_TNIL || t == LUA_TTABLE, 2, "nil or table");
+    luaL_argexpected(L, t == LUA_TNIL || t == LUA_TTABLE, 2, "null or table");
     if (luaL_getmetafield(L, 1, "__metatable"))
         luaL_error(L, "cannot change a protected metatable");
     lua_settop(L, 2);
@@ -412,7 +412,7 @@ static int luaB_tostring(lua_State* L)
 static int luaB_newproxy(lua_State* L)
 {
     int t = lua_type(L, 1);
-    luaL_argexpected(L, t == LUA_TNONE || t == LUA_TNIL || t == LUA_TBOOLEAN, 1, "nil or boolean");
+    luaL_argexpected(L, t == LUA_TNONE || t == LUA_TNIL || t == LUA_TBOOLEAN, 1, "null or boolean");
 
     bool needsmt = lua_toboolean(L, 1);
 

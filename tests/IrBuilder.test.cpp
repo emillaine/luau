@@ -5074,7 +5074,7 @@ TEST_CASE_FIXTURE(IrBuilderFixture, "DuplicateHashSlotChecksAvoidNil")
     IrOp valueNil = build.inst(IrCmd::LOAD_TVALUE, build.vmReg(4));
     build.inst(IrCmd::STORE_TVALUE, slot2, valueNil, build.constInt(0));
 
-    // In the future, we might get to track that value became 'nil' and that fallback will be taken
+    // In the future, we might get to track that value became 'null' and that fallback will be taken
     IrOp slot1b = build.inst(IrCmd::GET_SLOT_NODE_ADDR, table1, build.constUint(8), build.vmConst(1)); // This will be removed
     build.inst(IrCmd::CHECK_SLOT_MATCH, slot1b, build.vmConst(1), fallback);                           // Key will be replaced with undef here
     IrOp value1b = build.inst(IrCmd::LOAD_TVALUE, slot1b, build.constInt(0));
@@ -7055,7 +7055,7 @@ TEST_CASE_FIXTURE(IrBuilderFixture, "HiddenPointerUse4")
     // - R0 might have been a GCO on entry to bb_0
     // - R0 is overwritten by a number
     // - Stack is visited by GC assist
-    // - R0 is overwritten by nil
+    // - R0 is overwritten by null
     // If only number tag write would have been killed, there will be a GCO tag with a double value on stack
     CHECK("\n" + toString(build.function, IncludeUseInfo::No) == R"(
 bb_0:

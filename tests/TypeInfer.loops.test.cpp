@@ -24,7 +24,7 @@ TEST_CASE_FIXTURE(Fixture, "for_loop")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export q = nil
+        export q = null
         for i=0, 50, 2 do
             q = i
         end
@@ -35,7 +35,7 @@ TEST_CASE_FIXTURE(Fixture, "for_loop")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         // Luau cannot see that the loop must always run at least once, so we
-        // think that q could be nil.
+        // think that q could be null.
         CHECK("number?" == toString(requireType("q")));
     }
     else
@@ -58,7 +58,7 @@ type Iterable = typeof(setmetatable(
     }
 ))
 
-const t: Iterable = nil as any
+const t: Iterable = null as any
 
 for a, b in t do end
 )");
@@ -83,7 +83,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967")
             }
         ))
 
-        const t: Iterable = nil as any
+        const t: Iterable = null as any
 
         for a, b in t do end
     )");
@@ -105,8 +105,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_regression_issue_69967_alt")
             }
         ))
 
-        const t: Iterable = nil as any
-        export x, y = nil, nil
+        const t: Iterable = null as any
+        export x, y = null, null
 
         for a, b in t do
             x = a
@@ -132,8 +132,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export n = nil
-        export s = nil
+        export n = null
+        export s = null
         for i, v in pairs({ "foo" }) do
             n = i
             s = v
@@ -161,8 +161,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_next")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export n = nil
-        export s = nil
+        export n = null
+        export s = null
         for i, v in next, { "foo" } do
             n = i
             s = v
@@ -189,8 +189,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_next_and_multiple_elements"
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export n = nil
-        export s = nil
+        export n = null
+        export s = null
         for i, v in next, { "foo", "bar" } do
             n = i
             s = v
@@ -218,8 +218,8 @@ TEST_CASE_FIXTURE(Fixture, "for_in_with_an_iterator_of_type_any")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        const it: any = nil as any
-        export a, b = nil, nil
+        const it: any = null as any
+        export a, b = null, null
         for i, v in it do
             a, b = i, v
         end
@@ -300,7 +300,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_on_error")
             gobble.prop = x.otherprop
         end
 
-        export p = nil
+        export p = null
         for _, part in i_am_not_defined do
             p = part
             f(part)
@@ -465,7 +465,7 @@ TEST_CASE_FIXTURE(Fixture, "while_loop")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export i = nil
+        export i = null
         while true do
             i = 8
         end
@@ -483,7 +483,7 @@ TEST_CASE_FIXTURE(Fixture, "repeat_loop")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export i = nil
+        export i = null
         repeat
             i = 'hi'
         until true
@@ -554,7 +554,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iter_constraint_before_loop_body")
 
         function f()
             for u, v in pairs(T.fields) do
-                T.fields[u] = nil
+                T.fields[u] = null
             end
         end
     )");
@@ -635,7 +635,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ipairs_produces_integral_indices")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export key = nil
+        export key = null
         for i, e in ipairs({}) do key = i end
     )");
 
@@ -738,7 +738,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
             function unreachablecodepath(a: number?): number
                 repeat
                     return 10
-                until a != nil
+                until a != null
 
                 -- unreachable
             end
@@ -794,7 +794,7 @@ TEST_CASE_FIXTURE(Fixture, "loop_iter_basic")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         const t: {string} = {}
-        export key = nil
+        export key = null
         for k: number in t do
         end
         for k: number, v: string in t do
@@ -825,14 +825,14 @@ TEST_CASE_FIXTURE(Fixture, "loop_iter_trailing_nil")
 
     CheckResult result = check(R"(
         const t: {string} = {}
-        export extra = nil
+        export extra = null
         for k, v, e in t do
             extra = e
         end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(0, result);
-    CHECK("nil" == toString(requireType("extra")));
+    CHECK("null" == toString(requireType("extra")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "loop_iter_no_indexer_strict")
@@ -867,13 +867,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_iter_metamethod_nil")
         return;
 
     CheckResult result = check(R"(
-        const t = setmetatable({}, { __iter = function(o) return next, nil end, })
+        const t = setmetatable({}, { __iter = function(o) return next, null end, })
         for k: number, v: string in t do
         end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK(toString(result.errors[0]) == "Type 'nil' could not be converted into '{- [a]: b -}'");
+    CHECK(toString(result.errors[0]) == "Type 'null' could not be converted into '{- [a]: b -}'");
 #endif
 }
 
@@ -928,7 +928,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "loop_iter_metamethod_ok_with_inference")
             children = {"foo"}
         }, { __iter = function(o) return next, o.children end })
 
-        const a, b = nil, nil
+        const a, b = null, null
         for k, v in t do
             a = k
             b = v
@@ -1025,7 +1025,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_1")
 {
     CheckResult result = check(R"(
         function rawpairs(t)
-            return next, t, nil
+            return next, t, null
         end
 
         function getFragmentedKeys(tbl)
@@ -1043,7 +1043,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_minimized_fragmented_keys_2")
     CheckResult result = check(R"(
         function getFragmentedKeys(tbl)
             const _ = rawget(tbl, 0)
-            for _ in next, tbl, nil do
+            for _ in next, tbl, null do
             end
         end
     )");
@@ -1074,7 +1074,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_fragmented_keys")
         function getTableLength(tbl)
             length = 1
             value = rawget(tbl, length)
-            while value != nil do
+            while value != null do
                 length += 1
                 value = rawget(tbl, length)
             end
@@ -1082,7 +1082,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_fragmented_keys")
         end
 
         function rawpairs(t)
-            return next, t, nil
+            return next, t, null
         end
 
         function getFragmentedKeys(tbl)
@@ -1130,8 +1130,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_on_never_gives_never")
 
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        const iter: never = nil as any
-        export ans = nil
+        const iter: never = null as any
+        export ans = null
         for xs in iter do
             ans = xs
         end
@@ -1140,7 +1140,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_iteration_on_never_gives_never")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
-        CHECK("nil" == toString(requireType("ans")));
+        CHECK("null" == toString(requireType("ans")));
     else
         CHECK(toString(requireType("ans")) == "never");
 }
@@ -1311,7 +1311,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iteration_preserves_error_suppression")
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK("*error-type* | ~nil" == toString(requireTypeAtPosition({3, 22})));
+    CHECK("*error-type* | ~null" == toString(requireTypeAtPosition({3, 22})));
     CHECK("any" == toString(requireTypeAtPosition({3, 25})));
 }
 
@@ -1358,7 +1358,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1480")
         const part = {} as Part
 
         export currentParent: Instance? = part.Parent
-        while currentParent != nil do
+        while currentParent != null do
             currentParent = currentParent.Parent
         end
     )"));
@@ -1423,8 +1423,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "while_loop_error_in_body")
         function foo()
             x = ""
             while math.random () > 0.5 do
-                x = nil
-                error("why did you make x nil tho")
+                x = null
+                error("why did you make x null tho")
             end
             return x
         end
@@ -1439,12 +1439,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "while_loop_assign_different_type")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function takesString(_: string) end
-        function takesNil(_: nil) end
+        function takesNil(_: null) end
         function foo()
             x = ""
             takesString(x)
             while math.random () > 0.5 do
-                x = nil
+                x = null
                 takesNil(x)
             end
             return x
@@ -1458,7 +1458,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_loop_assignment")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        export x = nil
+        export x = null
         repeat
             x = 42
         until math.random() > 0.5
@@ -1472,7 +1472,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_loop_assignment_with_break")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        export x = nil
+        export x = null
         repeat
             x = 42
         until math.random() > 0.5
@@ -1486,7 +1486,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_unconditionally_fires_error")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        export x = nil
+        export x = null
         repeat
             x = 42
         until true
@@ -1505,7 +1505,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_is_linearish")
 
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        export x = nil
+        export x = null
         if math.random () > 0.5 then
             x = ""
             repeat
@@ -1513,11 +1513,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_is_linearish")
             until true
         end
         -- The repeat in the above branch unconditionally fires the error, so
-        -- this should _always_ be `nil`
+        -- this should _always_ be `null`
         const y = x
     )"));
 
-    CHECK_EQ("nil", toString(requireType("y")));
+    CHECK_EQ("null", toString(requireType("y")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "ensure_local_in_loop_does_not_escape")

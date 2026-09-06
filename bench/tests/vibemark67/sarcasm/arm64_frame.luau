@@ -46,7 +46,7 @@ function arm64_frame.rewrite(st, ctx)
 
 	-- sp-relative accesses that fall inside a fixed-size alloca region are redirected to the
 	-- allocation by the transform; pass them through untouched here.
-	function immVal2(op) return (op and op.kind == "imm") and (op.value or tonumber(op.text) or 0) or nil end
+	function immVal2(op) return (op and op.kind == "imm") and (op.value or tonumber(op.text) or 0) or null end
 	if m == "add" and ops[2] and ops[2].name == "sp" and ops[1] and ops[1].name != "sp" then
 		off = immVal2(ops[3])
 		if off and ctx.regionOf(off) then emit(st); return end
@@ -55,7 +55,7 @@ function arm64_frame.rewrite(st, ctx)
 		if ctx.regionOf(0) then emit(st); return end
 	end
 	do
-		mem = nil
+		mem = null
 		for _, o in ops do if o.kind == "mem" then mem = o end end
 		if mem and isFrameBase(mem.base) and not mem.writeback then
 			base = (mem.base.name == "sp") and 0 or ctx.fpOffset
@@ -68,7 +68,7 @@ function arm64_frame.rewrite(st, ctx)
 	if (m == "mov" or m == "add") and ops[1] and ops[1].name == "x29" then return end
 	if m == "mov" and ops[1] and ops[1].name == "sp" then return end  -- e.g. `mov sp, x29` (restore)
 
-	mem = nil
+	mem = null
 	for _, o in ops do if o.kind == "mem" then mem = o end end
 	if mem and isFrameBase(mem.base) then
 		-- Only writeback stp/ldp (the classic `stp x29,x30,[sp,-N]!`/`ldp ...,[sp],N`) is pure

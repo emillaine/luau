@@ -111,7 +111,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "independent_locals")
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "phi")
 {
     dfg(R"(
-        x = nil
+        x = null
 
         if a then
             x = true
@@ -129,7 +129,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "phi")
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_not_owned_by_while")
 {
     dfg(R"(
-        x = nil
+        x = null
 
         while cond() do
             x = true
@@ -151,7 +151,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_while")
 {
     dfg(R"(
         while cond() do
-            x = nil
+            x = null
             x = true
             x = 5
         end
@@ -168,7 +168,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_while")
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_not_owned_by_repeat")
 {
     dfg(R"(
-        x = nil
+        x = null
 
         repeat
             x = true
@@ -189,7 +189,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_repeat")
 {
     dfg(R"(
         repeat
-            x = nil
+            x = null
             x = true
             x = 5
         until cond()
@@ -206,7 +206,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_repeat")
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_not_owned_by_for")
 {
     dfg(R"(
-        x = nil
+        x = null
 
         for i = 0, 5 do
             x = true
@@ -228,7 +228,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_for")
 {
     dfg(R"(
         for i = 0, 5 do
-            x = nil
+            x = null
             x = true
             x = 5
         end
@@ -245,7 +245,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_for")
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_not_owned_by_for_in")
 {
     dfg(R"(
-        x = nil
+        x = null
 
         for i, v in t do
             x = true
@@ -267,7 +267,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "mutate_local_owned_by_for_in")
 {
     dfg(R"(
         for i, v in t do
-            x = nil
+            x = null
             x = true
             x = 5
         end
@@ -440,7 +440,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "function_captures_are_phi_nodes_of_all_
 
         function f()
             print(x)
-            x = nil
+            x = null
         end
 
         f()
@@ -449,7 +449,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "function_captures_are_phi_nodes_of_all_
 
     DefId x1 = graph->getDef(query<AstStatAssign>(module)->vars.data[0]);
     DefId x2 = getDef<AstExprLocal, 2>(); // print(x)
-    DefId x3 = getDef<AstExprLocal, 3>(); // x = nil
+    DefId x3 = getDef<AstExprLocal, 3>(); // x = null
     DefId x4 = getDef<AstExprLocal, 5>(); // x = "five"
 
     CHECK(x1 != x2);
@@ -471,7 +471,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "function_captures_are_phi_nodes_of_all_
 
         function f()
             print(t.x)
-            t.x = nil
+            t.x = null
         end
 
         f()
@@ -480,7 +480,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "function_captures_are_phi_nodes_of_all_
 
     DefId x1 = getDef<AstExprIndexName, 1>(); // t.x = 5
     DefId x2 = getDef<AstExprIndexName, 2>(); // print(t.x)
-    DefId x3 = getDef<AstExprIndexName, 3>(); // t.x = nil
+    DefId x3 = getDef<AstExprIndexName, 3>(); // t.x = null
     DefId x4 = getDef<AstExprIndexName, 4>(); // t.x = "five"
 
     CHECK(x1 != x2);
@@ -501,7 +501,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "function_captures_are_phi_nodes_of_all_
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "local_f_which_is_prototyped_enclosed_by_function")
 {
     dfg(R"(
-        f = nil
+        f = null
         function f()
             if cond() then
                 f()
@@ -525,7 +525,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "local_f_which_is_prototyped_enclosed_by
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "local_f_which_is_prototyped_enclosed_by_function_has_some_prior_versions")
 {
     dfg(R"(
-        f = nil
+        f = null
         f = 5
         function f()
             if cond() then
@@ -552,7 +552,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "local_f_which_is_prototyped_enclosed_by
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "local_f_which_is_prototyped_enclosed_by_function_has_some_future_versions")
 {
     dfg(R"(
-        f = nil
+        f = null
         function f()
             if cond() then
                 f()
@@ -580,7 +580,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "local_f_which_is_prototyped_enclosed_by
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "phi_node_if_case_binding")
 {
     dfg(R"(
-x = nil
+x = null
 if true then
     if true then
         x = 5
@@ -653,7 +653,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "insert_trivial_phi_nodes_inside_of_phi_
         const t = {}
 
         function f(k: string)
-            if t[k] != nil then
+            if t[k] != null then
                 return
             end
 
@@ -662,7 +662,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "insert_trivial_phi_nodes_inside_of_phi_
     )");
 
     DefId t1 = graph->getDef(query<AstStatLocal>(module)->vars.data[0]); // local t = {}
-    DefId t2 = getDef<AstExprLocal, 1>();                                // t[k] != nil
+    DefId t2 = getDef<AstExprLocal, 1>();                                // t[k] != null
     DefId t3 = getDef<AstExprLocal, 3>();                                // t[k] = 5
 
     CHECK(t1 != t2);
@@ -677,7 +677,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "insert_trivial_phi_nodes_inside_of_phi_
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "dfg_function_definition_in_a_do_block")
 {
     dfg(R"(
-        f = nil
+        f = null
         do
             function f()
             end
@@ -697,7 +697,7 @@ TEST_CASE_FIXTURE(DataFlowGraphFixture, "dfg_function_definition_in_a_do_block")
 TEST_CASE_FIXTURE(DataFlowGraphFixture, "dfg_captured_local_is_assigned_a_function")
 {
     dfg(R"(
-        f = nil
+        f = null
 
         function g()
             f()

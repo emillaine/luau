@@ -43,7 +43,7 @@ function frame.preprocess(body, regions, policy)
 		for _, r in (regions or {}) do
 			if off >= r.base and off < r.base + r.size then return r end
 		end
-		return nil
+		return null
 	end
 
 	function checkBounds(off, width, isWrite, raw)

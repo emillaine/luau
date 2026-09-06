@@ -134,7 +134,7 @@ TEST_CASE_FIXTURE(Fixture, "definition_file_extern_types")
     )");
 
     CheckResult result = check(R"(
-        const x: Bar = nil as any
+        const x: Bar = null as any
         const prop: number = x.Y
         const inheritedProp: number = x.X
         const method: number = x:foo(1)
@@ -455,7 +455,7 @@ TEST_CASE_FIXTURE(Fixture, "class_definition_string_props")
     )");
 
     CheckResult result = check(R"(
-        const x: Foo = nil as any
+        const x: Foo = null as any
         const y = x["a property"]
     )");
 
@@ -493,7 +493,7 @@ TEST_CASE_FIXTURE(Fixture, "class_definition_indexer")
     )");
 
     CheckResult result = check(R"(
-        const x: Foo = nil as any
+        const x: Foo = null as any
         const y = x[1]
     )");
 
@@ -525,7 +525,7 @@ TEST_CASE_FIXTURE(Fixture, "class_definitions_reference_other_extern_types")
     )");
 
     CheckResult result = check(R"(
-        const a: Channel = nil as any
+        const a: Channel = null as any
         const b = a.Messages[1]
         const c = b.Channel
     )");
@@ -593,7 +593,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_142285_reduce_minted_union_func")
                     l, m = middle(m+1, r), m+1
                 end
             end
-        return nil
+        return null
         end
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -618,7 +618,7 @@ TEST_CASE_FIXTURE(Fixture, "vector3_overflow")
 --!strict
 function graphPoint(t : number, points : { Vector3 }) : Vector3
     const n : number = points.count - 1
-    p = (nil as any)
+    p = (null as any)
     for i = 0, n do
         const x = points[i + 1]
         p = p and p + x or x
@@ -706,7 +706,7 @@ TEST_CASE_FIXTURE(Fixture, "extern_read_write_dual_attribute")
 
     CheckResult result = check(R"(
 --!strict
-const da: dual_attribute = nil as any
+const da: dual_attribute = null as any
 const x: boolean = da.value
 const y: number = da.value
 da.value = 5

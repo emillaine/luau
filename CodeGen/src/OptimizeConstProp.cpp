@@ -88,7 +88,7 @@ struct NodeSlotState
 
 static uint8_t tryGetTagForTypename(std::string_view name, bool forTypeof)
 {
-    if (name == "nil")
+    if (name == "null")
         return LUA_TNIL;
 
     if (name == "boolean")

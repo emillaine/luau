@@ -5,7 +5,7 @@ function bit32_add(lhs, rhs)
 	return bit32.bor(lhs + rhs, 0)
 end
 
-mem = nil
+mem = null
 
 FUNC_LIST = {}
 GLOBAL_LIST = {}
@@ -90,13 +90,13 @@ FUNC_LIST[1] = function(loc_0, loc_1)
 	loc_76 = 0
 	loc_77 = 0
 	loc_78 = 0
-	reg_7 = nil
-	reg_8 = nil
-	reg_12 = nil
-	reg_13 = nil
-	reg_14 = nil
-	reg_15 = nil
-	reg_16 = nil
+	reg_7 = null
+	reg_8 = null
+	reg_12 = null
+	reg_13 = null
+	reg_14 = null
+	reg_15 = null
+	reg_16 = null
 	while true do
 		loc_2 = bit32.bor(GLOBAL_LIST[0].value - 64, 0)
 		loc_3 = buffer.readu32(mem, loc_0 + 16)

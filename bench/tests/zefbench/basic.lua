@@ -9,7 +9,7 @@ function test()
 -- This single file contains the lexer, parser, AST evaluator, and self-checking tests.
 
 -- ===== Bit operations (cross-VM) =====
-band, bor, bxor, lshift, rshift = nil, nil, nil, nil, nil
+band, bor, bxor, lshift, rshift = null, null, null, null, null
 _bit32 = rawget(_G, "bit32")
 _bit = rawget(_G, "bit")
 if type(_bit32) == "table" then
@@ -18,7 +18,7 @@ if type(_bit32) == "table" then
 else if type(_bit) == "table" then
     band, bor, bxor, lshift, rshift =
         _bit.band, _bit.bor, _bit.bxor, _bit.lshift, _bit.rshift
-else if bit32 != nil and type(bit32) == "table" then
+else if bit32 != null and type(bit32) == "table" then
     band, bor, bxor, lshift, rshift =
         bit32.band, bit32.bor, bit32.bxor, bit32.lshift, bit32.rshift
 else
@@ -81,7 +81,7 @@ function CaselessMap:set(key, value)
 end
 
 function CaselessMap:has(key)
-    return self._map[strlower(key)] != nil
+    return self._map[strlower(key)] != null
 end
 
 function CaselessMap:get(key)
@@ -199,7 +199,7 @@ function State.new(program)
     self.values = CaselessMap.new()
     self.stringValues = CaselessMap.new()
     self.sideState = {}  -- keyed by AST node table
-    self.statement = nil
+    self.statement = null
     self.nextLineNumber = 0
     self.subStack = {}
     self.dataIndex = 0
@@ -224,7 +224,7 @@ end
 
 function State:getValue(name, numParameters)
     if self.values:has(name) then return self.values:get(name) end
-    result = nil
+    result = null
     if numParameters == 0 then
         result = NumberValue.new()
     else
@@ -301,7 +301,7 @@ end
 
 function Basic.StringVar(self, state)
     value = state.stringValues:get(self.name)
-    if value == nil then state:abort("Could not find string variable " .. self.name) end
+    if value == null then state:abort("Could not find string variable " .. self.name) end
     return value
 end
 
@@ -358,7 +358,7 @@ function Basic.Return(self, state)
 end
 
 function Basic.Stop(_, state)
-    state.nextLineNumber = nil
+    state.nextLineNumber = null
 end
 
 function Basic.On(self, state)
@@ -416,7 +416,7 @@ end
 
 function Basic.Input(self, state)
     results = state:consumeInput(#self.items)
-    state:validate(results != nil and #results == #self.items,
+    state:validate(results != null and #results == #self.items,
         "Input did not get the right number of items")
     for i, item in ipairs(self.items) do
         item:evaluate(state):assign(results[i])
@@ -448,7 +448,7 @@ function Basic.Dim(self, state)
 end
 
 function Basic.End(_, state)
-    state.nextLineNumber = nil
+    state.nextLineNumber = null
 end
 
 -- Mark statements that terminate a block (for parseStatements)
@@ -462,13 +462,13 @@ function Basic.Program(self, state)
     for k, _ in pairs(self.statements) do
         if k > maxLineNumber then maxLineNumber = k end
     end
-    while state.nextLineNumber != nil do
+    while state.nextLineNumber != null do
         state:validate(state.nextLineNumber <= maxLineNumber,
             "Went out of bounds of the program")
         lineNum = state.nextLineNumber
         state.nextLineNumber = lineNum + 1
         statement = self.statements[lineNum]
-        if statement != nil and statement.process != nil then
+        if statement != null and statement.process != null then
             state.statement = statement
             statement:process(state)
         end
@@ -565,7 +565,7 @@ function lex(source)
                         pos = pos + 1
                     end
                     word = line:sub(start, pos - 1)
-                    kind = nil
+                    kind = null
                     if KEYWORDS[strlower(word)] then
                         kind = "keyword"
                     else
@@ -628,8 +628,8 @@ function lex(source)
                     }
                 else
                     -- Operator
-                    two = pos + 1 <= len and line:sub(pos, pos + 1) or nil
-                    opStr = nil
+                    two = pos + 1 <= len and line:sub(pos, pos + 1) or null
+                    opStr = null
                     if two == "<>" or two == "<=" or two == ">=" then
                         opStr = two
                         pos = pos + 2
@@ -663,7 +663,7 @@ end
 
 -- ===== Parser =====
 function parse(tokens)
-    program = nil
+    program = null
     idx = 1
     pushBack = {}
 
@@ -703,9 +703,9 @@ function parse(tokens)
         return t
     end
 
-    parseNumericExpression = nil
-    parseStringExpression = nil
-    isStringExpression = nil
+    parseNumericExpression = null
+    parseStringExpression = null
+    isStringExpression = null
 
     function parseVariable()
         name = consumeKind("identifier").string
@@ -819,7 +819,7 @@ function parse(tokens)
         if isStringExpression() then
             left = parseStringExpression()
             op = nextToken()
-            ev = nil
+            ev = null
             if op.string == "=" then ev = Basic.Equals
             else if op.string == "<>" then ev = Basic.NotEquals
             else error("At " .. tostring(op.sourceLineNumber) .. ": expected a string comparison operator but got: " .. op.string) end
@@ -827,7 +827,7 @@ function parse(tokens)
         end
         left = parseNumericExpression()
         op = nextToken()
-        ev = nil
+        ev = null
         if op.string == "=" then ev = Basic.Equals
         else if op.string == "<>" then ev = Basic.NotEquals
         else if op.string == "<" then ev = Basic.LessThan
@@ -846,11 +846,11 @@ function parse(tokens)
         return t.value
     end
 
-    parseStatement = nil
-    parseStatements = nil
+    parseStatement = null
+    parseStatements = null
 
     parseStatements = function()
-        statement = nil
+        statement = null
         repeat
             statement = parseStatement()
         until statement.process and blockEndProcs[statement.process]
@@ -868,7 +868,7 @@ function parse(tokens)
         if command.kind == "keyword" then
             cmd = strlower(command.string)
             if cmd == "def" then
-                statement.process = nil  -- not exercised by benchmark; keep minimal
+                statement.process = null  -- not exercised by benchmark; keep minimal
                 statement.name = consumeKind("identifier")
                 statement.parameters = {}
                 if peekToken().string == "(" then

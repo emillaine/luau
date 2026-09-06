@@ -392,7 +392,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
             else if key == "bar" then
                 return "BAR"
             else
-                return nil
+                return null
             end
         end
 

@@ -78,7 +78,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pairs_iterator_should_infer_types_and_type_c
         type Map<K, V> = { [K]: V }
         const map: Map<string, number> = { ["foo"] = 1, ["bar"] = 2, ["baz"] = 3 }
 
-        const it: (Map<string, number>, string | nil) -> (string?, number), t: Map<string, number>, i: nil = pairs(map)
+        const it: (Map<string, number>, string | null) -> (string?, number), t: Map<string, number>, i: null = pairs(map)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -739,7 +739,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bad_select_should_not_crash")
     if (!FFlag::DebugLuauForceOldSolver)
     {
         // Note, the function "_" places no constraints on its arguments.  They
-        // can therefore be nil.  They are therefore optional.  Only the
+        // can therefore be null.  They are therefore optional.  Only the
         // select() call is invalid here.
         LUAU_REQUIRE_ERROR_COUNT(1, result);
 
@@ -903,7 +903,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "debug_traceback_is_crazy")
         function f(co: thread)
             -- debug.traceback takes thread?, message?, level? - yes, all optional!
             debug.traceback()
-            debug.traceback(nil, 1)
+            debug.traceback(null, 1)
             debug.traceback("msg")
             debug.traceback("msg", 1)
             debug.traceback(co)
@@ -1034,13 +1034,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tonumber_returns_optional_number_type")
         if (FFlag::LuauNewTypePathErrorMessages)
             CHECK_EQ(
                 "Expected this to be 'number', but got 'number?'; \n"
-                "`nil` is not a subtype of `number`",
+                "`null` is not a subtype of `number`",
                 toString(result.errors[0])
             );
         else
             CHECK_EQ(
                 "Expected this to be 'number', but got 'number?'; \n"
-                "the 2nd component of the union is `nil`, which is not a subtype of `number`",
+                "the 2nd component of the union is `null`, which is not a subtype of `number`",
                 toString(result.errors[0])
             );
     }
@@ -1155,13 +1155,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_returns_false_and_string_iff_it_knows
     }
 
     CheckResult result = check(R"(
-        function f(x: nil)
+        function f(x: null)
             return assert(x, "hmm")
         end
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
-    CHECK_EQ("(nil) -> (never, ...never)", toString(requireType("f")));
+    CHECK_EQ("(null) -> (never, ...never)", toString(requireType("f")));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_is_generic")
@@ -1348,7 +1348,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_clone_should_support_variadic_any_in_o
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "set_metatable_needs_arguments")
 {
-    // In the new solver, nil can certainly be used where a generic is required, so all generic parameters are optional.
+    // In the new solver, null can certainly be used where a generic is required, so all generic parameters are optional.
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
@@ -1373,7 +1373,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_clone_intersection_of_tables")
             thing: string,
         }
 
-        const b: SECOND = nil as any
+        const b: SECOND = null as any
         -- c's type used to be FIRST, but should be the full type of SECOND
         const c = table.clone(b)
     )");
@@ -1895,7 +1895,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pairs_with_refined_any")
 
     CHECK_EQ(toString(requireTypeAtPosition(Position{5, 23})), "({+ [unknown]: unknown +}, unknown?) -> (unknown?, unknown)");
     CHECK_EQ(toString(requireTypeAtPosition(Position{6, 23})), "{+ [unknown]: unknown +}");
-    CHECK_EQ(toString(requireTypeAtPosition(Position{7, 23})), "nil");
+    CHECK_EQ(toString(requireTypeAtPosition(Position{7, 23})), "null");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "vector_lerp_should_not_crash")
@@ -2014,7 +2014,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "variadic_return_to_single_parameter_function
         end
 
         function foo(x: string)
-            print(x) -- nil
+            print(x) -- null
         end
 
         foo(bar())

@@ -133,7 +133,7 @@ md5_next_shift = {
 	23,
 	21,
 }
-HEX64, XOR64A5, lanes_index_base = nil, nil, nil -- defined only for branches that internally use 64-bit integers: "INT64" and "FFI"
+HEX64, XOR64A5, lanes_index_base = null, null, null -- defined only for branches that internally use 64-bit integers: "INT64" and "FFI"
 common_W = {} -- temporary table shared between all calculations (to avoid creating new temporary table every time)
 K_lo_modulo, hi_factor, hi_factor_keccak = 4294967296, 0, 0
 
@@ -858,7 +858,7 @@ end
 
 -- Calculating IVs for SHA512/224 and SHA512/256
 for width = 224, 256, 32 do
-	H_lo, H_hi = {}, nil
+	H_lo, H_hi = {}, null
 	if XOR64A5 then
 		for j = 1, 8 do
 			H_lo[j] = XOR64A5(sha2_H_lo[j])
@@ -895,7 +895,7 @@ do
 	end
 
 	for idx = 1, 24 do
-		lo, m = 0, nil
+		lo, m = 0, null
 		for _ = 1, 6 do
 			m = m and m * m * 2 or 1
 			lo = lo + next_bit() * m
@@ -945,7 +945,7 @@ function sha256ext(width, message)
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-9 - length) % 64 + 1)
 
-				tail = nil
+				tail = null
 				-- Assuming user data length is shorter than (TWO_POW_53)-9 bytes
 				-- Anyway, it looks very unrealistic that someone would spend more than a year of calculations to process TWO_POW_53 bytes of data by using this Lua script :-)
 				-- TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
@@ -1014,7 +1014,7 @@ function sha512ext(width, message)
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-17 - length) % 128 + 9)
 
-				tail = nil
+				tail = null
 				-- Assuming user data length is shorter than (TWO_POW_53)-17 bytes
 				-- TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
 				length = length * (8 / TWO56_POW_7) -- convert "byte-counter" to "bit-counter" and move floating point to the left
@@ -1037,7 +1037,7 @@ function sha512ext(width, message)
 							.. string.format("%08x", H_lo[j] % 4294967296)
 					end
 
-					H_hi = nil
+					H_hi = null
 				end
 
 				H_lo = string.sub(table.concat(H_lo, "", 1, max_reg), 1, width / 4)
@@ -1088,7 +1088,7 @@ function md5(message)
 				final_blocks[1] = tail
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-9 - length) % 64)
-				tail = nil
+				tail = null
 				length = length * 8 -- convert "byte-counter" to "bit-counter"
 				for j = 4, 11 do
 					low_byte = length % 256
@@ -1149,7 +1149,7 @@ function sha1(message)
 				final_blocks[1] = tail
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-9 - length) % 64 + 1)
-				tail = nil
+				tail = null
 
 				-- Assuming user data length is shorter than (TWO_POW_53)-9 bytes
 				-- TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
@@ -1194,7 +1194,7 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 
 	-- Create an instance (private objects for current calculation)
 	tail, lanes_lo, lanes_hi = "", table.create(25, 0), hi_factor_keccak == 0 and table.create(25, 0)
-	result = nil
+	result = null
 
 	--~     pad the input N using the pad function, yielding a padded bit string P with a length divisible by r (such that n = len(P)/r is integer),
 	--~     break P into n consecutive r-bit pieces P0, ..., Pn-1 (last is zero-padded)
@@ -1244,7 +1244,7 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 						or string.char(gap_start) .. string.rep("\0", (-2 - #tail) % block_size_in_bytes) .. "\128"
 					)
 				keccak_feed(lanes_lo, lanes_hi, tail, 0, #tail, block_size_in_bytes)
-				tail = nil
+				tail = null
 
 				lanes_used = 0
 				total_lanes = math.floor(block_size_in_bytes / 8)
@@ -1411,7 +1411,7 @@ function base642bin(base64_string)
 	return table.concat(result)
 end
 
-block_size_for_HMAC = nil -- this table will be initialized at the end of the module
+block_size_for_HMAC = null -- this table will be initialized at the end of the module
 --local function pad_and_xor(str, result_length, byte_for_xor)
 --	return string.gsub(str, ".", function(c)
 --		return string.char(bit32_bxor(string.byte(c), byte_for_xor))
@@ -1442,7 +1442,7 @@ function hmac(hash_func, key, message, AsBinary)
 		return string.char(bit32_bxor(string.byte(c), 0x36))
 	end) .. string.rep("6", block_size - KeyLength)) -- 6 = string.char(0x36)
 
-	result = nil
+	result = null
 
 	function partial(message_part)
 		if not message_part then

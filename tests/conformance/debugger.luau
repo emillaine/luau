@@ -80,23 +80,23 @@ end
 
 breakpoint(77)
 
-pcall(cond, nil) -- prevent inlining
+pcall(cond, null) -- prevent inlining
 
 function continueLocals()
 	repeat
 		x = tostring(game)
 		do continue end
-		a1, a2, a3, a4, a5, a6 = nil, nil, nil, nil, nil, nil
+		a1, a2, a3, a4, a5, a6 = null, null, null, null, null, null
 	until pcall(
 		function()
 			print("1")
 			print("2")
-		end, nil
+		end, null
 	) or true
 end
 
 breakpoint(93)
 
-pcall(continueLocals, nil) -- prevent inlining
+pcall(continueLocals, null) -- prevent inlining
 
 return 'OK'

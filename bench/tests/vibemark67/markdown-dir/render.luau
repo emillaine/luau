@@ -63,7 +63,7 @@ function renderInlineNodes(nodes: {ast.Node}): string
     return table.concat(out)
 end
 
-renderNode = nil
+renderNode = null
 
 function renderNode(node: ast.Node, refDefs: {[string]: {dest: string, title: string}}): string
     out = {}

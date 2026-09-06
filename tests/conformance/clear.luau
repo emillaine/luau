@@ -25,10 +25,10 @@ do
 	assert((generateClearedTable(0, 10)).count == 0, "table array part should be empty (had hash)")
 	assert((generateClearedTable(10, 10)).count == 0, "table array part should be empty (had both)")
 
-	assert(next(generateClearedTable(0, 0)) == nil, "table hash part should stay empty")
-	assert(next(generateClearedTable(10, 0)) == nil, "table hash part should be empty (had array)")
-	assert(next(generateClearedTable(0, 10)) == nil, "table hash part should be empty (had hash)")
-	assert(next(generateClearedTable(10, 10)) == nil, "table hash part should be empty (had both)")
+	assert(next(generateClearedTable(0, 0)) == null, "table hash part should stay empty")
+	assert(next(generateClearedTable(10, 0)) == null, "table hash part should be empty (had array)")
+	assert(next(generateClearedTable(0, 10)) == null, "table hash part should be empty (had hash)")
+	assert(next(generateClearedTable(10, 10)) == null, "table hash part should be empty (had both)")
 
 	
 	for i = 1, 16 do

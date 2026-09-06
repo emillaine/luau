@@ -53,7 +53,7 @@ function x86_64_frame.rewrite(st, ctx)
 	if b == "pop" and ops[1] and ops[1].kind == "reg" and (x86.CALLEE_SAVED[ops[1].name] or ops[1].name == "rbp") then return end
 
 	-- rbp/rsp-relative memory access -> slot pseudo-register (unless it lands in a region).
-	mem = nil
+	mem = null
 	for _, o in ops do if o.kind == "mem" then mem = o end end
 	if mem and isStackReg(mem.base, usesRbp) and not mem.dispSym then
 		off = (mem.dispVal or 0)

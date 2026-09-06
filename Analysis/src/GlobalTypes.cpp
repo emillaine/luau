@@ -16,7 +16,7 @@ GlobalTypes::GlobalTypes(NotNull<BuiltinTypes> builtinTypes, SolverMode mode)
     globalTypeFunctionScope = std::make_shared<Scope>(globalTypes.addTypePack(TypePackVar{FreeTypePack{TypeLevel{}}}));
 
     globalScope->addBuiltinTypeBinding("any", TypeFun{{}, builtinTypes->anyType});
-    globalScope->addBuiltinTypeBinding("nil", TypeFun{{}, builtinTypes->nilType});
+    globalScope->addBuiltinTypeBinding("null", TypeFun{{}, builtinTypes->nilType});
     globalScope->addBuiltinTypeBinding("number", TypeFun{{}, builtinTypes->numberType});
     if (FFlag::LuauIntegerType2)
         globalScope->addBuiltinTypeBinding("integer", TypeFun{{}, builtinTypes->integerType});

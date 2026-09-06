@@ -9,10 +9,10 @@ do
     end
 end
 
--- falsy path (nil)
+-- falsy path (null)
 do
     entered = false
-    if const x = nil then
+    if const x = null then
         entered = true
     end
     assert(not entered)
@@ -30,7 +30,7 @@ end
 -- else branch taken when falsy
 do
     result = "none"
-    if const x = nil then
+    if const x = null then
         result = "then"
     else
         result = "else"
@@ -50,7 +50,7 @@ end
 -- variable scoping: not visible in else
 do
     x = "outer"
-    if const x = nil then
+    if const x = null then
         assert(false)
     else
         assert(x == "outer")
@@ -60,7 +60,7 @@ end
 -- else if with independent bindings
 do
     result = ""
-    if const x = nil then
+    if const x = null then
         result = "first"
     else if const y = "hello" then
         assert(y == "hello")
@@ -74,7 +74,7 @@ end
 -- else if falls through correctly
 do
     result = ""
-    if const x = nil then
+    if const x = null then
         result = "first"
     else if const y = false then
         result = "second"
@@ -119,7 +119,7 @@ do
         if flag then
             return "found"
         end
-        return nil
+        return null
     end
 
     if const val = maybeGet(true) then
@@ -157,7 +157,7 @@ end
 
 -- upvalue capture from then-block
 do
-    captured = nil
+    captured = null
     if const x = "hello" then
         captured = function() return x end
     end
@@ -221,7 +221,7 @@ end
 -- multiple return values whose first value is falsy: else-branch taken
 do
     function multiFalsy()
-        return nil, "err"
+        return null, "err"
     end
     result = "none"
     if const a = multiFalsy() then

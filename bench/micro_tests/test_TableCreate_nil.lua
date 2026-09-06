@@ -10,4 +10,4 @@ function test()
     return ts1-ts0
 end
 
-bench.runCode(test, "TableCreate: nil")
+bench.runCode(test, "TableCreate: null")

@@ -14,7 +14,7 @@ assert(tostring(1) == "1")
 assert(tostring(-1) == "-1")
 assert(tostring(1.125) == "1.125")
 assert(tostring(true) == "true")
-assert(tostring(nil) == "nil")
+assert(tostring(null) == "null")
 
 -- empty return
 assert(select('#', (function() end)()) == 0)
@@ -23,18 +23,18 @@ assert(select('#', (function() return end)()) == 0)
 -- locals
 assert((function() a = 1 return a end)() == 1)
 assert((function() a, b, c = 1, 2, 3 return c end)() == 3)
-assert((function() a, b, c = 1, 2 return c end)() == nil)
+assert((function() a, b, c = 1, 2 return c end)() == null)
 assert((function() a = 1, 2 return a end)() == 1)
 
 -- function calls
 function foo(a, b) return b end
-assert(foo(1) == nil)
+assert(foo(1) == null)
 assert(foo(1, 2) == 2)
 assert(foo(1, 2, 3) == 2)
 
 -- pcall
 assert(concat(pcall(function () end)) ==  "true")
-assert(concat(pcall(function () return nil end)) ==  "true,nil")
+assert(concat(pcall(function () return null end)) ==  "true,null")
 assert(concat(pcall(function () return 1,2,3 end)) ==  "true,1,2,3")
 assert(concat(pcall(function () error("oops") end)) ==  "false,basic.luau:39: oops")
 
@@ -42,7 +42,7 @@ assert(concat(pcall(function () error("oops") end)) ==  "false,basic.luau:39: oo
 assert((function() a = 1 a = 2 return a end)() == 2)
 assert((function() a = 1 a = 2 return a end)() == 2)
 assert((function() a = 1 a, b = 1 return a end)() == 1)
-assert((function() a = 1 a, b = 1 return b end)() == nil)
+assert((function() a = 1 a, b = 1 return b end)() == null)
 assert((function() a = 1 b = 2 a, b = b, a return a end)() == 2)
 assert((function() a = 1 b = 2 a, b = b, a return b end)() == 1)
 assert((function() _G.foo = 1 return _G['foo'] end)() == 1)
@@ -65,7 +65,7 @@ assert((function() a = 1 function foo() return function() return a end end retur
 assert((function() function foo(a) return function () return a end end return foo(1)() end)() == 1)
 
 -- this checks local aliasing - b & a should share the same local slot, but the capture must return 1 instead of 2
-assert((function() function foo() f = nil do a = 1 f = function () return a end end b = 2 return f end return foo()() end)() == 1)
+assert((function() function foo() f = null do a = 1 f = function () return a end end b = 2 return f end return foo()() end)() == 1)
 
 -- this checks local mutability - we capture a ref to 1 but must return 2
 assert((function() function foo() a = 1 function f() return a end a = 2 return f end return foo()() end)() == 2)
@@ -81,10 +81,10 @@ assert((function() function foo() t = {f=5} function t:get() return function() r
 
 -- if
 assert((function() a = 1 if a then a = 2 end return a end)() == 2)
-assert((function() a = nil if a then a = 2 end return a end)() == nil)
+assert((function() a = null if a then a = 2 end return a end)() == null)
 
 assert((function() a = 0 if a then a = 1 else a = 2 end return a end)() == 1)
-assert((function() a = nil if a then a = 1 else a = 2 end return a end)() == 2)
+assert((function() a = null if a then a = 1 else a = 2 end return a end)() == 2)
 
 -- binary ops
 assert((function() a = 1 a = a + 2 return a end)() == 3)
@@ -120,7 +120,7 @@ assert((function() a = -2 a = a ^ 0.5 return tostring(a) end)() == "nan")
 assert((function() a = '1' a = a .. '2' return a end)() == "12")
 assert((function() a = '1' a = a .. '2' .. '3' return a end)() == "123")
 
-assert(concat(pcall(function() return '1' .. nil .. '2' end)):match("^false,.*attempt to concatenate nil with string"))
+assert(concat(pcall(function() return '1' .. null .. '2' end)):match("^false,.*attempt to concatenate null with string"))
 
 assert((function() a = 1 a = a == 2 return a end)() == false)
 assert((function() a = 1 a = a != 2 return a end)() == true)
@@ -130,14 +130,14 @@ assert((function() a = 1 a = a > 2 return a end)() == false)
 assert((function() a = 1 a = a >= 2 return a end)() == false)
 
 assert((function() a = 1 a = a and 2 return a end)() == 2)
-assert((function() a = nil a = a and 2 return a end)() == nil)
+assert((function() a = null a = a and 2 return a end)() == null)
 assert((function() a = 1 a = a or 2 return a end)() == 1)
-assert((function() a = nil a = a or 2 return a end)() == 2)
+assert((function() a = null a = a or 2 return a end)() == 2)
 
-assert((function() a = nil a = 1 b = 2 b = a and b return b end)() == 2)
-assert((function() a = nil a = nil b = 2 b = a and b return b end)() == nil)
-assert((function() a = nil a = 1 b = 2 b = a or b return b end)() == 1)
-assert((function() a = nil a = nil b = 2 b = a or b return b end)() == 2)
+assert((function() a = null a = 1 b = 2 b = a and b return b end)() == 2)
+assert((function() a = null a = null b = 2 b = a and b return b end)() == null)
+assert((function() a = null a = 1 b = 2 b = a or b return b end)() == 1)
+assert((function() a = null a = null b = 2 b = a or b return b end)() == 2)
 
 assert((function(a) return 12 % a end)(5) == 2)
 
@@ -148,7 +148,7 @@ assert(2 * "0xa" == 20)
 -- unary ops
 assert((function() a = true a = not a return a end)() == false)
 assert((function() a = false a = not a return a end)() == true)
-assert((function() a = nil a = not a return a end)() == true)
+assert((function() a = null a = not a return a end)() == true)
 
 assert((function() return _G.count end)() == 0)
 assert((function() return ({1,2}).count end)() == 2)
@@ -171,7 +171,7 @@ assert((function() a = 10 b = 1 repeat b = b * 2 a = a - 1 if a == 1 then break 
 
 -- this makes sure a - 4 doesn't clobber a (which would happen if the lifetime of locals inside the repeat..until block is contained within
 -- the block and ends before the condition is evaluated
-assert((function() repeat a = 5 until a - 4 < 0 or a - 4 >= 0 end)() == nil)
+assert((function() repeat a = 5 until a - 4 < 0 or a - 4 >= 0 end)() == null)
 
 -- numeric for
 -- basic tests with positive/negative step sizes
@@ -185,7 +185,7 @@ assert((function() a = 1 for b=1,9 do a = a * 2 if a == 128 then break end end r
 assert((function() a = 1 for b=1,9 do a = a * 2 if a == 128 then break else end end return a end)() == 128)
 
 -- make sure internal index is protected against modification
-assert((function() a = 1 for b=9,1,-2 do a = a * 2 b = nil end return a end)() == 32)
+assert((function() a = 1 for b=9,1,-2 do a = a * 2 b = null end return a end)() == 32)
 
 -- make sure that when step is 0, we treat it as backward iteration (and as such, iterate zero times or indefinitely)
 -- this is consistent with Lua 5.1; future Lua versions emit an error when step is 0; LuaJIT instead treats 0 as forward iteration
@@ -221,9 +221,9 @@ assert((function() a = '' for k,v in ipairs({5, 6, 7}) do a = a .. k end return 
 assert((function() a = '' for k,v in ipairs({5, 6, 7}) do a = a .. v end return a end)() == "567")
 
 -- ipairs with gaps
-assert((function() a = '' for k in ipairs({5, 6, 7, nil, 8}) do a = a .. k end return a end)() == "123")
-assert((function() a = '' for k,v in ipairs({5, 6, 7, nil, 8}) do a = a .. k end return a end)() == "123")
-assert((function() a = '' for k,v in ipairs({5, 6, 7, nil, 8}) do a = a .. v end return a end)() == "567")
+assert((function() a = '' for k in ipairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "123")
+assert((function() a = '' for k,v in ipairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "123")
+assert((function() a = '' for k,v in ipairs({5, 6, 7, null, 8}) do a = a .. v end return a end)() == "567")
 
 -- manual ipairs/inext
 inext = ipairs({5,6,7})
@@ -235,9 +235,9 @@ assert((function() a = '' for k,v in pairs({5, 6, 7}) do a = a .. k end return a
 assert((function() a = '' for k,v in pairs({5, 6, 7}) do a = a .. v end return a end)() == "567")
 
 -- pairs on array with gaps
-assert((function() a = '' for k in pairs({5, 6, 7, nil, 8}) do a = a .. k end return a end)() == "1235")
-assert((function() a = '' for k,v in pairs({5, 6, 7, nil, 8}) do a = a .. k end return a end)() == "1235")
-assert((function() a = '' for k,v in pairs({5, 6, 7, nil, 8}) do a = a .. v end return a end)() == "5678")
+assert((function() a = '' for k in pairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "1235")
+assert((function() a = '' for k,v in pairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "1235")
+assert((function() a = '' for k,v in pairs({5, 6, 7, null, 8}) do a = a .. v end return a end)() == "5678")
 
 -- pairs on table
 assert((function() a = {} for k in pairs({a=1, b=2, c=3}) do a[k] = 1 end return a.a + a.b + a.c end)() == 3)
@@ -247,7 +247,7 @@ assert((function() a = {} for k,v in pairs({a=1, b=2, c=3}) do a[k] = v end retu
 -- pairs on mixed array/table + gaps in the array portion
 -- note that a,b,c results in a,c,b during traversal since index is based on hash & size
 assert((function() a = {} for k,v in pairs({1, 2, 3, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,5,7,6")
-assert((function() a = {} for k,v in pairs({1, 2, 3, nil, 4, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,4,5,7,6")
+assert((function() a = {} for k,v in pairs({1, 2, 3, null, 4, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,4,5,7,6")
 
 -- pairs manually
 assert((function() a = '' for k in next,{5, 6, 7} do a = a .. k end return a end)() == "123")
@@ -258,14 +258,14 @@ assert((function() a = {} for k,v in next,{a=1, b=2, c=3} do a[k] = 1 end return
 assert((function() a = {} for k,v in next,{a=1, b=2, c=3} do a[k] = v end return a.a + a.b + a.c end)() == 6)
 
 -- too many vars
-assert((function() a = '' for k,v,p in pairs({a=1, b=2, c=3}) do a = a .. tostring(p) end return a end)() == "nilnilnil")
+assert((function() a = '' for k,v,p in pairs({a=1, b=2, c=3}) do a = a .. tostring(p) end return a end)() == "nullnullnull")
 
 -- make sure break works
 assert((function() a = 1 for _ in pairs({1,2,3}) do a = a * 2 if a == 4 then break end end return a end)() == 4)
 assert((function() a = 1 for _ in pairs({1,2,3}) do a = a * 2 if a == 4 then break else end end return a end)() == 4)
 
 -- make sure internal index is protected against modification
-assert((function() a = 1 for b in pairs({1,2,3}) do a = a * 2 b = nil end return a end)() == 8)
+assert((function() a = 1 for b in pairs({1,2,3}) do a = a * 2 b = null end return a end)() == 8)
 
 -- make sure custom iterators work! example is from PIL 7.1
 function list_iter(t)
@@ -324,18 +324,18 @@ assert((function()
 end)() == "ArcticDunesCanyonsWaterMountainsHillsLavaflowPlainsMarsh")
 
 -- table literals may contain duplicate fields; the language doesn't specify assignment order but we currently assign left to right
-assert((function() t = {data = 4, data = nil, data = 42} return t.data end)() == 42)
-assert((function() t = {data = 4, data = nil, data = 42, data = nil} return t.data end)() == nil)
+assert((function() t = {data = 4, data = null, data = 42} return t.data end)() == 42)
+assert((function() t = {data = 4, data = null, data = 42, data = null} return t.data end)() == null)
 
 -- multiple returns
 -- local=
 assert((function() function foo() return 2, 3, 4 end a, b, c = foo() return ''..a..b..c end)() == "234")
 assert((function() function foo() return 2, 3, 4 end a, b, c = 1, foo() return ''..a..b..c end)() == "123")
-assert((function() function foo() return 2 end a, b, c = 1, foo() return ''..a..b..tostring(c) end)() == "12nil")
+assert((function() function foo() return 2 end a, b, c = 1, foo() return ''..a..b..tostring(c) end)() == "12null")
 
 -- assignments
-assert((function() function foo() return 2, 3 end a, b, c, d = 1, foo() return ''..a..b..c..tostring(d) end)() == "123nil")
-assert((function() function foo() return 2, 3 end a, b, c, d = nil, nil, nil, nil a, b, c, d = 1, foo() return ''..a..b..c..tostring(d) end)() == "123nil")
+assert((function() function foo() return 2, 3 end a, b, c, d = 1, foo() return ''..a..b..c..tostring(d) end)() == "123null")
+assert((function() function foo() return 2, 3 end a, b, c, d = null, null, null, null a, b, c, d = 1, foo() return ''..a..b..c..tostring(d) end)() == "123null")
 
 -- varargs
 -- local=
@@ -346,18 +346,18 @@ assert((function() function foo(x, ...) a, b, c = ... return a + b + c end retur
 assert((function() function foo(...) a, b, c = ... return a + b + c end return foo(1, 2, 3) end)() == 6)
 assert((function() function foo(x, ...) a, b, c = ... return a + b + c end return foo(1, 2, 3, 4) end)() == 9)
 
--- extra nils
-assert((function() function foo(...) a, b, c = ... return tostring(a) .. tostring(b) .. tostring(c) end return foo(1, 2) end)() == "12nil")
+-- extra nulls
+assert((function() function foo(...) a, b, c = ... return tostring(a) .. tostring(b) .. tostring(c) end return foo(1, 2) end)() == "12null")
 
 -- varargs + multiple returns
 -- return
 assert((function() function foo(...) return ... end return concat(foo(1, 2, 3)) end)() == "1,2,3")
-assert((function() function foo(...) return ... end return foo() end)() == nil)
+assert((function() function foo(...) return ... end return foo() end)() == null)
 assert((function() function foo(a, ...) return a + 10, ... end return concat(foo(1, 2, 3)) end)() == "11,2,3")
 
 -- call
 assert((function() function foo(...) return ... end function bar(...) return foo(...) end return concat(bar(1, 2, 3)) end)() == "1,2,3")
-assert((function() function foo(...) return ... end function bar(...) return foo(...) end return bar() end)() == nil)
+assert((function() function foo(...) return ... end function bar(...) return foo(...) end return bar() end)() == null)
 assert((function() function foo(a, ...) return a + 10, ... end function bar(a, ...) return foo(a * 2, ...) end return concat(bar(1, 2, 3)) end)() == "12,2,3")
 
 -- manual pack
@@ -378,9 +378,9 @@ assert((function() function foo() return 1, 2, 3 end return table.concat({1, 2, 
 
 -- table access
 assert((function() t = {6, 9, 7} return t[2] end)() == 9)
-assert((function() t = {6, 9, 7} return t[0] end)() == nil)
-assert((function() t = {6, 9, 7} return t[4] end)() == nil)
-assert((function() t = {6, 9, 7} return t[4.5] end)() == nil)
+assert((function() t = {6, 9, 7} return t[0] end)() == null)
+assert((function() t = {6, 9, 7} return t[4] end)() == null)
+assert((function() t = {6, 9, 7} return t[4.5] end)() == null)
 assert((function() t = {6, 9, 7, [4.5]=11} return t[4.5] end)() == 11)
 assert((function() t = {6, 9, 7, a=11} return t['a'] end)() == 11)
 assert((function() t = {6, 9, 7} setmetatable(t, { __index = function(t,i) return i * 10 end }) return concat(t[2],t[5]) end)() == "9,50")
@@ -390,7 +390,7 @@ assert((function() t = {6, 9, 7} t[0] = 5 return t[0] end)() == 5)
 assert((function() t = {6, 9, 7} t[4] = 10 return t[4] end)() == 10)
 assert((function() t = {6, 9, 7} t[4.5] = 10 return t[4.5] end)() == 10)
 assert((function() t = {6, 9, 7} t['a'] = 11 return t['a'] end)() == 11)
-assert((function() t = {6, 9, 7} setmetatable(t, { __newindex = function(t,i,v) rawset(t, i * 10, v) end }) t[1] = 17 t[5] = 1 return concat(t[1],t[5],t[50]) end)() == "17,nil,1")
+assert((function() t = {6, 9, 7} setmetatable(t, { __newindex = function(t,i,v) rawset(t, i * 10, v) end }) t[1] = 17 t[5] = 1 return concat(t[1],t[5],t[50]) end)() == "17,null,1")
 
 -- userdata access
 assert((function() ud = newproxy(true) getmetatable(ud).__index = function(ud,i) return i * 10 end return ud[2] end)() == 20)
@@ -399,21 +399,21 @@ assert((function() ud = newproxy(true) getmetatable(ud).__index = function() ret
 -- and/or
 -- rhs is a constant
 assert((function() a = 1 a = a and 2 return a end)() == 2)
-assert((function() a = nil a = a and 2 return a end)() == nil)
+assert((function() a = null a = a and 2 return a end)() == null)
 assert((function() a = 1 a = a or 2 return a end)() == 1)
-assert((function() a = nil a = a or 2 return a end)() == 2)
+assert((function() a = null a = a or 2 return a end)() == 2)
 
 -- rhs is a local
 assert((function() a = 1 b = 2 a = a and b return a end)() == 2)
-assert((function() a = nil b = 2 a = a and b return a end)() == nil)
+assert((function() a = null b = 2 a = a and b return a end)() == null)
 assert((function() a = 1 b = 2 a = a or b return a end)() == 1)
-assert((function() a = nil b = 2 a = a or b return a end)() == 2)
+assert((function() a = null b = 2 a = a or b return a end)() == 2)
 
 -- rhs is a global (prevents optimizations)
 assert((function() a = 1 b = 2 a = a and b return a end)() == 2)
-assert((function() a = nil b = 2 a = a and b return a end)() == nil)
+assert((function() a = null b = 2 a = a and b return a end)() == null)
 assert((function() a = 1 b = 2 a = a or b return a end)() == 1)
-assert((function() a = nil b = 2 a = a or b return a end)() == 2)
+assert((function() a = null b = 2 a = a or b return a end)() == 2)
 
 -- table access: method calls + fake oop via mt
 assert((function()
@@ -449,9 +449,9 @@ end)() == 6)
 
 -- table access:  fast-path tests for array lookup
 -- in-bounds array lookup shouldn't call into Lua, but if the element isn't there we'll still call the metatable
-assert((function() a = {9, [1.5] = 7} return a[1], a[2], a[1.5] end)() == 9,nil,7)
+assert((function() a = {9, [1.5] = 7} return a[1], a[2], a[1.5] end)() == 9,null,7)
 assert((function() a = {9, [1.5] = 7} setmetatable(a, { __index = function() return 5 end }) return concat(a[1],a[2],a[1.5]) end)() == "9,5,7")
-assert((function() a = {9, nil, 11} setmetatable(a, { __index = function() return 5 end }) return concat(a[1],a[2],a[3],a[4]) end)() == "9,5,11,5")
+assert((function() a = {9, null, 11} setmetatable(a, { __index = function() return 5 end }) return concat(a[1],a[2],a[3],a[4]) end)() == "9,5,11,5")
 
 -- namecall for userdata: technically not officially supported but hard to test in a different way!
 -- warning: this test may break at any time as we may decide that we'll only use userdata-namecall on tagged user data objects
@@ -494,8 +494,8 @@ end)() == 42)
 
 -- comparison
 -- basic types
-assert((function() a = nil return concat(a == nil, a != nil) end)() == "true,false")
-assert((function() a = nil return concat(a == 1, a != 1) end)() == "false,true")
+assert((function() a = null return concat(a == null, a != null) end)() == "true,false")
+assert((function() a = null return concat(a == 1, a != 1) end)() == "false,true")
 assert((function() a = 1 return concat(a == 1, a != 1) end)() == "true,false")
 assert((function() a = 1 return concat(a == 2, a != 2) end)() == "false,true")
 assert((function() a = true return concat(a == true, a != true) end)() == "true,false")
@@ -522,7 +522,7 @@ assert((function() a = newproxy(true) return concat(a == newproxy(true),a != new
 
 -- rawequal
 assert(rawequal(true, 5) == false)
-assert(rawequal(nil, nil) == true)
+assert(rawequal(null, null) == true)
 assert(rawequal(true, false) == false)
 assert(rawequal(true, true) == true)
 assert(rawequal(0, -0) == true)
@@ -534,7 +534,7 @@ assert((function() a = {} b = {} mt = { __eq = function(l, r) return l.count == 
 -- rawequal fallback
 assert(concat(pcall(rawequal, "a", "a")) == "true,true")
 assert(concat(pcall(rawequal, "a", "b")) == "true,false")
-assert(concat(pcall(rawequal, "a", nil)) == "true,false")
+assert(concat(pcall(rawequal, "a", null)) == "true,false")
 assert(pcall(rawequal, "a") == false)
 
 -- metatable ops
@@ -580,20 +580,20 @@ assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(
 
 -- array access
 assert((function() a = {4,5,6} return a[3] end)() == 6)
-assert((function() a = {4,5,nil,6} return a[3] end)() == nil)
-assert((function() a = {4,5,nil,6} setmetatable(a, { __index = function() return 42 end }) return a[4] end)() == 6)
-assert((function() a = {4,5,nil,6} setmetatable(a, { __index = function() return 42 end }) return a[3] end)() == 42)
+assert((function() a = {4,5,null,6} return a[3] end)() == null)
+assert((function() a = {4,5,null,6} setmetatable(a, { __index = function() return 42 end }) return a[4] end)() == 6)
+assert((function() a = {4,5,null,6} setmetatable(a, { __index = function() return 42 end }) return a[3] end)() == 42)
 assert((function() a = {4,5,6} a[3] = 8 return a[3] end)() == 8)
-assert((function() a = {4,5,nil,6} a[3] = 8 return a[3] end)() == 8)
-assert((function() a = {4,5,nil,6} setmetatable(a, { __newindex = function(t,i) rawset(t,i,42) end }) a[4] = 0 return a[4] end)() == 0)
-assert((function() a = {4,5,nil,6} setmetatable(a, { __newindex = function(t,i) rawset(t,i,42) end }) a[3] = 0 return a[3] end)() == 42)
+assert((function() a = {4,5,null,6} a[3] = 8 return a[3] end)() == 8)
+assert((function() a = {4,5,null,6} setmetatable(a, { __newindex = function(t,i) rawset(t,i,42) end }) a[4] = 0 return a[4] end)() == 0)
+assert((function() a = {4,5,null,6} setmetatable(a, { __newindex = function(t,i) rawset(t,i,42) end }) a[3] = 0 return a[3] end)() == 42)
 
 -- array index for literal
-assert((function() a = {4, 5, nil, 6} return concat(a[1], a[3], a[4], a[100]) end)() == "4,nil,6,nil")
-assert((function() a = {4, 5, nil, 6} a[1] = 42 a[3] = 0 a[100] = 75 return concat(a[1], a[3], a[75], a[100]) end)() == "42,0,nil,75")
+assert((function() a = {4, 5, null, 6} return concat(a[1], a[3], a[4], a[100]) end)() == "4,null,6,null")
+assert((function() a = {4, 5, null, 6} a[1] = 42 a[3] = 0 a[100] = 75 return concat(a[1], a[3], a[75], a[100]) end)() == "42,0,null,75")
 
 -- load error
-assert((function() return concat(loadstring('hello world')) end)() == "nil,[string \"hello world\"]:1: Incomplete statement: expected assignment or a function call")
+assert((function() return concat(loadstring('hello world')) end)() == "null,[string \"hello world\"]:1: Incomplete statement: expected assignment or a function call")
 
 -- many arguments & locals
 function f(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
@@ -601,10 +601,10 @@ function f(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
     p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
     p31, p32, p33, p34, p35, p36, p37, p38, p39, p40,
     p41, p42, p43, p44, p45, p46, p48, p49, p50, ...)
-    a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14 = nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
+    a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14 = null, null, null, null, null, null, null, null, null, null, null, null, null, null
 end
 
-assert(f() == nil)
+assert(f() == null)
 
 -- upvalues & loops (validates timely closing)
 assert((function()
@@ -748,8 +748,8 @@ end)() == 1)
 
 -- the reason why this test is interesting is it ensures we do correct mutability analysis for locals
 function chainTest(n)
-     first = nil
-     last = nil
+     first = null
+     last = null
 
      -- Build chain of n equality constraints
      for i = 0, n do
@@ -764,8 +764,8 @@ end
 assert(chainTest(100) == "v0,v100")
 
 -- this validates import fallbacks
-assert(idontexist == nil)
-assert(math.idontexist == nil)
+assert(idontexist == null)
+assert(math.idontexist == null)
 assert(pcall(function() return idontexist.a end) == false)
 assert(pcall(function() return math.pow.a end) == false)
 assert(pcall(function() return math.a.b end) == false)
@@ -834,7 +834,7 @@ assert((function() abs = math.abs function foo() return abs('-5') end return foo
 
 -- if you don't have enough arguments or types are wrong, we fall back to the regular execution; this checks that the error generated is actually correct
 assert(concat(pcall(function() return math.abs() end)):match("missing argument #1 to 'abs'"))
-assert(concat(pcall(function() return math.abs(nil) end)):match("invalid argument #1 to 'abs'"))
+assert(concat(pcall(function() return math.abs(null) end)):match("invalid argument #1 to 'abs'"))
 assert(concat(pcall(function() return math.abs({}) end)):match("invalid argument #1 to 'abs'"))
 
 -- very large unpack
@@ -925,7 +925,7 @@ end)() == 105)
 -- shrinking array part
 assert((function()
     t = table.create(100, 42)
-    for i=1,90 do t[i] = nil end
+    for i=1,90 do t[i] = null end
     t[101] = 42
     sum = 0
     for _,v in ipairs(t) do sum += v end
@@ -1003,7 +1003,7 @@ assert(pcall(function() return typeof(nothing()) end) == false)
 assert(pcall(function() return type(nothing()) end) == false)
 
 -- typeof == type in absence of custom userdata
-assert(concat(typeof(5), typeof(nil), typeof({}), typeof(newproxy())) == "number,nil,table,userdata")
+assert(concat(typeof(5), typeof(null), typeof({}), typeof(newproxy())) == "number,null,table,userdata")
 
 -- type/typeof/newproxy interaction with metatables: __type doesn't work intentionally to avoid spoofing
 assert((function()

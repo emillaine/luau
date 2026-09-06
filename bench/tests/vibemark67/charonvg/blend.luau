@@ -259,7 +259,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
     invMatrix = paintMatrix and paintMatrix:invert()
 
     -- Linear gradient constants
-    gx1, gy1, gdx, gdy, glen2 = nil, nil, nil, nil, nil
+    gx1, gy1, gdx, gdy, glen2 = null, null, null, null, null
     if isLinear then
         gx1 = paint.x1
         gy1 = paint.y1
@@ -268,7 +268,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
         glen2 = gdx * gdx + gdy * gdy
     end
     -- Radial gradient constants
-    rcx, rcy, rcr, rfx, rfy, rfr = nil, nil, nil, nil, nil, nil
+    rcx, rcy, rcr, rfx, rfy, rfr = null, null, null, null, null, null
     if isRadial then
         rcx = paint.cx
         rcy = paint.cy
@@ -307,7 +307,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
                         px, py = invMatrix:mapPoint(px, py)
                     end
 
-                    pos = nil
+                    pos = null
                     if isLinear then
                         if glen2 < 1e-10 then
                             pos = 0
@@ -324,7 +324,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
                         a = dcx * dcx + dcy * dcy - dr * dr
                         b = dx * dcx + dy * dcy + rfr * dr
                         c = dx * dx + dy * dy - rfr * rfr
-                        t = nil
+                        t = null
                         if mathAbs(a) < 1e-10 then
                             t = mathAbs(b) < 1e-10 and 0 or c / (2 * b)
                         else

@@ -907,11 +907,11 @@ TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireFunction")
     assertOutputContainsAll({"true", "function"});
 }
 
-TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireNil")
+TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireNull")
 {
-    std::string path = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/types/nil";
+    std::string path = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/types/null";
     runProtectedRequire(path);
-    assertOutputContainsAll({"true", "nil"});
+    assertOutputContainsAll({"true", "null"});
 }
 
 TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireNumber")

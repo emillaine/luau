@@ -59,7 +59,7 @@ for i = 0,nx-1 do
     testOutput = testOutput + a[3*(i*nx+i)+1];
 end
 
-a = nil;
+a = null;
 
 -- This has to be an approximate test since ECMAscript doesn't formally specify
 -- what sin() returns. Even if it did specify something like for example what Java 7

@@ -534,7 +534,7 @@ void luaL_addvalueany(luaL_Strbuf* B, int idx)
         break;
     }
     case LUA_TNIL:
-        luaL_addstring(B, "nil");
+        luaL_addstring(B, "null");
         break;
     case LUA_TBOOLEAN:
         if (lua_toboolean(L, idx))
@@ -622,7 +622,7 @@ const char* luaL_tolstring(lua_State* L, int idx, size_t* len)
     switch (lua_type(L, idx))
     {
     case LUA_TNIL:
-        lua_pushliteral(L, "nil");
+        lua_pushliteral(L, "null");
         break;
     case LUA_TBOOLEAN:
         lua_pushstring(L, (lua_toboolean(L, idx) ? "true" : "false"));

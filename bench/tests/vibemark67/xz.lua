@@ -159,15 +159,15 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
     uncompressed_pos = 0
 
     -- Probability tables (persistent across non-reset chunks)
-    is_match, is_rep, is_rep_g0, is_rep_g1, is_rep_g2, is_rep0_long = nil, nil, nil, nil, nil, nil
-    pos_slot_probs, pos_special, pos_align = nil, nil, nil
-    lit_probs = nil
-    len_choice, len_choice2, len_low, len_mid, len_high = nil, nil, nil, nil, nil
-    rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high = nil, nil, nil, nil, nil
-    state, rep0, rep1, rep2, rep3 = nil, nil, nil, nil, nil
+    is_match, is_rep, is_rep_g0, is_rep_g1, is_rep_g2, is_rep0_long = null, null, null, null, null, null
+    pos_slot_probs, pos_special, pos_align = null, null, null
+    lit_probs = null
+    len_choice, len_choice2, len_low, len_mid, len_high = null, null, null, null, null
+    rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high = null, null, null, null, null
+    state, rep0, rep1, rep2, rep3 = null, null, null, null, null
 
     -- Range decoder state (shared across decode operations within a chunk)
-    rc_range, rc_code, rc_inp_pos = nil, nil, nil
+    rc_range, rc_code, rc_inp_pos = null, null, null
 
     function reset_lzma_state()
         is_match = create_probs(LZMA_NUM_STATES * LZMA_NUM_POS_STATES_MAX)
@@ -364,7 +364,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
                     lit_st = bit32.lshift(bit32.band(total_pos, lit_pos_mask), lc) + bit32.rshift(prev_byte, 8 - lc)
                     po = lit_st * 768
 
-                    symbol = nil
+                    symbol = null
                     if state >= LZMA_NUM_LIT_STATES then
                         match_byte = dict_get(rep0)
                         symbol = 1
@@ -391,7 +391,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
                     dict_put_byte(byte)
                     state = lzma_state_update_literal(state)
                 else
-                    len = nil
+                    len = null
                     if decode_bit(is_rep, state + 1) == 0 then
                         len = decode_len(len_choice, len_choice2, len_low, len_mid, len_high, cur_pos_state)
                         state = lzma_state_update_match(state)
@@ -445,7 +445,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
                                 continue
                             end
                         else
-                            tmp = nil
+                            tmp = null
                             if decode_bit(is_rep_g1, state + 1) == 0 then
                                 tmp = rep1
                             else
@@ -557,7 +557,7 @@ function xz_decompress(input: string): string
         has_compressed_size = bit32.band(block_flags, 0x40) != 0
         has_uncompressed_size = bit32.band(block_flags, 0x80) != 0
 
-        compressed_size_field, uncompressed_size_field = nil, nil
+        compressed_size_field, uncompressed_size_field = null, null
 
         if has_compressed_size then
             compressed_size_field, pos = read_multibyte(input, pos)
@@ -569,9 +569,9 @@ function xz_decompress(input: string): string
         -- Filters
         filters = {}
         for i = 1, num_filters do
-            filter_id = nil
+            filter_id = null
             filter_id, pos = read_multibyte(input, pos)
-            props_size = nil
+            props_size = null
             props_size, pos = read_multibyte(input, pos)
             filter_props = input:sub(pos, pos + props_size - 1)
             pos = pos + props_size
@@ -606,14 +606,14 @@ function xz_decompress(input: string): string
         end
 
         -- Determine how much compressed data there is
-        comp_size = nil
+        comp_size = null
         if has_compressed_size then
             comp_size = compressed_size_field
         else
             -- We need to find the end by decoding LZMA2 chunks
             -- For now, compute from block size
             -- Actually we'll decode and track how much we consumed
-            comp_size = nil
+            comp_size = null
         end
 
         uncompressed_size = uncompressed_size_field
@@ -671,11 +671,11 @@ function xz_decompress(input: string): string
     end
 
     -- Index
-    num_records = nil
+    num_records = null
     num_records, pos = read_multibyte(input, pos)
 
     for _ = 1, num_records do
-        _unpadded, _uncompressed = nil, nil
+        _unpadded, _uncompressed = null, null
         _unpadded, pos = read_multibyte(input, pos)
         _uncompressed, pos = read_multibyte(input, pos)
     end
@@ -816,7 +816,7 @@ function hash4(buf: buffer, pos: number): number
 end
 
 -- lzma_encode: encode bytes [start_offset, end_offset) from data_buf (0-indexed buffer).
--- enc_state: nil for fresh state, or a table returned by a previous call to continue.
+-- enc_state: null for fresh state, or a table returned by a previous call to continue.
 -- Returns: (compressed_string, new_enc_state)
 function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number, lc: number, lp: number, pb: number, dict_size: number, enc_state: any): (string, any)
     data_len = buffer.len(data_buf)
@@ -833,16 +833,16 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
     rc = range_encoder_create()
 
     -- Prob tables and state: either fresh or carried over from enc_state
-    is_match, is_rep, is_rep_g0, is_rep_g1, is_rep_g2, is_rep0_long = nil, nil, nil, nil, nil, nil
-    pos_slot_enc = nil
-    pos_special, pos_align = nil, nil
-    lit_probs = nil
-    len_choice, len_choice2, len_low, len_mid, len_high = nil, nil, nil, nil, nil
-    rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high = nil, nil, nil, nil, nil
-    state, rep0, rep1, rep2, rep3 = nil, nil, nil, nil, nil
-    hash_table, chain = nil, nil
+    is_match, is_rep, is_rep_g0, is_rep_g1, is_rep_g2, is_rep0_long = null, null, null, null, null, null
+    pos_slot_enc = null
+    pos_special, pos_align = null, null
+    lit_probs = null
+    len_choice, len_choice2, len_low, len_mid, len_high = null, null, null, null, null
+    rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high = null, null, null, null, null
+    state, rep0, rep1, rep2, rep3 = null, null, null, null, null
+    hash_table, chain = null, null
 
-    if enc_state != nil then
+    if enc_state != null then
         -- Continue from previous state
         is_match    = enc_state.is_match
         is_rep      = enc_state.is_rep
@@ -993,7 +993,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         end
 
         -- Find pos_slot
-        pos_slot_val = nil
+        pos_slot_val = null
         if dist < 4 then
             pos_slot_val = dist
         else
@@ -1171,7 +1171,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
             len_state = LZMA_NUM_LEN_TO_POS_STATES - 1
         end
 
-        pos_slot_val = nil
+        pos_slot_val = null
         if dist < 4 then
             pos_slot_val = dist
         else
@@ -1665,7 +1665,7 @@ function lzma2_encode(input_data: string, dict_size: number): string
     total_len = #input_data
     offset = 0  -- 0-indexed buffer offset
     first_chunk = true
-    enc_state = nil  -- nil = fresh state for first chunk
+    enc_state = null  -- null = fresh state for first chunk
 
     while offset < total_len do
         -- Try to compress with the maximum chunk size first, then shrink if needed
@@ -1679,7 +1679,7 @@ function lzma2_encode(input_data: string, dict_size: number): string
         while pack_size > 65536 and unpack_size > 65536 do
             unpack_size = math.floor(unpack_size / 2)
             chunk_end = offset + unpack_size
-            compressed, new_state = lzma_encode(full_buf, offset, chunk_end, lc, lp, pb, dict_size, nil)
+            compressed, new_state = lzma_encode(full_buf, offset, chunk_end, lc, lp, pb, dict_size, null)
             pack_size = #compressed
         end
 

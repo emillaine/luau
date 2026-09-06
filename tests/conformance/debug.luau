@@ -14,7 +14,7 @@ assert(foo():find("foo") > 0)
 assert(foo("hello"):find("hello") > 0)
 assert(foo("hello"):find("foo") > 0)
 assert(foo("hello", 2):find("hello") > 0)
-assert(foo("hello", 2):find("foo") == nil)
+assert(foo("hello", 2):find("foo") == null)
 
 co = coroutine.create(bar)
 coroutine.resume(co)
@@ -23,7 +23,7 @@ assert(debug.traceback(co):find("bar") > 0)
 assert(debug.traceback(co, "hello"):find("hello") > 0)
 assert(debug.traceback(co, "hello"):find("bar") > 0)
 assert(debug.traceback(co, "hello", 2):find("hello") > 0)
-assert(debug.traceback(co, "hello", 2):find("bar") == nil)
+assert(debug.traceback(co, "hello", 2):find("bar") == null)
 
 -- traceback for the top frame
 function halp(key, value)
@@ -62,7 +62,7 @@ end
 assert(baz(0, "n") == "info")
 assert(baz(1, "n") == "baz")
 assert(baz(2, "n") == "") -- main/anonymous
-assert(baz(3, "n") == nil)
+assert(baz(3, "n") == null)
 assert(baz(0, "s") == "[C]")
 assert(baz(1, "s") == "debug.luau")
 assert(baz(0, "l") == -1)
@@ -72,7 +72,7 @@ assert(baz(1, "f") == baz)
 assert(baz(0, "a") == 0)
 assert(baz(1, "a") == 0)
 assert(baz(co, 1, "n") == "bar")
-assert(baz(co, 2, "n") == nil)
+assert(baz(co, 2, "n") == null)
 assert(baz(math.sqrt, "n") == "sqrt")
 assert(baz(math.sqrt, "f") == math.sqrt) -- yes this is pointless
 

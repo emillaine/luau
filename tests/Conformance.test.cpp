@@ -166,7 +166,7 @@ static int lua_loadstring(lua_State* L)
 
     lua_pushnil(L);
     lua_insert(L, -2); // put before error message
-    return 2;          // return nil plus error message
+    return 2;          // return null plus error message
 }
 
 static int lua_vector_dot(lua_State* L)
@@ -1945,7 +1945,7 @@ static void populateRTTI(lua_State* L, Luau::TypeId type)
             break;
 
         case Luau::PrimitiveType::NilType:
-            lua_pushstring(L, "nil");
+            lua_pushstring(L, "null");
             break;
 
         case Luau::PrimitiveType::Number:
@@ -3511,7 +3511,7 @@ TEST_CASE("GCDump")
     lua_State* CL = lua_newthread(L);
 
     std::string source = R"(
-x = nil
+x = null
 x = {}
 function f()
     x[1] = math.abs(42)
@@ -4185,7 +4185,7 @@ static int cYieldingIterator(lua_State* L)
     int index = luaL_checkinteger(L, 2);
 
     if (index >= max)
-        return 0; // nil: end iteration
+        return 0; // null: end iteration
 
     lua_pushinteger(L, index + 1);
     return lua_yield(L, 1);
@@ -5073,7 +5073,7 @@ function first(n, p)
       return n, unpack(t)
     end
   end
-  return inner, nil, n
+  return inner, null, n
 end
 
 function second(x)

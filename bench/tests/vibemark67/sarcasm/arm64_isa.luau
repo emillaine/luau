@@ -60,14 +60,14 @@ end
 -- Classify. Returns:
 --   { defs = {regop...}, uses = {regop...},
 --     control = "none"|"branch"|"condbranch"|"call"|"return"|"indirect"|"indcall",
---     targets = {label...}, fallsThrough = bool, isMove = {dstIdx,srcIdx} | nil }
+--     targets = {label...}, fallsThrough = bool, isMove = {dstIdx,srcIdx} | null }
 function arm64.classify(insn)
 	m = string.lower(insn.mnemonic)
 	ops = insn.operands or {}
 	defs, uses = {}, {}
 	rmw = {}  -- regnums that need use+def in the same register (writeback / merge ops)
-	control, targets, fallsThrough = "none", nil, true
-	isMove = nil
+	control, targets, fallsThrough = "none", null, true
+	isMove = null
 
 	-- Control flow first.
 	if m == "b" then

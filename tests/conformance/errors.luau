@@ -4,7 +4,7 @@ print("testing errors")
 
 function doit (s)
   f, msg = loadstring(s)
-  if f == nil then return msg end
+  if f == null then return msg end
   cond, msg = pcall(f)
   return (not cond) and msg
 end
@@ -27,7 +27,7 @@ end
 assert(doit("error('hi', 0)") == 'hi')
 
 -- test error message with no info
--- assert(doit("error()") == nil)
+-- assert(doit("error()") == null)
 
 
 -- test common errors/errors that crashed in the past
@@ -41,7 +41,7 @@ assert(doit(";"))
 assert(doit("a=1;;"))
 assert(doit("return;;"))
 assert(doit("assert(false)"))
-assert(doit("assert(nil)"))
+assert(doit("assert(null)"))
 assert(doit("a=math.sin\n(3)"))
 assert(doit("function a (... , ...) end"))
 assert(doit("function a (, ...) end"))
@@ -62,16 +62,16 @@ checkmessage("a={}; a.bbbb(3)", "field 'bbbb'")
 assert(not string.find(doit("a={13}; bbbb=1; a[bbbb](3)"), "'bbbb'"))
 checkmessage("a={13}; bbbb=1; a[bbbb](3)", "number")
 
-aaa = nil
+aaa = null
 checkmessage("aaa.bbb:ddd(9)", "global 'aaa'")
 checkmessage("aaa={bbb=1}; aaa.bbb:ddd(9)", "field 'bbb'")
 checkmessage("aaa={bbb={}}; aaa.bbb:ddd(9)", "method 'ddd'")
-checkmessage("a,b,c = nil,nil,nil; (function () a = b+1 end)()", "upvalue 'b'")
-assert(not doit("aaa={bbb={ddd=next}}; aaa.bbb:ddd(nil)"))
+checkmessage("a,b,c = null,null,null; (function () a = b+1 end)()", "upvalue 'b'")
+assert(not doit("aaa={bbb={ddd=next}}; aaa.bbb:ddd(null)"))
 
 checkmessage("b=1; aaa='a'; x=aaa+b", "local 'aaa'")
 checkmessage("aaa={}; x=3/aaa", "global 'aaa'")
-checkmessage("aaa='2'; b=nil;x=aaa*b", "global 'b'")
+checkmessage("aaa='2'; b=null;x=aaa*b", "global 'b'")
 checkmessage("aaa={}; x=-aaa", "global 'aaa'")
 assert(not string.find(doit("aaa={}; x=(aaa or aaa)+(aaa and aaa)"), "'aaa'"))
 assert(not string.find(doit("aaa={}; (aaa or aaa)()"), "'aaa'"))
@@ -93,11 +93,11 @@ if math.sin(1) == 0 then return 3 end    -- return
 x.a()]], "field 'a'")
 
 checkmessage([[
-prefix = nil
-insert = nil
+prefix = null
+insert = null
 while 1 do  
-  a = nil
-  if nil then break end
+  a = null
+  if null then break end
   insert(prefix, a)
 end]], "global 'insert'")
 
@@ -122,8 +122,8 @@ function lineerror (s)
   return line and line+0
 end
 
-assert(lineerror("a = nil\n for i=1,'a' do \n print(i) \n end") == 2)
--- assert(lineerror("\n a = nil \n for k,v in 3 \n do \n print(k) \n end") == 3)
+assert(lineerror("a = null\n for i=1,'a' do \n print(i) \n end") == 2)
+-- assert(lineerror("\n a = null \n for k,v in 3 \n do \n print(k) \n end") == 3)
 -- assert(lineerror("\n\n for k,v in \n 3 \n do \n print(k) \n end") == 4)
 assert(lineerror("function a.x.y ()\na=a+1\nend") == 1)
 
@@ -133,11 +133,11 @@ function _G.f(x) error('a', _G.X) end
 _G.g()
 ]]
 _G.X=3;assert(lineerror(p) == 3)
-_G.X=0;assert(lineerror(p) == nil)
+_G.X=0;assert(lineerror(p) == null)
 _G.X=1;assert(lineerror(p) == 2)
 _G.X=2;assert(lineerror(p) == 1)
 
-lineerror = nil
+lineerror = null
 
 do
   C = 0
@@ -154,7 +154,7 @@ do
 
   -- teste de linhas em erro
   C = 0
-  l1 = nil
+  l1 = null
   function g()
     -- l1 = debug.getinfo(1, "l").currentline
     _G.y()
@@ -168,7 +168,7 @@ do
 end
 
 -- C stack overflow
-ehline = nil
+ehline = null
 
 function cstackoverflows(triggerfunc)
   count = 1
@@ -203,7 +203,7 @@ function cstackoverflows(triggerfunc)
     print("after __tostring C stack overflow", count) -- 198: 1 resume + 1 xpcall + 198 luaB_tostring calls (which runs our __tostring successfully 197 times, erroring on the last attempt)
     ehassert(count > 1)
 
-    ps, pe = nil, nil
+    ps, pe = null, null
 
     -- __tostring overflow (lua_call)
     count = 1
@@ -307,21 +307,21 @@ checksyntax("'aa'", "", "'aa'", 1)
 checksyntax("\255a = 1", "", "\255", 1)
 
 doit('_G.I = loadstring("a=9+"); _G.a=3')
-assert(_G.a==3 and _G.I == nil)
+assert(_G.a==3 and _G.I == null)
 print('+')
 
 lim = 1000
 if rawget(_G, "_soft") then lim = 100 end
 for i=1,lim do
   doit('a = ')
-  doit('a = 4+nil')
+  doit('a = 4+null')
 end
 
 
 -- testing syntax limits
 syntaxdepth = if limitedstack then 200 else 500
 function testrep (init, rep)
-  s = "a = nil; "..init .. string.rep(rep, syntaxdepth)
+  s = "a = null; "..init .. string.rep(rep, syntaxdepth)
   a,b = loadstring(s)
   assert(not a) -- and string.find(b, "syntax levels"))
 end
@@ -342,9 +342,9 @@ s = "function foo ()\n  "
 for j = 1,70 do
   s = s.."a"..j..", "
 end
-s = s.."b = nil"
+s = s.."b = null"
 for j = 1,70 do
-  s = s..",nil"
+  s = s..",null"
 end
 s = s.."\n"
 for j = 1,70 do
@@ -359,9 +359,9 @@ s = "\nfunction foo ()\n  "
 for j = 1,300 do
   s = s.."a"..j..", " 
 end
-s = s.."b = nil"
+s = s.."b = null"
 for j = 1,300 do
-  s = s..",nil"
+  s = s..",null"
 end
 s = s.."\n"
 a,b = loadstring(s)
@@ -408,23 +408,23 @@ function ecall(fn, ...)
 end
 
 -- arith errors
-assert(ecall(function() return nil + 5 end) == "attempt to perform arithmetic (add) on nil and number")
+assert(ecall(function() return null + 5 end) == "attempt to perform arithmetic (add) on null and number")
 assert(ecall(function() return "a" + "b" end) == "attempt to perform arithmetic (add) on string")
-assert(ecall(function() return 1 > nil end) == "attempt to compare nil < number") -- note reversed order (by design)
+assert(ecall(function() return 1 > null end) == "attempt to compare null < number") -- note reversed order (by design)
 assert(ecall(function() return "a" <= 5 end) == "attempt to compare string <= number")
 
 -- table errors
-assert(ecall(function() t = {} t[nil] = 2 end) == "table index is nil")
+assert(ecall(function() t = {} t[null] = 2 end) == "table index is null")
 assert(ecall(function() t = {} t[0/0] = 2 end) == "table index is NaN")
 
-assert(ecall(function() t = {} rawset(t, nil, 2) end) == "table index is nil")
+assert(ecall(function() t = {} rawset(t, null, 2) end) == "table index is null")
 assert(ecall(function() t = {} rawset(t, 0/0, 2) end) == "table index is NaN")
 
-assert(ecall(function() t = {} t[nil] = nil end) == "table index is nil")
-assert(ecall(function() t = {} t[0/0] = nil end) == "table index is NaN")
+assert(ecall(function() t = {} t[null] = null end) == "table index is null")
+assert(ecall(function() t = {} t[0/0] = null end) == "table index is NaN")
 
-assert(ecall(function() t = {} rawset(t, nil, nil) end) == "table index is nil")
-assert(ecall(function() t = {} rawset(t, 0/0, nil) end) == "table index is NaN")
+assert(ecall(function() t = {} rawset(t, null, null) end) == "table index is null")
+assert(ecall(function() t = {} rawset(t, 0/0, null) end) == "table index is NaN")
 
 -- for loop type errors
 assert(ecall(function() for i='a',2 do end end) == "invalid 'for' initial value (number expected, got string)")

@@ -41,13 +41,13 @@ a,b = string.find("123456789", "345")
 assert(string.sub("123456789", a, b) == "345")
 assert(string.find("1234567890123456789", "345", 3) == 3)
 assert(string.find("1234567890123456789", "345", 4) == 13)
-assert(string.find("1234567890123456789", "346", 4) == nil)
+assert(string.find("1234567890123456789", "346", 4) == null)
 assert(string.find("1234567890123456789", ".45", -9) == 13)
-assert(string.find("abcdefg", "\0", 5, 1) == nil)
+assert(string.find("abcdefg", "\0", 5, 1) == null)
 assert(string.find("", "") == 1)
-assert(string.find('', 'aaa', 1) == nil)
+assert(string.find('', 'aaa', 1) == null)
 assert(('alo(.)alo'):find('(.)', 1, 1) == 4)
-assert(string.find('', '1', 2) == nil)
+assert(string.find('', '1', 2) == null)
 assert(string.find('123', '2', 0) == 2)
 print('+')
 
@@ -69,11 +69,11 @@ assert(string.byte("\0\0alo\0x", -1) == string.byte('x'))
 assert(string.byte("ba", 2) == 97)
 assert(string.byte("\n\n", 2, -1) == 10)
 assert(string.byte("\n\n", 2, 2) == 10)
-assert(string.byte("") == nil)
-assert(string.byte("hi", -3) == nil)
-assert(string.byte("hi", 3) == nil)
-assert(string.byte("hi", 9, 10) == nil)
-assert(string.byte("hi", 2, 1) == nil)
+assert(string.byte("") == null)
+assert(string.byte("hi", -3) == null)
+assert(string.byte("hi", 3) == null)
+assert(string.byte("hi", 9, 10) == null)
+assert(string.byte("hi", 2, 1) == null)
 assert(string.char() == "")
 assert(string.char(0, 255, 0) == "\0\255\0")
 assert(string.char(0, string.byte("\xe4"), 0) == "\0\xe4\0")
@@ -98,7 +98,7 @@ assert(string.reverse"\0001234" == "4321\0")
 
 for i=0,30 do assert(string.len(string.rep('a', i)) == i) end
 
-assert(type(tostring(nil)) == 'string')
+assert(type(tostring(null)) == 'string')
 assert(type(tostring(12)) == 'string')
 assert(''..12 == '12' and type(12 .. '') == 'string')
 assert(string.find(tostring{}, 'table:'))
@@ -153,11 +153,11 @@ function return_one_thing()
 	return "hi"
 end
 function return_two_nils()
-	return nil, nil
+	return null, null
 end
 
 assert(string.format("%*", return_one_thing()) == "hi")
-assert(string.format("%* %*", return_two_nils()) == "nil nil")
+assert(string.format("%* %*", return_two_nils()) == "null null")
 assert(pcall(function()
 	string.format("%* %* %*", return_two_nils())
 end) == false)
@@ -261,7 +261,7 @@ end
 
 os.setlocale("C")
 assert(os.setlocale() == 'C')
-assert(os.setlocale(nil, "numeric") == 'C')
+assert(os.setlocale(null, "numeric") == 'C')
 ]]--
 
 return('OK')

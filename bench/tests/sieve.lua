@@ -18,7 +18,7 @@ function test()
     return coroutine.wrap(function ()
       while 1 do
         n = g()
-        if n == nil then return end
+        if n == null then return end
         if n % p != 0 then coroutine.yield(n) end
       end
     end)
@@ -31,7 +31,7 @@ function test()
     x = gen(N)		-- generate primes up to N
     while 1 do
       n = x()		-- pick a number until done
-      if n == nil then break end
+      if n == null then break end
       -- print(n)		-- must be a prime number
       x = filter(n, x)	-- now remove its multiples
     end

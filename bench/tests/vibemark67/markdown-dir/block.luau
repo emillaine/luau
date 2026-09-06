@@ -48,11 +48,11 @@ end
 function isATXHeading(line: string): (number?, string?)
     trimmed = trimLeft(line)
     indent = #line - #trimmed
-    if indent > 3 then return nil, nil end
+    if indent > 3 then return null, null end
     level = countLeading(trimmed, "#")
-    if level < 1 or level > 6 then return nil, nil end
+    if level < 1 or level > 6 then return null, null end
     if #trimmed > level and string.sub(trimmed, level + 1, level + 1) != " " then
-        return nil, nil
+        return null, null
     end
     content = trim(string.sub(trimmed, level + 1))
     content = string.gsub(content, "%s+#+%s*$", "")
@@ -63,14 +63,14 @@ end
 function isFencedCodeStart(line: string): (string?, string?)
     trimmed = trimLeft(line)
     indent = #line - #trimmed
-    if indent > 3 then return nil, nil end
+    if indent > 3 then return null, null end
     ch = string.sub(trimmed, 1, 1)
-    if ch != "`" and ch != "~" then return nil, nil end
+    if ch != "`" and ch != "~" then return null, null end
     fenceLen = countLeading(trimmed, ch)
-    if fenceLen < 3 then return nil, nil end
+    if fenceLen < 3 then return null, null end
     fence = string.rep(ch, fenceLen)
     info = trim(string.sub(trimmed, fenceLen + 1))
-    if ch == "`" and string.find(info, "`") then return nil, nil end
+    if ch == "`" and string.find(info, "`") then return null, null end
     return fence, info
 end
 
@@ -102,7 +102,7 @@ end
 function isOrderedListItem(line: string): (number?, string?)
     trimmed = trimLeft(line)
     indent = #line - #trimmed
-    if indent > 3 then return nil, nil end
+    if indent > 3 then return null, null end
     num, rest = string.match(trimmed, "^(%d+)([%.%)])")
     if num and rest then
         afterMarker = string.sub(trimmed, #num + 2)
@@ -111,13 +111,13 @@ function isOrderedListItem(line: string): (number?, string?)
             return tonumber(num), content
         end
     end
-    return nil, nil
+    return null, null
 end
 
 function isBulletListItem(line: string): (string?, string?)
     trimmed = trimLeft(line)
     indent = #line - #trimmed
-    if indent > 3 then return nil, nil end
+    if indent > 3 then return null, null end
     ch = string.sub(trimmed, 1, 1)
     if ch == "-" or ch == "*" or ch == "+" then
         if #trimmed == 1 then return ch, "" end
@@ -125,16 +125,16 @@ function isBulletListItem(line: string): (string?, string?)
             return ch, string.sub(trimmed, 3)
         end
     end
-    return nil, nil
+    return null, null
 end
 
 function isSetextHeading(line: string): number?
     trimmed = trim(line)
-    if #trimmed == 0 then return nil end
+    if #trimmed == 0 then return null end
     ch = string.sub(trimmed, 1, 1)
-    if ch != "=" and ch != "-" then return nil end
+    if ch != "=" and ch != "-" then return null end
     for i = 1, #trimmed do
-        if string.sub(trimmed, i, i) != ch then return nil end
+        if string.sub(trimmed, i, i) != ch then return null end
     end
     return if ch == "=" then 1 else 2
 end

@@ -1,4 +1,4 @@
-function prequire(name) success, result = pcall(require, name); if success then return result end return nil end
+function prequire(name) success, result = pcall(require, name); if success then return result end return null end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function fma(a: vector, b: vector, c: vector)

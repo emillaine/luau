@@ -46,7 +46,7 @@ function parseXml(str)
             end
         end
         if pos == start then
-            return nil
+            return null
         end
         return string.sub(str, start, pos - 1)
     end
@@ -54,7 +54,7 @@ function parseXml(str)
     function readAttrValue()
         quote = string.byte(str, pos)
         if quote != 34 and quote != 39 then
-            return nil
+            return null
         end
         pos = pos + 1
         start = pos
@@ -139,7 +139,7 @@ function parseXml(str)
     function parseElement()
         skipWs()
         if pos > len then
-            return nil
+            return null
         end
 
         -- Text content (skip)
@@ -147,12 +147,12 @@ function parseXml(str)
             while pos <= len and string.byte(str, pos) != 60 do
                 pos = pos + 1
             end
-            return nil
+            return null
         end
 
         pos = pos + 1 -- skip '<'
         if pos > len then
-            return nil
+            return null
         end
 
         c = string.byte(str, pos)
@@ -161,28 +161,28 @@ function parseXml(str)
             if string.sub(str, pos, pos + 1) == "!-" then
                 pos = pos + 2
                 skipComment()
-                return nil
+                return null
             end
             if string.sub(str, pos, pos + 6) == "!DOCTYP" then
                 skipDoctype()
-                return nil
+                return null
             end
             if string.sub(str, pos, pos + 7) == "![CDATA[" then
                 endPos = string.find(str, "]]>", pos, true)
                 pos = endPos and endPos + 3 or len + 1
-                return nil
+                return null
             end
             -- Skip other declarations
             while pos <= len and string.byte(str, pos) != 62 do
                 pos = pos + 1
             end
             pos = pos + 1
-            return nil
+            return null
         end
         -- Processing instruction
         if c == 63 then
             skipPI()
-            return nil
+            return null
         end
         -- Closing tag
         if c == 47 then
@@ -196,7 +196,7 @@ function parseXml(str)
 
         tag = readName()
         if not tag then
-            return nil
+            return null
         end
 
         attrs = parseAttrs()
@@ -211,7 +211,7 @@ function parseXml(str)
             pos = pos + 1
         end
 
-        node = { tag = tag, attrs = attrs, children = {}, parent = nil }
+        node = { tag = tag, attrs = attrs, children = {}, parent = null }
 
         if not selfClose then
             while pos <= len do
@@ -235,7 +235,7 @@ function parseXml(str)
     end
 
     -- Find root element
-    root = nil
+    root = null
     while pos <= len do
         el = parseElement()
         if el and el != "CLOSE" then
@@ -266,20 +266,20 @@ DPI = 96
 
 function parseNumber(s)
     if not s then
-        return nil
+        return null
     end
     return tonumber(s:match("^%s*([%d%.%-%+eE]+)"))
 end
 
 function parseLength(s, viewDim)
     if not s then
-        return nil
+        return null
     end
     s = s:match("^%s*(.-)%s*$")
     num, unit = s:match("^([%d%.%-%+eE]+)(%a*%%?)$")
     num = tonumber(num)
     if not num then
-        return nil
+        return null
     end
     if unit == "%" then
         return num * (viewDim or 1) / 100
@@ -307,18 +307,18 @@ end
 
 function parseViewBox(s)
     if not s then
-        return nil
+        return null
     end
     x, y, w, h = s:match("([%d%.%-%+eE]+)[%s,]+([%d%.%-%+eE]+)[%s,]+([%d%.%-%+eE]+)[%s,]+([%d%.%-%+eE]+)")
     if not x then
-        return nil
+        return null
     end
     return { x = tonumber(x), y = tonumber(y), w = tonumber(w), h = tonumber(h) }
 end
 
 function parsePoints(s)
     if not s then
-        return nil
+        return null
     end
     points = {}
     for x, y in s:gmatch("([%d%.%-%+eE]+)[%s,]+([%d%.%-%+eE]+)") do
@@ -375,11 +375,11 @@ function findAttr(element, name, vars)
             return resolveVar(val, vars)
         end
         if not inherit then
-            return nil
+            return null
         end
         node = node.parent
     end
-    return nil
+    return null
 end
 
 -- ── Paint Resolution ────────────────────────────────────────────────────────
@@ -412,7 +412,7 @@ end
 
 function resolveGradientAttr(element, name, idMap, depth)
     if depth > 32 then
-        return nil
+        return null
     end
     val = element.attrs[name]
     if val then
@@ -424,7 +424,7 @@ function resolveGradientAttr(element, name, idMap, depth)
             return resolveGradientAttr(ref, name, idMap, depth + 1)
         end
     end
-    return nil
+    return null
 end
 
 function parseGradientCoord(str, fallback, viewDim, isBBox)
@@ -455,10 +455,10 @@ function resolveLinearGradient(element, idMap, extents, viewW, viewH)
 
     stops = resolveGradientStops(element, idMap, 0)
     if #stops == 0 then
-        return nil
+        return null
     end
 
-    matrix = nil
+    matrix = null
     if transformStr then
         matrix = Matrix.parse(transformStr)
     end
@@ -492,10 +492,10 @@ function resolveRadialGradient(element, idMap, extents, viewW, viewH)
 
     stops = resolveGradientStops(element, idMap, 0)
     if #stops == 0 then
-        return nil
+        return null
     end
 
-    matrix = nil
+    matrix = null
     if transformStr then
         matrix = Matrix.parse(transformStr)
     end
@@ -515,7 +515,7 @@ end
 
 function resolvePaint(value, element, idMap, extents, viewW, viewH, vars)
     if not value or value == "none" then
-        return nil
+        return null
     end
     -- Resolve currentColor
     if value == "currentColor" then
@@ -534,12 +534,12 @@ function resolvePaint(value, element, idMap, extents, viewW, viewH, vars)
         -- Try fallback color after url()
         fallback = value:match("url%([^%)]+%)%s+(.+)")
         if fallback then
-            return nil, Color.parse(fallback)
+            return null, Color.parse(fallback)
         end
-        return nil
+        return null
     end
     c = Color.parse(value)
-    return nil, c
+    return null, c
 end
 
 -- ── ViewBox Transform ───────────────────────────────────────────────────────
@@ -564,7 +564,7 @@ function applyViewBox(canvas, viewBox, vpWidth, vpHeight, par)
         return
     end
 
-    scale = nil
+    scale = null
     if meetOrSlice == "meet" then
         scale = math.min(scaleX, scaleY)
     else
@@ -768,7 +768,7 @@ function drawShape(ctx, element, path, idMap, viewW, viewH)
 
     -- Fill
     fillStr = findAttr(element, "fill", vars)
-    if fillStr == nil then
+    if fillStr == null then
         fillStr = "black"
     end -- SVG default fill is black
     if fillStr != "none" then
@@ -840,7 +840,7 @@ end
 function Svg.parse(svgString)
     root = parseXml(svgString)
     if not root or root.tag != "svg" then
-        return nil
+        return null
     end
 
     idMap = {}
@@ -869,7 +869,7 @@ end
 function Svg.parseFile(filename)
     f = io.open(filename, "r")
     if not f then
-        return nil
+        return null
     end
     content = f:read("*a")
     f:close()

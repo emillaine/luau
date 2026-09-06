@@ -14,7 +14,7 @@ contCreate = 0
 
 print('tables')
 while contCreate <= limit do
-  a = {}; a = nil
+  a = {}; a = null
   contCreate = contCreate+1
 end
 
@@ -60,8 +60,8 @@ assert(string.len(s) == k*80)
 s = string.sub(s, 1, 20000)
 s, i = string.gsub(s, '(%d%d%d%d)', math.sin)
 assert(i==20000/4)
-s = nil
-x = nil
+s = null
+x = null
 
 assert(_G["while"] == 234)
 
@@ -79,13 +79,13 @@ function dosteps (siz)
   collectgarbage()
   collectgarbage("stop")
   a = {}
-  b = nil
+  b = null
   for i=1,100 do
     a[i] = {{}}
     b = {}
   end
   assert(b)
-  b = nil
+  b = null
   x = gcinfo()
   i = 0
   repeat
@@ -106,18 +106,18 @@ do
   x = gcinfo()
   collectgarbage()
   collectgarbage("stop")
-  a = nil
+  a = null
   repeat
     a = {}
   until gcinfo() > 1000
   assert(a)
-  a = nil
+  a = null
   collectgarbage("restart")
   repeat
     a = {}
   until gcinfo() < 1000
   assert(a)
-  a = nil
+  a = null
 end
 
 lim = 15
@@ -128,11 +128,11 @@ b = {}
 for k,v in pairs(a) do b[k]=v end
 -- remove all indices and collect them
 for n in pairs(b) do
-  a[n] = nil
-  assert(type(n) == 'table' and next(n) == nil)
+  a[n] = null
+  assert(type(n) == 'table' and next(n) == null)
   collectgarbage()
 end
-b = nil
+b = null
 collectgarbage()
 for n in pairs(a) do error("cannot be here") end
 for i=1,lim do a[i] = i end
@@ -156,7 +156,7 @@ a = {}; setmetatable(a, {__mode = 'v'});
 a[1] = string.rep('b', 21)
 collectgarbage()
 assert(a[1])   -- strings are *values*
-a[1] = nil
+a[1] = null
 -- fill a with some `collectable' values (in both parts of the table)
 for i=1,lim do a[i] = {} end
 for i=1,lim do a[i..'x'] = {} end
@@ -178,7 +178,7 @@ for i=4,lim do a[i] = {} end
 for i=1,lim do a[{}] = i end
 for i=1,lim do t={}; a[t]=t end
 collectgarbage()
-assert(next(a) != nil)
+assert(next(a) != null)
 i = 0
 for k,v in pairs(a) do
   assert((k == 1 and v == x) or
@@ -187,7 +187,7 @@ for k,v in pairs(a) do
   i = i+1
 end
 assert(i == 4)
-x,y,z=nil
+x,y,z=null
 collectgarbage()
 assert(next(a) == string.rep('$', 11))
 
@@ -195,7 +195,7 @@ assert(next(a) == string.rep('$', 11))
 a = {}; setmetatable(a, {__mode = 'ks'})
 for i=1,lim do a[{}] = i end
 collectgarbage()
-assert(next(a) == nil)
+assert(next(a) == null)
 
 -- shrinking a table should be robust against an OOM
 do
@@ -256,18 +256,18 @@ do
   u = u
   getmetatable(u).__gc = function (o)
     assert(a[o] == 10-s)
-    assert(a[10-s] == nil) -- udata already removed from weak table
+    assert(a[10-s] == null) -- udata already removed from weak table
     assert(getmetatable(o) == getmetatable(u))
     assert(getmetatable(o).a[o] == 10-s)
     s=s+1
   end
 end
-a1, u = nil
-assert(next(a) != nil)
+a1, u = null
+assert(next(a) != null)
 collectgarbage()
 -- assert(s==11)
 collectgarbage()
-assert(next(a) == nil)  -- finalized keys are removed in two cycles
+assert(next(a) == null)  -- finalized keys are removed in two cycles
 
 
 -- __gc x weak tables
@@ -280,10 +280,10 @@ u = newproxy(true)
 m = getmetatable(u)
 m.x = {[{0}] = 1; [0] = {1}}; setmetatable(m.x, {__mode = "kv"});
 m.__gc = function (o)
-  assert(next(getmetatable(o).x) == nil)
+  assert(next(getmetatable(o).x) == null)
   m = 10
 end
-u, m = nil
+u, m = null
 collectgarbage()
 -- assert(m==10)
 
@@ -291,7 +291,7 @@ collectgarbage()
 -- errors during collection
 u = newproxy(true)
 getmetatable(u).__gc = function () error "!!!" end
-u = nil
+u = null
 -- assert(not pcall(collectgarbage))
 collectgarbage()
 
@@ -375,7 +375,7 @@ do
   end
 
   for i = 1,100 do
-    t[i] = nil
+    t[i] = null
   end
 
   collectgarbage()

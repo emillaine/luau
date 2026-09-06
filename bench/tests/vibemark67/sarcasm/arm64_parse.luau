@@ -12,7 +12,7 @@
 --   { kind = "reg",  name = "x0", rc = "gpr"|"neon"|"sp"|"zr", width = 32|64|..., shift = <shift?> }
 --   { kind = "imm",  text = "5381", value = <number?> }
 --   { kind = "sym",  text = "foo+16", reloc = <string?> }   -- reloc e.g. "lo12","got","got_lo12"
---   { kind = "mem",  base = <reg>, index = <operand?>, writeback = "pre"|"post"|nil,
+--   { kind = "mem",  base = <reg>, index = <operand?>, writeback = "pre"|"post"|null,
 --                    shift = <shift?>, text = <original> }
 -- A shift is { op = "lsl"|"lsr"|"asr"|"ror"|"uxtb"|... , amount = <number?>, amountText = <string?> }
 
@@ -26,7 +26,7 @@ SHIFT_OPS = {
 
 -- Registers ---------------------------------------------------------------
 
--- Classify a bare register token. Returns a reg operand table, or nil.
+-- Classify a bare register token. Returns a reg operand table, or null.
 function classifyReg(tok: string)
 	low = string.lower(tok)
 	if low == "sp" then
@@ -52,7 +52,7 @@ function classifyReg(tok: string)
 			return { kind = "reg", name = low, rc = "neon", width = 128, num = n }
 		end
 	end
-	return nil
+	return null
 end
 parse.classifyReg = classifyReg
 
@@ -103,11 +103,11 @@ parse.splitTopLevel = splitTopLevel
 function parseShift(field: string)
 	op, rest = string.match(field, "^(%a+)%s*(.*)$")
 	if not op or not SHIFT_OPS[string.lower(op)] then
-		return nil
+		return null
 	end
 	op = string.lower(op)
 	rest = (string.gsub(rest, "^%s*(.-)%s*$", "%1"))
-	amount, amountText = nil, nil
+	amount, amountText = null, null
 	if rest != "" then
 		amountText = rest
 		numtxt = (string.gsub(rest, "^#", ""))
@@ -142,7 +142,7 @@ end
 
 -- Parse a memory operand starting with '['.
 function parseMem(field: string, postIndex: string?)
-	writeback = nil
+	writeback = null
 	inner = field
 	if string.sub(inner, -1) == "!" then
 		writeback = "pre"
@@ -199,7 +199,7 @@ function parseOperands(s: string)
 				table.insert(operands, parseMem(field, fields[i + 1]))
 				i += 2
 			else
-				table.insert(operands, parseMem(field, nil))
+				table.insert(operands, parseMem(field, null))
 				i += 1
 			end
 		else
@@ -236,7 +236,7 @@ function stripLineComment(s: string): string
 	return s
 end
 
--- Split off a ;! annotation (returns code, annotation-or-nil).
+-- Split off a ;! annotation (returns code, annotation-or-null).
 function splitAnnotation(s: string): (string, string?)
 	idx = string.find(s, ";!", 1, true)
 	if idx then
@@ -245,7 +245,7 @@ function splitAnnotation(s: string): (string, string?)
 		ann = (string.gsub(ann, "^%s*(.-)%s*$", "%1"))
 		return code, ann
 	end
-	return s, nil
+	return s, null
 end
 
 function trim(s: string): string

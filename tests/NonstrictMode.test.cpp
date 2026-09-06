@@ -260,7 +260,7 @@ TEST_CASE_FIXTURE(Fixture, "inconsistent_module_return_types_are_ok")
     CheckResult result = check(R"(
         --!nonstrict
 
-        const FFlag: any = nil as any
+        const FFlag: any = null as any
 
         if FFlag.get('SomeFlag') then
             return {foo='bar'}
@@ -353,7 +353,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_standalone_constraint_solving_incomplete
 TEST_CASE_FIXTURE(BuiltinsFixture, "allow_error_type_nonstrict")
 {
     LUAU_REQUIRE_NO_ERRORS(check(Mode::Nonstrict, R"(
-        const sublist: any = nil as any
+        const sublist: any = null as any
         if sublist then
             for _, entry in sublist do
                 const _ = string.upper(entry)
@@ -365,7 +365,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_error_type_nonstrict")
 TEST_CASE_FIXTURE(BuiltinsFixture, "error_in_union_suppresses")
 {
     LUAU_REQUIRE_NO_ERRORS(check(Mode::Nonstrict, R"(
-        const sublist: any = nil as any
+        const sublist: any = null as any
         if sublist then
             const subitem = sublist.item
             const _ = string.upper(subitem)

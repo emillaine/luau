@@ -154,7 +154,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                         end
 
                         flushText()
-                        node = nil
+                        node = null
                         if isImage then
                             node = ast.createImage(dest, title)
                             ast.addChild(node, ast.createText(label))
@@ -179,7 +179,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                         ref = refDefs and refDefs[string.lower(refLabel)]
                         if ref then
                             flushText()
-                            node = nil
+                            node = null
                             if isImage then
                                 node = ast.createImage(ref.dest, ref.title)
                                 ast.addChild(node, ast.createText(label))
@@ -204,7 +204,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                     ref = refDefs and refDefs[string.lower(label)]
                     if ref then
                         flushText()
-                        node = nil
+                        node = null
                         if isImage then
                             node = ast.createImage(ref.dest, ref.title)
                             ast.addChild(node, ast.createText(label))
@@ -232,7 +232,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                 decoded = ""
                 if string.sub(entity, 1, 1) == "#" then
                     numStr = string.sub(entity, 2)
-                    num = nil
+                    num = null
                     if string.sub(numStr, 1, 1) == "x" or string.sub(numStr, 1, 1) == "X" then
                         num = tonumber(string.sub(numStr, 2), 16)
                     else

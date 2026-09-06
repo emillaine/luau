@@ -292,11 +292,11 @@ function parseNumber(str, pos)
     end
 
     if pos > len then
-        return nil
+        return null
     end
     c = string.byte(str, pos)
     if c != 46 and not (c >= 48 and c <= 57) then
-        return nil
+        return null
     end
 
     integer = 0
@@ -313,7 +313,7 @@ function parseNumber(str, pos)
     if pos <= len and string.byte(str, pos) == 46 then
         pos = pos + 1
         if pos > len or string.byte(str, pos) < 48 or string.byte(str, pos) > 57 then
-            return nil
+            return null
         end
         divisor = 1
         while pos <= len do
@@ -344,7 +344,7 @@ function parseNumber(str, pos)
                 end
             end
             if pos > len or string.byte(str, pos) < 48 or string.byte(str, pos) > 57 then
-                return nil
+                return null
             end
             while pos <= len do
                 c = string.byte(str, pos)
@@ -358,7 +358,7 @@ function parseNumber(str, pos)
     end
 
     if pos == startPos then
-        return nil
+        return null
     end
 
     value = sign * (integer + fraction)
@@ -380,7 +380,7 @@ end
 function parseRgbComponent(str, pos)
     value, newPos = parseNumber(str, pos)
     if not value then
-        return nil
+        return null
     end
     pos = newPos
     if pos <= #str and string.byte(str, pos) == 37 then
@@ -393,7 +393,7 @@ end
 function parseAlphaComponent(str, pos)
     value, newPos = parseNumber(str, pos)
     if not value then
-        return nil
+        return null
     end
     pos = newPos
     if pos <= #str and string.byte(str, pos) == 37 then
@@ -405,7 +405,7 @@ end
 
 function Color.parse(str)
     if type(str) != "string" or #str == 0 then
-        return nil
+        return null
     end
     pos = skipWs(str, 1)
     len = #str
@@ -417,7 +417,7 @@ function Color.parse(str)
             pos = pos + 1
         end
         count = pos - hexStart
-        r, g, b, a = nil, nil, nil, nil
+        r, g, b, a = null, null, null, null
         if count == 3 or count == 4 then
             c1 = hexDigit(string.byte(str, hexStart))
             c2 = hexDigit(string.byte(str, hexStart + 1))
@@ -439,7 +439,7 @@ function Color.parse(str)
                 a = hexDigit(string.byte(str, hexStart + 6)) * 16 + hexDigit(string.byte(str, hexStart + 7))
             end
         else
-            return nil
+            return null
         end
         return Color.rgba8(r, g, b, a)
     end
@@ -455,25 +455,25 @@ function Color.parse(str)
     else if name == "rgb" or name == "rgba" then
         pos = skipWs(str, pos)
         if pos > len or string.byte(str, pos) != 40 then
-            return nil
+            return null
         end
         pos = pos + 1
         pos = skipWs(str, pos)
 
-        r, g, b, a = nil, nil, nil, nil
+        r, g, b, a = null, null, null, null
         r, pos = parseRgbComponent(str, pos)
         if not r then
-            return nil
+            return null
         end
         pos = skipWsAndComma(str, pos)
         g, pos = parseRgbComponent(str, pos)
         if not g then
-            return nil
+            return null
         end
         pos = skipWsAndComma(str, pos)
         b, pos = parseRgbComponent(str, pos)
         if not b then
-            return nil
+            return null
         end
 
         a = 1
@@ -491,31 +491,31 @@ function Color.parse(str)
 
         pos = skipWs(str, pos)
         if pos > len or string.byte(str, pos) != 41 then
-            return nil
+            return null
         end
         return Color.rgba(r, g, b, a)
     else if name == "hsl" or name == "hsla" then
         pos = skipWs(str, pos)
         if pos > len or string.byte(str, pos) != 40 then
-            return nil
+            return null
         end
         pos = pos + 1
         pos = skipWs(str, pos)
 
-        h, s, l, a = nil, nil, nil, nil
+        h, s, l, a = null, null, null, null
         h, pos = parseNumber(str, pos)
         if not h then
-            return nil
+            return null
         end
         pos = skipWsAndComma(str, pos)
         s, pos = parseAlphaComponent(str, pos)
         if not s then
-            return nil
+            return null
         end
         pos = skipWsAndComma(str, pos)
         l, pos = parseAlphaComponent(str, pos)
         if not l then
-            return nil
+            return null
         end
 
         a = 1
@@ -533,13 +533,13 @@ function Color.parse(str)
 
         pos = skipWs(str, pos)
         if pos > len or string.byte(str, pos) != 41 then
-            return nil
+            return null
         end
         return Color.hsla(h, s, l, a)
     else
         value = NAMED_COLORS[name]
         if not value then
-            return nil
+            return null
         end
         r = bit32.rshift(bit32.band(value, 0xFF0000), 16)
         g = bit32.rshift(bit32.band(value, 0x00FF00), 8)

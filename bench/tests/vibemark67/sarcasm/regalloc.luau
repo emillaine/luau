@@ -8,12 +8,12 @@
 --
 -- Instruction contract (each entry of func.insns):
 --   { defs = {tempId...}, uses = {tempId...},
---     move = { dst = tempId, src = tempId } | nil,   -- reg-reg copy (coalesce candidate)
---     isLabelDef = "name" | nil,                      -- this insn is a label definition
---     targets = { "name"... } | nil,                  -- explicit branch targets
+--     move = { dst = tempId, src = tempId } | null,   -- reg-reg copy (coalesce candidate)
+--     isLabelDef = "name" | null,                      -- this insn is a label definition
+--     targets = { "name"... } | null,                  -- explicit branch targets
 --     fallsThrough = bool }                            -- control can fall to next insn
 --
--- func.temps: tempId -> { precolor = physRegName | nil, spillSlot = n | nil, spillCost = num }
+-- func.temps: tempId -> { precolor = physRegName | null, spillSlot = n | null, spillCost = num }
 -- The caller assigns temp ids (integers). Precolored temps model fixed physical regs.
 --
 -- Returns: { color = { tempId -> physRegName }, spilled = { tempId... } }
@@ -70,7 +70,7 @@ function buildCFG(insns)
 	-- Create blocks.
 	blocks = {}
 	blockOfInsn = {}
-	cur = nil
+	cur = null
 	for i = 1, n do
 		if isLeader[i] or i == 1 then
 			cur = { first = i, last = i, insns = {} }
@@ -171,7 +171,7 @@ function computeLiveness(insns, blocks)
 			for t in live do lo[t] = true end
 			liveOutOf[i] = lo
 			-- transfer: live = use ∪ (live − def)
-			for _, d in (ins.defs or {}) do live[d] = nil end
+			for _, d in (ins.defs or {}) do live[d] = null end
 			for _, u in (ins.uses or {}) do live[u] = true end
 		end
 	end
@@ -221,7 +221,7 @@ function regalloc.color(insns, temps, opts)
 		for _, u in (ins.uses or {}) do ensureNode(u) end
 	end
 
-	function precolored(t) return temps[t] and temps[t].precolor != nil end
+	function precolored(t) return temps[t] and temps[t].precolor != null end
 
 	function addEdge(u, v)
 		if u == v or adj[u][v] then return end
@@ -243,7 +243,7 @@ function regalloc.color(insns, temps, opts)
 		for t in (liveOutOf[i] or {}) do live[t] = true end
 		if ins.move then
 			-- uses of a move don't interfere with its def
-			for _, u in (ins.uses or {}) do live[u] = nil end
+			for _, u in (ins.uses or {}) do live[u] = null end
 			setAdd(moveList[ins.move.dst], i)
 			setAdd(moveList[ins.move.src], i)
 			worklistMoves[i] = true
@@ -278,7 +278,7 @@ function regalloc.color(insns, temps, opts)
 
 	function inArray(arr, x)
 		for idx, v in arr do if v == x then return idx end end
-		return nil
+		return null
 	end
 	function removeFrom(arr, x)
 		idx = inArray(arr, x)
@@ -293,7 +293,7 @@ function regalloc.color(insns, temps, opts)
 		return out
 	end
 	function moveRelated(t)
-		return next(nodeMoves(t)) != nil
+		return next(nodeMoves(t)) != null
 	end
 
 	-- adjacent = adjacent nodes not on select stack / coalesced
@@ -320,7 +320,7 @@ function regalloc.color(insns, temps, opts)
 		for t in nodesSet do
 			for m in nodeMoves(t) do
 				if activeMoves[m] then
-					activeMoves[m] = nil
+					activeMoves[m] = null
 					worklistMoves[m] = true
 				end
 			end
@@ -399,13 +399,13 @@ function regalloc.color(insns, temps, opts)
 	end
 
 	function coalesce()
-		m = nil
+		m = null
 		for _, mm in sortedList(worklistMoves) do m = mm; break end
-		worklistMoves[m] = nil
+		worklistMoves[m] = null
 		mv = insns[m].move
 		x = getAlias(mv.dst)
 		y = getAlias(mv.src)
-		u, v = nil, nil
+		u, v = null, null
 		if precolored(y) then u, v = y, x else u, v = x, y end
 		if u == v then
 			coalescedMoves[m] = true
@@ -414,7 +414,7 @@ function regalloc.color(insns, temps, opts)
 			constrainedMoves[m] = true
 			addWorklist(u); addWorklist(v)
 		else
-			canCoalesce = nil
+			canCoalesce = null
 			if precolored(u) then
 				canCoalesce = true
 				for w in adjacent(v) do
@@ -435,8 +435,8 @@ function regalloc.color(insns, temps, opts)
 
 	function freezeMoves(u)
 		for _, m in sortedList(nodeMoves(u)) do
-			activeMoves[m] = nil
-			worklistMoves[m] = nil
+			activeMoves[m] = null
+			worklistMoves[m] = null
 			frozenMoves[m] = true
 			mv = insns[m].move
 			v = getAlias(mv.src)
@@ -457,7 +457,7 @@ function regalloc.color(insns, temps, opts)
 
 	function selectSpill()
 		-- pick highest-degree (cheap heuristic) to spill optimistically
-		best, bestIdx, bestScore = nil, nil, nil
+		best, bestIdx, bestScore = null, null, null
 		for idx, t in spillWorklist do
 			cost = (temps[t] and temps[t].spillCost) or 1
 			score = degree[t] / math.max(cost, 0.0001)
@@ -486,16 +486,16 @@ function regalloc.color(insns, temps, opts)
 	actualSpills = {}
 	while #selectStack > 0 do
 		t = table.remove(selectStack)
-		onStack[t] = nil
+		onStack[t] = null
 		okColors = {}
 		for _, r in ALLOCATABLE do okColors[r] = true end
 		for _, w in adjList[t] do
 			aw = getAlias(w)
 			if coloredNodes[aw] or precoloredSet[aw] then
-				if color[aw] then okColors[color[aw]] = nil end
+				if color[aw] then okColors[color[aw]] = null end
 			end
 		end
-		chosen = nil
+		chosen = null
 		for _, r in ALLOCATABLE do
 			if okColors[r] then chosen = r break end
 		end

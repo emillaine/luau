@@ -102,7 +102,7 @@ function hydraulicErosion(
             if sedimentCapacity < 0 then sedimentCapacity = 0 end
 
             if sediment > sedimentCapacity or heightDiff > 0 then
-                amount = nil
+                amount = null
                 if heightDiff > 0 then
                     amount = math.min(heightDiff, sediment)
                 else

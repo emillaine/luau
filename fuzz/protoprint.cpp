@@ -108,7 +108,7 @@ static const std::string kNames[] = {
     "move",
     "newproxy",
     "next",
-    "nil",
+    "null",
     "noise",
     "number",
     "offset",
@@ -227,7 +227,7 @@ static const std::string kTypes[] = {
     "any",
     "boolean",
     "buffer",
-    "nil",
+    "null",
     "number",
     "integer",
     "string",
@@ -487,7 +487,7 @@ struct ProtoToLuau
 
     void print(const luau::ExprConstantNil& expr)
     {
-        source += "nil";
+        source += "null";
     }
 
     void print(const luau::ExprConstantBool& expr)
@@ -1083,7 +1083,7 @@ struct ProtoToLuau
         source += " = ";
 
         if (stat.values_size() == 0)
-            source += "nil";
+            source += "null";
 
         for (int i = 0; i < stat.values_size(); ++i)
         {

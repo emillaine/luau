@@ -235,7 +235,7 @@ function makeSource(): buffer
 
     for y = 0, HEIGHT - 1 do
         for x = 0, WIDTH - 1 do
-            r, g, b, a = nil, nil, nil, nil
+            r, g, b, a = null, null, null, null
 
             if y < 32 then
                 band = math.floor(x / 48)

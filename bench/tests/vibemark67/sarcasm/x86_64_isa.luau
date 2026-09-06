@@ -52,7 +52,7 @@ function x86.classify(insn)
 	m = x86.baseMnemonic(insn.mnemonic)
 	ops = insn.operands or {}
 	defs, uses, rmw = {}, {}, {}
-	control, targets, fallsThrough = "none", nil, true
+	control, targets, fallsThrough = "none", null, true
 
 	function useOperand(o)
 		if isGpr(o) then table.insert(uses, o) else if o and o.kind == "mem" then memRegs(o, uses) end

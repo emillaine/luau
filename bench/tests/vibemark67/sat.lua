@@ -1,11 +1,11 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-compute_lbd = nil
-get_clause = nil
-is_clause_locked = nil
-minimize_clause = nil
-remove_learned_clause = nil
-solver_add_clause = nil
-solver_enqueue = nil
+compute_lbd = null
+get_clause = null
+is_clause_locked = null
+minimize_clause = null
+remove_learned_clause = null
+solver_add_clause = null
+solver_enqueue = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -165,7 +165,7 @@ function solver_new(num_vars, clauses)
         s.level[i] = -1
     end
 
-    -- Reason clause for each variable (nil if decision)
+    -- Reason clause for each variable (null if decision)
     s.reason = {}
 
     -- Trail: ordered list of assignments
@@ -300,7 +300,7 @@ function solver_add_clause(s, lits, is_learned)
 
     if #cleaned == 1 then
         -- Unit clause: enqueue
-        return solver_enqueue(s, cleaned[1], nil)
+        return solver_enqueue(s, cleaned[1], null)
     end
 
     -- Create clause record
@@ -328,7 +328,7 @@ function solver_add_clause(s, lits, is_learned)
         end
     end
 
-    ci = nil
+    ci = null
     if is_learned then
         table_insert(s.learned, clause)
         ci = { learned = true, idx = #s.learned }
@@ -404,8 +404,8 @@ function solver_backtrack(s, target_level)
         v = lit_var(lit)
         s.assigns[v] = UNDEF
         s.level[v] = -1
-        s.reason[v] = nil
-        s.trail[i] = nil
+        s.reason[v] = null
+        s.trail[i] = null
     end
 
     -- Reset propagation queue
@@ -413,7 +413,7 @@ function solver_backtrack(s, target_level)
 
     -- Remove trail_lim entries above target_level
     for i = s.decision_level, target_level + 1, -1 do
-        s.trail_lim[i] = nil
+        s.trail_lim[i] = null
     end
 
     s.decision_level = target_level
@@ -435,7 +435,7 @@ function solver_propagate(s)
         watch_list = s.watches[wi]
 
         new_watch_list = {}
-        conflict_clause = nil
+        conflict_clause = null
         j = 1
         wlen = #watch_list
 
@@ -515,7 +515,7 @@ function solver_propagate(s)
         end
     end
 
-    return nil -- No conflict
+    return null -- No conflict
 end
 
 -- ============================================================================
@@ -607,7 +607,7 @@ end
 function solver_analyze(s, conflict_ci)
     learned_lits = {}
     counter = 0
-    p = nil
+    p = null
     p_reason = conflict_ci
 
     -- Clear seen
@@ -805,8 +805,8 @@ function is_clause_locked(s, learned_idx)
 end
 
 function remove_learned_clause(s, learned_idx)
-    -- Mark as nil (watches will skip nil clauses)
-    s.learned[learned_idx] = nil
+    -- Mark as null (watches will skip null clauses)
+    s.learned[learned_idx] = null
     s.clause_activity[learned_idx] = 0
 end
 
@@ -830,13 +830,13 @@ end
 
 function solver_solve(s)
     if s.conflict_at_root then
-        return "UNSAT", nil
+        return "UNSAT", null
     end
 
     -- Initial propagation
     conf = solver_propagate(s)
     if conf then
-        return "UNSAT", nil
+        return "UNSAT", null
     end
 
     while true do
@@ -864,7 +864,7 @@ function solver_solve(s)
 
         s.decisions = s.decisions + 1
         solver_new_decision_level(s)
-        solver_enqueue(s, lit, nil)
+        solver_enqueue(s, lit, null)
 
         -- Propagate
         conflict = solver_propagate(s)
@@ -873,7 +873,7 @@ function solver_solve(s)
             s.conflicts = s.conflicts + 1
 
             if s.decision_level == 0 then
-                return "UNSAT", nil
+                return "UNSAT", null
             end
 
             -- Analyze conflict
@@ -885,7 +885,7 @@ function solver_solve(s)
             -- Add learned clause
             if #learned_lits == 1 then
                 -- Unit clause at level 0
-                solver_enqueue(s, learned_lits[1], nil)
+                solver_enqueue(s, learned_lits[1], null)
             else
                 -- Create new clause
                 clause = {}
@@ -2200,7 +2200,7 @@ function run_one_iteration()
     instance_count = 0
 
     -- Trivially satisfiable
-    r, cs = nil, nil
+    r, cs = null, null
     r, cs = run_instance("trivial_sat_1", TRIVIAL_SAT_1, "SAT")
     total_checksum = (total_checksum + cs) % 1000000007
     instance_count = instance_count + 1

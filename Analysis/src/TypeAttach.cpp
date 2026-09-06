@@ -95,7 +95,7 @@ public:
         switch (ptv.type)
         {
         case PrimitiveType::NilType:
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("nil"), std::nullopt, Location());
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("null"), std::nullopt, Location());
         case PrimitiveType::Boolean:
             return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("boolean"), std::nullopt, Location());
         case PrimitiveType::Number:

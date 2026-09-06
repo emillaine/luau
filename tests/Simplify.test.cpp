@@ -145,7 +145,7 @@ TEST_CASE_FIXTURE(SimplifyFixture, "unknown_and_other_tops_and_bottom_types")
     CHECK(errorTy == intersect(errorTy, unknownTy));
 }
 
-TEST_CASE_FIXTURE(SimplifyFixture, "nil")
+TEST_CASE_FIXTURE(SimplifyFixture, "null")
 {
     CHECK(nilTy == intersect(nilTy, nilTy));
     CHECK(neverTy == intersect(nilTy, numberTy));
@@ -366,8 +366,8 @@ TEST_CASE_FIXTURE(SimplifyFixture, "optional_overloaded_function_and_top_functio
 TEST_CASE_FIXTURE(SimplifyFixture, "negated_function_does_not_intersect_cleanly_with_truthy")
 {
     // ~function & ~(false?)
-    // ~function & ~(false | nil)
-    // ~function & ~false & ~nil
+    // ~function & ~(false | null)
+    // ~function & ~false & ~null
 
     TypeId negatedFunctionTy = mkNegation(functionTy);
     CHECK(isIntersection(intersect(negatedFunctionTy, truthyTy)));
@@ -490,11 +490,11 @@ TEST_CASE_FIXTURE(SimplifyFixture, "two_unions")
 
 TEST_CASE_FIXTURE(SimplifyFixture, "curious_union")
 {
-    // (a & false) | (a & nil)
+    // (a & false) | (a & null)
     TypeId curious =
         arena->addType(UnionType{{arena->addType(IntersectionType{{freeTy, falseTy}}), arena->addType(IntersectionType{{freeTy, nilTy}})}});
 
-    CHECK("('a & false) | ('a & nil) | number" == toString(union_(curious, numberTy)));
+    CHECK("('a & false) | ('a & null) | number" == toString(union_(curious, numberTy)));
 }
 
 TEST_CASE_FIXTURE(SimplifyFixture, "negations")

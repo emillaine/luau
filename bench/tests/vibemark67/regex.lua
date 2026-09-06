@@ -1,7 +1,7 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-buildReplacement = nil
-findMatchEnd = nil
-parseAlternation = nil
+buildReplacement = null
+findMatchEnd = null
+parseAlternation = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -74,7 +74,7 @@ function createParser(pattern)
 end
 
 function parserPeek(p)
-    if p.pos > p.len then return nil end
+    if p.pos > p.len then return null end
     return sbyte(p.pattern, p.pos)
 end
 
@@ -91,7 +91,7 @@ end
 -- Parse an escape sequence, returning an AST node
 function parseEscape(p)
     ch = parserAdvance(p)
-    if ch == nil then
+    if ch == null then
         error("Unexpected end of pattern after backslash")
     end
     -- \d = digits
@@ -135,42 +135,42 @@ function parseCharClass(p)
     -- Parse class contents
     while true do
         ch = parserPeek(p)
-        if ch == nil then
+        if ch == null then
             error("Unterminated character class")
         end
         if ch == 93 then -- ']'
             parserAdvance(p)
             break
         end
-        startCh = nil
+        startCh = null
         if ch == 92 then -- '\'
             parserAdvance(p)
             esc = parserAdvance(p)
             if esc == 100 then -- 'd'
                 ranges[#ranges+1] = {48, 57}
-                startCh = nil
+                startCh = null
             else if esc == 119 then -- 'w'
                 ranges[#ranges+1] = {48, 57}
                 ranges[#ranges+1] = {65, 90}
                 ranges[#ranges+1] = {97, 122}
                 ranges[#ranges+1] = {95, 95}
-                startCh = nil
+                startCh = null
             else if esc == 115 then -- 's'
                 ranges[#ranges+1] = {9, 13}
                 ranges[#ranges+1] = {32, 32}
-                startCh = nil
+                startCh = null
             else
                 startCh = esc
             end
         else
             startCh = parserAdvance(p)
         end
-        if startCh != nil then
+        if startCh != null then
             -- Check for range: a-z
             next = parserPeek(p)
             if next == 45 then -- '-'
                 parserAdvance(p)
-                endCh = nil
+                endCh = null
                 afterDash = parserPeek(p)
                 if afterDash == 93 then -- ']' right after dash means literal dash
                     -- treat dash as literal, put back
@@ -195,7 +195,7 @@ end
 -- Parse atom: literal, dot, group, class, anchor, escape
 function parseAtom(p)
     ch = parserPeek(p)
-    if ch == nil then return nil end
+    if ch == null then return null end
 
     -- '(' grouping
     if ch == 40 then
@@ -243,7 +243,7 @@ function parseAtom(p)
 
     -- Not a special char that terminates expression
     if ch == 41 or ch == 124 then -- ')' or '|'
-        return nil
+        return null
     end
 
     -- Regular literal character
@@ -254,7 +254,7 @@ end
 -- Parse quantifier suffix on atom
 function parseQuantified(p)
     atom = parseAtom(p)
-    if atom == nil then return nil end
+    if atom == null then return null end
     ch = parserPeek(p)
     if ch == 42 then -- '*'
         parserAdvance(p)
@@ -274,7 +274,7 @@ function parseConcat(p)
     children = {}
     while true do
         node = parseQuantified(p)
-        if node == nil then break end
+        if node == null then break end
         children[#children+1] = node
     end
     if #children == 0 then
@@ -334,7 +334,7 @@ end
 
 function addTransition(fromState, byte, toState)
     t = fromState.transitions[byte]
-    if t == nil then
+    if t == null then
         fromState.transitions[byte] = {toState}
     else
         t[#t+1] = toState
@@ -455,7 +455,7 @@ end
 
 -- Build NFA from AST
 function buildNFA(ast)
-    if ast == nil then
+    if ast == null then
         return buildEpsilonFragment()
     end
 
@@ -550,7 +550,7 @@ function classMatches(classInfo, ch)
 end
 
 -- Simulate NFA on input text starting at position startPos
--- Returns (matched, captures) or (false, nil)
+-- Returns (matched, captures) or (false, null)
 function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
     -- Each "thread" is {state, captures}
     -- captures is an array: captures[groupIndex*2-1] = start, captures[groupIndex*2] = end
@@ -645,7 +645,7 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
 
     -- Check if any current state is accepting (for zero-length match)
     matched = false
-    bestCaptures = nil
+    bestCaptures = null
     for i = 1, #currentThreads do
         if currentThreads[i][1].accepting then
             matched = true
@@ -714,7 +714,7 @@ function simulateNFA(nfaStart, text, textLen, startPos, numGroups)
     if matched then
         return bestCaptures or emptyCaps
     end
-    return nil
+    return null
 end
 
 
@@ -742,7 +742,7 @@ function match(pattern, text)
     -- Try matching starting at each position
     for startPos = 1, textLen + 1 do
         caps = simulateNFA(nfaStart, text, textLen, startPos, numGroups)
-        if caps != nil then
+        if caps != null then
             -- Extract capture substrings
             captures = {}
             for g = 1, numGroups do
@@ -770,7 +770,7 @@ function matchFull(pattern, text)
     textLen = slen(text)
 
     caps = simulateNFA(nfaStart, text, textLen, 1, numGroups)
-    if caps != nil then
+    if caps != null then
         captures = {}
         for g = 1, numGroups do
             s = caps[g * 2 - 1]
@@ -1225,7 +1225,7 @@ function findAll(pattern, text)
 
     while pos <= textLen + 1 do
         caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
-        if caps != nil then
+        if caps != null then
             -- Determine match end from the overall match
             -- For findAll, we need the match length. Without explicit match bounds,
             -- advance by at least 1 to avoid infinite loops on zero-length matches.
@@ -1261,7 +1261,7 @@ function replace(pattern, text, replacement)
     -- Find first match
     for startPos = 1, textLen + 1 do
         caps = simulateNFA(nfaStart, text, textLen, startPos, numGroups)
-        if caps != nil then
+        if caps != null then
             -- We found a match starting at startPos
             -- We need to know where the match ends. For simple replacement,
             -- we'll simulate forward to find the longest match from startPos
@@ -1474,7 +1474,7 @@ function runExtendedTests()
     tests = buildExtendedTests()
     for i = 1, #tests do
         tc = tests[i]
-        result = nil
+        result = null
         if tc.fn == "isMatch" then
             result = isMatch(tc.pat, tc.txt)
         else if tc.fn == "fullMatch" then
@@ -1640,7 +1640,7 @@ function splitByRegex(pattern, text)
     pos = 1
     while pos <= textLen do
         caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
-        if caps != nil then
+        if caps != null then
             -- Found a match at pos, get match end
             matchEnd = findMatchEnd(nfaStart, text, textLen, pos)
             if matchEnd > pos then
@@ -1673,7 +1673,7 @@ function countMatches(pattern, text)
 
     while pos <= textLen + 1 do
         caps = simulateNFA(nfaStart, text, textLen, pos, numGroups)
-        if caps != nil then
+        if caps != null then
             count = count + 1
             pos = pos + 1
         else
@@ -1695,7 +1695,7 @@ end
 -- ============================================================
 
 function astToString(ast, depth)
-    if ast == nil then return "nil" end
+    if ast == null then return "null" end
     depth = depth or 0
     indent = srep("  ", depth)
     t = ast.type
@@ -1768,8 +1768,8 @@ function verifyASTConstruction()
 
     for i = 1, #testPatterns do
         ast, numGroups = parseRegex(testPatterns[i])
-        if ast == nil then
-            error("AST should not be nil for pattern: " .. testPatterns[i])
+        if ast == null then
+            error("AST should not be null for pattern: " .. testPatterns[i])
         end
         -- Generate string representation to exercise the code
         s = astToString(ast)
@@ -1828,7 +1828,7 @@ end
 -- Verify NFA state counts for various patterns
 function verifyNFAStateCount()
     -- Simple patterns should have predictable state counts
-    compiled = nil
+    compiled = null
 
     -- "a" -> 2 states (start, accept)
     compiled = compileRegex("a")

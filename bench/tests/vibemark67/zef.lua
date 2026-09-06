@@ -1,31 +1,31 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-callFunction = nil
-evalAssign = nil
-evalBinary = nil
-evalBlock = nil
-evalCall = nil
-evalClassDecl = nil
-evalField = nil
-evalMethod = nil
-evalNode = nil
-evalUnary = nil
-lookupMethod = nil
-parseAddSub = nil
-parseAnd = nil
-parseArgs = nil
-parseClass = nil
-parseComparison = nil
-parseEquality = nil
-parseExpr = nil
-parseFor = nil
-parseIf = nil
-parseMulDiv = nil
-parseOr = nil
-parsePostfix = nil
-parsePrimary = nil
-parseStatement = nil
-parseUnary = nil
-parseWhile = nil
+callFunction = null
+evalAssign = null
+evalBinary = null
+evalBlock = null
+evalCall = null
+evalClassDecl = null
+evalField = null
+evalMethod = null
+evalNode = null
+evalUnary = null
+lookupMethod = null
+parseAddSub = null
+parseAnd = null
+parseArgs = null
+parseClass = null
+parseComparison = null
+parseEquality = null
+parseExpr = null
+parseFor = null
+parseIf = null
+parseMulDiv = null
+parseOr = null
+parsePostfix = null
+parsePrimary = null
+parseStatement = null
+parseUnary = null
+parseWhile = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -391,7 +391,7 @@ function parseStatement(p)
     -- Return statement
     else if tk[1] == TK_IDENT and tk[2] == KW_RETURN then
         advance(p)
-        val = nil
+        val = null
         if peekType(p) != TK_SEMI and peekType(p) != TK_RBRACE and peekType(p) != TK_EOF then
             val = parseExpr(p)
         end
@@ -425,7 +425,7 @@ end
 function parseClass(p)
     advance(p) -- skip 'class'
     name = expect(p, TK_IDENT)[2]
-    parent = nil
+    parent = null
     if matchToken(p, TK_COLON) then
         parent = expect(p, TK_IDENT)[2]
     end
@@ -435,7 +435,7 @@ function parseClass(p)
     fcount = 0
     methods = {}
     mcount = 0
-    constructor = nil
+    constructor = null
 
     while peekType(p) != TK_RBRACE and peekType(p) != TK_EOF do
         tk2 = peek(p)
@@ -479,7 +479,7 @@ function parseIf(p)
     cond = parseExpr(p)
     expect(p, TK_RPAREN)
     thenBlock = parseBlock(p)
-    elseBlock = nil
+    elseBlock = null
     if isIdent(p, KW_ELSE) then
         advance(p)
         if isIdent(p, KW_IF) then
@@ -504,7 +504,7 @@ function parseFor(p)
     advance(p) -- skip 'for'
     expect(p, TK_LPAREN)
     -- init: my x = expr or expr
-    init = nil
+    init = null
     if isIdent(p, KW_MY) then
         advance(p)
         name = expect(p, TK_IDENT)[2]
@@ -527,7 +527,7 @@ function parseFor(p)
     expect(p, TK_SEMI)
     -- step: usually assignment
     stepExpr = parseExpr(p)
-    step = nil
+    step = null
     if peekType(p) == TK_ASSIGN then
         advance(p)
         val = parseExpr(p)
@@ -716,7 +716,7 @@ function parsePrimary(p)
             -- Lambda: fn(args) { body } or fn(args) expr
             params = parseParams(p)
             body = parseFuncBody(p)
-            return {ND_FUNC, params, body, nil}
+            return {ND_FUNC, params, body, null}
         else
             advance(p)
             return {ND_IDENT, val}
@@ -793,18 +793,18 @@ function envGet(env, name)
     e = env
     while e do
         v = e.vars[name]
-        if v != nil then
+        if v != null then
             return v
         end
         e = e.parent
     end
-    return nil
+    return null
 end
 
 function envSet(env, name, val)
     e = env
     while e do
-        if e.vars[name] != nil then
+        if e.vars[name] != null then
             e.vars[name] = val
             return
         end
@@ -819,14 +819,14 @@ end
 
 -- Value helpers
 function isTruthy(val)
-    if val == nil or val == 0 or val == false then return false end
+    if val == null or val == 0 or val == false then return false end
     if val == true then return true end
     if type(val) == "number" then return val != 0 end
     return true
 end
 
 function toZefString(val)
-    if val == nil then return "null" end
+    if val == null then return "null" end
     if type(val) == "boolean" then
         if val then return "true" else return "false" end
     end
@@ -850,7 +850,7 @@ function toZefString(val)
             -- Check for toString method
             toStr = lookupMethod(val, "toString")
             if toStr then
-                return callFunction(toStr, {val}, nil)
+                return callFunction(toStr, {val}, null)
             end
             return "<" .. (cls._name or "object") .. ">"
         end
@@ -914,7 +914,7 @@ function lookupMethod(inst, methodName)
         end
         cls = cls._parent
     end
-    return nil
+    return null
 end
 
 function lookupField(inst, fieldName)
@@ -940,7 +940,7 @@ function callFunction(func, args, thisObj)
     if type(result) == "table" and result[1] == RETURN_SENTINEL then
         return result[2]
     end
-    return nil
+    return null
 end
 
 -- Main eval
@@ -961,7 +961,7 @@ function evalNode(node, env)
 
     else if ntype == ND_IDENT then
         val = envGet(env, node[2])
-        if val == nil then return 0 end
+        if val == null then return 0 end
         return val
 
     else if ntype == ND_ARRAY then
@@ -1001,7 +1001,7 @@ function evalNode(node, env)
     else if ntype == ND_VARDECL then
         val = evalNode(node[3], env)
         envDeclare(env, node[2], val)
-        return nil
+        return null
 
     else if ntype == ND_ASSIGN then
         return evalAssign(node, env)
@@ -1026,7 +1026,7 @@ function evalNode(node, env)
                 end
             end
         end
-        return nil
+        return null
 
     else if ntype == ND_WHILE then
         while true do
@@ -1038,7 +1038,7 @@ function evalNode(node, env)
                 if result[1] == BREAK_SENTINEL then break end
             end
         end
-        return nil
+        return null
 
     else if ntype == ND_FOR then
         -- for (init; cond; step) { body }
@@ -1054,13 +1054,13 @@ function evalNode(node, env)
             end
             evalNode(node[4], forEnv) -- step
         end
-        return nil
+        return null
 
     else if ntype == ND_BREAK then
         return {BREAK_SENTINEL}
 
     else if ntype == ND_RETURN then
-        val = nil
+        val = null
         if node[2] then
             val = evalNode(node[2], env)
         end
@@ -1072,10 +1072,10 @@ function evalNode(node, env)
     else if ntype == ND_PRINTLN then
         val = evalNode(node[2], env)
         appendOutput(toZefString(val))
-        return nil
+        return null
 
     else
-        return nil
+        return null
     end
 end
 
@@ -1089,7 +1089,7 @@ function evalBlock(node, env)
             end
         end
     end
-    return nil
+    return null
 end
 
 function evalBinary(node, env)
@@ -1113,7 +1113,7 @@ function evalBinary(node, env)
 
     -- Operator overloading for objects
     if type(left) == "table" and left._isInstance then
-        methodName = nil
+        methodName = null
         if op == "+" then methodName = "add"
         else if op == "-" then methodName = "sub"
         else if op == "*" then methodName = "mul"
@@ -1172,7 +1172,7 @@ function evalCall(node, env)
 
     if type(callee) == "table" then
         if callee._isFunc then
-            return callFunction(callee, args, nil)
+            return callFunction(callee, args, null)
         else if callee._isClass then
             -- Instantiate
             inst = makeInstance(callee)
@@ -1181,7 +1181,7 @@ function evalCall(node, env)
             while cls do
                 fields = cls._fields
                 for i = 1, #fields do
-                    if inst._fields[fields[i]] == nil then
+                    if inst._fields[fields[i]] == null then
                         inst._fields[fields[i]] = 0
                     end
                 end
@@ -1218,14 +1218,14 @@ function evalMethod(node, env)
     if type(obj) == "table" and obj._isArray then
         if methodName == "push" then
             arrayPush(obj, args[1])
-            return nil
+            return null
         else if methodName == "size" then
             return obj._size
         else if methodName == "get" then
             return arrayGet(obj, args[1])
         else if methodName == "set" then
             arraySet(obj, args[1], args[2])
-            return nil
+            return null
         end
     end
 
@@ -1281,7 +1281,7 @@ function evalField(node, env)
     -- Instance fields
     if type(obj) == "table" and obj._isInstance then
         val = obj._fields[field]
-        if val != nil then
+        if val != null then
             return val
         end
         -- Check if it's a method (return bound method)
@@ -1317,7 +1317,7 @@ function evalAssign(node, env)
             arraySet(obj, idx, val)
         end
     end
-    return nil
+    return null
 end
 
 function evalClassDecl(node, env)
@@ -1327,7 +1327,7 @@ function evalClassDecl(node, env)
     methodDefs = node[5]
     ctorDef = node[6]
 
-    parentCls = nil
+    parentCls = null
     if parentName then
         parentCls = envGet(env, parentName)
     end
@@ -1346,14 +1346,14 @@ function evalClassDecl(node, env)
         methods[mname] = makeFunc(fullParams, mbody, env, mname)
     end
 
-    constructor = nil
+    constructor = null
     if ctorDef then
         constructor = makeFunc(ctorDef[1], ctorDef[2], env, name)
     end
 
     cls = makeClass(name, parentCls, fieldNames, methods, constructor)
     envDeclare(env, name, cls)
-    return nil
+    return null
 end
 
 -- ============================================================================
@@ -1364,7 +1364,7 @@ function runProgram(source)
     tokens = tokenize(source)
     parser = createParser(tokens)
     ast = parseProgram(parser)
-    env = newEnv(nil)
+    env = newEnv(null)
     resetOutput()
     evalNode(ast, env)
     return getOutput()

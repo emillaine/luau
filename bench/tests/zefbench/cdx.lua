@@ -163,7 +163,7 @@ function Motion_findIntersection(motion1, motion2)
         c = -radius * radius + (init2 - init1):squaredMagnitude()
 
         discr = b * b - 4 * a * c
-        if discr < 0 then return nil end
+        if discr < 0 then return null end
 
         v1 = (-b - math.sqrt(discr)) / (2 * a)
         v2 = (-b + math.sqrt(discr)) / (2 * a)
@@ -171,7 +171,7 @@ function Motion_findIntersection(motion1, motion2)
         if v1 <= v2 and ((v1 <= 1 and 1 <= v2) or
                          (v1 <= 0 and 0 <= v2) or
                          (0 <= v1 and v2 <= 1)) then
-            v = nil
+            v = null
             if v1 <= 0 then
                 -- Collision started before this frame; report at frame start
                 v = 0
@@ -191,7 +191,7 @@ function Motion_findIntersection(motion1, motion2)
             end
         end
 
-        return nil
+        return null
     end
 
     -- Planes have same speed and move in parallel (or are stationary);
@@ -201,13 +201,13 @@ function Motion_findIntersection(motion1, motion2)
         return (init1 + init2) * 0.5
     end
 
-    return nil
+    return null
 end
 
 -- ==================== RedBlackTree ====================
 
 function RBNode_new(key, value)
-    return { key = key, value = value, left = nil, right = nil, parent = nil, color = "red" }
+    return { key = key, value = value, left = null, right = null, parent = null, color = "red" }
 end
 
 function treeMinimum(x)
@@ -234,7 +234,7 @@ RBTree = {}
 RBTree.__index = RBTree
 
 function RedBlackTree_new()
-    return setmetatable({ _root = nil }, RBTree)
+    return setmetatable({ _root = null }, RBTree)
 end
 
 function RBTree:_leftRotate(x)
@@ -280,11 +280,11 @@ function RBTree:_findNode(key)
         else current = current.right
         end
     end
-    return nil
+    return null
 end
 
 function RBTree:_treeInsert(key, value)
-    y = nil
+    y = null
     x = self._root
     while x do
         y = x
@@ -362,12 +362,12 @@ function RBTree:put(key, value)
     end
 
     self._root.color = "black"
-    return nil
+    return null
 end
 
 function RBTree:get(key)
     node = self:_findNode(key)
-    if not node then return nil end
+    if not node then return null end
     return node.value
 end
 
@@ -452,23 +452,23 @@ end
 
 function RBTree:remove(key)
     z = self:_findNode(key)
-    if not z then return nil end
+    if not z then return null end
 
     -- y is the node to unlink from the tree
-    y = nil
+    y = null
     if not z.left or not z.right then
         y = z
     else
         y = RBNode_successor(z)
     end
 
-    -- x is y's only child (possibly nil), which may replace y
-    x = nil
+    -- x is y's only child (possibly null), which may replace y
+    x = null
     if y.left then x = y.left
     else x = y.right
     end
 
-    xParent = nil
+    xParent = null
     if x then
         x.parent = y.parent
         xParent = x.parent

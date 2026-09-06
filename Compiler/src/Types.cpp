@@ -20,7 +20,7 @@ static bool isGeneric(AstName name, const AstArray<AstGenericType*>& generics)
 
 static LuauBytecodeType getPrimitiveType(AstName name)
 {
-    if (name == "nil")
+    if (name == "null")
         return LBC_TYPE_NIL;
     else if (name == "boolean")
         return LBC_TYPE_BOOLEAN;

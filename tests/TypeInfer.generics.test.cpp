@@ -63,7 +63,7 @@ TEST_CASE_FIXTURE(Fixture, "unions_and_generics")
 {
     CheckResult result = check(R"(
         type foo = <T>(T | {T}) -> T
-        const foo = (nil as any) as foo
+        const foo = (null as any) as foo
 
         type Test = number | {number}
         const res = foo(1 as Test)
@@ -506,7 +506,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_unify_bound_types")
         type F = <a>() -> <b>(a, b) -> a
         type G = <b>(b, b) -> b
         const f: F = function<a>()
-          const x = nil
+          const x = null
           return function<b>(y: a, z: b): a
             if not(x) then x = y end
             return x
@@ -543,7 +543,7 @@ TEST_CASE_FIXTURE(Fixture, "mutable_state_polymorphism")
         -- not type
         -- () -> <a>(a) -> a
         function ohDear(): Id
-          const y = nil
+          const y = null
           function oh(x)
             -- Returns the same x every time it's called
             if not(y) then y = x end
@@ -776,7 +776,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_generic_types")
 type C = () -> ()
 type D = <T>() -> ()
 
-const c: C = nil as any
+const c: C = null as any
 const d: D = c
     )");
 
@@ -807,7 +807,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_function_mismatch_with_argument")
 type C = (number) -> ()
 type D = <T>(number) -> ()
 
-const c: C = nil as any
+const c: C = null as any
 const d: D = c
     )");
 
@@ -839,7 +839,7 @@ TEST_CASE_FIXTURE(Fixture, "error_detailed_function_mismatch_generic_pack")
 type C = () -> ()
 type D = <T...>() -> ()
 
-const c: C = nil as any
+const c: C = null as any
 const d: D = c
     )");
 
@@ -895,9 +895,9 @@ TEST_CASE_FIXTURE(Fixture, "generic_functions_should_be_memory_safe")
 -- At one point this produced a UAF
 type T<a> = { a: U<a>, b: a }
 type U<a> = { c: T<a>?, d : a }
-const x: T<number> = { a = { c = nil, d = 5 }, b = 37 }
+const x: T<number> = { a = { c = null, d = 5 }, b = 37 }
 x.a.c = x
-const y: T<string> = { a = { c = nil, d = 5 }, b = 37 }
+const y: T<string> = { a = { c = null, d = 5 }, b = 37 }
 y.a.c = y
     )");
 
@@ -908,10 +908,10 @@ y.a.c = y
         auto mismatch2 = get<TypeMismatch>(result.errors[1]);
         REQUIRE(mismatch1);
         REQUIRE(mismatch2);
-        CHECK_EQ(result.errors[0].location, Location{{7, 42}, {7, 43}});
+        CHECK_EQ(result.errors[0].location, Location{{7, 43}, {7, 44}});
         CHECK_EQ(toString(mismatch1->givenType), "number");
         CHECK_EQ(toString(mismatch1->wantedType), "string");
-        CHECK_EQ(result.errors[1].location, Location{{7, 51}, {7, 53}});
+        CHECK_EQ(result.errors[1].location, Location{{7, 52}, {7, 54}});
         CHECK_EQ(toString(mismatch2->givenType), "number");
         CHECK_EQ(toString(mismatch2->wantedType), "string");
     }
@@ -1156,14 +1156,14 @@ TEST_CASE_FIXTURE(Fixture, "generic_function")
     CheckResult result = check(R"(
         function id(x) return x end
         const a = id(55)
-        const b = id(nil)
+        const b = id(null)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
     CHECK_EQ("<T>(T) -> T", toString(requireType("id")));
     CHECK("number" == toString(requireType("a")));
-    CHECK("nil" == toString(requireType("b")));
+    CHECK("null" == toString(requireType("b")));
 }
 
 TEST_CASE_FIXTURE(Fixture, "generic_table_method")
@@ -1341,7 +1341,7 @@ TEST_CASE_FIXTURE(Fixture, "self_recursive_instantiated_param")
     CheckResult result = check(R"(
 type Table = { a: number }
 type Self<T> = T
-const a: Self<Table> = nil as any
+const a: Self<Table> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1448,7 +1448,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_function_function_argument_3")
 TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_argument_overloaded_pt_1")
 {
     CheckResult result = check(R"(
-        const g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T) = nil as any
+        const g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T) = null as any
 
         const a = g12(1, function(x) return x + x end)
         const b = g12(1, 2, function(x, y) return x + y end)
@@ -1472,7 +1472,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_argument_overloaded_
 TEST_CASE_FIXTURE(Fixture, "infer_generic_function_function_overloaded_pt_2")
 {
     CheckResult result = check(R"(
-        const g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T) = nil as any
+        const g12: (<T>(T, (T) -> T) -> T) & (<T>(T, T, (T, T) -> T) -> T) = null as any
 
         const a = g12({x=1}, function(x) return {x=-x.x} end)
         const b = g12({x=1}, {x=2}, function(x, y) return {x=x.x + y.x} end)
@@ -1547,7 +1547,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions_2")
         type t = <a>(a, a, (a, a) -> a) -> a
         type u = (number, number, <X>(X, X) -> X) -> number
 
-        const foo = (nil as any) as t
+        const foo = (null as any) as t
         const bar : u = foo
         )");
 
@@ -1562,7 +1562,7 @@ TEST_CASE_FIXTURE(Fixture, "substitution_with_bound_table")
         const b = a
         type B = typeof(b)
         type X<T> = T
-        const c: X<B> = nil as any
+        const c: X<B> = null as any
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1629,9 +1629,9 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics3")
     // cyclic types under local type inference.
 
     CheckResult result = check(R"(
-        const getReturnValue: <V>(cb: () -> V) -> V = nil as any
+        const getReturnValue: <V>(cb: () -> V) -> V = null as any
 
-        const y = getReturnValue(function() return nil as any end)
+        const y = getReturnValue(function() return null as any end)
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1878,7 +1878,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "follow_bound_type_packs_in_generic_type_visi
 {
     // Note: we just need this test not to crash
     check(R"(
-function (_(_,_,nil))
+function (_(_,_,null))
 (if l0 then typeof else `{_:_()}`,typeof).n0<A...,A...>(l0)
 function _:_():typeof<A...>()
 end
@@ -1904,7 +1904,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_2")
     CheckResult result = check(R"(
 function f(foo: (number) -> (number)): () end
 type T = <A...>(A...) -> A...
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1916,7 +1916,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_3")
     CheckResult result = check(R"(
 function f(foo: <B...>(B...) -> B...): () end
 type T = <A...>(A...) -> A...
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1930,7 +1930,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_4")
     CheckResult result = check(R"(
 function f(foo: <A...>(A...) -> A...): () end
 type T = <B..., C...>(B...) -> C...
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1942,7 +1942,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_5")
     CheckResult result = check(R"(
 function f(foo: (number) -> number): () end
 type T = <A...>(A...) -> number
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1954,7 +1954,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_6")
     CheckResult result = check(R"(
 function f(foo: (...number) -> number): () end
 type T = <A...>(A...) -> number
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1966,7 +1966,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_7")
     CheckResult result = check(R"(
 function f(foo: () -> ()): () end
 type T = <A...>() -> A...
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1978,7 +1978,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generic_packs_in_contravariant_position_8")
     CheckResult result = check(R"(
 function f(foo: () -> ()): () end
 type T = <A...>(A...) -> A...
-const t: T = nil as any
+const t: T = null as any
 f(t)
     )");
 
@@ -1992,7 +1992,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nested_generic_packs")
     CheckResult result = check(R"(
 type T = <A...>(A...) -> (<A...>(A...) -> ())
 type U = (string) -> ((number) -> ())
-const t: T = nil as any
+const t: T = null as any
 const u: U = t
     )");
 
@@ -2002,8 +2002,8 @@ const u: U = t
 TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error")
 {
     CheckResult res = check(R"(
-        const func: <T>(T, (T) -> ()) -> () = nil as any
-        const foobar: (number) -> () = nil as any
+        const func: <T>(T, (T) -> ()) -> () = null as any
+        const foobar: (number) -> () = null as any
         func({}, foobar)
     )");
 
@@ -2033,7 +2033,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "xpcall_should_work_with_generics")
 {
     CheckResult result = check(R"(
 --!strict
-const v: (number) -> (number) = nil as any
+const v: (number) -> (number) = null as any
 
 const x = 3
 
@@ -2047,7 +2047,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1985_array_of_union_for_generic")
 {
     CheckResult res = check(R"(
         function clear<T>(arr: { T }) table.clear(arr) end
-        const a: { true | false } = nil as any
+        const a: { true | false } = null as any
         -- This obviously shouldn't error, '{ true | false }' should fit '{ T }'
         -- TypeError: The generic type parameter Twas found to have invalid bounds. Its lower bounds were [true, false], and its upper bounds were [true].
         clear(a)
@@ -2060,7 +2060,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1985_array_of_union_for_generic_2")
 {
     CheckResult res = check(R"(
         function id<T>(arr: { T }): { T } return arr end
-        const a: { true | false } = nil as any
+        const a: { true | false } = null as any
         const b = id(a)
     )");
 
@@ -2172,15 +2172,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_185450_instantiate_generics_prior_to_pus
         const Child = {} as Child
 
         function Parent:Func1(value, ...)
-            if value then return self else return nil end
+            if value then return self else return null end
         end
 
         function Parent:Func2(value)
-            if value then return self else return nil end
+            if value then return self else return null end
         end
 
         function Child:Func()
-            if math.random() > 0.5 then return self else return nil end
+            if math.random() > 0.5 then return self else return null end
         end
     )"));
 }

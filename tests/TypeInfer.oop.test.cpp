@@ -73,7 +73,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_another_
 {
     CheckResult result = check(R"(
         type T = {method: ((T, number) -> number) & ((number) -> number)}
-        const T: T = nil as any
+        const T: T = null as any
 
         T.method(4)
     )");
@@ -206,7 +206,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
         --!strict
 
         type Foo = {
-            fooConn: () -> () | nil
+            fooConn: () -> () | null
         }
 
         const Foo = {}
@@ -214,7 +214,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
 
         function Foo.new()
             const self: Foo = {
-                fooConn = nil,
+                fooConn = null,
             }
             setmetatable(self, Foo)
 
@@ -380,7 +380,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "flag_when_index_metamethod_returns_0_values"
 
     LUAU_REQUIRE_NO_ERRORS(result);
 
-    CHECK("nil" == toString(requireType("p")));
+    CHECK("null" == toString(requireType("p")));
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "augmenting_an_unsealed_table_with_a_metatable")
@@ -480,7 +480,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         Promise.__index = Promise.prototype
 
         function Promise._new(traceback, callback, parent)
-            if parent != nil and not Promise.is(parent)then
+            if parent != null and not Promise.is(parent)then
             end
 
             const self = {
@@ -495,12 +495,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         end
 
         function Promise.resolve(...)
-            return Promise._new(debug.traceback(nil, 2), function(resolve)
+            return Promise._new(debug.traceback(null, 2), function(resolve)
             end)
         end
 
         function Promise.reject(...)
-            return Promise._new(debug.traceback(nil, 2), function(_, reject)
+            return Promise._new(debug.traceback(null, 2), function(_, reject)
             end)
         end
 
@@ -510,7 +510,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         end
 
         function Promise.try(callback, ...)
-            return Promise._try(debug.traceback(nil, 2), callback, ...)
+            return Promise._try(debug.traceback(null, 2), callback, ...)
         end
 
         function Promise._all(traceback, promises, amount)
@@ -522,7 +522,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         end
 
         function Promise.all(promises)
-            return Promise._all(debug.traceback(nil, 2), promises)
+            return Promise._all(debug.traceback(null, 2), promises)
         end
 
         function Promise.allSettled(promises)
@@ -530,12 +530,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
         end
 
         function Promise.race(promises)
-            return Promise._new(debug.traceback(nil, 2), function(resolve, reject, onCancel)
+            return Promise._new(debug.traceback(null, 2), function(resolve, reject, onCancel)
             end)
         end
 
         function Promise.each(list, predicate)
-            return Promise._new(debug.traceback(nil, 2), function(resolve, reject, onCancel)
+            return Promise._new(debug.traceback(null, 2), function(resolve, reject, onCancel)
                 const predicatePromise = Promise.resolve(predicate(value, index))
                 const success, result = predicatePromise:await()
             end)
@@ -667,7 +667,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern_2")
 
         const account = Account.new("Hina", 500)
 
-        if account:hasBalance(123) then -- TypeError: Value of type 'unknown' could be nil
+        if account:hasBalance(123) then -- TypeError: Value of type 'unknown' could be null
         end
     )");
 
@@ -802,7 +802,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
         export type Base = setmetatable<BaseStructure, typeof(Base)>
 
         function Base.new() : Base
-            return nil as any
+            return null as any
         end
 
         const Sub = {}
@@ -1108,7 +1108,7 @@ TEST_CASE_FIXTURE(Fixture, "prop_with_typeof_reassigned_class")
     CheckResult result = check(
         R"(
 class Animal end
-Animal = nil
+Animal = null
 class l0
 public _:typeof(Animal)
 end
@@ -1408,7 +1408,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_overrides_2")
         type MT1 = { __index: { propA: number } }
         type MT2 = { __index: { propB: string } }
 
-        const root: setmetatable<setmetatable<{ Name: string }, MT1>, MT2> = nil as any
+        const root: setmetatable<setmetatable<{ Name: string }, MT1>, MT2> = null as any
 
         const getpropB = root.propB
         const ohno = root.propA

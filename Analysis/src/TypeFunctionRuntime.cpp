@@ -457,7 +457,7 @@ std::optional<TypeFunctionTypeId> optionalTypeUserData(lua_State* L, int idx)
 static std::string getTag(lua_State* L, TypeFunctionTypeId ty)
 {
     if (auto n = get<TypeFunctionPrimitiveType>(ty); n && n->type == TypeFunctionPrimitiveType::Type::NilType)
-        return "nil";
+        return "null";
     else if (auto b = get<TypeFunctionPrimitiveType>(ty); b && b->type == TypeFunctionPrimitiveType::Type::Boolean)
         return "boolean";
     else if (auto n = get<TypeFunctionPrimitiveType>(ty); n && n->type == TypeFunctionPrimitiveType::Type::Number)

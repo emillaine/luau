@@ -1,7 +1,7 @@
 -- forward declarations (implicit-local dialect has no hoisted globals)
-buildChangeMap = nil
-groupIntoHunks = nil
-splitLines = nil
+buildChangeMap = null
+groupIntoHunks = null
+splitLines = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -16,7 +16,7 @@ function test()
 -- =========================================================================
 -- 32-bit arithmetic helpers
 -- =========================================================================
-band, bor, bxor, bnot, lshift, rshift = nil, nil, nil, nil, nil, nil
+band, bor, bxor, bnot, lshift, rshift = null, null, null, null, null, null
 _bit32 = rawget(_G, "bit32")
 _bit = rawget(_G, "bit")
 if type(_bit32) == "table" then
@@ -120,7 +120,7 @@ function sha1(message)
         a, b, c, d, e = h0, h1, h2, h3, h4
 
         for i = 0, 79 do
-            f, k = nil, nil
+            f, k = null, null
             if i <= 19 then
                 f = bor(band(b, c), band(bnot(b), d))
                 k = 0x5A827999
@@ -200,7 +200,7 @@ function getBlobContent(store, hash)
     if obj and obj.type == "blob" then
         return obj.content
     end
-    return nil
+    return null
 end
 
 -- =========================================================================
@@ -306,7 +306,7 @@ function getCommitData(store, hash)
     if obj and obj.type == "commit" then
         return parseCommit(obj.content)
     end
-    return nil
+    return null
 end
 
 -- =========================================================================
@@ -367,7 +367,7 @@ function myersDiff(aLines, bLines)
         trace[d] = vCopy
 
         for k = -d, d, 2 do
-            x = nil
+            x = null
             if k == -d or (k != d and (v[k - 1] or 0) < (v[k + 1] or 0)) then
                 x = v[k + 1] or 0
             else
@@ -399,7 +399,7 @@ function myersDiff(aLines, bLines)
     for d = #trace, 0, -1 do
         vPrev = trace[d]
         k = x - y
-        prevK = nil
+        prevK = null
         if k == -d or (k != d and (vPrev[k - 1] or 0) < (vPrev[k + 1] or 0)) then
             prevK = k + 1
         else
@@ -498,7 +498,7 @@ function groupIntoHunks(edits, aLines, bLines, contextSize)
         endIdx = math.min(#edits, lastChange + contextSize)
 
         hunkLines = {}
-        aStart, aCount, bStart, bCount = nil, 0, nil, 0
+        aStart, aCount, bStart, bCount = null, 0, null, 0
 
         for i = startIdx, endIdx do
             edit = edits[i]
@@ -564,8 +564,8 @@ end
 function parsePatch(patchText)
     lines = splitLines(patchText)
     hunks = {}
-    currentHunk = nil
-    aFile, bFile = nil, nil
+    currentHunk = null
+    aFile, bFile = null, null
     seenHunk = false
 
     for i = 1, #lines do
@@ -722,7 +722,7 @@ function buildChangeMap(edits, baseLines, newLines)
         edit = edits[i]
         if edit.op != "equal" then
             -- Collect contiguous changes
-            baseStart = nil
+            baseStart = null
             baseCount = 0
             newLinesCollected = {}
 
@@ -791,7 +791,7 @@ function diffCommits(store, commitA, commitB)
     -- Find modified and deleted files
     for fname, contentA in next, filesA do
         contentB = filesB[fname]
-        if contentB == nil then
+        if contentB == null then
             -- Deleted
             diffs[#diffs + 1] = { file = fname, status = "deleted",
                 patch = diffToUnified("a/" .. fname, "/dev/null", contentA, "") }
@@ -804,7 +804,7 @@ function diffCommits(store, commitA, commitB)
 
     -- Find added files
     for fname, contentB in next, filesB do
-        if filesA[fname] == nil then
+        if filesA[fname] == null then
             diffs[#diffs + 1] = { file = fname, status = "added",
                 patch = diffToUnified("/dev/null", "b/" .. fname, "", contentB) }
         end
@@ -1053,13 +1053,13 @@ local Node = {}
 Node.__index = Node
 
 function Node.new(value)
-    return setmetatable({ value = value, prev = nil, next = nil }, Node)
+    return setmetatable({ value = value, prev = null, next = null }, Node)
 end
 
 function LinkedList.new()
     local self = setmetatable({}, LinkedList)
-    self.head = nil
-    self.tail = nil
+    self.head = null
+    self.tail = null
     self.size = 0
     return self
 end
@@ -1093,26 +1093,26 @@ function LinkedList:pushBack(value)
 end
 
 function LinkedList:popFront()
-    if not self.head then return nil end
+    if not self.head then return null end
     local value = self.head.value
     self.head = self.head.next
     if self.head then
-        self.head.prev = nil
+        self.head.prev = null
     else
-        self.tail = nil
+        self.tail = null
     end
     self.size = self.size - 1
     return value
 end
 
 function LinkedList:popBack()
-    if not self.tail then return nil end
+    if not self.tail then return null end
     local value = self.tail.value
     self.tail = self.tail.prev
     if self.tail then
-        self.tail.next = nil
+        self.tail.next = null
     else
-        self.head = nil
+        self.head = null
     end
     self.size = self.size - 1
     return value
@@ -1140,7 +1140,7 @@ function LinkedList:find(value)
         end
         current = current.next
     end
-    return nil
+    return null
 end
 
 function LinkedList:toArray()
@@ -1212,7 +1212,7 @@ function HashMap:get(key)
             return bucket[i].value
         end
     end
-    return nil
+    return null
 end
 
 function HashMap:remove(key)
@@ -1229,7 +1229,7 @@ function HashMap:remove(key)
 end
 
 function HashMap:contains(key)
-    return self:get(key) ~= nil
+    return self:get(key) ~= null
 end
 
 function HashMap:resize()
@@ -1309,7 +1309,7 @@ function EventEmitter:emit(event, ...)
         for i = 1, #onceList do
             onceList[i].callback(...)
         end
-        self.onceListeners[event] = nil
+        self.onceListeners[event] = null
     end
 end
 
@@ -1326,8 +1326,8 @@ end
 
 function EventEmitter:removeAllListeners(event)
     if event then
-        self.listeners[event] = nil
-        self.onceListeners[event] = nil
+        self.listeners[event] = null
+        self.onceListeners[event] = null
     else
         self.listeners = {}
         self.onceListeners = {}
@@ -1453,15 +1453,15 @@ function BSTNode.new(key, value)
     return setmetatable({
         key = key,
         value = value,
-        left = nil,
-        right = nil,
+        left = null,
+        right = null,
         height = 1
     }, BSTNode)
 end
 
 function BST.new()
     local self = setmetatable({}, BST)
-    self.root = nil
+    self.root = null
     self.size = 0
     return self
 end
@@ -1551,7 +1551,7 @@ function BST:search(key)
             node = node.right
         end
     end
-    return nil
+    return null
 end
 
 function BST:inorder(node, result)
@@ -1775,7 +1775,7 @@ local JSON = {}
 
 function JSON.encode(value)
     local vType = type(value)
-    if value == nil then
+    if value == null then
         return "null"
     elseif vType == "boolean" then
         return value and "true" or "false"
@@ -1851,7 +1851,7 @@ function JSON.decode(str)
             return false
         elseif str:sub(pos, pos + 3) == "null" then
             pos = pos + 4
-            return nil
+            return null
         else
             return JSON._parseNumber(str, pos)
         end
@@ -2032,7 +2032,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
 
     while true do
         -- Find lowest f in open set
-        local bestKey, bestNode = nil, nil
+        local bestKey, bestNode = null, null
         for k, node in next, open do
             if not bestNode or node.f < bestNode.f then
                 bestKey = k
@@ -2040,7 +2040,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
             end
         end
 
-        if not bestNode then return nil end
+        if not bestNode then return null end
 
         if bestNode.x == endX and bestNode.y == endY then
             -- Reconstruct path
@@ -2059,7 +2059,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
             return reversed
         end
 
-        open[bestKey] = nil
+        open[bestKey] = null
         closed[bestKey] = bestNode
 
         -- Check neighbors
@@ -2115,7 +2115,7 @@ local KEYWORDS = {
     ["if"] = true, ["then"] = true, ["else"] = true,
     ["while"] = true, ["do"] = true, ["end"] = true,
     ["function"] = true, ["return"] = true, ["local"] = true,
-    ["true"] = true, ["false"] = true, ["nil"] = true,
+    ["true"] = true, ["false"] = true, ["null"] = true,
     ["and"] = true, ["or"] = true, ["not"] = true
 }
 
@@ -2377,7 +2377,7 @@ Computed.__index = Computed
 local Effect = {}
 Effect.__index = Effect
 
-local currentEffect = nil
+local currentEffect = null
 
 function Signal.new(initialValue)
     local self = setmetatable({}, Signal)
@@ -2409,7 +2409,7 @@ end
 function Computed.new(fn)
     local self = setmetatable({}, Computed)
     self.fn = fn
-    self.value = nil
+    self.value = null
     self.dirty = true
     self.subscribers = {}
     self:update()
@@ -2520,21 +2520,21 @@ function RingBuffer:push(value)
 end
 
 function RingBuffer:pop()
-    if self.size == 0 then return nil end
+    if self.size == 0 then return null end
     local value = self.buffer[self.head]
-    self.buffer[self.head] = nil
+    self.buffer[self.head] = null
     self.head = self.head % self.capacity + 1
     self.size = self.size - 1
     return value
 end
 
 function RingBuffer:peek()
-    if self.size == 0 then return nil end
+    if self.size == 0 then return null end
     return self.buffer[self.head]
 end
 
 function RingBuffer:peekBack()
-    if self.size == 0 then return nil end
+    if self.size == 0 then return null end
     local idx = (self.tail - 2) % self.capacity + 1
     return self.buffer[idx]
 end
@@ -2685,8 +2685,8 @@ function Tween.new(startVal, endVal, duration, easingFn)
     self.easingFn = easingFn or Tween.Easing.linear
     self.elapsed = 0
     self.completed = false
-    self.onUpdate = nil
-    self.onComplete = nil
+    self.onUpdate = null
+    self.onComplete = null
     return self
 end
 
@@ -2763,7 +2763,7 @@ end
 
 function ObjectPool:release(obj)
     if self.active[obj] then
-        self.active[obj] = nil
+        self.active[obj] = null
         self.activeCount = self.activeCount - 1
         self.resetFn(obj)
         self.pool[#self.pool + 1] = obj
@@ -2772,7 +2772,7 @@ end
 
 function ObjectPool:releaseAll()
     for obj in next, self.active do
-        self.active[obj] = nil
+        self.active[obj] = null
         self.resetFn(obj)
         self.pool[#self.pool + 1] = obj
     end
@@ -2951,7 +2951,7 @@ function Observable:emit(value)
     local transformed = value
     for i = 1, #self.transforms do
         transformed = self.transforms[i](transformed)
-        if transformed == nil then return end
+        if transformed == null then return end
     end
     for i = 1, #self.observers do
         self.observers[i](transformed)
@@ -3029,7 +3029,7 @@ function Observable:debounce(minInterval)
 end
 
 function Observable:distinct()
-    local lastVal = nil
+    local lastVal = null
     local newObs = Observable.new()
     self:subscribe(function(val)
         if val ~= lastVal then
@@ -3067,9 +3067,9 @@ function ECS:createEntity()
 end
 
 function ECS:destroyEntity(entityId)
-    self.entities[entityId] = nil
+    self.entities[entityId] = null
     for compType in next, self.components do
-        self.components[compType][entityId] = nil
+        self.components[compType][entityId] = null
     end
 end
 
@@ -3082,7 +3082,7 @@ end
 
 function ECS:removeComponent(entityId, componentType)
     if self.components[componentType] then
-        self.components[componentType][entityId] = nil
+        self.components[componentType][entityId] = null
     end
 end
 
@@ -3090,12 +3090,12 @@ function ECS:getComponent(entityId, componentType)
     if self.components[componentType] then
         return self.components[componentType][entityId]
     end
-    return nil
+    return null
 end
 
 function ECS:hasComponent(entityId, componentType)
     return self.components[componentType] and
-           self.components[componentType][entityId] ~= nil
+           self.components[componentType][entityId] ~= null
 end
 
 function ECS:query(...)
@@ -3166,7 +3166,7 @@ function VDOM.createElement(tag, props, children)
         tag = tag,
         props = props or {},
         children = children or {},
-        key = props and props.key or nil
+        key = props and props.key or null
     }
 end
 
@@ -3181,9 +3181,9 @@ end
 function VDOM.diff(oldNode, newNode)
     local patches = {}
 
-    if oldNode == nil then
+    if oldNode == null then
         patches[#patches + 1] = { type = "CREATE", node = newNode }
-    elseif newNode == nil then
+    elseif newNode == null then
         patches[#patches + 1] = { type = "REMOVE" }
     elseif oldNode.tag ~= newNode.tag then
         patches[#patches + 1] = { type = "REPLACE", node = newNode }
@@ -3214,8 +3214,8 @@ function VDOM.diffProps(oldProps, newProps)
     end
     -- Check for removed props
     for k in next, oldProps do
-        if newProps[k] == nil then
-            changes[#changes + 1] = { key = k, value = nil }
+        if newProps[k] == null then
+            changes[#changes + 1] = { key = k, value = null }
         end
     end
     return changes
@@ -3325,7 +3325,7 @@ function CoroutinePool:tick()
     end
 
     for i = 1, #toRemove do
-        self.running[toRemove[i]] = nil
+        self.running[toRemove[i]] = null
         self.runningCount = self.runningCount - 1
     end
 
@@ -3446,13 +3446,13 @@ function Protocol.parseRequest(raw)
         end
     end
 
-    if #lines == 0 then return nil end
+    if #lines == 0 then return null end
 
     local method, path = lines[1]:match("^(%S+)%s+(%S+)")
-    if not method then return nil end
+    if not method then return null end
 
     local headers = {}
-    local bodyStart = nil
+    local bodyStart = null
     for i = 2, #lines do
         if lines[i] == "" then
             bodyStart = i + 1
@@ -3488,12 +3488,12 @@ function Protocol.parseResponse(raw)
         end
     end
 
-    if #lines == 0 then return nil end
+    if #lines == 0 then return null end
     local status = lines[1]:match("PROTO/%d+%.%d+%s+(%d+)")
-    if not status then return nil end
+    if not status then return null end
 
     local headers = {}
-    local bodyStart = nil
+    local bodyStart = null
     for i = 2, #lines do
         if lines[i] == "" then
             bodyStart = i + 1
@@ -3548,7 +3548,7 @@ function Router:match(method, path)
             end
         end
     end
-    return nil
+    return null
 end
 
 function Router:handle(request)
@@ -3599,7 +3599,7 @@ function Database:getTable(tableName)
 end
 
 function Database:dropTable(tableName)
-    self.tables[tableName] = nil
+    self.tables[tableName] = null
     self.version = self.version + 1
 end
 
@@ -3648,10 +3648,10 @@ function Table:delete(id)
     for field, index in next, self.indexes do
         local key = row[field]
         if key and index[key] then
-            index[key][id] = nil
+            index[key][id] = null
         end
     end
-    self.rows[id] = nil
+    self.rows[id] = null
     return true
 end
 
@@ -3663,7 +3663,7 @@ function Table:update(id, changes)
         if self.indexes[k] then
             local oldKey = row[k]
             if oldKey and self.indexes[k][oldKey] then
-                self.indexes[k][oldKey][id] = nil
+                self.indexes[k][oldKey][id] = null
             end
             if v then
                 if not self.indexes[k][v] then
@@ -3815,7 +3815,7 @@ function Database:getTable(tableName)
 end
 
 function Database:dropTable(tableName)
-    self.tables[tableName] = nil
+    self.tables[tableName] = null
     self.version = self.version + 1
     self.transactionLog[#self.transactionLog + 1] = {
         op = "DROP_TABLE", table = tableName, time = os.clock()
@@ -3873,12 +3873,12 @@ function FSMCompiler.new()
     self.states = {}
     self.events = {}
     self.transitions = {}
-    self.initialState = nil
+    self.initialState = null
     return self
 end
 
 function FSMCompiler:addState(name, config)
-    self.states[name] = config or { onEnter = nil, onExit = nil }
+    self.states[name] = config or { onEnter = null, onExit = null }
     if not self.initialState then
         self.initialState = name
     end
@@ -4397,8 +4397,8 @@ return Config
 
     -- Merge the two branches
     mergedFiles, totalConflicts = mergeCommits(store, commit1, commitA, commitB)
-    assert(mergedFiles["newfileA.lua"] != nil, "Should have newfileA.lua")
-    assert(mergedFiles["newfileB.lua"] != nil, "Should have newfileB.lua")
+    assert(mergedFiles["newfileA.lua"] != null, "Should have newfileA.lua")
+    assert(mergedFiles["newfileB.lua"] != null, "Should have newfileB.lua")
     assert(totalConflicts > 0, "Vector3 should have merge conflicts")
 
     checksums[#checksums + 1] = checksumString(mergedFiles["vector3.lua"] or "")
@@ -4595,7 +4595,7 @@ return Config
     branchAExt = {}
     for k, v in next, extendedFiles do branchAExt[k] = v end
     branchAExt["signal.lua"] = branchAExt["signal.lua"]:gsub(
-        "local currentEffect = nil", "local currentEffect = nil\nlocal batchQueue = {}")
+        "local currentEffect = null", "local currentEffect = null\nlocal batchQueue = {}")
     branchAExt["observable.lua"] = branchAExt["observable.lua"]:gsub(
         "self.observers = {}", "self.observers = {}\n    self.paused = false")
     branchAExt["newutil.lua"] = [[
@@ -4648,7 +4648,7 @@ function Perf.start(name)
 end
 function Perf.stop(name)
     local elapsed = os.clock() - (Perf.timers[name] or 0)
-    Perf.timers[name] = nil
+    Perf.timers[name] = null
     return elapsed
 end
 function Perf.measure(name, fn)
@@ -4667,8 +4667,8 @@ return Perf
     -- Merge branches
     extMerged, extConflicts = mergeCommits(extStore, extCommit1, extCommitA, extCommitB)
     -- Both added different new files, should be conflict-free for those
-    assert(extMerged["newutil.lua"] != nil, "Should have newutil.lua from branch A")
-    assert(extMerged["perf.lua"] != nil, "Should have perf.lua from branch B")
+    assert(extMerged["newutil.lua"] != null, "Should have newutil.lua from branch A")
+    assert(extMerged["perf.lua"] != null, "Should have perf.lua from branch B")
     checksums[#checksums + 1] = checksumString(extMerged["signal.lua"] or "")
     checksums[#checksums + 1] = checksumString(extMerged["pathfinder.lua"] or "")
     checksums[#checksums + 1] = checksumString(extMerged["newutil.lua"] or "")
@@ -4817,7 +4817,7 @@ return Perf
         if #data.parents > 0 then
             current = data.parents[1]
         else
-            current = nil
+            current = null
         end
     end
     assert(chainLen == 16, "Expected chain of 16 commits, got " .. chainLen)
@@ -4896,8 +4896,8 @@ return Perf
     -- app.lua should conflict (both modified differently)
     assert(mConflicts > 0, "Should have conflicts in app.lua")
     -- Both new files should be present
-    assert(mMerged["newfeature.lua"] != nil, "Should have newfeature.lua")
-    assert(mMerged["hotfix.lua"] != nil, "Should have hotfix.lua")
+    assert(mMerged["newfeature.lua"] != null, "Should have newfeature.lua")
+    assert(mMerged["hotfix.lua"] != null, "Should have hotfix.lua")
     -- utils.lua only changed by theirs
     assert(mMerged["utils.lua"] == mTheirs["utils.lua"], "utils should be theirs version")
     -- config.lua only changed by ours
@@ -5014,7 +5014,7 @@ end
 -- =========================================================================
 ITERATIONS = 2
 allPassed = true
-firstChecksum = nil
+firstChecksum = null
 correctChecksum = 2674509866
 
 for iter = 1, ITERATIONS do

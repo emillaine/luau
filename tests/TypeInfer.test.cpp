@@ -106,7 +106,7 @@ TEST_CASE_FIXTURE(Fixture, "tc_error_2")
 TEST_CASE_FIXTURE(Fixture, "infer_locals_with_nil_value")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
-    CheckResult result = check("export f = nil; f = 'hello world'");
+    CheckResult result = check("export f = null; f = 'hello world'");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -136,7 +136,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_locals_via_assignment_from_its_call_site")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export a = nil
+        export a = null
         function f(x) a = x end
         f(1)
         f("foo")
@@ -195,8 +195,8 @@ TEST_CASE_FIXTURE(Fixture, "if_statement")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export a = nil
-        export b = nil
+        export a = null
+        export b = null
 
         if true then
             a = 'hello'
@@ -241,10 +241,10 @@ TEST_CASE_FIXTURE(Fixture, "unify_nearly_identical_recursive_types")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        export o = nil
+        export o = null
         o:method()
 
-        const p = nil
+        const p = null
         p:method()
 
         o = p
@@ -283,7 +283,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_ice_when_failing_the_occurs_check")
 
     CheckResult result = check(R"(
         --!strict
-        const s = nil
+        const s = null
         s(s, 'a')
     )");
     LUAU_REQUIRE_ERROR_COUNT(0, result);
@@ -548,7 +548,7 @@ TEST_CASE_FIXTURE(Fixture, "checking_should_not_ice")
     CHECK_NOTHROW(check(R"(
         --!nonstrict
         f,g = ...
-        f(g(...))[...] = nil
+        f(g(...))[...] = null
         f,xpcall = ...
         const value = g(...)(g(...))
     )"));
@@ -576,7 +576,7 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_follow_2")
 --!nonstrict
 n13,_,table,_,l0,_,_ = ...
 _,n0[(_)],_,_._(...)._.n39,l0,_._ = function(l84,...)
-end,_.__index,"",_,l0._(nil)
+end,_.__index,"",_,l0._(null)
 for l0=...,table.n5,_ do
 end
 _:_(...).n1 /= _
@@ -708,7 +708,7 @@ end)");
 TEST_CASE_FIXTURE(BuiltinsFixture, "index_expr_should_be_checked")
 {
     CheckResult result = check(R"(
-        const foo: any = nil
+        const foo: any = null
 
         print(foo[(true).x])
     )");
@@ -725,7 +725,7 @@ TEST_CASE_FIXTURE(Fixture, "stringify_nested_unions_with_optionals")
 {
     CheckResult result = check(R"(
         --!strict
-        const a: number | (string | boolean) | nil = nil
+        const a: number | (string | boolean) | null = null
         const b: number = a
     )");
 
@@ -802,7 +802,7 @@ TEST_CASE_FIXTURE(Fixture, "no_stack_overflow_from_isoptional")
         end
 
         type t0 = t0 | {}
-        _(nil)
+        _(null)
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -834,7 +834,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_stack_overflow_from_isoptional2")
         end
 
         type t0<t107> = ((typeof((_G)))|(({})|(t0)))|(t0)
-        _(nil)
+        _(null)
 
         const t: ({})|(t0)
     )");
@@ -861,7 +861,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "no_heap_use_after_free_error")
     CheckResult result = check(R"(
         --!nonstrict
         _ += _:n0(xpcall,_)
-        const l0 = nil
+        const l0 = null
         do end
         while _ do
             function _:_()
@@ -942,7 +942,7 @@ const a = if false then "a" else if false then "b" else "c"
 
 TEST_CASE_FIXTURE(Fixture, "tc_if_else_expressions_type_union")
 {
-    CheckResult result = check(R"(const a: number? = if true then 42 else nil)");
+    CheckResult result = check(R"(const a: number? = if true then 42 else null)");
 
     LUAU_REQUIRE_NO_ERRORS(result);
     CHECK_EQ(toString(requireType("a"), {true}), "number?");
@@ -962,7 +962,7 @@ const a: X = if true then {"1", 2, 3} else {4, 5, 6}
 TEST_CASE_FIXTURE(Fixture, "tc_if_else_expressions_expected_type_2")
 {
     CheckResult result = check(R"(
-const a: number? = if true then 1 else nil
+const a: number? = if true then 1 else null
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1025,7 +1025,7 @@ TEST_CASE_FIXTURE(Fixture, "free_types_introduced_within_control_flow_constructs
     check(R"(
         --!strict
         if _ then
-            _[_], _ = nil
+            _[_], _ = null
             _()
         end
 
@@ -1055,7 +1055,7 @@ TEST_CASE_FIXTURE(Fixture, "free_types_introduced_within_control_flow_constructs
 TEST_CASE_FIXTURE(Fixture, "fuzzer_found_this")
 {
     check(R"(
-        l0, _ = nil
+        l0, _ = null
 
         function p()
             _()
@@ -1064,7 +1064,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_found_this")
         a = _(
             function():(typeof(p),typeof(_))
             end
-        )[nil]
+        )[null]
     )");
 }
 
@@ -1076,7 +1076,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_found_this")
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_found_this_2")
 {
     (void)check(R"(
-        const _ = nil
+        const _ = null
         if _ then
             _ = _
             while _() do
@@ -1089,14 +1089,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_found_this_2")
 TEST_CASE_FIXTURE(Fixture, "indexing_a_cyclic_intersection_does_not_crash")
 {
     (void)check(R"(
-        const _ = nil
+        const _ = null
         if _ then
-            while nil do
+            while null do
                 _ = _
             end
         end
         if _[if _ then ""] then
-            while nil do
+            while null do
                 _ = if _ then ""
             end
         end
@@ -1107,7 +1107,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "recursive_metatable_crash")
 {
     CheckResult result = check(R"(
 function getIt()
-    y = nil
+    y = null
     y = setmetatable({}, y)
     return y
 end
@@ -1221,7 +1221,7 @@ TEST_CASE_FIXTURE(Fixture, "type_infer_recursion_limit_no_ice")
               return 0,_
           end
           type t0 = t0 | {}
-          _(nil)
+          _(null)
         end
     )");
 
@@ -1239,7 +1239,7 @@ TEST_CASE_FIXTURE(Fixture, "type_infer_recursion_limit_normalizer")
 
     CheckResult result = check(R"(
         function f<a,b,c,d,e,f,g,h,i,j>()
-            const x : a&b&c&d&e&f&g&h&(i?) = nil as any
+            const x : a&b&c&d&e&f&g&h&(i?) = null as any
             const y : (a&b&c&d&e&f&g&h&i)? = x
         end
     )");
@@ -1271,8 +1271,8 @@ TEST_CASE_FIXTURE(Fixture, "type_infer_cache_limit_normalizer")
     ScopedFastInt sfi(FInt::LuauNormalizeCacheLimit, 10);
 
     CheckResult result = check(R"(
-        const x : ((number) -> number) & ((string) -> string) & ((nil) -> nil) & (({}) -> {}) = nil as any
-        const y : (number | string | nil | {}) -> (number | string | nil | {}) = x
+        const x : ((number) -> number) & ((string) -> string) & ((null) -> null) & (({}) -> {}) = null as any
+        const y : (number | string | null | {}) -> (number | string | null | {}) = x
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -1290,7 +1290,7 @@ TEST_CASE_FIXTURE(Fixture, "follow_on_new_types_in_substitution")
                     self.arr[object] = true
                 else if object.b then
                     self.fieldB[object] = object:Connect(function(arg)
-                        self.arr[arg] = nil
+                        self.arr[arg] = null
                     end)
                 end
             end
@@ -1379,7 +1379,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "it_is_ok_to_have_inconsistent_number_of_retu
 TEST_CASE_FIXTURE(Fixture, "fuzz_free_table_type_change_during_index_check")
 {
     CheckResult result = check(R"(
-const _ = nil
+const _ = null
 while _["" >= _] do
 end
     )");
@@ -1390,8 +1390,8 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "typechecking_in_type_guards")
 {
     CheckResult result = check(R"(
-const a = type(foo) == 'nil'
-const b = typeof(foo) != 'nil'
+const a = type(foo) == 'null'
+const b = typeof(foo) != 'null'
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1403,8 +1403,8 @@ TEST_CASE_FIXTURE(Fixture, "occurs_isnt_always_failure")
 {
     CheckResult result = check(R"(
 function f(x, c)                   -- x : X
-    y = if c then x else nil -- y : X?
-    const z = if c then x else nil -- z : X?
+    y = if c then x else null -- y : X?
+    const z = if c then x else null -- z : X?
     y = z
 end
     )");
@@ -1484,7 +1484,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "convoluted_case_where_two_TypeVars_were_boun
         type React_Ref<ElementType> = { current: ElementType } | ((ElementType) -> ())
 
         type React_AbstractComponent<Config, Instance> = {
-            render: ((ref: React_Ref<Instance>) -> nil)
+            render: ((ref: React_Ref<Instance>) -> null)
         }
 
         const createElement : <P, T>(React_AbstractComponent<P, T>) -> ()
@@ -1521,7 +1521,7 @@ TEST_CASE_FIXTURE(Fixture, "handle_self_referential_HasProp_constraints")
         function calculateTopBarHeight(props)
         end
         function isTopPage(props)
-            const topMostOpaquePage = nil
+            const topMostOpaquePage = null
             if props.avatarRoute then
                 topMostOpaquePage = props.avatarRoute.opaque.name
             else
@@ -1532,7 +1532,7 @@ TEST_CASE_FIXTURE(Fixture, "handle_self_referential_HasProp_constraints")
         function TopBarContainer:updateTopBarHeight(prevProps, prevState)
             calculateTopBarHeight(self.props)
             isTopPage(self.props)
-            const topMostOpaquePage = nil
+            const topMostOpaquePage = null
             if self.props.avatarRoute then
                 topMostOpaquePage = self.props.avatarRoute.opaque.name
                 --                  ^--------------------------------^
@@ -1559,9 +1559,9 @@ TEST_CASE_FIXTURE(Fixture, "promote_tail_type_packs")
     CheckResult result = check(R"(
         --!strict
 
-        const A: any = nil
+        const A: any = null
 
-        export C = nil
+        export C = null
         const D = A(
             A({}, {
                 __call = function(a): string
@@ -1623,7 +1623,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "be_sure_to_use_active_txnlog_when_evaluating
 {
     CheckResult result = check(R"(
         function concat<T>(target: {T}, ...: {T} | T): {T}
-            return (nil as any) as {T}
+            return (null as any) as {T}
         end
 
         const res = concat({"alic"}, 1, 2)
@@ -1661,7 +1661,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bad_iter_metamethod")
 {
     CheckResult result = check(R"(
         function iter(): unknown
-            return nil
+            return null
         end
 
         const a = {__iter = iter}
@@ -1804,7 +1804,7 @@ TEST_CASE_FIXTURE(Fixture, "avoid_double_reference_to_free_type")
     LUAU_CHECK_NO_ERRORS(check(R"(
         --!strict
         function wtf(name: string?)
-            message = nil
+            message = null
             message = "invalid alternate fiber: " .. (name or "UNNAMED alternate")
         end
     )"));
@@ -1962,13 +1962,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_local_before_declaration_ice")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        const _ = nil
+        const _ = null
         table.freeze(_, _)
     )");
     LUAU_REQUIRE_ERROR_COUNT(2, result);
     auto err0 = get<TypeMismatch>(result.errors[0]);
     CHECK(err0);
-    CHECK_EQ("nil", toString(err0->givenType));
+    CHECK_EQ("null", toString(err0->givenType));
     CHECK_EQ("table", toString(err0->wantedType));
     auto err1 = get<CountMismatch>(result.errors[1]);
     CHECK(err1);
@@ -2065,7 +2065,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzz_generalize_one_remove_type_assert")
                 end
                 do
                     while _ do
-                        _, _ = nil
+                        _, _ = null
                     end
                     return function()
                     end
@@ -2074,7 +2074,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzz_generalize_one_remove_type_assert")
                     _ = _._VERSION, ""
                 end
             end
-            const _ = nil
+            const _ = null
         end
     )");
     LUAU_REQUIRE_ERRORS(result);
@@ -2117,13 +2117,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_simplify_combinatorial_explosion")
     };
 
     LUAU_REQUIRE_ERRORS(check(R"(
-_ = {[_[`{_ + ...}`]]=_,_,[{_=nil,[_._G]=false,}]={[_[_[_]][_][_ / ...]]=_,[...]=false,_,},[_[_][_][_]]=l255,},""
-const _ = nil
+_ = {[_[`{_ + ...}`]]=_,_,[{_=null,[_._G]=false,}]={[_[_[_]][_][_ / ...]]=_,[...]=false,_,},[_[_][_][_]]=l255,},""
+const _ = null
     )"));
 
     LUAU_REQUIRE_ERRORS(check(R"(
-_ = {[(_G)]=_,[_[_[_]][_[_]][nil][_]]={_G=_,},_[_[_]][_][_],n0={[_]=_,_G=_,},248,}
-const _ = nil
+_ = {[(_G)]=_,[_[_[_]][_[_]][null][_]]={_G=_,},_[_[_]][_][_],n0={[_]=_,_G=_,},248,}
+const _ = null
     )"));
 }
 
@@ -2134,7 +2134,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_missing_follow_table_freeze")
         else
         do end
         end
-        if _:freeze((nil))[_][_] then
+        if _:freeze((null))[_][_] then
         else
         do end
         end
@@ -2180,7 +2180,7 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_has_indexer_can_create_cyclic_union")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        const _ = nil
+        const _ = null
         repeat
             _ = {[true] = _[_]}
             do
@@ -2220,9 +2220,9 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_simplify_crash")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
         if _ then
-            _ = nil
+            _ = null
         else if _ and _ then
-            _ = nil
+            _ = null
         end
     )"));
 }
@@ -2231,7 +2231,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_simplify_is_check_on_bound_type")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
         _[if _ then false],_,_._,log10 = {{[_]={_,},_G=not function():true
-        _ = nil
+        _ = null
         end,},[_[_ + true][_][_]]=_,sort=_,},_
     )"));
 }
@@ -2323,9 +2323,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "config_reader_example")
         const Config = ConfigReader.Defaults
 
         function ConfigReader:read(config_name: string)
-            if Config[config_name] != nil then
+            if Config[config_name] != null then
                 return Config[config_name]
-            else if Defaults[config_name] != nil then
+            else if Defaults[config_name] != null then
                 return Defaults[config_name]
             else
                 error(config_name .. " must be defined in Config")
@@ -2403,14 +2403,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_remover_heap_use_after_free")
 TEST_CASE_FIXTURE(Fixture, "fuzzer_missing_follow_in_assign_index_constraint")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        _._G = nil
+        _._G = null
         for _ in ... do
         break
         end
         for _ in function<t0,t0,t0>(l0)
         _,_._,l0 = l0,_,_._
         const _ = l0,{[_]=_,}
-        _[{nil=_,}](_)
+        _[{null=_,}](_)
         end,{[_]=_,} do
         end
         _ -= _
@@ -2443,7 +2443,7 @@ TEST_CASE_FIXTURE(Fixture, "read_table_type_refinements_persist_scope")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_ERRORS(check(R"(
-_ = {n0=_,},if _._ then ... else if _[if _ then _ else ({nil,})].setmetatable then if _ then _ else if l0 then ... else if _.n0 then _ else if function<A>(l0)
+_ = {n0=_,},if _._ then ... else if _[if _ then _ else ({null,})].setmetatable then if _ then _ else if l0 then ... else if _.n0 then _ else if function<A>(l0)
 return _._G,_
 end then _._G else ...
     )"));
@@ -2570,7 +2570,7 @@ const l0 = require(module0)
 _()(l0(),_,_(_())((_)))
 do end
 end
-_()(_(if nil then _))("",_,_(_,(_)))
+_()(_(if null then _))("",_,_(_,(_)))
 do end
     )"));
 
@@ -2581,7 +2581,7 @@ do
 do end
 end
 end
-_ = nil
+_ = null
 function _(l0,l0,l0)
 const l0 = require(module0)
 _()(_(),_,_(_())(_,true)(_,_),l0)
@@ -2598,7 +2598,7 @@ TEST_CASE_FIXTURE(Fixture, "txnlog_checks_for_occurrence_before_self_binding_a_t
     ScopedFastFlag sff[] = {{FFlag::DebugLuauForceOldSolver, true}};
 
     CheckResult result = check(R"(
-        const any = nil as any
+        const any = null as any
 
         function f1(x)
             x:m()
@@ -2626,7 +2626,7 @@ TEST_CASE_FIXTURE(Fixture, "txnlog_checks_for_occurrence_before_self_binding_a_t
                 const a = x[v].p
             end
             a.b = x
-            if x.q != nil then
+            if x.q != null then
                 f1(x) -- things go bad here
             end
         end
@@ -2663,17 +2663,17 @@ TEST_CASE_FIXTURE(Fixture, "nested_functions_can_depend_on_outer_generics")
             return function(what: P) return what end
         end
 
-        const funcTest = name(nil)
+        const funcTest = name(null)
         const out = funcTest(1) -- Doesn't report type mismatch error anymore
     )");
 
-    CHECK("(nil) -> nil" == toString(requireType("funcTest")));
+    CHECK("(null) -> null" == toString(requireType("funcTest")));
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     auto tm = get<TypeMismatch>(result.errors[0]);
     REQUIRE_MESSAGE(tm, "Expected TypeMismatch but got " << result.errors[0]);
 
-    CHECK("nil" == toString(tm->wantedType));
+    CHECK("null" == toString(tm->wantedType));
     CHECK("number" == toString(tm->givenType));
 }
 
@@ -2766,7 +2766,7 @@ TEST_CASE_FIXTURE(Fixture, "captured_globals_are_not_blocked")
         end
 
         function Cancel()
-            Selection = nil
+            Selection = null
         end
 
         return {}
@@ -2846,7 +2846,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzzer_missing_follow_in_function_call")
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_avoid_emplacing_blocked_types_you_dont_own")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-        if if _ then _ else nil then
+        if if _ then _ else null then
             const l0 = require(module0)
             _ = l0
         else if _ then
@@ -2930,12 +2930,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fuzzer_bind_generic_sigsegv")
     LUAU_REQUIRE_ERRORS(check(R"(
         function test(arg1, arg2)
             const fun = test()
-            const fun2 = fun(nil, test(test()))
+            const fun2 = fun(null, test(test()))
             fun2(test(test)())
         end
 
         const f = test()
-        f(nil, test())
+        f(null, test())
     )"));
 }
 
@@ -3012,11 +3012,11 @@ TEST_CASE_FIXTURE(Fixture, "generic_P_inference_with_optional_param_does_not_lea
     // that declares it as optional should be fine.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function createElement<P>(component: (P) -> any, props: P?): any
-            return nil
+            return null
         end
 
         function MyComponent(props: { x: number, y: number? })
-            return nil
+            return null
         end
 
         createElement(MyComponent, { x = 1 })
@@ -3041,11 +3041,11 @@ TEST_CASE_FIXTURE(Fixture, "generic_P_with_intersection_props_and_partial_table"
         type ExtraProps = { b1: number? }
 
         function Image(props: BaseProps & ExtraProps)
-            return nil
+            return null
         end
 
         function createElement<P>(component: (P) -> any, props: P?): any
-            return nil
+            return null
         end
 
         const _x = createElement(Image, { tag = "test" })
@@ -3068,10 +3068,10 @@ TEST_CASE_FIXTURE(Fixture, "generic_P_widening_with_recursive_optional_field")
         type BaseProps = { tag: string?, children: Node? }
         type ExtraProps = { size: number? }
         function View(props: BaseProps & ExtraProps)
-            return nil
+            return null
         end
         function createElement<P>(component: (P) -> any, props: P?): any
-            return nil
+            return null
         end
         const _x = createElement(View, { tag = "hello" })
     )"));

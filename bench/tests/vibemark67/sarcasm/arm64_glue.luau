@@ -211,7 +211,7 @@ function glue.callsiteThunk(out, callee: string, sigDesc)
 	-- register save plan: x19 = myth; then per-arg iv (+ lo if pointer)
 	myth = 19
 	nextReg = 20
-	args = {}  -- k -> { iv = reg, lo = reg|nil, isPtr = bool }
+	args = {}  -- k -> { iv = reg, lo = reg|null, isPtr = bool }
 	for k = 1, sigDesc.argWords do
 		isPtr = sigDesc.argTypes[k] == 7
 		ent = { iv = nextReg, isPtr = isPtr }

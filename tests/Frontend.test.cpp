@@ -506,7 +506,7 @@ export type btype = { x: number }
 
 function bf()
     const a = require(game.A)
-    const bfl : a.atype = nil
+    const bfl : a.atype = null
     return {bfl.x}
 end
 return {mod_b = 2}
@@ -2064,7 +2064,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "generic_P_widening_with_cross_module_recursi
         export type BaseProps = { tag: string?, children: Node? }
         export type ExtraProps = { size: number? }
         function View(props: BaseProps & ExtraProps)
-            return nil
+            return null
         end
         return View
     )";
@@ -2075,7 +2075,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "generic_P_widening_with_cross_module_recursi
         const Modules = game:GetService('Gui').Modules
         const View = require(Modules.A)
         function createElement<P>(component: (P) -> any, props: P?): any
-            return nil
+            return null
         end
         const _x = createElement(View, { tag = "hello" })
     )";

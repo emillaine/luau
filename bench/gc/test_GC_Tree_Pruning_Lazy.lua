@@ -30,7 +30,7 @@ function test()
     function prune_tree(tree, level)
         if tree.left then
             if math.random() > 0.9 - level * 0.05 then
-                tree.left = nil
+                tree.left = null
             else
                 prune_tree(tree.left, level + 1)
             end
@@ -38,7 +38,7 @@ function test()
 
         if tree.right then
             if math.random() > 0.9 - level * 0.05 then
-                tree.right = nil
+                tree.right = null
             else
                 prune_tree(tree.right, level + 1)
             end

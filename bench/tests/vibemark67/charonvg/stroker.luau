@@ -15,7 +15,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
 
     -- Collect flattened contours
     contours = {}
-    current = nil
+    current = null
 
     path:traverseFlatten(function(cmd, ...)
         if cmd == Path.MOVE_TO then
@@ -61,7 +61,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                 last = pts[n]
                 if first[1] == last[1] and first[2] == last[2] then
                     n = n - 1
-                    pts[n + 1] = nil
+                    pts[n + 1] = null
                 end
                 if n < 2 then
                     break

@@ -31,7 +31,7 @@ M.cc = {
 -- Static operand analysis -------------------------------------------------
 function M.memOperand(stmt)
 	for _, op in stmt.operands do if op.kind == "mem" then return op end end
-	return nil
+	return null
 end
 
 WIDTH_LETTER = { b = 1, w = 2, l = 4, q = 8 }
@@ -39,7 +39,7 @@ function M.accessSizeAlign(stmt)
 	mnem = string.lower(stmt.mnemonic)
 	zs = string.match(mnem, "^mov[zs]([bw])")  -- movzbl/movswq/... source width letter
 	if zs then s = WIDTH_LETTER[zs]; return s, s end
-	mem = nil
+	mem = null
 	for _, op in stmt.operands do if op.kind == "mem" then mem = op end end
 	if (mnem == "movzx" or mnem == "movsx") and mem and mem.size then return mem.size, mem.size end
 	sz = (mem and mem.size) or stmt.opsize
@@ -54,7 +54,7 @@ end
 
 -- x86 uses `lea`/`mov` for address arithmetic, so there is no `mov rd, rsp` alloca-base
 -- idiom to recognize for fixed-size regions (gcc emits `lea`, handled as a region result).
-function M.allocaRegionBase(stmt) return nil end
+function M.allocaRegionBase(stmt) return null end
 
 -- Is this a load/store the transform models? On x86 most instructions can carry a memory
 -- operand (it is a load/store architecture only in spirit), so any mem operand is a real
@@ -81,7 +81,7 @@ function M.make(ctx)
 
 	function cg.move(dst, src, coalesce)
 		emit(build.insn("mov", { rt(dst), rt(src) },
-			{ defs = {dst}, uses = {src}, move = coalesce and { dst = dst, src = src } or nil }))
+			{ defs = {dst}, uses = {src}, move = coalesce and { dst = dst, src = src } or null }))
 	end
 	function cg.moveImm(dst, v) emit(build.insn("mov", { rt(dst), build.imm(v) }, { defs = {dst} })) end
 	function cg.moveZero(dst) emit(build.insn("mov", { rt(dst), build.imm(0) }, { defs = {dst} })) end
@@ -92,26 +92,26 @@ function M.make(ctx)
 		mnem = (size == 1) and "movzbl" or "mov"
 		w = (size == 1) and 32 or (size and size * 8 or 64)
 		emit(build.insn(mnem, { rt(dst, w),
-			build.memx(rt(base), { dispVal = off != 0 and off or nil }) }, { defs = {dst}, uses = {base} }))
+			build.memx(rt(base), { dispVal = off != 0 and off or null }) }, { defs = {dst}, uses = {base} }))
 	end
 	function cg.loadIndexed(dst, base, idx, scale, size)
 		emit(build.insn("mov", { rt(dst, size and size * 8 or 64),
 			build.memx(rt(base), { index = rt(idx), scale = scale or 1 }) }, { defs = {dst}, uses = {base, idx} }))
 	end
 	function cg.store(src, base, off)
-		emit(build.insn("mov", { build.memx(rt(base), { dispVal = off != 0 and off or nil }), rt(src) },
+		emit(build.insn("mov", { build.memx(rt(base), { dispVal = off != 0 and off or null }), rt(src) },
 			{ uses = {src, base} }))
 	end
 	function cg.storeIndexed(src, base, idx, scale)
 		emit(build.insn("mov", { build.memx(rt(base), { index = rt(idx), scale = scale or 1 }), rt(src) },
 			{ uses = {src, base, idx} }))
 	end
-	-- dst = base + off + idx*scale (lea; base/idx are temps, may be nil)
+	-- dst = base + off + idx*scale (lea; base/idx are temps, may be null)
 	function cg.effAddr(dst, base, off, idx, scale)
-		uses, mopts = {}, { dispVal = (off != 0) and off or nil }
+		uses, mopts = {}, { dispVal = (off != 0) and off or null }
 		if base then table.insert(uses, base) end
 		if idx then mopts.index = rt(idx); mopts.scale = scale or 1; table.insert(uses, idx) end
-		emit(build.insn("lea", { rt(dst), build.memx(base and rt(base) or nil, mopts) }, { defs = {dst}, uses = uses }))
+		emit(build.insn("lea", { rt(dst), build.memx(base and rt(base) or null, mopts) }, { defs = {dst}, uses = uses }))
 	end
 	function cg.addImm(dst, src, imm)  -- dst = src + imm
 		emit(build.insn("lea", { rt(dst), build.memx(rt(src), { dispVal = imm }) }, { defs = {dst}, uses = {src} }))
@@ -147,7 +147,7 @@ function M.make(ctx)
 	-- (sign-extended) immediate, so a mask that doesn't fit imm32 must go through a register.
 	function cg.testMaskBranch(reg, mask, cond, lbl, width)
 		mval = (type(mask) == "number") and mask or tonumber(mask)
-		big = (mval == nil) or mval > 0x7fffffff or mval < -0x80000000
+		big = (mval == null) or mval > 0x7fffffff or mval < -0x80000000
 		if big then
 			m = allocTemp({ role = "scratch" }); cg.movBig(m, mask)
 			emit(build.insn("test", { rt(reg), rt(m) }, { uses = {reg, m} }))
@@ -162,7 +162,7 @@ function M.make(ctx)
 	function cg.label(name) emit(build.label(name)) end
 
 	function cg.call(sym, uses, clobbers, indirect)
-		node = build.insn("call", { build.sym(sym, indirect and nil or "plt") },
+		node = build.insn("call", { build.sym(sym, indirect and null or "plt") },
 			{ control = "call", uses = uses, defs = clobbers })
 		if indirect then node.indirect = true end
 		emit(node)
@@ -179,9 +179,9 @@ function M.make(ctx)
 
 	-- effective address + capability selection for a memory operand.
 	function cg.computeAddr(node, mem)
-		baseTemp = mem.base and node.opTemp[mem.base] or nil
-		indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or nil
-		capLo = nil
+		baseTemp = mem.base and node.opTemp[mem.base] or null
+		indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or null
+		capLo = null
 		if baseTemp and pf.isPtr[baseTemp] then capLo = pf.lowerTemp[baseTemp]
 		else if indexTemp and pf.isPtr[indexTemp] then capLo = pf.lowerTemp[indexTemp] end
 		disp = mem.dispVal or 0

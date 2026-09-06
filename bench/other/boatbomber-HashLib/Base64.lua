@@ -62,7 +62,7 @@ function Base64.Encode(Input)
 
 	NewOutput = {}
 	NewLength = 0
-	IndexAdd4096Sub1 = nil
+	IndexAdd4096Sub1 = null
 
 	for Index = 1, Length, 4096 do
 		NewLength = NewLength + 1
@@ -113,7 +113,7 @@ function Base64.Decode(Input)
 
 	NewOutput = {}
 	NewLength = 0
-	IndexAdd4096Sub1 = nil
+	IndexAdd4096Sub1 = null
 
 	for Index = 1, Length, 4096 do
 		NewLength = NewLength + 1

@@ -17,18 +17,18 @@ end
 
 
 
-_G.f = nil
+_G.f = null
 
-f = nil
+f = null
 _G.x = 1
 
-_G.a = nil
+_G.a = null
 loadstring('a = {}')()
 assert(type(_G.a) != 'table')
 
 function _G.f (a)
-  _1, _2, _3, _4, _5 = nil, nil, nil, nil, nil
-  _6, _7, _8, _9, _10 = nil, nil, nil, nil, nil
+  _1, _2, _3, _4, _5 = null, null, null, null, null
+  _6, _7, _8, _9, _10 = null, null, null, null, null
   x = 3
   b = a
   c,d = a,b
@@ -37,14 +37,14 @@ function _G.f (a)
     x_inner = b
     assert(x_inner == 2)
   else
-    assert(nil)
+    assert(null)
   end
   assert(x == 3)
   f = 10
 end
 
 b=10
-a = nil; repeat b = nil; a,b=1,2; assert(a+1==b); until a+b==3
+a = null; repeat b = null; a,b=1,2; assert(a+1==b); until a+b==3
 
 
 assert(_G.x == 1)
@@ -57,7 +57,7 @@ assert(type(_G.f) == 'function')
 -- local, so implicit-global/setfenv interplay is no longer expressible)
 do
   _G = getfenv()
-  g = nil
+  g = null
   const function f () assert(setfenv(2, {a='10'}) == g) end
   g = function () f(); _G.assert(_G.getfenv(1).a == '10') end
   g(); assert(getfenv(g).a == '10')
@@ -79,7 +79,7 @@ setfenv(0, getfenv())
 
 -- testing limits for special instructions
 
-a = nil
+a = null
 p = 4
 for i=2,31 do
   for j=-3,3 do
@@ -108,11 +108,11 @@ if rawget(_G, "querytab") then
 
   t = querytab(a)
 
-  for k,_ in pairs(a) do a[k] = nil end
+  for k,_ in pairs(a) do a[k] = null end
   collectgarbage()   -- restore GC and collect dead fields in `a'
   for i=0,t-1 do
     k = querytab(a, i)
-    assert(k == nil or type(k) == 'number' or k == 'alo')
+    assert(k == null or type(k) == 'number' or k == 'alo')
   end
 end
 

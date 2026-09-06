@@ -70,14 +70,14 @@ end
 
 function FadeValue:destroy()
 	self.finalCallback()
-	self.finalCallback = nil
+	self.finalCallback = null
 end
 )");
 }
 
 TEST_CASE_FIXTURE(Fixture, "basic")
 {
-    CheckResult result = check("const t = {foo = \"bar\", baz = 9, quux = nil}");
+    CheckResult result = check("const t = {foo = \"bar\", baz = 9, quux = null}");
     LUAU_REQUIRE_NO_ERRORS(result);
 
     const TableType* tType = get<TableType>(requireType("t"));
@@ -487,7 +487,7 @@ TEST_CASE_FIXTURE(Fixture, "table_param_width_subtyping_1")
             return o
         end
 
-        foo({x=55, y=nil, w=3.14159})
+        foo({x=55, y=null, w=3.14159})
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -529,7 +529,7 @@ TEST_CASE_FIXTURE(Fixture, "table_param_width_subtyping_3")
     {
         // This does not error because `baz` in the method is being inferred as having the type `unknown`, which is an optional type.
         // Specifically, `T` has the type `{ bar: string, method: ... }` and `method` has the type `function({ read baz: unknown }) -> ()`.
-        // In this case, `T` functions as a valid argument type for `method` because it will always read `baz` as `nil` which is a subtype of
+        // In this case, `T` functions as a valid argument type for `method` because it will always read `baz` as `null` which is a subtype of
         // `unknown.` This is safe because in order to do anything with that value, the function body _must_ do some kind of conditional testing.
         LUAU_REQUIRE_NO_ERRORS(result);
     }
@@ -692,7 +692,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_array_2")
         const buttonVector = {}
 
         function createButton( actionName, functionInfoTable )
-            position = nil
+            position = null
             for i = 1,buttonVector.count do
                 if buttonVector[i] == "empty" then
                     position = i
@@ -1169,9 +1169,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "meta_add_both_ways")
 {
     CheckResult result = check(R"(
         type VectorMt = { __add: (Vector, number) -> Vector }
-        const vectorMt: VectorMt = nil as any
+        const vectorMt: VectorMt = null as any
         type Vector = typeof(setmetatable({}, vectorMt))
-        const a: Vector = nil as any
+        const a: Vector = null as any
 
         const b = a + 2
         const c = 2 + a
@@ -1215,14 +1215,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unification_of_unions_in_a_self_referential_
     CheckResult result = check(R"(
         type A = {}
         type AMT = { __mul: (A, A | number) -> A }
-        export a: A = nil as any
-        const amt: AMT = nil as any
+        export a: A = null as any
+        const amt: AMT = null as any
         setmetatable(a, amt)
 
         type B = {}
         type BMT = { __mul: (B, A | B | number) -> A }
-        const b: B = nil as any
-        const bmt: BMT = nil as any
+        const b: B = null as any
+        const bmt: BMT = null as any
         setmetatable(b, bmt)
 
         a = b
@@ -1298,8 +1298,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "result_is_always_any_if_lhs_is_any")
             __mul: (Vector3MT, Vector3MT|number) -> Vector3MT
         }
 
-        const Vector3: {new: (number?, number?, number?) -> Vector3MT} = nil as any
-        const Vector3MT: Vector3MT = nil as any
+        const Vector3: {new: (number?, number?, number?) -> Vector3MT} = null as any
+        const Vector3MT: Vector3MT = null as any
         setmetatable(Vector3, Vector3MT)
 
         type CFrameMT = {
@@ -1308,11 +1308,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "result_is_always_any_if_lhs_is_any")
 
         const CFrame: {
             Angles:(number, number, number) -> CFrameMT
-        } = nil as any
-        const CFrameMT: CFrameMT = nil as any
+        } = null as any
+        const CFrameMT: CFrameMT = null as any
         setmetatable(CFrame, CFrameMT)
 
-        const n: any = nil as any
+        const n: any = null as any
         const a = (n + Vector3.new(0, 1.5, 0)) * CFrame.Angles(0, math.pi/2, 0)
     )");
 
@@ -1598,7 +1598,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_mismatch_should_fail")
         setmetatable(t1, mt1)
 
         const t2 = {x = 1}
-        const mt2 = {__index = function() return nil end}
+        const mt2 = {__index = function() return null end}
         setmetatable(t2, mt2)
 
         t1 = t2
@@ -1903,7 +1903,7 @@ TEST_CASE_FIXTURE(Fixture, "type_mismatch_on_massive_table_is_cut_short")
 
 
     CheckResult result = check(R"(
-        export t: {a: number,b: number, c: number, d: number, e: number, f: number} = nil as any
+        export t: {a: number,b: number, c: number, d: number, e: number, f: number} = null as any
         t = 1
     )");
 
@@ -1930,7 +1930,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
             return { ["foo"] = 1 }
         end
 
-        f()["foo"] = nil
+        f()["foo"] = null
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
@@ -1938,21 +1938,21 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
             t: {known_prop: boolean, [string]: number},
             key: string
         )
-            t[key] = nil
-            t["hello"] = nil
-            t.undefined = nil
+            t[key] = null
+            t["hello"] = null
+            t.undefined = null
         end
     )"));
 
     auto result = check(R"(
         function f(t: {known_prop: boolean, [string]: number, })
-            t.known_prop = nil
+            t.known_prop = null
         end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ(Location{{2, 27}, {2, 30}}, result.errors[0].location);
-    CHECK_EQ("Expected this to be 'boolean', but got 'nil'", toString(result.errors[0]));
+    CHECK_EQ(Location{{2, 27}, {2, 31}}, result.errors[0].location);
+    CHECK_EQ("Expected this to be 'boolean', but got 'null'", toString(result.errors[0]));
 
     loadDefinition(R"(
         declare extern type FancyHashtable with
@@ -1963,21 +1963,21 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_even_on_non_lvalue_base_expr")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function removekey(fh: FancyHashtable, other_key: string)
-            fh["hmmm"] = nil
-            fh[other_key] = nil
-            fh.dne = nil
+            fh["hmmm"] = null
+            fh[other_key] = null
+            fh.dne = null
         end
     )"));
 
     result = check(R"(
         function removekey(fh: FancyHashtable)
-            fh.real_property = nil
+            fh.real_property = null
         end
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ(result.errors[0].location, Location{{2, 31}, {2, 34}});
-    CHECK_EQ("Expected this to be 'string', but got 'nil'", toString(result.errors[0]));
+    CHECK_EQ(result.errors[0].location, Location{{2, 31}, {2, 35}});
+    CHECK_EQ("Expected this to be 'string', but got 'null'", toString(result.errors[0]));
 }
 
 TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_on_generic_map")
@@ -1988,7 +1988,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_set_nil_on_generic_map")
             m[k] = v
         end
         function unset<K, V>(m: MyMap<K, V>, k: K)
-            m[k] = nil
+            m[k] = null
         end
         const m: MyMap<string, boolean> = {}
         set(m, "foo", true)
@@ -2002,15 +2002,15 @@ TEST_CASE_FIXTURE(Fixture, "key_setting_inference_given_nil_upper_bound")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function setkey_object(t: { [string]: number }, v)
             t.foo = v
-            t.foo = nil
+            t.foo = null
         end
         function setkey_constindex(t: { [string]: number }, v)
             t["foo"] = v
-            t["foo"] = nil
+            t["foo"] = null
         end
         function setkey_unknown(t: { [string]: number }, k, v)
             t[k] = v
-            t[k] = nil
+            t[k] = null
         end
     )"));
     CHECK_EQ(toString(requireType("setkey_object")), "({ [string]: number }, number) -> ()");
@@ -2084,7 +2084,7 @@ TEST_CASE_FIXTURE(Fixture, "shorter_array_types_actually_work")
 {
     CheckResult result = check(R"(
         --!strict
-        const A: {string | number} = nil as any
+        const A: {string | number} = null as any
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(0, result);
@@ -2097,7 +2097,7 @@ TEST_CASE_FIXTURE(Fixture, "only_ascribe_synthetic_names_at_module_scope")
     CheckResult result = check(R"(
         --!strict
         const TopLevel = {}
-        export foo = nil
+        export foo = null
 
         for i = 1, 10 do
             const SubScope = { 1, 2, 3 }
@@ -2531,7 +2531,7 @@ but got
         // First, both of the __call functions have hidden ...any arguments
         // because their exact definition is available.
         //
-        // Second, nil <: unknown, so we consider that parameter to be optional.
+        // Second, null <: unknown, so we consider that parameter to be optional.
         LUAU_REQUIRE_ERROR_COUNT(1, result);
         if (FFlag::LuauNewTypePathErrorMessages)
             CHECK(
@@ -2709,7 +2709,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "recursive_metatable_type_call")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-export b = nil
+export b = null
 b = setmetatable({}, {__call = b})
 b()
     )");
@@ -2755,7 +2755,7 @@ TEST_CASE_FIXTURE(Fixture, "top_table_type")
 TEST_CASE_FIXTURE(Fixture, "length_operator_union")
 {
     CheckResult result = check(R"(
-const x: {number} | {string} = nil as any
+const x: {number} | {string} = null as any
 const y = x.count
     )");
 
@@ -2765,7 +2765,7 @@ const y = x.count
 TEST_CASE_FIXTURE(Fixture, "length_operator_intersection")
 {
     CheckResult result = check(R"(
-const x: {number} & {z:string} = nil as any -- mixed tables are evil
+const x: {number} & {z:string} = null as any -- mixed tables are evil
 const y = x.count
     )");
 
@@ -2775,7 +2775,7 @@ const y = x.count
 TEST_CASE_FIXTURE(Fixture, "length_operator_non_table_union")
 {
     CheckResult result = check(R"(
-const x: {number} | any | string = nil as any
+const x: {number} | any | string = null as any
 const y = x.count
     )");
 
@@ -2787,7 +2787,7 @@ TEST_CASE_FIXTURE(Fixture, "length_operator_union_errors")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-const x: {number} | number | string = nil as any
+const x: {number} | number | string = null as any
 const y = x.count
     )");
 
@@ -2845,7 +2845,7 @@ TEST_CASE_FIXTURE(Fixture, "confusing_indexing")
 TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a_table")
 {
     CheckResult result = check(R"(
-        const a: {x: number, y: number, [any]: any} | {y: number} = nil as any
+        const a: {x: number, y: number, [any]: any} | {y: number} = null as any
 
         function f(t)
             t.y = 1
@@ -2866,7 +2866,7 @@ TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a
 TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a_table_2")
 {
     CheckResult result = check(R"(
-        const a: {y: number} | {x: number, y: number, [any]: any} = nil as any
+        const a: {y: number} | {x: number, y: number, [any]: any} = null as any
 
         function f(t)
             t.y = 1
@@ -2918,7 +2918,7 @@ TEST_CASE_FIXTURE(Fixture, "unifying_tables_shouldnt_uaf2")
 {
     CheckResult result = check(R"(
 -- Another example that UAFd, this time found by fuzzing.
-const _ = nil
+const _ = null
 do
 _._ *= (_[{n0=_[{[{[_]=_,}]=_,}],}])[_]
 _ = (_.n0)
@@ -2953,7 +2953,7 @@ TEST_CASE_FIXTURE(Fixture, "table_length")
 
 TEST_CASE_FIXTURE(Fixture, "nil_assign_doesnt_hit_indexer")
 {
-    LUAU_REQUIRE_NO_ERRORS(check("const a = {} a[0] = 7  a[0] = nil"));
+    LUAU_REQUIRE_NO_ERRORS(check("const a = {} a[0] = 7  a[0] = null"));
 }
 
 TEST_CASE_FIXTURE(Fixture, "wrong_assign_does_hit_indexer")
@@ -2964,7 +2964,7 @@ TEST_CASE_FIXTURE(Fixture, "wrong_assign_does_hit_indexer")
         const a = {}
         a[0] = 7
         a[0] = 't'
-        a[0] = nil
+        a[0] = null
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2979,13 +2979,13 @@ TEST_CASE_FIXTURE(Fixture, "nil_assign_doesnt_hit_no_indexer")
 {
     CheckResult result = check(R"(
         const a = {a=1, b=2}
-        a['a'] = nil
+        a['a'] = null
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK_EQ(
         result.errors[0],
         (TypeError{
-            Location{Position{2, 17}, Position{2, 20}},
+            Location{Position{2, 17}, Position{2, 21}},
             TypeMismatch{
                 getBuiltins()->numberType,
                 getBuiltins()->nilType,
@@ -2997,7 +2997,7 @@ TEST_CASE_FIXTURE(Fixture, "nil_assign_doesnt_hit_no_indexer")
 TEST_CASE_FIXTURE(Fixture, "free_rhs_table_can_also_be_bound")
 {
     check(R"(
-        const o = nil
+        const o = null
         const v = o:i()
 
         function g(u)
@@ -3013,8 +3013,8 @@ TEST_CASE_FIXTURE(Fixture, "free_rhs_table_can_also_be_bound")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_unifies_into_map")
 {
     CheckResult result = check(R"(
-        const Instance: any = nil as any
-        const UDim2: any = nil as any
+        const Instance: any = null as any
+        const UDim2: any = null as any
 
         function Create(instanceType)
             return function(data)
@@ -3064,7 +3064,7 @@ TEST_CASE_FIXTURE(Fixture, "should_not_unblock_table_type_twice")
 
     check(R"(
         const timer = peek(timerQueue)
-        while timer != nil do
+        while timer != null do
             if timer.startTime <= currentTime then
                 timer.isQueued = true
             end
@@ -3239,7 +3239,7 @@ TEST_CASE_FIXTURE(Fixture, "evil_table_unification")
     check(R"(
 --!nonstrict
 _ = ...
-_:table(_,string)[_:gsub(_,...,n0)],_,_:gsub(_,string)[""],_:split(_,...,table)._,n0 = nil
+_:table(_,string)[_:gsub(_,...,n0)],_,_:gsub(_,string)[""],_:split(_,...,table)._,n0 = null
 do end
 )");
 }
@@ -3306,9 +3306,9 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_table_cloning_3")
 type X<T> = T
 const a = {}
 a.x = 4
-const b: X<typeof(a)> = nil as any
+const b: X<typeof(a)> = null as any
 a.y = 5
-export c: X<typeof(a)> = nil as any
+export c: X<typeof(a)> = null as any
 c = b
 )");
 
@@ -3344,7 +3344,7 @@ TEST_CASE_FIXTURE(Fixture, "table_indexing_error_location")
 {
     CheckResult result = check(R"(
 const foo = {42}
-const bar: number? = nil as any
+const bar: number? = null as any
 const baz = foo[bar]
     )");
 
@@ -3504,7 +3504,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_invalidate_the_properties_iterator_of_free_tabl
 TEST_CASE_FIXTURE(Fixture, "checked_prop_too_early")
 {
     CheckResult result = check(R"(
-        const t: {x: number?}? = {x = nil}
+        const t: {x: number?}? = {x = null}
         const u = t.x and t or 5
     )");
 
@@ -3512,12 +3512,12 @@ TEST_CASE_FIXTURE(Fixture, "checked_prop_too_early")
 
     if (!FFlag::DebugLuauForceOldSolver)
     {
-        CHECK_EQ("Value of type '{ x: number? }?' could be nil", toString(result.errors[0]));
+        CHECK_EQ("Value of type '{ x: number? }?' could be null", toString(result.errors[0]));
         CHECK_EQ("number | { read x: number, write x: number? }", toString(requireType("u")));
     }
     else
     {
-        CHECK_EQ("Value of type '{ x: number? }?' could be nil", toString(result.errors[0]));
+        CHECK_EQ("Value of type '{ x: number? }?' could be null", toString(result.errors[0]));
         CHECK_EQ("number | { x: number? }", toString(requireType("u")));
     }
 }
@@ -3525,12 +3525,12 @@ TEST_CASE_FIXTURE(Fixture, "checked_prop_too_early")
 TEST_CASE_FIXTURE(Fixture, "accidentally_checked_prop_in_opposite_branch")
 {
     CheckResult result = check(R"(
-        const t: {x: number?}? = {x = nil}
+        const t: {x: number?}? = {x = null}
         const u = t and t.x == 5 or t.x == 31337
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK_EQ("Value of type '{ x: number? }?' could be nil", toString(result.errors[0]));
+    CHECK_EQ("Value of type '{ x: number? }?' could be null", toString(result.errors[0]));
     CHECK_EQ("boolean", toString(requireType("u")));
 }
 
@@ -3996,7 +3996,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tables_should_be_fully_populated")
 TEST_CASE_FIXTURE(Fixture, "fuzz_table_indexer_unification_can_bound_owner_to_string")
 {
     CheckResult result = check(R"(
-sin,_ = nil
+sin,_ = null
 _ = _[_.sin][_._][_][_]._
 _[_] = _
     )");
@@ -4007,7 +4007,7 @@ _[_] = _
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_table_extra_prop_unification_can_bound_owner_to_string")
 {
     CheckResult result = check(R"(
-l0,_ = nil
+l0,_ = null
 _ = _,_[_.n5]._[_][_][_]._
 _._.foreach[_],_ = _[_],_._
     )");
@@ -4018,7 +4018,7 @@ _._.foreach[_],_ = _[_],_._
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_typelevel_promote_on_changed_table_type")
 {
     CheckResult result = check(R"(
-_._,_ = nil
+_._,_ = null
 _ = _.foreach[_]._,_[_.n5]._[_.foreach][_][_]._
 _ = _._
     )");
@@ -4066,7 +4066,7 @@ end)
 TEST_CASE_FIXTURE(BuiltinsFixture, "fuzz_table_unify_prop_realloc")
 {
     CheckResult result = check(R"(
-n3,_ = nil
+n3,_ = null
 _ = _[""]._,_[l0][_._][{[_]=_,_=_,}][_G].number
 _ = {_,}
     )");
@@ -4121,7 +4121,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_extend_unsealed_tables_in_rvalue_position")
             Sour = true
         }
 
-        const print: any = nil as any
+        const print: any = null as any
 
         print(testDictionary[""])
     )");
@@ -4167,7 +4167,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "top_table_type_is_isomorphic_to_empty_sealed
             for index = 1, select("#", ...) do
                 const rest = select(index, ...)
 
-                if rest != nil and typeof(rest) == "table" then
+                if rest != null and typeof(rest) == "table" then
                     for key, value in pairs(rest) do
                     end
                 end
@@ -4198,7 +4198,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "certain_properties_of_table_literal_arguments_can_be_covariant")
 {
     CheckResult result = check(R"(
-        function f(a: {[string]: string | {any} | nil })
+        function f(a: {[string]: string | {any} | null })
             return a
         end
 
@@ -4453,7 +4453,7 @@ TEST_CASE_FIXTURE(Fixture, "nested_write_property_mismatch_describes_the_assigne
     CheckResult result = check(R"(
         type A = { write outer: { read inner: number } }
         type B = { write outer: { read inner: string } }
-        const a: A = nil as any
+        const a: A = null as any
         const b: B = a
     )");
 
@@ -5071,9 +5071,9 @@ TEST_CASE_FIXTURE(Fixture, "setprop_on_a_mutating_local_in_both_loops_and_functi
         const _ = 5
 
         while (_) do
-            _._ = nil
+            _._ = null
             function _()
-                _ = nil
+                _ = null
             end
         end
     )");
@@ -5156,11 +5156,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_results_compare_to_nil")
         --!strict
 
         function foo(tbl: {number})
-            if tbl[2] == nil then
+            if tbl[2] == null then
                 print("foo")
             end
 
-            if tbl[3] != nil then
+            if tbl[3] != null then
                 print("bar")
             end
         end
@@ -5176,9 +5176,9 @@ Module 'l0':
 do end
 
 Module 'l1':
-const _ = {n0=nil,}
-if if nil then _ then
-if nil and (_)._ != (_)._ then
+const _ = {n0=null,}
+if if null then _ then
+if null and (_)._ != (_)._ then
 do end
 while _ do
 _ = _
@@ -5187,9 +5187,9 @@ end
 end
 do end
 end
-const l0 = nil
+const l0 = null
 while _ do
-_ = nil
+_ = null
 (_[_])._ %= `{# _}{bit32.extract(# _,1)}`
 end
 
@@ -5204,16 +5204,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_literal_inference_assert")
         }
 
         buttons.Button = {
-            call = nil;
-            lightParts = nil;
-            litPropertyOverrides = nil;
-            model = nil;
-            pivot = nil;
-            unlitPropertyOverrides = nil;
+            call = null;
+            lightParts = null;
+            litPropertyOverrides = null;
+            model = null;
+            pivot = null;
+            unlitPropertyOverrides = null;
         }
         buttons.Button.__index = buttons.Button
 
-        const lightFuncs: { (self: types.Button, lit: boolean) -> nil } = {
+        const lightFuncs: { (self: types.Button, lit: boolean) -> null } = {
             ['\x00'] = function(self: types.Button, lit: boolean)
         end;
         }
@@ -5243,12 +5243,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table::insert_should_not_report_errors_when_
     CheckResult result = check(R"(
 type cs = { GetTagged : (cs, string) -> any}
 const destroyQueue: {any} = {} -- pair of (time, coin)
-const tick : () -> any = nil as any
-const CS : cs = nil as any
-const DESTROY_DELAY = nil
+const tick : () -> any = null as any
+const CS : cs = null as any
+const DESTROY_DELAY = null
 function SpawnCoin()
 	const spawns = CS:GetTagged('CoinSpawner')
-	const n : any = nil as any
+	const n : any = null as any
 	const StartPos = spawns[n].CFrame
 	const Coin = script.Coin:Clone()
 	Coin.CFrame = StartPos
@@ -5369,13 +5369,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_union_type")
                 setmetatable(self, Message)
                 return self
             end
-            const self = Message.new(nil)
+            const self = Message.new(null)
             self[key] = value
         end
     )");
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK_EQ(
-        "Cannot add indexer to table '{ @metatable t1, (nil & ~(false?)) | {  } } where t1 = { new: <T>(T) -> { @metatable t1, (T & ~(false?)) | {  "
+        "Cannot add indexer to table '{ @metatable t1, (null & ~(false?)) | {  } } where t1 = { new: <T>(T) -> { @metatable t1, (T & ~(false?)) | {  "
         "} } }'",
         toString(result.errors[0])
     );
@@ -5662,7 +5662,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1615_parametrized_type_alias")
     LUAU_CHECK_NO_ERRORS(check(R"(
         type Pair<Node> = { sep: {}? }
         const a: Pair<{}> = {
-            sep = nil,
+            sep = null,
         }
     )"));
 }
@@ -5674,7 +5674,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1543_optional_generic_param")
 
         const foo: foo<any> = { bar = "foobar" }
         const foo: foo<any> = { }
-        const foo: foo<nil> = { }
+        const foo: foo<null> = { }
     )"));
 }
 
@@ -6087,7 +6087,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1344")
         	t.value = ""
         end
 
-        export s: string? = nil
+        export s: string? = null
 
         if not s then
         	s = ""
@@ -6203,7 +6203,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1888_and_or_subscriptable")
         function CacheManager:has(cacheName: string, id: string): boolean
             const cache = _caches[cacheName]
             const entry = cache and cache[id]
-            return entry != nil
+            return entry != null
         end
     )"));
 }
@@ -6254,7 +6254,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1914_access_after_assignment_with_assert
             { name = "Part3" },
         }
 
-        export baseWall: WallHolder? = nil as any
+        export baseWall: WallHolder? = null as any
         for _, wall in walls do
             if wall.name == "Wall" then
                 baseWall = wall as WallHolder
@@ -6564,7 +6564,7 @@ TEST_CASE_FIXTURE(Fixture, "array_of_callbacks_bidirectionally_inferred")
                 if input then
                     return 42
                 else
-                    return nil
+                    return null
                 end
             end
         }
@@ -6656,7 +6656,7 @@ TEST_CASE_FIXTURE(Fixture, "table_with_intersection_containing_lambda")
             foo = "wow!",
             method = function(arg)
                 const _ = arg
-                return nil
+                return null
             end,
         }
     )"));
@@ -6673,7 +6673,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_174304_allow_getmetatable_error_and_tabl
             end
 
             const ok, hasNew = pcall(function()
-                return class.new != nil and tbl.new == class.new
+                return class.new != null and tbl.new == class.new
             end)
             if ok and hasNew then
                 return true
@@ -6698,7 +6698,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_indexing_into_error_or_not_nil")
         function f(i: number, ...)
             const value = select(i, ...)
             const valueType = typeof(value)
-            if value == nil then
+            if value == null then
             else if valueType == "table" then
                 for k = 1, value.count do
                     const _ = value[k]
@@ -6769,7 +6769,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2094_push_type_constraint_should_always_
 
         function new<T>(t: T): Interface<TypeFn<T>>
             return {
-                _t = nil as any,
+                _t = null as any,
             }
         end
     )"));
@@ -6783,7 +6783,7 @@ TEST_CASE_FIXTURE(Fixture, "table_access_indexer_via_name_expr")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         --!strict
         type List = "Val1" | "Val2" | "Val3"
-        const Table: { [List]: boolean } = nil as any
+        const Table: { [List]: boolean } = null as any
         const _ = Table.Val1
     )"));
 
@@ -6797,7 +6797,7 @@ TEST_CASE_FIXTURE(Fixture, "table_access_indexer_fails_with_missing_key")
     auto result = check(R"(
         --!strict
         type List = "Val2" | "Val3"
-        const Table: { [List]: boolean } = nil as any
+        const Table: { [List]: boolean } = null as any
         const _ = Table.Val1
     )");
 
@@ -6831,13 +6831,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_allow_laundering")
 
     CheckResult result = check(R"(
         --!strict
-        function foo(t: {}): { x: nil }
+        function foo(t: {}): { x: null }
             return t
         end
 
         const t: { x: number } = { x = 42 }
         const laundered = foo(t) -- via width subtyping
-        laundered.x = nil
+        laundered.x = null
         assert(type(t) == "number")
     )");
 
@@ -6893,7 +6893,7 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_3")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const v: number? = nil as any
+        const v: number? = null as any
         const t1 = {
             {1, 2, 3},
             {v}
@@ -6916,8 +6916,8 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_4")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const v: number? = nil as any
-        const s: string? = nil as any
+        const v: number? = null as any
+        const s: string? = null as any
         const t = {
             {s},
             {v}
@@ -6934,7 +6934,7 @@ TEST_CASE_FIXTURE(Fixture, "basic_data_like_array_5")
     ScopedFastFlag _{FFlag::LuauRelateIndexersTypo, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const v: number? = nil as any
+        const v: number? = null as any
         const t = {
             { entry = 42 },
             { entry = v }
@@ -6981,8 +6981,8 @@ type B = {
 	parsed: A,
 }
 
-const x : B = (nil as any)
-const found = x.parsed.foo["any"] == nil -- errors
+const x : B = (null as any)
+const found = x.parsed.foo["any"] == null -- errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -7003,8 +7003,8 @@ type B = {
 	parsed: A,
 }
 
-const x : B = (nil as any)
-const found = x.parsed.foo["any"] != nil -- errors
+const x : B = (null as any)
+const found = x.parsed.foo["any"] != null -- errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -7025,9 +7025,9 @@ type B = {
 	parsed: A,
 }
 
-const x : B = (nil as any)
+const x : B = (null as any)
 
-if x.parsed.foo["any"] != nil then
+if x.parsed.foo["any"] != null then
 end
 
 )");
@@ -7050,9 +7050,9 @@ type B = {
 	parsed: A,
 }
 
-const x : B = (nil as any)
+const x : B = (null as any)
 
-if x.parsed.foo["any"] == nil then
+if x.parsed.foo["any"] == null then
 end
 
 )");
@@ -7081,7 +7081,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1947_partial")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function foo<T>(bar: { qux: T, baz: string? }) end
         foo { qux = "string", baz = "a" }
-        foo { qux = "string", baz = nil }
+        foo { qux = "string", baz = null }
         foo { qux = "string" }
     )"));
 }
@@ -7097,7 +7097,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1890")
         }
 
         function test_fn<T>(p: ListConfig<T>)
-            return nil as any
+            return null as any
         end
 
         export a = test_fn {
@@ -7316,7 +7316,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "bidirectional_union_via_type_function")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         type function Optional(t)
-            return types.unionof(t, types.singleton(nil))
+            return types.unionof(t, types.singleton(null))
         end
 
         type Config = {
@@ -7375,8 +7375,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersection_of_indexers_1")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string | number]: string } & { [string | number]: unknown } = nil as any
-        const key: string = nil as any
+        const tbl: { [string | number]: string } & { [string | number]: unknown } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -7391,8 +7391,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersection_of_indexers_2")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string | number]: never } & { [string | number]: string } = nil as any
-        const key: string = nil as any
+        const tbl: { [string | number]: never } & { [string | number]: string } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -7407,8 +7407,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersection_of_indexers_3")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { good: boolean } & { [string]: string } = nil as any
-        const key: string = nil as any
+        const tbl: { good: boolean } & { [string]: string } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -7423,8 +7423,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_indexers_1")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string | number]: never } | { [string | number]: string } = nil as any
-        const key: string = nil as any
+        const tbl: { [string | number]: never } | { [string | number]: string } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -7439,8 +7439,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_indexers_2")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string | number]: unknown } | { [string | number]: string } = nil as any
-        const key: string = nil as any
+        const tbl: { [string | number]: unknown } | { [string | number]: string } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -7455,8 +7455,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_indexers_3")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        const tbl: { [string | number]: boolean | string } | { [string | number]: boolean | number } = nil as any
-        const key: string = nil as any
+        const tbl: { [string | number]: boolean | string } | { [string | number]: boolean | number } = null as any
+        const key: string = null as any
         const val = tbl[key]
     )"));
 
@@ -7491,7 +7491,7 @@ TEST_CASE_FIXTURE(Fixture, "test_indexing_into_unsealed_table")
     };
 
     CheckResult results = check(R"(
-        const key1: string, key2: number = nil as any, nil as any
+        const key1: string, key2: number = null as any, null as any
         const tbl = {}
         tbl[key1] = 42
         const val = tbl[key2]

@@ -3782,7 +3782,7 @@ std::tuple<TypeId, TypeId, RefinementId> ConstraintGenerator::checkBinary(
             return {leftType, rightType, nullptr};
 
         TypeId discriminantTy = builtinTypes->neverType;
-        if (typeguard->type == "nil")
+        if (typeguard->type == "null")
             discriminantTy = builtinTypes->nilType;
         else if (typeguard->type == "string")
             discriminantTy = builtinTypes->stringType;
