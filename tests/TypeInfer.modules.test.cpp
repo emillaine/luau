@@ -130,6 +130,30 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_types")
     REQUIRE_MESSAGE(bool(get<TableType>(hType)), "Expected table but got " << toString(hType));
 }
 
+TEST_CASE_FIXTURE(BuiltinsFixture, "require_types_via_implicit_local")
+{
+    fileResolver.source["workspace/A"] = R"(
+        export type Point = {x: number, y: number}
+
+        return {}
+    )";
+
+    fileResolver.source["workspace/B"] = R"(
+        Hooty = require(workspace.A)
+
+        const h: Hooty.Point = nil as any
+    )";
+
+    CheckResult bResult = getFrontend().check("workspace/B");
+    LUAU_REQUIRE_NO_ERRORS(bResult);
+
+    ModulePtr b = getFrontend().moduleResolver.getModule("workspace/B");
+    REQUIRE(b != nullptr);
+
+    TypeId hType = requireType(b, "h");
+    REQUIRE_MESSAGE(bool(get<TableType>(hType)), "Expected table but got " << toString(hType));
+}
+
 TEST_CASE_FIXTURE(BuiltinsFixture, "require_a_variadic_function")
 {
     fileResolver.source["game/A"] = R"(

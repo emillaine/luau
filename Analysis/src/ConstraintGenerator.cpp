@@ -2041,6 +2041,50 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatAssign* ass
         visitLValue(scope, assign->vars.data[i], valueTypes[i]);
     }
 
+    if (assign->values.size > 0)
+    {
+        // To correctly handle 'require', we need to import the exported type bindings into the variable 'namespace'.
+        // Mirrors the handling in visit(AstStatLocal*) for implicit locals declared by bare assignment.
+        for (size_t i = 0; i < assign->values.size && i < assign->vars.size; ++i)
+        {
+            const AstExprLocal* local = assign->vars.data[i]->as<AstExprLocal>();
+            if (!local)
+                continue;
+
+            const AstExprCall* call = assign->values.data[i]->as<AstExprCall>();
+            if (!call)
+                continue;
+
+            auto maybeRequire = matchRequire(*call);
+            if (!maybeRequire)
+                continue;
+
+            AstExpr* require = *maybeRequire;
+
+            auto moduleInfo = moduleResolver->resolveModuleInfo(module->name, *require);
+            if (!moduleInfo)
+                continue;
+
+            ModulePtr module = moduleResolver->getModule(moduleInfo->name);
+            if (!module)
+                continue;
+
+            const Name name{local->local->name.value};
+            scope->importedTypeBindings[name] = module->exportedTypeBindings;
+            scope->importedModules[name] = moduleInfo->name;
+
+            // Imported typeArguments of requires that transitively refer to current module have to be replaced with 'any'
+            for (const auto& [location, path] : requireCycles)
+            {
+                if (path.empty() || path.front() != moduleInfo->name)
+                    continue;
+
+                for (auto& [name, tf] : scope->importedTypeBindings[name])
+                    tf = TypeFun{{}, {}, builtinTypes->anyType};
+            }
+        }
+    }
+
     return ControlFlow::None;
 }
 
