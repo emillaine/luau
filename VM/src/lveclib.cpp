@@ -6,6 +6,10 @@
 #include "lobject.h"
 
 #include <math.h>
+#include <string.h>
+
+static int vector_lerp(lua_State* L);
+static int vector_index(lua_State* L);
 
 static int vector_create(lua_State* L)
 {
@@ -253,33 +257,6 @@ static int vector_max(lua_State* L)
     return 1;
 }
 
-static int vector_index(lua_State* L)
-{
-    const LUA_VECTOR_TYPE* v = luaL_checkvector(L, 1);
-    size_t namelen = 0;
-    const char* name = luaL_checklstring(L, 2, &namelen);
-
-    // field access implementation mirrors the fast-path we have in the VM
-    if (namelen == 1)
-    {
-        int ic = (name[0] | ' ') - 'x';
-
-#if LUA_VECTOR_SIZE == 4
-        // 'w' is before 'x' in ascii, so ic is -1 when indexing with 'w'
-        if (ic == -1)
-            ic = 3;
-#endif
-
-        if (unsigned(ic) < LUA_VECTOR_SIZE)
-        {
-            lua_pushnumber(L, v[ic]);
-            return 1;
-        }
-    }
-
-    luaL_error(L, "attempt to index vector with '%s'", name);
-}
-
 static int vector_lerp(lua_State* L)
 {
     const LUA_VECTOR_TYPE* a = luaL_checkvector(L, 1);
@@ -312,6 +289,45 @@ static const luaL_Reg vectorlib[] = {
     {"lerp", vector_lerp},
     {NULL, NULL},
 };
+
+static int vector_index(lua_State* L)
+{
+    const LUA_VECTOR_TYPE* v = luaL_checkvector(L, 1);
+    size_t namelen = 0;
+    const char* name = luaL_checklstring(L, 2, &namelen);
+
+    // field access implementation mirrors the fast-path we have in the VM
+    if (namelen == 1)
+    {
+        int ic = (name[0] | ' ') - 'x';
+
+#if LUA_VECTOR_SIZE == 4
+        // 'w' is before 'x' in ascii, so ic is -1 when indexing with 'w'
+        if (ic == -1)
+            ic = 3;
+#endif
+
+        if (unsigned(ic) < LUA_VECTOR_SIZE)
+        {
+            lua_pushnumber(L, v[ic]);
+            return 1;
+        }
+    }
+
+    // method fallback: serve vector library functions (except constructors) as methods
+    for (const luaL_Reg* l = vectorlib; l->name; l++)
+    {
+        if (l->name[0] == name[0] && strlen(l->name) == namelen && memcmp(l->name, name, namelen) == 0)
+        {
+            if (strcmp(l->name, "create") == 0)
+                break;
+            lua_pushcfunction(L, l->func, NULL);
+            return 1;
+        }
+    }
+
+    luaL_error(L, "attempt to index vector with '%s'", name);
+}
 
 static void createmetatable(lua_State* L)
 {

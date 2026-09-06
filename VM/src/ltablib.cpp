@@ -699,5 +699,29 @@ int luaopen_table(lua_State* L)
     lua_pushcfunction(L, tunpack, "unpack");
     lua_setglobal(L, "unpack");
 
+    // Method table for t:method() syntax; excludes constructors (create, pack)
+    // which have no receiver. Stack: [lib]
+    static const char* methods[] = {
+        "concat", "foreach", "foreachi", "getn", "maxn", "insert", "remove", "sort",
+        "unpack", "move", "find", "clear", "freeze", "isfrozen", "clone", NULL,
+    };
+
+    lua_createtable(L, 0, 16); // [lib, methods]
+    for (const char** name = methods; *name; name++)
+    {
+        lua_getfield(L, -2, *name); // [lib, methods, fn]
+        lua_setfield(L, -2, *name); // [lib, methods]
+    }
+
+    lua_createtable(L, 0, 1); // [lib, methods, mt]
+    lua_pushvalue(L, -2);     // [lib, methods, mt, methods]
+    lua_setfield(L, -2, "__index"); // [lib, methods, mt]
+
+    lua_setreadonly(L, -1, true); // mt readonly
+    lua_setreadonly(L, -2, true); // methods readonly
+
+    L->global->mt[LUA_TTABLE] = hvalue(L->top - 1);
+    lua_pop(L, 2); // [lib]
+
     return 1;
 }

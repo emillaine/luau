@@ -86,6 +86,32 @@ void luaL_sandbox(lua_State* L)
         lua_pop(L, 1);
     }
 
+    lua_newbuffer(L, 0);
+    if (lua_getmetatable(L, -1))
+    {
+        lua_setreadonly(L, -1, true);
+        lua_pop(L, 2);
+    }
+    else
+    {
+        lua_pop(L, 1);
+    }
+
+#if LUA_VECTOR_SIZE == 4
+    lua_pushvector(L, 0.0f, 0.0f, 0.0f, 0.0f);
+#else
+    lua_pushvector(L, 0.0f, 0.0f, 0.0f);
+#endif
+    if (lua_getmetatable(L, -1))
+    {
+        lua_setreadonly(L, -1, true);
+        lua_pop(L, 2);
+    }
+    else
+    {
+        lua_pop(L, 1);
+    }
+
     // set globals to readonly and activate safeenv since the env is immutable
     lua_setreadonly(L, LUA_GLOBALSINDEX, true);
     lua_setsafeenv(L, LUA_GLOBALSINDEX, true);

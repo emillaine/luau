@@ -430,12 +430,53 @@ static const luaL_Reg bufferlib_NOINTEGER[] = {
     {NULL, NULL},
 };
 
+static void createmetatable(lua_State* L)
+{
+    // Method table for buf:method() syntax; excludes constructors (create, fromstring)
+    // which have no receiver. Entry stack: [lib]
+    int lib = lua_gettop(L);
+
+    lua_createtable(L, 0, 32); // [lib, methods]
+    int methods = lua_gettop(L);
+
+    lua_pushnil(L); // [lib, methods, nil]
+    while (lua_next(L, lib) != 0)
+    {
+        // key at -2, value at -1
+        if (lua_type(L, -2) == LUA_TSTRING)
+        {
+            const char* key = lua_tostring(L, -2);
+            if (strcmp(key, "create") != 0 && strcmp(key, "fromstring") != 0)
+            {
+                lua_pushvalue(L, -2); // [.., k, v, k]
+                lua_pushvalue(L, -2); // [.., k, v, k, v]
+                lua_rawset(L, methods); // methods[k] = v
+            }
+        }
+        lua_pop(L, 1); // [.., k]
+    }
+    // [lib, methods]
+    lua_setreadonly(L, methods, true);
+
+    lua_createtable(L, 0, 1); // [lib, methods, mt]
+    lua_pushvalue(L, methods); // [lib, methods, mt, methods]
+    lua_setfield(L, -2, "__index"); // mt.__index = methods; [lib, methods, mt]
+
+    lua_newbuffer(L, 0);   // [lib, methods, mt, dummy]
+    lua_pushvalue(L, -2);  // [lib, methods, mt, dummy, mt]
+    lua_setmetatable(L, -2); // set buffer metatable; [lib, methods, mt, dummy]
+    lua_pop(L, 1);         // [lib, methods, mt]
+    lua_pop(L, 2);         // [lib]
+}
+
 int luaopen_buffer(lua_State* L)
 {
     if (FFlag::LuauIntegerLibrary)
         luaL_register(L, LUA_BUFFERLIBNAME, bufferlib);
     else
         luaL_register(L, LUA_BUFFERLIBNAME, bufferlib_NOINTEGER);
+
+    createmetatable(L);
 
     return 1;
 }

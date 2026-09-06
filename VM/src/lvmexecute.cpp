@@ -983,7 +983,20 @@ reentry:
                         // recompute ra since stack might have been reallocated
                         ra = VM_REG(LUAU_INSN_A(insn));
                         if (ttisnil(ra))
-                            luaG_methoderror(L, ra + 1, tsvalue(kv));
+                        {
+                            // fallback: global table metatable __index (table library methods for t:method())
+                            LuaTable* gmt = L->global->mt[LUA_TTABLE];
+                            const TValue* gindex = gmt ? fasttm(L, gmt, TM_INDEX) : NULL;
+                            const TValue* gres = (gindex && ttistable(gindex)) ? luaH_getstr(hvalue(gindex), tsvalue(kv)) : NULL;
+                            if (gres && !ttisnil(gres))
+                            {
+                                setobj2s(L, ra, gres);
+                            }
+                            else
+                            {
+                                luaG_methoderror(L, ra + 1, tsvalue(kv));
+                            }
+                        }
                     }
                 }
                 else
