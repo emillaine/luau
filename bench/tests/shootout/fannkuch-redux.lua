@@ -1,4 +1,4 @@
---[[
+#[[
 MIT License
 
 Copyright (c) 2017 Gabriel de Quadros Ligneul
@@ -21,9 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
--- The Computer Language Benchmarks Game
--- http://benchmarksgame.alioth.debian.org/
--- contributed by Mike Pall
+# The Computer Language Benchmarks Game
+# http://benchmarksgame.alioth.debian.org/
+# contributed by Mike Pall
 
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
@@ -34,16 +34,16 @@ function fannkuch(n)
   p, q, s, sign, maxflips, sum = {}, {}, {}, 1, 0, 0
   for i=1,n do p[i] = i; q[i] = i; s[i] = i end
   repeat
-    -- Copy and flip.
-    q1 = p[1]				-- Cache 1st element.
+    # Copy and flip.
+    q1 = p[1]				# Cache 1st element.
     if q1 != 1 then
-      for i=2,n do q[i] = p[i] end		-- Work on a copy.
+      for i=2,n do q[i] = p[i] end		# Work on a copy.
       flips = 1
       repeat
 	qq = q[q1]
-	if qq == 1 then				-- ... until 1st element is 1.
+	if qq == 1 then				# ... until 1st element is 1.
 	  sum = sum + sign*flips
-	  if flips > maxflips then maxflips = flips end -- New maximum?
+	  if flips > maxflips then maxflips = flips end # New maximum?
 	  break
 	end
 	q[q1] = q1
@@ -55,15 +55,15 @@ function fannkuch(n)
       until false
     end
     if sign == 1 then
-      p[2], p[1] = p[1], p[2]; sign = -1	-- Rotate 1<-2.
+      p[2], p[1] = p[1], p[2]; sign = -1	# Rotate 1<-2.
     else
-      p[2], p[3] = p[3], p[2]; sign = 1		-- Rotate 1<-2 and 1<-2<-3.
+      p[2], p[3] = p[3], p[2]; sign = 1		# Rotate 1<-2 and 1<-2<-3.
       for i=3,n do
 	sx = s[i]
 	if sx != 1 then s[i] = sx-1; break end
-	if i == n then return sum, maxflips end	-- Out of permutations.
+	if i == n then return sum, maxflips end	# Out of permutations.
 	s[i] = i
-	-- Rotate 1<-...<-i+1.
+	# Rotate 1<-...<-i+1.
 	t = p[1]; for j=1,i do p[j] = p[j+1] end; p[i+1] = t
       end
     end

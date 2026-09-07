@@ -1,4 +1,4 @@
--- Chess position evaluation with piece-square tables
+# Chess position evaluation with piece-square tables
 
 boardMod = require("./board")
 EMPTY = boardMod.EMPTY

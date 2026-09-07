@@ -63,7 +63,7 @@ function NBodySystem.new(bodies)
     px = 0
     py = 0
     pz = 0
-    size = #self.bodies
+    size = self.bodies.count
 
     for i=1, size do
         b = self.bodies[i]
@@ -81,7 +81,7 @@ end
 
 function NBodySystem:advance(dt)
     dx, dy, dz, distance, mag = null, null, null, null, null
-    size = #self.bodies
+    size = self.bodies.count
 
     for i=1, size do
       bodyi = self.bodies[i]
@@ -115,7 +115,7 @@ end
 function NBodySystem:energy()
     dx, dy, dz, distance = null, null, null, null
     e = 0.0
-    size = #self.bodies
+    size = self.bodies.count
 
     for i=1, size do
         bodyi = self.bodies[i]

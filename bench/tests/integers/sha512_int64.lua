@@ -35,16 +35,16 @@ function test()
 	end
 
 	function preprocess(msg)
-		msgLen = #msg
+		msgLen = msg.count
 		extra = 128 - ((msgLen + 17) % 128)
 
 		padded = msg .. '\128' .. string.rep('\0', extra + 8)
-		paddedLen = #padded + 8
+		paddedLen = padded.count + 8
 
 		buf = buffer.create(paddedLen)
 		buffer.writestring(buf, 0, padded)
 
-		-- length goes in the low 8 bytes (high 8 bytes left as zero, fits since msgLen*8 < 2^64)
+		# length goes in the low 8 bytes (high 8 bytes left as zero, fits since msgLen*8 < 2^64)
 		bitLen = msgLen * 8
 		for i = 0, 7 do
 			rem = bitLen % 256

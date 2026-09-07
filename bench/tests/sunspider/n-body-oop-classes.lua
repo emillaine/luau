@@ -1,4 +1,4 @@
--- --bench-args: --fflags=DebugLuauUserDefinedClasses,DebugLuauUserDefinedClassesRuntime,LuauCallFeedback,LuauEmitCallFeedback
+# --bench-args: --fflags=DebugLuauUserDefinedClasses,DebugLuauUserDefinedClassesRuntime,LuauCallFeedback,LuauEmitCallFeedback
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
@@ -71,7 +71,7 @@ class NBodySystem
         px = 0
         py = 0
         pz = 0
-        size = #self.bodies
+        size = self.bodies.count
 
         for i=1, size do
             b = self.bodies[i]
@@ -87,7 +87,7 @@ class NBodySystem
 
     function advance(self, dt)
         dx, dy, dz, distance, mag = null, null, null, null, null
-        size = #self.bodies
+        size = self.bodies.count
 
         for i=1, size do
           bodyi = self.bodies[i]
@@ -121,7 +121,7 @@ class NBodySystem
     function energy(self)
         dx, dy, dz, distance = null, null, null, null
         e = 0.0
-        size = #self.bodies
+        size = self.bodies.count
 
         for i=1, size do
             bodyi = self.bodies[i]

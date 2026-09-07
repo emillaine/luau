@@ -1,4 +1,4 @@
--- forward declaration (no hoisted globals)
+# forward declaration (no hoisted globals)
 findContactPoints_PolygonPolygon = null
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
@@ -6,14 +6,14 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- 2D Physics Engine Benchmark
--- A rigid body dynamics simulation with broad-phase (spatial hash) and narrow-phase
--- (SAT) collision detection, sequential impulse constraint solver, joints, and friction.
--- Style: vectors as plain tables, mix of local functions and upvalues, math-heavy.
+# 2D Physics Engine Benchmark
+# A rigid body dynamics simulation with broad-phase (spatial hash) and narrow-phase
+# (SAT) collision detection, sequential impulse constraint solver, joints, and friction.
+# Style: vectors as plain tables, mix of local functions and upvalues, math-heavy.
 
 M = {sqrt = math.sqrt, abs = math.abs, min = math.min, max = math.max, cos = math.cos, sin = math.sin, atan2 = math.atan2 or math.atan, pi = math.pi, huge = math.huge, floor = math.floor}
 
--- Deterministic PRNG
+# Deterministic PRNG
 prng_state = 12345
 function random()
     prng_state = (prng_state * 1103515245 + 12345) % 2147483648
@@ -28,9 +28,9 @@ function resetRandom()
     prng_state = 12345
 end
 
--- ============================================================================
--- Vector operations (no metatables - just functions on {x, y} tables)
--- ============================================================================
+# ============================================================================
+# Vector operations (no metatables - just functions on {x, y} tables)
+# ============================================================================
 
 function vec(x, y)
     return {x = x, y = y}
@@ -126,9 +126,9 @@ function vecEqual(a, b, eps)
     return M.abs(a.x - b.x) < eps and M.abs(a.y - b.y) < eps
 end
 
--- ============================================================================
--- Matrix 2x2 operations (for rotations)
--- ============================================================================
+# ============================================================================
+# Matrix 2x2 operations (for rotations)
+# ============================================================================
 
 function mat2(angle)
     c = M.cos(angle)
@@ -144,9 +144,9 @@ function mat2Transpose(m)
     return {m00 = m.m00, m01 = m.m10, m10 = m.m01, m11 = m.m11}
 end
 
--- ============================================================================
--- Shape definitions
--- ============================================================================
+# ============================================================================
+# Shape definitions
+# ============================================================================
 
 SHAPE_CIRCLE = 1
 SHAPE_POLYGON = 2
@@ -161,7 +161,7 @@ end
 
 function computePolygonArea(vertices)
     area = 0
-    n = #vertices
+    n = vertices.count
     for i = 1, n do
         j = (i % n) + 1
         area = area + vertices[i].x * vertices[j].y
@@ -172,7 +172,7 @@ end
 
 function computePolygonCentroid(vertices)
     cx, cy = 0, 0
-    n = #vertices
+    n = vertices.count
     area = 0
     for i = 1, n do
         j = (i % n) + 1
@@ -189,7 +189,7 @@ function computePolygonCentroid(vertices)
 end
 
 function computePolygonMOI(vertices, mass)
-    n = #vertices
+    n = vertices.count
     numerator = 0
     denominator = 0
     for i = 1, n do
@@ -206,7 +206,7 @@ end
 
 function computePolygonNormals(vertices)
     normals = {}
-    n = #vertices
+    n = vertices.count
     for i = 1, n do
         j = (i % n) + 1
         edge = vecSub(vertices[j], vertices[i])
@@ -219,7 +219,7 @@ end
 function createPolygon(vertices)
     centroid = computePolygonCentroid(vertices)
     centered = {}
-    for i = 1, #vertices do
+    for i = 1, vertices.count do
         centered[i] = vecSub(vertices[i], centroid)
     end
     normals = computePolygonNormals(centered)
@@ -228,7 +228,7 @@ function createPolygon(vertices)
         type = SHAPE_POLYGON,
         vertices = centered,
         normals = normals,
-        vertexCount = #centered,
+        vertexCount = centered.count,
         area = area,
         centroidOffset = centroid
     }
@@ -253,9 +253,9 @@ function createRegularPolygon(radius, sides)
     return createPolygon(vertices)
 end
 
--- ============================================================================
--- Rigid Body
--- ============================================================================
+# ============================================================================
+# Rigid Body
+# ============================================================================
 
 bodyIdCounter = 0
 
@@ -361,7 +361,7 @@ function bodyGetAABB(body)
         verts = bodyGetTransformedVertices(body)
         minX, minY = M.huge, M.huge
         maxX, maxY = -M.huge, -M.huge
-        for i = 1, #verts do
+        for i = 1, verts.count do
             v = verts[i]
             if v.x < minX then minX = v.x end
             if v.y < minY then minY = v.y end
@@ -372,9 +372,9 @@ function bodyGetAABB(body)
     end
 end
 
--- ============================================================================
--- Spatial Hash (broad-phase)
--- ============================================================================
+# ============================================================================
+# Spatial Hash (broad-phase)
+# ============================================================================
 
 function createSpatialHash(cellSize)
     return {
@@ -411,8 +411,8 @@ function spatialHashInsert(hash, body)
                 cell = {}
                 hash.cells[key] = cell
             end
-            cell[#cell + 1] = body
-            myCells[#myCells + 1] = key
+            cell[cell.count + 1] = body
+            myCells[myCells.count + 1] = key
         end
     end
     hash.bodyToCells[body.id] = myCells
@@ -432,11 +432,11 @@ function spatialHashQuery(hash, aabb)
             key = spatialHashKey(hash, cx, cy)
             cell = hash.cells[key]
             if cell then
-                for i = 1, #cell do
+                for i = 1, cell.count do
                     b = cell[i]
                     if not seen[b.id] then
                         seen[b.id] = true
-                        results[#results + 1] = b
+                        results[results.count + 1] = b
                     end
                 end
             end
@@ -447,23 +447,23 @@ end
 
 function spatialHashFindPairs(hash, bodies)
     spatialHashClear(hash)
-    for i = 1, #bodies do
+    for i = 1, bodies.count do
         spatialHashInsert(hash, bodies[i])
     end
 
     foundPairs = {}
     pairSet = {}
 
-    -- Collect cell keys into an array and sort them for deterministic iteration
+    # Collect cell keys into an array and sort them for deterministic iteration
     cellKeys = {}
     for key in next, hash.cells do
-        cellKeys[#cellKeys + 1] = key
+        cellKeys[cellKeys.count + 1] = key
     end
     table.sort(cellKeys)
 
-    for ki = 1, #cellKeys do
+    for ki = 1, cellKeys.count do
         cell = hash.cells[cellKeys[ki]]
-        n = #cell
+        n = cell.count
         for i = 1, n do
             for j = i + 1, n do
                 a = cell[i]
@@ -478,9 +478,9 @@ function spatialHashFindPairs(hash, bodies)
                     if not pairSet[pairKey] then
                         pairSet[pairKey] = true
                         if a.id < b.id then
-                            foundPairs[#foundPairs + 1] = {a = a, b = b}
+                            foundPairs[foundPairs.count + 1] = {a = a, b = b}
                         else
-                            foundPairs[#foundPairs + 1] = {a = b, b = a}
+                            foundPairs[foundPairs.count + 1] = {a = b, b = a}
                         end
                     end
                 end
@@ -490,9 +490,9 @@ function spatialHashFindPairs(hash, bodies)
     return foundPairs
 end
 
--- ============================================================================
--- AABB overlap test
--- ============================================================================
+# ============================================================================
+# AABB overlap test
+# ============================================================================
 
 function aabbOverlap(a, b)
     aabb1 = bodyGetAABB(a)
@@ -501,14 +501,14 @@ function aabbOverlap(a, b)
            aabb1.maxY >= aabb2.minY and aabb1.minY <= aabb2.maxY
 end
 
--- ============================================================================
--- Narrow-phase: SAT (Separating Axis Theorem)
--- ============================================================================
+# ============================================================================
+# Narrow-phase: SAT (Separating Axis Theorem)
+# ============================================================================
 
 function projectPolygonOnAxis(vertices, axis)
     min = vecDot(vertices[1], axis)
     max = min
-    for i = 2, #vertices do
+    for i = 2, vertices.count do
         proj = vecDot(vertices[i], axis)
         if proj < min then min = proj end
         if proj > max then max = proj end
@@ -532,7 +532,7 @@ function findPolygonPolygonContacts(bodyA, bodyB)
     referenceBody = null
     incidentBody = null
 
-    for i = 1, #normalsA do
+    for i = 1, normalsA.count do
         axis = normalsA[i]
         minA, maxA = projectPolygonOnAxis(vertsA, axis)
         minB, maxB = projectPolygonOnAxis(vertsB, axis)
@@ -550,7 +550,7 @@ function findPolygonPolygonContacts(bodyA, bodyB)
         end
     end
 
-    for i = 1, #normalsB do
+    for i = 1, normalsB.count do
         axis = normalsB[i]
         minA, maxA = projectPolygonOnAxis(vertsA, axis)
         minB, maxB = projectPolygonOnAxis(vertsB, axis)
@@ -592,7 +592,7 @@ function findContactPoints_PolygonPolygon(vertsA, vertsB, normal)
     function findSupport(vertices, direction)
         maxProj = -M.huge
         best = null
-        for i = 1, #vertices do
+        for i = 1, vertices.count do
             proj = vecDot(vertices[i], direction)
             if proj > maxProj then
                 maxProj = proj
@@ -603,7 +603,7 @@ function findContactPoints_PolygonPolygon(vertsA, vertsB, normal)
     end
 
     function findIncidentEdge(vertices, refNormal)
-        n = #vertices
+        n = vertices.count
         minDot = M.huge
         edgeIdx = 1
         for i = 1, n do
@@ -624,11 +624,11 @@ function findContactPoints_PolygonPolygon(vertsA, vertsB, normal)
         out = {}
         d1 = vecDot(normal, v1) - offset
         d2 = vecDot(normal, v2) - offset
-        if d1 >= 0 then out[#out + 1] = v1 end
-        if d2 >= 0 then out[#out + 1] = v2 end
+        if d1 >= 0 then out[out.count + 1] = v1 end
+        if d2 >= 0 then out[out.count + 1] = v2 end
         if d1 * d2 < 0 then
             t = d1 / (d1 - d2)
-            out[#out + 1] = vecLerp(v1, v2, t)
+            out[out.count + 1] = vecLerp(v1, v2, t)
         end
         return out
     end
@@ -638,7 +638,7 @@ function findContactPoints_PolygonPolygon(vertsA, vertsB, normal)
 
     e1, e2 = findIncidentEdge(vertsB, normal)
 
-    nA = #vertsA
+    nA = vertsA.count
     refIdx = 1
     maxProj = -M.huge
     for i = 1, nA do
@@ -658,26 +658,26 @@ function findContactPoints_PolygonPolygon(vertsA, vertsB, normal)
     offset2 = vecDot(refEdge, refV2)
 
     clipped = clipSegment(e1, e2, refEdge, offset1)
-    if #clipped < 2 then
+    if clipped.count < 2 then
         contacts[1] = supportB
         return contacts
     end
 
     clipped = clipSegment(clipped[1], clipped[2], vecNeg(refEdge), -offset2)
-    if #clipped < 2 then
+    if clipped.count < 2 then
         contacts[1] = supportB
         return contacts
     end
 
     refOffset = vecDot(refNormal, refV1)
-    for i = 1, #clipped do
+    for i = 1, clipped.count do
         sep = vecDot(refNormal, clipped[i]) - refOffset
         if sep <= 0 then
-            contacts[#contacts + 1] = clipped[i]
+            contacts[contacts.count + 1] = clipped[i]
         end
     end
 
-    if #contacts == 0 then
+    if contacts.count == 0 then
         contacts[1] = supportB
     end
 
@@ -723,7 +723,7 @@ function findCirclePolygonContacts(circleBody, polyBody)
     separatingNormal = null
     axisType = null
 
-    for i = 1, #normals do
+    for i = 1, normals.count do
         axis = normals[i]
         minP, maxP = projectPolygonOnAxis(verts, axis)
         minC, maxC = projectCircleOnAxis(center, radius, axis)
@@ -738,7 +738,7 @@ function findCirclePolygonContacts(circleBody, polyBody)
 
     closestDist = M.huge
     closestVertex = null
-    for i = 1, #verts do
+    for i = 1, verts.count do
         d = vecDistSq(center, verts[i])
         if d < closestDist then
             closestDist = d
@@ -797,9 +797,9 @@ function detectCollision(bodyA, bodyB)
     return null
 end
 
--- ============================================================================
--- Constraint Solver (Sequential Impulses)
--- ============================================================================
+# ============================================================================
+# Constraint Solver (Sequential Impulses)
+# ============================================================================
 
 function preSolveContact(manifold, dt)
     bodyA = manifold.bodyA
@@ -809,7 +809,7 @@ function preSolveContact(manifold, dt)
 
     manifold.tangent = tangent
 
-    for i = 1, #manifold.contacts do
+    for i = 1, manifold.contacts.count do
         contact = manifold.contacts[i]
         cp = {}
         cp.point = contact
@@ -861,7 +861,7 @@ function solveContact(manifold)
     normal = manifold.normal
     tangent = manifold.tangent
 
-    for i = 1, #manifold.contacts do
+    for i = 1, manifold.contacts.count do
         cp = manifold.contacts[i]
 
         relVel = vecSub(
@@ -903,9 +903,9 @@ function solveContact(manifold)
     end
 end
 
--- ============================================================================
--- Joints
--- ============================================================================
+# ============================================================================
+# Joints
+# ============================================================================
 
 function createDistanceJoint(bodyA, bodyB, anchorA, anchorB, distance)
     return {
@@ -1096,9 +1096,9 @@ function solveJoint(joint, dt)
     end
 end
 
--- ============================================================================
--- World
--- ============================================================================
+# ============================================================================
+# World
+# ============================================================================
 
 function createWorld(gravity, cellSize)
     return {
@@ -1113,12 +1113,12 @@ function createWorld(gravity, cellSize)
 end
 
 function worldAddBody(world, body)
-    world.bodies[#world.bodies + 1] = body
+    world.bodies[world.bodies.count + 1] = body
     return body
 end
 
 function worldAddJoint(world, joint)
-    world.joints[#world.joints + 1] = joint
+    world.joints[world.joints.count + 1] = joint
     return joint
 end
 
@@ -1127,7 +1127,7 @@ function worldStep(world, dt)
     bodies = world.bodies
     gravity = world.gravity
 
-    for i = 1, #bodies do
+    for i = 1, bodies.count do
         body = bodies[i]
         if not body.isStatic then
             gravForce = vecMul(gravity, body.mass * body.gravityScale)
@@ -1143,30 +1143,30 @@ function worldStep(world, dt)
     pairs = spatialHashFindPairs(world.spatialHash, bodies)
 
     manifolds = {}
-    for i = 1, #pairs do
+    for i = 1, pairs.count do
         pair = pairs[i]
         if aabbOverlap(pair.a, pair.b) then
             manifold = detectCollision(pair.a, pair.b)
             if manifold then
-                manifolds[#manifolds + 1] = manifold
+                manifolds[manifolds.count + 1] = manifold
             end
         end
     end
 
-    for i = 1, #manifolds do
+    for i = 1, manifolds.count do
         preSolveContact(manifolds[i], dt)
     end
 
     for iter = 1, world.iterations do
-        for i = 1, #manifolds do
+        for i = 1, manifolds.count do
             solveContact(manifolds[i])
         end
-        for i = 1, #world.joints do
+        for i = 1, world.joints.count do
             solveJoint(world.joints[i], dt)
         end
     end
 
-    for i = 1, #bodies do
+    for i = 1, bodies.count do
         body = bodies[i]
         if not body.isStatic then
             body.position = vecAdd(body.position, vecMul(body.velocity, dt))
@@ -1177,9 +1177,9 @@ function worldStep(world, dt)
     world.manifolds = manifolds
 end
 
--- ============================================================================
--- Ray casting
--- ============================================================================
+# ============================================================================
+# Ray casting
+# ============================================================================
 
 function raycastCircle(origin, direction, maxDist, body)
     center = body.position
@@ -1201,7 +1201,7 @@ end
 
 function raycastPolygon(origin, direction, maxDist, body)
     verts = bodyGetTransformedVertices(body)
-    n = #verts
+    n = verts.count
     tMin = maxDist
     hitNormal = null
     hit = false
@@ -1235,7 +1235,7 @@ end
 function worldRaycast(world, origin, direction, maxDist)
     maxDist = maxDist or 1000
     closest = null
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         result = null
         if body.shape.type == SHAPE_CIRCLE then
@@ -1255,7 +1255,7 @@ end
 function worldRaycastAll(world, origin, direction, maxDist)
     maxDist = maxDist or 1000
     results = {}
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         result = null
         if body.shape.type == SHAPE_CIRCLE then
@@ -1264,16 +1264,16 @@ function worldRaycastAll(world, origin, direction, maxDist)
             result = raycastPolygon(origin, direction, maxDist, body)
         end
         if result then
-            results[#results + 1] = result
+            results[results.count + 1] = result
         end
     end
     table.sort(results, function(a, b) return a.t < b.t end)
     return results
 end
 
--- ============================================================================
--- Continuous Collision Detection (TOI - Time of Impact)
--- ============================================================================
+# ============================================================================
+# Continuous Collision Detection (TOI - Time of Impact)
+# ============================================================================
 
 function computeTOI(bodyA, bodyB, dt)
     relVel = vecSub(bodyB.velocity, bodyA.velocity)
@@ -1323,9 +1323,9 @@ function computeTOI(bodyA, bodyB, dt)
     return toi
 end
 
--- ============================================================================
--- Island Solver and Sleeping
--- ============================================================================
+# ============================================================================
+# Island Solver and Sleeping
+# ============================================================================
 
 
 function bodyCanSleep(body)
@@ -1340,59 +1340,59 @@ function buildIslands(bodies, manifolds)
     islands = {}
     bodyToManifolds = {}
 
-    for i = 1, #manifolds do
+    for i = 1, manifolds.count do
         m = manifolds[i]
         idA = m.bodyA.id
         idB = m.bodyB.id
         if not bodyToManifolds[idA] then bodyToManifolds[idA] = {} end
         if not bodyToManifolds[idB] then bodyToManifolds[idB] = {} end
-        bodyToManifolds[idA][#bodyToManifolds[idA] + 1] = m
-        bodyToManifolds[idB][#bodyToManifolds[idB] + 1] = m
+        bodyToManifolds[idA][bodyToManifolds[idA].count + 1] = m
+        bodyToManifolds[idB][bodyToManifolds[idB].count + 1] = m
     end
 
-    for i = 1, #bodies do
+    for i = 1, bodies.count do
         startBody = bodies[i]
         if not visited[startBody.id] and not startBody.isStatic then
             island = {bodies = {}, manifolds = {}}
             stack = {startBody}
             visited[startBody.id] = true
 
-            while #stack > 0 do
-                body = stack[#stack]
-                stack[#stack] = null
-                island.bodies[#island.bodies + 1] = body
+            while stack.count > 0 do
+                body = stack[stack.count]
+                stack[stack.count] = null
+                island.bodies[island.bodies.count + 1] = body
 
                 ms = bodyToManifolds[body.id]
                 if ms then
-                    for j = 1, #ms do
+                    for j = 1, ms.count do
                         m = ms[j]
                         seenManifold = false
-                        for k = 1, #island.manifolds do
+                        for k = 1, island.manifolds.count do
                             if island.manifolds[k] == m then seenManifold = true; break end
                         end
                         if not seenManifold then
-                            island.manifolds[#island.manifolds + 1] = m
+                            island.manifolds[island.manifolds.count + 1] = m
                         end
                         other = null
                         if m.bodyA.id == body.id then other = m.bodyB else other = m.bodyA end
                         if not visited[other.id] and not other.isStatic then
                             visited[other.id] = true
-                            stack[#stack + 1] = other
+                            stack[stack.count + 1] = other
                         end
                     end
                 end
             end
 
-            islands[#islands + 1] = island
+            islands[islands.count + 1] = island
         end
     end
 
     return islands
 end
 
--- ============================================================================
--- Weld Joint (locks two bodies together)
--- ============================================================================
+# ============================================================================
+# Weld Joint (locks two bodies together)
+# ============================================================================
 
 function createWeldJoint(bodyA, bodyB, anchorA, anchorB)
     referenceAngle = bodyB.angle - bodyA.angle
@@ -1463,9 +1463,9 @@ function solveWeldJoint(joint, dt)
     end
 end
 
--- ============================================================================
--- Rope Joint (max distance constraint)
--- ============================================================================
+# ============================================================================
+# Rope Joint (max distance constraint)
+# ============================================================================
 
 function createRopeJoint(bodyA, bodyB, anchorA, anchorB, maxLength)
     return {
@@ -1524,9 +1524,9 @@ function solveRopeJoint(joint, dt)
     bodyApplyImpulse(bodyB, impulse, worldAnchorB)
 end
 
--- ============================================================================
--- Wheel Joint (spring + revolute, for vehicles)
--- ============================================================================
+# ============================================================================
+# Wheel Joint (spring + revolute, for vehicles)
+# ============================================================================
 
 function createWheelJoint(bodyA, bodyB, anchorA, anchorB, axis)
     return {
@@ -1616,9 +1616,9 @@ function solveWheelJoint(joint, dt)
     end
 end
 
--- ============================================================================
--- Gear Joint (couples two revolute joints)
--- ============================================================================
+# ============================================================================
+# Gear Joint (couples two revolute joints)
+# ============================================================================
 
 function createGearJoint(jointA, jointB, ratio)
     return {
@@ -1652,12 +1652,12 @@ function solveGearJoint(joint, dt)
     bodyB.angularVelocity = bodyB.angularVelocity + bodyB.invInertia * lambda * ratio
 end
 
--- ============================================================================
--- Convex Hull computation (Andrew's monotone chain)
--- ============================================================================
+# ============================================================================
+# Convex Hull computation (Andrew's monotone chain)
+# ============================================================================
 
 function computeConvexHull(points)
-    n = #points
+    n = points.count
     if n < 3 then return points end
 
     table.sort(points, function(a, b)
@@ -1692,9 +1692,9 @@ function computeConvexHull(points)
     return result
 end
 
--- ============================================================================
--- Minkowski Difference support (for GJK-like queries)
--- ============================================================================
+# ============================================================================
+# Minkowski Difference support (for GJK-like queries)
+# ============================================================================
 
 function support(shape, position, angle, direction)
     if shape.type == SHAPE_CIRCLE then
@@ -1723,9 +1723,9 @@ function minkowskiSupport(bodyA, bodyB, direction)
     return vecSub(pointA, pointB)
 end
 
--- ============================================================================
--- Point-in-shape queries
--- ============================================================================
+# ============================================================================
+# Point-in-shape queries
+# ============================================================================
 
 function pointInCircle(point, body)
     dist = vecDist(point, body.position)
@@ -1734,7 +1734,7 @@ end
 
 function pointInPolygon(point, body)
     verts = bodyGetTransformedVertices(body)
-    n = #verts
+    n = verts.count
     for i = 1, n do
         j = (i % n) + 1
         edge = vecSub(verts[j], verts[i])
@@ -1756,33 +1756,33 @@ end
 
 function worldQueryPoint(world, point)
     results = {}
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         if pointInBody(point, world.bodies[i]) then
-            results[#results + 1] = world.bodies[i]
+            results[results.count + 1] = world.bodies[i]
         end
     end
     return results
 end
 
--- ============================================================================
--- AABB query
--- ============================================================================
+# ============================================================================
+# AABB query
+# ============================================================================
 
 function worldQueryAABB(world, queryAABB)
     results = {}
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         bodyAABB = bodyGetAABB(world.bodies[i])
         if bodyAABB.maxX >= queryAABB.minX and bodyAABB.minX <= queryAABB.maxX and
            bodyAABB.maxY >= queryAABB.minY and bodyAABB.minY <= queryAABB.maxY then
-            results[#results + 1] = world.bodies[i]
+            results[results.count + 1] = world.bodies[i]
         end
     end
     return results
 end
 
--- ============================================================================
--- Distance computation between shapes
--- ============================================================================
+# ============================================================================
+# Distance computation between shapes
+# ============================================================================
 
 function closestPointOnSegment(point, segStart, segEnd)
     seg = vecSub(segEnd, segStart)
@@ -1793,7 +1793,7 @@ end
 
 function distancePointToPolygon(point, body)
     verts = bodyGetTransformedVertices(body)
-    n = #verts
+    n = verts.count
     minDist = M.huge
     for i = 1, n do
         j = (i % n) + 1
@@ -1818,18 +1818,18 @@ function distanceBetweenBodies(bodyA, bodyB)
         vertsA = bodyGetTransformedVertices(bodyA)
         vertsB = bodyGetTransformedVertices(bodyB)
         minDist = M.huge
-        for i = 1, #vertsA do
-            for j = 1, #vertsB do
-                nB = #vertsB
+        for i = 1, vertsA.count do
+            for j = 1, vertsB.count do
+                nB = vertsB.count
                 j2 = (j % nB) + 1
                 closest = closestPointOnSegment(vertsA[i], vertsB[j], vertsB[j2])
                 d = vecDist(vertsA[i], closest)
                 if d < minDist then minDist = d end
             end
         end
-        for i = 1, #vertsB do
-            for j = 1, #vertsA do
-                nA = #vertsA
+        for i = 1, vertsB.count do
+            for j = 1, vertsA.count do
+                nA = vertsA.count
                 j2 = (j % nA) + 1
                 closest = closestPointOnSegment(vertsB[i], vertsA[j], vertsA[j2])
                 d = vecDist(vertsB[i], closest)
@@ -1840,9 +1840,9 @@ function distanceBetweenBodies(bodyA, bodyB)
     end
 end
 
--- ============================================================================
--- Extended World step with joints
--- ============================================================================
+# ============================================================================
+# Extended World step with joints
+# ============================================================================
 
 function solveJointExtended(joint, dt)
     if joint.type == "distance" then
@@ -1867,7 +1867,7 @@ function worldStepExtended(world, dt)
     bodies = world.bodies
     gravity = world.gravity
 
-    for i = 1, #bodies do
+    for i = 1, bodies.count do
         body = bodies[i]
         if not body.isStatic then
             gravForce = vecMul(gravity, body.mass * body.gravityScale)
@@ -1883,30 +1883,30 @@ function worldStepExtended(world, dt)
     bpPairs = spatialHashFindPairs(world.spatialHash, bodies)
 
     manifolds = {}
-    for i = 1, #bpPairs do
+    for i = 1, bpPairs.count do
         pair = bpPairs[i]
         if aabbOverlap(pair.a, pair.b) then
             manifold = detectCollision(pair.a, pair.b)
             if manifold then
-                manifolds[#manifolds + 1] = manifold
+                manifolds[manifolds.count + 1] = manifold
             end
         end
     end
 
-    for i = 1, #manifolds do
+    for i = 1, manifolds.count do
         preSolveContact(manifolds[i], dt)
     end
 
     for iter = 1, world.iterations do
-        for i = 1, #manifolds do
+        for i = 1, manifolds.count do
             solveContact(manifolds[i])
         end
-        for i = 1, #world.joints do
+        for i = 1, world.joints.count do
             solveJointExtended(world.joints[i], dt)
         end
     end
 
-    for i = 1, #bodies do
+    for i = 1, bodies.count do
         body = bodies[i]
         if not body.isStatic then
             body.position = vecAdd(body.position, vecMul(body.velocity, dt))
@@ -1917,9 +1917,9 @@ function worldStepExtended(world, dt)
     world.manifolds = manifolds
 end
 
--- ============================================================================
--- Scenario 1: Box Stack (tests resting contacts and friction)
--- ============================================================================
+# ============================================================================
+# Scenario 1: Box Stack (tests resting contacts and friction)
+# ============================================================================
 
 function createBoxStackScenario()
     world = createWorld(vec(0, -20), 3.0)
@@ -1950,9 +1950,9 @@ function createBoxStackScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 2: Pendulum Chain (tests revolute joints)
--- ============================================================================
+# ============================================================================
+# Scenario 2: Pendulum Chain (tests revolute joints)
+# ============================================================================
 
 function createPendulumScenario()
     world = createWorld(vec(0, -10), 4.0)
@@ -1999,9 +1999,9 @@ function createPendulumScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 3: Ball Pit (tests broad-phase with many circles)
--- ============================================================================
+# ============================================================================
+# Scenario 3: Ball Pit (tests broad-phase with many circles)
+# ============================================================================
 
 function createBallPitScenario()
     world = createWorld(vec(0, -15), 2.0)
@@ -2042,9 +2042,9 @@ function createBallPitScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 4: Domino Chain (tests sequential collisions)
--- ============================================================================
+# ============================================================================
+# Scenario 4: Domino Chain (tests sequential collisions)
+# ============================================================================
 
 function createDominoScenario()
     world = createWorld(vec(0, -10), 2.5)
@@ -2082,9 +2082,9 @@ function createDominoScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 5: Billiards (tests circle-circle collisions and rebounds)
--- ============================================================================
+# ============================================================================
+# Scenario 5: Billiards (tests circle-circle collisions and rebounds)
+# ============================================================================
 
 function createBilliardsScenario()
     world = createWorld(vec(0, 0), 3.0)
@@ -2146,9 +2146,9 @@ function createBilliardsScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 6: Mixed Shapes Tumbler (polygon variety + rotation)
--- ============================================================================
+# ============================================================================
+# Scenario 6: Mixed Shapes Tumbler (polygon variety + rotation)
+# ============================================================================
 
 function createTumblerScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2194,9 +2194,9 @@ function createTumblerScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 7: Bridge with distance joints
--- ============================================================================
+# ============================================================================
+# Scenario 7: Bridge with distance joints
+# ============================================================================
 
 function createBridgeScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2247,9 +2247,9 @@ function createBridgeScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 8: Newton's Cradle (tests energy transfer)
--- ============================================================================
+# ============================================================================
+# Scenario 8: Newton's Cradle (tests energy transfer)
+# ============================================================================
 
 function createCradleScenario()
     world = createWorld(vec(0, -10), 2.0)
@@ -2287,9 +2287,9 @@ function createCradleScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 9: Vehicle on terrain (wheel joints + uneven ground)
--- ============================================================================
+# ============================================================================
+# Scenario 9: Vehicle on terrain (wheel joints + uneven ground)
+# ============================================================================
 
 function createVehicleScenario()
     world = createWorld(vec(0, -10), 4.0)
@@ -2361,9 +2361,9 @@ function createVehicleScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 10: Wrecking ball (rope joint + heavy ball + structure)
--- ============================================================================
+# ============================================================================
+# Scenario 10: Wrecking ball (rope joint + heavy ball + structure)
+# ============================================================================
 
 function createWreckingBallScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2422,9 +2422,9 @@ function createWreckingBallScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 11: Gear train (coupled revolute joints)
--- ============================================================================
+# ============================================================================
+# Scenario 11: Gear train (coupled revolute joints)
+# ============================================================================
 
 function createGearTrainScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2443,7 +2443,7 @@ function createGearTrainScenario()
     gearBodies = {}
     gearJoints = {}
 
-    for i = 1, #gearData do
+    for i = 1, gearData.count do
         gd = gearData[i]
         gear = createBody(createRegularPolygon(gd.radius, gd.sides), gd.x, gd.y, gd.density, false)
         gear.angularDamping = 0.02
@@ -2463,7 +2463,7 @@ function createGearTrainScenario()
         gearJoints[i] = joint
     end
 
-    for i = 1, #gearBodies - 1 do
+    for i = 1, gearBodies.count - 1 do
         ratio = -gearData[i].radius / gearData[i + 1].radius
         gj = createGearJoint(gearJoints[i], gearJoints[i + 1], ratio)
         worldAddJoint(world, gj)
@@ -2472,9 +2472,9 @@ function createGearTrainScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 12: Cloth simulation (grid of distance joints)
--- ============================================================================
+# ============================================================================
+# Scenario 12: Cloth simulation (grid of distance joints)
+# ============================================================================
 
 function createClothScenario()
     world = createWorld(vec(0, -5), 2.0)
@@ -2527,9 +2527,9 @@ function createClothScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 13: Conveyor belt (applying tangential force at contacts)
--- ============================================================================
+# ============================================================================
+# Scenario 13: Conveyor belt (applying tangential force at contacts)
+# ============================================================================
 
 function createConveyorScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2576,9 +2576,9 @@ function createConveyorScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 14: Catapult (prismatic joint + release mechanism)
--- ============================================================================
+# ============================================================================
+# Scenario 14: Catapult (prismatic joint + release mechanism)
+# ============================================================================
 
 function createCatapultScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2628,9 +2628,9 @@ function createCatapultScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 15: Pinball machine (flippers, bumpers, ball)
--- ============================================================================
+# ============================================================================
+# Scenario 15: Pinball machine (flippers, bumpers, ball)
+# ============================================================================
 
 function createPinballScenario()
     world = createWorld(vec(0, -8), 2.5)
@@ -2665,7 +2665,7 @@ function createPinballScenario()
         {x = -3, y = 6}, {x = 3, y = 6}
     }
 
-    for i = 1, #bumperPositions do
+    for i = 1, bumperPositions.count do
         bp = bumperPositions[i]
         bumper = createBody(createCircle(0.6), bp.x, bp.y, 1, true)
         bumper.restitution = 1.2
@@ -2705,9 +2705,9 @@ function createPinballScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 16: Rube Goldberg machine
--- ============================================================================
+# ============================================================================
+# Scenario 16: Rube Goldberg machine
+# ============================================================================
 
 function createRubeGoldbergScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2775,9 +2775,9 @@ function createRubeGoldbergScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 17: Granular material (many small circles)
--- ============================================================================
+# ============================================================================
+# Scenario 17: Granular material (many small circles)
+# ============================================================================
 
 function createGranularScenario()
     world = createWorld(vec(0, -10), 1.5)
@@ -2819,9 +2819,9 @@ function createGranularScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 18: Ragdoll (connected body segments)
--- ============================================================================
+# ============================================================================
+# Scenario 18: Ragdoll (connected body segments)
+# ============================================================================
 
 function createRagdollScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -2914,9 +2914,9 @@ function createRagdollScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 19: Breakable joint chain (stress test)
--- ============================================================================
+# ============================================================================
+# Scenario 19: Breakable joint chain (stress test)
+# ============================================================================
 
 function createBreakableChainScenario()
     world = createWorld(vec(0, -10), 2.5)
@@ -2964,9 +2964,9 @@ function createBreakableChainScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 20: Stacking with varying shapes (stress test for solver)
--- ============================================================================
+# ============================================================================
+# Scenario 20: Stacking with varying shapes (stress test for solver)
+# ============================================================================
 
 function createMixedStackScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -3008,9 +3008,9 @@ function createMixedStackScenario()
     return world
 end
 
--- ============================================================================
--- Additional raycast and query test scenario
--- ============================================================================
+# ============================================================================
+# Additional raycast and query test scenario
+# ============================================================================
 
 function createRaycastTestScenario()
     world = createWorld(vec(0, 0), 3.0)
@@ -3040,19 +3040,19 @@ function createRaycastTestScenario()
         dir = vec(M.cos(angle), M.sin(angle))
         hit = worldRaycast(world, vec(0, 0), dir, 20)
         if hit then
-            rayResults[#rayResults + 1] = hit.t
+            rayResults[rayResults.count + 1] = hit.t
         end
     end
 
     aabbResults = worldQueryAABB(world, {minX = -5, minY = -5, maxX = 5, maxY = 5})
     pointResults = worldQueryPoint(world, vec(0, 0))
 
-    return world, #rayResults, #aabbResults, #pointResults
+    return world, rayResults.count, aabbResults.count, pointResults.count
 end
 
--- ============================================================================
--- Particle System (Verlet integration, no rotation)
--- ============================================================================
+# ============================================================================
+# Particle System (Verlet integration, no rotation)
+# ============================================================================
 
 function createParticle(x, y, mass, radius)
     return {
@@ -3076,7 +3076,7 @@ function createParticleConstraint(p1, p2, restLength, stiffness)
 end
 
 function particleSystemStep(particles, constraints, gravity, dt, bounds)
-    for i = 1, #particles do
+    for i = 1, particles.count do
         p = particles[i]
         if not p.pinned then
             p.acc = vecAdd(p.acc, gravity)
@@ -3090,7 +3090,7 @@ function particleSystemStep(particles, constraints, gravity, dt, bounds)
 
     iterations = 4
     for iter = 1, iterations do
-        for i = 1, #constraints do
+        for i = 1, constraints.count do
             c = constraints[i]
             diff = vecSub(c.p2.pos, c.p1.pos)
             dist = vecLen(diff)
@@ -3106,7 +3106,7 @@ function particleSystemStep(particles, constraints, gravity, dt, bounds)
             end
         end
 
-        for i = 1, #particles do
+        for i = 1, particles.count do
             p = particles[i]
             if not p.pinned and bounds then
                 if p.pos.x - p.radius < bounds.minX then p.pos.x = bounds.minX + p.radius end
@@ -3116,8 +3116,8 @@ function particleSystemStep(particles, constraints, gravity, dt, bounds)
             end
         end
 
-        for i = 1, #particles do
-            for j = i + 1, #particles do
+        for i = 1, particles.count do
+            for j = i + 1, particles.count do
                 p1 = particles[i]
                 p2 = particles[j]
                 diff = vecSub(p2.pos, p1.pos)
@@ -3140,15 +3140,15 @@ end
 
 function checksumParticles(particles)
     sum = 0
-    for i = 1, #particles do
+    for i = 1, particles.count do
         sum = sum + particles[i].pos.x * 100 + particles[i].pos.y * 100
     end
     return M.floor(sum * 100) / 100
 end
 
--- ============================================================================
--- Scenario 21: Particle rope (Verlet)
--- ============================================================================
+# ============================================================================
+# Scenario 21: Particle rope (Verlet)
+# ============================================================================
 
 function createParticleRopeScenario()
     numParticles = 40
@@ -3176,9 +3176,9 @@ function createParticleRopeScenario()
     return checksumParticles(particles)
 end
 
--- ============================================================================
--- Scenario 22: Particle cloth (2D grid with Verlet)
--- ============================================================================
+# ============================================================================
+# Scenario 22: Particle cloth (2D grid with Verlet)
+# ============================================================================
 
 function createParticleClothScenario()
     cols = 15
@@ -3202,21 +3202,21 @@ function createParticleClothScenario()
         for c = 0, cols - 1 do
             idx = r * cols + c + 1
             if c < cols - 1 then
-                constraints[#constraints + 1] = createParticleConstraint(
+                constraints[constraints.count + 1] = createParticleConstraint(
                     particles[idx], particles[idx + 1], spacing, 0.9)
             end
             if r < rows - 1 then
-                constraints[#constraints + 1] = createParticleConstraint(
+                constraints[constraints.count + 1] = createParticleConstraint(
                     particles[idx], particles[idx + cols], spacing, 0.9)
             end
             if c < cols - 1 and r < rows - 1 then
                 diagLen = spacing * 1.414
-                constraints[#constraints + 1] = createParticleConstraint(
+                constraints[constraints.count + 1] = createParticleConstraint(
                     particles[idx], particles[idx + cols + 1], diagLen, 0.5)
             end
             if c > 0 and r < rows - 1 then
                 diagLen = spacing * 1.414
-                constraints[#constraints + 1] = createParticleConstraint(
+                constraints[constraints.count + 1] = createParticleConstraint(
                     particles[idx], particles[idx + cols - 1], diagLen, 0.5)
             end
         end
@@ -3232,9 +3232,9 @@ function createParticleClothScenario()
     return checksumParticles(particles)
 end
 
--- ============================================================================
--- Scenario 23: Soft body (particle-based circle)
--- ============================================================================
+# ============================================================================
+# Scenario 23: Soft body (particle-based circle)
+# ============================================================================
 
 function createSoftBodyScenario()
     numRings = 3
@@ -3251,27 +3251,27 @@ function createSoftBodyScenario()
     for ring = 1, numRings do
         n = particlesPerRing[ring]
         r = ringRadii[ring]
-        startIdx = #allParticles + 1
+        startIdx = allParticles.count + 1
         for i = 1, n do
             angle = (i - 1) * 2 * M.pi / n
             px = centerX + r * M.cos(angle)
             py = centerY + r * M.sin(angle)
             p = createParticle(px, py, 1.0, 0.12)
-            allParticles[#allParticles + 1] = p
+            allParticles[allParticles.count + 1] = p
         end
 
         for i = 0, n - 1 do
             idx1 = startIdx + i
             idx2 = startIdx + (i + 1) % n
             dist = vecDist(allParticles[idx1].pos, allParticles[idx2].pos)
-            allConstraints[#allConstraints + 1] = createParticleConstraint(
+            allConstraints[allConstraints.count + 1] = createParticleConstraint(
                 allParticles[idx1], allParticles[idx2], dist, 0.8)
         end
 
         for i = 0, n - 1 do
             idx = startIdx + i
             dist = vecDist(allParticles[idx].pos, center.pos)
-            allConstraints[#allConstraints + 1] = createParticleConstraint(
+            allConstraints[allConstraints.count + 1] = createParticleConstraint(
                 allParticles[idx], center, dist, 0.6)
         end
     end
@@ -3281,7 +3281,7 @@ function createSoftBodyScenario()
         innerIdx = 1 + particlesPerRing[1] + M.floor((i - 1) * particlesPerRing[2] / particlesPerRing[1]) + 1
         if innerIdx <= 1 + particlesPerRing[1] + particlesPerRing[2] then
             dist = vecDist(allParticles[outerIdx].pos, allParticles[innerIdx].pos)
-            allConstraints[#allConstraints + 1] = createParticleConstraint(
+            allConstraints[allConstraints.count + 1] = createParticleConstraint(
                 allParticles[outerIdx], allParticles[innerIdx], dist, 0.5)
         end
     end
@@ -3296,9 +3296,9 @@ function createSoftBodyScenario()
     return checksumParticles(allParticles)
 end
 
--- ============================================================================
--- Buoyancy simulation
--- ============================================================================
+# ============================================================================
+# Buoyancy simulation
+# ============================================================================
 
 function computeSubmergedArea(body, waterLevel)
     if body.shape.type == SHAPE_CIRCLE then
@@ -3312,11 +3312,11 @@ function computeSubmergedArea(body, waterLevel)
         return area, vec(body.position.x, centroidY)
     else
         verts = bodyGetTransformedVertices(body)
-        n = #verts
+        n = verts.count
         submergedVerts = {}
         for i = 1, n do
             if verts[i].y <= waterLevel then
-                submergedVerts[#submergedVerts + 1] = verts[i]
+                submergedVerts[submergedVerts.count + 1] = verts[i]
             end
         end
         for i = 1, n do
@@ -3325,18 +3325,18 @@ function computeSubmergedArea(body, waterLevel)
             v2 = verts[j]
             if (v1.y <= waterLevel) != (v2.y <= waterLevel) then
                 t = (waterLevel - v1.y) / (v2.y - v1.y)
-                submergedVerts[#submergedVerts + 1] = vecLerp(v1, v2, t)
+                submergedVerts[submergedVerts.count + 1] = vecLerp(v1, v2, t)
             end
         end
-        if #submergedVerts < 3 then return 0, vec(0, 0) end
+        if submergedVerts.count < 3 then return 0, vec(0, 0) end
 
         cx, cy = 0, 0
-        for i = 1, #submergedVerts do
+        for i = 1, submergedVerts.count do
             cx = cx + submergedVerts[i].x
             cy = cy + submergedVerts[i].y
         end
-        cx = cx / #submergedVerts
-        cy = cy / #submergedVerts
+        cx = cx / submergedVerts.count
+        cy = cy / submergedVerts.count
 
         table.sort(submergedVerts, function(a, b)
             angA = M.atan2(a.y - cy, a.x - cx)
@@ -3365,9 +3365,9 @@ function applyBuoyancy(body, waterLevel, waterDensity, dragCoeff)
     body.angularVelocity = body.angularVelocity * (1 - 0.02 * subArea)
 end
 
--- ============================================================================
--- Scenario 24: Buoyancy pool
--- ============================================================================
+# ============================================================================
+# Scenario 24: Buoyancy pool
+# ============================================================================
 
 function createBuoyancyScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -3395,7 +3395,7 @@ function createBuoyancyScenario()
         end
         body.restitution = 0.2
         worldAddBody(world, body)
-        floaters[#floaters + 1] = body
+        floaters[floaters.count + 1] = body
     end
 
     world.waterLevel = 5.0
@@ -3406,9 +3406,9 @@ function createBuoyancyScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 25: Tornado / vortex (radial force field)
--- ============================================================================
+# ============================================================================
+# Scenario 25: Tornado / vortex (radial force field)
+# ============================================================================
 
 function createTornadoScenario()
     world = createWorld(vec(0, -5), 3.0)
@@ -3440,7 +3440,7 @@ function createTornadoScenario()
         body.linearDamping = 0.1
         body.angularDamping = 0.1
         worldAddBody(world, body)
-        debris[#debris + 1] = body
+        debris[debris.count + 1] = body
     end
 
     world.vortexCenter = vec(0, 7)
@@ -3450,9 +3450,9 @@ function createTornadoScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 26: Pyramid stress test (many resting contacts)
--- ============================================================================
+# ============================================================================
+# Scenario 26: Pyramid stress test (many resting contacts)
+# ============================================================================
 
 function createLargePyramidScenario()
     world = createWorld(vec(0, -10), 2.0)
@@ -3487,9 +3487,9 @@ function createLargePyramidScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 27: Marble run (ramps + funnels + obstacles)
--- ============================================================================
+# ============================================================================
+# Scenario 27: Marble run (ramps + funnels + obstacles)
+# ============================================================================
 
 function createMarbleRunScenario()
     world = createWorld(vec(0, -10), 2.5)
@@ -3503,7 +3503,7 @@ function createMarbleRunScenario()
         {x = 3, y = 3, w = 4, angle = 0.15},
     }
 
-    for i = 1, #ramps do
+    for i = 1, ramps.count do
         r = ramps[i]
         ramp = createBody(createBox(r.w / 2, 0.15), r.x, r.y, 1, true)
         ramp.angle = r.angle
@@ -3522,7 +3522,7 @@ function createMarbleRunScenario()
         {x = 1, y = 4.5, type = "circle", r = 0.35},
     }
 
-    for i = 1, #obstacles do
+    for i = 1, obstacles.count do
         o = obstacles[i]
         body = null
         if o.type == "circle" then
@@ -3558,9 +3558,9 @@ function createMarbleRunScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 28: Explosion (radial impulse)
--- ============================================================================
+# ============================================================================
+# Scenario 28: Explosion (radial impulse)
+# ============================================================================
 
 function createExplosionScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -3587,7 +3587,7 @@ function createExplosionScenario()
     explosionRadius = 8
     explosionForce = 500
 
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         if not body.isStatic then
             toBody = vecSub(body.position, explosionCenter)
@@ -3603,9 +3603,9 @@ function createExplosionScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 29: Pulley system
--- ============================================================================
+# ============================================================================
+# Scenario 29: Pulley system
+# ============================================================================
 
 function createPulleyScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -3655,9 +3655,9 @@ function createPulleyScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 30: Elastic collision chain (demonstrates energy conservation)
--- ============================================================================
+# ============================================================================
+# Scenario 30: Elastic collision chain (demonstrates energy conservation)
+# ============================================================================
 
 function createElasticChainScenario()
     world = createWorld(vec(0, 0), 3.0)
@@ -3692,9 +3692,9 @@ function createElasticChainScenario()
     return world
 end
 
--- ============================================================================
--- Material property tables (realistic physical properties)
--- ============================================================================
+# ============================================================================
+# Material property tables (realistic physical properties)
+# ============================================================================
 
 D = {}
 D.materials = {
@@ -3728,9 +3728,9 @@ function applyMaterial(body, materialName)
     body.dynamicFriction = mat.dynamicFriction
 end
 
--- ============================================================================
--- Scenario 31: Material interaction test
--- ============================================================================
+# ============================================================================
+# Scenario 31: Material interaction test
+# ============================================================================
 
 function createMaterialTestScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -3747,7 +3747,7 @@ function createMaterialTestScenario()
     materialNames = {"steel", "rubber", "wood_oak", "ice", "glass", "plastic",
                            "cork", "leather", "teflon", "copper"}
 
-    for i = 1, #materialNames do
+    for i = 1, materialNames.count do
         mat = D.materials[materialNames[i]]
         x = -6 + (i - 1) * 1.2
         body = createBody(createBox(0.4, 0.4), x, 7, mat.density, false)
@@ -3758,9 +3758,9 @@ function createMaterialTestScenario()
     return world
 end
 
--- ============================================================================
--- Pre-defined complex polygon shapes for testing
--- ============================================================================
+# ============================================================================
+# Pre-defined complex polygon shapes for testing
+# ============================================================================
 
 D.complexShapes = {
     star = function()
@@ -3818,9 +3818,9 @@ D.complexShapes = {
     end
 }
 
--- ============================================================================
--- Scenario 32: Complex polygon collisions
--- ============================================================================
+# ============================================================================
+# Scenario 32: Complex polygon collisions
+# ============================================================================
 
 function createComplexPolygonScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -3832,7 +3832,7 @@ function createComplexPolygonScenario()
                         "chevron", "cross", "kite", "parallelogram", "shield"}
 
     resetRandom()
-    for i = 1, #shapeNames do
+    for i = 1, shapeNames.count do
         verts = D.complexShapes[shapeNames[i]]()
         shape = createPolygon(verts)
         x = -8 + (i - 1) * 1.8
@@ -3856,9 +3856,9 @@ function createComplexPolygonScenario()
     return world
 end
 
--- ============================================================================
--- Continuous rotation angle normalization and angular limit helper
--- ============================================================================
+# ============================================================================
+# Continuous rotation angle normalization and angular limit helper
+# ============================================================================
 
 function normalizeAngle(angle)
     while angle > M.pi do angle = angle - 2 * M.pi end
@@ -3874,9 +3874,9 @@ function clampAngularVelocity(body, maxOmega)
     end
 end
 
--- ============================================================================
--- Position correction (separate pass for penetration resolution)
--- ============================================================================
+# ============================================================================
+# Position correction (separate pass for penetration resolution)
+# ============================================================================
 
 function solvePositionConstraints(manifolds, bodies)
     slop = 0.005
@@ -3884,7 +3884,7 @@ function solvePositionConstraints(manifolds, bodies)
     baumgarte = 0.4
     corrected = false
 
-    for i = 1, #manifolds do
+    for i = 1, manifolds.count do
         m = manifolds[i]
         bodyA = m.bodyA
         bodyB = m.bodyB
@@ -3909,9 +3909,9 @@ function solvePositionConstraints(manifolds, bodies)
     return corrected
 end
 
--- ============================================================================
--- Warm starting (cache impulses between frames)
--- ============================================================================
+# ============================================================================
+# Warm starting (cache impulses between frames)
+# ============================================================================
 
 D.warmStartCache = {}
 
@@ -3929,7 +3929,7 @@ function applyWarmStart(manifold)
     bodyB = manifold.bodyB
     normal = manifold.normal
 
-    for i = 1, M.min(#manifold.contacts, #cached) do
+    for i = 1, M.min(manifold.contacts.count, cached.count) do
         cp = manifold.contacts[i]
         prev = cached[i]
         if cp.rA and prev.normalImpulse then
@@ -3945,16 +3945,16 @@ end
 function saveWarmStart(manifold)
     key = getWarmStartKey(manifold.bodyA.id, manifold.bodyB.id)
     data = {}
-    for i = 1, #manifold.contacts do
+    for i = 1, manifold.contacts.count do
         cp = manifold.contacts[i]
         data[i] = {normalImpulse = cp.normalImpulse, tangentImpulse = cp.tangentImpulse}
     end
     D.warmStartCache[key] = data
 end
 
--- ============================================================================
--- Scenario 33: Large-scale stress test (many bodies, many contacts)
--- ============================================================================
+# ============================================================================
+# Scenario 33: Large-scale stress test (many bodies, many contacts)
+# ============================================================================
 
 function createStressTestScenario()
     world = createWorld(vec(0, -10), 2.0)
@@ -3993,9 +3993,9 @@ function createStressTestScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 34: Castle structure (detailed brick placement)
--- ============================================================================
+# ============================================================================
+# Scenario 34: Castle structure (detailed brick placement)
+# ============================================================================
 
 function createCastleScenario()
     world = createWorld(vec(0, -10), 2.5)
@@ -4106,9 +4106,9 @@ function createCastleScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 35: Clockwork mechanism (many gears and linkages)
--- ============================================================================
+# ============================================================================
+# Scenario 35: Clockwork mechanism (many gears and linkages)
+# ============================================================================
 
 function createClockworkScenario()
     world = createWorld(vec(0, 0), 4.0)
@@ -4133,7 +4133,7 @@ function createClockworkScenario()
         {x = 2.5, y = 4.0, r = 1.1, teeth = 11, speed = 1.82},
     }
 
-    for i = 1, #gearLayout do
+    for i = 1, gearLayout.count do
         gl = gearLayout[i]
         gear = createBody(createRegularPolygon(gl.r, gl.teeth), gl.x, gl.y, 3.0, false)
         gear.angularDamping = 0.01
@@ -4160,7 +4160,7 @@ function createClockworkScenario()
         {1, 10}, {10, 11}, {10, 12}
     }
 
-    for i = 1, #gearConnections do
+    for i = 1, gearConnections.count do
         conn = gearConnections[i]
         a = conn[1]
         b = conn[2]
@@ -4210,9 +4210,9 @@ function createClockworkScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 36: Trebuchet with projectile arc
--- ============================================================================
+# ============================================================================
+# Scenario 36: Trebuchet with projectile arc
+# ============================================================================
 
 function createTrebuchetScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -4277,9 +4277,9 @@ function createTrebuchetScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 37: Fluid-like particle simulation (SPH-inspired)
--- ============================================================================
+# ============================================================================
+# Scenario 37: Fluid-like particle simulation (SPH-inspired)
+# ============================================================================
 
 function createFluidScenario()
     world = createWorld(vec(0, -10), 1.5)
@@ -4319,9 +4319,9 @@ function createFluidScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 38: Windmill with blades and falling objects
--- ============================================================================
+# ============================================================================
+# Scenario 38: Windmill with blades and falling objects
+# ============================================================================
 
 function createWindmillScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -4383,9 +4383,9 @@ function createWindmillScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 39: Multi-body vehicle (car with suspension)
--- ============================================================================
+# ============================================================================
+# Scenario 39: Multi-body vehicle (car with suspension)
+# ============================================================================
 
 function createDetailedVehicleScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -4397,7 +4397,7 @@ function createDetailedVehicleScenario()
         {x = 20, y = 0}, {x = 25, y = 0},
     }
 
-    for i = 1, #terrainSegs - 1 do
+    for i = 1, terrainSegs.count - 1 do
         p1 = terrainSegs[i]
         p2 = terrainSegs[i + 1]
         midX = (p1.x + p2.x) / 2
@@ -4462,9 +4462,9 @@ function createDetailedVehicleScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 40: Bowling alley
--- ============================================================================
+# ============================================================================
+# Scenario 40: Bowling alley
+# ============================================================================
 
 function createBowlingScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -4496,11 +4496,11 @@ function createBowlingScenario()
         for col = 0, row do
             x = pinStartX + row * pinSpacing * 0.866
             y = pinStartY + (col - row / 2) * pinSpacing
-            pinPositions[#pinPositions + 1] = {x = x, y = y}
+            pinPositions[pinPositions.count + 1] = {x = x, y = y}
         end
     end
 
-    for i = 1, #pinPositions do
+    for i = 1, pinPositions.count do
         pp = pinPositions[i]
         pin = createBody(createBox(pinRadius, pinHeight / 2), pp.x, pp.y + pinHeight / 2, pinDensity, false)
         pin.restitution = 0.3
@@ -4519,9 +4519,9 @@ function createBowlingScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 41: Earthquake simulation (shaking ground)
--- ============================================================================
+# ============================================================================
+# Scenario 41: Earthquake simulation (shaking ground)
+# ============================================================================
 
 function createEarthquakeScenario()
     world = createWorld(vec(0, -10), 2.5)
@@ -4586,9 +4586,9 @@ function createEarthquakeScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 42: Pachinko machine (many pegs, falling balls)
--- ============================================================================
+# ============================================================================
+# Scenario 42: Pachinko machine (many pegs, falling balls)
+# ============================================================================
 
 function createPachinkoScenario()
     world = createWorld(vec(0, -8), 2.0)
@@ -4642,9 +4642,9 @@ function createPachinkoScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 43: Spring lattice (many interconnected springs)
--- ============================================================================
+# ============================================================================
+# Scenario 43: Spring lattice (many interconnected springs)
+# ============================================================================
 
 function createSpringLatticeScenario()
     world = createWorld(vec(0, -5), 2.0)
@@ -4707,9 +4707,9 @@ function createSpringLatticeScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 44: Cannon with multiple projectiles
--- ============================================================================
+# ============================================================================
+# Scenario 44: Cannon with multiple projectiles
+# ============================================================================
 
 function createCannonScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -4755,9 +4755,9 @@ function createCannonScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 45: Wrecking yard (heavy machinery + debris)
--- ============================================================================
+# ============================================================================
+# Scenario 45: Wrecking yard (heavy machinery + debris)
+# ============================================================================
 
 function createWreckingYardScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -4816,9 +4816,9 @@ function createWreckingYardScenario()
     return world
 end
 
--- ============================================================================
--- Cubic Bezier Spline system (for path-based scenarios)
--- ============================================================================
+# ============================================================================
+# Cubic Bezier Spline system (for path-based scenarios)
+# ============================================================================
 
 function bezierPoint(p0, p1, p2, p3, t)
     u = 1 - t
@@ -4858,7 +4858,7 @@ end
 function createSpline(controlPoints)
     spline = {
         points = controlPoints,
-        numSegments = M.floor((#controlPoints - 1) / 3)
+        numSegments = M.floor((controlPoints.count - 1) / 3)
     }
     return spline
 end
@@ -4883,9 +4883,9 @@ function splineTangentAt(spline, t)
         spline.points[base + 2], spline.points[base + 3], localT))
 end
 
--- ============================================================================
--- Predefined track splines for scenarios
--- ============================================================================
+# ============================================================================
+# Predefined track splines for scenarios
+# ============================================================================
 
 D.trackSplines = {
     oval = createSpline({
@@ -4910,9 +4910,9 @@ D.trackSplines = {
     }),
 }
 
--- ============================================================================
--- Scenario 46: Race track (bodies following spline path)
--- ============================================================================
+# ============================================================================
+# Scenario 46: Race track (bodies following spline path)
+# ============================================================================
 
 function createRaceTrackScenario()
     world = createWorld(vec(0, -10), 4.0)
@@ -4966,9 +4966,9 @@ function createRaceTrackScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 47: Roller coaster track
--- ============================================================================
+# ============================================================================
+# Scenario 47: Roller coaster track
+# ============================================================================
 
 function createRollerCoasterScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -5015,9 +5015,9 @@ function createRollerCoasterScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 48: Destruction derby (cars crashing)
--- ============================================================================
+# ============================================================================
+# Scenario 48: Destruction derby (cars crashing)
+# ============================================================================
 
 function createDestructionDerbyScenario()
     world = createWorld(vec(0, -10), 4.0)
@@ -5069,7 +5069,7 @@ function createDestructionDerbyScenario()
         {x = -3, y = 3, r = 0.6}, {x = 3, y = -3, r = 0.6},
         {x = -3, y = -3, r = 0.6},
     }
-    for i = 1, #obstacles do
+    for i = 1, obstacles.count do
         o = obstacles[i]
         obs = createBody(createCircle(o.r), o.x, o.y, 1, true)
         obs.restitution = 0.7
@@ -5079,9 +5079,9 @@ function createDestructionDerbyScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 49: Assembly line (conveyor + sorting)
--- ============================================================================
+# ============================================================================
+# Scenario 49: Assembly line (conveyor + sorting)
+# ============================================================================
 
 function createAssemblyLineScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -5096,7 +5096,7 @@ function createAssemblyLineScenario()
         {x = 10, y = 1.5, w = 4, angle = 0.1, speed = 2.5},
     }
 
-    for i = 1, #belts do
+    for i = 1, belts.count do
         b = belts[i]
         belt = createBody(createBox(b.w / 2, 0.15), b.x, b.y, 1, true)
         belt.angle = b.angle
@@ -5144,9 +5144,9 @@ function createAssemblyLineScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 50: Suspension bridge with traffic
--- ============================================================================
+# ============================================================================
+# Scenario 50: Suspension bridge with traffic
+# ============================================================================
 
 function createSuspensionBridgeScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -5224,9 +5224,9 @@ function createSuspensionBridgeScenario()
     return world
 end
 
--- ============================================================================
--- Predefined obstacle courses (large data)
--- ============================================================================
+# ============================================================================
+# Predefined obstacle courses (large data)
+# ============================================================================
 
 D.obstacleCourseData = {
     {type = "box", x = -12.5, y = 1.0, w = 0.5, h = 1.0, angle = 0, static = true},
@@ -5279,7 +5279,7 @@ function createObstacleCourseScenario()
     ground = createBody(createBox(15, 0.3), 0, -0.3, 1, true)
     worldAddBody(world, ground)
 
-    for i = 1, #D.obstacleCourseData do
+    for i = 1, D.obstacleCourseData.count do
         d = D.obstacleCourseData[i]
         body = null
         if d.type == "box" then
@@ -5309,9 +5309,9 @@ function createObstacleCourseScenario()
     return world
 end
 
--- ============================================================================
--- Predefined building layout data (for city scenario)
--- ============================================================================
+# ============================================================================
+# Predefined building layout data (for city scenario)
+# ============================================================================
 
 D.buildingLayouts = {
     {x = -20, floors = 4, width = 3, style = "brick"},
@@ -5333,7 +5333,7 @@ function createCityBlockScenario()
     ground.staticFriction = 0.8
     worldAddBody(world, ground)
 
-    for bi = 1, #D.buildingLayouts do
+    for bi = 1, D.buildingLayouts.count do
         bld = D.buildingLayouts[bi]
         bx = bld.x
         bw = bld.width
@@ -5385,9 +5385,9 @@ function createCityBlockScenario()
     return world
 end
 
--- ============================================================================
--- Terrain generation functions
--- ============================================================================
+# ============================================================================
+# Terrain generation functions
+# ============================================================================
 
 function generateHillTerrain(startX, endX, segments, amplitude, frequency, baseY)
     points = {}
@@ -5406,16 +5406,16 @@ function generateStepTerrain(startX, endX, numSteps, stepHeight, baseY)
     for i = 0, numSteps do
         x = startX + i * stepWidth
         y = baseY + M.floor(i / 2) * stepHeight
-        points[#points + 1] = vec(x, y)
+        points[points.count + 1] = vec(x, y)
         if i < numSteps then
-            points[#points + 1] = vec(x + stepWidth, y)
+            points[points.count + 1] = vec(x + stepWidth, y)
         end
     end
     return points
 end
 
 function buildTerrainBodies(world, points)
-    for i = 1, #points - 1 do
+    for i = 1, points.count - 1 do
         p1 = points[i]
         p2 = points[i + 1]
         midX = (p1.x + p2.x) / 2
@@ -5432,9 +5432,9 @@ function buildTerrainBodies(world, points)
     end
 end
 
--- ============================================================================
--- Scenario 51: Hill terrain with rolling objects
--- ============================================================================
+# ============================================================================
+# Scenario 51: Hill terrain with rolling objects
+# ============================================================================
 
 function createHillTerrainScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -5463,9 +5463,9 @@ function createHillTerrainScenario()
     return world
 end
 
--- ============================================================================
--- Scenario 52: Step terrain with bouncing balls
--- ============================================================================
+# ============================================================================
+# Scenario 52: Step terrain with bouncing balls
+# ============================================================================
 
 function createStepTerrainScenario()
     world = createWorld(vec(0, -10), 3.0)
@@ -5491,9 +5491,9 @@ function createStepTerrainScenario()
     return world
 end
 
--- ============================================================================
--- Predefined joint configurations for mechanical tests
--- ============================================================================
+# ============================================================================
+# Predefined joint configurations for mechanical tests
+# ============================================================================
 
 D.mechanismConfigs = {
     fourbar = {
@@ -5545,14 +5545,14 @@ function createMechanismScenario()
 
     for mechName, config in next, D.mechanismConfigs do
         bodies = {}
-        for i = 1, #config.bodies do
+        for i = 1, config.bodies.count do
             bd = config.bodies[i]
             body = createBody(createBox(bd.w, bd.h), bd.x, bd.y, 2.0, bd.static)
             worldAddBody(world, body)
             bodies[i] = body
         end
 
-        for i = 1, #config.joints do
+        for i = 1, config.joints.count do
             jd = config.joints[i]
             a = bodies[jd.a]
             b = bodies[jd.b]
@@ -5575,13 +5575,13 @@ function createMechanismScenario()
     return world
 end
 
--- ============================================================================
--- Energy and momentum analysis
--- ============================================================================
+# ============================================================================
+# Energy and momentum analysis
+# ============================================================================
 
 function computeKineticEnergy(world)
     ke = 0
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         if not body.isStatic then
             linKE = 0.5 * body.mass * vecLenSq(body.velocity)
@@ -5594,7 +5594,7 @@ end
 
 function computeMomentum(world)
     px, py = 0, 0
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         if not body.isStatic then
             px = px + body.mass * body.velocity.x
@@ -5607,7 +5607,7 @@ end
 function computeAngularMomentum(world, origin)
     origin = origin or vec(0, 0)
     L = 0
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         if not body.isStatic then
             r = vecSub(body.position, origin)
@@ -5622,7 +5622,7 @@ end
 function computeCenterOfMass(world)
     totalMass = 0
     cx, cy = 0, 0
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         if not body.isStatic then
             totalMass = totalMass + body.mass
@@ -5636,9 +5636,9 @@ function computeCenterOfMass(world)
     return vec(0, 0), 0
 end
 
--- ============================================================================
--- Scenario 53: Energy conservation test
--- ============================================================================
+# ============================================================================
+# Scenario 53: Energy conservation test
+# ============================================================================
 
 function createEnergyTestScenario()
     world = createWorld(vec(0, 0), 4.0)
@@ -5670,9 +5670,9 @@ function createEnergyTestScenario()
     return world
 end
 
--- ============================================================================
--- Predefined simulation test cases with expected physics behavior
--- ============================================================================
+# ============================================================================
+# Predefined simulation test cases with expected physics behavior
+# ============================================================================
 
 D.testCases = {
     {
@@ -5732,7 +5732,7 @@ D.testCases = {
         end,
         steps = 30,
         check = function(world)
-            for i = 2, #world.bodies do
+            for i = 2, world.bodies.count do
                 if world.bodies[i].position.x > 2 or world.bodies[i].position.x < -2 then
                     return false
                 end
@@ -5781,7 +5781,7 @@ D.testCases = {
 
 function runTestCases()
     allPassed = true
-    for i = 1, #D.testCases do
+    for i = 1, D.testCases.count do
         tc = D.testCases[i]
         bodyIdCounter = 0
         world = tc.setup()
@@ -5795,9 +5795,9 @@ function runTestCases()
     return allPassed
 end
 
--- ============================================================================
--- Additional predefined body configurations
--- ============================================================================
+# ============================================================================
+# Additional predefined body configurations
+# ============================================================================
 
 D.predefWorlds = {}
 
@@ -5966,13 +5966,13 @@ D.predefWorlds.domino_spiral = function()
     return world
 end
 
--- ============================================================================
--- Run simulation and checksum
--- ============================================================================
+# ============================================================================
+# Run simulation and checksum
+# ============================================================================
 
 function checksumWorld(world)
     sum = 0
-    for i = 1, #world.bodies do
+    for i = 1, world.bodies.count do
         body = world.bodies[i]
         sum = sum + body.position.x * 1000
         sum = sum + body.position.y * 1000
@@ -6039,7 +6039,7 @@ function runScenariosGroup2()
     bodyIdCounter = 0
     world = createBuoyancyScenario()
     for step = 1, 10 do
-        for fi = 1, #world.floaters do
+        for fi = 1, world.floaters.count do
             applyBuoyancy(world.floaters[fi], world.waterLevel, world.waterDensity, world.dragCoeff)
         end
         worldStep(world, 1/60)
@@ -6049,7 +6049,7 @@ function runScenariosGroup2()
     bodyIdCounter = 0
     world = createTornadoScenario()
     for step = 1, 12 do
-        for di = 1, #world.debris do
+        for di = 1, world.debris.count do
             body = world.debris[di]
             if not body.isStatic then
                 toCenter = vecSub(world.vortexCenter, body.position)
@@ -6125,7 +6125,7 @@ function runAllScenarios()
     return result
 end
 
--- First run to establish expected values
+# First run to establish expected values
 result = runAllScenarios()
 expected = 21502896.173
 if math.abs(result - expected) > expected * 1e-3 then

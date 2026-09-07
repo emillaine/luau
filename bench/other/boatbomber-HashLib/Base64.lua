@@ -1,24 +1,24 @@
--- @original: https://gist.github.com/Reselim/40d62b17d138cc74335a1b0709e19ce2
+# @original: https://gist.github.com/Reselim/40d62b17d138cc74335a1b0709e19ce2
 Alphabet = {}
 Indexes = {}
 
--- A-Z
+# A-Z
 for Index = 65, 90 do
 	table.insert(Alphabet, Index)
 end
 
--- a-z
+# a-z
 for Index = 97, 122 do
 	table.insert(Alphabet, Index)
 end
 
--- 0-9
+# 0-9
 for Index = 48, 57 do
 	table.insert(Alphabet, Index)
 end
 
-table.insert(Alphabet, 43) -- +
-table.insert(Alphabet, 47) -- /
+table.insert(Alphabet, 43) # +
+table.insert(Alphabet, 47) # /
 
 for Index, Character in ipairs(Alphabet) do
 	Indexes[Character] = Index
@@ -30,16 +30,16 @@ bit32_rshift = bit32.rshift
 bit32_lshift = bit32.lshift
 bit32_band = bit32.band
 
---[[**
+#[[**
 	Encodes a string in Base64.
 	@param [t:string] Input The input string to encode.
 	@returns [t:string] The string encoded in Base64.
-**--]]
+**#]]
 function Base64.Encode(Input)
 	Output = {}
 	Length = 0
 
-	for Index = 1, #Input, 3 do
+	for Index = 1, Input.count, 3 do
 		C1, C2, C3 = string.byte(Input, Index, Index + 2)
 
 		A = bit32_rshift(C1, 2)
@@ -76,16 +76,16 @@ function Base64.Encode(Input)
 	return table.concat(NewOutput)
 end
 
---[[**
+#[[**
 	Decodes a string from Base64.
 	@param [t:string] Input The input string to decode.
 	@returns [t:string] The newly decoded string.
-**--]]
+**#]]
 function Base64.Decode(Input)
 	Output = {}
 	Length = 0
 
-	for Index = 1, #Input, 4 do
+	for Index = 1, Input.count, 4 do
 		C1, C2, C3, C4 = string.byte(Input, Index, Index + 3)
 
 		I1 = Indexes[C1] - 1

@@ -14,8 +14,8 @@ function test()
 	}
 
 	function sha3_256(msg)
-		-- pad10*1 with SHA-3 domain separator 0x06
-		msgLen = #msg
+		# pad10*1 with SHA-3 domain separator 0x06
+		msgLen = msg.count
 		rateBytes = 136
 
 		pad = rateBytes - (msgLen % rateBytes)
@@ -30,7 +30,7 @@ function test()
 			buffer.writeu8(buf, paddedLen - 1, 0x80)
 		end
 
-		-- 25-lane state (S<col><row>), little-endian interpretation
+		# 25-lane state (S<col><row>), little-endian interpretation
 		S00, S10, S20, S30, S40 = 0i, 0i, 0i, 0i, 0i
 		S01, S11, S21, S31, S41 = 0i, 0i, 0i, 0i, 0i
 		S02, S12, S22, S32, S42 = 0i, 0i, 0i, 0i, 0i
@@ -38,7 +38,7 @@ function test()
 		S04, S14, S24, S34, S44 = 0i, 0i, 0i, 0i, 0i
 
 		for blockOffset = 0, paddedLen - 1, rateBytes do
-			-- absorb 17 lanes (136 bytes) of message
+			# absorb 17 lanes (136 bytes) of message
 			S00 = integer.bxor(S00, buffer.readinteger(buf, blockOffset))
 			S10 = integer.bxor(S10, buffer.readinteger(buf, blockOffset + 8))
 			S20 = integer.bxor(S20, buffer.readinteger(buf, blockOffset + 16))
@@ -58,7 +58,7 @@ function test()
 			S13 = integer.bxor(S13, buffer.readinteger(buf, blockOffset + 128))
 
 			for round = 1, 24 do
-				-- THETA
+				# THETA
 				C0 = integer.bxor(S00, S01, S02, S03, S04)
 				C1 = integer.bxor(S10, S11, S12, S13, S14)
 				C2 = integer.bxor(S20, S21, S22, S23, S24)
@@ -71,7 +71,7 @@ function test()
 				D3 = integer.bxor(C2, integer.lrotate(C4, 1i))
 				D4 = integer.bxor(C3, integer.lrotate(C0, 1i))
 
-				-- RHO + PI: B[X,Y] = ROT(S[(3Y+X) mod 5, X] XOR D[(3Y+X) mod 5], r[..])
+				# RHO + PI: B[X,Y] = ROT(S[(3Y+X) mod 5, X] XOR D[(3Y+X) mod 5], r[..])
 				B00 = integer.bxor(S00, D0)
 				B10 = integer.lrotate(integer.bxor(S11, D1), 44i)
 				B20 = integer.lrotate(integer.bxor(S22, D2), 43i)
@@ -102,7 +102,7 @@ function test()
 				B34 = integer.lrotate(integer.bxor(S03, D0), 41i)
 				B44 = integer.lrotate(integer.bxor(S14, D1), 2i)
 
-				-- CHI
+				# CHI
 				S00 = integer.bxor(B00, integer.band(integer.bnot(B10), B20))
 				S10 = integer.bxor(B10, integer.band(integer.bnot(B20), B30))
 				S20 = integer.bxor(B20, integer.band(integer.bnot(B30), B40))
@@ -133,12 +133,12 @@ function test()
 				S34 = integer.bxor(B34, integer.band(integer.bnot(B44), B04))
 				S44 = integer.bxor(B44, integer.band(integer.bnot(B04), B14))
 
-				-- IOTA
+				# IOTA
 				S00 = integer.bxor(S00, RC[round])
 			end
 		end
 
-		-- squeeze 32 bytes (first 4 lanes, little-endian bytes -> hex via bswap)
+		# squeeze 32 bytes (first 4 lanes, little-endian bytes -> hex via bswap)
 		return string.format(
 			"%016x%016x%016x%016x",
 			integer.bswap(S00), integer.bswap(S10), integer.bswap(S20), integer.bswap(S30)

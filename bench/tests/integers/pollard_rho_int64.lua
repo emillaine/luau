@@ -3,8 +3,8 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-	-- Modular multiplication via double-and-add (binary method).
-	-- Required because n > 2^31, so x*x can overflow signed int64.
+	# Modular multiplication via double-and-add (binary method).
+	# Required because n > 2^31, so x*x can overflow signed int64.
 	function mulmod(a: integer, b: integer, m: integer): integer
 		result = 0i
 		a = integer.rem(a, m)
@@ -55,21 +55,21 @@ function test()
 		end
 	end
 
-	-- 8 odd semiprimes with n > 2^32, products of two ~10^5 primes.
-	-- Values are 34-bit, forcing genuine 64-bit arithmetic in mulmod and gcd.
+	# 8 odd semiprimes with n > 2^32, products of two ~10^5 primes.
+	# Values are 34-bit, forcing genuine 64-bit arithmetic in mulmod and gcd.
 	primes = {
 		100003i, 100019i, 100043i, 100049i, 100057i, 100069i, 100103i, 100109i,
 		100129i, 100151i, 100153i, 100169i, 100183i, 100189i, 100193i, 100207i,
 	}
 	semiprimes = {}
-	for i = 1, #primes, 2 do
+	for i = 1, primes.count, 2 do
 		semiprimes[(i + 1) // 2] = integer.mul(primes[i], primes[i + 1])
 	end
 
 	ts0 = os.clock()
 
 	for iter = 1, 1 do
-		for i = 1, #semiprimes do
+		for i = 1, semiprimes.count do
 			n = semiprimes[i]
 			f = pollard_rho(n)
 			assert(f != 1i and f != n)

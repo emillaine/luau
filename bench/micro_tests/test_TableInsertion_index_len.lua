@@ -8,7 +8,7 @@ function test()
     for i=1,300 do
         t = {}
         for j=1,1000 do
-            t[#t+1] = j
+            t[t.count+1] = j
         end
     end
 

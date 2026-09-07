@@ -1,4 +1,4 @@
--- forward declarations (implicit-local dialect has no hoisted globals)
+# forward declarations (implicit-local dialect has no hoisted globals)
 buildChangeMap = null
 groupIntoHunks = null
 splitLines = null
@@ -8,14 +8,14 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- Git object model + diff benchmark
--- Compatible with: Lua 5.5, LuaJIT 2.x, Lute
--- Implements: SHA-1, content-addressable store, blob/tree/commit objects,
--- Myers diff, unified diff output, patch parsing/application, three-way merge.
+# Git object model + diff benchmark
+# Compatible with: Lua 5.5, LuaJIT 2.x, Lute
+# Implements: SHA-1, content-addressable store, blob/tree/commit objects,
+# Myers diff, unified diff output, patch parsing/application, three-way merge.
 
--- =========================================================================
--- 32-bit arithmetic helpers
--- =========================================================================
+# =========================================================================
+# 32-bit arithmetic helpers
+# =========================================================================
 band, bor, bxor, bnot, lshift, rshift = null, null, null, null, null, null
 _bit32 = rawget(_G, "bit32")
 _bit = rawget(_G, "bit")
@@ -43,39 +43,39 @@ format = string.format
 concat = table.concat
 insert = table.insert
 
--- =========================================================================
--- SHA-1 Implementation
--- =========================================================================
+# =========================================================================
+# SHA-1 Implementation
+# =========================================================================
 
--- Rotate left 32-bit
+# Rotate left 32-bit
 function rotl(x, n)
     return bor(lshift(x, n), rshift(x, 32 - n))
 end
 
--- Convert a string to an array of 32-bit big-endian words
+# Convert a string to an array of 32-bit big-endian words
 function strToWords(s)
     words = {}
-    len = #s
+    len = s.count
     for i = 1, len, 4 do
         b0 = byte(s, i) or 0
         b1 = byte(s, i + 1) or 0
         b2 = byte(s, i + 2) or 0
         b3 = byte(s, i + 3) or 0
-        words[#words + 1] = bor(lshift(b0, 24), lshift(b1, 16), lshift(b2, 8), b3)
+        words[words.count + 1] = bor(lshift(b0, 24), lshift(b1, 16), lshift(b2, 8), b3)
     end
     return words
 end
 
--- SHA-1 padding
+# SHA-1 padding
 function sha1Pad(msg)
-    len = #msg
+    len = msg.count
     bitLen = len * 8
-    -- Append 0x80
+    # Append 0x80
     msg = msg .. char(0x80)
-    -- Pad to 56 mod 64 bytes
-    padLen = (56 - (#msg % 64)) % 64
+    # Pad to 56 mod 64 bytes
+    padLen = (56 - (msg.count % 64)) % 64
     msg = msg .. string.rep(char(0), padLen)
-    -- Append 64-bit big-endian length (we only handle up to 32-bit lengths here)
+    # Append 64-bit big-endian length (we only handle up to 32-bit lengths here)
     highBits = floor(bitLen / 4294967296)
     lowBits = bitLen % 4294967296
     msg = msg .. char(
@@ -91,7 +91,7 @@ function sha1Pad(msg)
     return msg
 end
 
--- Main SHA-1 computation
+# Main SHA-1 computation
 function sha1(message)
     msg = sha1Pad(message)
     h0 = 0x67452301
@@ -101,8 +101,8 @@ function sha1(message)
     h4 = 0xC3D2E1F0
 
     w = {}
-    for chunkStart = 1, #msg, 64 do
-        -- Break chunk into 16 32-bit words
+    for chunkStart = 1, msg.count, 64 do
+        # Break chunk into 16 32-bit words
         for i = 0, 15 do
             offset = chunkStart + i * 4
             b0 = byte(msg, offset)
@@ -112,7 +112,7 @@ function sha1(message)
             w[i] = bor(lshift(b0, 24), lshift(b1, 16), lshift(b2, 8), b3)
         end
 
-        -- Extend to 80 words
+        # Extend to 80 words
         for i = 16, 79 do
             w[i] = rotl(bxor(w[i-3], w[i-8], w[i-14], w[i-16]), 1)
         end
@@ -153,15 +153,15 @@ function sha1(message)
     return format("%08x%08x%08x%08x%08x", h0, h1, h2, h3, h4)
 end
 
--- Git-style hash: sha1("type len\0content")
+# Git-style hash: sha1("type len\0content")
 function gitHash(objType, content)
-    header = objType .. " " .. #content .. "\0"
+    header = objType .. " " .. content.count .. "\0"
     return sha1(header .. content)
 end
 
--- =========================================================================
--- Content-Addressable Object Store
--- =========================================================================
+# =========================================================================
+# Content-Addressable Object Store
+# =========================================================================
 ObjectStore = {}
 
 function createObjectStore()
@@ -188,9 +188,9 @@ function getRef(store, name)
     return store.refs[name]
 end
 
--- =========================================================================
--- Blob Object
--- =========================================================================
+# =========================================================================
+# Blob Object
+# =========================================================================
 function createBlob(store, content)
     return storeObject(store, "blob", content)
 end
@@ -203,16 +203,16 @@ function getBlobContent(store, hash)
     return null
 end
 
--- =========================================================================
--- Tree Object
--- =========================================================================
+# =========================================================================
+# Tree Object
+# =========================================================================
 
--- entries is a list of {mode, name, hash}
+# entries is a list of {mode, name, hash}
 function serializeTree(entries)
     parts = {}
-    for i = 1, #entries do
+    for i = 1, entries.count do
         e = entries[i]
-        parts[#parts + 1] = e.mode .. " " .. e.name .. "\0" .. e.hash
+        parts[parts.count + 1] = e.mode .. " " .. e.name .. "\0" .. e.hash
     end
     return concat(parts, "")
 end
@@ -220,7 +220,7 @@ end
 function parseTree(content)
     entries = {}
     pos = 1
-    len = #content
+    len = content.count
     while pos <= len do
         spacePos = content:find(" ", pos)
         if not spacePos then break end
@@ -229,14 +229,14 @@ function parseTree(content)
         if not nullPos then break end
         name = sub(content, spacePos + 1, nullPos - 1)
         hash = sub(content, nullPos + 1, nullPos + 40)
-        entries[#entries + 1] = { mode = mode, name = name, hash = hash }
+        entries[entries.count + 1] = { mode = mode, name = name, hash = hash }
         pos = nullPos + 41
     end
     return entries
 end
 
 function createTree(store, entries)
-    -- Sort entries by name for determinism
+    # Sort entries by name for determinism
     table.sort(entries, function(a, b) return a.name < b.name end)
     content = serializeTree(entries)
     return storeObject(store, "tree", content)
@@ -250,19 +250,19 @@ function getTreeEntries(store, hash)
     return {}
 end
 
--- =========================================================================
--- Commit Object
--- =========================================================================
+# =========================================================================
+# Commit Object
+# =========================================================================
 function serializeCommit(treeHash, parentHashes, author, message)
     lines = {}
-    lines[#lines + 1] = "tree " .. treeHash
-    for i = 1, #parentHashes do
-        lines[#lines + 1] = "parent " .. parentHashes[i]
+    lines[lines.count + 1] = "tree " .. treeHash
+    for i = 1, parentHashes.count do
+        lines[lines.count + 1] = "parent " .. parentHashes[i]
     end
-    lines[#lines + 1] = "author " .. author
-    lines[#lines + 1] = "committer " .. author
-    lines[#lines + 1] = ""
-    lines[#lines + 1] = message
+    lines[lines.count + 1] = "author " .. author
+    lines[lines.count + 1] = "committer " .. author
+    lines[lines.count + 1] = ""
+    lines[lines.count + 1] = message
     return concat(lines, "\n")
 end
 
@@ -270,13 +270,13 @@ function parseCommit(content)
     result = { parents = {} }
     lines = splitLines(content)
     i = 1
-    while i <= #lines do
+    while i <= lines.count do
         line = lines[i]
         if line == "" then
-            -- Rest is message
+            # Rest is message
             msgLines = {}
-            for j = i + 1, #lines do
-                msgLines[#msgLines + 1] = lines[j]
+            for j = i + 1, lines.count do
+                msgLines[msgLines.count + 1] = lines[j]
             end
             result.message = concat(msgLines, "\n")
             break
@@ -285,7 +285,7 @@ function parseCommit(content)
         if key == "tree" then
             result.tree = value
         else if key == "parent" then
-            result.parents[#result.parents + 1] = value
+            result.parents[result.parents.count + 1] = value
         else if key == "author" then
             result.author = value
         else if key == "committer" then
@@ -309,20 +309,20 @@ function getCommitData(store, hash)
     return null
 end
 
--- =========================================================================
--- String Utilities
--- =========================================================================
+# =========================================================================
+# String Utilities
+# =========================================================================
 function splitLines(text)
     lines = {}
     pos = 1
-    len = #text
+    len = text.count
     while pos <= len do
         nl = text:find("\n", pos, true)
         if nl then
-            lines[#lines + 1] = sub(text, pos, nl - 1)
+            lines[lines.count + 1] = sub(text, pos, nl - 1)
             pos = nl + 1
         else
-            lines[#lines + 1] = sub(text, pos)
+            lines[lines.count + 1] = sub(text, pos)
             break
         end
     end
@@ -338,28 +338,28 @@ function trimRight(s)
 end
 
 function startsWith(s, prefix)
-    return sub(s, 1, #prefix) == prefix
+    return sub(s, 1, prefix.count) == prefix
 end
 
--- =========================================================================
--- Myers Diff Algorithm (O(ND))
--- =========================================================================
+# =========================================================================
+# Myers Diff Algorithm (O(ND))
+# =========================================================================
 
--- Compute shortest edit script between two sequences of lines
+# Compute shortest edit script between two sequences of lines
 function myersDiff(aLines, bLines)
-    n = #aLines
-    m = #bLines
+    n = aLines.count
+    m = bLines.count
     max = n + m
     if max == 0 then return {} end
 
-    -- V array indexed from -max to max, storing x values for each diagonal
+    # V array indexed from -max to max, storing x values for each diagonal
     v = {}
     v[1] = 0
     trace = {}
 
     found = false
     for d = 0, max do
-        -- Save current V state for traceback
+        # Save current V state for traceback
         vCopy = {}
         for k2, val in next, v do
             vCopy[k2] = val
@@ -375,7 +375,7 @@ function myersDiff(aLines, bLines)
             end
             y = x - k
 
-            -- Follow diagonal (matching lines)
+            # Follow diagonal (matching lines)
             while x < n and y < m and aLines[x + 1] == bLines[y + 1] do
                 x = x + 1
                 y = y + 1
@@ -391,12 +391,12 @@ function myersDiff(aLines, bLines)
         if found then break end
     end
 
-    -- Traceback to find the actual edit script
+    # Traceback to find the actual edit script
     edits = {}
     x = n
     y = m
 
-    for d = #trace, 0, -1 do
+    for d = trace.count, 0, -1 do
         vPrev = trace[d]
         k = x - y
         prevK = null
@@ -409,52 +409,52 @@ function myersDiff(aLines, bLines)
         prevX = vPrev[prevK] or 0
         prevY = prevX - prevK
 
-        -- Diagonal moves (equal lines)
+        # Diagonal moves (equal lines)
         while x > prevX and y > prevY do
             x = x - 1
             y = y - 1
-            edits[#edits + 1] = { op = "equal", aIdx = x + 1, bIdx = y + 1 }
+            edits[edits.count + 1] = { op = "equal", aIdx = x + 1, bIdx = y + 1 }
         end
 
         if d > 0 then
             if x == prevX then
-                -- Insert
+                # Insert
                 y = y - 1
-                edits[#edits + 1] = { op = "insert", bIdx = y + 1 }
+                edits[edits.count + 1] = { op = "insert", bIdx = y + 1 }
             else
-                -- Delete
+                # Delete
                 x = x - 1
-                edits[#edits + 1] = { op = "delete", aIdx = x + 1 }
+                edits[edits.count + 1] = { op = "delete", aIdx = x + 1 }
             end
         end
     end
 
-    -- Reverse edits (we built them backwards)
+    # Reverse edits (we built them backwards)
     reversed = {}
-    for i = #edits, 1, -1 do
-        reversed[#reversed + 1] = edits[i]
+    for i = edits.count, 1, -1 do
+        reversed[reversed.count + 1] = edits[i]
     end
     return reversed
 end
 
--- =========================================================================
--- Unified Diff Format
--- =========================================================================
+# =========================================================================
+# Unified Diff Format
+# =========================================================================
 function generateUnifiedDiff(aName, bName, aLines, bLines, edits, contextSize)
     contextSize = contextSize or 3
     output = {}
-    output[#output + 1] = "--- " .. aName
-    output[#output + 1] = "+++ " .. bName
+    output[output.count + 1] = "--- " .. aName
+    output[output.count + 1] = "+++ " .. bName
 
-    -- Group edits into hunks
+    # Group edits into hunks
     hunks = groupIntoHunks(edits, aLines, bLines, contextSize)
 
-    for h = 1, #hunks do
+    for h = 1, hunks.count do
         hunk = hunks[h]
-        output[#output + 1] = format("@@ -%d,%d +%d,%d @@",
+        output[output.count + 1] = format("@@ -%d,%d +%d,%d @@",
             hunk.aStart, hunk.aCount, hunk.bStart, hunk.bCount)
-        for i = 1, #hunk.lines do
-            output[#output + 1] = hunk.lines[i]
+        for i = 1, hunk.lines.count do
+            output[output.count + 1] = hunk.lines[i]
         end
     end
 
@@ -462,40 +462,40 @@ function generateUnifiedDiff(aName, bName, aLines, bLines, edits, contextSize)
 end
 
 function groupIntoHunks(edits, aLines, bLines, contextSize)
-    -- First, build a list of change positions
+    # First, build a list of change positions
     changes = {}
-    for i = 1, #edits do
+    for i = 1, edits.count do
         if edits[i].op != "equal" then
-            changes[#changes + 1] = i
+            changes[changes.count + 1] = i
         end
     end
 
-    if #changes == 0 then return {} end
+    if changes.count == 0 then return {} end
 
-    -- Group changes that are within contextSize*2 of each other
+    # Group changes that are within contextSize*2 of each other
     groups = {}
     currentGroup = { changes[1] }
-    for i = 2, #changes do
-        -- Check gap between consecutive changes in edit list
+    for i = 2, changes.count do
+        # Check gap between consecutive changes in edit list
         if changes[i] - changes[i-1] <= contextSize * 2 + 1 then
-            currentGroup[#currentGroup + 1] = changes[i]
+            currentGroup[currentGroup.count + 1] = changes[i]
         else
-            groups[#groups + 1] = currentGroup
+            groups[groups.count + 1] = currentGroup
             currentGroup = { changes[i] }
         end
     end
-    groups[#groups + 1] = currentGroup
+    groups[groups.count + 1] = currentGroup
 
-    -- Build hunks
+    # Build hunks
     hunks = {}
-    for g = 1, #groups do
+    for g = 1, groups.count do
         group = groups[g]
         firstChange = group[1]
-        lastChange = group[#group]
+        lastChange = group[group.count]
 
-        -- Determine context boundaries
+        # Determine context boundaries
         startIdx = math.max(1, firstChange - contextSize)
-        endIdx = math.min(#edits, lastChange + contextSize)
+        endIdx = math.min(edits.count, lastChange + contextSize)
 
         hunkLines = {}
         aStart, aCount, bStart, bCount = null, 0, null, 0
@@ -505,23 +505,23 @@ function groupIntoHunks(edits, aLines, bLines, contextSize)
             if edit.op == "equal" then
                 if not aStart then aStart = edit.aIdx end
                 if not bStart then bStart = edit.bIdx end
-                hunkLines[#hunkLines + 1] = " " .. aLines[edit.aIdx]
+                hunkLines[hunkLines.count + 1] = " " .. aLines[edit.aIdx]
                 aCount = aCount + 1
                 bCount = bCount + 1
             else if edit.op == "delete" then
                 if not aStart then aStart = edit.aIdx end
                 if not bStart then
-                    -- bStart is the line in b after last context
+                    # bStart is the line in b after last context
                     bStart = edit.aIdx - (aStart and (edit.aIdx - aStart) or 0)
-                    -- Recalculate based on tracked position
+                    # Recalculate based on tracked position
                     bStart = bCount + 1
                 end
-                hunkLines[#hunkLines + 1] = "-" .. aLines[edit.aIdx]
+                hunkLines[hunkLines.count + 1] = "-" .. aLines[edit.aIdx]
                 aCount = aCount + 1
             else if edit.op == "insert" then
                 if not aStart then aStart = 1 end
                 if not bStart then bStart = edit.bIdx end
-                hunkLines[#hunkLines + 1] = "+" .. bLines[edit.bIdx]
+                hunkLines[hunkLines.count + 1] = "+" .. bLines[edit.bIdx]
                 bCount = bCount + 1
             end
         end
@@ -529,7 +529,7 @@ function groupIntoHunks(edits, aLines, bLines, contextSize)
         if not aStart then aStart = 1 end
         if not bStart then bStart = 1 end
 
-        hunks[#hunks + 1] = {
+        hunks[hunks.count + 1] = {
             aStart = aStart,
             aCount = aCount,
             bStart = bStart,
@@ -541,9 +541,9 @@ function groupIntoHunks(edits, aLines, bLines, contextSize)
     return hunks
 end
 
--- =========================================================================
--- Simplified Diff (line-level, for merge)
--- =========================================================================
+# =========================================================================
+# Simplified Diff (line-level, for merge)
+# =========================================================================
 function computeLineDiff(aText, bText)
     aLines = splitLines(aText)
     bLines = splitLines(bText)
@@ -558,9 +558,9 @@ function diffToUnified(aName, bName, aText, bText)
     return generateUnifiedDiff(aName, bName, aLines, bLines, edits, 3)
 end
 
--- =========================================================================
--- Patch Parsing
--- =========================================================================
+# =========================================================================
+# Patch Parsing
+# =========================================================================
 function parsePatch(patchText)
     lines = splitLines(patchText)
     hunks = {}
@@ -568,7 +568,7 @@ function parsePatch(patchText)
     aFile, bFile = null, null
     seenHunk = false
 
-    for i = 1, #lines do
+    for i = 1, lines.count do
         line = lines[i]
         if not seenHunk and startsWith(line, "--- ") then
             aFile = sub(line, 5)
@@ -586,11 +586,11 @@ function parsePatch(patchText)
                     bCount = tonumber(bCount),
                     lines = {}
                 }
-                hunks[#hunks + 1] = currentHunk
+                hunks[hunks.count + 1] = currentHunk
             end
         else if currentHunk then
             if startsWith(line, " ") or startsWith(line, "+") or startsWith(line, "-") then
-                currentHunk.lines[#currentHunk.lines + 1] = line
+                currentHunk.lines[currentHunk.lines.count + 1] = line
             end
         end
     end
@@ -598,49 +598,49 @@ function parsePatch(patchText)
     return { aFile = aFile, bFile = bFile, hunks = hunks }
 end
 
--- =========================================================================
--- Patch Application
--- =========================================================================
+# =========================================================================
+# Patch Application
+# =========================================================================
 function applyPatch(originalText, patch)
     origLines = splitLines(originalText)
     result = {}
     origIdx = 1
 
-    for h = 1, #patch.hunks do
+    for h = 1, patch.hunks.count do
         hunk = patch.hunks[h]
-        -- Copy lines before this hunk
+        # Copy lines before this hunk
         while origIdx < hunk.aStart do
-            result[#result + 1] = origLines[origIdx]
+            result[result.count + 1] = origLines[origIdx]
             origIdx = origIdx + 1
         end
-        -- Apply hunk
-        for i = 1, #hunk.lines do
+        # Apply hunk
+        for i = 1, hunk.lines.count do
             hLine = hunk.lines[i]
             prefix = sub(hLine, 1, 1)
             content = sub(hLine, 2)
             if prefix == " " then
-                result[#result + 1] = content
+                result[result.count + 1] = content
                 origIdx = origIdx + 1
             else if prefix == "-" then
                 origIdx = origIdx + 1
             else if prefix == "+" then
-                result[#result + 1] = content
+                result[result.count + 1] = content
             end
         end
     end
 
-    -- Copy remaining lines
-    while origIdx <= #origLines do
-        result[#result + 1] = origLines[origIdx]
+    # Copy remaining lines
+    while origIdx <= origLines.count do
+        result[result.count + 1] = origLines[origIdx]
         origIdx = origIdx + 1
     end
 
     return joinLines(result)
 end
 
--- =========================================================================
--- Three-Way Merge
--- =========================================================================
+# =========================================================================
+# Three-Way Merge
+# =========================================================================
 function threeWayMerge(baseText, oursText, theirsText)
     baseLines = splitLines(baseText)
     oursLines = splitLines(oursText)
@@ -649,40 +649,40 @@ function threeWayMerge(baseText, oursText, theirsText)
     oursEdits = myersDiff(baseLines, oursLines)
     theirsEdits = myersDiff(baseLines, theirsLines)
 
-    -- Build change maps: which base lines are modified by each side
+    # Build change maps: which base lines are modified by each side
     oursChanges = buildChangeMap(oursEdits, baseLines, oursLines)
     theirsChanges = buildChangeMap(theirsEdits, baseLines, theirsLines)
 
-    -- Merge
+    # Merge
     result = {}
     conflicts = 0
     baseIdx = 1
 
-    while baseIdx <= #baseLines do
+    while baseIdx <= baseLines.count do
         oc = oursChanges[baseIdx]
         tc = theirsChanges[baseIdx]
 
         if not oc and not tc then
-            -- No changes, keep base
-            result[#result + 1] = baseLines[baseIdx]
+            # No changes, keep base
+            result[result.count + 1] = baseLines[baseIdx]
             baseIdx = baseIdx + 1
         else if oc and not tc then
-            -- Only ours changed
-            for j = 1, #oc.newLines do
-                result[#result + 1] = oc.newLines[j]
+            # Only ours changed
+            for j = 1, oc.newLines.count do
+                result[result.count + 1] = oc.newLines[j]
             end
             baseIdx = baseIdx + oc.baseCount
         else if tc and not oc then
-            -- Only theirs changed
-            for j = 1, #tc.newLines do
-                result[#result + 1] = tc.newLines[j]
+            # Only theirs changed
+            for j = 1, tc.newLines.count do
+                result[result.count + 1] = tc.newLines[j]
             end
             baseIdx = baseIdx + tc.baseCount
         else
-            -- Both changed - check if same change
-            same = (#oc.newLines == #tc.newLines)
+            # Both changed - check if same change
+            same = (oc.newLines.count == tc.newLines.count)
             if same then
-                for j = 1, #oc.newLines do
+                for j = 1, oc.newLines.count do
                     if oc.newLines[j] != tc.newLines[j] then
                         same = false
                         break
@@ -690,23 +690,23 @@ function threeWayMerge(baseText, oursText, theirsText)
                 end
             end
             if same then
-                -- Same change, take either
-                for j = 1, #oc.newLines do
-                    result[#result + 1] = oc.newLines[j]
+                # Same change, take either
+                for j = 1, oc.newLines.count do
+                    result[result.count + 1] = oc.newLines[j]
                 end
                 baseIdx = baseIdx + oc.baseCount
             else
-                -- Conflict!
+                # Conflict!
                 conflicts = conflicts + 1
-                result[#result + 1] = "<<<<<<< OURS"
-                for j = 1, #oc.newLines do
-                    result[#result + 1] = oc.newLines[j]
+                result[result.count + 1] = "<<<<<<< OURS"
+                for j = 1, oc.newLines.count do
+                    result[result.count + 1] = oc.newLines[j]
                 end
-                result[#result + 1] = "======="
-                for j = 1, #tc.newLines do
-                    result[#result + 1] = tc.newLines[j]
+                result[result.count + 1] = "======="
+                for j = 1, tc.newLines.count do
+                    result[result.count + 1] = tc.newLines[j]
                 end
-                result[#result + 1] = ">>>>>>> THEIRS"
+                result[result.count + 1] = ">>>>>>> THEIRS"
                 baseIdx = baseIdx + math.max(oc.baseCount, tc.baseCount)
             end
         end
@@ -718,30 +718,30 @@ end
 function buildChangeMap(edits, baseLines, newLines)
     changes = {}
     i = 1
-    while i <= #edits do
+    while i <= edits.count do
         edit = edits[i]
         if edit.op != "equal" then
-            -- Collect contiguous changes
+            # Collect contiguous changes
             baseStart = null
             baseCount = 0
             newLinesCollected = {}
 
-            while i <= #edits and edits[i].op != "equal" do
+            while i <= edits.count and edits[i].op != "equal" do
                 e = edits[i]
                 if e.op == "delete" then
                     if not baseStart then baseStart = e.aIdx end
                     baseCount = baseCount + 1
                 else if e.op == "insert" then
                     if not baseStart then
-                        -- Pure insert, anchor to next base line
+                        # Pure insert, anchor to next base line
                         baseStart = e.bIdx
                     end
-                    newLinesCollected[#newLinesCollected + 1] = newLines[e.bIdx]
+                    newLinesCollected[newLinesCollected.count + 1] = newLines[e.bIdx]
                 end
                 i = i + 1
             end
 
-            if baseStart and baseStart <= #baseLines then
+            if baseStart and baseStart <= baseLines.count then
                 changes[baseStart] = {
                     baseCount = math.max(baseCount, 1),
                     newLines = newLinesCollected
@@ -754,14 +754,14 @@ function buildChangeMap(edits, baseLines, newLines)
     return changes
 end
 
--- =========================================================================
--- High-level Git operations
--- =========================================================================
+# =========================================================================
+# High-level Git operations
+# =========================================================================
 function buildTreeFromFiles(store, files)
     entries = {}
     for fname, content in next, files do
         blobHash = createBlob(store, content)
-        entries[#entries + 1] = { mode = "100644", name = fname, hash = blobHash }
+        entries[entries.count + 1] = { mode = "100644", name = fname, hash = blobHash }
     end
     return createTree(store, entries)
 end
@@ -776,7 +776,7 @@ function getFilesFromCommit(store, commitHash)
     if not commitData then return {} end
     entries = getTreeEntries(store, commitData.tree)
     files = {}
-    for i = 1, #entries do
+    for i = 1, entries.count do
         e = entries[i]
         files[e.name] = getBlobContent(store, e.hash)
     end
@@ -788,24 +788,24 @@ function diffCommits(store, commitA, commitB)
     filesB = getFilesFromCommit(store, commitB)
     diffs = {}
 
-    -- Find modified and deleted files
+    # Find modified and deleted files
     for fname, contentA in next, filesA do
         contentB = filesB[fname]
         if contentB == null then
-            -- Deleted
-            diffs[#diffs + 1] = { file = fname, status = "deleted",
+            # Deleted
+            diffs[diffs.count + 1] = { file = fname, status = "deleted",
                 patch = diffToUnified("a/" .. fname, "/dev/null", contentA, "") }
         else if contentA != contentB then
-            -- Modified
-            diffs[#diffs + 1] = { file = fname, status = "modified",
+            # Modified
+            diffs[diffs.count + 1] = { file = fname, status = "modified",
                 patch = diffToUnified("a/" .. fname, "b/" .. fname, contentA, contentB) }
         end
     end
 
-    -- Find added files
+    # Find added files
     for fname, contentB in next, filesB do
         if filesA[fname] == null then
-            diffs[#diffs + 1] = { file = fname, status = "added",
+            diffs[diffs.count + 1] = { file = fname, status = "added",
                 patch = diffToUnified("/dev/null", "b/" .. fname, "", contentB) }
         end
     end
@@ -822,7 +822,7 @@ function mergeCommits(store, baseCommit, oursCommit, theirsCommit)
     merged = {}
     totalConflicts = 0
 
-    -- Collect all filenames
+    # Collect all filenames
     allFiles = {}
     for fname in next, baseFiles do allFiles[fname] = true end
     for fname in next, oursFiles do allFiles[fname] = true end
@@ -846,7 +846,7 @@ function mergeCommits(store, baseCommit, oursCommit, theirsCommit)
                 merged[fname] = ours
             end
         else
-            -- Both modified differently
+            # Both modified differently
             mergedContent, conflicts = threeWayMerge(base, ours, theirs)
             merged[fname] = mergedContent
             totalConflicts = totalConflicts + conflicts
@@ -856,13 +856,13 @@ function mergeCommits(store, baseCommit, oursCommit, theirsCommit)
     return merged, totalConflicts
 end
 
--- =========================================================================
--- Test Source Files (realistic content)
--- =========================================================================
+# =========================================================================
+# Test Source Files (realistic content)
+# =========================================================================
 
 TEST_FILE_1 = [[
--- Module: Vector3
--- 3D vector mathematics library
+# Module: Vector3
+# 3D vector mathematics library
 
 local Vector3 = {}
 Vector3.__index = Vector3
@@ -932,8 +932,8 @@ return Vector3
 ]]
 
 TEST_FILE_2 = [[
--- Module: Matrix4x4
--- 4x4 matrix operations for 3D transformations
+# Module: Matrix4x4
+# 4x4 matrix operations for 3D transformations
 
 local Matrix4x4 = {}
 Matrix4x4.__index = Matrix4x4
@@ -1043,8 +1043,8 @@ return Matrix4x4
 ]]
 
 TEST_FILE_3 = [[
--- Module: LinkedList
--- Doubly linked list implementation
+# Module: LinkedList
+# Doubly linked list implementation
 
 local LinkedList = {}
 LinkedList.__index = LinkedList
@@ -1161,8 +1161,8 @@ return LinkedList
 ]]
 
 TEST_FILE_4 = [[
--- Module: HashMap
--- Hash map with separate chaining
+# Module: HashMap
+# Hash map with separate chaining
 
 local HashMap = {}
 HashMap.__index = HashMap
@@ -1263,8 +1263,8 @@ return HashMap
 ]]
 
 TEST_FILE_5 = [[
--- Module: EventEmitter
--- Event system with priorities and once-listeners
+# Module: EventEmitter
+# Event system with priorities and once-listeners
 
 local EventEmitter = {}
 EventEmitter.__index = EventEmitter
@@ -1349,8 +1349,8 @@ return EventEmitter
 ]]
 
 TEST_FILE_6 = [[
--- Module: Scheduler
--- Priority-based task scheduler with time slicing
+# Module: Scheduler
+# Priority-based task scheduler with time slicing
 
 local Scheduler = {}
 Scheduler.__index = Scheduler
@@ -1415,7 +1415,7 @@ function Scheduler:tick(deltaTime)
             toRemove[#toRemove + 1] = i
         end
     end
-    -- Remove completed/cancelled tasks (in reverse order)
+    # Remove completed/cancelled tasks (in reverse order)
     for i = #toRemove, 1, -1 do
         table.remove(self.tasks, toRemove[i])
     end
@@ -1440,8 +1440,8 @@ return Scheduler
 ]]
 
 TEST_FILE_7 = [[
--- Module: BinarySearchTree
--- Self-balancing binary search tree (AVL-like)
+# Module: BinarySearchTree
+# Self-balancing binary search tree (AVL-like)
 
 local BST = {}
 BST.__index = BST
@@ -1571,8 +1571,8 @@ return BST
 ]]
 
 TEST_FILE_8 = [[
--- Module: StringBuffer
--- Efficient string building with rope-like structure
+# Module: StringBuffer
+# Efficient string building with rope-like structure
 
 local StringBuffer = {}
 StringBuffer.__index = StringBuffer
@@ -1680,8 +1680,8 @@ return StringBuffer
 ]]
 
 TEST_FILE_9 = [[
--- Module: StateMachine
--- Finite state machine with transitions and guards
+# Module: StateMachine
+# Finite state machine with transitions and guards
 
 local StateMachine = {}
 StateMachine.__index = StateMachine
@@ -1768,8 +1768,8 @@ return StateMachine
 ]]
 
 TEST_FILE_10 = [[
--- Module: JSON
--- Simple JSON encoder/decoder
+# Module: JSON
+# Simple JSON encoder/decoder
 
 local JSON = {}
 
@@ -1794,7 +1794,7 @@ function JSON.encode(value)
             :gsub('\t', '\\t')
         return '"' .. escaped .. '"'
     elseif vType == "table" then
-        -- Check if array
+        # Check if array
         local isArray = true
         local maxIdx = 0
         for k in next, value do
@@ -1860,7 +1860,7 @@ function JSON.decode(str)
 end
 
 function JSON._parseString(str, startPos)
-    -- Simple string parser
+    # Simple string parser
     local result = {}
     local i = startPos + 1
     while i <= #str do
@@ -1892,7 +1892,7 @@ function JSON._parseNumber(str, startPos)
 end
 
 function JSON._parseObject(str, startPos)
-    -- Simplified, not fully robust
+    # Simplified, not fully robust
     return {}, startPos + 2
 end
 
@@ -1904,8 +1904,8 @@ return JSON
 ]]
 
 TEST_FILE_11 = [[
--- Module: Logger
--- Structured logging with levels and formatters
+# Module: Logger
+# Structured logging with levels and formatters
 
 local Logger = {}
 Logger.__index = Logger
@@ -1983,8 +1983,8 @@ return Logger
 ]]
 
 TEST_FILE_12 = [[
--- Module: PathFinder
--- A* pathfinding on a grid
+# Module: PathFinder
+# A* pathfinding on a grid
 
 local PathFinder = {}
 PathFinder.__index = PathFinder
@@ -2031,7 +2031,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
     open[startKey].f = open[startKey].g + open[startKey].h
 
     while true do
-        -- Find lowest f in open set
+        # Find lowest f in open set
         local bestKey, bestNode = null, null
         for k, node in next, open do
             if not bestNode or node.f < bestNode.f then
@@ -2043,7 +2043,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
         if not bestNode then return null end
 
         if bestNode.x == endX and bestNode.y == endY then
-            -- Reconstruct path
+            # Reconstruct path
             local path = {}
             local key = bestKey
             while key do
@@ -2051,7 +2051,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
                 path[#path + 1] = { x = node.x, y = node.y }
                 key = cameFrom[key]
             end
-            -- Reverse
+            # Reverse
             local reversed = {}
             for i = #path, 1, -1 do
                 reversed[#reversed + 1] = path[i]
@@ -2062,7 +2062,7 @@ function PathFinder:findPath(startX, startY, endX, endY)
         open[bestKey] = null
         closed[bestKey] = bestNode
 
-        -- Check neighbors
+        # Check neighbors
         local neighbors = {
             { x = bestNode.x + 1, y = bestNode.y },
             { x = bestNode.x - 1, y = bestNode.y },
@@ -2092,8 +2092,8 @@ return PathFinder
 ]]
 
 TEST_FILE_13 = [[
--- Module: TokenStream
--- Lexer/tokenizer for a simple expression language
+# Module: TokenStream
+# Lexer/tokenizer for a simple expression language
 
 local TokenStream = {}
 TokenStream.__index = TokenStream
@@ -2248,8 +2248,8 @@ return TokenStream
 ]]
 
 TEST_FILE_14 = [[
--- Module: QuadTree
--- Spatial partitioning data structure for 2D collision detection
+# Module: QuadTree
+# Spatial partitioning data structure for 2D collision detection
 
 local QuadTree = {}
 QuadTree.__index = QuadTree
@@ -2365,8 +2365,8 @@ return QuadTree
 ]]
 
 TEST_FILE_15 = [[
--- Module: Signal
--- Reactive signal/computed value system (like SolidJS signals)
+# Module: Signal
+# Reactive signal/computed value system (like SolidJS signals)
 
 local Signal = {}
 Signal.__index = Signal
@@ -2465,7 +2465,7 @@ function Effect:dispose()
     self.disposed = true
 end
 
--- Factory functions
+# Factory functions
 function createSignal(value)
     local sig = Signal.new(value)
     local getter = function() return sig:get() end
@@ -2493,8 +2493,8 @@ return {
 ]]
 
 TEST_FILE_16 = [[
--- Module: RingBuffer
--- Fixed-size circular buffer with overflow handling
+# Module: RingBuffer
+# Fixed-size circular buffer with overflow handling
 
 local RingBuffer = {}
 RingBuffer.__index = RingBuffer
@@ -2592,13 +2592,13 @@ return RingBuffer
 ]]
 
 TEST_FILE_17 = [[
--- Module: Tween
--- Animation tweening library with easing functions
+# Module: Tween
+# Animation tweening library with easing functions
 
 local Tween = {}
 Tween.__index = Tween
 
--- Easing functions
+# Easing functions
 Tween.Easing = {}
 
 function Tween.Easing.linear(t)
@@ -2724,8 +2724,8 @@ return Tween
 ]]
 
 TEST_FILE_18 = [[
--- Module: ObjectPool
--- Reusable object pool to avoid garbage collection pressure
+# Module: ObjectPool
+# Reusable object pool to avoid garbage collection pressure
 
 local ObjectPool = {}
 ObjectPool.__index = ObjectPool
@@ -2809,8 +2809,8 @@ return ObjectPool
 ]]
 
 TEST_FILE_19 = [[
--- Module: CommandPattern
--- Command pattern with undo/redo stack
+# Module: CommandPattern
+# Command pattern with undo/redo stack
 
 local CommandHistory = {}
 CommandHistory.__index = CommandHistory
@@ -2826,9 +2826,9 @@ end
 function CommandHistory:execute(command)
     command:execute()
     self.undoStack[#self.undoStack + 1] = command
-    -- Clear redo stack on new command
+    # Clear redo stack on new command
     self.redoStack = {}
-    -- Enforce max size
+    # Enforce max size
     if #self.undoStack > self.maxSize then
         table.remove(self.undoStack, 1)
     end
@@ -2871,7 +2871,7 @@ function CommandHistory:getRedoCount()
     return #self.redoStack
 end
 
--- Example command: SetValueCommand
+# Example command: SetValueCommand
 local SetValueCommand = {}
 SetValueCommand.__index = SetValueCommand
 
@@ -2892,7 +2892,7 @@ function SetValueCommand:undo()
     self.target[self.key] = self.oldValue
 end
 
--- Batch command
+# Batch command
 local BatchCommand = {}
 BatchCommand.__index = BatchCommand
 
@@ -2922,8 +2922,8 @@ return {
 ]]
 
 TEST_FILE_20 = [[
--- Module: Observable
--- Observer pattern with filtering and mapping
+# Module: Observable
+# Observer pattern with filtering and mapping
 
 local Observable = {}
 Observable.__index = Observable
@@ -2965,7 +2965,7 @@ function Observable:map(fn)
         newObs.transforms[i] = self.transforms[i]
     end
     newObs.transforms[#newObs.transforms + 1] = fn
-    -- Subscribe the new observable to this one
+    # Subscribe the new observable to this one
     self:subscribe(function(val)
         newObs:emit(val)
     end)
@@ -3044,8 +3044,8 @@ return Observable
 ]]
 
 TEST_FILE_21 = [[
--- Module: ECS
--- Entity Component System (simplified)
+# Module: ECS
+# Entity Component System (simplified)
 
 local ECS = {}
 ECS.__index = ECS
@@ -3155,8 +3155,8 @@ return ECS
 ]]
 
 TEST_FILE_22 = [[
--- Module: VirtualDOM
--- Simplified virtual DOM diffing and patching
+# Module: VirtualDOM
+# Simplified virtual DOM diffing and patching
 
 local VDOM = {}
 VDOM.__index = VDOM
@@ -3188,13 +3188,13 @@ function VDOM.diff(oldNode, newNode)
     elseif oldNode.tag ~= newNode.tag then
         patches[#patches + 1] = { type = "REPLACE", node = newNode }
     else
-        -- Diff props
+        # Diff props
         local propPatches = VDOM.diffProps(oldNode.props, newNode.props)
         if #propPatches > 0 then
             patches[#patches + 1] = { type = "PROPS", changes = propPatches }
         end
 
-        -- Diff children
+        # Diff children
         local childPatches = VDOM.diffChildren(oldNode.children, newNode.children)
         if #childPatches > 0 then
             patches[#patches + 1] = { type = "CHILDREN", patches = childPatches }
@@ -3206,13 +3206,13 @@ end
 
 function VDOM.diffProps(oldProps, newProps)
     local changes = {}
-    -- Check for changed/added props
+    # Check for changed/added props
     for k, v in next, newProps do
         if oldProps[k] ~= v then
             changes[#changes + 1] = { key = k, value = v }
         end
     end
-    -- Check for removed props
+    # Check for removed props
     for k in next, oldProps do
         if newProps[k] == null then
             changes[#changes + 1] = { key = k, value = null }
@@ -3272,8 +3272,8 @@ return VDOM
 ]]
 
 TEST_FILE_23 = [==[
--- Module: Coroutine Pool
--- Manages a pool of coroutines for cooperative multitasking
+# Module: Coroutine Pool
+# Manages a pool of coroutines for cooperative multitasking
 
 local CoroutinePool = {}
 CoroutinePool.__index = CoroutinePool
@@ -3296,7 +3296,7 @@ function CoroutinePool:submit(fn, id)
 end
 
 function CoroutinePool:tick()
-    -- Start new coroutines if capacity allows
+    # Start new coroutines if capacity allows
     while self.runningCount < self.maxConcurrent and #self.queue > 0 do
         local task = table.remove(self.queue, 1)
         local co = coroutine.create(task.fn)
@@ -3304,7 +3304,7 @@ function CoroutinePool:tick()
         self.runningCount = self.runningCount + 1
     end
 
-    -- Resume running coroutines
+    # Resume running coroutines
     local toRemove = {}
     for id, co in next, self.running do
         if coroutine.status(co) == "suspended" then
@@ -3353,8 +3353,8 @@ return CoroutinePool
 ]==]
 
 TEST_FILE_24 = [[
--- Module: NetworkProtocol
--- Simple request/response protocol parser and builder
+# Module: NetworkProtocol
+# Simple request/response protocol parser and builder
 
 local Protocol = {}
 Protocol.__index = Protocol
@@ -3515,7 +3515,7 @@ function Protocol.parseResponse(raw)
     return Protocol.createResponse(tonumber(status), headers, body)
 end
 
--- Router
+# Router
 local Router = {}
 Router.__index = Router
 
@@ -3552,7 +3552,7 @@ function Router:match(method, path)
 end
 
 function Router:handle(request)
-    -- Run middleware
+    # Run middleware
     for i = 1, #self.middleware do
         local result = self.middleware[i](request)
         if result then return result end
@@ -3570,8 +3570,8 @@ return { Protocol = Protocol, Router = Router }
 ]]
 
 TEST_FILE_25 = [[
--- Module: Database
--- In-memory database with indexing and queries
+# Module: Database
+# In-memory database with indexing and queries
 
 local Database = {}
 Database.__index = Database
@@ -3626,7 +3626,7 @@ function Table:insert(row)
     row._id = self.nextId
     self.nextId = self.nextId + 1
     self.rows[row._id] = row
-    -- Update indexes
+    # Update indexes
     for field, index in next, self.indexes do
         local key = row[field]
         if key then
@@ -3644,7 +3644,7 @@ end
 function Table:delete(id)
     local row = self.rows[id]
     if not row then return false end
-    -- Remove from indexes
+    # Remove from indexes
     for field, index in next, self.indexes do
         local key = row[field]
         if key and index[key] then
@@ -3659,7 +3659,7 @@ function Table:update(id, changes)
     local row = self.rows[id]
     if not row then return false end
     for k, v in next, changes do
-        -- Update indexes
+        # Update indexes
         if self.indexes[k] then
             local oldKey = row[k]
             if oldKey and self.indexes[k][oldKey] then
@@ -3679,7 +3679,7 @@ end
 
 function Table:createIndex(field)
     self.indexes[field] = {}
-    -- Build index from existing rows
+    # Build index from existing rows
     for id, row in next, self.rows do
         local key = row[field]
         if key then
@@ -3758,7 +3758,7 @@ function Table:limit(results, n)
     return limited
 end
 
--- Join two tables
+# Join two tables
 function Database:innerJoin(tableName1, tableName2, field1, field2)
     local t1 = self.tables[tableName1]
     local t2 = self.tables[tableName2]
@@ -3782,8 +3782,8 @@ return { Database = Database, Table = Table }
 ]]
 
 TEST_FILE_25_MODIFIED = [[
--- Module: Database (v2)
--- In-memory database with indexing, queries, and transactions
+# Module: Database (v2)
+# In-memory database with indexing, queries, and transactions
 
 local Database = {}
 Database.__index = Database
@@ -3834,7 +3834,7 @@ function Database:commitTransaction(tx)
 end
 
 function Database:rollbackTransaction(tx)
-    -- Undo operations in reverse
+    # Undo operations in reverse
     for i = #tx.operations, 1, -1 do
         local op = tx.operations[i]
         if op.type == "INSERT" then
@@ -3862,8 +3862,8 @@ return { Database = Database, Table = Table }
 ]]
 
 TEST_FILE_26 = [==[
--- Module: FSM Compiler
--- Compiles state machine definitions into optimized transition tables
+# Module: FSM Compiler
+# Compiles state machine definitions into optimized transition tables
 
 local FSMCompiler = {}
 FSMCompiler.__index = FSMCompiler
@@ -3894,7 +3894,7 @@ function FSMCompiler:addTransition(fromState, event, toState, action)
 end
 
 function FSMCompiler:compile()
-    -- Build transition table as nested lookup
+    # Build transition table as nested lookup
     local table_lookup = {}
     for key, trans in next, self.transitions do
         local from, event = key:match("^(.+):(.+)$")
@@ -3906,7 +3906,7 @@ function FSMCompiler:compile()
         end
     end
 
-    -- Build state index for array-based lookup
+    # Build state index for array-based lookup
     local stateIndex = {}
     local stateList = {}
     for name in next, self.states do
@@ -3929,7 +3929,7 @@ end
 function FSMCompiler:validate()
     local errors = {}
 
-    -- Check all transition targets exist
+    # Check all transition targets exist
     for key, trans in next, self.transitions do
         local from = key:match("^(.+):")
         if not self.states[from] then
@@ -3940,7 +3940,7 @@ function FSMCompiler:validate()
         end
     end
 
-    -- Check for unreachable states
+    # Check for unreachable states
     local reachable = {}
     reachable[self.initialState] = true
     local changed = true
@@ -3997,11 +3997,11 @@ end
 return FSMCompiler
 ]==]
 
--- Additional test files with variants for merge testing
+# Additional test files with variants for merge testing
 TEST_FILE_1_MODIFIED_A = [[
--- Module: Vector3
--- 3D vector mathematics library
--- Version 2.0 - Added angle operations
+# Module: Vector3
+# 3D vector mathematics library
+# Version 2.0 - Added angle operations
 
 local Vector3 = {}
 Vector3.__index = Vector3
@@ -4105,9 +4105,9 @@ return Vector3
 ]]
 
 TEST_FILE_1_MODIFIED_B = [[
--- Module: Vector3
--- 3D vector mathematics library
--- Optimized for performance
+# Module: Vector3
+# 3D vector mathematics library
+# Optimized for performance
 
 local Vector3 = {}
 Vector3.__index = Vector3
@@ -4195,29 +4195,29 @@ end
 return Vector3
 ]]
 
--- =========================================================================
--- Checksum utility for verification
--- =========================================================================
+# =========================================================================
+# Checksum utility for verification
+# =========================================================================
 function checksumString(s)
     h = 5381
-    for i = 1, #s do
+    for i = 1, s.count do
         h = ((h * 33) + byte(s, i)) % 4294967296
     end
     return h
 end
 
--- =========================================================================
--- Main Benchmark Workload
--- =========================================================================
+# =========================================================================
+# Main Benchmark Workload
+# =========================================================================
 function runBenchmarkIteration()
     store = createObjectStore()
     checksums = {}
 
-    -- =====================================================================
-    -- Phase 1: SHA-1 correctness and object creation
-    -- =====================================================================
+    # =====================================================================
+    # Phase 1: SHA-1 correctness and object creation
+    # =====================================================================
 
-    -- Test SHA-1 with known values
+    # Test SHA-1 with known values
     hash1 = sha1("")
     assert(hash1 == "da39a3ee5e6b4b0d3255bfef95601890afd80709",
         "SHA-1 empty string failed: " .. hash1)
@@ -4230,11 +4230,11 @@ function runBenchmarkIteration()
     assert(hash3 == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
         "SHA-1 fox failed: " .. hash3)
 
-    -- =====================================================================
-    -- Phase 2: Build repository with multiple commits
-    -- =====================================================================
+    # =====================================================================
+    # Phase 2: Build repository with multiple commits
+    # =====================================================================
 
-    -- Initial commit with all test files
+    # Initial commit with all test files
     initialFiles = {
         ["vector3.lua"] = TEST_FILE_1,
         ["matrix4x4.lua"] = TEST_FILE_2,
@@ -4256,15 +4256,15 @@ function runBenchmarkIteration()
         "Initial commit: add all modules")
     setRef(store, "main", commit1)
 
-    checksums[#checksums + 1] = checksumString(commit1)
+    checksums[checksums.count + 1] = checksumString(commit1)
 
-    -- Second commit: modify some files
+    # Second commit: modify some files
     modifiedFiles = {}
     for k, v in next, initialFiles do modifiedFiles[k] = v end
     modifiedFiles["vector3.lua"] = TEST_FILE_1_MODIFIED_A
-    -- Add a new file
+    # Add a new file
     modifiedFiles["config.lua"] = [[
--- Configuration module
+# Configuration module
 local Config = {}
 Config.VERSION = "1.0.0"
 Config.DEBUG = false
@@ -4288,9 +4288,9 @@ return Config
         "Update vector3 with angle ops, add config")
     setRef(store, "main", commit2)
 
-    checksums[#checksums + 1] = checksumString(commit2)
+    checksums[checksums.count + 1] = checksumString(commit2)
 
-    -- Third commit: branch point for merge testing
+    # Third commit: branch point for merge testing
     branchFiles = {}
     for k, v in next, modifiedFiles do branchFiles[k] = v end
     branchFiles["scheduler.lua"] = branchFiles["scheduler.lua"] ..
@@ -4301,68 +4301,68 @@ return Config
         "Enhance scheduler with docs")
     setRef(store, "feature-branch", commit3)
 
-    checksums[#checksums + 1] = checksumString(commit3)
+    checksums[checksums.count + 1] = checksumString(commit3)
 
-    -- =====================================================================
-    -- Phase 3: Diff operations
-    -- =====================================================================
+    # =====================================================================
+    # Phase 3: Diff operations
+    # =====================================================================
 
-    -- Diff between commit1 and commit2
+    # Diff between commit1 and commit2
     diffs12 = diffCommits(store, commit1, commit2)
-    assert(#diffs12 > 0, "Expected diffs between commits 1 and 2")
+    assert(diffs12.count > 0, "Expected diffs between commits 1 and 2")
 
-    -- Verify we detect the vector3 modification
+    # Verify we detect the vector3 modification
     foundVector3Diff = false
-    for i = 1, #diffs12 do
+    for i = 1, diffs12.count do
         if diffs12[i].file == "vector3.lua" then
             foundVector3Diff = true
-            checksums[#checksums + 1] = checksumString(diffs12[i].patch)
+            checksums[checksums.count + 1] = checksumString(diffs12[i].patch)
         end
     end
     assert(foundVector3Diff, "Should detect vector3.lua modification")
 
-    -- Diff between commit2 and commit3
+    # Diff between commit2 and commit3
     diffs23 = diffCommits(store, commit2, commit3)
-    assert(#diffs23 > 0, "Expected diffs between commits 2 and 3")
-    for i = 1, #diffs23 do
-        checksums[#checksums + 1] = checksumString(diffs23[i].patch)
+    assert(diffs23.count > 0, "Expected diffs between commits 2 and 3")
+    for i = 1, diffs23.count do
+        checksums[checksums.count + 1] = checksumString(diffs23[i].patch)
     end
 
-    -- =====================================================================
-    -- Phase 4: Patch parsing and application
-    -- =====================================================================
+    # =====================================================================
+    # Phase 4: Patch parsing and application
+    # =====================================================================
 
-    -- Create a diff, parse it as a patch, and apply it
+    # Create a diff, parse it as a patch, and apply it
     originalText = TEST_FILE_8
     modifiedText = TEST_FILE_8:gsub("StringBuffer", "StringBuilder")
     patchText = diffToUnified("a/stringbuf.lua", "b/stringbuf.lua",
         originalText, modifiedText)
 
-    checksums[#checksums + 1] = checksumString(patchText)
+    checksums[checksums.count + 1] = checksumString(patchText)
 
     patch = parsePatch(patchText)
     assert(patch.aFile == "a/stringbuf.lua", "Patch aFile mismatch")
     assert(patch.bFile == "b/stringbuf.lua", "Patch bFile mismatch")
-    assert(#patch.hunks > 0, "Patch should have hunks")
+    assert(patch.hunks.count > 0, "Patch should have hunks")
 
-    -- Apply the patch
+    # Apply the patch
     patchedText = applyPatch(originalText, patch)
-    -- The patched text should match the modified text
-    -- (Note: exact match depends on diff granularity, just check it changed)
+    # The patched text should match the modified text
+    # (Note: exact match depends on diff granularity, just check it changed)
     assert(patchedText != originalText, "Patch should modify the text")
-    checksums[#checksums + 1] = checksumString(patchedText)
+    checksums[checksums.count + 1] = checksumString(patchedText)
 
-    -- =====================================================================
-    -- Phase 5: Three-way merge
-    -- =====================================================================
+    # =====================================================================
+    # Phase 5: Three-way merge
+    # =====================================================================
 
-    -- Merge test: both sides modify vector3 differently
+    # Merge test: both sides modify vector3 differently
     mergeResult, conflicts = threeWayMerge(
         TEST_FILE_1, TEST_FILE_1_MODIFIED_A, TEST_FILE_1_MODIFIED_B)
     assert(conflicts > 0, "Expected merge conflicts with divergent changes")
-    checksums[#checksums + 1] = checksumString(mergeResult)
+    checksums[checksums.count + 1] = checksumString(mergeResult)
 
-    -- Merge test: non-conflicting changes
+    # Merge test: non-conflicting changes
     baseSimple = "line1\nline2\nline3\nline4\nline5\n"
     oursSimple = "line1\nline2 modified\nline3\nline4\nline5\n"
     theirsSimple = "line1\nline2\nline3\nline4 changed\nline5\n"
@@ -4370,13 +4370,13 @@ return Config
         baseSimple, oursSimple, theirsSimple)
     assert(simpleConflicts == 0,
         "Non-overlapping changes should not conflict, got " .. simpleConflicts)
-    checksums[#checksums + 1] = checksumString(mergedSimple)
+    checksums[checksums.count + 1] = checksumString(mergedSimple)
 
-    -- =====================================================================
-    -- Phase 6: Full merge workflow
-    -- =====================================================================
+    # =====================================================================
+    # Phase 6: Full merge workflow
+    # =====================================================================
 
-    -- Create divergent branch
+    # Create divergent branch
     branchAFiles = {}
     for k, v in next, initialFiles do branchAFiles[k] = v end
     branchAFiles["vector3.lua"] = TEST_FILE_1_MODIFIED_A
@@ -4395,70 +4395,70 @@ return Config
         "Bob <bob@example.com> 1700003000 +0000",
         "Branch B: optimize vector3, add newfileB")
 
-    -- Merge the two branches
+    # Merge the two branches
     mergedFiles, totalConflicts = mergeCommits(store, commit1, commitA, commitB)
     assert(mergedFiles["newfileA.lua"] != null, "Should have newfileA.lua")
     assert(mergedFiles["newfileB.lua"] != null, "Should have newfileB.lua")
     assert(totalConflicts > 0, "Vector3 should have merge conflicts")
 
-    checksums[#checksums + 1] = checksumString(mergedFiles["vector3.lua"] or "")
-    checksums[#checksums + 1] = checksumString(mergedFiles["newfileA.lua"] or "")
-    checksums[#checksums + 1] = checksumString(mergedFiles["newfileB.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mergedFiles["vector3.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mergedFiles["newfileA.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mergedFiles["newfileB.lua"] or "")
 
-    -- =====================================================================
-    -- Phase 7: Large diff stress test
-    -- =====================================================================
+    # =====================================================================
+    # Phase 7: Large diff stress test
+    # =====================================================================
 
-    -- Generate a large file with predictable content
+    # Generate a large file with predictable content
     largeParts = {}
     for i = 1, 200 do
-        largeParts[#largeParts + 1] = format("function func_%04d(x, y)", i)
-        largeParts[#largeParts + 1] = format("    local result = x * %d + y * %d", i, i * 2)
-        largeParts[#largeParts + 1] = "    if result > 1000 then"
-        largeParts[#largeParts + 1] = "        result = result - 1000"
-        largeParts[#largeParts + 1] = "    end"
-        largeParts[#largeParts + 1] = "    return result"
-        largeParts[#largeParts + 1] = "end"
-        largeParts[#largeParts + 1] = ""
+        largeParts[largeParts.count + 1] = format("function func_%04d(x, y)", i)
+        largeParts[largeParts.count + 1] = format("    local result = x * %d + y * %d", i, i * 2)
+        largeParts[largeParts.count + 1] = "    if result > 1000 then"
+        largeParts[largeParts.count + 1] = "        result = result - 1000"
+        largeParts[largeParts.count + 1] = "    end"
+        largeParts[largeParts.count + 1] = "    return result"
+        largeParts[largeParts.count + 1] = "end"
+        largeParts[largeParts.count + 1] = ""
     end
     largeFileA = concat(largeParts, "\n")
 
-    -- Modify every 10th function
+    # Modify every 10th function
     largeParts2 = {}
     for i = 1, 200 do
         if i % 10 == 0 then
-            largeParts2[#largeParts2 + 1] = format("function func_%04d(x, y, z)", i)
-            largeParts2[#largeParts2 + 1] = format("    local result = x * %d + y * %d + z", i, i * 2)
-            largeParts2[#largeParts2 + 1] = "    if result > 2000 then"
-            largeParts2[#largeParts2 + 1] = "        result = result % 2000"
-            largeParts2[#largeParts2 + 1] = "    end"
-            largeParts2[#largeParts2 + 1] = "    return result"
-            largeParts2[#largeParts2 + 1] = "end"
+            largeParts2[largeParts2.count + 1] = format("function func_%04d(x, y, z)", i)
+            largeParts2[largeParts2.count + 1] = format("    local result = x * %d + y * %d + z", i, i * 2)
+            largeParts2[largeParts2.count + 1] = "    if result > 2000 then"
+            largeParts2[largeParts2.count + 1] = "        result = result % 2000"
+            largeParts2[largeParts2.count + 1] = "    end"
+            largeParts2[largeParts2.count + 1] = "    return result"
+            largeParts2[largeParts2.count + 1] = "end"
         else
-            largeParts2[#largeParts2 + 1] = format("function func_%04d(x, y)", i)
-            largeParts2[#largeParts2 + 1] = format("    local result = x * %d + y * %d", i, i * 2)
-            largeParts2[#largeParts2 + 1] = "    if result > 1000 then"
-            largeParts2[#largeParts2 + 1] = "        result = result - 1000"
-            largeParts2[#largeParts2 + 1] = "    end"
-            largeParts2[#largeParts2 + 1] = "    return result"
-            largeParts2[#largeParts2 + 1] = "end"
+            largeParts2[largeParts2.count + 1] = format("function func_%04d(x, y)", i)
+            largeParts2[largeParts2.count + 1] = format("    local result = x * %d + y * %d", i, i * 2)
+            largeParts2[largeParts2.count + 1] = "    if result > 1000 then"
+            largeParts2[largeParts2.count + 1] = "        result = result - 1000"
+            largeParts2[largeParts2.count + 1] = "    end"
+            largeParts2[largeParts2.count + 1] = "    return result"
+            largeParts2[largeParts2.count + 1] = "end"
         end
-        largeParts2[#largeParts2 + 1] = ""
+        largeParts2[largeParts2.count + 1] = ""
     end
     largeFileB = concat(largeParts2, "\n")
 
     largeDiff = diffToUnified("a/large.lua", "b/large.lua", largeFileA, largeFileB)
-    assert(#largeDiff > 100, "Large diff should produce substantial output")
-    checksums[#checksums + 1] = checksumString(largeDiff)
+    assert(largeDiff.count > 100, "Large diff should produce substantial output")
+    checksums[checksums.count + 1] = checksumString(largeDiff)
 
-    -- Parse and apply the large patch
+    # Parse and apply the large patch
     largePatch = parsePatch(largeDiff)
     largePatched = applyPatch(largeFileA, largePatch)
-    checksums[#checksums + 1] = checksumString(largePatched)
+    checksums[checksums.count + 1] = checksumString(largePatched)
 
-    -- =====================================================================
-    -- Phase 8: Multiple sequential commits (simulating history)
-    -- =====================================================================
+    # =====================================================================
+    # Phase 8: Multiple sequential commits (simulating history)
+    # =====================================================================
 
     historyFiles = {}
     for k, v in next, initialFiles do historyFiles[k] = v end
@@ -4466,68 +4466,68 @@ return Config
     commitHistory = { commit1 }
 
     for step = 1, 5 do
-        -- Each step modifies a different file
+        # Each step modifies a different file
         fileNames = {"linkedlist.lua", "hashmap.lua", "events.lua",
                           "scheduler.lua", "bst.lua"}
         fname = fileNames[step]
         original = historyFiles[fname]
-        -- Add a comment at the top
+        # Add a comment at the top
         historyFiles[fname] = format("-- Revision %d\n", step) .. original
         c = commitFiles(store, historyFiles, {prevCommit},
             format("Dev%d <dev%d@example.com> %d +0000", step, step, 1700004000 + step * 1000),
             format("Revision %d: update %s", step, fname))
-        commitHistory[#commitHistory + 1] = c
+        commitHistory[commitHistory.count + 1] = c
         prevCommit = c
     end
 
-    -- Diff across entire history
-    fullDiffs = diffCommits(store, commitHistory[1], commitHistory[#commitHistory])
-    assert(#fullDiffs > 0, "Should have diffs across history")
-    for i = 1, #fullDiffs do
-        checksums[#checksums + 1] = checksumString(fullDiffs[i].patch)
+    # Diff across entire history
+    fullDiffs = diffCommits(store, commitHistory[1], commitHistory[commitHistory.count])
+    assert(fullDiffs.count > 0, "Should have diffs across history")
+    for i = 1, fullDiffs.count do
+        checksums[checksums.count + 1] = checksumString(fullDiffs[i].patch)
     end
 
-    -- =====================================================================
-    -- Phase 9: Object store integrity
-    -- =====================================================================
+    # =====================================================================
+    # Phase 9: Object store integrity
+    # =====================================================================
 
-    -- Verify all objects are retrievable and consistent
+    # Verify all objects are retrievable and consistent
     objectCount = 0
     for hash, obj in next, store.objects do
         objectCount = objectCount + 1
-        -- Verify hash matches content
+        # Verify hash matches content
         expectedHash = gitHash(obj.type, obj.content)
         assert(hash == expectedHash,
             "Object store corruption: hash mismatch for " .. hash)
     end
     assert(objectCount > 30, "Expected many objects, got " .. objectCount)
-    checksums[#checksums + 1] = objectCount
+    checksums[checksums.count + 1] = objectCount
 
-    -- =====================================================================
-    -- Phase 10: Diff edge cases
-    -- =====================================================================
+    # =====================================================================
+    # Phase 10: Diff edge cases
+    # =====================================================================
 
-    -- Empty to non-empty
+    # Empty to non-empty
     emptyDiff = diffToUnified("a/empty", "b/full", "", "hello\nworld\n")
-    checksums[#checksums + 1] = checksumString(emptyDiff)
+    checksums[checksums.count + 1] = checksumString(emptyDiff)
 
-    -- Non-empty to empty
+    # Non-empty to empty
     delDiff = diffToUnified("a/full", "b/empty", "hello\nworld\n", "")
-    checksums[#checksums + 1] = checksumString(delDiff)
+    checksums[checksums.count + 1] = checksumString(delDiff)
 
-    -- Identical files
+    # Identical files
     identDiff = diffToUnified("a/same", "b/same", "same\ncontent\n", "same\ncontent\n")
-    checksums[#checksums + 1] = checksumString(identDiff)
+    checksums[checksums.count + 1] = checksumString(identDiff)
 
-    -- Single line change
+    # Single line change
     singleDiff = diffToUnified("a/f", "b/f",
         "aaa\nbbb\nccc\nddd\neee\n",
         "aaa\nbbb\nCCC\nddd\neee\n")
-    checksums[#checksums + 1] = checksumString(singleDiff)
+    checksums[checksums.count + 1] = checksumString(singleDiff)
 
-    -- =====================================================================
-    -- Phase 11: Extended repository with all test files
-    -- =====================================================================
+    # =====================================================================
+    # Phase 11: Extended repository with all test files
+    # =====================================================================
 
     extendedFiles = {
         ["vector3.lua"] = TEST_FILE_1,
@@ -4562,9 +4562,9 @@ return Config
     extCommit1 = commitFiles(extStore, extendedFiles, {},
         "Charlie <charlie@example.com> 1700010000 +0000",
         "Full project: 26 modules")
-    checksums[#checksums + 1] = checksumString(extCommit1)
+    checksums[checksums.count + 1] = checksumString(extCommit1)
 
-    -- Modify several files in a second commit
+    # Modify several files in a second commit
     extModified = {}
     for k, v in next, extendedFiles do extModified[k] = v end
     extModified["quadtree.lua"] = extModified["quadtree.lua"]:gsub(
@@ -4578,20 +4578,20 @@ return Config
     extCommit2 = commitFiles(extStore, extModified, {extCommit1},
         "Charlie <charlie@example.com> 1700011000 +0000",
         "Tweak quadtree, ringbuffer, tween, ecs")
-    checksums[#checksums + 1] = checksumString(extCommit2)
+    checksums[checksums.count + 1] = checksumString(extCommit2)
 
-    -- Diff the extended commits
+    # Diff the extended commits
     extDiffs = diffCommits(extStore, extCommit1, extCommit2)
-    assert(#extDiffs >= 4, "Expected at least 4 file diffs, got " .. #extDiffs)
-    for i = 1, #extDiffs do
-        checksums[#checksums + 1] = checksumString(extDiffs[i].patch)
+    assert(extDiffs.count >= 4, "Expected at least 4 file diffs, got " .. extDiffs.count)
+    for i = 1, extDiffs.count do
+        checksums[checksums.count + 1] = checksumString(extDiffs[i].patch)
     end
 
-    -- =====================================================================
-    -- Phase 12: Branching and merging on extended repo
-    -- =====================================================================
+    # =====================================================================
+    # Phase 12: Branching and merging on extended repo
+    # =====================================================================
 
-    -- Branch A: refactor signal module
+    # Branch A: refactor signal module
     branchAExt = {}
     for k, v in next, extendedFiles do branchAExt[k] = v end
     branchAExt["signal.lua"] = branchAExt["signal.lua"]:gsub(
@@ -4599,7 +4599,7 @@ return Config
     branchAExt["observable.lua"] = branchAExt["observable.lua"]:gsub(
         "self.observers = {}", "self.observers = {}\n    self.paused = false")
     branchAExt["newutil.lua"] = [[
--- Utility module added in branch A
+# Utility module added in branch A
 local Util = {}
 function Util.clamp(val, minVal, maxVal)
     return math.max(minVal, math.min(maxVal, val))
@@ -4631,7 +4631,7 @@ return Util
         "Alice <alice@example.com> 1700012000 +0000",
         "Branch A: enhance signal/observable, add util")
 
-    -- Branch B: optimize different modules
+    # Branch B: optimize different modules
     branchBExt = {}
     for k, v in next, extendedFiles do branchBExt[k] = v end
     branchBExt["pathfinder.lua"] = branchBExt["pathfinder.lua"]:gsub(
@@ -4640,7 +4640,7 @@ return Util
         "self.maxConcurrent = maxConcurrent or 4",
         "self.maxConcurrent = maxConcurrent or 8")
     branchBExt["perf.lua"] = [[
--- Performance monitoring module added in branch B
+# Performance monitoring module added in branch B
 local Perf = {}
 Perf.timers = {}
 function Perf.start(name)
@@ -4664,19 +4664,19 @@ return Perf
         "Bob <bob@example.com> 1700012000 +0000",
         "Branch B: optimize pathfinder/pool, add perf")
 
-    -- Merge branches
+    # Merge branches
     extMerged, extConflicts = mergeCommits(extStore, extCommit1, extCommitA, extCommitB)
-    -- Both added different new files, should be conflict-free for those
+    # Both added different new files, should be conflict-free for those
     assert(extMerged["newutil.lua"] != null, "Should have newutil.lua from branch A")
     assert(extMerged["perf.lua"] != null, "Should have perf.lua from branch B")
-    checksums[#checksums + 1] = checksumString(extMerged["signal.lua"] or "")
-    checksums[#checksums + 1] = checksumString(extMerged["pathfinder.lua"] or "")
-    checksums[#checksums + 1] = checksumString(extMerged["newutil.lua"] or "")
-    checksums[#checksums + 1] = checksumString(extMerged["perf.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(extMerged["signal.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(extMerged["pathfinder.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(extMerged["newutil.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(extMerged["perf.lua"] or "")
 
-    -- =====================================================================
-    -- Phase 13: SHA-1 stress (hash many objects)
-    -- =====================================================================
+    # =====================================================================
+    # Phase 13: SHA-1 stress (hash many objects)
+    # =====================================================================
 
     hashStore = createObjectStore()
     for i = 1, 100 do
@@ -4684,31 +4684,31 @@ return Perf
             i, string.rep("x", i * 3))
         createBlob(hashStore, content)
     end
-    -- Verify all 100 objects stored uniquely
+    # Verify all 100 objects stored uniquely
     hashCount = 0
     for _ in next, hashStore.objects do hashCount = hashCount + 1 end
     assert(hashCount == 100, "Expected 100 unique hashes, got " .. hashCount)
-    checksums[#checksums + 1] = hashCount
+    checksums[checksums.count + 1] = hashCount
 
-    -- Hash some larger strings
+    # Hash some larger strings
     for i = 1, 20 do
         bigContent = string.rep(format("line %d: data data data\n", i), 50)
         h = sha1(bigContent)
-        checksums[#checksums + 1] = checksumString(h)
+        checksums[checksums.count + 1] = checksumString(h)
     end
 
-    -- =====================================================================
-    -- Phase 14: Complex merge scenarios
-    -- =====================================================================
+    # =====================================================================
+    # Phase 14: Complex merge scenarios
+    # =====================================================================
 
-    -- Test: three-way merge with insertions at different points
+    # Test: three-way merge with insertions at different points
     mergeBase = "header\n"
     for i = 1, 20 do
         mergeBase = mergeBase .. format("line %d\n", i)
     end
     mergeBase = mergeBase .. "footer\n"
 
-    -- Ours: insert after line 5
+    # Ours: insert after line 5
     mergeOurs = "header\n"
     for i = 1, 20 do
         mergeOurs = mergeOurs .. format("line %d\n", i)
@@ -4718,7 +4718,7 @@ return Perf
     end
     mergeOurs = mergeOurs .. "footer\n"
 
-    -- Theirs: insert after line 15
+    # Theirs: insert after line 15
     mergeTheirs = "header\n"
     for i = 1, 20 do
         mergeTheirs = mergeTheirs .. format("line %d\n", i)
@@ -4729,18 +4729,18 @@ return Perf
     mergeTheirs = mergeTheirs .. "footer\n"
 
     mergedResult, mergeConflictCount = threeWayMerge(mergeBase, mergeOurs, mergeTheirs)
-    checksums[#checksums + 1] = checksumString(mergedResult)
-    -- Both insertions should be present (non-overlapping)
+    checksums[checksums.count + 1] = checksumString(mergedResult)
+    # Both insertions should be present (non-overlapping)
     assert(mergedResult:find("inserted by ours"), "Should contain ours insertion")
     assert(mergedResult:find("inserted by theirs"), "Should contain theirs insertion")
 
-    -- Test: merge with deletions
+    # Test: merge with deletions
     delBase = ""
     for i = 1, 30 do
         delBase = delBase .. format("item %d\n", i)
     end
 
-    -- Ours removes items 5-10
+    # Ours removes items 5-10
     delOurs = ""
     for i = 1, 30 do
         if i < 5 or i > 10 then
@@ -4748,7 +4748,7 @@ return Perf
         end
     end
 
-    -- Theirs removes items 20-25
+    # Theirs removes items 20-25
     delTheirs = ""
     for i = 1, 30 do
         if i < 20 or i > 25 then
@@ -4757,13 +4757,13 @@ return Perf
     end
 
     delMerged, delConflicts = threeWayMerge(delBase, delOurs, delTheirs)
-    checksums[#checksums + 1] = checksumString(delMerged)
+    checksums[checksums.count + 1] = checksumString(delMerged)
 
-    -- =====================================================================
-    -- Phase 15: Patch round-trip testing
-    -- =====================================================================
+    # =====================================================================
+    # Phase 15: Patch round-trip testing
+    # =====================================================================
 
-    -- Generate diffs for several file pairs, parse them, and apply
+    # Generate diffs for several file pairs, parse them, and apply
     patchTestFiles = {
         { TEST_FILE_3, TEST_FILE_3:gsub("LinkedList", "DoublyLinkedList") },
         { TEST_FILE_7, TEST_FILE_7:gsub("BST", "AVLTree") },
@@ -4771,21 +4771,21 @@ return Perf
         { TEST_FILE_12, TEST_FILE_12:gsub("PathFinder", "AStarSolver") },
     }
 
-    for idx = 1, #patchTestFiles do
+    for idx = 1, patchTestFiles.count do
         orig = patchTestFiles[idx][1]
         modified = patchTestFiles[idx][2]
         pText = diffToUnified("a/file.lua", "b/file.lua", orig, modified)
         p = parsePatch(pText)
         applied = applyPatch(orig, p)
         assert(applied != orig, "Patch " .. idx .. " should change the file")
-        checksums[#checksums + 1] = checksumString(applied)
+        checksums[checksums.count + 1] = checksumString(applied)
     end
 
-    -- =====================================================================
-    -- Phase 16: Commit history traversal
-    -- =====================================================================
+    # =====================================================================
+    # Phase 16: Commit history traversal
+    # =====================================================================
 
-    -- Build a longer linear history
+    # Build a longer linear history
     histStore = createObjectStore()
     histFiles = { ["main.lua"] = "-- main\nprint('hello')\n" }
     histPrev = commitFiles(histStore, histFiles, {},
@@ -4803,67 +4803,67 @@ return Perf
         c = commitFiles(histStore, histFiles, {histPrev},
             format("Dev <dev@co.com> %d +0000", 1700020000 + step * 100),
             format("step %d", step))
-        allCommits[#allCommits + 1] = c
+        allCommits[allCommits.count + 1] = c
         histPrev = c
     end
 
-    -- Traverse and verify commit chain
-    current = allCommits[#allCommits]
+    # Traverse and verify commit chain
+    current = allCommits[allCommits.count]
     chainLen = 0
     while current do
         data = getCommitData(histStore, current)
         if not data then break end
         chainLen = chainLen + 1
-        if #data.parents > 0 then
+        if data.parents.count > 0 then
             current = data.parents[1]
         else
             current = null
         end
     end
     assert(chainLen == 16, "Expected chain of 16 commits, got " .. chainLen)
-    checksums[#checksums + 1] = chainLen
+    checksums[checksums.count + 1] = chainLen
 
-    -- Diff first vs last
-    historyDiff = diffCommits(histStore, allCommits[1], allCommits[#allCommits])
-    for i = 1, #historyDiff do
-        checksums[#checksums + 1] = checksumString(historyDiff[i].patch)
+    # Diff first vs last
+    historyDiff = diffCommits(histStore, allCommits[1], allCommits[allCommits.count])
+    for i = 1, historyDiff.count do
+        checksums[checksums.count + 1] = checksumString(historyDiff[i].patch)
     end
 
-    -- =====================================================================
-    -- Phase 17: Protocol and database file diffs
-    -- =====================================================================
+    # =====================================================================
+    # Phase 17: Protocol and database file diffs
+    # =====================================================================
 
-    -- Modify protocol file
+    # Modify protocol file
     protocolOrig = TEST_FILE_24
     protocolMod = protocolOrig:gsub("PROTO/1.1", "PROTO/2.0")
     protocolMod = protocolMod:gsub("STATUS_OK = 200", "STATUS_OK = 200\nProtocol.STATUS_CREATED = 201")
     protoDiff = diffToUnified("a/protocol.lua", "b/protocol.lua",
         protocolOrig, protocolMod)
-    checksums[#checksums + 1] = checksumString(protoDiff)
+    checksums[checksums.count + 1] = checksumString(protoDiff)
 
-    -- Modify database file
+    # Modify database file
     dbOrig = TEST_FILE_25
     dbMod = dbOrig:gsub("self.version = 0", "self.version = 1")
     dbMod = dbMod:gsub("function Table:count()", "function Table:size()")
     dbDiff = diffToUnified("a/database.lua", "b/database.lua", dbOrig, dbMod)
-    checksums[#checksums + 1] = checksumString(dbDiff)
+    checksums[checksums.count + 1] = checksumString(dbDiff)
 
-    -- Parse and apply both patches
+    # Parse and apply both patches
     protoPatch = parsePatch(protoDiff)
     protoApplied = applyPatch(protocolOrig, protoPatch)
     assert(protoApplied != protocolOrig, "Protocol patch should change file")
-    checksums[#checksums + 1] = checksumString(protoApplied)
+    checksums[checksums.count + 1] = checksumString(protoApplied)
 
     dbPatch = parsePatch(dbDiff)
     dbApplied = applyPatch(dbOrig, dbPatch)
     assert(dbApplied != dbOrig, "Database patch should change file")
-    checksums[#checksums + 1] = checksumString(dbApplied)
+    checksums[checksums.count + 1] = checksumString(dbApplied)
 
-    -- =====================================================================
-    -- Phase 18: Multi-file merge with conflicts in various locations
-    -- =====================================================================
+    # =====================================================================
+    # Phase 18: Multi-file merge with conflicts in various locations
+    # =====================================================================
 
-    -- Create a scenario with 5 files where 2 conflict
+    # Create a scenario with 5 files where 2 conflict
     mBase = {
         ["app.lua"] = "-- App\nlocal App = {}\nApp.version = '1.0'\nfunction App.init()\n    print('starting')\nend\nfunction App.run()\n    App.init()\n    print('running')\nend\nreturn App\n",
         ["config.lua"] = "-- Config\nlocal C = {}\nC.debug = false\nC.port = 8080\nC.host = 'localhost'\nC.timeout = 30\nreturn C\n",
@@ -4893,70 +4893,70 @@ return Perf
         "Bob <b@co.com> 1700031000 +0000", "theirs changes")
 
     mMerged, mConflicts = mergeCommits(mStoreM, mBaseC, mOursC, mTheirsC)
-    -- app.lua should conflict (both modified differently)
+    # app.lua should conflict (both modified differently)
     assert(mConflicts > 0, "Should have conflicts in app.lua")
-    -- Both new files should be present
+    # Both new files should be present
     assert(mMerged["newfeature.lua"] != null, "Should have newfeature.lua")
     assert(mMerged["hotfix.lua"] != null, "Should have hotfix.lua")
-    -- utils.lua only changed by theirs
+    # utils.lua only changed by theirs
     assert(mMerged["utils.lua"] == mTheirs["utils.lua"], "utils should be theirs version")
-    -- config.lua only changed by ours
+    # config.lua only changed by ours
     assert(mMerged["config.lua"] == mOurs["config.lua"], "config should be ours version")
 
-    checksums[#checksums + 1] = checksumString(mMerged["app.lua"] or "")
-    checksums[#checksums + 1] = checksumString(mMerged["config.lua"] or "")
-    checksums[#checksums + 1] = checksumString(mMerged["utils.lua"] or "")
-    checksums[#checksums + 1] = checksumString(mMerged["newfeature.lua"] or "")
-    checksums[#checksums + 1] = checksumString(mMerged["hotfix.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mMerged["app.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mMerged["config.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mMerged["utils.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mMerged["newfeature.lua"] or "")
+    checksums[checksums.count + 1] = checksumString(mMerged["hotfix.lua"] or "")
 
-    -- =====================================================================
-    -- Phase 19: Large-scale diff with many scattered changes
-    -- =====================================================================
+    # =====================================================================
+    # Phase 19: Large-scale diff with many scattered changes
+    # =====================================================================
 
-    -- Generate a config-like file with many key-value pairs
+    # Generate a config-like file with many key-value pairs
     configParts = {}
-    configParts[#configParts + 1] = "-- Auto-generated configuration"
-    configParts[#configParts + 1] = "local Config = {}"
-    configParts[#configParts + 1] = ""
+    configParts[configParts.count + 1] = "-- Auto-generated configuration"
+    configParts[configParts.count + 1] = "local Config = {}"
+    configParts[configParts.count + 1] = ""
     for i = 1, 100 do
-        configParts[#configParts + 1] = format("Config.setting_%03d = %d", i, i * 7)
+        configParts[configParts.count + 1] = format("Config.setting_%03d = %d", i, i * 7)
     end
-    configParts[#configParts + 1] = ""
-    configParts[#configParts + 1] = "return Config"
+    configParts[configParts.count + 1] = ""
+    configParts[configParts.count + 1] = "return Config"
     configA = concat(configParts, "\n")
 
-    -- Change every 5th setting
+    # Change every 5th setting
     configParts2 = {}
-    configParts2[#configParts2 + 1] = "-- Auto-generated configuration"
-    configParts2[#configParts2 + 1] = "local Config = {}"
-    configParts2[#configParts2 + 1] = ""
+    configParts2[configParts2.count + 1] = "-- Auto-generated configuration"
+    configParts2[configParts2.count + 1] = "local Config = {}"
+    configParts2[configParts2.count + 1] = ""
     for i = 1, 100 do
         if i % 5 == 0 then
-            configParts2[#configParts2 + 1] = format("Config.setting_%03d = %d  -- updated", i, i * 11)
+            configParts2[configParts2.count + 1] = format("Config.setting_%03d = %d  -- updated", i, i * 11)
         else
-            configParts2[#configParts2 + 1] = format("Config.setting_%03d = %d", i, i * 7)
+            configParts2[configParts2.count + 1] = format("Config.setting_%03d = %d", i, i * 7)
         end
     end
-    configParts2[#configParts2 + 1] = ""
-    configParts2[#configParts2 + 1] = "return Config"
+    configParts2[configParts2.count + 1] = ""
+    configParts2[configParts2.count + 1] = "return Config"
     configB = concat(configParts2, "\n")
 
     configDiff = diffToUnified("a/config.lua", "b/config.lua", configA, configB)
-    assert(#configDiff > 200, "Config diff should be substantial")
-    checksums[#checksums + 1] = checksumString(configDiff)
+    assert(configDiff.count > 200, "Config diff should be substantial")
+    checksums[checksums.count + 1] = checksumString(configDiff)
 
-    -- Apply patch and verify
+    # Apply patch and verify
     configPatch = parsePatch(configDiff)
-    if #configPatch.hunks > 0 then
+    if configPatch.hunks.count > 0 then
         configPatched = applyPatch(configA, configPatch)
-        checksums[#checksums + 1] = checksumString(configPatched)
+        checksums[checksums.count + 1] = checksumString(configPatched)
     end
 
-    -- =====================================================================
-    -- Phase 20: Verify SHA-1 properties
-    -- =====================================================================
+    # =====================================================================
+    # Phase 20: Verify SHA-1 properties
+    # =====================================================================
 
-    -- Verify that even small changes produce very different hashes
+    # Verify that even small changes produce very different hashes
     baseStr = "This is a test string for hash avalanche testing"
     baseHash = sha1(baseStr)
     for i = 1, 10 do
@@ -4964,13 +4964,13 @@ return Perf
             string.char(baseStr:byte(i + 1) + 1) ..
             baseStr:sub(i + 2)
         modHash = sha1(modified)
-        -- Hashes should be completely different
+        # Hashes should be completely different
         assert(modHash != baseHash,
             "Hash collision on single-bit change at position " .. i)
-        checksums[#checksums + 1] = checksumString(modHash)
+        checksums[checksums.count + 1] = checksumString(modHash)
     end
 
-    -- Verify determinism of the full pipeline
+    # Verify determinism of the full pipeline
     verifyStore = createObjectStore()
     verifyFiles = {
         ["a.lua"] = "local a = 1\nreturn a\n",
@@ -4982,7 +4982,7 @@ return Perf
     vc2 = commitFiles(verifyStore, verifyFiles, {vc1},
         "V <v@v.com> 1700041000 +0000", "verify commit 2")
 
-    -- Do it again and check same hashes
+    # Do it again and check same hashes
     verifyStore2 = createObjectStore()
     verifyFiles2 = {
         ["a.lua"] = "local a = 1\nreturn a\n",
@@ -4996,22 +4996,22 @@ return Perf
 
     assert(vc1 == vc1b, "Deterministic commit 1 failed")
     assert(vc2 == vc2b, "Deterministic commit 2 failed")
-    checksums[#checksums + 1] = checksumString(vc1 .. vc2)
+    checksums[checksums.count + 1] = checksumString(vc1 .. vc2)
 
-    -- =====================================================================
-    -- Compute overall checksum for verification
-    -- =====================================================================
+    # =====================================================================
+    # Compute overall checksum for verification
+    # =====================================================================
     finalChecksum = 0
-    for i = 1, #checksums do
+    for i = 1, checksums.count do
         finalChecksum = (finalChecksum * 31 + checksums[i]) % 4294967296
     end
 
     return finalChecksum, objectCount
 end
 
--- =========================================================================
--- Run benchmark loop
--- =========================================================================
+# =========================================================================
+# Run benchmark loop
+# =========================================================================
 ITERATIONS = 2
 allPassed = true
 firstChecksum = null

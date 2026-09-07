@@ -1,4 +1,4 @@
---[[
+#[[
    The Great Computer Language Shootout
    http://shootout.alioth.debian.org/
    contributed by Isaac Gouy
@@ -21,7 +21,7 @@ function fannkuch(n)
    r = n;
 
    while (true) do
-      -- write-out the first 30 permutations
+      # write-out the first 30 permutations
       if (check < 30) then
          s = "";
          for i = 1,n do s = s .. tostring(perm1[i]+1); end

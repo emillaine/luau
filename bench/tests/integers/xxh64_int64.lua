@@ -69,7 +69,7 @@ function test()
 			offset += 1
 		end
 
-		-- avalanche
+		# avalanche
 		hash = integer.bxor(hash, integer.rshift(hash, 33i))
 		hash = integer.mul(hash, PRIME64_2)
 		hash = integer.bxor(hash, integer.rshift(hash, 29i))

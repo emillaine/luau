@@ -1,6 +1,6 @@
--- 3D Cube Rotation
--- http://www.speich.net/computer/moztesting/3d.htm
--- Created by Simon Speich
+# 3D Cube Rotation
+# http://www.speich.net/computer/moztesting/3d.htm
+# Created by Simon Speich
 
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
@@ -8,9 +8,9 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 Q = {}
-MTrans = {};  -- transformation matrix
-MQube = {}  -- position information of qube
-I = {}      -- entity matrix
+MTrans = {};  # transformation matrix
+MQube = {}  # position information of qube
+I = {}      # entity matrix
 Origin = {}
 Testing = {}
 LoopTimer = null;
@@ -109,7 +109,7 @@ function CreateP(X,Y,Z)
   return result
 end
 
--- multiplies two matrices
+# multiplies two matrices
 function MMulti(M1, M2)
   M = {{},{},{},{}};
   for i = 1,4 do
@@ -120,7 +120,7 @@ function MMulti(M1, M2)
   return M;
 end
 
--- multiplies matrix with vector
+# multiplies matrix with vector
 function VMulti(M, V)
   Vect = {};
   for i = 1,4 do
@@ -137,7 +137,7 @@ function VMulti2(M, V)
   return Vect;
 end
 
--- add to matrices
+# add to matrices
 function MAdd(M1, M2)
   M = {{},{},{},{}};
   for i = 1,4 do
@@ -201,7 +201,7 @@ function RotateZ(M, Phi)
 end
 
 function DrawQube()
-  -- calc current normals
+  # calc current normals
   CurN = {};
   i = 5;
   Q.LastPx = 0;
@@ -249,7 +249,7 @@ end
 function Loop()
   if (Testing.LoopCount > Testing.LoopMax) then return; end
   TestingStr = tostring(Testing.LoopCount);
-  while (#TestingStr < 3) do TestingStr = "0" .. TestingStr; end
+  while (TestingStr.count < 3) do TestingStr = "0" .. TestingStr; end
   MTrans = Translate(I, -Q[9].V[1], -Q[9].V[2], -Q[9].V[3]);
   MTrans = RotateX(MTrans, 1);
   MTrans = RotateY(MTrans, 3);
@@ -267,7 +267,7 @@ function Loop()
 end
 
 function Init(CubeSize)
-  -- init/reset vars
+  # init/reset vars
   Origin.V = {150,150,20,1};
   Testing.LoopCount = 0;
   Testing.LoopMax = 50;
@@ -278,7 +278,7 @@ function Init(CubeSize)
   Testing.TimeTotal = 0;
   Testing.Init = false;
 
-  -- transformation matrix
+  # transformation matrix
   MTrans = {
   {1,0,0,0},
   {0,1,0,0},
@@ -286,7 +286,7 @@ function Init(CubeSize)
   {0,0,0,1}
   };
   
-  -- position information of qube
+  # position information of qube
   MQube = {
   {1,0,0,0},
   {0,1,0,0},
@@ -294,7 +294,7 @@ function Init(CubeSize)
   {0,0,0,1}
   };
   
-  -- entity matrix
+  # entity matrix
   I = {
   {1,0,0,0},
   {0,1,0,0},
@@ -302,7 +302,7 @@ function Init(CubeSize)
   {0,0,0,1}
   };
   
-  -- create qube
+  # create qube
   Q[1] = CreateP(-CubeSize,-CubeSize, CubeSize);
   Q[2] = CreateP(-CubeSize, CubeSize, CubeSize);
   Q[3] = CreateP( CubeSize, CubeSize, CubeSize);
@@ -312,22 +312,22 @@ function Init(CubeSize)
   Q[7] = CreateP( CubeSize, CubeSize,-CubeSize);
   Q[8] = CreateP( CubeSize,-CubeSize,-CubeSize);
   
-  -- center of gravity
+  # center of gravity
   Q[9] = CreateP(0, 0, 0);
   
-  -- anti-clockwise edge check
+  # anti-clockwise edge check
   Q.Edge = {{1,2,3},{4,5,7},{8,7,6},{5,6,2},{5,1,4},{2,6,7}};
   
-  -- calculate squad normals
+  # calculate squad normals
   Q.Normal = {};
-  for i = 1,#Q.Edge do
+  for i = 1,Q.Edge.count do
     Q.Normal[i] = CalcNormal(Q[Q.Edge[i][1]].V, Q[Q.Edge[i][2]].V, Q[Q.Edge[i][3]].V);
   end
   
-  -- line drawn ?
+  # line drawn ?
   Q.Line = {false,false,false,false,false,false,false,false,false,false,false,false};
   
-  -- create line pixels
+  # create line pixels
   Q.NumPx = 9 * 2 * CubeSize;
   for i = 1,Q.NumPx do CreateP(0,0,0); end
   
@@ -343,11 +343,11 @@ function Init(CubeSize)
   Testing.Init = true;
   Loop();
   
-  -- Perform a simple sum-based verification.
+  # Perform a simple sum-based verification.
   sum = 0;
-  for i = 1,#Q do
+  for i = 1,Q.count do
     vector = Q[i].V;
-    for j = 1,#vector do
+    for j = 1,vector.count do
       sum = sum + vector[j];
     end
   end

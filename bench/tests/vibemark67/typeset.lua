@@ -4,13 +4,13 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- Typeset benchmark: A text layout engine implementing Knuth-Plass paragraph breaking.
--- This benchmark models a mini TeX typesetter with font metrics, kerning, hyphenation,
--- and a full document model. Compatible with Lua 5.x, LuaJIT, and Luau (lute).
+# Typeset benchmark: A text layout engine implementing Knuth-Plass paragraph breaking.
+# This benchmark models a mini TeX typesetter with font metrics, kerning, hyphenation,
+# and a full document model. Compatible with Lua 5.x, LuaJIT, and Luau (lute).
 
---------------------------------------------------------------------------------
--- Utility imports
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Utility imports
+#------------------------------------------------------------------------------
 floor = math.floor
 abs = math.abs
 min = math.min
@@ -29,9 +29,9 @@ sub = string.sub
 len = string.len
 lower = string.lower
 
---------------------------------------------------------------------------------
--- Font metrics: character widths in 1/1000 em for proportional fonts
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Font metrics: character widths in 1/1000 em for proportional fonts
+#------------------------------------------------------------------------------
 font_metrics = {}
 
 font_metrics["TimesRoman"] = {
@@ -634,7 +634,7 @@ font_metrics["Helvetica"] = {
     },
 }
 
--- Courier: monospace font (all characters 600 units wide)
+# Courier: monospace font (all characters 600 units wide)
 font_metrics["Courier"] = {
     units_per_em = 1000,
     ascent = 629,
@@ -655,10 +655,10 @@ do
         ch[i] = 562
         cd[i] = 0
     end
-    -- Adjust specific heights
+    # Adjust specific heights
     ch[32] = 0
     ch[95] = 0
-    -- Descenders
+    # Descenders
     cd[103] = 157
     cd[106] = 157
     cd[112] = 157
@@ -673,7 +673,7 @@ do
     cd[124] = 157
 end
 
--- TimesRoman-Italic
+# TimesRoman-Italic
 font_metrics["TimesRoman-Italic"] = {
     units_per_em = 1000,
     ascent = 683,
@@ -789,7 +789,7 @@ do
     end
 end
 
--- Helvetica-Bold
+# Helvetica-Bold
 font_metrics["Helvetica-Bold"] = {
     units_per_em = 1000,
     ascent = 718,
@@ -906,13 +906,13 @@ do
 end
 
 
---------------------------------------------------------------------------------
--- Kerning pairs: value in 1/1000 em (negative = tighter)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Kerning pairs: value in 1/1000 em (negative = tighter)
+#------------------------------------------------------------------------------
 kerning = {}
 
 kerning["TimesRoman"] = {
-    -- A pairs
+    # A pairs
     ["AC"] = -40,
     ["AG"] = -40,
     ["AO"] = -55,
@@ -930,18 +930,18 @@ kerning["TimesRoman"] = {
     ["Ao"] = -40,
     ["Aq"] = -40,
     ["Au"] = -30,
-    -- B pairs
+    # B pairs
     ["BA"] = -25,
     ["BU"] = -10,
     ["BY"] = -20,
-    -- C pairs
+    # C pairs
     ["CA"] = -30,
-    -- D pairs
+    # D pairs
     ["DA"] = -35,
     ["DV"] = -40,
     ["DW"] = -40,
     ["DY"] = -40,
-    -- F pairs
+    # F pairs
     ["FA"] = -74,
     ["Fa"] = -15,
     ["Fe"] = -15,
@@ -949,12 +949,12 @@ kerning["TimesRoman"] = {
     ["Fo"] = -15,
     ["Fr"] = -20,
     ["Fu"] = -20,
-    -- G pairs
+    # G pairs
     ["GA"] = -30,
-    -- J pairs
+    # J pairs
     ["JA"] = -25,
     ["Ju"] = -15,
-    -- K pairs
+    # K pairs
     ["KO"] = -30,
     ["KU"] = -20,
     ["KY"] = -20,
@@ -962,27 +962,27 @@ kerning["TimesRoman"] = {
     ["Ko"] = -25,
     ["Ku"] = -15,
     ["Ky"] = -15,
-    -- L pairs
+    # L pairs
     ["LT"] = -92,
     ["LV"] = -100,
     ["LW"] = -74,
     ["LY"] = -100,
     ["Ly"] = -34,
-    -- O pairs
+    # O pairs
     ["OA"] = -35,
     ["OT"] = -40,
     ["OV"] = -50,
     ["OW"] = -50,
     ["OX"] = -40,
     ["OY"] = -50,
-    -- P pairs
+    # P pairs
     ["PA"] = -85,
     ["Pe"] = -20,
     ["Po"] = -20,
     ["Pa"] = -15,
-    -- Q pairs
+    # Q pairs
     ["QU"] = -10,
-    -- R pairs
+    # R pairs
     ["RC"] = -30,
     ["RG"] = -30,
     ["RO"] = -30,
@@ -996,7 +996,7 @@ kerning["TimesRoman"] = {
     ["Re"] = -15,
     ["Ro"] = -15,
     ["Ru"] = -15,
-    -- T pairs
+    # T pairs
     ["TA"] = -55,
     ["TC"] = -30,
     ["TG"] = -30,
@@ -1014,9 +1014,9 @@ kerning["TimesRoman"] = {
     ["Tu"] = -45,
     ["Tw"] = -60,
     ["Ty"] = -60,
-    -- U pairs
+    # U pairs
     ["UA"] = -40,
-    -- V pairs
+    # V pairs
     ["VA"] = -85,
     ["VC"] = -30,
     ["VG"] = -30,
@@ -1034,7 +1034,7 @@ kerning["TimesRoman"] = {
     ["Vs"] = -40,
     ["Vu"] = -35,
     ["Vy"] = -20,
-    -- W pairs
+    # W pairs
     ["WA"] = -60,
     ["WC"] = -15,
     ["WG"] = -15,
@@ -1050,10 +1050,10 @@ kerning["TimesRoman"] = {
     ["Ws"] = -30,
     ["Wu"] = -20,
     ["Wy"] = -18,
-    -- X pairs
+    # X pairs
     ["XC"] = -10,
     ["XO"] = -10,
-    -- Y pairs
+    # Y pairs
     ["YA"] = -50,
     ["YC"] = -30,
     ["YG"] = -30,
@@ -1073,26 +1073,26 @@ kerning["TimesRoman"] = {
     ["Ys"] = -60,
     ["Yu"] = -45,
     ["Yv"] = -35,
-    -- a pairs
+    # a pairs
     ["ac"] = -10,
     ["ag"] = -10,
     ["ay"] = -20,
     ["av"] = -15,
     ["aw"] = -10,
-    -- b pairs
+    # b pairs
     ["be"] = -10,
     ["bo"] = -10,
     ["bu"] = -20,
     ["bv"] = -15,
     ["by"] = -20,
-    -- c pairs
+    # c pairs
     ["ch"] = -10,
     ["ck"] = -10,
-    -- d pairs
+    # d pairs
     ["da"] = -10,
     ["dd"] = -10,
     ["dw"] = -15,
-    -- e pairs
+    # e pairs
     ["ea"] = -5,
     ["ec"] = -5,
     ["eg"] = -5,
@@ -1100,49 +1100,49 @@ kerning["TimesRoman"] = {
     ["ew"] = -15,
     ["ex"] = -10,
     ["ey"] = -15,
-    -- f pairs
+    # f pairs
     ["fa"] = -10,
     ["fe"] = -10,
     ["ff"] = -18,
     ["fi"] = -20,
     ["fl"] = -18,
     ["fo"] = -10,
-    -- g pairs
+    # g pairs
     ["ga"] = -5,
     ["ge"] = -5,
     ["gi"] = -10,
     ["go"] = -5,
     ["gr"] = -5,
-    -- h pairs
+    # h pairs
     ["hy"] = -20,
-    -- i pairs
+    # i pairs
     ["ic"] = -10,
-    -- k pairs
+    # k pairs
     ["ke"] = -10,
     ["ko"] = -10,
     ["ky"] = -10,
-    -- l pairs
+    # l pairs
     ["la"] = -5,
     ["le"] = -5,
     ["li"] = -5,
     ["lo"] = -5,
     ["ly"] = -5,
-    -- n pairs
+    # n pairs
     ["na"] = -5,
     ["ne"] = -5,
     ["no"] = -5,
     ["nv"] = -20,
     ["ny"] = -15,
-    -- o pairs
+    # o pairs
     ["ov"] = -15,
     ["ow"] = -10,
     ["ox"] = -10,
     ["oy"] = -15,
-    -- p pairs
+    # p pairs
     ["pa"] = -5,
     ["pe"] = -5,
     ["py"] = -15,
-    -- r pairs
+    # r pairs
     ["ra"] = -10,
     ["rc"] = -10,
     ["rd"] = -10,
@@ -1156,38 +1156,38 @@ kerning["TimesRoman"] = {
     ["rt"] = -10,
     ["rv"] = -10,
     ["ry"] = -10,
-    -- s pairs
+    # s pairs
     ["st"] = -10,
     ["sw"] = -10,
-    -- t pairs
+    # t pairs
     ["ta"] = -10,
     ["te"] = -5,
     ["to"] = -10,
     ["ty"] = -15,
-    -- u pairs
+    # u pairs
     ["ua"] = -5,
     ["uc"] = -5,
     ["ue"] = -5,
     ["un"] = -5,
-    -- v pairs
+    # v pairs
     ["va"] = -25,
     ["ve"] = -15,
     ["vi"] = -10,
     ["vo"] = -20,
-    -- w pairs
+    # w pairs
     ["wa"] = -15,
     ["we"] = -10,
     ["wi"] = -5,
     ["wo"] = -15,
-    -- x pairs
+    # x pairs
     ["xa"] = -5,
     ["xe"] = -5,
-    -- y pairs
+    # y pairs
     ["ya"] = -20,
     ["yc"] = -15,
     ["ye"] = -15,
     ["yo"] = -20,
-    -- Additional uppercase pairs for completeness
+    # Additional uppercase pairs for completeness
     ["AB"] = -10,
     ["AD"] = -15,
     ["AE"] = -10,
@@ -1257,7 +1257,7 @@ kerning["TimesRoman"] = {
 }
 
 kerning["Helvetica"] = {
-    -- A pairs
+    # A pairs
     ["AC"] = -30,
     ["AG"] = -30,
     ["AO"] = -40,
@@ -1275,18 +1275,18 @@ kerning["Helvetica"] = {
     ["Ao"] = -25,
     ["Aq"] = -25,
     ["Au"] = -30,
-    -- B pairs
+    # B pairs
     ["BA"] = -20,
     ["BU"] = -10,
     ["BY"] = -20,
-    -- C pairs
+    # C pairs
     ["CA"] = -25,
-    -- D pairs
+    # D pairs
     ["DA"] = -30,
     ["DV"] = -30,
     ["DW"] = -25,
     ["DY"] = -30,
-    -- F pairs
+    # F pairs
     ["FA"] = -60,
     ["Fa"] = -20,
     ["Fe"] = -20,
@@ -1294,12 +1294,12 @@ kerning["Helvetica"] = {
     ["Fo"] = -20,
     ["Fr"] = -20,
     ["Fu"] = -20,
-    -- G pairs
+    # G pairs
     ["GA"] = -25,
-    -- J pairs
+    # J pairs
     ["JA"] = -20,
     ["Ju"] = -15,
-    -- K pairs
+    # K pairs
     ["KO"] = -25,
     ["KU"] = -15,
     ["KY"] = -25,
@@ -1307,27 +1307,27 @@ kerning["Helvetica"] = {
     ["Ko"] = -20,
     ["Ku"] = -15,
     ["Ky"] = -20,
-    -- L pairs
+    # L pairs
     ["LT"] = -80,
     ["LV"] = -92,
     ["LW"] = -60,
     ["LY"] = -92,
     ["Ly"] = -30,
-    -- O pairs
+    # O pairs
     ["OA"] = -30,
     ["OT"] = -30,
     ["OV"] = -40,
     ["OW"] = -40,
     ["OX"] = -30,
     ["OY"] = -40,
-    -- P pairs
+    # P pairs
     ["PA"] = -74,
     ["Pe"] = -20,
     ["Po"] = -20,
     ["Pa"] = -20,
-    -- Q pairs
+    # Q pairs
     ["QU"] = -10,
-    -- R pairs
+    # R pairs
     ["RC"] = -20,
     ["RG"] = -20,
     ["RO"] = -20,
@@ -1341,7 +1341,7 @@ kerning["Helvetica"] = {
     ["Re"] = -15,
     ["Ro"] = -15,
     ["Ru"] = -15,
-    -- T pairs
+    # T pairs
     ["TA"] = -50,
     ["TC"] = -25,
     ["TG"] = -25,
@@ -1359,9 +1359,9 @@ kerning["Helvetica"] = {
     ["Tu"] = -40,
     ["Tw"] = -50,
     ["Ty"] = -50,
-    -- U pairs
+    # U pairs
     ["UA"] = -35,
-    -- V pairs
+    # V pairs
     ["VA"] = -80,
     ["VC"] = -25,
     ["VG"] = -25,
@@ -1379,7 +1379,7 @@ kerning["Helvetica"] = {
     ["Vs"] = -35,
     ["Vu"] = -30,
     ["Vy"] = -20,
-    -- W pairs
+    # W pairs
     ["WA"] = -50,
     ["WC"] = -10,
     ["WG"] = -10,
@@ -1395,10 +1395,10 @@ kerning["Helvetica"] = {
     ["Ws"] = -25,
     ["Wu"] = -15,
     ["Wy"] = -15,
-    -- X pairs
+    # X pairs
     ["XC"] = -10,
     ["XO"] = -10,
-    -- Y pairs
+    # Y pairs
     ["YA"] = -50,
     ["YC"] = -25,
     ["YG"] = -25,
@@ -1418,26 +1418,26 @@ kerning["Helvetica"] = {
     ["Ys"] = -50,
     ["Yu"] = -40,
     ["Yv"] = -30,
-    -- a pairs
+    # a pairs
     ["ac"] = -10,
     ["ag"] = -10,
     ["ay"] = -15,
     ["av"] = -15,
     ["aw"] = -10,
-    -- b pairs
+    # b pairs
     ["be"] = -10,
     ["bo"] = -10,
     ["bu"] = -15,
     ["bv"] = -15,
     ["by"] = -15,
-    -- c pairs
+    # c pairs
     ["ch"] = -10,
     ["ck"] = -10,
-    -- d pairs
+    # d pairs
     ["da"] = -10,
     ["dd"] = -10,
     ["dw"] = -10,
-    -- e pairs
+    # e pairs
     ["ea"] = -5,
     ["ec"] = -5,
     ["eg"] = -5,
@@ -1445,49 +1445,49 @@ kerning["Helvetica"] = {
     ["ew"] = -10,
     ["ex"] = -10,
     ["ey"] = -10,
-    -- f pairs
+    # f pairs
     ["fa"] = -10,
     ["fe"] = -10,
     ["ff"] = -15,
     ["fi"] = -20,
     ["fl"] = -15,
     ["fo"] = -10,
-    -- g pairs
+    # g pairs
     ["ga"] = -5,
     ["ge"] = -5,
     ["gi"] = -10,
     ["go"] = -5,
     ["gr"] = -5,
-    -- h pairs
+    # h pairs
     ["hy"] = -15,
-    -- i pairs
+    # i pairs
     ["ic"] = -10,
-    -- k pairs
+    # k pairs
     ["ke"] = -10,
     ["ko"] = -10,
     ["ky"] = -10,
-    -- l pairs
+    # l pairs
     ["la"] = -5,
     ["le"] = -5,
     ["li"] = -5,
     ["lo"] = -5,
     ["ly"] = -5,
-    -- n pairs
+    # n pairs
     ["na"] = -5,
     ["ne"] = -5,
     ["no"] = -5,
     ["nv"] = -15,
     ["ny"] = -10,
-    -- o pairs
+    # o pairs
     ["ov"] = -10,
     ["ow"] = -10,
     ["ox"] = -10,
     ["oy"] = -10,
-    -- p pairs
+    # p pairs
     ["pa"] = -5,
     ["pe"] = -5,
     ["py"] = -10,
-    -- r pairs
+    # r pairs
     ["ra"] = -10,
     ["rc"] = -10,
     ["rd"] = -10,
@@ -1501,38 +1501,38 @@ kerning["Helvetica"] = {
     ["rt"] = -10,
     ["rv"] = -10,
     ["ry"] = -10,
-    -- s pairs
+    # s pairs
     ["st"] = -10,
     ["sw"] = -10,
-    -- t pairs
+    # t pairs
     ["ta"] = -10,
     ["te"] = -5,
     ["to"] = -10,
     ["ty"] = -10,
-    -- u pairs
+    # u pairs
     ["ua"] = -5,
     ["uc"] = -5,
     ["ue"] = -5,
     ["un"] = -5,
-    -- v pairs
+    # v pairs
     ["va"] = -20,
     ["ve"] = -10,
     ["vi"] = -10,
     ["vo"] = -15,
-    -- w pairs
+    # w pairs
     ["wa"] = -10,
     ["we"] = -10,
     ["wi"] = -5,
     ["wo"] = -10,
-    -- x pairs
+    # x pairs
     ["xa"] = -5,
     ["xe"] = -5,
-    -- y pairs
+    # y pairs
     ["ya"] = -15,
     ["yc"] = -10,
     ["ye"] = -10,
     ["yo"] = -15,
-    -- Additional uppercase pairs
+    # Additional uppercase pairs
     ["AB"] = -10,
     ["AD"] = -10,
     ["AE"] = -10,
@@ -1759,13 +1759,13 @@ kerning["Helvetica-Bold"] = {
 kerning["Courier"] = {}
 
 
---------------------------------------------------------------------------------
--- Hyphenation patterns (TeX-style English patterns)
--- Key: pattern (with . for word boundary)
--- Value: digit string where odd digits indicate valid hyphenation points
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Hyphenation patterns (TeX-style English patterns)
+# Key: pattern (with . for word boundary)
+# Value: digit string where odd digits indicate valid hyphenation points
+#------------------------------------------------------------------------------
 hyphenation_patterns = {
-    -- Prefix patterns: .a through .z
+    # Prefix patterns: .a through .z
     [".ab"] = "0010",
     [".abi"] = "00100",
     [".abl"] = "00100",
@@ -2083,7 +2083,7 @@ hyphenation_patterns = {
     [".hum"] = "00100",
     [".hun"] = "00100",
     [".hy"] = "0010",
-    -- Internal patterns
+    # Internal patterns
     ["abi"] = "010",
     ["abl"] = "010",
     ["abr"] = "010",
@@ -2199,7 +2199,7 @@ hyphenation_patterns = {
     ["awa"] = "010",
     ["awe"] = "010",
     ["awi"] = "010",
-    -- B internal patterns
+    # B internal patterns
     ["bal"] = "010",
     ["ban"] = "010",
     ["bar"] = "010",
@@ -2250,7 +2250,7 @@ hyphenation_patterns = {
     ["bur"] = "010",
     ["bus"] = "010",
     ["but"] = "010",
-    -- C internal patterns
+    # C internal patterns
     ["cab"] = "010",
     ["cad"] = "010",
     ["cal"] = "010",
@@ -2300,7 +2300,7 @@ hyphenation_patterns = {
     ["cur"] = "010",
     ["cus"] = "010",
     ["cut"] = "010",
-    -- D internal patterns
+    # D internal patterns
     ["dal"] = "010",
     ["dam"] = "010",
     ["dan"] = "010",
@@ -2353,7 +2353,7 @@ hyphenation_patterns = {
     ["dur"] = "010",
     ["dus"] = "010",
     ["dut"] = "010",
-    -- E internal patterns
+    # E internal patterns
     ["eal"] = "010",
     ["ear"] = "010",
     ["eas"] = "010",
@@ -2418,7 +2418,7 @@ hyphenation_patterns = {
     ["exi"] = "010",
     ["exp"] = "010",
     ["ext"] = "010",
-    -- Suffix patterns
+    # Suffix patterns
     ["able."] = "01000",
     ["ably."] = "01000",
     ["acle."] = "01000",
@@ -2461,7 +2461,7 @@ hyphenation_patterns = {
     ["ness."] = "01000",
     ["ment."] = "01000",
     ["ence."] = "01000",
-    -- F through Z internal patterns (representative set)
+    # F through Z internal patterns (representative set)
     ["fab"] = "010",
     ["fac"] = "010",
     ["fal"] = "010",
@@ -2512,7 +2512,7 @@ hyphenation_patterns = {
     ["fur"] = "010",
     ["fus"] = "010",
     ["fut"] = "010",
-    -- G patterns
+    # G patterns
     ["gal"] = "010",
     ["gam"] = "010",
     ["gan"] = "010",
@@ -2553,7 +2553,7 @@ hyphenation_patterns = {
     ["gur"] = "010",
     ["gus"] = "010",
     ["gut"] = "010",
-    -- H patterns
+    # H patterns
     ["hab"] = "010",
     ["had"] = "010",
     ["hal"] = "010",
@@ -2595,7 +2595,7 @@ hyphenation_patterns = {
     ["hum"] = "010",
     ["hun"] = "010",
     ["hur"] = "010",
-    -- I patterns
+    # I patterns
     ["ial"] = "010",
     ["ian"] = "010",
     ["iat"] = "010",
@@ -2697,7 +2697,7 @@ hyphenation_patterns = {
     ["ivo"] = "010",
     ["ize"] = "010",
     ["izi"] = "010",
-    -- More suffix patterns
+    # More suffix patterns
     ["ful."] = "0100",
     ["ing."] = "0100",
     ["ism."] = "0100",
@@ -2714,9 +2714,9 @@ hyphenation_patterns = {
     ["ate."] = "0100",
 }
 
---------------------------------------------------------------------------------
--- Hyphenation engine
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Hyphenation engine
+#------------------------------------------------------------------------------
 function find_hyphenation_points(word)
     if len(word) < 4 then
         return {}
@@ -2729,7 +2729,7 @@ function find_hyphenation_points(word)
         values[i] = 0
     end
 
-    -- Apply patterns
+    # Apply patterns
     for i = 1, plen do
         for j = i + 1, min(i + 6, plen) do
             pat = sub(padded, i, j)
@@ -2746,7 +2746,7 @@ function find_hyphenation_points(word)
         end
     end
 
-    -- Extract break points (odd values, not at start/end)
+    # Extract break points (odd values, not at start/end)
     points = {}
     wlen = len(word)
     for i = 2, wlen - 1 do
@@ -2776,9 +2776,9 @@ function hyphenate_word(word)
 end
 
 
---------------------------------------------------------------------------------
--- Box, Glue, and Penalty classes (TeX box-and-glue model)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Box, Glue, and Penalty classes (TeX box-and-glue model)
+#------------------------------------------------------------------------------
 Box = {}
 Box.__index = Box
 
@@ -2885,9 +2885,9 @@ function Penalty:__tostring()
     return format("Penalty(%d, %d, %s)", self.width, self.penalty, tostring(self.flagged))
 end
 
---------------------------------------------------------------------------------
--- GlyphRun class: a sequence of positioned glyphs
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# GlyphRun class: a sequence of positioned glyphs
+#------------------------------------------------------------------------------
 GlyphRun = {}
 GlyphRun.__index = GlyphRun
 
@@ -2904,12 +2904,12 @@ function GlyphRun:add_glyph(char_code, x, y, advance)
 end
 
 function GlyphRun:glyph_count()
-    return #self.glyphs
+    return self.glyphs.count
 end
 
 function GlyphRun:total_width()
     w = 0
-    for i = 1, #self.glyphs do
+    for i = 1, self.glyphs.count do
         w = w + self.glyphs[i][4]
     end
     return w
@@ -2917,16 +2917,16 @@ end
 
 function GlyphRun:clone()
     run = GlyphRun.new(self.font_name, self.font_size)
-    for i = 1, #self.glyphs do
+    for i = 1, self.glyphs.count do
         g = self.glyphs[i]
         insert(run.glyphs, {g[1], g[2], g[3], g[4]})
     end
     return run
 end
 
---------------------------------------------------------------------------------
--- Breakpoint class for the Knuth-Plass algorithm
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Breakpoint class for the Knuth-Plass algorithm
+#------------------------------------------------------------------------------
 Breakpoint = {}
 Breakpoint.__index = Breakpoint
 
@@ -2944,21 +2944,21 @@ function Breakpoint.new(position, line, fitness, total_width, total_stretch, tot
     }, Breakpoint)
 end
 
---------------------------------------------------------------------------------
--- Knuth-Plass line breaking algorithm
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Knuth-Plass line breaking algorithm
+#------------------------------------------------------------------------------
 function compute_adjustment_ratio(target_width, natural_width, total_stretch, total_shrink)
     if natural_width == target_width then
         return 0
     else if natural_width < target_width then
-        -- Need to stretch
+        # Need to stretch
         if total_stretch > 0 then
             return (target_width - natural_width) / total_stretch
         else
             return huge
         end
     else
-        -- Need to shrink
+        # Need to shrink
         if total_shrink > 0 then
             return (target_width - natural_width) / total_shrink
         else
@@ -2969,13 +2969,13 @@ end
 
 function compute_fitness_class(ratio)
     if ratio < -0.5 then
-        return 0  -- tight
+        return 0  # tight
     else if ratio <= 0.5 then
-        return 1  -- normal
+        return 1  # normal
     else if ratio <= 1.0 then
-        return 2  -- loose
+        return 2  # loose
     else
-        return 3  -- very loose
+        return 3  # very loose
     end
 end
 
@@ -2993,10 +2993,10 @@ function knuth_plass_break(items, line_lengths, options)
     flagged_demerit = (options and options.flagged_demerit) or 100
     looseness = (options and options.looseness) or 0
 
-    n = #items
+    n = items.count
     if n == 0 then return {} end
 
-    -- Running totals
+    # Running totals
     sum_width = {}
     sum_stretch = {}
     sum_shrink = {}
@@ -3021,7 +3021,7 @@ function knuth_plass_break(items, line_lengths, options)
         end
     end
 
-    -- Active node list
+    # Active node list
     active = {
         Breakpoint.new(0, 0, 1, 0, 0, 0, 0, null, 0)
     }
@@ -3030,10 +3030,10 @@ function knuth_plass_break(items, line_lengths, options)
         if type(line_lengths) == "number" then
             return line_lengths
         else if type(line_lengths) == "table" then
-            if line_num <= #line_lengths then
+            if line_num <= line_lengths.count then
                 return line_lengths[line_num]
             else
-                return line_lengths[#line_lengths]
+                return line_lengths[line_lengths.count]
             end
         end
         return 28000
@@ -3055,24 +3055,24 @@ function knuth_plass_break(items, line_lengths, options)
 
         if is_feasible_break then
             new_active = {}
-            best_candidates = {}  -- indexed by fitness class
+            best_candidates = {}  # indexed by fitness class
 
-            for a = 1, #active do
+            for a = 1, active.count do
                 node = active[a]
                 line_num = node.line + 1
                 target_width = get_line_length(line_num)
 
-                -- Compute natural width from node to current position
+                # Compute natural width from node to current position
                 nat_width = sum_width[i + 1] - node.total_width
                 nat_stretch = sum_stretch[i + 1] - node.total_stretch
                 nat_shrink = sum_shrink[i + 1] - node.total_shrink
 
-                -- If the break is a penalty with width (hyphen), add it
+                # If the break is a penalty with width (hyphen), add it
                 if item.type == "penalty" and item.width > 0 then
                     nat_width = nat_width + item.width
                 end
 
-                -- Subtract glue at the end (if breaking at glue)
+                # Subtract glue at the end (if breaking at glue)
                 if item.type == "glue" then
                     nat_width = nat_width - item.width
                     nat_stretch = nat_stretch - item.stretch
@@ -3081,15 +3081,15 @@ function knuth_plass_break(items, line_lengths, options)
 
                 ratio = compute_adjustment_ratio(target_width, nat_width, nat_stretch, nat_shrink)
 
-                -- Check if this node should be deactivated (line too short even with max stretch)
+                # Check if this node should be deactivated (line too short even with max stretch)
                 if ratio < -1 then
-                    -- Line is too short, deactivate this node
-                    -- but first check if it was previously feasible
+                    # Line is too short, deactivate this node
+                    # but first check if it was previously feasible
                 else if ratio > tolerance and item.type == "glue" then
-                    -- Could still become feasible with later breaks, keep active
+                    # Could still become feasible with later breaks, keep active
                     insert(new_active, node)
                 else
-                    -- Feasible break
+                    # Feasible break
                     insert(new_active, node)
 
                     if ratio >= -1 and ratio <= tolerance then
@@ -3108,13 +3108,13 @@ function knuth_plass_break(items, line_lengths, options)
                             demerits = (1 + badness) * (1 + badness)
                         end
 
-                        -- Fitness demerit
+                        # Fitness demerit
                         fitness = compute_fitness_class(ratio)
                         if abs(fitness - node.fitness) > 1 then
                             demerits = demerits + fitness_demerit
                         end
 
-                        -- Flagged demerit (consecutive hyphens)
+                        # Flagged demerit (consecutive hyphens)
                         if item.type == "penalty" and item.flagged and
                            node.position > 0 and items[node.position] and
                            items[node.position].type == "penalty" and items[node.position].flagged then
@@ -3123,13 +3123,13 @@ function knuth_plass_break(items, line_lengths, options)
 
                         demerits = demerits + node.demerits
 
-                        -- Compute total_width/stretch/shrink after this break
+                        # Compute total_width/stretch/shrink after this break
                         tw = sum_width[i + 1]
                         ts = sum_stretch[i + 1]
                         tsh = sum_shrink[i + 1]
 
-                        -- Skip any glue/penalty after break
-                        -- (natural width for next line starts after break)
+                        # Skip any glue/penalty after break
+                        # (natural width for next line starts after break)
 
                         if not best_candidates[fitness] or demerits < best_candidates[fitness].demerits then
                             best_candidates[fitness] = Breakpoint.new(
@@ -3142,14 +3142,14 @@ function knuth_plass_break(items, line_lengths, options)
                 end
             end
 
-            -- Add best candidates to active list
+            # Add best candidates to active list
             for _, bp in pairs(best_candidates) do
                 insert(new_active, bp)
             end
 
-            if #new_active == 0 then
-                -- Emergency: no feasible breaks found, force a break at current position
-                -- Use the best (least bad) active node
+            if new_active.count == 0 then
+                # Emergency: no feasible breaks found, force a break at current position
+                # Use the best (least bad) active node
                 best_node = active[1]
                 if best_node then
                     line_num = best_node.line + 1
@@ -3166,24 +3166,24 @@ function knuth_plass_break(items, line_lengths, options)
         end
     end
 
-    -- Find the best active node (endpoint)
-    if #active == 0 then
+    # Find the best active node (endpoint)
+    if active.count == 0 then
         return {}
     end
 
     best = active[1]
-    for i = 2, #active do
+    for i = 2, active.count do
         if active[i].demerits < best.demerits then
             best = active[i]
         end
     end
 
-    -- Handle looseness
+    # Handle looseness
     if looseness != 0 then
         target_lines = best.line + looseness
         closest = best
         closest_diff = huge
-        for i = 1, #active do
+        for i = 1, active.count do
             diff = abs(active[i].line - target_lines)
             if diff < closest_diff or (diff == closest_diff and active[i].demerits < closest.demerits) then
                 closest = active[i]
@@ -3193,7 +3193,7 @@ function knuth_plass_break(items, line_lengths, options)
         best = closest
     end
 
-    -- Trace back through the chain of breakpoints
+    # Trace back through the chain of breakpoints
     breaks = {}
     node = best
     while node and node.position > 0 do
@@ -3205,9 +3205,9 @@ function knuth_plass_break(items, line_lengths, options)
 end
 
 
---------------------------------------------------------------------------------
--- Paragraph layout engine
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Paragraph layout engine
+#------------------------------------------------------------------------------
 ParagraphLayout = {}
 ParagraphLayout.__index = ParagraphLayout
 
@@ -3244,7 +3244,7 @@ function ParagraphLayout:build_items(text)
     fn = self.font_name
     text_len = len(text)
 
-    -- Add first-line indent if needed
+    # Add first-line indent if needed
     if self.first_indent > 0 then
         insert(items, Box.new(self.first_indent, "", fn, 0))
     end
@@ -3257,21 +3257,21 @@ function ParagraphLayout:build_items(text)
         c = byte(text, i)
 
         if c == 32 or c == 9 or c == 10 or c == 13 then
-            -- Space character - end word if in one, add glue
+            # Space character - end word if in one, add glue
             if in_word then
-                -- Process accumulated word
+                # Process accumulated word
                 word = sub(text, word_start, i - 1)
                 self:emit_word(items, word, fn)
                 in_word = false
             end
-            -- Add glue for space
+            # Add glue for space
             insert(items, Glue.word_space(fn))
-            -- Check for sentence end (period followed by space)
+            # Check for sentence end (period followed by space)
             if i > 1 then
                 prev = byte(text, i - 1)
                 if prev == 46 or prev == 63 or prev == 33 then
-                    -- Sentence-ending punctuation: use wider space
-                    items[#items] = Glue.sentence_space(fn)
+                    # Sentence-ending punctuation: use wider space
+                    items[items.count] = Glue.sentence_space(fn)
                 end
             end
             i = i + 1
@@ -3284,13 +3284,13 @@ function ParagraphLayout:build_items(text)
         end
     end
 
-    -- Process final word
+    # Process final word
     if in_word then
         word = sub(text, word_start, text_len)
         self:emit_word(items, word, fn)
     end
 
-    -- Add finishing glue and forced break
+    # Add finishing glue and forced break
     insert(items, Glue.fil())
     insert(items, Penalty.forced())
 
@@ -3301,13 +3301,13 @@ function ParagraphLayout:emit_word(items, word, font_name)
     wlen = len(word)
 
     if self.hyphenate_flag and wlen >= 5 then
-        -- Try to hyphenate
+        # Try to hyphenate
         parts = hyphenate_word(word)
-        if #parts > 1 then
-            for pi = 1, #parts do
+        if parts.count > 1 then
+            for pi = 1, parts.count do
                 part = parts[pi]
                 self:emit_chars(items, part, font_name)
-                if pi < #parts then
+                if pi < parts.count then
                     insert(items, Penalty.hyphen(font_name))
                 end
             end
@@ -3315,7 +3315,7 @@ function ParagraphLayout:emit_word(items, word, font_name)
         end
     end
 
-    -- No hyphenation, emit as single box sequence
+    # No hyphenation, emit as single box sequence
     self:emit_chars(items, word, font_name)
 end
 
@@ -3327,7 +3327,7 @@ function ParagraphLayout:emit_chars(items, str, font_name)
         c = byte(str, i)
         w = self:get_char_width(c, font_name)
 
-        -- Apply kerning
+        # Apply kerning
         if i < slen then
             next_c = byte(str, i + 1)
             kern = self:get_kerning(c, next_c, font_name)
@@ -3343,45 +3343,45 @@ end
 function ParagraphLayout:layout(text)
     items = self:build_items(text)
 
-    -- Determine line lengths
+    # Determine line lengths
     line_lengths = self.line_width
 
-    -- Run Knuth-Plass
+    # Run Knuth-Plass
     breaks = knuth_plass_break(items, line_lengths, {
         tolerance = self.tolerance,
         fitness_demerit = 100,
         flagged_demerit = 100,
     })
 
-    -- Position glyphs on each line
+    # Position glyphs on each line
     return self:position_lines(items, breaks, line_lengths)
 end
 
 function ParagraphLayout:position_lines(items, breaks, line_lengths)
     lines = {}
-    n_items = #items
+    n_items = items.count
     prev_break = 0
 
-    for b = 1, #breaks do
+    for b = 1, breaks.count do
         bp = breaks[b]
         line_num = b
         target_width = null
         if type(line_lengths) == "number" then
             target_width = line_lengths
         else if type(line_lengths) == "table" then
-            target_width = line_lengths[min(line_num, #line_lengths)]
+            target_width = line_lengths[min(line_num, line_lengths.count)]
         else
             target_width = 28000
         end
 
         ratio = bp.ratio
 
-        -- Collect items for this line
+        # Collect items for this line
         line_items = {}
         start_idx = prev_break + 1
         end_idx = bp.position
 
-        -- Skip leading glue
+        # Skip leading glue
         while start_idx <= end_idx and items[start_idx] and items[start_idx].type == "glue" do
             start_idx = start_idx + 1
         end
@@ -3392,21 +3392,21 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
             end
         end
 
-        -- Position glyphs
+        # Position glyphs
         glyph_run = GlyphRun.new(self.font_name, self.font_size)
         x = 0
 
-        for li = 1, #line_items do
+        for li = 1, line_items.count do
             item = line_items[li]
             if item.type == "box" then
-                -- Place the box
+                # Place the box
                 content = item.content
                 if content and len(content) > 0 then
                     for ci = 1, len(content) do
                         cc = byte(content, ci)
                         cw = self:get_char_width(cc, item.font_name or self.font_name)
 
-                        -- Apply kerning with next char
+                        # Apply kerning with next char
                         if ci < len(content) then
                             next_cc = byte(content, ci + 1)
                             cw = cw + self:get_kerning(cc, next_cc, item.font_name or self.font_name)
@@ -3416,23 +3416,23 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
                         x = x + cw
                     end
                 else
-                    -- Empty box (indent)
+                    # Empty box (indent)
                     x = x + item.width
                 end
             else if item.type == "glue" then
-                -- Adjust glue width based on ratio
+                # Adjust glue width based on ratio
                 adjusted_width = item.width
                 if ratio > 0 then
                     adjusted_width = item.width + floor(ratio * item.stretch)
                 else if ratio < 0 then
                     adjusted_width = item.width + floor(ratio * item.shrink)
                 end
-                -- Add space glyph
+                # Add space glyph
                 glyph_run:add_glyph(32, x, 0, adjusted_width)
                 x = x + adjusted_width
             else if item.type == "penalty" then
-                -- If this is the break point and it's a hyphen penalty, add hyphen glyph
-                if li == #line_items and item.flagged and item.width > 0 then
+                # If this is the break point and it's a hyphen penalty, add hyphen glyph
+                if li == line_items.count and item.flagged and item.width > 0 then
                     glyph_run:add_glyph(45, x, 0, item.width)
                     x = x + item.width
                 end
@@ -3451,9 +3451,9 @@ function ParagraphLayout:position_lines(items, breaks, line_lengths)
     return lines
 end
 
---------------------------------------------------------------------------------
--- Page layout engine
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Page layout engine
+#------------------------------------------------------------------------------
 Page = {}
 Page.__index = Page
 
@@ -3497,7 +3497,7 @@ function PageLayout:get_text_height()
 end
 
 function PageLayout:new_page()
-    page_num = #self.pages + 1
+    page_num = self.pages.count + 1
     page = Page.new(page_num, self.page_width, self.page_height)
     insert(self.pages, page)
     self.current_page = page
@@ -3513,12 +3513,12 @@ end
 
 function PageLayout:add_paragraph(lines, leading)
     leading = leading or 12
-    line_height = leading * 100  -- Convert to font units (approx)
+    line_height = leading * 100  # Convert to font units (approx)
 
-    for i = 1, #lines do
+    for i = 1, lines.count do
         self:ensure_page()
 
-        -- Check if we need a new page
+        # Check if we need a new page
         if self.current_y + line_height > self.page_height - self.margin_bottom then
             self:new_page()
         end
@@ -3526,11 +3526,11 @@ function PageLayout:add_paragraph(lines, leading)
         line = lines[i]
         run = line.glyph_run
 
-        -- Position the glyph run on the page
-        -- Adjust y coordinates for all glyphs in the run
+        # Position the glyph run on the page
+        # Adjust y coordinates for all glyphs in the run
         page_run = run:clone()
-        for g = 1, #page_run.glyphs do
-            page_run.glyphs[g][3] = self.current_y  -- Set y position
+        for g = 1, page_run.glyphs.count do
+            page_run.glyphs[g][3] = self.current_y  # Set y position
         end
 
         self.current_page:add_glyph_run(page_run, self.margin_left, self.current_y)
@@ -3547,13 +3547,13 @@ function PageLayout:add_vertical_space(amount)
 end
 
 function PageLayout:finalize()
-    -- Nothing special needed for now
+    # Nothing special needed for now
 end
 
 
---------------------------------------------------------------------------------
--- Document model
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Document model
+#------------------------------------------------------------------------------
 Section = {}
 Section.__index = Section
 
@@ -3574,7 +3574,7 @@ function Section:add_paragraph(text, options)
 end
 
 function Section:typeset(page_layout)
-    -- Typeset section title
+    # Typeset section title
     title_size = 14 - (self.level - 1) * 2
     title_font = "Helvetica-Bold"
     title_layout = ParagraphLayout.new({
@@ -3591,7 +3591,7 @@ function Section:typeset(page_layout)
     page_layout:add_paragraph(title_lines, title_size + 4)
     page_layout:add_vertical_space(title_size * 50)
 
-    -- Typeset elements
+    # Typeset elements
     for _, elem in ipairs(self.elements) do
         if elem.type == "paragraph" then
             opts = elem.options
@@ -3636,9 +3636,9 @@ function Document:typeset(page_layout)
     return page_layout
 end
 
---------------------------------------------------------------------------------
--- Sample texts for benchmarking
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Sample texts for benchmarking
+#------------------------------------------------------------------------------
 sample_texts = {}
 
 sample_texts[1] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo."
@@ -3723,9 +3723,9 @@ sample_texts[39] = "The architecture of Gothic cathedrals represents one of the 
 sample_texts[40] = "Bayesian inference provides a principled framework for updating beliefs in light of new evidence, combining prior knowledge with observed data through Bayes' theorem. The posterior distribution represents our updated beliefs about unknown parameters after observing data, and is proportional to the product of the likelihood function and the prior distribution. Computational challenges arise because the normalizing constant, the marginal likelihood, often involves intractable high-dimensional integrals. Markov chain Monte Carlo methods, including the Metropolis-Hastings algorithm and Gibbs sampling, provide practical solutions for approximating posterior distributions in complex models."
 
 
---------------------------------------------------------------------------------
--- Additional font metrics: Georgia and Palatino
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Additional font metrics: Georgia and Palatino
+#------------------------------------------------------------------------------
 font_metrics["Georgia"] = {
     units_per_em = 1000,
     ascent = 917,
@@ -4187,7 +4187,7 @@ do
 end
 
 
--- Kerning tables for additional fonts
+# Kerning tables for additional fonts
 kerning["Georgia"] = {
     ["AC"] = -35,
     ["AG"] = -35,
@@ -4587,11 +4587,11 @@ kerning["Bookman"] = {
 }
 
 
---------------------------------------------------------------------------------
--- Extended hyphenation patterns (additional patterns for better coverage)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Extended hyphenation patterns (additional patterns for better coverage)
+#------------------------------------------------------------------------------
 extended_patterns = {
-    -- Multi-character patterns for common English word parts
+    # Multi-character patterns for common English word parts
     ["abil"] = "0100",
     ["abili"] = "01010",
     ["abol"] = "0100",
@@ -4758,7 +4758,7 @@ extended_patterns = {
     ["awar"] = "0100",
     ["awfu"] = "0100",
     ["awkw"] = "0100",
-    -- B extended patterns
+    # B extended patterns
     ["back"] = "0100",
     ["badl"] = "0100",
     ["bake"] = "0100",
@@ -4891,7 +4891,7 @@ extended_patterns = {
     ["bust"] = "0100",
     ["busy"] = "0100",
     ["butt"] = "0100",
-    -- C extended patterns
+    # C extended patterns
     ["cabi"] = "0100",
     ["cabl"] = "0100",
     ["cafe"] = "0100",
@@ -5076,7 +5076,7 @@ extended_patterns = {
     ["cust"] = "0100",
     ["cute"] = "0100",
     ["cycl"] = "0100",
-    -- D extended patterns
+    # D extended patterns
     ["dail"] = "0100",
     ["dair"] = "0100",
     ["dama"] = "0100",
@@ -5238,7 +5238,7 @@ extended_patterns = {
     ["dwel"] = "0100",
     ["dyin"] = "0100",
     ["dyna"] = "0100",
-    -- E extended patterns
+    # E extended patterns
     ["each"] = "0100",
     ["eage"] = "0100",
     ["earl"] = "0100",
@@ -5374,7 +5374,7 @@ extended_patterns = {
     ["extr"] = "0100",
 }
 
--- Merge extended patterns into the main table
+# Merge extended patterns into the main table
 for k, v in pairs(extended_patterns) do
     if not hyphenation_patterns[k] then
         hyphenation_patterns[k] = v
@@ -5382,9 +5382,9 @@ for k, v in pairs(extended_patterns) do
 end
 
 
---------------------------------------------------------------------------------
--- Ligature tables (used for width adjustment in advanced layout)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Ligature tables (used for width adjustment in advanced layout)
+#------------------------------------------------------------------------------
 ligatures = {}
 
 ligatures["TimesRoman"] = {
@@ -5419,9 +5419,9 @@ ligatures["Palatino"] = {
     ["ffl"] = {width = 870, chars = {102, 102, 108}},
 }
 
---------------------------------------------------------------------------------
--- More sample texts (41-80) for additional benchmark coverage
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# More sample texts (41-80) for additional benchmark coverage
+#------------------------------------------------------------------------------
 
 sample_texts[41] = "The photosynthetic process in green plants converts light energy from the sun " ..
     "into chemical energy stored in glucose molecules. This fundamental biochemical " ..
@@ -5772,11 +5772,11 @@ sample_texts[80] = "The invention of writing, occurring independently in Mesopot
     "of the relationship between written symbols and spoken language."
 
 
---------------------------------------------------------------------------------
--- More extended hyphenation patterns (F through Z)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# More extended hyphenation patterns (F through Z)
+#------------------------------------------------------------------------------
 extended_patterns_2 = {
-    -- F extended patterns
+    # F extended patterns
     ["face"] = "0100",
     ["faci"] = "0100",
     ["fact"] = "0100",
@@ -5934,7 +5934,7 @@ extended_patterns_2 = {
     ["fuss"] = "0100",
     ["futi"] = "0100",
     ["futu"] = "0100",
-    -- G extended patterns
+    # G extended patterns
     ["gain"] = "0100",
     ["gala"] = "0100",
     ["gale"] = "0100",
@@ -6034,7 +6034,7 @@ extended_patterns_2 = {
     ["gulf"] = "0100",
     ["gull"] = "0100",
     ["gust"] = "0100",
-    -- H extended patterns
+    # H extended patterns
     ["habi"] = "0100",
     ["hack"] = "0100",
     ["hail"] = "0100",
@@ -6136,7 +6136,7 @@ extended_patterns_2 = {
     ["hype"] = "0100",
     ["hypo"] = "0100",
     ["hyst"] = "0100",
-    -- I extended patterns
+    # I extended patterns
     ["icon"] = "0100",
     ["idea"] = "0100",
     ["iden"] = "0100",
@@ -6227,7 +6227,7 @@ extended_patterns_2 = {
     ["iter"] = "0100",
     ["itin"] = "0100",
     ["ivor"] = "0100",
-    -- J extended patterns
+    # J extended patterns
     ["jack"] = "0100",
     ["jail"] = "0100",
     ["janu"] = "0100",
@@ -6254,7 +6254,7 @@ extended_patterns_2 = {
     ["jury"] = "0100",
     ["just"] = "0100",
     ["juve"] = "0100",
-    -- K extended patterns
+    # K extended patterns
     ["keen"] = "0100",
     ["keep"] = "0100",
     ["kept"] = "0100",
@@ -6276,7 +6276,7 @@ extended_patterns_2 = {
     ["knoc"] = "0100",
     ["knot"] = "0100",
     ["know"] = "0100",
-    -- L extended patterns
+    # L extended patterns
     ["labe"] = "0100",
     ["labo"] = "0100",
     ["lace"] = "0100",
@@ -6391,7 +6391,7 @@ extended_patterns_2 = {
     ["lush"] = "0100",
     ["lust"] = "0100",
     ["luxu"] = "0100",
-    -- M extended patterns
+    # M extended patterns
     ["mach"] = "0100",
     ["maga"] = "0100",
     ["magi"] = "0100",
@@ -6541,7 +6541,7 @@ extended_patterns_2 = {
     ["mutu"] = "0100",
     ["myst"] = "0100",
     ["myth"] = "0100",
-    -- N extended patterns
+    # N extended patterns
     ["nail"] = "0100",
     ["nake"] = "0100",
     ["name"] = "0100",
@@ -6600,7 +6600,7 @@ extended_patterns_2 = {
     ["numer"] = "01000",
     ["nurs"] = "0100",
     ["nutr"] = "0100",
-    -- O extended patterns
+    # O extended patterns
     ["oasi"] = "0100",
     ["obey"] = "0100",
     ["obje"] = "0100",
@@ -6662,7 +6662,7 @@ extended_patterns_2 = {
     ["owne"] = "0100",
     ["oxid"] = "0100",
     ["oxyg"] = "0100",
-    -- P extended patterns
+    # P extended patterns
     ["pace"] = "0100",
     ["pack"] = "0100",
     ["pact"] = "0100",
@@ -6868,7 +6868,7 @@ extended_patterns_2 = {
     ["purs"] = "0100",
     ["push"] = "0100",
     ["puzz"] = "0100",
-    -- R extended patterns
+    # R extended patterns
     ["rabi"] = "0100",
     ["race"] = "0100",
     ["raci"] = "0100",
@@ -7036,7 +7036,7 @@ extended_patterns_2 = {
     ["rush"] = "0100",
     ["rust"] = "0100",
     ["ruth"] = "0100",
-    -- S extended patterns
+    # S extended patterns
     ["sack"] = "0100",
     ["sacr"] = "0100",
     ["safe"] = "0100",
@@ -7392,7 +7392,7 @@ extended_patterns_2 = {
     ["syno"] = "0100",
     ["synt"] = "0100",
     ["syst"] = "0100",
-    -- T extended patterns
+    # T extended patterns
     ["tabl"] = "0100",
     ["tack"] = "0100",
     ["tact"] = "0100",
@@ -7569,7 +7569,7 @@ extended_patterns_2 = {
     ["type"] = "0100",
     ["typi"] = "0100",
     ["tyra"] = "0100",
-    -- U extended patterns
+    # U extended patterns
     ["ugil"] = "0100",
     ["ugly"] = "0100",
     ["ulce"] = "0100",
@@ -7647,7 +7647,7 @@ extended_patterns_2 = {
     ["usua"] = "0100",
     ["util"] = "0100",
     ["utte"] = "0100",
-    -- V extended patterns
+    # V extended patterns
     ["vaca"] = "0100",
     ["vacu"] = "0100",
     ["vagu"] = "0100",
@@ -7722,7 +7722,7 @@ extended_patterns_2 = {
     ["voya"] = "0100",
     ["vulg"] = "0100",
     ["vuln"] = "0100",
-    -- W extended patterns
+    # W extended patterns
     ["wade"] = "0100",
     ["wage"] = "0100",
     ["wago"] = "0100",
@@ -7832,7 +7832,7 @@ extended_patterns_2 = {
     ["writ"] = "0100",
     ["wron"] = "0100",
     ["wrot"] = "0100",
-    -- Y extended patterns
+    # Y extended patterns
     ["yard"] = "0100",
     ["yarn"] = "0100",
     ["year"] = "0100",
@@ -7842,7 +7842,7 @@ extended_patterns_2 = {
     ["youn"] = "0100",
     ["your"] = "0100",
     ["yout"] = "0100",
-    -- Z extended patterns
+    # Z extended patterns
     ["zeal"] = "0100",
     ["zero"] = "0100",
     ["zest"] = "0100",
@@ -7851,7 +7851,7 @@ extended_patterns_2 = {
     ["zoom"] = "0100",
 }
 
--- Merge extended patterns 2 into the main table
+# Merge extended patterns 2 into the main table
 for k, v in pairs(extended_patterns_2) do
     if not hyphenation_patterns[k] then
         hyphenation_patterns[k] = v
@@ -7859,9 +7859,9 @@ for k, v in pairs(extended_patterns_2) do
 end
 
 
---------------------------------------------------------------------------------
--- Additional sample texts (81-100) - varied content for comprehensive testing
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Additional sample texts (81-100) - varied content for comprehensive testing
+#------------------------------------------------------------------------------
 
 sample_texts[81] = "The concept of infinity has fascinated mathematicians and philosophers for " ..
     "millennia, from the paradoxes of Zeno to Cantor's revolutionary transfinite " ..
@@ -8056,12 +8056,12 @@ sample_texts[100] = "The molecular basis of heredity was established through a s
     "molecular biology: information flows from DNA to RNA to protein, with DNA " ..
     "serving as the hereditary material of life."
 
---------------------------------------------------------------------------------
--- Additional kerning data for multi-font completeness
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Additional kerning data for multi-font completeness
+#------------------------------------------------------------------------------
 extended_kerning = {
     ["TimesRoman"] = {
-        -- Additional lowercase pairs
+        # Additional lowercase pairs
         ["ab"] = -5,
         ["ad"] = -5,
         ["af"] = -10,
@@ -8363,7 +8363,7 @@ extended_kerning = {
     },
 }
 
--- Merge extended kerning pairs
+# Merge extended kerning pairs
 for font_name, kern_pairs in pairs(extended_kerning) do
     if kerning[font_name] then
         for pair, val in pairs(kern_pairs) do
@@ -8375,9 +8375,9 @@ for font_name, kern_pairs in pairs(extended_kerning) do
 end
 
 
---------------------------------------------------------------------------------
--- Additional font width data: Minion Pro and Century Schoolbook
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Additional font width data: Minion Pro and Century Schoolbook
+#------------------------------------------------------------------------------
 font_metrics["MinionPro"] = {
     units_per_em = 1000,
     ascent = 727,
@@ -8763,13 +8763,13 @@ kerning["CenturySchoolbook"] = {
 }
 
 
---------------------------------------------------------------------------------
--- Test document builder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Test document builder
+#------------------------------------------------------------------------------
 function build_test_documents()
     docs = {}
 
-    -- Document 1: Simple single-font document with TimesRoman
+    # Document 1: Simple single-font document with TimesRoman
     do
         doc = Document.new("The Nature of Typography")
         s1 = doc:add_section("Introduction to Typesetting", 1)
@@ -8788,7 +8788,7 @@ function build_test_documents()
         docs[1] = doc
     end
 
-    -- Document 2: Multi-section technical document
+    # Document 2: Multi-section technical document
     do
         doc = Document.new("Computational Methods in Text Layout")
         s1 = doc:add_section("Algorithms", 1)
@@ -8808,7 +8808,7 @@ function build_test_documents()
         docs[2] = doc
     end
 
-    -- Document 3: Dense text stress test
+    # Document 3: Dense text stress test
     do
         doc = Document.new("Encyclopedia of Knowledge")
         s1 = doc:add_section("Natural Sciences", 1)
@@ -8832,7 +8832,7 @@ function build_test_documents()
         docs[3] = doc
     end
 
-    -- Document 4: Mixed fonts and sizes
+    # Document 4: Mixed fonts and sizes
     do
         doc = Document.new("Survey of Modern Science")
         s1 = doc:add_section("Physics", 1)
@@ -8853,7 +8853,7 @@ function build_test_documents()
         docs[4] = doc
     end
 
-    -- Document 5: Large document with many paragraphs (heavy stress test)
+    # Document 5: Large document with many paragraphs (heavy stress test)
     do
         doc = Document.new("Comprehensive Review")
         s1 = doc:add_section("Part One", 1)
@@ -8874,7 +8874,7 @@ function build_test_documents()
         docs[5] = doc
     end
 
-    -- Document 6: Short paragraphs and pangrams
+    # Document 6: Short paragraphs and pangrams
     do
         doc = Document.new("Typographic Specimens")
         s1 = doc:add_section("Pangrams and Short Texts", 1)
@@ -8891,25 +8891,25 @@ function build_test_documents()
     return docs
 end
 
---------------------------------------------------------------------------------
--- Checksum computation: sum of floor(x * 1000) + floor(y * 1000) for all glyphs
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Checksum computation: sum of floor(x * 1000) + floor(y * 1000) for all glyphs
+#------------------------------------------------------------------------------
 function compute_checksum(page_layout)
     sum = 0
-    for page_idx = 1, #page_layout.pages do
+    for page_idx = 1, page_layout.pages.count do
         page = page_layout.pages[page_idx]
-        for run_idx = 1, #page.glyph_runs do
+        for run_idx = 1, page.glyph_runs.count do
             entry = page.glyph_runs[run_idx]
             run = entry.run
             base_x = entry.x
             base_y = entry.y
-            for g = 1, #run.glyphs do
+            for g = 1, run.glyphs.count do
                 glyph = run.glyphs[g]
                 x = base_x + glyph[2]
                 y = base_y + glyph[3]
-                -- Use modular arithmetic to avoid floating point overflow
+                # Use modular arithmetic to avoid floating point overflow
                 sum = sum + (floor(x * 100) % 1000000) + (floor(y * 100) % 1000000)
-                -- Keep sum bounded
+                # Keep sum bounded
                 if sum > 1000000000 then
                     sum = sum % 1000000000
                 end
@@ -8919,14 +8919,14 @@ function compute_checksum(page_layout)
     return sum
 end
 
---------------------------------------------------------------------------------
--- Single benchmark iteration
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Single benchmark iteration
+#------------------------------------------------------------------------------
 function run_single_iteration()
     docs = build_test_documents()
     total_checksum = 0
 
-    for doc_idx = 1, #docs do
+    for doc_idx = 1, docs.count do
         doc = docs[doc_idx]
         page_layout = PageLayout.new({
             page_width = 36000,
@@ -8947,112 +8947,112 @@ function run_single_iteration()
     return total_checksum
 end
 
---------------------------------------------------------------------------------
--- Main benchmark loop
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Main benchmark loop
+#------------------------------------------------------------------------------
 
--- Warm up and get expected checksum
+# Warm up and get expected checksum
 checksum = run_single_iteration()
 if checksum != 608624000 then
     error("Wrong checksum " .. checksum)
 end
 
--- Note: The benchmark loop above is the actual execution point.
--- Below are additional data tables that support the layout engine's completeness.
--- They are loaded at module initialization time and referenced during typesetting.
+# Note: The benchmark loop above is the actual execution point.
+# Below are additional data tables that support the layout engine's completeness.
+# They are loaded at module initialization time and referenced during typesetting.
 
---------------------------------------------------------------------------------
--- Unicode character class data for proper word boundary detection
--- Maps ASCII codes to character classes:
--- 0=whitespace, 1=letter, 2=digit, 3=punctuation, 4=hyphen, 5=apostrophe
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Unicode character class data for proper word boundary detection
+# Maps ASCII codes to character classes:
+# 0=whitespace, 1=letter, 2=digit, 3=punctuation, 4=hyphen, 5=apostrophe
+#------------------------------------------------------------------------------
 char_class = {}
 do
     for i = 0, 127 do
-        char_class[i] = 3  -- default: punctuation
+        char_class[i] = 3  # default: punctuation
     end
-    -- Whitespace
-    char_class[9] = 0   -- tab
-    char_class[10] = 0  -- newline
-    char_class[13] = 0  -- carriage return
-    char_class[32] = 0  -- space
-    -- Uppercase letters
+    # Whitespace
+    char_class[9] = 0   # tab
+    char_class[10] = 0  # newline
+    char_class[13] = 0  # carriage return
+    char_class[32] = 0  # space
+    # Uppercase letters
     for i = 65, 90 do
         char_class[i] = 1
     end
-    -- Lowercase letters
+    # Lowercase letters
     for i = 97, 122 do
         char_class[i] = 1
     end
-    -- Digits
+    # Digits
     for i = 48, 57 do
         char_class[i] = 2
     end
-    -- Special
-    char_class[45] = 4  -- hyphen
-    char_class[39] = 5  -- apostrophe
+    # Special
+    char_class[45] = 4  # hyphen
+    char_class[39] = 5  # apostrophe
 end
 
---------------------------------------------------------------------------------
--- Sentence-ending punctuation detection
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Sentence-ending punctuation detection
+#------------------------------------------------------------------------------
 sentence_enders = {
-    [46] = true,   -- period
-    [63] = true,   -- question mark
-    [33] = true,   -- exclamation mark
+    [46] = true,   # period
+    [63] = true,   # question mark
+    [33] = true,   # exclamation mark
 }
 
---------------------------------------------------------------------------------
--- Opening and closing bracket pairs for balanced detection
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Opening and closing bracket pairs for balanced detection
+#------------------------------------------------------------------------------
 bracket_pairs = {
-    [40] = 41,     -- ( )
-    [91] = 93,     -- [ ]
-    [123] = 125,   -- { }
+    [40] = 41,     # ( )
+    [91] = 93,     # [ ]
+    [123] = 125,   # { }
 }
 
---------------------------------------------------------------------------------
--- Additional line-break classification for CJK-aware typesetting
--- (Not actively used in this benchmark but provides realistic data bulk)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Additional line-break classification for CJK-aware typesetting
+# (Not actively used in this benchmark but provides realistic data bulk)
+#------------------------------------------------------------------------------
 break_class = {}
 do
-    -- ASCII break classifications based on UAX #14
-    -- Class codes: 0=AL (Alphabetic), 1=NU (Numeric), 2=SP (Space),
-    --   3=OP (Open Punctuation), 4=CL (Close Punctuation),
-    --   5=QU (Quotation), 6=HY (Hyphen), 7=BA (Break After),
-    --   8=BB (Break Before), 9=EX (Exclamation), 10=IN (Inseparable)
+    # ASCII break classifications based on UAX #14
+    # Class codes: 0=AL (Alphabetic), 1=NU (Numeric), 2=SP (Space),
+    #   3=OP (Open Punctuation), 4=CL (Close Punctuation),
+    #   5=QU (Quotation), 6=HY (Hyphen), 7=BA (Break After),
+    #   8=BB (Break Before), 9=EX (Exclamation), 10=IN (Inseparable)
     for i = 0, 127 do
-        break_class[i] = 0  -- default: Alphabetic
+        break_class[i] = 0  # default: Alphabetic
     end
-    break_class[32] = 2    -- space
-    break_class[9] = 2     -- tab
-    break_class[33] = 9    -- !
-    break_class[34] = 5    -- "
-    break_class[39] = 5    -- '
-    break_class[40] = 3    -- (
-    break_class[41] = 4    -- )
-    break_class[44] = 10   -- ,
-    break_class[45] = 6    -- -
-    break_class[46] = 10   -- .
-    break_class[47] = 7    -- /
-    break_class[58] = 10   -- :
-    break_class[59] = 10   -- ;
-    break_class[63] = 9    -- ?
-    break_class[91] = 3    -- [
-    break_class[93] = 4    -- ]
-    break_class[123] = 3   -- {
-    break_class[125] = 4   -- }
-    -- Digits
+    break_class[32] = 2    # space
+    break_class[9] = 2     # tab
+    break_class[33] = 9    # !
+    break_class[34] = 5    # "
+    break_class[39] = 5    # '
+    break_class[40] = 3    # (
+    break_class[41] = 4    # )
+    break_class[44] = 10   # ,
+    break_class[45] = 6    # -
+    break_class[46] = 10   # .
+    break_class[47] = 7    # /
+    break_class[58] = 10   # :
+    break_class[59] = 10   # ;
+    break_class[63] = 9    # ?
+    break_class[91] = 3    # [
+    break_class[93] = 4    # ]
+    break_class[123] = 3   # {
+    break_class[125] = 4   # }
+    # Digits
     for i = 48, 57 do
         break_class[i] = 1
     end
 end
 
---------------------------------------------------------------------------------
--- Line-break pair table (simplified): can_break[before_class][after_class]
--- true = break allowed, false = break prohibited
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Line-break pair table (simplified): can_break[before_class][after_class]
+# true = break allowed, false = break prohibited
+#------------------------------------------------------------------------------
 break_pair_table = {}
 do
     for i = 0, 10 do
@@ -9061,42 +9061,42 @@ do
             break_pair_table[i][j] = false
         end
     end
-    -- Breaks allowed after space
+    # Breaks allowed after space
     for j = 0, 10 do
         break_pair_table[2][j] = true
     end
-    -- No break before close punctuation
+    # No break before close punctuation
     for i = 0, 10 do
         break_pair_table[i][4] = false
     end
-    -- No break after open punctuation
+    # No break after open punctuation
     for j = 0, 10 do
         break_pair_table[3][j] = false
     end
-    -- Break allowed between alphabetics
+    # Break allowed between alphabetics
     break_pair_table[0][0] = false
-    -- Break after hyphen
+    # Break after hyphen
     break_pair_table[6][0] = true
     break_pair_table[6][1] = true
-    -- Break after BA class
+    # Break after BA class
     for j = 0, 10 do
         break_pair_table[7][j] = true
     end
-    -- Break before BB class
+    # Break before BB class
     for i = 0, 10 do
         break_pair_table[i][8] = true
     end
-    -- No break between digits
+    # No break between digits
     break_pair_table[1][1] = false
-    -- Break between words
+    # Break between words
     break_pair_table[0][2] = false
     break_pair_table[2][0] = true
     break_pair_table[2][1] = true
 end
 
---------------------------------------------------------------------------------
--- Script identification (for multi-script typesetting support)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Script identification (for multi-script typesetting support)
+#------------------------------------------------------------------------------
 script_table = {}
 do
     for i = 0, 127 do
@@ -9122,36 +9122,36 @@ do
     end
 end
 
---------------------------------------------------------------------------------
--- Optical margin correction values (for hanging punctuation)
--- Values in 1/1000 em representing how much to shift each character
--- when it appears at the left or right margin
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Optical margin correction values (for hanging punctuation)
+# Values in 1/1000 em representing how much to shift each character
+# when it appears at the left or right margin
+#------------------------------------------------------------------------------
 optical_margins = {
     ["TimesRoman"] = {
         left = {
-            [40] = -80,   -- (
-            [91] = -60,   -- [
-            [123] = -80,  -- {
-            [34] = -100,  -- "
-            [39] = -100,  -- '
-            [96] = -100,  -- `
-            [84] = -20,   -- T
-            [86] = -30,   -- V
-            [87] = -20,   -- W
-            [89] = -30,   -- Y
+            [40] = -80,   # (
+            [91] = -60,   # [
+            [123] = -80,  # {
+            [34] = -100,  # "
+            [39] = -100,  # '
+            [96] = -100,  # `
+            [84] = -20,   # T
+            [86] = -30,   # V
+            [87] = -20,   # W
+            [89] = -30,   # Y
         },
         right = {
-            [41] = -80,   -- )
-            [93] = -60,   -- ]
-            [125] = -80,  -- }
-            [34] = -100,  -- "
-            [39] = -100,  -- '
-            [44] = -70,   -- ,
-            [46] = -70,   -- .
-            [45] = -60,   -- -
-            [58] = -50,   -- :
-            [59] = -50,   -- ;
+            [41] = -80,   # )
+            [93] = -60,   # ]
+            [125] = -80,  # }
+            [34] = -100,  # "
+            [39] = -100,  # '
+            [44] = -70,   # ,
+            [46] = -70,   # .
+            [45] = -60,   # -
+            [58] = -50,   # :
+            [59] = -50,   # ;
         },
     },
     ["Helvetica"] = {
@@ -9338,10 +9338,10 @@ optical_margins = {
     },
 }
 
---------------------------------------------------------------------------------
--- Paragraph indentation patterns for different document styles
--- Each style defines first_indent, subsequent_indent, and spacing behavior
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Paragraph indentation patterns for different document styles
+# Each style defines first_indent, subsequent_indent, and spacing behavior
+#------------------------------------------------------------------------------
 paragraph_styles = {
     ["book"] = {
         first_indent = 1500,
@@ -9401,9 +9401,9 @@ paragraph_styles = {
     },
 }
 
---------------------------------------------------------------------------------
--- Section heading styles for different document types
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Section heading styles for different document types
+#------------------------------------------------------------------------------
 heading_styles = {
     [1] = {
         font_name = "Helvetica-Bold",
@@ -9442,9 +9442,9 @@ heading_styles = {
     },
 }
 
---------------------------------------------------------------------------------
--- Page size definitions (common paper sizes in 1/1000 inch)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Page size definitions (common paper sizes in 1/1000 inch)
+#------------------------------------------------------------------------------
 page_sizes = {
     ["letter"] = {width = 8500, height = 11000},
     ["legal"] = {width = 8500, height = 14000},
@@ -9456,9 +9456,9 @@ page_sizes = {
     ["quarto"] = {width = 8000, height = 10000},
 }
 
---------------------------------------------------------------------------------
--- Margin presets for common document layouts
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Margin presets for common document layouts
+#------------------------------------------------------------------------------
 margin_presets = {
     ["normal"] = {top = 4000, bottom = 4000, left = 4000, right = 4000},
     ["narrow"] = {top = 2500, bottom = 2500, left = 2500, right = 2500},
@@ -9468,9 +9468,9 @@ margin_presets = {
     ["book"] = {top = 3500, bottom = 5000, left = 4500, right = 4500},
 }
 
---------------------------------------------------------------------------------
--- Text decoration metrics (for underline, strikethrough, overline)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Text decoration metrics (for underline, strikethrough, overline)
+#------------------------------------------------------------------------------
 decoration_metrics = {
     ["TimesRoman"] = {
         underline_position = -100,
@@ -9546,9 +9546,9 @@ decoration_metrics = {
     },
 }
 
---------------------------------------------------------------------------------
--- Superscript and subscript positioning data
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Superscript and subscript positioning data
+#------------------------------------------------------------------------------
 script_positioning = {
     ["TimesRoman"] = {
         superscript_x_offset = 0,
@@ -9642,16 +9642,16 @@ script_positioning = {
     },
 }
 
--- End of typeset benchmark data tables.
--- All data above is loaded at module initialization time and participates
--- in the layout calculations through font_metrics, kerning, and
--- hyphenation_patterns lookups during the benchmark iterations.
+# End of typeset benchmark data tables.
+# All data above is loaded at module initialization time and participates
+# in the layout calculations through font_metrics, kerning, and
+# hyphenation_patterns lookups during the benchmark iterations.
 
---------------------------------------------------------------------------------
--- Font fallback chain definitions
--- When a character is not found in the primary font, these define which fonts
--- to try in order. This data supports multi-font document rendering.
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Font fallback chain definitions
+# When a character is not found in the primary font, these define which fonts
+# to try in order. This data supports multi-font document rendering.
+#------------------------------------------------------------------------------
 font_fallback_chains = {
     ["TimesRoman"] = {
         "TimesRoman",
@@ -9731,10 +9731,10 @@ font_fallback_chains = {
     },
 }
 
---------------------------------------------------------------------------------
--- Color definitions for syntax highlighting in code blocks
--- Expressed as RGB triplets (0-255)
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Color definitions for syntax highlighting in code blocks
+# Expressed as RGB triplets (0-255)
+#------------------------------------------------------------------------------
 syntax_colors = {
     keyword = {0, 0, 180},
     string = {180, 0, 0},
@@ -9756,9 +9756,9 @@ syntax_colors = {
     debug = {128, 128, 128},
 }
 
---------------------------------------------------------------------------------
--- Baseline grid specifications for grid-aligned typography
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Baseline grid specifications for grid-aligned typography
+#------------------------------------------------------------------------------
 baseline_grids = {
     ["10pt_12pt"] = {
         body_size = 10,
@@ -9798,10 +9798,10 @@ baseline_grids = {
     },
 }
 
---------------------------------------------------------------------------------
--- Tracking (letter-spacing) adjustments by font size
--- Values in 1/1000 em to add between all characters at given size
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Tracking (letter-spacing) adjustments by font size
+# Values in 1/1000 em to add between all characters at given size
+#------------------------------------------------------------------------------
 tracking_adjustments = {
     ["TimesRoman"] = {
         [6] = 40,
@@ -9905,10 +9905,10 @@ tracking_adjustments = {
     },
 }
 
---------------------------------------------------------------------------------
--- Word frequency data for optimal hyphenation cache sizing
--- Top 100 English words that benefit from precomputed hyphenation
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Word frequency data for optimal hyphenation cache sizing
+# Top 100 English words that benefit from precomputed hyphenation
+#------------------------------------------------------------------------------
 common_hyphenatable_words = {
     "information",
     "international",
@@ -9991,7 +9991,7 @@ common_hyphenatable_words = {
     "inadvertently",
 }
 
--- End of benchmark file.
+# End of benchmark file.
 
 end
 

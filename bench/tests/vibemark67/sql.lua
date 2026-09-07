@@ -1,4 +1,4 @@
--- forward declarations (implicit-local dialect has no hoisted globals)
+# forward declarations (implicit-local dialect has no hoisted globals)
 btreeCollectKeys = null
 btreeCount = null
 btreeHeight = null
@@ -16,11 +16,11 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
--- SQL benchmark: a SQLite-like query engine with tokenizer, parser, executor,
--- B-tree indexes, JOINs, aggregates, and comprehensive test queries.
--- Target runtimes: Luau (lute)
+# SQL benchmark: a SQLite-like query engine with tokenizer, parser, executor,
+# B-tree indexes, JOINs, aggregates, and comprehensive test queries.
+# Target runtimes: Luau (lute)
 
--- ===== Utility aliases (local) =====
+# ===== Utility aliases (local) =====
 floor = math.floor
 mabs = math.abs
 msqrt = math.sqrt
@@ -45,7 +45,7 @@ bxor = bit32.bxor
 blshift = bit32.lshift
 brshift = bit32.rshift
 
--- ===== Seeded PRNG =====
+# ===== Seeded PRNG =====
 PRNG = {}
 PRNG.__index = PRNG
 
@@ -54,7 +54,7 @@ function PRNG.new(seed)
 end
 
 function PRNG:next()
-    -- xorshift32
+    # xorshift32
     x = self.state
     x = bxor(x, blshift(x, 13))
     x = bxor(x, brshift(x, 17))
@@ -65,7 +65,7 @@ end
 
 function PRNG:nextInt(lo, hi)
     x = self:next()
-    -- bit32 returns unsigned 32-bit values (0 to 4294967295)
+    # bit32 returns unsigned 32-bit values (0 to 4294967295)
     return lo + (x % (hi - lo + 1))
 end
 
@@ -75,10 +75,10 @@ function PRNG:nextFloat()
 end
 
 function PRNG:choice(tbl)
-    return tbl[self:nextInt(1, #tbl)]
+    return tbl[self:nextInt(1, tbl.count)]
 end
 
--- ===== Token Types =====
+# ===== Token Types =====
 TK_KEYWORD = "KEYWORD"
 TK_IDENT = "IDENT"
 TK_NUMBER = "NUMBER"
@@ -92,7 +92,7 @@ TK_STAR = "STAR"
 TK_DOT = "DOT"
 TK_EOF = "EOF"
 
--- ===== Token =====
+# ===== Token =====
 Token = {}
 Token.__index = Token
 
@@ -104,7 +104,7 @@ function Token:__tostring()
     return sfmt("Token(%s, %s)", self.type, tostring(self.value))
 end
 
--- ===== SQL Keywords =====
+# ===== SQL Keywords =====
 SQL_KEYWORDS = {}
 function initKeywords()
     kws = {
@@ -122,7 +122,7 @@ function initKeywords()
 end
 initKeywords()
 
--- ===== Tokenizer =====
+# ===== Tokenizer =====
 Tokenizer = {}
 Tokenizer.__index = Tokenizer
 
@@ -152,7 +152,7 @@ function Tokenizer:skipWhitespace()
         if c == 32 or c == 9 or c == 10 or c == 13 then
             self.pos = self.pos + 1
         else if c == 45 and self.pos + 1 <= self.len and sbyte(self.src, self.pos + 1) == 45 then
-            -- line comment
+            # line comment
             self.pos = self.pos + 2
             while self.pos <= self.len and sbyte(self.src, self.pos) != 10 do
                 self.pos = self.pos + 1
@@ -201,12 +201,12 @@ function Tokenizer:readNumber()
 end
 
 function Tokenizer:readString(quote)
-    self.pos = self.pos + 1  -- skip opening quote
+    self.pos = self.pos + 1  # skip opening quote
     parts = {}
     while self.pos <= self.len do
         c = sbyte(self.src, self.pos)
         if c == quote then
-            -- check for escaped quote (double quote)
+            # check for escaped quote (double quote)
             if self.pos + 1 <= self.len and sbyte(self.src, self.pos + 1) == quote then
                 tinsert(parts, schar(quote))
                 self.pos = self.pos + 2
@@ -243,38 +243,38 @@ function Tokenizer:tokenize()
         else if self:isDigit(c) then
             num = self:readNumber()
             tinsert(self.tokens, Token.new(TK_NUMBER, num, startPos))
-        else if c == 39 then  -- single quote
+        else if c == 39 then  # single quote
             str = self:readString(39)
             tinsert(self.tokens, Token.new(TK_STRING, str, startPos))
-        else if c == 34 then  -- double quote (identifier)
+        else if c == 34 then  # double quote (identifier)
             str = self:readString(34)
             tinsert(self.tokens, Token.new(TK_IDENT, str, startPos))
-        else if c == 40 then  -- (
+        else if c == 40 then  # (
             tinsert(self.tokens, Token.new(TK_LPAREN, "(", startPos))
             self.pos = self.pos + 1
-        else if c == 41 then  -- )
+        else if c == 41 then  # )
             tinsert(self.tokens, Token.new(TK_RPAREN, ")", startPos))
             self.pos = self.pos + 1
-        else if c == 44 then  -- ,
+        else if c == 44 then  # ,
             tinsert(self.tokens, Token.new(TK_COMMA, ",", startPos))
             self.pos = self.pos + 1
-        else if c == 59 then  -- ;
+        else if c == 59 then  # ;
             tinsert(self.tokens, Token.new(TK_SEMI, ";", startPos))
             self.pos = self.pos + 1
-        else if c == 42 then  -- *
+        else if c == 42 then  # *
             tinsert(self.tokens, Token.new(TK_STAR, "*", startPos))
             self.pos = self.pos + 1
-        else if c == 46 then  -- .
+        else if c == 46 then  # .
             tinsert(self.tokens, Token.new(TK_DOT, ".", startPos))
             self.pos = self.pos + 1
-        else if c == 60 then  -- < or <= or <>
+        else if c == 60 then  # < or <= or <>
             self.pos = self.pos + 1
             if self.pos <= self.len then
                 nc = sbyte(self.src, self.pos)
-                if nc == 61 then  -- <=
+                if nc == 61 then  # <=
                     tinsert(self.tokens, Token.new(TK_OP, "<=", startPos))
                     self.pos = self.pos + 1
-                else if nc == 62 then  -- <>
+                else if nc == 62 then  # <>
                     tinsert(self.tokens, Token.new(TK_OP, "<>", startPos))
                     self.pos = self.pos + 1
                 else
@@ -283,7 +283,7 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_OP, "<", startPos))
             end
-        else if c == 62 then  -- > or >=
+        else if c == 62 then  # > or >=
             self.pos = self.pos + 1
             if self.pos <= self.len and sbyte(self.src, self.pos) == 61 then
                 tinsert(self.tokens, Token.new(TK_OP, ">=", startPos))
@@ -291,10 +291,10 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_OP, ">", startPos))
             end
-        else if c == 61 then  -- =
+        else if c == 61 then  # =
             tinsert(self.tokens, Token.new(TK_OP, "=", startPos))
             self.pos = self.pos + 1
-        else if c == 33 then  -- !=
+        else if c == 33 then  # !=
             self.pos = self.pos + 1
             if self.pos <= self.len and sbyte(self.src, self.pos) == 61 then
                 tinsert(self.tokens, Token.new(TK_OP, "!=", startPos))
@@ -302,28 +302,28 @@ function Tokenizer:tokenize()
             else
                 tinsert(self.tokens, Token.new(TK_OP, "!", startPos))
             end
-        else if c == 43 then  -- +
+        else if c == 43 then  # +
             tinsert(self.tokens, Token.new(TK_OP, "+", startPos))
             self.pos = self.pos + 1
-        else if c == 45 then  -- -
+        else if c == 45 then  # -
             tinsert(self.tokens, Token.new(TK_OP, "-", startPos))
             self.pos = self.pos + 1
-        else if c == 47 then  -- /
+        else if c == 47 then  # /
             tinsert(self.tokens, Token.new(TK_OP, "/", startPos))
             self.pos = self.pos + 1
-        else if c == 37 then  -- %
+        else if c == 37 then  # %
             tinsert(self.tokens, Token.new(TK_OP, "%", startPos))
             self.pos = self.pos + 1
         else
-            -- skip unknown
+            # skip unknown
             self.pos = self.pos + 1
         end
     end
     return self.tokens
 end
 
--- ===== AST Node Types =====
--- We use plain tables with a "kind" field for AST nodes
+# ===== AST Node Types =====
+# We use plain tables with a "kind" field for AST nodes
 
 function mkNode(kind, props)
     props = props or {}
@@ -331,7 +331,7 @@ function mkNode(kind, props)
     return props
 end
 
--- ===== Parser =====
+# ===== Parser =====
 Parser = {}
 Parser.__index = Parser
 
@@ -339,7 +339,7 @@ function Parser.new(tokens)
     return setmetatable({
         tokens = tokens,
         pos = 1,
-        len = #tokens
+        len = tokens.count
     }, Parser)
 end
 
@@ -446,7 +446,7 @@ function Parser:parseSelect()
 
     if self:matchKeyword("FROM") then
         from = self:parseTableRef()
-        -- parse JOINs
+        # parse JOINs
         while self:isKeyword("JOIN") or self:isKeyword("INNER") or self:isKeyword("LEFT") or self:isKeyword("CROSS") do
             tinsert(joins, self:parseJoin())
         end
@@ -492,7 +492,7 @@ function Parser:parseSelectColumns()
         self:advance()
         tinsert(cols, mkNode("STAR_COL"))
         if self:match(TK_COMMA) then
-            -- more columns after *? Unusual but handle
+            # more columns after *? Unusual but handle
             rest = self:parseSelectColumns()
             for _, c in next, rest do tinsert(cols, c) end
         end
@@ -504,7 +504,7 @@ function Parser:parseSelectColumns()
         if self:matchKeyword("AS") then
             alias = self:expect(TK_IDENT).value
         else if self:peekType() == TK_IDENT and not self:isKeyword("FROM") and not self:isKeyword("WHERE") then
-            -- implicit alias
+            # implicit alias
             alias = self:advance().value
         end
         tinsert(cols, mkNode("COLUMN", { expr = expr, alias = alias }))
@@ -725,7 +725,7 @@ function Parser:parsePrimary()
     else if t.type == TK_IDENT then
         name = t.value
         self:advance()
-        -- check for table.column
+        # check for table.column
         if self:current().type == TK_DOT then
             self:advance()
             col = self:current()
@@ -737,7 +737,7 @@ function Parser:parsePrimary()
                 return mkNode("COLUMN_REF", { table_name = name, column = col.value })
             end
         end
-        -- check for function call
+        # check for function call
         if self:current().type == TK_LPAREN then
             self:advance()
             args = {}
@@ -813,7 +813,7 @@ function Parser:parseCreateTable()
         end
         tinsert(cols, { name = colName, colType = colType, primaryKey = isPK })
         if not self:match(TK_COMMA) then break end
-        -- check for trailing paren
+        # check for trailing paren
         if self:current().type == TK_RPAREN then break end
     end
     self:expect(TK_RPAREN)
@@ -864,8 +864,8 @@ function Parser:parseUpdate()
     return mkNode("UPDATE", { table_name = tableName, assignments = assignments, where = whereClause })
 end
 
--- ===== B-Tree Index =====
-BTREE_ORDER = 8  -- max children per node
+# ===== B-Tree Index =====
+BTREE_ORDER = 8  # max children per node
 
 BTreeNode = {}
 BTreeNode.__index = BTreeNode
@@ -873,8 +873,8 @@ BTreeNode.__index = BTreeNode
 function BTreeNode.new(isLeaf)
     return setmetatable({
         isLeaf = isLeaf,
-        keys = {},      -- {key, rowIndex} pairs
-        children = {},  -- child nodes (for internal nodes)
+        keys = {},      # {key, rowIndex} pairs
+        children = {},  # child nodes (for internal nodes)
         numKeys = 0
     }, BTreeNode)
 end
@@ -906,7 +906,7 @@ function btreeSplitChild(parent, idx)
     mid = floor((BTREE_ORDER - 1) / 2) + 1
     newNode = BTreeNode.new(fullChild.isLeaf)
 
-    -- move upper half keys to new node
+    # move upper half keys to new node
     j = 1
     for i = mid + 1, fullChild.numKeys do
         newNode.keys[j] = fullChild.keys[i]
@@ -915,7 +915,7 @@ function btreeSplitChild(parent, idx)
     end
     newNode.numKeys = j - 1
 
-    -- move upper half children if internal
+    # move upper half children if internal
     if not fullChild.isLeaf then
         j = 1
         for i = mid + 1, fullChild.numKeys + 1 do
@@ -929,7 +929,7 @@ function btreeSplitChild(parent, idx)
     fullChild.keys[mid] = null
     fullChild.numKeys = mid - 1
 
-    -- shift parent's children and keys
+    # shift parent's children and keys
     for i = parent.numKeys + 1, idx + 1, -1 do
         parent.children[i + 1] = parent.children[i]
     end
@@ -996,7 +996,7 @@ function btreeSearch(node, key)
 
     if i <= node.numKeys and btreeKeyEqual(node.keys[i][1], key) then
         tinsert(results, node.keys[i][2])
-        -- check for duplicates in adjacent positions
+        # check for duplicates in adjacent positions
         j = i + 1
         while j <= node.numKeys and btreeKeyEqual(node.keys[j][1], key) do
             tinsert(results, node.keys[j][2])
@@ -1045,7 +1045,7 @@ function btreeRangeScan(node, lo, hi, results)
     end
 end
 
--- ===== Table Storage =====
+# ===== Table Storage =====
 TableStore = {}
 TableStore.__index = TableStore
 
@@ -1069,7 +1069,7 @@ function TableStore:insertRow(values)
     self.nextRowId = rowId + 1
     self.rows[rowId] = values
 
-    -- update indexes
+    # update indexes
     for colName, idx in next, self.indexes do
         colIdx = self.colMap[colName]
         if colIdx and values[colIdx] != null then
@@ -1100,7 +1100,7 @@ function TableStore:deleteRow(rowId)
     self.rows[rowId] = null
 end
 
--- ===== Database =====
+# ===== Database =====
 Database = {}
 Database.__index = Database
 
@@ -1124,7 +1124,7 @@ function Database:dropTable(name)
     self.tables[name] = null
 end
 
--- ===== Query Executor =====
+# ===== Query Executor =====
 Executor = {}
 Executor.__index = Executor
 
@@ -1190,7 +1190,7 @@ function Executor:execInsert(stmt)
         for i, expr in next, rowExprs do
             values[i] = self:evalLiteral(expr)
         end
-        -- reorder if columns specified
+        # reorder if columns specified
         if stmt.columns then
             reordered = {}
             for i, colName in next, stmt.columns do
@@ -1285,7 +1285,7 @@ function resolveColumn(ctx, tableName, colName)
         end
         return null
     end
-    -- search all tables
+    # search all tables
     for _, entry in next, ctx.tables do
         if entry.tbl then
             colIdx = entry.tbl:getColumnIndex(colName)
@@ -1298,7 +1298,7 @@ function resolveColumn(ctx, tableName, colName)
 end
 
 function Executor:execSelect(stmt)
-    -- Get base table rows
+    # Get base table rows
     tbl = null
     baseAlias = null
     rows = {}
@@ -1308,9 +1308,9 @@ function Executor:execSelect(stmt)
         if not tbl then error("Table not found: " .. stmt.from.name) end
         baseAlias = stmt.from.alias or stmt.from.name
 
-        -- Try index scan for simple WHERE on indexed column
+        # Try index scan for simple WHERE on indexed column
         useIndex = false
-        if stmt.where and #stmt.joins == 0 and stmt.where.kind == "BINOP" and stmt.where.op == "=" then
+        if stmt.where and stmt.joins.count == 0 and stmt.where.kind == "BINOP" and stmt.where.op == "=" then
             indexCol = self:getIndexableColumn(stmt.where, tbl)
             if indexCol then
                 val = self:getCompareValue(stmt.where, indexCol.colName)
@@ -1335,14 +1335,14 @@ function Executor:execSelect(stmt)
             end
         end
     else
-        -- No FROM clause - single row with no columns
+        # No FROM clause - single row with no columns
         rows = { {} }
         tbl = TableStore.new("__dual", {})
     end
 
-    -- Process JOINs
+    # Process JOINs
     joinTableInfo = {}
-    if stmt.joins and #stmt.joins > 0 then
+    if stmt.joins and stmt.joins.count > 0 then
         for _, join in next, stmt.joins do
             joinTbl = self.db:getTable(join.table.name)
             if not joinTbl then error("Table not found: " .. join.table.name) end
@@ -1350,10 +1350,10 @@ function Executor:execSelect(stmt)
             tinsert(joinTableInfo, { name = join.table.name, alias = joinAlias, tbl = joinTbl, join = join })
         end
 
-        -- Perform nested loop join
+        # Perform nested loop join
         rows = self:performJoins(tbl, baseAlias, rows, joinTableInfo, stmt)
     else
-        -- Filter with WHERE (if not already done by index)
+        # Filter with WHERE (if not already done by index)
         if stmt.where then
             filtered = {}
             for _, row in next, rows do
@@ -1367,43 +1367,43 @@ function Executor:execSelect(stmt)
         end
     end
 
-    -- GROUP BY
+    # GROUP BY
     if stmt.groupBy then
         return self:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
     end
 
-    -- Check if there are aggregate functions without GROUP BY
+    # Check if there are aggregate functions without GROUP BY
     if self:hasAggregates(stmt.columns) then
         return self:execAggregateNoGroup(stmt, tbl, baseAlias, rows, joinTableInfo)
     end
 
-    -- ORDER BY
+    # ORDER BY
     if stmt.orderBy then
         rows = self:applyOrderBy(stmt.orderBy, rows, tbl, baseAlias, joinTableInfo)
     end
 
-    -- DISTINCT
+    # DISTINCT
     if stmt.distinct then
         rows = self:applyDistinct(stmt, rows, tbl, baseAlias, joinTableInfo)
     end
 
-    -- LIMIT / OFFSET
+    # LIMIT / OFFSET
     if stmt.offsetVal then
         newRows = {}
-        for i = stmt.offsetVal + 1, #rows do
+        for i = stmt.offsetVal + 1, rows.count do
             tinsert(newRows, rows[i])
         end
         rows = newRows
     end
     if stmt.limitVal then
         newRows = {}
-        for i = 1, mmin(stmt.limitVal, #rows) do
+        for i = 1, mmin(stmt.limitVal, rows.count) do
             tinsert(newRows, rows[i])
         end
         rows = newRows
     end
 
-    -- Project columns
+    # Project columns
     resultCols = self:getResultColumns(stmt.columns, tbl, baseAlias, joinTableInfo)
     resultRows = {}
     for _, row in next, rows do
@@ -1420,7 +1420,7 @@ end
 
 function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt)
     currentRows = {}
-    -- Each element: { baseRow, joinRow1, joinRow2, ... }
+    # Each element: { baseRow, joinRow1, joinRow2, ... }
     for _, row in next, baseRows do
         tinsert(currentRows, { base = row, joins = {} })
     end
@@ -1432,7 +1432,7 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
             for _, jrow in next, jinfo.tbl.rows do
                 ctx = { tables = {}, resolve = resolveColumn }
                 ctx.tables[baseAlias] = { tbl = baseTbl, row = cr.base }
-                -- add previously joined tables
+                # add previously joined tables
                 for pi = 1, ji - 1 do
                     prevInfo = joinTableInfo[pi]
                     ctx.tables[prevInfo.alias] = { tbl = prevInfo.tbl, row = cr.joins[pi] }
@@ -1461,7 +1461,7 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
         currentRows = newRows
     end
 
-    -- Apply WHERE
+    # Apply WHERE
     if stmt.where then
         filtered = {}
         for _, cr in next, currentRows do
@@ -1477,14 +1477,14 @@ function Executor:performJoins(baseTbl, baseAlias, baseRows, joinTableInfo, stmt
         currentRows = filtered
     end
 
-    -- Flatten for simpler downstream processing - store join data in a side table
-    -- We'll use a combined row approach: base row + metadata
+    # Flatten for simpler downstream processing - store join data in a side table
+    # We'll use a combined row approach: base row + metadata
     flatRows = {}
     for _, cr in next, currentRows do
         combined = {}
-        -- base columns
+        # base columns
         for i, v in next, cr.base do combined[i] = v end
-        -- mark as joined row
+        # mark as joined row
         combined.__joins = cr.joins
         combined.__base = cr.base
         tinsert(flatRows, combined)
@@ -1543,8 +1543,8 @@ function Executor:execAggregateNoGroup(stmt, tbl, baseAlias, rows, joinTableInfo
                 val = self:computeAggregate(col.expr, rows, tbl, baseAlias, joinTableInfo)
                 tinsert(resultRow, val)
             else
-                -- non-aggregate in aggregate query: take first row value
-                if #rows > 0 then
+                # non-aggregate in aggregate query: take first row value
+                if rows.count > 0 then
                     ctx = self:makeCtxForRow(rows[1], tbl, baseAlias, joinTableInfo)
                     tinsert(resultRow, self:evalExpr(col.expr, ctx))
                 else
@@ -1560,7 +1560,7 @@ function Executor:execAggregateNoGroup(stmt, tbl, baseAlias, rows, joinTableInfo
 end
 
 function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
-    -- Group rows
+    # Group rows
     groups = {}
     groupOrder = {}
     for _, row in next, rows do
@@ -1578,7 +1578,7 @@ function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
         tinsert(groups[gkey], row)
     end
 
-    -- Evaluate HAVING and project
+    # Evaluate HAVING and project
     resultCols = {}
     resultRows = {}
     colsBuilt = false
@@ -1588,7 +1588,7 @@ function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
         firstRow = groupRows[1]
         ctx = self:makeCtxForRow(firstRow, tbl, baseAlias, joinTableInfo)
 
-        -- Check HAVING
+        # Check HAVING
         passHaving = true
         if stmt.having then
             havingVal = self:evalExprWithAgg(stmt.having, groupRows, tbl, baseAlias, joinTableInfo, ctx)
@@ -1616,15 +1616,15 @@ function Executor:execGroupBy(stmt, tbl, baseAlias, rows, joinTableInfo)
         end
     end
 
-    -- ORDER BY on result
+    # ORDER BY on result
     if stmt.orderBy then
         resultRows = self:applyOrderByResult(stmt.orderBy, resultRows, resultCols, stmt)
     end
 
-    -- LIMIT
+    # LIMIT
     if stmt.limitVal then
         limited = {}
-        for i = 1, mmin(stmt.limitVal, #resultRows) do
+        for i = 1, mmin(stmt.limitVal, resultRows.count) do
             tinsert(limited, resultRows[i])
         end
         resultRows = limited
@@ -1650,7 +1650,7 @@ function Executor:computeAggregate(aggNode, groupRows, tbl, baseAlias, joinTable
     fn = aggNode.func
     if fn == "COUNT" then
         if aggNode.star then
-            return #groupRows
+            return groupRows.count
         end
         count = 0
         for _, row in next, groupRows do
@@ -1749,11 +1749,11 @@ function Executor:applyOrderBy(orderBy, rows, tbl, baseAlias, joinTableInfo)
 end
 
 function Executor:applyOrderByResult(orderBy, resultRows, resultCols, stmt)
-    -- Map order-by expressions to result column indices
+    # Map order-by expressions to result column indices
     sorted = {}
     for i, r in next, resultRows do sorted[i] = r end
 
-    -- Build column name to index mapping
+    # Build column name to index mapping
     colIndexMap = {}
     for i, name in next, resultCols do
         colIndexMap[name] = i
@@ -1852,18 +1852,18 @@ function Executor:projectRow(columns, row, tbl, baseAlias, joinTableInfo, allRow
         if col.kind == "STAR_COL" then
             baseRow = row
             if row.__base then baseRow = row.__base end
-            for i = 1, #tbl.columns do
+            for i = 1, tbl.columns.count do
                 tinsert(result, baseRow[i])
             end
             if joinTableInfo and row.__joins then
                 for ji, jinfo in next, joinTableInfo do
                     jrow = row.__joins[ji]
                     if jrow then
-                        for i = 1, #jinfo.tbl.columns do
+                        for i = 1, jinfo.tbl.columns.count do
                             tinsert(result, jrow[i])
                         end
                     else
-                        for _ = 1, #jinfo.tbl.columns do
+                        for _ = 1, jinfo.tbl.columns.count do
                             tinsert(result, null)
                         end
                     end
@@ -1912,7 +1912,7 @@ function Executor:evalExpr(expr, ctx)
     else if expr.kind == "FUNC_CALL" then
         return self:evalFuncCall(expr, ctx)
     else if expr.kind == "AGG_FUNC" then
-        -- When evaluated in a non-aggregate context, just return null or column value
+        # When evaluated in a non-aggregate context, just return null or column value
         if expr.arg then
             return self:evalExpr(expr.arg, ctx)
         end
@@ -1989,7 +1989,7 @@ function evalLike(str, pattern)
     if str == null or pattern == null then return false end
     str = tostring(str)
     pattern = tostring(pattern)
-    -- Convert SQL LIKE pattern to Lua pattern
+    # Convert SQL LIKE pattern to Lua pattern
     luaPat = "^"
     for i = 1, slen(pattern) do
         c = ssub(pattern, i, i)
@@ -2062,9 +2062,9 @@ function Executor:evalFuncCall(expr, ctx)
     return null
 end
 
--- ===== Data Generation =====
+# ===== Data Generation =====
 function generateTestData(db, rng)
-    -- Create users table
+    # Create users table
     db:createTable("users", {
         { name = "id", colType = "INTEGER", primaryKey = true },
         { name = "name", colType = "TEXT" },
@@ -2075,7 +2075,7 @@ function generateTestData(db, rng)
         { name = "active", colType = "INTEGER" }
     })
 
-    -- Create products table
+    # Create products table
     db:createTable("products", {
         { name = "id", colType = "INTEGER", primaryKey = true },
         { name = "name", colType = "TEXT" },
@@ -2085,7 +2085,7 @@ function generateTestData(db, rng)
         { name = "rating", colType = "REAL" }
     })
 
-    -- Create orders table
+    # Create orders table
     db:createTable("orders", {
         { name = "id", colType = "INTEGER", primaryKey = true },
         { name = "user_id", colType = "INTEGER" },
@@ -2096,7 +2096,7 @@ function generateTestData(db, rng)
         { name = "order_date", colType = "TEXT" }
     })
 
-    -- Generate users
+    # Generate users
     firstNames = { "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank",
                          "Ivy", "Jack", "Karen", "Leo", "Mona", "Nick", "Olive", "Paul",
                          "Quinn", "Rose", "Sam", "Tina" }
@@ -2118,7 +2118,7 @@ function generateTestData(db, rng)
         usersTbl:insertRow({ i, fullName, email, age, city, score, active })
     end
 
-    -- Generate products
+    # Generate products
     categories = { "Electronics", "Books", "Clothing", "Food", "Sports", "Home", "Toys", "Garden" }
     adjectives = { "Premium", "Basic", "Deluxe", "Ultra", "Mini", "Super", "Pro", "Eco" }
     productNouns = { "Widget", "Gadget", "Tool", "Device", "Kit", "Set", "Pack", "Bundle" }
@@ -2135,7 +2135,7 @@ function generateTestData(db, rng)
         productsTbl:insertRow({ i, pname, category, price, stock, rating })
     end
 
-    -- Generate orders
+    # Generate orders
     statuses = { "pending", "shipped", "delivered", "cancelled", "returned" }
     ordersTbl = db:getTable("orders")
     for i = 1, 200 do
@@ -2152,7 +2152,7 @@ function generateTestData(db, rng)
         ordersTbl:insertRow({ i, userId, productId, quantity, total, status, orderDate })
     end
 
-    -- Create indexes
+    # Create indexes
     usersTbl:createIndex("id")
     usersTbl:createIndex("city")
     usersTbl:createIndex("age")
@@ -2164,7 +2164,7 @@ function generateTestData(db, rng)
     ordersTbl:createIndex("status")
 end
 
--- ===== Checksum Utility =====
+# ===== Checksum Utility =====
 function checksumResult(result)
     if result == null then return 0 end
     if result.type == "OK" then
@@ -2173,13 +2173,13 @@ function checksumResult(result)
     if result.type != "RESULT_SET" then return 0 end
 
     hash = 7
-    -- Include column names
+    # Include column names
     for _, col in next, result.columns do
         for i = 1, slen(col) do
             hash = (hash * 31 + sbyte(col, i)) % 1000000007
         end
     end
-    -- Include row data
+    # Include row data
     for _, row in next, result.rows do
         for _, val in next, row do
             s = tostring(val)
@@ -2187,141 +2187,141 @@ function checksumResult(result)
                 hash = (hash * 31 + sbyte(s, i)) % 1000000007
             end
         end
-        hash = (hash * 17 + #row) % 1000000007
+        hash = (hash * 17 + row.count) % 1000000007
     end
-    hash = (hash * 13 + #result.rows) % 1000000007
+    hash = (hash * 13 + result.rows.count) % 1000000007
     return hash
 end
 
--- ===== Test Queries =====
+# ===== Test Queries =====
 function getTestQueries()
     queries = {}
 
-    -- Query 1: Simple SELECT *
+    # Query 1: Simple SELECT *
     tinsert(queries, "SELECT * FROM users LIMIT 10")
 
-    -- Query 2: SELECT with WHERE
+    # Query 2: SELECT with WHERE
     tinsert(queries, "SELECT name, age, city FROM users WHERE age > 50")
 
-    -- Query 3: SELECT with AND
+    # Query 3: SELECT with AND
     tinsert(queries, "SELECT name, score FROM users WHERE age >= 30 AND age <= 50 AND active = 1")
 
-    -- Query 4: SELECT with OR
+    # Query 4: SELECT with OR
     tinsert(queries, "SELECT name, city FROM users WHERE city = 'New York' OR city = 'Chicago'")
 
-    -- Query 5: SELECT with LIKE
+    # Query 5: SELECT with LIKE
     tinsert(queries, "SELECT name, email FROM users WHERE name LIKE 'A%'")
 
-    -- Query 6: ORDER BY ASC
+    # Query 6: ORDER BY ASC
     tinsert(queries, "SELECT name, score FROM users ORDER BY score ASC LIMIT 15")
 
-    -- Query 7: ORDER BY DESC
+    # Query 7: ORDER BY DESC
     tinsert(queries, "SELECT name, age FROM users ORDER BY age DESC LIMIT 10")
 
-    -- Query 8: COUNT aggregate
+    # Query 8: COUNT aggregate
     tinsert(queries, "SELECT COUNT(*) AS total_users FROM users")
 
-    -- Query 9: SUM aggregate
+    # Query 9: SUM aggregate
     tinsert(queries, "SELECT SUM(score) AS total_score FROM users WHERE active = 1")
 
-    -- Query 10: AVG aggregate
+    # Query 10: AVG aggregate
     tinsert(queries, "SELECT AVG(age) AS avg_age FROM users")
 
-    -- Query 11: MIN/MAX
+    # Query 11: MIN/MAX
     tinsert(queries, "SELECT MIN(price) AS cheapest, MAX(price) AS most_expensive FROM products")
 
-    -- Query 12: GROUP BY with COUNT
+    # Query 12: GROUP BY with COUNT
     tinsert(queries, "SELECT city, COUNT(*) AS cnt FROM users GROUP BY city ORDER BY cnt DESC")
 
-    -- Query 13: GROUP BY with SUM
+    # Query 13: GROUP BY with SUM
     tinsert(queries, "SELECT status, SUM(total) AS revenue FROM orders GROUP BY status")
 
-    -- Query 14: GROUP BY with HAVING
+    # Query 14: GROUP BY with HAVING
     tinsert(queries, "SELECT city, AVG(age) AS avg_age FROM users GROUP BY city HAVING AVG(age) > 35")
 
-    -- Query 15: INNER JOIN
+    # Query 15: INNER JOIN
     tinsert(queries, "SELECT u.name, o.total, o.status FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.total > 100 LIMIT 20")
 
-    -- Query 16: JOIN with aggregate
+    # Query 16: JOIN with aggregate
     tinsert(queries, "SELECT u.city, COUNT(*) AS order_count FROM users u INNER JOIN orders o ON u.id = o.user_id GROUP BY u.city")
 
-    -- Query 17: Multi-table JOIN
+    # Query 17: Multi-table JOIN
     tinsert(queries, "SELECT u.name, p.name, o.quantity FROM users u INNER JOIN orders o ON u.id = o.user_id INNER JOIN products p ON p.id = o.product_id LIMIT 15")
 
-    -- Query 18: IN expression
+    # Query 18: IN expression
     tinsert(queries, "SELECT name, category, price FROM products WHERE category IN ('Electronics', 'Books', 'Sports')")
 
-    -- Query 19: BETWEEN
+    # Query 19: BETWEEN
     tinsert(queries, "SELECT name, price FROM products WHERE price BETWEEN 50 AND 200 ORDER BY price ASC")
 
-    -- Query 20: Complex WHERE with arithmetic
+    # Query 20: Complex WHERE with arithmetic
     tinsert(queries, "SELECT name, price, stock, price * stock AS inventory_value FROM products WHERE stock > 100 ORDER BY price DESC LIMIT 10")
 
-    -- Query 21: DISTINCT
+    # Query 21: DISTINCT
     tinsert(queries, "SELECT DISTINCT city FROM users ORDER BY city ASC")
 
-    -- Query 22: Subexpression in WHERE
+    # Query 22: Subexpression in WHERE
     tinsert(queries, "SELECT name, score FROM users WHERE score > 50 AND (city = 'Austin' OR city = 'Dallas')")
 
-    -- Query 23: GROUP BY multiple columns
+    # Query 23: GROUP BY multiple columns
     tinsert(queries, "SELECT city, active, COUNT(*) AS cnt FROM users GROUP BY city, active ORDER BY cnt DESC LIMIT 15")
 
-    -- Query 24: Aggregate with JOIN and GROUP BY
+    # Query 24: Aggregate with JOIN and GROUP BY
     tinsert(queries, "SELECT p.category, SUM(o.total) AS cat_revenue, COUNT(*) AS num_orders FROM products p INNER JOIN orders o ON p.id = o.product_id GROUP BY p.category ORDER BY cat_revenue DESC")
 
-    -- Query 25: NOT condition
+    # Query 25: NOT condition
     tinsert(queries, "SELECT name, age FROM users WHERE NOT age < 40 ORDER BY age ASC LIMIT 10")
 
-    -- Query 26: Multiple aggregates
+    # Query 26: Multiple aggregates
     tinsert(queries, "SELECT city, MIN(age) AS youngest, MAX(age) AS oldest, AVG(score) AS avg_score FROM users GROUP BY city ORDER BY avg_score DESC")
 
-    -- Query 27: JOIN with WHERE and ORDER BY
+    # Query 27: JOIN with WHERE and ORDER BY
     tinsert(queries, "SELECT u.name, o.total, o.order_date FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.status = 'delivered' ORDER BY o.total DESC LIMIT 20")
 
-    -- Query 28: Products with high rating and stock
+    # Query 28: Products with high rating and stock
     tinsert(queries, "SELECT name, category, price, rating FROM products WHERE rating > 3 AND stock > 50 ORDER BY rating DESC")
 
-    -- Query 29: Count by category with having
+    # Query 29: Count by category with having
     tinsert(queries, "SELECT category, COUNT(*) AS num_products, AVG(price) AS avg_price FROM products GROUP BY category HAVING COUNT(*) > 4")
 
-    -- Query 30: Complex join aggregation
+    # Query 30: Complex join aggregation
     tinsert(queries, "SELECT u.city, SUM(o.total) AS city_revenue, AVG(o.quantity) AS avg_qty FROM users u INNER JOIN orders o ON u.id = o.user_id GROUP BY u.city ORDER BY city_revenue DESC LIMIT 5")
 
-    -- Query 31: Users who placed orders for electronics
+    # Query 31: Users who placed orders for electronics
     tinsert(queries, "SELECT u.name, p.category, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id INNER JOIN products p ON p.id = o.product_id WHERE p.category = 'Electronics' ORDER BY o.total DESC LIMIT 10")
 
-    -- Query 32: Score distribution
+    # Query 32: Score distribution
     tinsert(queries, "SELECT active, COUNT(*) AS cnt, SUM(score) AS total_score, MIN(score) AS min_s, MAX(score) AS max_s FROM users GROUP BY active")
 
-    -- Query 33: Order quantities per product
+    # Query 33: Order quantities per product
     tinsert(queries, "SELECT p.name, SUM(o.quantity) AS total_qty, COUNT(*) AS order_count FROM products p INNER JOIN orders o ON p.id = o.product_id GROUP BY p.name ORDER BY total_qty DESC LIMIT 10")
 
-    -- Query 34: Users with no filter, large offset
+    # Query 34: Users with no filter, large offset
     tinsert(queries, "SELECT name, age, city FROM users ORDER BY name ASC LIMIT 10 OFFSET 50")
 
-    -- Query 35: Arithmetic in select
+    # Query 35: Arithmetic in select
     tinsert(queries, "SELECT name, price, stock, price * stock AS value, price * 0.9 AS discounted FROM products WHERE price > 100 ORDER BY value DESC LIMIT 10")
 
-    -- Query 36: IS NOT NULL check (all rows have values, but tests the path)
+    # Query 36: IS NOT NULL check (all rows have values, but tests the path)
     tinsert(queries, "SELECT name, email FROM users WHERE email IS NOT NULL AND score > 80 ORDER BY score DESC LIMIT 10")
 
-    -- Query 37: Multi-condition join
+    # Query 37: Multi-condition join
     tinsert(queries, "SELECT u.name, o.status, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE u.active = 1 AND o.total > 50 ORDER BY o.total DESC LIMIT 15")
 
-    -- Query 38: LIKE with middle pattern
+    # Query 38: LIKE with middle pattern
     tinsert(queries, "SELECT name, email FROM users WHERE email LIKE '%smith%'")
 
-    -- Query 39: Group by order status with totals
+    # Query 39: Group by order status with totals
     tinsert(queries, "SELECT status, COUNT(*) AS num_orders, SUM(total) AS sum_total, AVG(total) AS avg_total, MAX(total) AS max_total FROM orders GROUP BY status ORDER BY sum_total DESC")
 
-    -- Query 40: Complex nested conditions
+    # Query 40: Complex nested conditions
     tinsert(queries, "SELECT name, age, city, score FROM users WHERE (age > 30 AND score > 50) OR (age < 25 AND city = 'Phoenix') ORDER BY score DESC LIMIT 15")
 
     return queries
 end
 
--- ===== Query Plan / Optimizer =====
--- Simple cost-based query plan estimator
+# ===== Query Plan / Optimizer =====
+# Simple cost-based query plan estimator
 QueryPlanner = {}
 QueryPlanner.__index = QueryPlanner
 
@@ -2333,7 +2333,7 @@ function QueryPlanner:estimateCost(stmt)
     if stmt.kind != "SELECT" then return 1 end
     cost = 0
 
-    -- Base table scan cost
+    # Base table scan cost
     if stmt.from then
         tbl = self.db:getTable(stmt.from.name)
         if tbl then
@@ -2341,17 +2341,17 @@ function QueryPlanner:estimateCost(stmt)
             for _ in next, tbl.rows do rowCount = rowCount + 1 end
             cost = cost + rowCount
 
-            -- Check if index can be used
+            # Check if index can be used
             if stmt.where then
                 indexUsable = self:canUseIndex(stmt.where, tbl)
                 if indexUsable then
-                    cost = cost * 0.1  -- index reduces cost significantly
+                    cost = cost * 0.1  # index reduces cost significantly
                 end
             end
         end
     end
 
-    -- JOIN cost estimation (nested loop)
+    # JOIN cost estimation (nested loop)
     if stmt.joins then
         for _, join in next, stmt.joins do
             joinTbl = self.db:getTable(join.table.name)
@@ -2363,15 +2363,15 @@ function QueryPlanner:estimateCost(stmt)
         end
     end
 
-    -- GROUP BY cost
+    # GROUP BY cost
     if stmt.groupBy then
         cost = cost + cost * 0.3
     end
 
-    -- ORDER BY cost (sort)
+    # ORDER BY cost (sort)
     if stmt.orderBy then
         n = mmax(cost, 1)
-        cost = cost + n * floor(msqrt(n))  -- approximate n*log(n)
+        cost = cost + n * floor(msqrt(n))  # approximate n*log(n)
     end
 
     return floor(cost)
@@ -2427,8 +2427,8 @@ function QueryPlanner:collectIndexCandidates(node, suggestions)
     end
 end
 
--- ===== Statistics Collector =====
--- Collects statistics about tables for query optimization
+# ===== Statistics Collector =====
+# Collects statistics about tables for query optimization
 StatsCollector = {}
 StatsCollector.__index = StatsCollector
 
@@ -2445,12 +2445,12 @@ function StatsCollector:analyze(tableName)
         columns = {}
     }
 
-    -- Count rows
+    # Count rows
     for _ in next, tbl.rows do
         tblStats.rowCount = tblStats.rowCount + 1
     end
 
-    -- Per-column stats
+    # Per-column stats
     for ci, col in next, tbl.columns do
         colStats = {
             name = col.name,
@@ -2529,7 +2529,7 @@ function StatsCollector:getSelectivity(tableName, colName, op, value)
     return 0.5
 end
 
--- ===== Virtual Table (View-like materialization) =====
+# ===== Virtual Table (View-like materialization) =====
 VirtualTable = {}
 VirtualTable.__index = VirtualTable
 
@@ -2546,8 +2546,8 @@ function VirtualTable:materialize()
     return executor:execute(self.query)
 end
 
--- ===== Expression Evaluator Cache =====
--- Caches evaluated expressions for repeated evaluation on same row
+# ===== Expression Evaluator Cache =====
+# Caches evaluated expressions for repeated evaluation on same row
 ExprCache = {}
 ExprCache.__index = ExprCache
 
@@ -2563,7 +2563,7 @@ function ExprCache:getKey(expr)
     else if expr.kind == "STRING_LIT" then
         return "S:" .. expr.value
     end
-    return null  -- not cacheable
+    return null  # not cacheable
 end
 
 function ExprCache:get(expr)
@@ -2585,8 +2585,8 @@ function ExprCache:clear()
     self.cache = {}
 end
 
--- ===== Hash Join Implementation =====
--- For equi-joins, hash join is faster than nested loop
+# ===== Hash Join Implementation =====
+# For equi-joins, hash join is faster than nested loop
 HashJoin = {}
 HashJoin.__index = HashJoin
 
@@ -2595,7 +2595,7 @@ function HashJoin.new()
 end
 
 function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
-    -- Build hash table on right side
+    # Build hash table on right side
     hashTable = {}
     for _, rrow in next, rightRows do
         key = rightKeyFn(rrow)
@@ -2608,7 +2608,7 @@ function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
         end
     end
 
-    -- Probe with left side
+    # Probe with left side
     results = {}
     for _, lrow in next, leftRows do
         key = leftKeyFn(lrow)
@@ -2625,7 +2625,7 @@ function HashJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     return results
 end
 
--- ===== Sort-Merge Join =====
+# ===== Sort-Merge Join =====
 SortMergeJoin = {}
 SortMergeJoin.__index = SortMergeJoin
 
@@ -2634,7 +2634,7 @@ function SortMergeJoin.new()
 end
 
 function SortMergeJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
-    -- Sort both sides
+    # Sort both sides
     sortedLeft = {}
     for i, r in next, leftRows do sortedLeft[i] = r end
     tsort(sortedLeft, function(a, b)
@@ -2651,11 +2651,11 @@ function SortMergeJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
         return compareValues(ka, kb) < 0
     end)
 
-    -- Merge
+    # Merge
     results = {}
     li = 1
     ri = 1
-    while li <= #sortedLeft and ri <= #sortedRight do
+    while li <= sortedLeft.count and ri <= sortedRight.count do
         lk = leftKeyFn(sortedLeft[li])
         rk = rightKeyFn(sortedRight[ri])
         cmp = compareValues(lk, rk)
@@ -2664,13 +2664,13 @@ function SortMergeJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
         else if cmp > 0 then
             ri = ri + 1
         else
-            -- Match: collect all matching from right
+            # Match: collect all matching from right
             matchStart = ri
-            while ri <= #sortedRight and compareValues(rightKeyFn(sortedRight[ri]), lk) == 0 do
+            while ri <= sortedRight.count and compareValues(rightKeyFn(sortedRight[ri]), lk) == 0 do
                 ri = ri + 1
             end
-            -- For each matching left row
-            while li <= #sortedLeft and compareValues(leftKeyFn(sortedLeft[li]), lk) == 0 do
+            # For each matching left row
+            while li <= sortedLeft.count and compareValues(leftKeyFn(sortedLeft[li]), lk) == 0 do
                 for j = matchStart, ri - 1 do
                     tinsert(results, { left = sortedLeft[li], right = sortedRight[j] })
                 end
@@ -2681,8 +2681,8 @@ function SortMergeJoin:execute(leftRows, rightRows, leftKeyFn, rightKeyFn)
     return results
 end
 
--- ===== Buffer Pool / Page Cache Simulation =====
--- Simulates a database buffer pool with LRU eviction
+# ===== Buffer Pool / Page Cache Simulation =====
+# Simulates a database buffer pool with LRU eviction
 BufferPool = {}
 BufferPool.__index = BufferPool
 
@@ -2712,7 +2712,7 @@ function BufferPool:put(pageId, data)
         self:touch(pageId)
         return
     end
-    -- Evict if full
+    # Evict if full
     count = 0
     for _ in next, self.pages do count = count + 1 end
     if count >= self.capacity then
@@ -2734,7 +2734,7 @@ function BufferPool:touch(pageId)
 end
 
 function BufferPool:evictLRU()
-    if #self.accessOrder > 0 then
+    if self.accessOrder.count > 0 then
         evictId = self.accessOrder[1]
         tremove(self.accessOrder, 1)
         self.pages[evictId] = null
@@ -2747,14 +2747,14 @@ function BufferPool:getHitRate()
     return self.hitCount / total
 end
 
--- ===== WAL (Write-Ahead Log) Simulation =====
+# ===== WAL (Write-Ahead Log) Simulation =====
 WAL = {}
 WAL.__index = WAL
 
 function WAL.new()
     return setmetatable({
         entries = {},
-        lsn = 0,  -- log sequence number
+        lsn = 0,  # log sequence number
         checkpointLSN = 0
     }, WAL)
 end
@@ -2801,7 +2801,7 @@ function WAL:getUncommitted()
     return result
 end
 
--- ===== Transaction Manager =====
+# ===== Transaction Manager =====
 TxManager = {}
 TxManager.__index = TxManager
 
@@ -2844,13 +2844,13 @@ end
 function TxManager:rollback(txId)
     tx = self.activeTx[txId]
     if not tx then return end
-    -- Mark operations as rolled back (just remove from WAL perspective)
+    # Mark operations as rolled back (just remove from WAL perspective)
     self.activeTx[txId] = null
 end
 
--- ===== Extended B-Tree with bulk loading =====
+# ===== Extended B-Tree with bulk loading =====
 function BTree:bulkLoad(sortedPairs)
-    -- For pre-sorted data, build tree bottom-up
+    # For pre-sorted data, build tree bottom-up
     self.root = BTreeNode.new(true)
     for _, kv in next, sortedPairs do
         self:insert(kv[1], kv[2])
@@ -2905,9 +2905,9 @@ function btreeCollectKeys(node, result)
     end
 end
 
--- ===== Additional test data tables =====
+# ===== Additional test data tables =====
 function generateExtendedData(db, rng)
-    -- Create categories table for normalization tests
+    # Create categories table for normalization tests
     db:createTable("categories", {
         { name = "id", colType = "INTEGER", primaryKey = true },
         { name = "name", colType = "TEXT" },
@@ -2929,7 +2929,7 @@ function generateExtendedData(db, rng)
         catsTbl:insertRow({ i, catNames[i], parentId, depth })
     end
 
-    -- Create reviews table
+    # Create reviews table
     db:createTable("reviews", {
         { name = "id", colType = "INTEGER", primaryKey = true },
         { name = "user_id", colType = "INTEGER" },
@@ -2953,7 +2953,7 @@ function generateExtendedData(db, rng)
         reviewsTbl:insertRow({ i, userId, productId, rating, comment })
     end
 
-    -- Create indexes on extended tables
+    # Create indexes on extended tables
     catsTbl:createIndex("id")
     catsTbl:createIndex("parent_id")
     reviewsTbl:createIndex("id")
@@ -2962,107 +2962,107 @@ function generateExtendedData(db, rng)
     reviewsTbl:createIndex("rating")
 end
 
--- ===== Extended queries =====
+# ===== Extended queries =====
 function getExtendedQueries()
     queries = {}
 
-    -- Query E1: Review statistics per product
+    # Query E1: Review statistics per product
     tinsert(queries, "SELECT product_id, COUNT(*) AS num_reviews, AVG(rating) AS avg_rating, MIN(rating) AS min_r, MAX(rating) AS max_r FROM reviews GROUP BY product_id ORDER BY avg_rating DESC LIMIT 10")
 
-    -- Query E2: Users with most reviews
+    # Query E2: Users with most reviews
     tinsert(queries, "SELECT user_id, COUNT(*) AS review_count FROM reviews GROUP BY user_id HAVING COUNT(*) > 2 ORDER BY review_count DESC")
 
-    -- Query E3: Join reviews with users
+    # Query E3: Join reviews with users
     tinsert(queries, "SELECT u.name, r.rating, r.comment FROM users u INNER JOIN reviews r ON u.id = r.user_id WHERE r.rating = 5 LIMIT 15")
 
-    -- Query E4: Join reviews with products
+    # Query E4: Join reviews with products
     tinsert(queries, "SELECT p.name, r.rating, r.comment FROM products p INNER JOIN reviews r ON p.id = r.product_id WHERE r.rating <= 2 ORDER BY r.rating ASC LIMIT 10")
 
-    -- Query E5: Categories with children
+    # Query E5: Categories with children
     tinsert(queries, "SELECT name, depth FROM categories WHERE depth = 2 ORDER BY name ASC")
 
-    -- Query E6: Products grouped by price range (via arithmetic)
+    # Query E6: Products grouped by price range (via arithmetic)
     tinsert(queries, "SELECT category, COUNT(*) AS cnt, MIN(price) AS min_p, MAX(price) AS max_p FROM products WHERE price > 0 GROUP BY category ORDER BY cnt DESC")
 
-    -- Query E7: Orders per user per status
+    # Query E7: Orders per user per status
     tinsert(queries, "SELECT user_id, status, COUNT(*) AS cnt, SUM(total) AS sum_total FROM orders GROUP BY user_id, status ORDER BY sum_total DESC LIMIT 20")
 
-    -- Query E8: High-value orders with user info
+    # Query E8: High-value orders with user info
     tinsert(queries, "SELECT u.name, u.city, o.total, o.status FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.total > 200 AND u.active = 1 ORDER BY o.total DESC LIMIT 10")
 
-    -- Query E9: Product rating distribution
+    # Query E9: Product rating distribution
     tinsert(queries, "SELECT rating, COUNT(*) AS cnt FROM reviews GROUP BY rating ORDER BY rating ASC")
 
-    -- Query E10: Average order value by city
+    # Query E10: Average order value by city
     tinsert(queries, "SELECT u.city, AVG(o.total) AS avg_order, COUNT(*) AS num_orders FROM users u INNER JOIN orders o ON u.id = o.user_id GROUP BY u.city ORDER BY avg_order DESC")
 
-    -- Query E11: Products never ordered (via NOT IN approach using BETWEEN)
+    # Query E11: Products never ordered (via NOT IN approach using BETWEEN)
     tinsert(queries, "SELECT name, price FROM products WHERE stock BETWEEN 0 AND 5 ORDER BY price DESC")
 
-    -- Query E12: LIKE with suffix
+    # Query E12: LIKE with suffix
     tinsert(queries, "SELECT name, email FROM users WHERE email LIKE '%@example.com' AND age > 40 LIMIT 15")
 
-    -- Query E13: Complex multi-join
+    # Query E13: Complex multi-join
     tinsert(queries, "SELECT u.name, p.name, r.rating FROM users u INNER JOIN reviews r ON u.id = r.user_id INNER JOIN products p ON p.id = r.product_id WHERE r.rating >= 4 LIMIT 20")
 
-    -- Query E14: Arithmetic expressions in group by result
+    # Query E14: Arithmetic expressions in group by result
     tinsert(queries, "SELECT category, SUM(price * stock) AS total_inventory FROM products GROUP BY category ORDER BY total_inventory DESC")
 
-    -- Query E15: Orders in date range
+    # Query E15: Orders in date range
     tinsert(queries, "SELECT id, user_id, total, order_date FROM orders WHERE order_date > '2024-06-01' AND order_date < '2024-09-01' ORDER BY order_date ASC LIMIT 20")
 
     return queries
 end
 
--- ===== Stress test queries (repeated complex operations) =====
+# ===== Stress test queries (repeated complex operations) =====
 function getStressQueries()
     queries = {}
 
-    -- Stress 1: Large GROUP BY
+    # Stress 1: Large GROUP BY
     tinsert(queries, "SELECT user_id, COUNT(*) AS oc, SUM(total) AS st, AVG(total) AS at FROM orders GROUP BY user_id ORDER BY st DESC")
 
-    -- Stress 2: Join all three main tables
+    # Stress 2: Join all three main tables
     tinsert(queries, "SELECT u.city, p.category, SUM(o.quantity) AS total_qty FROM users u INNER JOIN orders o ON u.id = o.user_id INNER JOIN products p ON p.id = o.product_id GROUP BY u.city, p.category ORDER BY total_qty DESC LIMIT 20")
 
-    -- Stress 3: Aggregates with having
+    # Stress 3: Aggregates with having
     tinsert(queries, "SELECT user_id, SUM(total) AS user_total FROM orders GROUP BY user_id HAVING SUM(total) > 500 ORDER BY user_total DESC")
 
-    -- Stress 4: Multiple conditions
+    # Stress 4: Multiple conditions
     tinsert(queries, "SELECT name, age, city, score FROM users WHERE age > 25 AND age < 60 AND score > 20 AND active = 1 ORDER BY score DESC LIMIT 25")
 
-    -- Stress 5: Products with reviews join
+    # Stress 5: Products with reviews join
     tinsert(queries, "SELECT p.name, p.price, COUNT(*) AS rc, AVG(r.rating) AS ar FROM products p INNER JOIN reviews r ON p.id = r.product_id GROUP BY p.name, p.price ORDER BY ar DESC LIMIT 15")
 
     return queries
 end
 
--- ===== B-Tree stress test =====
+# ===== B-Tree stress test =====
 function btreeStressTest(rng)
     tree = BTree.new()
     checksum = 0
 
-    -- Insert 500 random values
+    # Insert 500 random values
     for i = 1, 500 do
         key = rng:nextInt(1, 10000)
         tree:insert(key, i)
     end
 
-    -- Search for various keys
+    # Search for various keys
     for i = 1, 200 do
         key = rng:nextInt(1, 10000)
         results = tree:search(key)
-        checksum = (checksum + #results * i) % 1000000007
+        checksum = (checksum + results.count * i) % 1000000007
     end
 
-    -- Range scans
+    # Range scans
     for i = 1, 50 do
         lo = rng:nextInt(1, 5000)
         hi = lo + rng:nextInt(100, 2000)
         results = tree:rangeScan(lo, hi)
-        checksum = (checksum + #results * (i + 200)) % 1000000007
+        checksum = (checksum + results.count * (i + 200)) % 1000000007
     end
 
-    -- Verify tree properties
+    # Verify tree properties
     height = tree:height()
     count = tree:count()
     checksum = (checksum + height * 1000 + count) % 1000000007
@@ -3070,25 +3070,25 @@ function btreeStressTest(rng)
     return checksum
 end
 
--- ===== Buffer pool stress test =====
+# ===== Buffer pool stress test =====
 function bufferPoolStressTest(rng)
     pool = BufferPool.new(32)
     checksum = 0
 
-    -- Simulate page accesses with locality
+    # Simulate page accesses with locality
     for i = 1, 1000 do
         pageId = null
         if rng:nextFloat() < 0.7 then
-            -- Access recently used page (locality)
+            # Access recently used page (locality)
             pageId = sfmt("page_%d", rng:nextInt(mmax(1, i - 20), i))
         else
-            -- Random access
+            # Random access
             pageId = sfmt("page_%d", rng:nextInt(1, i))
         end
 
         data = pool:get(pageId)
         if data == null then
-            -- Simulate loading page
+            # Simulate loading page
             data = { id = pageId, content = srep("x", 64), accessed = i }
             pool:put(pageId, data)
         end
@@ -3100,7 +3100,7 @@ function bufferPoolStressTest(rng)
     return checksum
 end
 
--- ===== WAL / Transaction stress test =====
+# ===== WAL / Transaction stress test =====
 function walStressTest(rng)
     wal = WAL.new()
     txMgr = TxManager.new(wal)
@@ -3113,7 +3113,7 @@ function walStressTest(rng)
             op = rng:nextInt(1, 3) == 1 and "INSERT" or (rng:nextInt(1, 2) == 1 and "UPDATE" or "DELETE")
             txMgr:addOperation(txId, op, "test_table", { row = i * 100 + j })
         end
-        -- 80% commit, 20% rollback
+        # 80% commit, 20% rollback
         if rng:nextFloat() < 0.8 then
             txMgr:commit(txId)
         else
@@ -3122,15 +3122,15 @@ function walStressTest(rng)
         checksum = (checksum + wal.lsn) % 1000000007
     end
 
-    -- Checkpoint
+    # Checkpoint
     wal:checkpoint()
     uncommitted = wal:getUncommitted()
-    checksum = (checksum + #uncommitted * 7) % 1000000007
+    checksum = (checksum + uncommitted.count * 7) % 1000000007
 
     return checksum
 end
 
--- ===== Hash Join benchmark =====
+# ===== Hash Join benchmark =====
 function hashJoinBenchmark(db)
     usersTbl = db:getTable("users")
     ordersTbl = db:getTable("orders")
@@ -3147,19 +3147,19 @@ function hashJoinBenchmark(db)
     hj = HashJoin.new()
     results = hj:execute(
         userRows, orderRows,
-        function(r) return r[1] end,  -- users.id
-        function(r) return r[2] end   -- orders.user_id
+        function(r) return r[1] end,  # users.id
+        function(r) return r[2] end   # orders.user_id
     )
 
     checksum = 0
     for i, r in next, results do
-        val = (r.left[1] or 0) + (r.right[5] or 0)  -- user id + order total
+        val = (r.left[1] or 0) + (r.right[5] or 0)  # user id + order total
         checksum = (checksum + floor(val * i)) % 1000000007
     end
     return checksum
 end
 
--- ===== Sort-Merge Join benchmark =====
+# ===== Sort-Merge Join benchmark =====
 function sortMergeJoinBenchmark(db)
     usersTbl = db:getTable("users")
     ordersTbl = db:getTable("orders")
@@ -3176,8 +3176,8 @@ function sortMergeJoinBenchmark(db)
     smj = SortMergeJoin.new()
     results = smj:execute(
         userRows, orderRows,
-        function(r) return r[1] end,  -- users.id
-        function(r) return r[2] end   -- orders.user_id
+        function(r) return r[1] end,  # users.id
+        function(r) return r[2] end   # orders.user_id
     )
 
     checksum = 0
@@ -3188,7 +3188,7 @@ function sortMergeJoinBenchmark(db)
     return checksum
 end
 
--- ===== Query Plan cost estimation benchmark =====
+# ===== Query Plan cost estimation benchmark =====
 function queryPlanBenchmark(db)
     planner = QueryPlanner.new(db)
     queries = getTestQueries()
@@ -3203,13 +3203,13 @@ function queryPlanBenchmark(db)
             cost = planner:estimateCost(stmt)
             checksum = (checksum + cost * qi) % 1000000007
             suggestions = planner:suggestIndexes(stmt)
-            checksum = (checksum + #suggestions * qi * 7) % 1000000007
+            checksum = (checksum + suggestions.count * qi * 7) % 1000000007
         end
     end
     return checksum
 end
 
--- ===== Statistics collector benchmark =====
+# ===== Statistics collector benchmark =====
 function statsBenchmark(db)
     collector = StatsCollector.new(db)
     checksum = 0
@@ -3220,7 +3220,7 @@ function statsBenchmark(db)
     collector:analyze("reviews")
     collector:analyze("categories")
 
-    -- Use selectivity estimates
+    # Use selectivity estimates
     tests = {
         { "users", "age", "=", 30 },
         { "users", "age", ">", 50 },
@@ -3236,7 +3236,7 @@ function statsBenchmark(db)
         checksum = (checksum + floor(sel * 10000) * i) % 1000000007
     end
 
-    -- Check row counts
+    # Check row counts
     for tblName, tblStats in next, collector.stats do
         checksum = (checksum + tblStats.rowCount * slen(tblName)) % 1000000007
     end
@@ -3244,7 +3244,7 @@ function statsBenchmark(db)
     return checksum
 end
 
--- ===== Run benchmark =====
+# ===== Run benchmark =====
 function runBenchmark()
     numIterations = 5
     totalChecksum = 0
@@ -3259,7 +3259,7 @@ function runBenchmark()
         executor = Executor.new(db)
         iterChecksum = 0
 
-        -- Run main queries
+        # Run main queries
         queries = getTestQueries()
         for qi, sql in next, queries do
             ok, result = pcall(function() return executor:execute(sql) end)
@@ -3270,7 +3270,7 @@ function runBenchmark()
             iterChecksum = (iterChecksum + cs * qi) % 1000000007
         end
 
-        -- Run extended queries
+        # Run extended queries
         extQueries = getExtendedQueries()
         for qi, sql in next, extQueries do
             ok, result = pcall(function() return executor:execute(sql) end)
@@ -3281,7 +3281,7 @@ function runBenchmark()
             iterChecksum = (iterChecksum + cs * (qi + 100)) % 1000000007
         end
 
-        -- Run stress queries
+        # Run stress queries
         stressQueries = getStressQueries()
         for qi, sql in next, stressQueries do
             ok, result = pcall(function() return executor:execute(sql) end)
@@ -3292,31 +3292,31 @@ function runBenchmark()
             iterChecksum = (iterChecksum + cs * (qi + 200)) % 1000000007
         end
 
-        -- B-Tree stress test
+        # B-Tree stress test
         btreeCS = btreeStressTest(rng)
         iterChecksum = (iterChecksum + btreeCS) % 1000000007
 
-        -- Buffer pool stress test
+        # Buffer pool stress test
         bpCS = bufferPoolStressTest(rng)
         iterChecksum = (iterChecksum + bpCS) % 1000000007
 
-        -- WAL / Transaction stress test
+        # WAL / Transaction stress test
         walCS = walStressTest(rng)
         iterChecksum = (iterChecksum + walCS) % 1000000007
 
-        -- Hash join benchmark
+        # Hash join benchmark
         hjCS = hashJoinBenchmark(db)
         iterChecksum = (iterChecksum + hjCS) % 1000000007
 
-        -- Sort-merge join benchmark
+        # Sort-merge join benchmark
         smjCS = sortMergeJoinBenchmark(db)
         iterChecksum = (iterChecksum + smjCS) % 1000000007
 
-        -- Query plan benchmark
+        # Query plan benchmark
         qpCS = queryPlanBenchmark(db)
         iterChecksum = (iterChecksum + qpCS) % 1000000007
 
-        -- Stats benchmark
+        # Stats benchmark
         stCS = statsBenchmark(db)
         iterChecksum = (iterChecksum + stCS) % 1000000007
 
@@ -3333,7 +3333,7 @@ function runBenchmark()
     return numIterations, totalChecksum
 end
 
--- ===== Main =====
+# ===== Main =====
 startTime = clock()
 iterations, checksum = runBenchmark()
 elapsed = clock() - startTime

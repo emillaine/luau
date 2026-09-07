@@ -42,7 +42,7 @@ function test()
 		for r = 1, 12 do
 			s = SIGMA[r]
 
-			-- column step
+			# column step
 			V0 = integer.add(integer.add(V0, V4), M[s[1]])
 			V12 = integer.rrotate(integer.bxor(V12, V0), 32i)
 			V8 = integer.add(V8, V12)
@@ -79,7 +79,7 @@ function test()
 			V11 = integer.add(V11, V15)
 			V7 = integer.rrotate(integer.bxor(V7, V11), 63i)
 
-			-- diagonal step
+			# diagonal step
 			V0 = integer.add(integer.add(V0, V5), M[s[9]])
 			V15 = integer.rrotate(integer.bxor(V15, V0), 32i)
 			V10 = integer.add(V10, V15)
@@ -138,7 +138,7 @@ function test()
 
 		M = table.create(16, 0i)
 
-		-- process all full 128-byte blocks except the last
+		# process all full 128-byte blocks except the last
 		fullBlocks = (len - 1) // 128
 		for blockIdx = 0, fullBlocks - 1 do
 			off = blockIdx * 128
@@ -148,7 +148,7 @@ function test()
 			compress(h, M, integer.create((blockIdx + 1) * 128), false)
 		end
 
-		-- final block: copy remaining + pad with zeros to 128 bytes
+		# final block: copy remaining + pad with zeros to 128 bytes
 		lastBlockStart = fullBlocks * 128
 		lastBlockLen = len - lastBlockStart
 		lastBuf = buffer.create(128)

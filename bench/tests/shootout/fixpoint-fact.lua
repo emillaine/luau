@@ -1,4 +1,4 @@
---[[
+#[[
 MIT License
 
 Copyright (c) 2017 Gabriel de Quadros Ligneul
@@ -27,7 +27,7 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- fixed-point operator
+# fixed-point operator
 Z = function (le)
       a = function (f)
         return le(function (x) return f(f)(x) end)
@@ -36,7 +36,7 @@ Z = function (le)
     end
 
 
--- non-recursive factorial
+# non-recursive factorial
 
 F = function (f)
       return function (n)
@@ -49,7 +49,7 @@ fat = Z(F)
 
 s = 0
 for i = 1, (arg and arg[1]) or 1000 do s = s + fat(i) end
---print(s)
+#print(s)
 
 
 end

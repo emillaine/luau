@@ -1,4 +1,4 @@
--- --bench-args: --fflags=DebugLuauUserDefinedClasses,DebugLuauUserDefinedClassesRuntime,LuauCallFeedback,LuauEmitCallFeedback
+# --bench-args: --fflags=DebugLuauUserDefinedClasses,DebugLuauUserDefinedClassesRuntime,LuauCallFeedback,LuauEmitCallFeedback
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
@@ -14,9 +14,9 @@ function popcnt32(i)
 	return bit32.rshift(bit32.band(i + bit32.rshift(i,4), 0x0F0F0F0F) * 0x01010101, 24)
 end
 
---
--- Utils
--- 
+#
+# Utils
+# 
 
 function square(s)
 	return RANKS:find(s:sub(2,2)) * 8 + FILES:find(s:sub(1,1)) - 9
@@ -62,16 +62,16 @@ end
 
 _utils = {squareName, moveName}
 
--- @hgoldstein implementation notes
--- * Fairly tedious to rewrite all of the methods: consider adding codemod.
--- * We don't support static data, that is moved to locals which may unintentionally boost perf.
--- * Board used itself as both a hashtable and an array: what kind of benefits do we get from
---   this split? Any?
--- * There's a lot of static data intertwined with functionality.
+# @hgoldstein implementation notes
+# * Fairly tedious to rewrite all of the methods: consider adding codemod.
+# * We don't support static data, that is moved to locals which may unintentionally boost perf.
+# * Board used itself as both a hashtable and an array: what kind of benefits do we get from
+#   this split? Any?
+# * There's a lot of static data intertwined with functionality.
 
---
--- Bitboards
---
+#
+# Bitboards
+#
 
 BITBOARD_ZERO = null
 BITBOARD_FULL = null
@@ -266,7 +266,7 @@ FileF = Bitboard.from(0x20202020, 0x20202020)
 FileG = Bitboard.from(0x40404040, 0x40404040)
 FileH = Bitboard.from(0x80808080, 0x80808080)
 
--- These masks are filled out below for all files
+# These masks are filled out below for all files
 RightMasks = {FileH}
 LeftMasks = {FileA}
 
@@ -275,9 +275,9 @@ for i=2,8 do
 	LeftMasks[i] = LeftMasks[i-1]:lshift(1):bor(FileA)
 end
 
---
--- Board
---
+#
+# Board
+#
 
 ROOK_SLIDES = {{1,0}, {-1,0}, {0,1}, {0,-1}}
 BISHOP_SLIDES = {{1,1}, {-1,1}, {1,-1}, {-1,-1}}
@@ -286,7 +286,7 @@ KNIGHT_MOVES = {{2,1}, {2,-1}, {-2,1}, {-2,-1}, {1,2}, {1,-2}, {-1,2}, {-1,-2}}
 
 class Board
 
-	-- Spellcheck?
+	# Spellcheck?
 	public ocupied: Bitboard
 	public white: Bitboard
 	public black: Bitboard
@@ -475,7 +475,7 @@ class Board
 		if piece == 0 then return BITBOARD_ZERO end
 
 		if type == 0 then
-			-- Pawn
+			# Pawn
 			d = -(piece*2 - 3)
 			movetwo = piece == 1 and Rank3 or Rank6
 
@@ -494,7 +494,7 @@ class Board
 
 			return out
 		else if type == 5 then
-			-- King
+			# King
 			for x=-1,1,1 do
 				for y = -1,1,1 do
 					w = r:move(x,y)
@@ -508,7 +508,7 @@ class Board
 				end
 			end
 		else if type == 2 then
-			-- Knight
+			# Knight
 			for _,j in ipairs(KNIGHT_MOVES) do
 				w = r:move(j[1],j[2])
 
@@ -521,7 +521,7 @@ class Board
 				end
 			end
 		else
-			-- Sliders (Rook, Bishop, Queen)
+			# Sliders (Rook, Bishop, Queen)
 			slides = null
 			if type == 1 then
 				slides = ROOK_SLIDES
@@ -553,14 +553,14 @@ class Board
 		return out
 	end
 
--- 0-5 - From Square
--- 6-11 - To Square
--- 12 - is Check
--- 13 - Is EnPassent
--- 14 - Is Castle
--- 15-19 - Promotion Piece
--- 20-24 - Moved Pice
--- 25-29 - Captured Piece
+# 0-5 - From Square
+# 6-11 - To Square
+# 12 - is Check
+# 13 - Is EnPassent
+# 14 - Is Castle
+# 15-19 - Promotion Piece
+# 20-24 - Moved Pice
+# 25-29 - Captured Piece
 
 
 	function toString(self, mark)
@@ -574,7 +574,7 @@ class Board
 				if i == 0 then
 					table.insert(out, '-')
 				else
-					-- out = out .. PieceSymbols:sub(i,i)
+					# out = out .. PieceSymbols:sub(i,i)
 					table.insert(out, UnicodePieces[i])
 				end
 				if mark != null and mark:index(n) != 0 then
@@ -651,7 +651,7 @@ class Board
 					id = bit32.replace(id, self:index(m), 25, 4)
 				end
 
-				-- Check if pawn needs to be promoted
+				# Check if pawn needs to be promoted
 				if p == 1 and m >= 8*7 then
 					for i=3,9,2 do
 						emit(bit32.replace(id, i, 15, 4))
@@ -690,14 +690,14 @@ class Board
 	function perft(self, depth)
 		if depth == 0 then return 1 end
 		if depth == 1 then 
-			return #self:moveList()
+			return self.count:moveList()
 		end
 		result = 0
 		for k,m in ipairs(self:moveList()) do
 			c = self:applyMove(m):perft(depth - 1)
 			if c == 0 then
-				-- Perft only counts leaf nodes at target depth
-				-- result = result + 1
+				# Perft only counts leaf nodes at target depth
+				# result = result + 1
 			else
 				result = result + c
 			end
@@ -744,12 +744,12 @@ class Board
 
 		if piece < 3 then
 			dist = math.abs(to - from)
-			-- Pawn moved two squares, set ep square
+			# Pawn moved two squares, set ep square
 			if dist == 16 then
 				out.ep = Bitboard.some((from + to) / 2)
 			end
 
-			-- Remove enpasent capture
+			# Remove enpasent capture
 			if not tom:bandempty(self.ep) then
 				if piece == 1 then
 					out.state[2] = out.state[2]:bandnot(self.ep:down())
@@ -785,9 +785,9 @@ class Board
 
 end
 
---
--- Main
---
+#
+# Main
+#
 
 failures = 0
 function test(fen, ply, target)
@@ -805,15 +805,15 @@ function test(fen, ply, target)
 		for k,v in pairs(b:moveList()) do
 			print(ucimove(v) .. ': ' .. (ply > 1 and b:applyMove(v):perft(ply-1) or '1'))
 		end
-		--error("Test Failure")
+		#error("Test Failure")
 	else
 		print("OK", found, fen)
 	end
 end
 
--- From https://www.chessprogramming.org/Perft_Results
--- If interpreter, computers, or algorithm gets too fast
--- feel free to go deeper
+# From https://www.chessprogramming.org/Perft_Results
+# If interpreter, computers, or algorithm gets too fast
+# feel free to go deeper
 
 testCases = {}
 function addTest(...) table.insert(testCases, {...}) end

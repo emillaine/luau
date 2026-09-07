@@ -3,9 +3,9 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-  -- The Computer Language Benchmarks Game
-  -- http://benchmarksgame.alioth.debian.org/
-  -- contributed by Mike Pall
+  # The Computer Language Benchmarks Game
+  # http://benchmarksgame.alioth.debian.org/
+  # contributed by Mike Pall
 
   function BottomUpTree(item, depth)
     if depth > 0 then

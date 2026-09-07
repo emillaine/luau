@@ -1,4 +1,4 @@
--- forward declarations (implicit-local dialect has no hoisted globals)
+# forward declarations (implicit-local dialect has no hoisted globals)
 callFunction = null
 evalAssign = null
 evalBinary = null
@@ -32,9 +32,9 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- Zef language interpreter benchmark
--- A complete interpreter for the Zef programming language.
--- Compatible with: Luau (lute), Lua 5.1+, LuaJIT
+# Zef language interpreter benchmark
+# A complete interpreter for the Zef programming language.
+# Compatible with: Luau (lute), Lua 5.1+, LuaJIT
 
 clock = os.clock
 floor = math.floor
@@ -45,11 +45,11 @@ char = string.char
 find = string.find
 format = string.format
 
--- ============================================================================
--- LEXER
--- ============================================================================
+# ============================================================================
+# LEXER
+# ============================================================================
 
--- Token types
+# Token types
 TK_NUMBER = 1
 TK_STRING = 2
 TK_IDENT = 3
@@ -80,7 +80,7 @@ TK_ASSIGN = 27
 TK_COLON = 28
 TK_EOF = 29
 
--- Keywords
+# Keywords
 KW_MY = "my"
 KW_FN = "fn"
 KW_CLASS = "class"
@@ -111,24 +111,24 @@ end
 function tokenize(source)
     tokens = {}
     pos = 1
-    len = #source
+    len = source.count
     tcount = 0
 
     while pos <= len do
         c = byte(source, pos)
 
-        -- Skip whitespace
+        # Skip whitespace
         if c == 32 or c == 9 or c == 10 or c == 13 then
             pos = pos + 1
 
-        -- Skip single-line comments
+        # Skip single-line comments
         else if c == 47 and pos < len and byte(source, pos + 1) == 47 then
             pos = pos + 2
             while pos <= len and byte(source, pos) != 10 do
                 pos = pos + 1
             end
 
-        -- Numbers
+        # Numbers
         else if isDigit(c) then
             start = pos
             while pos <= len and isDigit(byte(source, pos)) do
@@ -143,14 +143,14 @@ function tokenize(source)
             tcount = tcount + 1
             tokens[tcount] = {TK_NUMBER, tonumber(sub(source, start, pos - 1))}
 
-        -- Strings
+        # Strings
         else if c == 34 then
             pos = pos + 1
             parts = {}
             pcount = 0
             while pos <= len and byte(source, pos) != 34 do
                 ch = byte(source, pos)
-                if ch == 92 then -- backslash
+                if ch == 92 then # backslash
                     pos = pos + 1
                     esc = byte(source, pos)
                     if esc == 110 then pcount = pcount + 1; parts[pcount] = "\n"
@@ -165,11 +165,11 @@ function tokenize(source)
                 end
                 pos = pos + 1
             end
-            pos = pos + 1 -- skip closing quote
+            pos = pos + 1 # skip closing quote
             tcount = tcount + 1
             tokens[tcount] = {TK_STRING, concat(parts)}
 
-        -- Identifiers and keywords
+        # Identifiers and keywords
         else if isAlpha(c) then
             start = pos
             while pos <= len and isAlnum(byte(source, pos)) do
@@ -179,7 +179,7 @@ function tokenize(source)
             tcount = tcount + 1
             tokens[tcount] = {TK_IDENT, word}
 
-        -- Two-character operators
+        # Two-character operators
         else if c == 62 and pos < len and byte(source, pos + 1) == 61 then
             tcount = tcount + 1; tokens[tcount] = {TK_GE}; pos = pos + 2
         else if c == 60 and pos < len and byte(source, pos + 1) == 61 then
@@ -193,7 +193,7 @@ function tokenize(source)
         else if c == 124 and pos < len and byte(source, pos + 1) == 124 then
             tcount = tcount + 1; tokens[tcount] = {TK_OR}; pos = pos + 2
 
-        -- Single-character operators
+        # Single-character operators
         else if c == 40 then tcount = tcount + 1; tokens[tcount] = {TK_LPAREN}; pos = pos + 1
         else if c == 41 then tcount = tcount + 1; tokens[tcount] = {TK_RPAREN}; pos = pos + 1
         else if c == 123 then tcount = tcount + 1; tokens[tcount] = {TK_LBRACE}; pos = pos + 1
@@ -214,7 +214,7 @@ function tokenize(source)
         else if c == 61 then tcount = tcount + 1; tokens[tcount] = {TK_ASSIGN}; pos = pos + 1
         else if c == 58 then tcount = tcount + 1; tokens[tcount] = {TK_COLON}; pos = pos + 1
         else
-            pos = pos + 1 -- skip unknown
+            pos = pos + 1 # skip unknown
         end
     end
 
@@ -223,11 +223,11 @@ function tokenize(source)
     return tokens
 end
 
--- ============================================================================
--- PARSER
--- ============================================================================
+# ============================================================================
+# PARSER
+# ============================================================================
 
--- AST node types
+# AST node types
 ND_NUMBER = "num"
 ND_STRING = "str"
 ND_NULL = "null"
@@ -304,7 +304,7 @@ function matchToken(p, tktype)
     return false
 end
 
--- Parse a parameter list: (a, b, c)
+# Parse a parameter list: (a, b, c)
 function parseParams(p)
     expect(p, TK_LPAREN)
     params = {}
@@ -321,7 +321,7 @@ function parseParams(p)
     return params
 end
 
--- Parse a block: { stmts }
+# Parse a block: { stmts }
 function parseBlock(p)
     expect(p, TK_LBRACE)
     stmts = {}
@@ -334,12 +334,12 @@ function parseBlock(p)
     return {ND_BLOCK, stmts}
 end
 
--- Parse function body: either { block } or single expression
+# Parse function body: either { block } or single expression
 function parseFuncBody(p)
     if peekType(p) == TK_LBRACE then
         return parseBlock(p)
     else
-        -- expression-bodied function
+        # expression-bodied function
         expr = parseExpr(p)
         return {ND_BLOCK, {{ND_RETURN, expr}}}
     end
@@ -348,7 +348,7 @@ end
 function parseStatement(p)
     tk = peek(p)
 
-    -- Variable declaration: my x = expr
+    # Variable declaration: my x = expr
     if tk[1] == TK_IDENT and tk[2] == KW_MY then
         advance(p)
         name = expect(p, TK_IDENT)[2]
@@ -357,7 +357,7 @@ function parseStatement(p)
         matchToken(p, TK_SEMI)
         return {ND_VARDECL, name, val}
 
-    -- Function declaration: fn name(args) { body }
+    # Function declaration: fn name(args) { body }
     else if tk[1] == TK_IDENT and tk[2] == KW_FN then
         advance(p)
         name = expect(p, TK_IDENT)[2]
@@ -366,29 +366,29 @@ function parseStatement(p)
         matchToken(p, TK_SEMI)
         return {ND_VARDECL, name, {ND_FUNC, params, body, name}}
 
-    -- Class declaration
+    # Class declaration
     else if tk[1] == TK_IDENT and tk[2] == KW_CLASS then
         return parseClass(p)
 
-    -- If statement
+    # If statement
     else if tk[1] == TK_IDENT and tk[2] == KW_IF then
         return parseIf(p)
 
-    -- While statement
+    # While statement
     else if tk[1] == TK_IDENT and tk[2] == KW_WHILE then
         return parseWhile(p)
 
-    -- For statement: for (init; cond; step) { body }
+    # For statement: for (init; cond; step) { body }
     else if tk[1] == TK_IDENT and tk[2] == KW_FOR then
         return parseFor(p)
 
-    -- Break statement
+    # Break statement
     else if tk[1] == TK_IDENT and tk[2] == KW_BREAK then
         advance(p)
         matchToken(p, TK_SEMI)
         return {ND_BREAK}
 
-    -- Return statement
+    # Return statement
     else if tk[1] == TK_IDENT and tk[2] == KW_RETURN then
         advance(p)
         val = null
@@ -398,7 +398,7 @@ function parseStatement(p)
         matchToken(p, TK_SEMI)
         return {ND_RETURN, val}
 
-    -- println
+    # println
     else if tk[1] == TK_IDENT and tk[2] == KW_PRINTLN then
         advance(p)
         expect(p, TK_LPAREN)
@@ -407,10 +407,10 @@ function parseStatement(p)
         matchToken(p, TK_SEMI)
         return {ND_PRINTLN, val}
 
-    -- Expression statement (assignment or call)
+    # Expression statement (assignment or call)
     else
         expr = parseExpr(p)
-        -- Check for assignment
+        # Check for assignment
         if peekType(p) == TK_ASSIGN then
             advance(p)
             val = parseExpr(p)
@@ -423,7 +423,7 @@ function parseStatement(p)
 end
 
 function parseClass(p)
-    advance(p) -- skip 'class'
+    advance(p) # skip 'class'
     name = expect(p, TK_IDENT)[2]
     parent = null
     if matchToken(p, TK_COLON) then
@@ -447,15 +447,15 @@ function parseClass(p)
             fields[fcount] = fname
         else if tk2[1] == TK_IDENT and tk2[2] == KW_FN then
             advance(p)
-            -- Check if it's a named method or constructor
+            # Check if it's a named method or constructor
             if peekType(p) == TK_LPAREN then
-                -- Constructor: fn(args) { body }
+                # Constructor: fn(args) { body }
                 params = parseParams(p)
                 body = parseFuncBody(p)
                 matchToken(p, TK_SEMI)
                 constructor = {params, body}
             else
-                -- Named method: fn name(args) { body }
+                # Named method: fn name(args) { body }
                 mname = expect(p, TK_IDENT)[2]
                 params = parseParams(p)
                 body = parseFuncBody(p)
@@ -464,7 +464,7 @@ function parseClass(p)
                 methods[mcount] = {mname, params, body}
             end
         else
-            -- skip unexpected
+            # skip unexpected
             advance(p)
         end
     end
@@ -474,7 +474,7 @@ function parseClass(p)
 end
 
 function parseIf(p)
-    advance(p) -- skip 'if'
+    advance(p) # skip 'if'
     expect(p, TK_LPAREN)
     cond = parseExpr(p)
     expect(p, TK_RPAREN)
@@ -492,7 +492,7 @@ function parseIf(p)
 end
 
 function parseWhile(p)
-    advance(p) -- skip 'while'
+    advance(p) # skip 'while'
     expect(p, TK_LPAREN)
     cond = parseExpr(p)
     expect(p, TK_RPAREN)
@@ -501,9 +501,9 @@ function parseWhile(p)
 end
 
 function parseFor(p)
-    advance(p) -- skip 'for'
+    advance(p) # skip 'for'
     expect(p, TK_LPAREN)
-    -- init: my x = expr or expr
+    # init: my x = expr or expr
     init = null
     if isIdent(p, KW_MY) then
         advance(p)
@@ -522,10 +522,10 @@ function parseFor(p)
         end
     end
     expect(p, TK_SEMI)
-    -- condition
+    # condition
     cond = parseExpr(p)
     expect(p, TK_SEMI)
-    -- step: usually assignment
+    # step: usually assignment
     stepExpr = parseExpr(p)
     step = null
     if peekType(p) == TK_ASSIGN then
@@ -651,7 +651,7 @@ function parsePostfix(p)
         if tt == TK_DOT then
             advance(p)
             field = expect(p, TK_IDENT)[2]
-            -- Check if it's a method call
+            # Check if it's a method call
             if peekType(p) == TK_LPAREN then
                 args = parseArgs(p)
                 expr = {ND_METHOD, expr, field, args}
@@ -713,7 +713,7 @@ function parsePrimary(p)
             return {ND_BOOL, false}
         else if val == KW_FN then
             advance(p)
-            -- Lambda: fn(args) { body } or fn(args) expr
+            # Lambda: fn(args) { body } or fn(args) expr
             params = parseParams(p)
             body = parseFuncBody(p)
             return {ND_FUNC, params, body, null}
@@ -758,15 +758,15 @@ function parseProgram(p)
     return {ND_BLOCK, stmts}
 end
 
--- ============================================================================
--- EVALUATOR
--- ============================================================================
+# ============================================================================
+# EVALUATOR
+# ============================================================================
 
--- Sentinels for return and break
+# Sentinels for return and break
 RETURN_SENTINEL = {}
 BREAK_SENTINEL = {}
 
--- Output buffer
+# Output buffer
 OutputBuffer = {}
 OutputCount = 0
 
@@ -784,7 +784,7 @@ function appendOutput(s)
     OutputBuffer[OutputCount] = s
 end
 
--- Environment
+# Environment
 function newEnv(parent)
     return {vars = {}, parent = parent}
 end
@@ -817,7 +817,7 @@ function envDeclare(env, name, val)
     env.vars[name] = val
 end
 
--- Value helpers
+# Value helpers
 function isTruthy(val)
     if val == null or val == 0 or val == false then return false end
     if val == true then return true end
@@ -847,7 +847,7 @@ function toZefString(val)
         end
         if val._isInstance then
             cls = val._class
-            -- Check for toString method
+            # Check for toString method
             toStr = lookupMethod(val, "toString")
             if toStr then
                 return callFunction(toStr, {val}, null)
@@ -865,7 +865,7 @@ end
 function makeArray(elems)
     arr = {_isArray = true, _data = {}, _size = 0}
     if elems then
-        for i = 1, #elems do
+        for i = 1, elems.count do
             arr._data[i] = elems[i]
             arr._size = i
         end
@@ -879,7 +879,7 @@ function arrayPush(arr, val)
 end
 
 function arrayGet(arr, idx)
-    -- 0-based indexing for Zef
+    # 0-based indexing for Zef
     return arr._data[idx + 1]
 end
 
@@ -887,7 +887,7 @@ function arraySet(arr, idx, val)
     arr._data[idx + 1] = val
 end
 
--- Class / instance helpers
+# Class / instance helpers
 function makeClass(name, parent, fields, methods, constructor)
     cls = {
         _isClass = true,
@@ -921,16 +921,16 @@ function lookupField(inst, fieldName)
     return inst._fields[fieldName]
 end
 
--- Function value
+# Function value
 function makeFunc(params, body, closure, name)
     return {_isFunc = true, _params = params, _body = body, _closure = closure, _name = name}
 end
 
--- Call a function value
+# Call a function value
 function callFunction(func, args, thisObj)
     env = newEnv(func._closure)
     params = func._params
-    for i = 1, #params do
+    for i = 1, params.count do
         envDeclare(env, params[i], args[i])
     end
     if thisObj then
@@ -943,7 +943,7 @@ function callFunction(func, args, thisObj)
     return null
 end
 
--- Main eval
+# Main eval
 function evalNode(node, env)
     ntype = node[1]
 
@@ -967,7 +967,7 @@ function evalNode(node, env)
     else if ntype == ND_ARRAY then
         elems = node[2]
         vals = {}
-        for i = 1, #elems do
+        for i = 1, elems.count do
             vals[i] = evalNode(elems[i], env)
         end
         return makeArray(vals)
@@ -1041,9 +1041,9 @@ function evalNode(node, env)
         return null
 
     else if ntype == ND_FOR then
-        -- for (init; cond; step) { body }
+        # for (init; cond; step) { body }
         forEnv = newEnv(env)
-        evalNode(node[2], forEnv) -- init
+        evalNode(node[2], forEnv) # init
         while true do
             cond = evalNode(node[3], forEnv)
             if not isTruthy(cond) then break end
@@ -1052,7 +1052,7 @@ function evalNode(node, env)
                 if result[1] == RETURN_SENTINEL then return result end
                 if result[1] == BREAK_SENTINEL then break end
             end
-            evalNode(node[4], forEnv) -- step
+            evalNode(node[4], forEnv) # step
         end
         return null
 
@@ -1081,7 +1081,7 @@ end
 
 function evalBlock(node, env)
     stmts = node[2]
-    for i = 1, #stmts do
+    for i = 1, stmts.count do
         result = evalNode(stmts[i], env)
         if type(result) == "table" then
             if result[1] == RETURN_SENTINEL or result[1] == BREAK_SENTINEL then
@@ -1095,7 +1095,7 @@ end
 function evalBinary(node, env)
     op = node[2]
 
-    -- Short-circuit for && and ||
+    # Short-circuit for && and ||
     if op == "&&" then
         left = evalNode(node[3], env)
         if not isTruthy(left) then return 0 end
@@ -1111,7 +1111,7 @@ function evalBinary(node, env)
     left = evalNode(node[3], env)
     right = evalNode(node[4], env)
 
-    -- Operator overloading for objects
+    # Operator overloading for objects
     if type(left) == "table" and left._isInstance then
         methodName = null
         if op == "+" then methodName = "add"
@@ -1127,7 +1127,7 @@ function evalBinary(node, env)
         end
     end
 
-    -- String concatenation with +
+    # String concatenation with +
     if op == "+" and (type(left) == "string" or type(right) == "string") then
         return toZefString(left) .. toZefString(right)
     end
@@ -1166,7 +1166,7 @@ function evalCall(node, env)
     callee = evalNode(node[2], env)
     argNodes = node[3]
     args = {}
-    for i = 1, #argNodes do
+    for i = 1, argNodes.count do
         args[i] = evalNode(argNodes[i], env)
     end
 
@@ -1174,30 +1174,30 @@ function evalCall(node, env)
         if callee._isFunc then
             return callFunction(callee, args, null)
         else if callee._isClass then
-            -- Instantiate
+            # Instantiate
             inst = makeInstance(callee)
-            -- Initialize fields
+            # Initialize fields
             cls = callee
             while cls do
                 fields = cls._fields
-                for i = 1, #fields do
+                for i = 1, fields.count do
                     if inst._fields[fields[i]] == null then
                         inst._fields[fields[i]] = 0
                     end
                 end
                 cls = cls._parent
             end
-            -- Call constructor
+            # Call constructor
             if callee._constructor then
                 ctor = callee._constructor
                 cenv = newEnv(ctor._closure)
                 cparams = ctor._params
-                for i = 1, #cparams do
+                for i = 1, cparams.count do
                     envDeclare(cenv, cparams[i], args[i])
                 end
                 envDeclare(cenv, "this", inst)
                 result = evalNode(ctor._body, cenv)
-                -- ignore return from constructor
+                # ignore return from constructor
             end
             return inst
         end
@@ -1210,11 +1210,11 @@ function evalMethod(node, env)
     methodName = node[3]
     argNodes = node[4]
     args = {}
-    for i = 1, #argNodes do
+    for i = 1, argNodes.count do
         args[i] = evalNode(argNodes[i], env)
     end
 
-    -- Array methods
+    # Array methods
     if type(obj) == "table" and obj._isArray then
         if methodName == "push" then
             arrayPush(obj, args[1])
@@ -1229,10 +1229,10 @@ function evalMethod(node, env)
         end
     end
 
-    -- String methods
+    # String methods
     if type(obj) == "string" then
         if methodName == "size" then
-            return #obj
+            return obj.count
         else if methodName == "toString" then
             return obj
         else if methodName == "charAt" then
@@ -1241,18 +1241,18 @@ function evalMethod(node, env)
         end
     end
 
-    -- Number methods
+    # Number methods
     if type(obj) == "number" then
         if methodName == "toString" then
             return toZefString(obj)
         end
     end
 
-    -- Instance methods
+    # Instance methods
     if type(obj) == "table" and obj._isInstance then
         m = lookupMethod(obj, methodName)
         if m then
-            -- Prepend 'this' = obj
+            # Prepend 'this' = obj
             return callFunction(m, {obj, unpack(args)}, obj)
         end
     end
@@ -1264,32 +1264,32 @@ function evalField(node, env)
     obj = evalNode(node[2], env)
     field = node[3]
 
-    -- Array fields
+    # Array fields
     if type(obj) == "table" and obj._isArray then
         if field == "size" then
             return obj._size
         end
     end
 
-    -- String fields
+    # String fields
     if type(obj) == "string" then
         if field == "size" then
-            return #obj
+            return obj.count
         end
     end
 
-    -- Instance fields
+    # Instance fields
     if type(obj) == "table" and obj._isInstance then
         val = obj._fields[field]
         if val != null then
             return val
         end
-        -- Check if it's a method (return bound method)
+        # Check if it's a method (return bound method)
         m = lookupMethod(obj, field)
         if m then
-            -- Return a bound method
+            # Return a bound method
             bound = makeFunc(m._params, m._body, m._closure, m._name)
-            -- We'll handle 'this' binding at call site
+            # We'll handle 'this' binding at call site
             bound._boundThis = obj
             return bound
         end
@@ -1333,14 +1333,14 @@ function evalClassDecl(node, env)
     end
 
     methods = {}
-    for i = 1, #methodDefs do
+    for i = 1, methodDefs.count do
         mdef = methodDefs[i]
         mname = mdef[1]
         mparams = mdef[2]
         mbody = mdef[3]
-        -- Method params include 'this' as first implicit param
+        # Method params include 'this' as first implicit param
         fullParams = {"this"}
-        for j = 1, #mparams do
+        for j = 1, mparams.count do
             fullParams[j + 1] = mparams[j]
         end
         methods[mname] = makeFunc(fullParams, mbody, env, mname)
@@ -1356,9 +1356,9 @@ function evalClassDecl(node, env)
     return null
 end
 
--- ============================================================================
--- RUN HELPER
--- ============================================================================
+# ============================================================================
+# RUN HELPER
+# ============================================================================
 
 function runProgram(source)
     tokens = tokenize(source)
@@ -1370,11 +1370,11 @@ function runProgram(source)
     return getOutput()
 end
 
--- ============================================================================
--- TEST PROGRAMS
--- ============================================================================
+# ============================================================================
+# TEST PROGRAMS
+# ============================================================================
 
--- Program 1: Linked List
+# Program 1: Linked List
 PROG_LINKED_LIST = [[
 class Node {
     readable val;
@@ -1445,7 +1445,7 @@ println(sumList(list2));
 
 EXPECTED_LINKED_LIST = "45\n0,1,2,3,4,5,6,7,8,9\n45\n190"
 
--- Program 2: Binary Tree
+# Program 2: Binary Tree
 PROG_BINARY_TREE = [[
 class TreeNode {
     readable val;
@@ -1523,7 +1523,7 @@ println(treeSum(root));
 
 EXPECTED_BINARY_TREE = "0,1,2,3,4,5,6,7,8,9\n4\n45"
 
--- Program 3: Shapes with inheritance
+# Program 3: Shapes with inheritance
 PROG_SHAPES = [[
 class Shape {
     readable name;
@@ -1605,7 +1605,7 @@ println(v3.toString());
 
 EXPECTED_SHAPES = "circle: area=75\nrectangle: area=12\nsquare: area=36\ncircle: area=12\n135\n(4,6)"
 
--- Program 4: Closures and HOF
+# Program 4: Closures and HOF
 PROG_CLOSURES = [[
 fn makeCounter(start) {
     my count = start;
@@ -1695,7 +1695,7 @@ println(add5(20));
 
 EXPECTED_CLOSURES = "1\n2\n3\n3\n0\n110\n30\n11\n15\n25"
 
--- Program 5: Sorting
+# Program 5: Sorting
 PROG_SORTING = [[
 fn swap(arr, i, j) {
     my tmp = arr[i];
@@ -1799,7 +1799,7 @@ println(sumArr(a3));
 
 EXPECTED_SORTING = "0,1,2,3,4,5,6,7,8,9\n0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19\n45\n190\n1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20\n210"
 
--- Program 6: Fibonacci, memoization, iterators, for loops, break
+# Program 6: Fibonacci, memoization, iterators, for loops, break
 PROG_ADVANCED = [[
 // Recursive fibonacci
 fn fib(n) {
@@ -1967,7 +1967,7 @@ println(tripleSum);
 
 EXPECTED_ADVANCED = "0\n1\n5\n55\n6765\n75025\n832040\n25\n1060\n53\n25\n30\n69\n90\n12\n25\n36\n225"
 
--- Program 7: String processing and more class features
+# Program 7: String processing and more class features
 PROG_STRINGS = [[
 // String builder class
 class StringBuilder {
@@ -2131,15 +2131,15 @@ println(collatzLength(7));
 
 EXPECTED_STRINGS = "Hello World!\n4\n30\n30\n20\n10\n0\n1\n2\n3\n4\n5\n986115\n986115\n161156\n12345\n-99\n0\n111\n0\n16"
 
--- ============================================================================
--- CHECKSUM AND BENCHMARK RUNNER
--- ============================================================================
+# ============================================================================
+# CHECKSUM AND BENCHMARK RUNNER
+# ============================================================================
 
 function checksumString(s)
     h = 5381
-    for i = 1, #s do
+    for i = 1, s.count do
         h = h * 33 + byte(s, i)
-        -- Keep it in reasonable range to avoid precision issues
+        # Keep it in reasonable range to avoid precision issues
         h = h % 1000000007
     end
     return h
@@ -2170,14 +2170,14 @@ function runAllTests()
     return totalChecksum
 end
 
--- ============================================================================
--- MAIN
--- ============================================================================
+# ============================================================================
+# MAIN
+# ============================================================================
 
--- Run once to validate
+# Run once to validate
 expectedChecksum = 3067968536
 
--- Benchmark loop
+# Benchmark loop
 iterations = 10
 startTime = clock()
 for iter = 1, iterations do

@@ -1,7 +1,7 @@
---!strict
+#!strict
 
--- Convenience wrappers around the global `integer` module so the rest of the
--- emulator can do 64-bit arithmetic without repeating boilerplate.
+# Convenience wrappers around the global `integer` module so the rest of the
+# emulator can do 64-bit arithmetic without repeating boilerplate.
 
 i = integer
 
@@ -10,7 +10,7 @@ M = {}
 M.ZERO = i.create(0)
 M.ONE = i.create(1)
 M.NEG_ONE = i.neg(i.create(1))
-M.MAX_U64 = M.NEG_ONE -- 0xFFFFFFFFFFFFFFFF as bits
+M.MAX_U64 = M.NEG_ONE # 0xFFFFFFFFFFFFFFFF as bits
 M.MASK32 = i.fromstring("FFFFFFFF", 16)
 M.MASK16 = i.create(0xFFFF)
 M.MASK8 = i.create(0xFF)
@@ -71,7 +71,7 @@ function M.arshift(a: integer, n: integer): integer
     return i.arshift(a, n)
 end
 
--- Shift by a number (converts to integer internally)
+# Shift by a number (converts to integer internally)
 function M.shl(a: integer, n: number): integer
     return i.lshift(a, i.create(n))
 end
@@ -136,33 +136,33 @@ function M.srem(a: integer, b: integer): integer
     return i.rem(a, b)
 end
 
--- Sign-extend a value from `bits` width to 64 bits.
+# Sign-extend a value from `bits` width to 64 bits.
 function M.signExtend(val: integer, bits: number): integer
     shift = 64 - bits
     shiftI = i.create(shift)
     return i.arshift(i.lshift(val, shiftI), shiftI)
 end
 
--- Zero-extend (mask to `bits` width).
+# Zero-extend (mask to `bits` width).
 function M.zeroExtend(val: integer, bits: number): integer
     if bits >= 64 then return val end
     mask = i.sub(i.lshift(M.ONE, i.create(bits)), M.ONE)
     return i.band(val, mask)
 end
 
--- Extract bits [hi:lo] inclusive from val.
+# Extract bits [hi:lo] inclusive from val.
 function M.extractBits(val: integer, lo: number, hi: number): integer
     width = hi - lo + 1
     shifted = M.shr(val, lo)
     return M.zeroExtend(shifted, width)
 end
 
--- Count leading zeros (64-bit).
+# Count leading zeros (64-bit).
 function M.clz64(val: integer): number
     return i.tonumber(i.countlz(val))
 end
 
--- Reverse bits of a 64-bit value.
+# Reverse bits of a 64-bit value.
 function M.rbit64(val: integer): integer
     result = M.ZERO
     for bit = 0, 63 do
@@ -173,7 +173,7 @@ function M.rbit64(val: integer): integer
     return result
 end
 
--- Reverse bytes of a 64-bit value.
+# Reverse bytes of a 64-bit value.
 function M.rev64(val: integer): integer
     result = M.ZERO
     for byte = 0, 7 do
@@ -183,7 +183,7 @@ function M.rev64(val: integer): integer
     return result
 end
 
--- Reverse bytes of lower 32 bits.
+# Reverse bytes of lower 32 bits.
 function M.rev32(val: integer): integer
     result = M.ZERO
     for byte = 0, 3 do
@@ -193,7 +193,7 @@ function M.rev32(val: integer): integer
     return result
 end
 
--- Reverse bytes in each 16-bit halfword of lower 32 bits.
+# Reverse bytes in each 16-bit halfword of lower 32 bits.
 function M.rev16(val: integer): integer
     b0 = i.band(val, M.MASK8)
     b1 = i.band(i.rshift(val, i.create(8)), M.MASK8)
@@ -211,17 +211,17 @@ function M.isNegative(val: integer): boolean
     return i.lt(val, M.ZERO)
 end
 
--- Multiply two 64-bit values and return the high 64 bits (signed).
+# Multiply two 64-bit values and return the high 64 bits (signed).
 function M.smulh(a: integer, b: integer): integer
-    -- Use the integer module's mul which gives low 64 bits.
-    -- For smulh we need to do it differently. Let's split into 32-bit halves.
+    # Use the integer module's mul which gives low 64 bits.
+    # For smulh we need to do it differently. Let's split into 32-bit halves.
     a_neg = M.isNegative(a)
     b_neg = M.isNegative(b)
     abs_a = if a_neg then M.neg(a) else a
     abs_b = if b_neg then M.neg(b) else b
     hi = M.umulh_impl(abs_a, abs_b)
     if a_neg != b_neg then
-        -- negate 128-bit result: complement high, and if low != 0, subtract 1 from high
+        # negate 128-bit result: complement high, and if low != 0, subtract 1 from high
         lo = i.mul(abs_a, abs_b)
         hi = i.bnot(hi)
         if lo != M.ZERO then
@@ -231,43 +231,43 @@ function M.smulh(a: integer, b: integer): integer
     return hi
 end
 
--- Multiply two 64-bit values and return the high 64 bits (unsigned).
+# Multiply two 64-bit values and return the high 64 bits (unsigned).
 function M.umulh(a: integer, b: integer): integer
     return M.umulh_impl(a, b)
 end
 
 function M.umulh_impl(a: integer, b: integer): integer
-    -- Split each into two 32-bit halves and do schoolbook multiplication.
+    # Split each into two 32-bit halves and do schoolbook multiplication.
     a_lo = i.band(a, M.MASK32)
     a_hi = i.rshift(a, i.create(32))
     b_lo = i.band(b, M.MASK32)
     b_hi = i.rshift(b, i.create(32))
 
-    -- a*b = (a_hi*2^32 + a_lo) * (b_hi*2^32 + b_lo)
-    --     = a_hi*b_hi*2^64 + (a_hi*b_lo + a_lo*b_hi)*2^32 + a_lo*b_lo
-    -- We want bits [127:64]
+    # a*b = (a_hi*2^32 + a_lo) * (b_hi*2^32 + b_lo)
+    #     = a_hi*b_hi*2^64 + (a_hi*b_lo + a_lo*b_hi)*2^32 + a_lo*b_lo
+    # We want bits [127:64]
 
-    -- Since these are positive and fit in 63 bits each half fits in 32 bits unsigned.
-    -- But the integer module treats them as signed 64-bit...
-    -- The products of 32-bit * 32-bit fit in 64 bits unsigned.
-    -- However integer.mul gives us the low 64 bits which IS the correct product for 32x32.
+    # Since these are positive and fit in 63 bits each half fits in 32 bits unsigned.
+    # But the integer module treats them as signed 64-bit...
+    # The products of 32-bit * 32-bit fit in 64 bits unsigned.
+    # However integer.mul gives us the low 64 bits which IS the correct product for 32x32.
 
     ll = i.mul(a_lo, b_lo)
     lh = i.mul(a_lo, b_hi)
     hl = i.mul(a_hi, b_lo)
     hh = i.mul(a_hi, b_hi)
 
-    -- ll contributes bits [63:0], so ll >> 32 carries into the middle sum
+    # ll contributes bits [63:0], so ll >> 32 carries into the middle sum
     ll_hi = i.rshift(ll, i.create(32))
 
-    -- middle = lh + hl + ll_hi (but this can overflow 64 bits by at most 1 bit)
+    # middle = lh + hl + ll_hi (but this can overflow 64 bits by at most 1 bit)
     mid = i.add(lh, ll_hi)
-    -- detect carry: if mid < lh (unsigned), carry occurred
+    # detect carry: if mid < lh (unsigned), carry occurred
     carry1 = if i.ult(mid, lh) then M.ONE else M.ZERO
     mid2 = i.add(mid, hl)
     carry2 = if i.ult(mid2, hl) then M.ONE else M.ZERO
 
-    -- high = hh + (carry1 + carry2) * 2^32 + mid2 >> 32
+    # high = hh + (carry1 + carry2) * 2^32 + mid2 >> 32
     mid2_hi = i.rshift(mid2, i.create(32))
     carries = i.add(carry1, carry2)
     result = i.add(hh, mid2_hi)

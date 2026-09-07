@@ -2,8 +2,8 @@ function prequire(name) success, result = pcall(require, name); return success a
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
 function mmul(matrix1, matrix2)
-    shapeRows = #matrix1
-    shapeColumns = #matrix2[1]
+    shapeRows = matrix1.count
+    shapeColumns = matrix2[1].count
     result = table.create(shapeRows)
     for i = 1, shapeRows do
         result[i] = table.create(shapeColumns)

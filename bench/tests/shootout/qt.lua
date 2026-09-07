@@ -1,4 +1,4 @@
---[[
+#[[
 MIT License
 
 Copyright (c) 2017 Gabriel de Quadros Ligneul
@@ -21,14 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
--- Julia sets via interval cell-mapping (quadtree version)
+# Julia sets via interval cell-mapping (quadtree version)
 
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
 function test()
 
---require"julia" local f=f
+#require"julia" local f=f
 
 io=io
 root,exterior = null, null
@@ -43,7 +43,7 @@ E={}
 write=print
 
 function output(a1,a2,a3,a4,a5,a6)
-	--[[write(
+	#[[write(
 	a1 or ""," ",
 	a2 or ""," ",
 	a3 or ""," ",
@@ -125,7 +125,7 @@ function clip(q,xmin,xmax,ymin,ymax,o,oxmin,oxmax,oymin,oymax)
 	if ixmin>=ixmax then return end
 	if ymin>oymin then iymin=ymin else iymin=oymin end
 	if ymax<oymax then iymax=ymax else iymax=oymax end
-	--if ixmin<=ixmax and iymin<=iymax then
+	#if ixmin<=ixmax and iymin<=iymax then
 	if iymin<iymax then
 		if q[1]==null then
 			addedge(o,q)
@@ -141,7 +141,7 @@ function clip(q,xmin,xmax,ymin,ymax,o,oxmin,oxmax,oymin,oymax)
 end
 
 function map(q,xmin,xmax,ymin,ymax)
-	--xmin,xmax,ymin,ymax=f(xmin,xmax,ymin,ymax,cx,cy)
+	xmin.count,xmax,ymin,ymax=f(xmin,xmax,ymin,ymax,cx,cy)
 	xmin,xmax,ymin,ymax=f(xmin,xmax,ymin,ymax)
 	if outside(xmin,xmax,ymin,ymax) then
 		q.color=white
@@ -242,7 +242,7 @@ function colorup(q)
 		c4=colorup(q[4])
 		if c1==c2 and c1==c3 and c1==c4 then
 if c1!=gray then
-			q[1]=null; --q[2]=null; q[3]=null; q[4]=null
+			q[1]=null; q[2].count=null; q[3]=null; q[4]=null
 N=N+1 end
 			q.color=c1
 		end
@@ -265,18 +265,18 @@ function save(q,xmin,ymin,N)
 end
 function show(p)
 	N=2^10
-	-- io.output(p..".box")
+	# io.output(p..".box")
 	output(N)
 	save(root,0,0,N)
-	-- io.close()
+	# io.close()
 end
 
 t0=0
 function memory(s)
 	t=os.clock()
-	--local dt=string.format("%f",t-t0)
+	#local dt=string.format("%f",t-t0)
 	dt=t-t0
-	--io.stdout:write(s,"\t",dt," sec\t",t," sec\t",math.floor(collectgarbage("count")/1024),"M\n")
+	#io.stdout:write(s,"\t",dt," sec\t",t," sec\t",math.floor(collectgarbage("count")/1024),"M\n")
 	t0=t
 end
 
@@ -292,42 +292,42 @@ memory("begin")
 	root=newcell()
 	exterior=newcell()	exterior.color=white
 	show(0)
-	for i=1,l do --print("\nstep",i)
+	for i=1,l do #print("\nstep",i)
 		nE=0
 		do_(refine,"refine")
 		do_(update,"update")
 		repeat
-			N=0 color(root,Rxmin,Rxmax,Rymin,Rymax) --print("color",N)
+			N=0 color(root,Rxmin,Rxmax,Rymin,Rymax) #print("color",N)
 		until N==0 memory("color")
 		repeat
-			N=0 prewhite(root,Rxmin,Rxmax,Rymin,Rymax) --print("prewhite",N)
+			N=0 prewhite(root,Rxmin,Rxmax,Rymin,Rymax) #print("prewhite",N)
 		until N==0 memory("prewhite")
 		do_(recolor,"recolor")
-		do_(colorup,"colorup")		--print("colorup",N)
-		g,b=do_(area,"area")	--print("area",g,b,g+b)
+		do_(colorup,"colorup")		#print("colorup",N)
+		g,b=do_(area,"area")	#print("area",g,b,g+b)
 		show(i) memory("output")
-	--print("edges",nE)
+	#print("edges",nE)
 	end
 end
 
---julia(14,0.25,0.35)
---julia(14, -.12, .74 )
---julia(14,0,0)
---julia(12,0.25,0)
---julia(9,0.24,0)
---julia(9,0.26,0)
---julia(13,0,1)
---julia(12,-1.1,0)
---julia(9,-0.12,0.5)
+#julia(14,0.25,0.35)
+#julia(14, -.12, .74 )
+#julia(14,0,0)
+#julia(12,0.25,0)
+#julia(9,0.24,0)
+#julia(9,0.26,0)
+#julia(13,0,1)
+#julia(12,-1.1,0)
+#julia(9,-0.12,0.5)
 
--- figures for paper
---julia(14,0,1)
---julia(14,-1,0)
---julia(12,-0.12, 0.64)
---julia(14,-0.12, 0.60)
---julia(14,-0.12, 0.30)
+# figures for paper
+#julia(14,0,1)
+#julia(14,-1,0)
+#julia(12,-0.12, 0.64)
+#julia(14,-0.12, 0.60)
+#julia(14,-0.12, 0.30)
 
--- julia (level, a, b) -- julia set de c= a + b i
+# julia (level, a, b) -- julia set de c= a + b i
 julia(8,-0.25, 0.74)
 
 end

@@ -1,4 +1,4 @@
---[[
+#[[
 MIT License
 
 Copyright (c) 2017 Gabriel de Quadros Ligneul
@@ -33,7 +33,7 @@ floor = math.ifloor or floor
 function heapsort(n, ra)
     j, i, rra = null, null, null
     l = floor(n/2) + 1
-    -- local l = (n//2) + 1
+    # local l = (n//2) + 1
     ir = n;
     while 1 do
         if l > 1 then

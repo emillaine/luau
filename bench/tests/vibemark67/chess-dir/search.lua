@@ -1,4 +1,4 @@
--- Alpha-beta search with iterative deepening, quiescence, and transposition table
+# Alpha-beta search with iterative deepening, quiescence, and transposition table
 
 boardMod = require("./board")
 movegen = require("./movegen")
@@ -63,7 +63,7 @@ function mvvLva(move: movegen.Move): number
 end
 
 function orderMoves(moves: {movegen.Move}, ttFrom: number?, ttTo: number?)
-    scores = table.create(#moves, 0)
+    scores = table.create(moves.count, 0)
     for i, move in moves do
         s = mvvLva(move)
         if ttFrom and ttTo and move.from == ttFrom and move.to == ttTo then
@@ -72,10 +72,10 @@ function orderMoves(moves: {movegen.Move}, ttFrom: number?, ttTo: number?)
         scores[i] = s
     end
 
-    for i = 1, #moves - 1 do
+    for i = 1, moves.count - 1 do
         bestIdx = i
         bestScore = scores[i]
-        for j = i + 1, #moves do
+        for j = i + 1, moves.count do
             if scores[j] > bestScore then
                 bestIdx = j
                 bestScore = scores[j]
@@ -120,7 +120,7 @@ function alphaBeta(board: boardMod.Board, depth: number, alpha: number, beta: nu
     if ttScore then return ttScore end
 
     moves = movegen.generateLegalMoves(board)
-    if #moves == 0 then
+    if moves.count == 0 then
         if movegen.isInCheck(board) then
             return -(MATE_SCORE - ply)
         end
@@ -165,7 +165,7 @@ function search(board: boardMod.Board, maxDepth: number): (movegen.Move?, number
 
     for depth = 1, maxDepth do
         moves = movegen.generateLegalMoves(board)
-        if #moves == 0 then break end
+        if moves.count == 0 then break end
 
         _, ttFrom, ttTo = ttProbe(board.zobrist, 0, -INFINITY, INFINITY)
         orderMoves(moves, ttFrom, ttTo)

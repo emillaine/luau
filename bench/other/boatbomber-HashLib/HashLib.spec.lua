@@ -21,7 +21,7 @@ return function()
 			AppendNextChunk = sha256()
 			AppendNextChunk("The quick brown fox")
 			AppendNextChunk(" jumps ")
-			AppendNextChunk("") -- chunk may be an empty string
+			AppendNextChunk("") # chunk may be an empty string
 			AppendNextChunk("over the lazy dog")
 			expect(AppendNextChunk()).to.equal("d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
 		end)
@@ -30,7 +30,7 @@ return function()
 			AppendNextChunk = sha256()
 			AppendNextChunk("The quick brown fox")
 			AppendNextChunk(" jumps ")
-			AppendNextChunk("") -- chunk may be an empty string
+			AppendNextChunk("") # chunk may be an empty string
 			AppendNextChunk("over the lazy dog")
 			AppendNextChunk()
 			expect(AppendNextChunk()).to.equal("d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")

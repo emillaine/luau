@@ -9,7 +9,7 @@ bench.runCode(function()
 			for i=1,500 do
 				str = table.concat(t2, string.rep("!", inner))
 			end
-			assert(#str)
+			assert(str.count)
 		end
 	end
 end, "table: concat (small)")
@@ -22,7 +22,7 @@ bench.runCode(function()
 			for i=1,100 do
 				str = table.concat(t2, string.rep("!", inner))
 			end
-			assert(#str)
+			assert(str.count)
 		end
 	end
 end, "table: concat (big)")

@@ -3,9 +3,9 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
---------------------------------------------------------------------------------
--- CRC32 and CRC64 tables
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# CRC32 and CRC64 tables
+#------------------------------------------------------------------------------
 
 CRC32_TABLE = table.create(256, 0)
 CRC64_TABLE = {}
@@ -23,8 +23,8 @@ do
         CRC32_TABLE[i] = crc
     end
 
-    -- CRC64 uses 64-bit polynomial 0xC96C5795D7870F42
-    -- We store as {high32, low32} pairs
+    # CRC64 uses 64-bit polynomial 0xC96C5795D7870F42
+    # We store as {high32, low32} pairs
     for i = 0, 255 do
         lo = i
         hi = 0
@@ -47,7 +47,7 @@ end
 
 function crc32(data: string, init: number?): number
     crc = bit32.bxor(init or 0, 0xFFFFFFFF)
-    for i = 1, #data do
+    for i = 1, data.count do
         byte = string.byte(data, i)
         crc = bit32.bxor(bit32.rshift(crc, 8), CRC32_TABLE[bit32.band(bit32.bxor(crc, byte), 0xFF)])
     end
@@ -66,7 +66,7 @@ end
 function crc64(data: string): (number, number)
     lo = 0xFFFFFFFF
     hi = 0xFFFFFFFF
-    for i = 1, #data do
+    for i = 1, data.count do
         byte = string.byte(data, i)
         idx = bit32.band(bit32.bxor(lo, byte), 0xFF)
         entry = CRC64_TABLE[idx]
@@ -83,26 +83,26 @@ function crc64_bytes(data: string): string
     return string.pack("<I4I4", lo, hi)
 end
 
---------------------------------------------------------------------------------
--- Bit reader for LZMA range decoding
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Bit reader for LZMA range decoding
+#------------------------------------------------------------------------------
 
-RC_TOP = 0x1000000  -- 1 << 24
-RC_BIT_MODEL_TOTAL = 2048  -- 1 << 11
+RC_TOP = 0x1000000  # 1 << 24
+RC_BIT_MODEL_TOTAL = 2048  # 1 << 11
 RC_MOVE_BITS = 5
 
---------------------------------------------------------------------------------
--- LZMA Decoder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# LZMA Decoder
+#------------------------------------------------------------------------------
 
 LZMA_NUM_REPS = 4
 LZMA_NUM_STATES = 12
 LZMA_NUM_LIT_STATES = 7
 LZMA_NUM_POS_BITS_MAX = 4
-LZMA_NUM_POS_STATES_MAX = 16  -- 1 << 4
+LZMA_NUM_POS_STATES_MAX = 16  # 1 << 4
 LZMA_MATCH_LEN_MIN = 2
 LZMA_NUM_ALIGN_BITS = 4
-LZMA_NUM_FULL_DISTANCES = 128  -- 1 << (kNumPosSlotBits + kEndPosModelIndex / 2)
+LZMA_NUM_FULL_DISTANCES = 128  # 1 << (kNumPosSlotBits + kEndPosModelIndex / 2)
 LZMA_END_POS_MODEL_INDEX = 14
 LZMA_NUM_POS_SLOT_BITS = 6
 LZMA_NUM_LEN_TO_POS_STATES = 4
@@ -110,7 +110,7 @@ LZMA_NUM_LEN_TO_POS_STATES = 4
 function create_probs(size: number): { number }
     t = table.create(size, 1024)
     for i = 1, size do
-        t[i] = 1024  -- RC_BIT_MODEL_TOTAL / 2
+        t[i] = 1024  # RC_BIT_MODEL_TOTAL / 2
     end
     return t
 end
@@ -134,31 +134,31 @@ function lzma_state_update_short_rep(state: number): number
 end
 
 
---------------------------------------------------------------------------------
--- LZMA2 Decoder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# LZMA2 Decoder
+#------------------------------------------------------------------------------
 
 function lzma2_decode(input: string, input_offset: number, expected_uncompressed_size: number, dict_size: number): string
     pos = input_offset
     output_parts = {}
     total_output = 0
 
-    -- Persistent LZMA state across chunks
+    # Persistent LZMA state across chunks
     lc = 3
     lp = 0
     pb = 2
     pos_mask = bit32.lshift(1, pb) - 1
     lit_pos_mask = bit32.lshift(1, lp) - 1
 
-    -- Dictionary
+    # Dictionary
     dict_buf = buffer.create(dict_size)
     dict_pos = 0
     dict_total_written = 0
 
-    -- Cumulative uncompressed position (for pos_state/lit_state calculations)
+    # Cumulative uncompressed position (for pos_state/lit_state calculations)
     uncompressed_pos = 0
 
-    -- Probability tables (persistent across non-reset chunks)
+    # Probability tables (persistent across non-reset chunks)
     is_match, is_rep, is_rep_g0, is_rep_g1, is_rep_g2, is_rep0_long = null, null, null, null, null, null
     pos_slot_probs, pos_special, pos_align = null, null, null
     lit_probs = null
@@ -166,7 +166,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
     rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high = null, null, null, null, null
     state, rep0, rep1, rep2, rep3 = null, null, null, null, null
 
-    -- Range decoder state (shared across decode operations within a chunk)
+    # Range decoder state (shared across decode operations within a chunk)
     rc_range, rc_code, rc_inp_pos = null, null, null
 
     function reset_lzma_state()
@@ -211,7 +211,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
 
     reset_lzma_state()
 
-    -- Dict helpers
+    # Dict helpers
     function dict_get(dist: number): number
         return buffer.readu8(dict_buf, (dict_pos - dist - 1) % dict_size)
     end
@@ -225,7 +225,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
         dict_total_written = dict_total_written + 1
     end
 
-    -- Range decoder helpers (defined once, use rc_range/rc_code/rc_inp_pos upvalues)
+    # Range decoder helpers (defined once, use rc_range/rc_code/rc_inp_pos upvalues)
     function normalize()
         if rc_range < RC_TOP then
             rc_range = bit32.lshift(rc_range, 8)
@@ -297,7 +297,7 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
             chunk = input:sub(pos, pos + unpack_size - 1)
             pos = pos + unpack_size
             table.insert(output_parts, chunk)
-            for i = 1, #chunk do
+            for i = 1, chunk.count do
                 dict_put_byte(string.byte(chunk, i))
             end
             total_output = total_output + unpack_size
@@ -335,21 +335,21 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
                 uncompressed_pos = 0
             end
 
-            -- Initialize range decoder for this chunk
+            # Initialize range decoder for this chunk
             rc_range = 0xFFFFFFFF
             rc_code = 0
-            rc_inp_pos = pos + 1  -- skip leading 0 byte
+            rc_inp_pos = pos + 1  # skip leading 0 byte
             for _ = 1, 4 do
                 rc_code = bit32.lshift(rc_code, 8) + string.byte(input, rc_inp_pos)
                 rc_inp_pos = rc_inp_pos + 1
             end
 
 
-            -- Allocate output buffer for this chunk
+            # Allocate output buffer for this chunk
             output_buf = buffer.create(unpack_size)
             output_pos = 0
 
-            -- Decode this LZMA chunk
+            # Decode this LZMA chunk
             while output_pos < unpack_size do
                 total_pos = uncompressed_pos + output_pos
                 cur_pos_state = bit32.band(total_pos, pos_mask)
@@ -491,9 +491,9 @@ function lzma2_decode(input: string, input_offset: number, expected_uncompressed
     return table.concat(output_parts)
 end
 
---------------------------------------------------------------------------------
--- XZ Stream Decoder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# XZ Stream Decoder
+#------------------------------------------------------------------------------
 
 XZ_MAGIC = "\xFD7zXZ\x00"
 XZ_FOOTER_MAGIC = "YZ"
@@ -516,19 +516,19 @@ end
 function xz_decompress(input: string): string
     pos = 1
 
-    -- Stream Header (12 bytes)
+    # Stream Header (12 bytes)
     magic = input:sub(pos, pos + 5)
     assert(magic == XZ_MAGIC, "Invalid XZ magic")
     pos = pos + 6
 
-    -- Stream flags
+    # Stream flags
     flag1 = string.byte(input, pos)
     flag2 = string.byte(input, pos + 1)
     assert(flag1 == 0, "Invalid stream flag byte 1")
     check_type = bit32.band(flag2, 0x0F)
     pos = pos + 2
 
-    -- CRC32 of stream flags
+    # CRC32 of stream flags
     flags_crc = string.unpack("<I4", input, pos)
     pos = pos + 4
 
@@ -536,12 +536,12 @@ function xz_decompress(input: string): string
     block_sizes = {}
     block_uncompressed_sizes = {}
 
-    -- Decode blocks
+    # Decode blocks
     while true do
-        -- Peek at block header size byte
+        # Peek at block header size byte
         header_size_byte = string.byte(input, pos)
         if header_size_byte == 0 then
-            -- Index indicator
+            # Index indicator
             pos = pos + 1
             break
         end
@@ -550,7 +550,7 @@ function xz_decompress(input: string): string
         block_header_start = pos
         pos = pos + 1
 
-        -- Block flags
+        # Block flags
         block_flags = string.byte(input, pos)
         pos = pos + 1
         num_filters = bit32.band(block_flags, 3) + 1
@@ -566,7 +566,7 @@ function xz_decompress(input: string): string
             uncompressed_size_field, pos = read_multibyte(input, pos)
         end
 
-        -- Filters
+        # Filters
         filters = {}
         for i = 1, num_filters do
             filter_id = null
@@ -578,22 +578,22 @@ function xz_decompress(input: string): string
             table.insert(filters, { id = filter_id, props = filter_props })
         end
 
-        -- Skip padding to 4-byte alignment
+        # Skip padding to 4-byte alignment
         header_data_size = pos - block_header_start
-        padding_needed = block_header_size - header_data_size - 4  -- -4 for CRC32
+        padding_needed = block_header_size - header_data_size - 4  # -4 for CRC32
         pos = pos + padding_needed
 
-        -- Block header CRC32
+        # Block header CRC32
         block_header_crc = string.unpack("<I4", input, pos)
         pos = pos + 4
 
-        -- Compressed data
+        # Compressed data
         data_start = pos
         dict_size = 0
 
-        -- Parse LZMA2 filter properties
+        # Parse LZMA2 filter properties
         for _, filter in ipairs(filters) do
-            if filter.id == 0x21 then  -- LZMA2
+            if filter.id == 0x21 then  # LZMA2
                 prop_byte = string.byte(filter.props, 1)
                 if prop_byte >= 40 then
                     dict_size = 0xFFFFFFFF
@@ -605,28 +605,28 @@ function xz_decompress(input: string): string
             end
         end
 
-        -- Determine how much compressed data there is
+        # Determine how much compressed data there is
         comp_size = null
         if has_compressed_size then
             comp_size = compressed_size_field
         else
-            -- We need to find the end by decoding LZMA2 chunks
-            -- For now, compute from block size
-            -- Actually we'll decode and track how much we consumed
+            # We need to find the end by decoding LZMA2 chunks
+            # For now, compute from block size
+            # Actually we'll decode and track how much we consumed
             comp_size = null
         end
 
         uncompressed_size = uncompressed_size_field
 
-        -- Decode LZMA2
+        # Decode LZMA2
         decoded = lzma2_decode(input, pos, uncompressed_size or 0, dict_size)
         table.insert(output_parts, decoded)
 
-        -- Advance past compressed data
+        # Advance past compressed data
         if comp_size then
             pos = pos + comp_size
         else
-            -- Need to scan LZMA2 to find end
+            # Need to scan LZMA2 to find end
             scan_pos = pos
             while true do
                 ctrl = string.byte(input, scan_pos)
@@ -636,11 +636,11 @@ function xz_decompress(input: string): string
                     sz = bit32.lshift(string.byte(input, scan_pos), 8) + string.byte(input, scan_pos + 1) + 1
                     scan_pos = scan_pos + 2 + sz
                 else if ctrl >= 0x80 then
-                    scan_pos = scan_pos + 2  -- unpack size
+                    scan_pos = scan_pos + 2  # unpack size
                     psz = bit32.lshift(string.byte(input, scan_pos), 8) + string.byte(input, scan_pos + 1) + 1
                     scan_pos = scan_pos + 2
                     if ctrl >= 0xC0 then
-                        scan_pos = scan_pos + 1  -- props byte
+                        scan_pos = scan_pos + 1  # props byte
                     end
                     scan_pos = scan_pos + psz
                 end
@@ -649,28 +649,28 @@ function xz_decompress(input: string): string
             pos = scan_pos
         end
 
-        -- Padding to 4-byte alignment after compressed data
+        # Padding to 4-byte alignment after compressed data
         block_data_size = pos - data_start
         pad = (4 - (block_data_size % 4)) % 4
         pos = pos + pad
 
-        -- Check value
+        # Check value
         if check_type == 0x04 then
-            -- CRC64 (8 bytes)
+            # CRC64 (8 bytes)
             pos = pos + 8
         else if check_type == 0x01 then
-            -- CRC32 (4 bytes)
+            # CRC32 (4 bytes)
             pos = pos + 4
         else if check_type == 0x0A then
-            -- SHA-256 (32 bytes)
+            # SHA-256 (32 bytes)
             pos = pos + 32
         end
 
         table.insert(block_sizes, comp_size)
-        table.insert(block_uncompressed_sizes, #decoded)
+        table.insert(block_uncompressed_sizes, decoded.count)
     end
 
-    -- Index
+    # Index
     num_records = null
     num_records, pos = read_multibyte(input, pos)
 
@@ -680,36 +680,36 @@ function xz_decompress(input: string): string
         _uncompressed, pos = read_multibyte(input, pos)
     end
 
-    -- Index padding
+    # Index padding
     index_padding = (4 - ((pos - 1) % 4)) % 4
-    -- Actually the index starts at the 0x00 byte we already consumed
-    -- Index padding to 4-byte multiple of total index size
-    -- Let's just skip to 4-byte alignment
+    # Actually the index starts at the 0x00 byte we already consumed
+    # Index padding to 4-byte multiple of total index size
+    # Let's just skip to 4-byte alignment
     while (pos - 1) % 4 != 0 do
         pos = pos + 1
     end
 
-    -- Index CRC32
+    # Index CRC32
     pos = pos + 4
 
-    -- Stream footer (12 bytes)
-    -- CRC32 (4) + Backward Size (4) + Stream Flags (2) + Footer Magic (2)
+    # Stream footer (12 bytes)
+    # CRC32 (4) + Backward Size (4) + Stream Flags (2) + Footer Magic (2)
     pos = pos + 12
 
     return table.concat(output_parts)
 end
 
---------------------------------------------------------------------------------
--- LZMA Encoder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# LZMA Encoder
+#------------------------------------------------------------------------------
 
 MATCH_LEN_MIN = 2
-MATCH_LEN_MAX = 273  -- 2 + 271
+MATCH_LEN_MAX = 273  # 2 + 271
 
--- Range encoder using 64-bit low via Luau doubles (safe up to 2^53)
+# Range encoder using 64-bit low via Luau doubles (safe up to 2^53)
 function range_encoder_create()
     return {
-        low = 0,       -- full 64-bit value stored as double (exact up to 2^53)
+        low = 0,       # full 64-bit value stored as double (exact up to 2^53)
         range = 0xFFFFFFFF,
         cache = 0,
         cache_size = 1,
@@ -718,14 +718,14 @@ function range_encoder_create()
 end
 
 function rc_shift_low(rc)
-    -- Extract byte at bit position 32 (i.e. floor(low / 2^32))
+    # Extract byte at bit position 32 (i.e. floor(low / 2^32))
     low_hi = math.floor(rc.low / 0x100000000)
-    -- Extract bits 24-31 of the lower 32 bits
+    # Extract bits 24-31 of the lower 32 bits
     low32 = rc.low - low_hi * 0x100000000
     top_byte = math.floor(low32 / 0x1000000)
 
     if top_byte != 0xFF or low_hi != 0 then
-        -- Flush cache
+        # Flush cache
         byte_out = rc.cache + low_hi
         table.insert(rc.output, string.char(bit32.band(byte_out, 0xFF)))
         fill = bit32.band(0xFF + low_hi, 0xFF)
@@ -736,7 +736,7 @@ function rc_shift_low(rc)
         rc.cache_size = 0
     end
     rc.cache_size = rc.cache_size + 1
-    -- low = (low & 0x00FFFFFF) << 8
+    # low = (low & 0x00FFFFFF) << 8
     rc.low = bit32.lshift(bit32.band(low32, 0x00FFFFFF), 8)
 end
 
@@ -799,8 +799,8 @@ function rc_get_output(rc): string
     return table.concat(rc.output)
 end
 
--- Hash chain match finder
-HASH_SIZE = 1048576  -- 2^20
+# Hash chain match finder
+HASH_SIZE = 1048576  # 2^20
 HASH_MASK = HASH_SIZE - 1
 
 function hash3(buf: buffer, pos: number): number
@@ -815,9 +815,9 @@ function hash4(buf: buffer, pos: number): number
     return bit32.band(bit32.bxor(v, bit32.rshift(v, 12)), HASH_MASK)
 end
 
--- lzma_encode: encode bytes [start_offset, end_offset) from data_buf (0-indexed buffer).
--- enc_state: null for fresh state, or a table returned by a previous call to continue.
--- Returns: (compressed_string, new_enc_state)
+# lzma_encode: encode bytes [start_offset, end_offset) from data_buf (0-indexed buffer).
+# enc_state: null for fresh state, or a table returned by a previous call to continue.
+# Returns: (compressed_string, new_enc_state)
 function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number, lc: number, lp: number, pb: number, dict_size: number, enc_state: any): (string, any)
     data_len = buffer.len(data_buf)
     chunk_len = end_offset - start_offset
@@ -829,10 +829,10 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
     lit_pos_mask = bit32.lshift(1, lp) - 1
     lc_val = lc
 
-    -- Range encoder (always fresh per LZMA2 chunk)
+    # Range encoder (always fresh per LZMA2 chunk)
     rc = range_encoder_create()
 
-    -- Prob tables and state: either fresh or carried over from enc_state
+    # Prob tables and state: either fresh or carried over from enc_state
     is_match, is_rep, is_rep_g0, is_rep_g1, is_rep_g2, is_rep0_long = null, null, null, null, null, null
     pos_slot_enc = null
     pos_special, pos_align = null, null
@@ -843,7 +843,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
     hash_table, chain = null, null
 
     if enc_state != null then
-        -- Continue from previous state
+        # Continue from previous state
         is_match    = enc_state.is_match
         is_rep      = enc_state.is_rep
         is_rep_g0   = enc_state.is_rep_g0
@@ -871,12 +871,12 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         rep3  = enc_state.rep3
         hash_table = enc_state.hash_table
         chain      = enc_state.chain
-        -- Extend chain if the full buffer is longer now
-        while #chain < data_len do
+        # Extend chain if the full buffer is longer now
+        while chain.count < data_len do
             table.insert(chain, -1)
         end
     else
-        -- Fresh state
+        # Fresh state
         is_match    = create_probs(LZMA_NUM_STATES * LZMA_NUM_POS_STATES_MAX)
         is_rep      = create_probs(LZMA_NUM_STATES)
         is_rep_g0   = create_probs(LZMA_NUM_STATES)
@@ -934,7 +934,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
     MAX_CHAIN_LEN = 1024
     NICE_LEN = 273
 
-    -- Encode literal
+    # Encode literal
     function encode_literal(pos: number, byte: number, prev_byte: number)
         lit_state = bit32.lshift(bit32.band(pos, lit_pos_mask), lc_val) + bit32.rshift(prev_byte, 8 - lc_val)
         probs_offset = lit_state * 768
@@ -950,7 +950,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 rc_encode_bit(rc, lit_probs, prob_idx, cur_bit)
                 symbol = symbol * 2 + cur_bit
                 if match_bit != cur_bit then
-                    -- Encode remaining bits normally
+                    # Encode remaining bits normally
                     for j = i - 1, 0, -1 do
                         b = bit32.band(bit32.rshift(context, j), 1)
                         rc_encode_bit(rc, lit_probs, probs_offset + symbol + 1, b)
@@ -969,7 +969,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         end
     end
 
-    -- Encode length
+    # Encode length
     function encode_length(choice, choice2, low, mid, high, pos_state: number, len: number)
         if len < 8 then
             rc_encode_bit(rc, choice, 1, 0)
@@ -985,14 +985,14 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         end
     end
 
-    -- Encode distance
+    # Encode distance
     function encode_distance(dist: number, len: number)
         len_state = len
         if len_state >= LZMA_NUM_LEN_TO_POS_STATES then
             len_state = LZMA_NUM_LEN_TO_POS_STATES - 1
         end
 
-        -- Find pos_slot
+        # Find pos_slot
         pos_slot_val = null
         if dist < 4 then
             pos_slot_val = dist
@@ -1024,16 +1024,16 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         end
     end
 
-    -- Hash chain match finder for the optimal parser.
-    -- Returns a list of {len, dist} pairs for all distinct-distance best matches,
-    -- and separately updates the hash chain for position `pos`.
-    -- The rep distances must be passed in so we can check them without relying on globals.
+    # Hash chain match finder for the optimal parser.
+    # Returns a list of {len, dist} pairs for all distinct-distance best matches,
+    # and separately updates the hash chain for position `pos`.
+    # The rep distances must be passed in so we can check them without relying on globals.
     function find_matches_at(pos: number, r0: number, r1: number, r2: number, r3: number): { { number } }
         results = {}
         max_len = math.min(MATCH_LEN_MAX, end_offset - pos)
 
         if max_len < MATCH_LEN_MIN then
-            -- Not enough lookahead; just update hash and return nothing
+            # Not enough lookahead; just update hash and return nothing
             if pos + 3 < end_offset then
                 h = hash4(data_buf, pos)
                 chain[pos + 1] = hash_table[h + 1]
@@ -1042,7 +1042,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
             return results
         end
 
-        -- Check the 4 rep distances
+        # Check the 4 rep distances
         best_rep_len = 0
         for ri, rep_dist in ipairs({ r0, r1, r2, r3 }) do
             if rep_dist < pos and rep_dist < dict_size then
@@ -1053,23 +1053,23 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                     len = len + 1
                 end
                 if len >= MATCH_LEN_MIN then
-                    -- rep index: negative values -1..-4 mean rep0..rep3
+                    # rep index: negative values -1..-4 mean rep0..rep3
                     table.insert(results, { len, -(ri) })
                     if len > best_rep_len then best_rep_len = len end
                 end
             end
         end
 
-        -- Hash chain search (requires at least 4 bytes for hash4)
+        # Hash chain search (requires at least 4 bytes for hash4)
         if pos + 3 < end_offset then
             h = hash4(data_buf, pos)
             cur = hash_table[h + 1]
             chain[pos + 1] = cur
             hash_table[h + 1] = pos
 
-            -- We track the longest match at each chain position.
-            -- Only add to results when we find a strictly longer match.
-            -- The DP will enumerate all useful lengths (2..mlen) for each match.
+            # We track the longest match at each chain position.
+            # Only add to results when we find a strictly longer match.
+            # The DP will enumerate all useful lengths (2..mlen) for each match.
             if best_rep_len < NICE_LEN then
                 chain_count = 0
                 chain_best = best_rep_len
@@ -1098,26 +1098,26 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return results
     end
 
-    -- Bit-cost tables (scaled by 1<<6 = 64 units per bit).
-    -- price_table[prob] gives the cost of encoding a 0-bit with that probability.
-    -- prob is in [1, 2047] (LZMA uses 1..2047).
-    PRICE_SCALE = 64  -- 1 unit = 1/64 bit
+    # Bit-cost tables (scaled by 1<<6 = 64 units per bit).
+    # price_table[prob] gives the cost of encoding a 0-bit with that probability.
+    # prob is in [1, 2047] (LZMA uses 1..2047).
+    PRICE_SCALE = 64  # 1 unit = 1/64 bit
     price_table = table.create(2049, 0)
     do
-        -- cost of bit=0: -log2(prob/2048) * PRICE_SCALE
-        -- cost of bit=1: -log2((2048-prob)/2048) * PRICE_SCALE
-        -- We store cost_of_0 at index prob+1 (1-indexed).
-        -- Total table: [0] unused, [1..2048] for prob 0..2047
-        -- prob=0 and prob=2048 are degenerate; LZMA never reaches them.
+        # cost of bit=0: -log2(prob/2048) * PRICE_SCALE
+        # cost of bit=1: -log2((2048-prob)/2048) * PRICE_SCALE
+        # We store cost_of_0 at index prob+1 (1-indexed).
+        # Total table: [0] unused, [1..2048] for prob 0..2047
+        # prob=0 and prob=2048 are degenerate; LZMA never reaches them.
         for p = 1, 2047 do
             cost0 = -math.log(p / 2048) / math.log(2) * PRICE_SCALE
             price_table[p + 1] = math.floor(cost0 + 0.5)
         end
-        price_table[1] = 64 * 15  -- prob=0: cost infinity, use large value
-        price_table[2049] = 0      -- prob=2048: free (prob=1), shouldn't be used
+        price_table[1] = 64 * 15  # prob=0: cost infinity, use large value
+        price_table[2049] = 0      # prob=2048: free (prob=1), shouldn't be used
     end
 
-    -- Returns cost (in PRICE_SCALE units) of encoding a single bit with given prob array/idx
+    # Returns cost (in PRICE_SCALE units) of encoding a single bit with given prob array/idx
     function bit_price(probs, idx, bit)
         prob = probs[idx]
         if bit == 0 then
@@ -1127,7 +1127,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         end
     end
 
-    -- Cost of encoding a bit-tree of num_bits with the given value
+    # Cost of encoding a bit-tree of num_bits with the given value
     function bit_tree_price(probs, num_bits, val)
         total = 0
         m = 1
@@ -1139,7 +1139,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return total
     end
 
-    -- Cost of encoding a reverse bit-tree
+    # Cost of encoding a reverse bit-tree
     function bit_tree_reverse_price(probs, offset, num_bits, val)
         total = 0
         m = 1
@@ -1151,7 +1151,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return total
     end
 
-    -- Cost of encoding length value `len` (raw, i.e. already subtracted MATCH_LEN_MIN)
+    # Cost of encoding length value `len` (raw, i.e. already subtracted MATCH_LEN_MIN)
     function length_price(choice, choice2, low, mid, high, pos_state, len)
         if len < 8 then
             return bit_price(choice, 1, 0) + bit_tree_price(low[pos_state], 3, len)
@@ -1164,7 +1164,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         end
     end
 
-    -- Cost of encoding a distance value `dist` with the given length (raw)
+    # Cost of encoding a distance value `dist` with the given length (raw)
     function distance_price(dist, len_raw)
         len_state = len_raw
         if len_state >= LZMA_NUM_LEN_TO_POS_STATES then
@@ -1196,7 +1196,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 total = total + bit_tree_reverse_price(pos_special, offset, num_direct_bits, dist_reduced)
             else
                 num_fixed = num_direct_bits - LZMA_NUM_ALIGN_BITS
-                -- direct bits: each costs exactly 1 bit = PRICE_SCALE
+                # direct bits: each costs exactly 1 bit = PRICE_SCALE
                 total = total + num_fixed * PRICE_SCALE
                 total = total + bit_tree_reverse_price(pos_align, 1, LZMA_NUM_ALIGN_BITS,
                     bit32.band(dist_reduced, 0xF))
@@ -1206,21 +1206,21 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return total
     end
 
-    -- DP optimal parser
-    -- We process the input in windows. Within each window we compute the optimal
-    -- parse via forward DP, then encode the result.
-    --
-    -- opt_cost[i]  : min bit-cost (PRICE_SCALE units) to reach absolute position (window_start + i)
-    -- opt_len[i]   : length of the token that ends at position (window_start + i); 0 = not set
-    -- opt_type[i]  : type of token: 1=literal, 2=short_rep, 3=rep0, 4=rep1, 5=rep2, 6=rep3, 7=normal_match
-    -- opt_dist[i]  : for type=7 (normal match): the match distance (>= 0)
-    -- opt_state[i] : LZMA state at position (window_start + i)
-    -- opt_r0/r1/r2/r3[i] : rep distances at position (window_start + i)
+    # DP optimal parser
+    # We process the input in windows. Within each window we compute the optimal
+    # parse via forward DP, then encode the result.
+    #
+    # opt_cost[i]  : min bit-cost (PRICE_SCALE units) to reach absolute position (window_start + i)
+    # opt_len[i]   : length of the token that ends at position (window_start + i); 0 = not set
+    # opt_type[i]  : type of token: 1=literal, 2=short_rep, 3=rep0, 4=rep1, 5=rep2, 6=rep3, 7=normal_match
+    # opt_dist[i]  : for type=7 (normal match): the match distance (>= 0)
+    # opt_state[i] : LZMA state at position (window_start + i)
+    # opt_r0/r1/r2/r3[i] : rep distances at position (window_start + i)
 
-    OPT_WINDOW = 4096  -- max DP window size
+    OPT_WINDOW = 4096  # max DP window size
     INF_COST = 1e18
 
-    -- Token type constants
+    # Token type constants
     TOK_LIT       = 1
     TOK_SHORT_REP = 2
     TOK_REP0      = 3
@@ -1229,7 +1229,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
     TOK_REP3      = 6
     TOK_MATCH     = 7
 
-    -- Reusable opt arrays (1-indexed, index i corresponds to offset i-1 within window)
+    # Reusable opt arrays (1-indexed, index i corresponds to offset i-1 within window)
     opt_cost  = table.create(OPT_WINDOW + MATCH_LEN_MAX + 2, INF_COST)
     opt_len   = table.create(OPT_WINDOW + MATCH_LEN_MAX + 2, 0)
     opt_type  = table.create(OPT_WINDOW + MATCH_LEN_MAX + 2, 0)
@@ -1280,8 +1280,8 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return cost
     end
 
-    -- Match price computation (state-aware)
-    -- Returns cost of encoding a normal match (is_match=1, is_rep=0) at given state.
+    # Match price computation (state-aware)
+    # Returns cost of encoding a normal match (is_match=1, is_rep=0) at given state.
     function normal_match_price(cur_st, pos_state, len_raw, dist)
         sidx = cur_st * LZMA_NUM_POS_STATES_MAX + pos_state
         cost = bit_price(is_match, sidx + 1, 1)
@@ -1291,7 +1291,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return cost
     end
 
-    -- Rep match price (rep index 0..3, len >= 2 for rep0; len >= 1 for short rep0)
+    # Rep match price (rep index 0..3, len >= 2 for rep0; len >= 1 for short rep0)
     function rep_match_price(cur_st, pos_state, rep_idx, len_raw)
         sidx = cur_st * LZMA_NUM_POS_STATES_MAX + pos_state
         cost = bit_price(is_match, sidx + 1, 1)
@@ -1300,7 +1300,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         if rep_idx == 0 then
             cost = cost + bit_price(is_rep_g0, cur_st + 1, 0)
             if len_raw == 0 then
-                -- short rep (len=1)
+                # short rep (len=1)
                 cost = cost + bit_price(is_rep0_long, sidx + 1, 0)
             else
                 cost = cost + bit_price(is_rep0_long, sidx + 1, 1)
@@ -1315,7 +1315,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                        + bit_price(is_rep_g1, cur_st + 1, 1)
                        + bit_price(is_rep_g2, cur_st + 1, 0)
                        + length_price(rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high, pos_state, len_raw)
-        else -- rep_idx == 3
+        else # rep_idx == 3
             cost = cost + bit_price(is_rep_g0, cur_st + 1, 1)
                        + bit_price(is_rep_g1, cur_st + 1, 1)
                        + bit_price(is_rep_g2, cur_st + 1, 1)
@@ -1324,54 +1324,54 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
         return cost
     end
 
-    -- State/rep transitions (mirroring encoder logic)
+    # State/rep transitions (mirroring encoder logic)
     function next_state_lit(st) return lzma_state_update_literal(st) end
     function next_state_match(st) return lzma_state_update_match(st) end
     function next_state_rep(st) return lzma_state_update_rep(st) end
     function next_state_short_rep(st) return lzma_state_update_short_rep(st) end
 
-    -- Compute rep distances after a normal match
+    # Compute rep distances after a normal match
     function reps_after_match(dist, r0, r1, r2, r3)
         return dist, r0, r1, r2
     end
 
-    -- Compute rep distances after a rep match (rep_idx = 0..3)
+    # Compute rep distances after a rep match (rep_idx = 0..3)
     function reps_after_rep(rep_idx, r0, r1, r2, r3)
         if rep_idx == 0 then
-            return r0, r1, r2, r3  -- rep0 stays rep0
+            return r0, r1, r2, r3  # rep0 stays rep0
         else if rep_idx == 1 then
             return r1, r0, r2, r3
         else if rep_idx == 2 then
             return r2, r0, r1, r3
-        else -- rep_idx == 3
+        else # rep_idx == 3
             return r3, r0, r1, r2
         end
     end
 
-    -- Encode a single token (literal or match) and advance position.
-    -- Updates state/rep0-3 in-place (local variables).
-    -- `token_type`: "lit", "short_rep", "rep", "match"
-    -- `token_len`: actual length (not raw)
-    -- `token_dist`: distance (for "match"), or rep index 0-3 (for "rep"/"short_rep")
+    # Encode a single token (literal or match) and advance position.
+    # Updates state/rep0-3 in-place (local variables).
+    # `token_type`: "lit", "short_rep", "rep", "match"
+    # `token_len`: actual length (not raw)
+    # `token_dist`: distance (for "match"), or rep index 0-3 (for "rep"/"short_rep")
     function emit_token(pos: number, token_len: number, token_dist_or_rep: number, is_rep_match: boolean, is_short_rep: boolean)
         pos_state = bit32.band(pos, pos_mask)
         state_idx = state * LZMA_NUM_POS_STATES_MAX + pos_state
 
         if not is_rep_match and token_len == 1 and token_dist_or_rep == 0 then
-            -- Literal
+            # Literal
             rc_encode_bit(rc, is_match, state_idx + 1, 0)
             cur_byte = buffer.readu8(data_buf, pos)
             prev_byte = if pos > start_offset then buffer.readu8(data_buf, pos - 1) else 0
             encode_literal(pos, cur_byte, prev_byte)
             state = next_state_lit(state)
         else if is_short_rep then
-            -- Short rep (rep0, len=1)
+            # Short rep (rep0, len=1)
             rc_encode_bit(rc, is_match, state_idx + 1, 1)
             rc_encode_bit(rc, is_rep, state + 1, 1)
             rc_encode_bit(rc, is_rep_g0, state + 1, 0)
             rc_encode_bit(rc, is_rep0_long, state_idx + 1, 0)
             state = next_state_short_rep(state)
-            -- rep0 stays the same
+            # rep0 stays the same
         else if is_rep_match then
             rep_idx = token_dist_or_rep
             rc_encode_bit(rc, is_match, state_idx + 1, 1)
@@ -1386,14 +1386,14 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 rc_encode_bit(rc, is_rep_g0, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g1, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g2, state + 1, 0)
-            else -- rep_idx == 3
+            else # rep_idx == 3
                 rc_encode_bit(rc, is_rep_g0, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g1, state + 1, 1)
                 rc_encode_bit(rc, is_rep_g2, state + 1, 1)
             end
             encode_length(rep_len_choice, rep_len_choice2, rep_len_low, rep_len_mid, rep_len_high, pos_state, token_len - MATCH_LEN_MIN)
             state = next_state_rep(state)
-            -- Update reps
+            # Update reps
             if rep_idx == 1 then
                 tmp = rep1; rep1 = rep0; rep0 = tmp
             else if rep_idx == 2 then
@@ -1401,9 +1401,9 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
             else if rep_idx == 3 then
                 tmp = rep3; rep3 = rep2; rep2 = rep1; rep1 = rep0; rep0 = tmp
             end
-            -- rep0 unchanged for rep_idx==0
+            # rep0 unchanged for rep_idx==0
         else
-            -- Normal match
+            # Normal match
             dist = token_dist_or_rep
             rc_encode_bit(rc, is_match, state_idx + 1, 1)
             rc_encode_bit(rc, is_rep, state + 1, 0)
@@ -1413,40 +1413,40 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
             state = next_state_match(state)
         end
 
-        -- Note: hash chain updates for skipped positions are handled by the DP pass
-        -- (find_matches_at is called on every position during forward DP), so we do
-        -- not need to update them again here.
+        # Note: hash chain updates for skipped positions are handled by the DP pass
+        # (find_matches_at is called on every position during forward DP), so we do
+        # not need to update them again here.
     end
 
-    -- Main encoding loop using optimal (forward DP) parser
+    # Main encoding loop using optimal (forward DP) parser
     pos = start_offset
 
     while pos < end_offset do
-        -- Determine the window end (we won't DP beyond this)
+        # Determine the window end (we won't DP beyond this)
         win_end = math.min(pos + OPT_WINDOW, end_offset)
-        win_size = win_end - pos  -- number of positions in the window
+        win_size = win_end - pos  # number of positions in the window
 
-        -- Initialize DP arrays for this window
-        -- We need indices 1..(win_size + MATCH_LEN_MAX) to allow matches to extend past win_end
+        # Initialize DP arrays for this window
+        # We need indices 1..(win_size + MATCH_LEN_MAX) to allow matches to extend past win_end
         max_reach = win_size + MATCH_LEN_MAX + 1
         for i = 1, max_reach do
             opt_cost[i] = INF_COST
             opt_len[i] = 0
             opt_type[i] = 0
         end
-        opt_cost[1] = 0   -- cost to reach pos+0 is 0
+        opt_cost[1] = 0   # cost to reach pos+0 is 0
         opt_state[1] = state
         opt_r0[1] = rep0
         opt_r1[1] = rep1
         opt_r2[1] = rep2
         opt_r3[1] = rep3
 
-        -- Forward DP pass
-        last_reachable = 1  -- furthest index with finite cost
+        # Forward DP pass
+        last_reachable = 1  # furthest index with finite cost
         for i = 1, win_size do
             if opt_cost[i] >= INF_COST then
-                -- This position is unreachable; skip
-                -- (Should not happen since we ensure connectivity via literals)
+                # This position is unreachable; skip
+                # (Should not happen since we ensure connectivity via literals)
                 continue
             end
 
@@ -1455,9 +1455,9 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
             cur_st = opt_state[i]
             cur_r0, cur_r1, cur_r2, cur_r3 = opt_r0[i], opt_r1[i], opt_r2[i], opt_r3[i]
 
-            -- Option 1: literal
+            # Option 1: literal
             lit_cost = cur_cost + literal_price(abs_pos, cur_st, cur_r0, cur_r1, cur_r2, cur_r3)
-            ni = i + 1  -- next index
+            ni = i + 1  # next index
             if lit_cost < opt_cost[ni] then
                 opt_cost[ni] = lit_cost
                 opt_len[ni] = 1
@@ -1468,8 +1468,8 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 if ni > last_reachable then last_reachable = ni end
             end
 
-            -- Option 2: short rep (rep0, len=1)
-            -- rep0 is the distance, so the byte at abs_pos - rep0 - 1 should match abs_pos
+            # Option 2: short rep (rep0, len=1)
+            # rep0 is the distance, so the byte at abs_pos - rep0 - 1 should match abs_pos
             if abs_pos >= cur_r0 + 1 and abs_pos < end_offset then
                 if buffer.readu8(data_buf, abs_pos) == buffer.readu8(data_buf, abs_pos - cur_r0 - 1) then
                     ps = bit32.band(abs_pos, pos_mask)
@@ -1486,23 +1486,23 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 end
             end
 
-            -- Option 3: matches (rep or normal).
-            -- find_matches_at updates the hash chain for abs_pos and returns all
-            -- available matches (rep and normal). Works near end of input too
-            -- (returns only rep matches when fewer than 4 bytes remain).
+            # Option 3: matches (rep or normal).
+            # find_matches_at updates the hash chain for abs_pos and returns all
+            # available matches (rep and normal). Works near end of input too
+            # (returns only rep matches when fewer than 4 bytes remain).
             do
                 matches = find_matches_at(abs_pos, cur_r0, cur_r1, cur_r2, cur_r3)
                 ps = bit32.band(abs_pos, pos_mask)
 
                 for _, m in ipairs(matches) do
                     mlen = m[1]
-                    mdist = m[2]  -- negative = rep index (-1=rep0, etc.), non-negative = dist
+                    mdist = m[2]  # negative = rep index (-1=rep0, etc.), non-negative = dist
 
                     if mdist < 0 then
-                        -- Rep match; mdist == -1 means rep0, -2 means rep1, etc.
-                        rep_idx = -mdist - 1  -- 0..3
-                        tok_type_for_rep = TOK_REP0 + rep_idx  -- TOK_REP0=3, TOK_REP1=4, etc.
-                        -- Try all lengths from MATCH_LEN_MIN to mlen
+                        # Rep match; mdist == -1 means rep0, -2 means rep1, etc.
+                        rep_idx = -mdist - 1  # 0..3
+                        tok_type_for_rep = TOK_REP0 + rep_idx  # TOK_REP0=3, TOK_REP1=4, etc.
+                        # Try all lengths from MATCH_LEN_MIN to mlen
                         for l = MATCH_LEN_MIN, mlen do
                             len_raw = l - MATCH_LEN_MIN
                             mc = cur_cost + rep_match_price(cur_st, ps, rep_idx, len_raw)
@@ -1519,7 +1519,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                             end
                         end
                     else
-                        -- Normal match
+                        # Normal match
                         for l = MATCH_LEN_MIN, mlen do
                             len_raw = l - MATCH_LEN_MIN
                             mc = cur_cost + normal_match_price(cur_st, ps, len_raw, mdist)
@@ -1540,34 +1540,34 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
             end
         end
 
-        -- Backward trace to recover the optimal path.
-        -- We start from the last reachable index and follow back-pointers
-        -- (stored as the source index = j - opt_len[j]) to index 1.
-        -- We build a sequence of (len, type, dist) triples in reverse,
-        -- then emit them in forward order.
+        # Backward trace to recover the optimal path.
+        # We start from the last reachable index and follow back-pointers
+        # (stored as the source index = j - opt_len[j]) to index 1.
+        # We build a sequence of (len, type, dist) triples in reverse,
+        # then emit them in forward order.
 
-        -- The "end" of the window: we want to consume exactly win_size positions.
-        -- Find the index corresponding to win_end (= win_size + 1 in 1-indexed).
-        -- If that exact index has finite cost, use it; otherwise find the best index
-        -- at or beyond win_size that we can trace back to index 1.
-        end_idx = win_size + 1  -- 1-indexed: corresponds to absolute position pos + win_size
+        # The "end" of the window: we want to consume exactly win_size positions.
+        # Find the index corresponding to win_end (= win_size + 1 in 1-indexed).
+        # If that exact index has finite cost, use it; otherwise find the best index
+        # at or beyond win_size that we can trace back to index 1.
+        end_idx = win_size + 1  # 1-indexed: corresponds to absolute position pos + win_size
 
-        -- Trace backward from end_idx to 1
-        -- Note: end_idx may exceed last_reachable if the last few positions extended past win_end
-        -- In that case, use last_reachable.
+        # Trace backward from end_idx to 1
+        # Note: end_idx may exceed last_reachable if the last few positions extended past win_end
+        # In that case, use last_reachable.
         if end_idx > last_reachable then end_idx = last_reachable end
 
-        -- Build token sequence in reverse
-        tok_seq_len   = {}  -- token lengths in reverse order
-        tok_seq_type  = {}  -- token types
-        tok_seq_dist  = {}  -- token distances
+        # Build token sequence in reverse
+        tok_seq_len   = {}  # token lengths in reverse order
+        tok_seq_type  = {}  # token types
+        tok_seq_dist  = {}  # token distances
         n_toks = 0
 
         cur_idx = end_idx
         while cur_idx > 1 do
             tl = opt_len[cur_idx]
             if tl == 0 then
-                -- No valid back-pointer; fallback: emit a single literal
+                # No valid back-pointer; fallback: emit a single literal
                 n_toks = n_toks + 1
                 tok_seq_len[n_toks]  = 1
                 tok_seq_type[n_toks] = TOK_LIT
@@ -1578,11 +1578,11 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 tok_seq_len[n_toks]  = tl
                 tok_seq_type[n_toks] = opt_type[cur_idx]
                 tok_seq_dist[n_toks] = opt_dist[cur_idx]
-                cur_idx = cur_idx - tl  -- jump back to source index
+                cur_idx = cur_idx - tl  # jump back to source index
             end
         end
 
-        -- Emit tokens in forward order (tok_seq is in reverse)
+        # Emit tokens in forward order (tok_seq is in reverse)
         emit_pos = pos
         for ti = n_toks, 1, -1 do
             tok_len  = tok_seq_len[ti]
@@ -1601,7 +1601,7 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
                 emit_token(emit_pos, tok_len, 2, true, false)
             else if tok_type == TOK_REP3 then
                 emit_token(emit_pos, tok_len, 3, true, false)
-            else  -- TOK_MATCH
+            else  # TOK_MATCH
                 emit_token(emit_pos, tok_len, tok_dist, false, false)
             end
 
@@ -1644,9 +1644,9 @@ function lzma_encode(data_buf: buffer, start_offset: number, end_offset: number,
     return rc_get_output(rc), new_state
 end
 
---------------------------------------------------------------------------------
--- LZMA2 Encoder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# LZMA2 Encoder
+#------------------------------------------------------------------------------
 
 function lzma2_encode(input_data: string, dict_size: number): string
     lc = 3
@@ -1656,35 +1656,35 @@ function lzma2_encode(input_data: string, dict_size: number): string
     parts = {}
     props_byte = lc + lp * 9 + pb * 45
 
-    -- Split into chunks that fit in LZMA2's 16-bit pack_size field
-    -- Max uncompressed per chunk: 2MB (21 bits). Max compressed per chunk: 64KB (16 bits).
-    chunk_max_uncompressed = 2097152  -- 2MB max (fits in 21-bit unpack_size field)
+    # Split into chunks that fit in LZMA2's 16-bit pack_size field
+    # Max uncompressed per chunk: 2MB (21 bits). Max compressed per chunk: 64KB (16 bits).
+    chunk_max_uncompressed = 2097152  # 2MB max (fits in 21-bit unpack_size field)
 
-    -- Work with the full input as a buffer so state (hash chains) can span chunks
+    # Work with the full input as a buffer so state (hash chains) can span chunks
     full_buf = buffer.fromstring(input_data)
-    total_len = #input_data
-    offset = 0  -- 0-indexed buffer offset
+    total_len = input_data.count
+    offset = 0  # 0-indexed buffer offset
     first_chunk = true
-    enc_state = null  -- null = fresh state for first chunk
+    enc_state = null  # null = fresh state for first chunk
 
     while offset < total_len do
-        -- Try to compress with the maximum chunk size first, then shrink if needed
+        # Try to compress with the maximum chunk size first, then shrink if needed
         chunk_end = math.min(offset + chunk_max_uncompressed, total_len)
         unpack_size = chunk_end - offset
 
         compressed, new_state = lzma_encode(full_buf, offset, chunk_end, lc, lp, pb, dict_size, enc_state)
-        pack_size = #compressed
+        pack_size = compressed.count
 
-        -- If compressed is too large, try half the size
+        # If compressed is too large, try half the size
         while pack_size > 65536 and unpack_size > 65536 do
             unpack_size = math.floor(unpack_size / 2)
             chunk_end = offset + unpack_size
             compressed, new_state = lzma_encode(full_buf, offset, chunk_end, lc, lp, pb, dict_size, null)
-            pack_size = #compressed
+            pack_size = compressed.count
         end
 
         if pack_size > 65536 or pack_size + 6 >= unpack_size then
-            -- Store uncompressed in sub-chunks
+            # Store uncompressed in sub-chunks
             remaining = unpack_size
             sub_off = offset
             input_str = buffer.tostring(full_buf)
@@ -1702,7 +1702,7 @@ function lzma2_encode(input_data: string, dict_size: number): string
                 first_chunk = false
             end
         else
-            -- LZMA compressed chunk (always use 0xE0 for simplicity/correctness)
+            # LZMA compressed chunk (always use 0xE0 for simplicity/correctness)
             unpack_high = bit32.band(bit32.rshift(unpack_size - 1, 16), 0x1F)
             control = bit32.bor(0xE0, unpack_high)
             table.insert(parts, string.char(control))
@@ -1722,15 +1722,15 @@ function lzma2_encode(input_data: string, dict_size: number): string
         offset = chunk_end
     end
 
-    -- End marker
+    # End marker
     table.insert(parts, "\x00")
 
     return table.concat(parts)
 end
 
---------------------------------------------------------------------------------
--- XZ Stream Encoder
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# XZ Stream Encoder
+#------------------------------------------------------------------------------
 
 function encode_multibyte(val: number): string
     bytes = {}
@@ -1743,41 +1743,41 @@ function encode_multibyte(val: number): string
 end
 
 function xz_compress(input_data: string): string
-    dict_size = 8388608  -- 8MB dictionary (xz default for -6)
-    dict_prop = 22  -- encodes as mantissa=2, exponent=22 -> 2<<22 = 8MB
+    dict_size = 8388608  # 8MB dictionary (xz default for -6)
+    dict_prop = 22  # encodes as mantissa=2, exponent=22 -> 2<<22 = 8MB
 
     parts = {}
 
-    -- Stream Header
+    # Stream Header
     table.insert(parts, XZ_MAGIC)
-    -- Stream flags: check type = CRC64 (0x04)
+    # Stream flags: check type = CRC64 (0x04)
     stream_flags = "\x00\x04"
     table.insert(parts, stream_flags)
-    -- CRC32 of stream flags
+    # CRC32 of stream flags
     table.insert(parts, string.pack("<I4", crc32(stream_flags)))
 
-    -- Block
+    # Block
     lzma2_data = lzma2_encode(input_data, dict_size)
-    uncompressed_size = #input_data
-    compressed_size = #lzma2_data
+    uncompressed_size = input_data.count
+    compressed_size = lzma2_data.count
 
-    -- Block header
+    # Block header
     block_header_parts = {}
-    -- Block flags: 1 filter, has compressed size, has uncompressed size
-    table.insert(block_header_parts, string.char(bit32.bor(0x00, 0x40, 0x80)))  -- 1 filter + comp size + uncomp size
-    -- Compressed size
+    # Block flags: 1 filter, has compressed size, has uncompressed size
+    table.insert(block_header_parts, string.char(bit32.bor(0x00, 0x40, 0x80)))  # 1 filter + comp size + uncomp size
+    # Compressed size
     table.insert(block_header_parts, encode_multibyte(compressed_size))
-    -- Uncompressed size
+    # Uncompressed size
     table.insert(block_header_parts, encode_multibyte(uncompressed_size))
-    -- Filter: LZMA2 (ID=0x21, props_size=1, props=dict_prop)
+    # Filter: LZMA2 (ID=0x21, props_size=1, props=dict_prop)
     table.insert(block_header_parts, encode_multibyte(0x21))
     table.insert(block_header_parts, encode_multibyte(1))
     table.insert(block_header_parts, string.char(dict_prop))
 
     block_header_content = table.concat(block_header_parts)
 
-    -- Calculate block header size (must be multiple of 4, includes size byte + content + padding + crc32)
-    header_real_size = 1 + #block_header_content + 4  -- size byte + content + crc32
+    # Calculate block header size (must be multiple of 4, includes size byte + content + padding + crc32)
+    header_real_size = 1 + block_header_content.count + 4  # size byte + content + crc32
     header_padded_size = math.ceil(header_real_size / 4) * 4
     header_padding = header_padded_size - header_real_size
     header_size_byte = header_padded_size / 4 - 1
@@ -1788,51 +1788,51 @@ function xz_compress(input_data: string): string
 
     table.insert(parts, full_block_header)
 
-    -- Compressed data
+    # Compressed data
     table.insert(parts, lzma2_data)
 
-    -- Padding to 4-byte alignment
-    data_pad = (4 - (#lzma2_data % 4)) % 4
+    # Padding to 4-byte alignment
+    data_pad = (4 - (lzma2_data.count % 4)) % 4
     if data_pad > 0 then
         table.insert(parts, string.rep("\x00", data_pad))
     end
 
-    -- CRC64 check of uncompressed data
+    # CRC64 check of uncompressed data
     table.insert(parts, crc64_bytes(input_data))
 
-    -- Index
+    # Index
     index_start_offset = 0
     for _, p in ipairs(parts) do
-        index_start_offset = index_start_offset + #p
+        index_start_offset = index_start_offset + p.count
     end
 
     index_parts = {}
-    table.insert(index_parts, "\x00")  -- Index indicator
-    table.insert(index_parts, encode_multibyte(1))  -- Number of records = 1
+    table.insert(index_parts, "\x00")  # Index indicator
+    table.insert(index_parts, encode_multibyte(1))  # Number of records = 1
 
-    -- Record: unpadded size (header + data + check), uncompressed size
-    unpadded_size = #full_block_header + #lzma2_data + 8  -- +8 for CRC64 check
+    # Record: unpadded size (header + data + check), uncompressed size
+    unpadded_size = full_block_header.count + lzma2_data.count + 8  # +8 for CRC64 check
     table.insert(index_parts, encode_multibyte(unpadded_size))
     table.insert(index_parts, encode_multibyte(uncompressed_size))
 
     index_content = table.concat(index_parts)
-    -- Pad index to 4-byte alignment
-    index_pad = (4 - (#index_content % 4)) % 4
+    # Pad index to 4-byte alignment
+    index_pad = (4 - (index_content.count % 4)) % 4
     index_content = index_content .. string.rep("\x00", index_pad)
 
     index_crc = crc32(index_content)
     table.insert(parts, index_content)
     table.insert(parts, string.pack("<I4", index_crc))
 
-    -- Stream Footer
-    backward_size = math.ceil(#index_content / 4)  -- in 4-byte units
-    -- Note: backward size includes the index CRC32 too
-    -- Actually backward_size = (index_size + 4(CRC32)) / 4 - 1... no
-    -- Backward Size: number of 4-byte units minus one...
-    -- Actually: "Backward Size is stored as a 4-byte little-endian integer,
-    -- and the real Backward Size equals (stored_value + 1) * 4 bytes"
-    -- This is the size of the Index field (including CRC32)
-    index_total_size = #index_content + 4  -- content + CRC32
+    # Stream Footer
+    backward_size = math.ceil(index_content.count / 4)  # in 4-byte units
+    # Note: backward size includes the index CRC32 too
+    # Actually backward_size = (index_size + 4(CRC32)) / 4 - 1... no
+    # Backward Size: number of 4-byte units minus one...
+    # Actually: "Backward Size is stored as a 4-byte little-endian integer,
+    # and the real Backward Size equals (stored_value + 1) * 4 bytes"
+    # This is the size of the Index field (including CRC32)
+    index_total_size = index_content.count + 4  # content + CRC32
     backward_size_val = index_total_size / 4 - 1
 
     footer_content = string.pack("<I4", backward_size_val) .. stream_flags

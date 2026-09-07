@@ -1,4 +1,4 @@
---[[
+#[[
  * AES Cipher function: encrypt 'input' with Rijndael algorithm
  *
  *   takes   byte-array 'input' (16 bytes)
@@ -12,7 +12,7 @@
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 
--- Sbox is pre-computed multiplicative inverse in GF(2^8) used in SubBytes and KeyExpansion [§5.1.1]
+# Sbox is pre-computed multiplicative inverse in GF(2^8) used in SubBytes and KeyExpansion [§5.1.1]
 Sbox =  { 0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
              0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
              0xb7,0xfd,0x93,0x26,0x36,0x3f,0xf7,0xcc,0x34,0xa5,0xe5,0xf1,0x71,0xd8,0x31,0x15,
@@ -30,7 +30,7 @@ Sbox =  { 0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,
              0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,
              0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16 };
 
--- Rcon is Round Constant used for the Key Expansion [1st col is 2^(r-1) in GF(2^8)] [§5.2]
+# Rcon is Round Constant used for the Key Expansion [1st col is 2^(r-1) in GF(2^8)] [§5.2]
 Rcon = { { 0x00, 0x00, 0x00, 0x00 },
              {0x01, 0x00, 0x00, 0x00},
              {0x02, 0x00, 0x00, 0x00},
@@ -43,7 +43,7 @@ Rcon = { { 0x00, 0x00, 0x00, 0x00 },
              {0x1b, 0x00, 0x00, 0x00},
              {0x36, 0x00, 0x00, 0x00} }; 
 
-function SubBytes(s, Nb)    -- apply SBox to state S [§5.1.1]
+function SubBytes(s, Nb)    # apply SBox to state S [§5.1.1]
   for r = 0,3 do
     for c = 0,Nb-1 do s[r + 1][c + 1] = Sbox[s[r + 1][c + 1] + 1]; end
   end
@@ -51,20 +51,20 @@ function SubBytes(s, Nb)    -- apply SBox to state S [§5.1.1]
 end
 
 
-function ShiftRows(s, Nb)    -- shift row r of state S left by r bytes [§5.1.2]
+function ShiftRows(s, Nb)    # shift row r of state S left by r bytes [§5.1.2]
   t = {};
   for r = 1,3 do
-    for c = 0,3 do t[c + 1] = s[r + 1][((c + r) % Nb) + 1] end;  -- shift into temp copy
-    for c = 0,3 do s[r + 1][c + 1] = t[c + 1]; end         -- and copy back
-  end          -- note that this will work for Nb=4,5,6, but not 7,8 (always 4 for AES):
-  return s;  -- see fp.gladman.plus.com/cryptography_technology/rijndael/aes.spec.311.pdf 
+    for c = 0,3 do t[c + 1] = s[r + 1][((c + r) % Nb) + 1] end;  # shift into temp copy
+    for c = 0,3 do s[r + 1][c + 1] = t[c + 1]; end         # and copy back
+  end          # note that this will work for Nb=4,5,6, but not 7,8 (always 4 for AES):
+  return s;  # see fp.gladman.plus.com/cryptography_technology/rijndael/aes.spec.311.pdf 
 end
 
 
-function MixColumns(s, Nb)   -- combine bytes of each col of state S [§5.1.3]
+function MixColumns(s, Nb)   # combine bytes of each col of state S [§5.1.3]
   for c = 0,3 do
-    a = {};  -- 'a' is a copy of the current column from 's'
-    b = {};  -- 'b' is a•{02} in GF(2^8)
+    a = {};  # 'a' is a copy of the current column from 's'
+    b = {};  # 'b' is a•{02} in GF(2^8)
     for i = 0,3 do
       a[i + 1] = s[i + 1][c + 1];
 
@@ -74,22 +74,22 @@ function MixColumns(s, Nb)   -- combine bytes of each col of state S [§5.1.3]
         b[i + 1] = bit32.lshift(s[i + 1][c + 1], 1);
       end
     end
-    -- a[n] ^ b[n] is a•{03} in GF(2^8)
-    s[1][c + 1] = bit32.bxor(b[1], a[2], b[2], a[3], a[4]); -- 2*a0 + 3*a1 + a2 + a3
-    s[2][c + 1] = bit32.bxor(a[1], b[2], a[3], b[3], a[4]); -- a0 * 2*a1 + 3*a2 + a3
-    s[3][c + 1] = bit32.bxor(a[1], a[2], b[3], a[4], b[4]); -- a0 + a1 + 2*a2 + 3*a3
-    s[4][c + 1] = bit32.bxor(a[1], b[1], a[2], a[3], b[4]); -- 3*a0 + a1 + a2 + 2*a3
+    # a[n] ^ b[n] is a•{03} in GF(2^8)
+    s[1][c + 1] = bit32.bxor(b[1], a[2], b[2], a[3], a[4]); # 2*a0 + 3*a1 + a2 + a3
+    s[2][c + 1] = bit32.bxor(a[1], b[2], a[3], b[3], a[4]); # a0 * 2*a1 + 3*a2 + a3
+    s[3][c + 1] = bit32.bxor(a[1], a[2], b[3], a[4], b[4]); # a0 + a1 + 2*a2 + 3*a3
+    s[4][c + 1] = bit32.bxor(a[1], b[1], a[2], a[3], b[4]); # 3*a0 + a1 + a2 + 2*a3
 end
   return s;
 end
 
 
-function SubWord(w)    -- apply SBox to 4-byte word w
+function SubWord(w)    # apply SBox to 4-byte word w
   for i = 0,3 do w[i + 1] = Sbox[w[i + 1] + 1]; end
   return w;
 end
 
-function RotWord(w)    -- rotate 4-byte word w left by one byte
+function RotWord(w)    # rotate 4-byte word w left by one byte
   w[5] = w[1];
   for i = 0,3 do w[i + 1] = w[i + 2]; end
   return w;
@@ -97,18 +97,18 @@ end
 
 
 
-function AddRoundKey(state, w, rnd, Nb)  -- xor Round Key into state S [§5.1.4]
+function AddRoundKey(state, w, rnd, Nb)  # xor Round Key into state S [§5.1.4]
   for r = 0,3 do
     for c = 0,Nb-1 do state[r + 1][c + 1] = bit32.bxor(state[r + 1][c + 1], w[rnd*4+c + 1][r + 1]); end
   end
   return state;
 end
 
-function Cipher(input, w)    -- main Cipher function [§5.1]
-  Nb = 4;               -- block size (in words): no of columns in state (fixed at 4 for AES)
-  Nr = #w / Nb - 1; -- no of rounds: 10/12/14 for 128/192/256-bit keys
+function Cipher(input, w)    # main Cipher function [§5.1]
+  Nb = 4;               # block size (in words): no of columns in state (fixed at 4 for AES)
+  Nr = w.count / Nb - 1; # no of rounds: 10/12/14 for 128/192/256-bit keys
 
-  state = {{},{},{},{}};  -- initialise 4xNb byte-array 'state' with input [§3.4]
+  state = {{},{},{},{}};  # initialise 4xNb byte-array 'state' with input [§3.4]
   for i = 0,4*Nb-1 do state[(i % 4) + 1][math.floor(i/4) + 1] = input[i + 1]; end
 
   state = AddRoundKey(state, w, 0, Nb);
@@ -124,17 +124,17 @@ function Cipher(input, w)    -- main Cipher function [§5.1]
   state = ShiftRows(state, Nb);
   state = AddRoundKey(state, w, Nr, Nb);
 
-  output = {}  -- convert state to 1-d array before returning [§3.4]
+  output = {}  # convert state to 1-d array before returning [§3.4]
   for i = 0,4*Nb-1 do output[i + 1] = state[(i % 4) + 1][math.floor(i / 4) + 1]; end
 
   return output;
 end
 
 
-function KeyExpansion(key)  -- generate Key Schedule (byte-array Nr+1 x Nb) from Key [§5.2]
-  Nb = 4;            -- block size (in words): no of columns in state (fixed at 4 for AES)
-  Nk = #key / 4  -- key length (in words): 4/6/8 for 128/192/256-bit keys
-  Nr = Nk + 6;       -- no of rounds: 10/12/14 for 128/192/256-bit keys
+function KeyExpansion(key)  # generate Key Schedule (byte-array Nr+1 x Nb) from Key [§5.2]
+  Nb = 4;            # block size (in words): no of columns in state (fixed at 4 for AES)
+  Nk = key.count / 4  # key length (in words): 4/6/8 for 128/192/256-bit keys
+  Nr = Nk + 6;       # no of rounds: 10/12/14 for 128/192/256-bit keys
 
   w = {};
   temp = {};
@@ -159,11 +159,11 @@ function KeyExpansion(key)  -- generate Key Schedule (byte-array Nr+1 x Nb) from
   return w;
 end
 
-function escCtrlChars(str)  -- escape control chars which might cause problems handling ciphertext
+function escCtrlChars(str)  # escape control chars which might cause problems handling ciphertext
   return string.gsub(str, "[\0\t\n\v\f\r\'\"!-]", function(c) return '!' .. string.byte(c, 1) .. '!'; end);
 end
 
-function unescCtrlChars(str)  -- unescape potentially problematic control characters
+function unescCtrlChars(str)  # unescape potentially problematic control characters
   return string.gsub(str, "!%d%d?%d?!", function(c)
     sc = string.sub(c, 2,-2)
 
@@ -171,7 +171,7 @@ function unescCtrlChars(str)  -- unescape potentially problematic control charac
   end);
 end
 
---[[ 
+#[[ 
  * Use AES to encrypt 'plaintext' with 'password' using 'nBits' key, in 'Counter' mode of operation
  *                           - see http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
  *   for each block
@@ -180,75 +180,75 @@ end
  ]]
 
 function AESEncryptCtr(plaintext, password, nBits)
-  if (not (nBits==128 or nBits==192 or nBits==256)) then return ''; end  -- standard allows 128/192/256 bit keys
+  if (not (nBits==128 or nBits==192 or nBits==256)) then return ''; end  # standard allows 128/192/256 bit keys
 
-  -- for this example script, generate the key by applying Cipher to 1st 16/24/32 chars of password; 
-  -- for real-world applications, a higher security approach would be to hash the password e.g. with SHA-1
-  nBytes = nBits/8;  -- no bytes in key
+  # for this example script, generate the key by applying Cipher to 1st 16/24/32 chars of password; 
+  # for real-world applications, a higher security approach would be to hash the password e.g. with SHA-1
+  nBytes = nBits/8;  # no bytes in key
   pwBytes = {};
   for i = 0,nBytes-1 do pwBytes[i + 1] = string.byte(password, i + 1); end
   key = Cipher(pwBytes, KeyExpansion(pwBytes));
 
-  -- key is now 16/24/32 bytes long
+  # key is now 16/24/32 bytes long
   for i = 1,nBytes-16 do
     table.insert(key, key[i])
   end
 
-  -- initialise counter block (NIST SP800-38A §B.2): millisecond time-stamp for nonce in 1st 8 bytes,
-  -- block counter in 2nd 8 bytes
-  blockSize = 16;  -- block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-  counterBlock = {};  -- block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-  nonce = os.clock() * 1000 -- (new Date()).getTime();  -- milliseconds since 1-Jan-1970
+  # initialise counter block (NIST SP800-38A §B.2): millisecond time-stamp for nonce in 1st 8 bytes,
+  # block counter in 2nd 8 bytes
+  blockSize = 16;  # block size fixed at 16 bytes / 128 bits (Nb=4) for AES
+  counterBlock = {};  # block size fixed at 16 bytes / 128 bits (Nb=4) for AES
+  nonce = os.clock() * 1000 # (new Date()).getTime();  -- milliseconds since 1-Jan-1970
 
-  -- encode nonce in two stages to cater for JavaScript 32-bit limit on bitwise ops
+  # encode nonce in two stages to cater for JavaScript 32-bit limit on bitwise ops
   for i = 0,3 do counterBlock[i + 1] = bit32.extract(nonce, i * 8, 8); end
   for i = 0,3 do counterBlock[i + 4 + 1] = bit32.extract(math.floor(nonce / 0x100000000), i*8, 8); end
 
-  -- generate key schedule - an expansion of the key into distinct Key Rounds for each round
+  # generate key schedule - an expansion of the key into distinct Key Rounds for each round
   keySchedule = KeyExpansion(key);
 
-  blockCount = math.ceil(#plaintext / blockSize);
-  ciphertext = {};  -- ciphertext as array of strings
+  blockCount = math.ceil(plaintext.count / blockSize);
+  ciphertext = {};  # ciphertext as array of strings
   
   for b = 0,blockCount-1 do
-    -- set counter (block #) in last 8 bytes of counter block (leaving nonce in 1st 8 bytes)
-    -- again done in two stages for 32-bit ops
+    # set counter (block #) in last 8 bytes of counter block (leaving nonce in 1st 8 bytes)
+    # again done in two stages for 32-bit ops
     for c = 0,3 do counterBlock[15-c + 1] = bit32.extract(b, c*8, 8); end
     for c = 0,3 do counterBlock[15-c-4 + 1] = bit32.extract(math.floor(b/0x100000000), c*8, 8); end
 
-    cipherCntr = Cipher(counterBlock, keySchedule);  -- -- encrypt counter block --
+    cipherCntr = Cipher(counterBlock, keySchedule);  # -- encrypt counter block --
     
-    -- calculate length of final block:
+    # calculate length of final block:
     blockLength = null
     
     if b<blockCount-1 then
       blockLength = blockSize;
     else
-      blockLength = (#plaintext - 1) % blockSize+1;
+      blockLength = (plaintext.count - 1) % blockSize+1;
     end
 
     ct = '';
-    for i = 0,blockLength-1 do  -- -- xor plaintext with ciphered counter byte-by-byte --
+    for i = 0,blockLength-1 do  # -- xor plaintext with ciphered counter byte-by-byte --
       plaintextByte = string.byte(plaintext, b*blockSize+i + 1);
       cipherByte = bit32.bxor(plaintextByte, cipherCntr[i + 1]);
       ct = ct .. string.char(cipherByte);
     end
-    -- ct is now ciphertext for this block
+    # ct is now ciphertext for this block
 
-    ciphertext[b + 1] = escCtrlChars(ct);  -- escape troublesome characters in ciphertext
+    ciphertext[b + 1] = escCtrlChars(ct);  # escape troublesome characters in ciphertext
   end
 
-  -- convert the nonce to a string to go on the front of the ciphertext
+  # convert the nonce to a string to go on the front of the ciphertext
   ctrTxt = '';
   for i = 0,7 do ctrTxt = ctrTxt .. string.char(counterBlock[i + 1]); end
   ctrTxt = escCtrlChars(ctrTxt);
 
-  -- use '-' to separate blocks, use Array.join to concatenate arrays of strings for efficiency
+  # use '-' to separate blocks, use Array.join to concatenate arrays of strings for efficiency
   return ctrTxt .. '-' .. table.concat(ciphertext, '-');
 end
 
 
---[[
+#[[
  * Use AES to decrypt 'ciphertext' with 'password' using 'nBits' key, in Counter mode of operation
  *
  *   for each block
@@ -257,22 +257,22 @@ end
  ]]
 
 function AESDecryptCtr(ciphertext, password, nBits)
-  if (not (nBits==128 or nBits==192 or nBits==256)) then return ''; end  -- standard allows 128/192/256 bit keys
+  if (not (nBits==128 or nBits==192 or nBits==256)) then return ''; end  # standard allows 128/192/256 bit keys
 
-  nBytes = nBits/8;  -- no bytes in key
+  nBytes = nBits/8;  # no bytes in key
   pwBytes = {};
   for i = 0,nBytes-1 do pwBytes[i + 1] = string.byte(password, i + 1); end
   pwKeySchedule = KeyExpansion(pwBytes);
   key = Cipher(pwBytes, pwKeySchedule);
 
-  -- key is now 16/24/32 bytes long
+  # key is now 16/24/32 bytes long
   for i = 1,nBytes-16 do
     table.insert(key, key[i])
   end
 
   keySchedule = KeyExpansion(key);
 
-  -- split ciphertext into array of block-length strings 
+  # split ciphertext into array of block-length strings 
   tmp = {}
 
   for token in string.gmatch(ciphertext, "[^-]+") do
@@ -281,33 +281,33 @@ function AESDecryptCtr(ciphertext, password, nBits)
 
   ciphertext = tmp;
 
-  -- recover nonce from 1st element of ciphertext
-  blockSize = 16;  -- block size fixed at 16 bytes / 128 bits (Nb=4) for AES
+  # recover nonce from 1st element of ciphertext
+  blockSize = 16;  # block size fixed at 16 bytes / 128 bits (Nb=4) for AES
   counterBlock = {};
   ctrTxt = unescCtrlChars(ciphertext[1]);
   for i = 0,7 do counterBlock[i + 1] = string.byte(ctrTxt, i + 1); end
 
   plaintext = {};
 
-  for b = 1,#ciphertext-1 do
-    -- set counter (block #) in last 8 bytes of counter block (leaving nonce in 1st 8 bytes)
+  for b = 1,ciphertext.count-1 do
+    # set counter (block #) in last 8 bytes of counter block (leaving nonce in 1st 8 bytes)
     for c = 0,3 do counterBlock[15-c + 1] = bit32.extract(b-1, c*8, 8); end
     for c = 0,3 do counterBlock[15-c-4 + 1] = bit32.extract(math.floor((b-1)/0x100000000), c*8, 8); end
 
-    cipherCntr = Cipher(counterBlock, keySchedule);  -- encrypt counter block
+    cipherCntr = Cipher(counterBlock, keySchedule);  # encrypt counter block
 
     ciphertext[b + 1] = unescCtrlChars(ciphertext[b + 1]);
 
     pt = '';
-    for i = 0,#ciphertext[b + 1]-1 do
-      -- -- xor plaintext with ciphered counter byte-by-byte --
+    for i = 0,ciphertext[b + 1].count-1 do
+      # -- xor plaintext with ciphered counter byte-by-byte --
       ciphertextByte = string.byte(ciphertext[b + 1], i + 1);
       plaintextByte = bit32.bxor(ciphertextByte, cipherCntr[i + 1]);
       pt = pt .. string.char(plaintextByte);
     end
-    -- pt is now plaintext for this block
+    # pt is now plaintext for this block
 
-    plaintext[b] = pt;  -- b-1 'cos no initial nonce block in plaintext
+    plaintext[b] = pt;  # b-1 'cos no initial nonce block in plaintext
   end
 
   return table.concat(plaintext)

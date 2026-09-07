@@ -9,7 +9,7 @@ function test()
 
     ts0 = os.clock()
     sum = 0
-    for i=1,#t do sum = sum + t[i] end
+    for i=1,t.count do sum = sum + t[i] end
     ts1 = os.clock()
 
     return ts1-ts0

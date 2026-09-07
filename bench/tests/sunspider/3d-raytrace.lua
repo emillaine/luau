@@ -1,4 +1,4 @@
---[[
+#[[
  * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,7 +131,7 @@ function invertMatrix(self)
     return self;
 end
 
--- Triangle intersection using barycentric coord method
+# Triangle intersection using barycentric coord method
 function Triangle(p1, p2, p3)
     this = {}
 
@@ -215,11 +215,11 @@ function Scene(a_triangles)
 
     this.intersect = function(self, origin, dir, near, far)
         closest = null;
-        for i = 0,#self.triangles-1 do
+        for i = 0,self.triangles.count-1 do
             triangle = self.triangles[i + 1];   
             d = triangle:intersect(origin, dir, near, far);
             if (d == null or d > far or d < near) then
-                -- continue;
+                # continue;
             else
                 far = d;
                 closest = triangle;
@@ -243,7 +243,7 @@ function Scene(a_triangles)
             colour = closest.material;
         end
         
-        -- do reflection
+        # do reflection
         reflected = null;
         if (colour.reflection or 0 > 0.001) then
             reflection = addVector(scale(normal, -2*dot(dir, normal)), dir);
@@ -255,7 +255,7 @@ function Scene(a_triangles)
         
         l = { self.ambient[1], self.ambient[2], self.ambient[3] };
 
-        for i = 0,#self.lights-1 do
+        for i = 0,self.lights.count-1 do
             light = self.lights[i + 1];
             toLight = sub(light, hit);
             distance = lengthVector(toLight);
@@ -263,7 +263,7 @@ function Scene(a_triangles)
             distance = distance - 0.0001;
 
             if (self:blocked(hit, toLight, distance)) then
-                -- continue;
+                # continue;
             else
                 nl = dot(normal, toLight);
                 if (nl > 0) then
@@ -283,11 +283,11 @@ function Scene(a_triangles)
     this.blocked = function(self, O, D, far)
         near = 0.0001;
         closest = null;
-        for i = 0,#self.triangles-1 do
+        for i = 0,self.triangles.count-1 do
             triangle = self.triangles[i + 1];   
             d = triangle:intersect(O, D, near, far);
             if (d == null or d > far or d < near) then
-                --continue;
+                #continue;
             else
                 return true;
             end
@@ -301,8 +301,8 @@ end
 
 zero = { 0,0,0 };
 
--- this camera code is from notes i made ages ago, it is from *somewhere* -- i cannot remember where
--- that somewhere is
+# this camera code is from notes i made ages ago, it is from *somewhere* -- i cannot remember where
+# that somewhere is
 function Camera(origin, lookat, up)
     this = {}
 
@@ -361,7 +361,7 @@ end
 function raytraceScene()
     startDate = 13154863;
     numTriangles = 2 * 6;
-    triangles = {}; -- numTriangles);
+    triangles = {}; # numTriangles);
     tfl = createVector(-10,  10, -10);
     tfr = createVector( 10,  10, -10);
     tbl = createVector(-10,  10,  10);
@@ -371,47 +371,47 @@ function raytraceScene()
     bbl = createVector(-10, -10,  10);
     bbr = createVector( 10, -10,  10);
     
-    -- cube!!!
-    -- front
+    # cube!!!
+    # front
     i = 0;
     
     triangles[i + 1] = Triangle(tfl, tfr, bfr); i = i + 1;
     triangles[i + 1] = Triangle(tfl, bfr, bfl); i = i + 1;
-    -- back
+    # back
     triangles[i + 1] = Triangle(tbl, tbr, bbr); i = i + 1;
     triangles[i + 1] = Triangle(tbl, bbr, bbl); i = i + 1;
-    --        triangles[i-1].material = [0.7,0.2,0.2];
-    --            triangles[i-1].material.reflection = 0.8;
-    -- left
+    #        triangles[i-1].material = [0.7,0.2,0.2];
+    #            triangles[i-1].material.reflection = 0.8;
+    # left
     triangles[i + 1] = Triangle(tbl, tfl, bbl); i = i + 1;
-    --            triangles[i-1].reflection = 0.6;
+    #            triangles[i-1].reflection = 0.6;
     triangles[i + 1] = Triangle(tfl, bfl, bbl); i = i + 1;
-    --            triangles[i-1].reflection = 0.6;
-    -- right
+    #            triangles[i-1].reflection = 0.6;
+    # right
     triangles[i + 1] = Triangle(tbr, tfr, bbr); i = i + 1;
     triangles[i + 1] = Triangle(tfr, bfr, bbr); i = i + 1;
-    -- top
+    # top
     triangles[i + 1] = Triangle(tbl, tbr, tfr); i = i + 1;
     triangles[i + 1] = Triangle(tbl, tfr, tfl); i = i + 1;
-    -- bottom
+    # bottom
     triangles[i + 1] = Triangle(bbl, bbr, bfr); i = i + 1;
     triangles[i + 1] = Triangle(bbl, bfr, bfl); i = i + 1;
     
-    -- Floor!!!!
+    # Floor!!!!
     green = createVector(0.0, 0.4, 0.0);
-    green.reflection = 0; --
+    green.reflection = 0; #
     grey = createVector(0.4, 0.4, 0.4);
     grey.reflection = 1.0;
     floorShader = function(tri, pos, view)
         x = ((pos[1]/32) % 2 + 2) % 2;
         z = ((pos[3]/32 + 0.3) % 2 + 2) % 2;
         if ((x < 1) != (z < 1)) then
-            --in the real world we use the fresnel term...
-            --    local angle = 1-dot(view, tri.normal);
-            --   angle *= angle;
-            --  angle *= angle;
-            -- angle *= angle;
-            --grey.reflection = angle;
+            #in the real world we use the fresnel term...
+            #    local angle = 1-dot(view, tri.normal);
+            #   angle *= angle;
+            #  angle *= angle;
+            # angle *= angle;
+            #grey.reflection = angle;
             return grey;
         else 
             return green;
@@ -435,7 +435,7 @@ function raytraceScene()
     _scene.lights[3] = createVector(23, 20, 17);
     _scene.lights[3].colour = createVector(0.7, 0.7, 0.7);
     _scene.ambient = createVector(0.1, 0.1, 0.1);
-    --  _scene.background = createVector(0.7, 0.7, 1.0);
+    #  _scene.background = createVector(0.7, 0.7, 1.0);
     
     pixels = {};
     for y = 0,size-1 do
@@ -488,12 +488,12 @@ end
 
 testOutput = arrayToCanvasCommands(raytraceScene());
 
---local f = io.output("output.html")
---f:write(testOutput)
---f:close()
+#local f = io.output("output.html")
+#f:write(testOutput)
+#f:close()
 
 expectedLength = 11599;
-testLength = #testOutput
+testLength = testOutput.count
 
 if (testLength != expectedLength) then
     assert(false, "Error: bad result: expected length " .. expectedLength .. " but got " .. testLength);

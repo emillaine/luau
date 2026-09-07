@@ -1,4 +1,4 @@
--- forward declarations (implicit-local dialect has no hoisted globals)
+# forward declarations (implicit-local dialect has no hoisted globals)
 callClosure = null
 callFunction = null
 evalArgList = null
@@ -22,6 +22,7 @@ execStat = null
 execWhile = null
 interpToString = null
 lexCountLongBracket = null
+lexSkipCommentBody = null
 lexSkipLongString = null
 parseCallArgs = null
 parseFuncBody = null
@@ -31,9 +32,9 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
--- Luau Interpreter in Luau (meta-circular) benchmark
--- A full Luau interpreter: lexer, parser, evaluator with metatables, standard library
--- Target runtimes: Luau (lute)
+# Luau Interpreter in Luau (meta-circular) benchmark
+# A full Luau interpreter: lexer, parser, evaluator with metatables, standard library
+# Target runtimes: Luau (lute)
 
 floor = math.floor
 mabs = math.abs
@@ -73,9 +74,9 @@ end
 unpack_ = table.unpack or unpack
 clock = os.clock
 
--- ============================================================================
--- TOKEN TYPES
--- ============================================================================
+# ============================================================================
+# TOKEN TYPES
+# ============================================================================
 
 TK_EOF = "EOF"
 TK_NUMBER = "NUMBER"
@@ -109,7 +110,7 @@ TK_LBRACKET = "["
 TK_RBRACKET = "]"
 TK_DOTS = "..."
 
--- Keywords as token types
+# Keywords as token types
 TK_LOCAL = "local"
 TK_FUNCTION = "function"
 TK_IF = "if"
@@ -133,7 +134,7 @@ TK_UNTIL = "until"
 TK_BREAK = "break"
 TK_CONTINUE = "continue"
 
--- Keyword lookup table
+# Keyword lookup table
 KEYWORDS = {}
 KEYWORDS["local"] = TK_LOCAL
 KEYWORDS["function"] = TK_FUNCTION
@@ -158,9 +159,9 @@ KEYWORDS["until"] = TK_UNTIL
 KEYWORDS["break"] = TK_BREAK
 KEYWORDS["continue"] = TK_CONTINUE
 
--- ============================================================================
--- LEXER
--- ============================================================================
+# ============================================================================
+# LEXER
+# ============================================================================
 
 function newLexer(source)
     lex = {}
@@ -185,6 +186,19 @@ function lexNextChar(lex)
     return ch
 end
 
+function lexSkipCommentBody(lex)
+    if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "[" then
+        lvl = lexCountLongBracket(lex)
+        if lvl >= 0 then
+            lexSkipLongString(lex, lvl)
+            return
+        end
+    end
+    while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) != "\n" do
+        lex.pos = lex.pos + 1
+    end
+end
+
 function lexSkipWhitespace(lex)
     while lex.pos <= lex.len do
         ch = ssub(lex.source, lex.pos, lex.pos)
@@ -192,22 +206,17 @@ function lexSkipWhitespace(lex)
             if ch == "\n" then lex.line = lex.line + 1 end
             lex.pos = lex.pos + 1
         else if ch == "-" and lex.pos + 1 <= lex.len and ssub(lex.source, lex.pos + 1, lex.pos + 1) == "-" then
-            -- comment
             lex.pos = lex.pos + 2
-            if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "[" then
-                lvl = lexCountLongBracket(lex)
-                if lvl >= 0 then
-                    lexSkipLongString(lex, lvl)
-                else
-                    -- line comment
-                    while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) != "\n" do
-                        lex.pos = lex.pos + 1
-                    end
-                end
+            lexSkipCommentBody(lex)
+        else if ch == "#" then
+            nxt = null
+            if lex.pos + 1 <= lex.len then nxt = ssub(lex.source, lex.pos + 1, lex.pos + 1) end
+            # `#expr` is still the length operator in guest programs; `# ...` / `#[[` / `#!` are comments.
+            if nxt == null or nxt == " " or nxt == "\t" or nxt == "\n" or nxt == "\r" or nxt == "[" or nxt == "!" then
+                lex.pos = lex.pos + 1
+                lexSkipCommentBody(lex)
             else
-                while lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) != "\n" do
-                    lex.pos = lex.pos + 1
-                end
+                break
             end
         else
             break
@@ -231,7 +240,7 @@ function lexCountLongBracket(lex)
 end
 
 function lexSkipLongString(lex, level)
-    -- skip opening [==..==[
+    # skip opening [==..==[
     lex.pos = lex.pos + 1 + level + 1
     while lex.pos <= lex.len do
         ch = ssub(lex.source, lex.pos, lex.pos)
@@ -253,9 +262,9 @@ function lexSkipLongString(lex, level)
 end
 
 function lexReadLongString(lex, level)
-    -- skip opening [==..==[
+    # skip opening [==..==[
     lex.pos = lex.pos + 1 + level + 1
-    -- skip immediate newline
+    # skip immediate newline
     if lex.pos <= lex.len and ssub(lex.source, lex.pos, lex.pos) == "\n" then
         lex.line = lex.line + 1
         lex.pos = lex.pos + 1
@@ -314,7 +323,7 @@ function lexReadNumber(lex)
                 end
             end
             raw = ssub(lex.source, start, lex.pos - 1)
-            -- remove underscores
+            # remove underscores
             clean = ""
             for i = 1, slen(raw) do
                 c = ssub(raw, i, i)
@@ -344,7 +353,7 @@ function lexReadNumber(lex)
             return val
         end
     end
-    -- decimal
+    # decimal
     while lex.pos <= lex.len do
         c = ssub(lex.source, lex.pos, lex.pos)
         if lexIsDigit(c) or c == "_" then
@@ -387,7 +396,7 @@ function lexReadNumber(lex)
 end
 
 function lexReadString(lex, quote)
-    lex.pos = lex.pos + 1 -- skip opening quote
+    lex.pos = lex.pos + 1 # skip opening quote
     parts = {}
     while lex.pos <= lex.len do
         ch = ssub(lex.source, lex.pos, lex.pos)
@@ -439,14 +448,14 @@ function lexNext(lex)
     end
     ch = ssub(lex.source, lex.pos, lex.pos)
 
-    -- Numbers
+    # Numbers
     if lexIsDigit(ch) then
         lex.value = lexReadNumber(lex)
         lex.token = TK_NUMBER
         return
     end
 
-    -- Identifiers and keywords
+    # Identifiers and keywords
     if lexIsAlpha(ch) then
         start = lex.pos
         while lex.pos <= lex.len and lexIsAlnum(ssub(lex.source, lex.pos, lex.pos)) do
@@ -464,14 +473,14 @@ function lexNext(lex)
         return
     end
 
-    -- Strings
+    # Strings
     if ch == "\"" or ch == "'" then
         lex.value = lexReadString(lex, ch)
         lex.token = TK_STRING
         return
     end
 
-    -- Long strings
+    # Long strings
     if ch == "[" then
         lvl = lexCountLongBracket(lex)
         if lvl >= 0 then
@@ -481,7 +490,7 @@ function lexNext(lex)
         end
     end
 
-    -- Operators and punctuation
+    # Operators and punctuation
     lex.pos = lex.pos + 1
     if ch == "+" then lex.token = TK_PLUS; lex.value = null
     else if ch == "*" then lex.token = TK_STAR; lex.value = null
@@ -515,11 +524,11 @@ function lexNext(lex)
                 lex.token = TK_DOTDOT; lex.value = null
             end
         else if lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) then
-            -- number starting with dot like .5
-            lex.pos = lex.pos - 1 -- back up to include the dot
-            -- Actually read as number
+            # number starting with dot like .5
+            lex.pos = lex.pos - 1 # back up to include the dot
+            # Actually read as number
             start = lex.pos
-            lex.pos = lex.pos + 1 -- skip dot
+            lex.pos = lex.pos + 1 # skip dot
             while lex.pos <= lex.len and lexIsDigit(ssub(lex.source, lex.pos, lex.pos)) do
                 lex.pos = lex.pos + 1
             end
@@ -576,18 +585,18 @@ function lexNext(lex)
     end
 end
 
--- ============================================================================
--- AST NODE CONSTRUCTORS
--- ============================================================================
+# ============================================================================
+# AST NODE CONSTRUCTORS
+# ============================================================================
 
 function astNode(tag, fields)
     fields.tag = tag
     return fields
 end
 
--- ============================================================================
--- PARSER
--- ============================================================================
+# ============================================================================
+# PARSER
+# ============================================================================
 
 function newParser(source)
     parser = {}
@@ -622,7 +631,7 @@ function parserMatch(parser, tk)
     return false, null
 end
 
--- Forward declarations
+# Forward declarations
 parseExpr = null
 parseBlock = null
 parseStat = null
@@ -710,7 +719,7 @@ function parseTableConstructor(parser)
             field.value = parseExpr(parser)
             field.kind = "bracket"
         else if parserCheck(parser, TK_NAME) then
-            -- Could be name=value or just an expression
+            # Could be name=value or just an expression
             savedPos = parser.lex.pos
             savedLine = parser.lex.line
             savedToken = parser.lex.token
@@ -723,7 +732,7 @@ function parseTableConstructor(parser)
                 field.value = parseExpr(parser)
                 field.kind = "name"
             else
-                -- Restore state and parse as expression
+                # Restore state and parse as expression
                 parser.lex.pos = savedPos
                 parser.lex.line = savedLine
                 parser.lex.token = savedToken
@@ -795,16 +804,16 @@ function parseUnaryExpr(parser)
     end
 end
 
--- Operator precedence table
--- Precedence levels (higher = tighter binding):
--- 1: or
--- 2: and
--- 3: < > <= >= ~= ==
--- 4: ..
--- 5: + -
--- 6: * / // %
--- 7: unary (not - #)
--- 8: ^
+# Operator precedence table
+# Precedence levels (higher = tighter binding):
+# 1: or
+# 2: and
+# 3: < > <= >= ~= ==
+# 4: ..
+# 5: + -
+# 6: * / // %
+# 7: unary (not - #)
+# 8: ^
 
 function getBinopPrecedence(tk)
     if tk == TK_OR then return 1
@@ -923,7 +932,7 @@ parseStat = function(parser)
         end
     else if tk == TK_FUNCTION then
         lexNext(parser.lex)
-        -- function name or function t.name or function t:name
+        # function name or function t.name or function t:name
         name = parserExpect(parser, TK_NAME)
         indexChain = {name}
         isMethod = false
@@ -975,7 +984,7 @@ parseStat = function(parser)
         lexNext(parser.lex)
         firstName = parserExpect(parser, TK_NAME)
         if parserCheck(parser, TK_ASSIGN) then
-            -- numeric for
+            # numeric for
             lexNext(parser.lex)
             start = parseExpr(parser)
             parserExpect(parser, TK_COMMA)
@@ -989,7 +998,7 @@ parseStat = function(parser)
             parserExpect(parser, TK_END)
             return astNode("NumFor", {var = firstName, start = start, limit = limit, step = step, body = body})
         else
-            -- generic for
+            # generic for
             names = {firstName}
             while parserCheck(parser, TK_COMMA) do
                 lexNext(parser.lex)
@@ -1022,15 +1031,15 @@ parseStat = function(parser)
         lexNext(parser.lex)
         return astNode("Continue", {})
     else
-        -- expression statement (assignment or function call)
+        # expression statement (assignment or function call)
         suffixes = parseLvalueList(parser)
         if parserCheck(parser, TK_ASSIGN) then
             lexNext(parser.lex)
             values = parseExprList(parser)
             return astNode("Assign", {targets = suffixes, values = values})
         else
-            -- must be a function call
-            if #suffixes == 1 then
+            # must be a function call
+            if suffixes.count == 1 then
                 return astNode("ExprStat", {expr = suffixes[1]})
             else
                 parserError(parser, "expected assignment or function call")
@@ -1062,11 +1071,11 @@ function parseProgram(source)
     return block
 end
 
--- ============================================================================
--- EVALUATOR
--- ============================================================================
+# ============================================================================
+# EVALUATOR
+# ============================================================================
 
--- Signals
+# Signals
 SIGNAL_BREAK = {type = "break"}
 SIGNAL_CONTINUE = {type = "continue"}
 
@@ -1074,7 +1083,7 @@ function newSignalReturn(vals)
     return {type = "return", values = vals}
 end
 
--- Environment
+# Environment
 function newEnv(parent)
     env = {}
     env.vars = {}
@@ -1087,7 +1096,7 @@ function envGet(env, name)
     while e do
         v = e.vars[name]
         if v != null then
-            return v[1] -- stored as {value} to allow null distinction
+            return v[1] # stored as {value} to allow null distinction
         end
         e = e.parent
     end
@@ -1110,7 +1119,7 @@ function envDefine(env, name, value)
     env.vars[name] = {value}
 end
 
--- Closure
+# Closure
 function newClosure(node, env, globals)
     cl = {}
     cl.node = node
@@ -1119,7 +1128,7 @@ function newClosure(node, env, globals)
     return cl
 end
 
--- Interpreter state
+# Interpreter state
 function newInterp()
     interp = {}
     interp.globals = {}
@@ -1128,7 +1137,7 @@ function newInterp()
     return interp
 end
 
--- Get metafield
+# Get metafield
 function getMetafield(interp, val, field)
     if type(val) == "table" then
         mt = interp.metatables[val]
@@ -1140,7 +1149,7 @@ function getMetafield(interp, val, field)
     return null
 end
 
--- Arithmetic metamethod helper
+# Arithmetic metamethod helper
 function arith(interp, op, a, b)
     metafield = null
     if op == "+" then metafield = "__add"
@@ -1154,13 +1163,13 @@ function arith(interp, op, a, b)
     handler = getMetafield(interp, a, metafield) or getMetafield(interp, b, metafield)
     if handler then
         results = callFunction(interp, handler, {a, b})
-        if results and #results > 0 then return results[1] end
+        if results and results.count > 0 then return results[1] end
         return null
     end
     error("attempt to perform arithmetic on a " .. type(a) .. " value")
 end
 
--- Table indexing with __index metamethod
+# Table indexing with __index metamethod
 function tableIndex(interp, tbl, key)
     val = rawget(tbl, key)
     if val != null then return val end
@@ -1172,7 +1181,7 @@ function tableIndex(interp, tbl, key)
                 return tableIndex(interp, idx, key)
             else if type(idx) == "function" or (type(idx) == "table" and idx._isClosure) then
                 results = callFunction(interp, idx, {tbl, key})
-                if results and #results > 0 then return results[1] end
+                if results and results.count > 0 then return results[1] end
                 return null
             end
         end
@@ -1180,7 +1189,7 @@ function tableIndex(interp, tbl, key)
     return null
 end
 
--- Table newindex with __newindex metamethod
+# Table newindex with __newindex metamethod
 function tableNewIndex(interp, tbl, key, value)
     existing = rawget(tbl, key)
     if existing != null then
@@ -1203,7 +1212,7 @@ function tableNewIndex(interp, tbl, key, value)
     rawset(tbl, key, value)
 end
 
--- Call a function (native or closure)
+# Call a function (native or closure)
 function callFunction(interp, func, args)
     if type(func) == "function" then
         return {func(unpack_(args or {}))}
@@ -1211,7 +1220,7 @@ function callFunction(interp, func, args)
     if type(func) == "table" and func._isClosure then
         return callClosure(interp, func, args or {})
     end
-    -- try __call metamethod
+    # try __call metamethod
     if type(func) == "table" then
         mt = interp.metatables[func]
         if mt then
@@ -1219,8 +1228,8 @@ function callFunction(interp, func, args)
             if callMeta then
                 newArgs = {func}
                 if args then
-                    for i = 1, #args do
-                        newArgs[#newArgs + 1] = args[i]
+                    for i = 1, args.count do
+                        newArgs[newArgs.count + 1] = args[i]
                     end
                 end
                 return callFunction(interp, callMeta, newArgs)
@@ -1238,19 +1247,19 @@ function callClosure(interp, closure, args)
     end
     funcNode = closure.node
     localEnv = newEnv(closure.env)
-    -- Bind parameters
-    paramCount = #funcNode.params
+    # Bind parameters
+    paramCount = funcNode.params.count
     for i = 1, paramCount do
         argVal = null
-        if args and i <= #args then argVal = args[i] end
+        if args and i <= args.count then argVal = args[i] end
         envDefine(localEnv, funcNode.params[i], argVal)
     end
-    -- Bind varargs
+    # Bind varargs
     if funcNode.varargs then
         varargsList = {}
         if args then
-            for i = paramCount + 1, #args do
-                varargsList[#varargsList + 1] = args[i]
+            for i = paramCount + 1, args.count do
+                varargsList[varargsList.count + 1] = args[i]
             end
         end
         envDefine(localEnv, "...", varargsList)
@@ -1263,14 +1272,14 @@ function callClosure(interp, closure, args)
     return {}
 end
 
--- Evaluate expression - returns single value
+# Evaluate expression - returns single value
 function evalExpr(interp, node, env)
     results = evalExprMulti(interp, node, env)
-    if results and #results > 0 then return results[1] end
+    if results and results.count > 0 then return results[1] end
     return null
 end
 
--- Evaluate expression - returns multiple values (only for last position)
+# Evaluate expression - returns multiple values (only for last position)
 function evalExprMulti(interp, node, env)
     tag = node.tag
     if tag == "Number" then
@@ -1328,7 +1337,7 @@ function evalUnop(interp, node, env)
         handler = getMetafield(interp, val, "__unm")
         if handler then
             r = callFunction(interp, handler, {val})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return null
         end
         error("attempt to perform arithmetic on a " .. type(val) .. " value")
@@ -1338,10 +1347,10 @@ function evalUnop(interp, node, env)
             handler = getMetafield(interp, val, "__len")
             if handler then
                 r = callFunction(interp, handler, {val})
-                if r and #r > 0 then return r[1] end
+                if r and r.count > 0 then return r[1] end
                 return null
             end
-            return #val
+            return val.count
         end
         error("attempt to get length of a " .. type(val) .. " value")
     else if op == "not" then
@@ -1352,7 +1361,7 @@ end
 function evalBinop(interp, node, env)
     op = node.op
 
-    -- Short-circuit operators
+    # Short-circuit operators
     if op == TK_AND then
         left = evalExpr(interp, node.left, env)
         if not left then return left end
@@ -1394,7 +1403,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, left, "__concat") or getMetafield(interp, right, "__concat")
         if handler then
             r = callFunction(interp, handler, {left, right})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return null
         end
         error("attempt to concatenate a " .. type(left) .. " value")
@@ -1404,7 +1413,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, left, "__eq")
         if handler then
             r = callFunction(interp, handler, {left, right})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return false
         end
         return false
@@ -1414,7 +1423,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, left, "__eq")
         if handler then
             r = callFunction(interp, handler, {left, right})
-            if r and #r > 0 then return not r[1] end
+            if r and r.count > 0 then return not r[1] end
             return true
         end
         return true
@@ -1424,7 +1433,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, left, "__lt") or getMetafield(interp, right, "__lt")
         if handler then
             r = callFunction(interp, handler, {left, right})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
@@ -1434,7 +1443,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, right, "__lt") or getMetafield(interp, left, "__lt")
         if handler then
             r = callFunction(interp, handler, {right, left})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
@@ -1444,7 +1453,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, left, "__le") or getMetafield(interp, right, "__le")
         if handler then
             r = callFunction(interp, handler, {left, right})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
@@ -1454,7 +1463,7 @@ function evalBinop(interp, node, env)
         handler = getMetafield(interp, right, "__le") or getMetafield(interp, left, "__le")
         if handler then
             r = callFunction(interp, handler, {right, left})
-            if r and #r > 0 then return r[1] end
+            if r and r.count > 0 then return r[1] end
             return false
         end
         error("attempt to compare two " .. type(left) .. " values")
@@ -1483,16 +1492,16 @@ end
 
 function evalArgList(interp, argNodes, env)
     args = {}
-    if not argNodes or #argNodes == 0 then return args end
-    -- All args except last: take single value
-    for i = 1, #argNodes - 1 do
-        args[#args + 1] = evalExpr(interp, argNodes[i], env)
+    if not argNodes or argNodes.count == 0 then return args end
+    # All args except last: take single value
+    for i = 1, argNodes.count - 1 do
+        args[args.count + 1] = evalExpr(interp, argNodes[i], env)
     end
-    -- Last arg: expand multiple returns
-    lastResults = evalExprMulti(interp, argNodes[#argNodes], env)
+    # Last arg: expand multiple returns
+    lastResults = evalExprMulti(interp, argNodes[argNodes.count], env)
     if lastResults then
-        for i = 1, #lastResults do
-            args[#args + 1] = lastResults[i]
+        for i = 1, lastResults.count do
+            args[args.count + 1] = lastResults[i]
         end
     end
     return args
@@ -1502,12 +1511,12 @@ function evalTableConstructor(interp, node, env)
     tbl = {}
     arrayIdx = 1
     fields = node.fields
-    for i = 1, #fields do
+    for i = 1, fields.count do
         field = fields[i]
         if field.kind == "bracket" then
             key = evalExpr(interp, field.key, env)
             val = null
-            if i == #fields then
+            if i == fields.count then
                 multi = evalExprMulti(interp, field.value, env)
                 val = multi and multi[1] or null
             else
@@ -1519,12 +1528,12 @@ function evalTableConstructor(interp, node, env)
             val = evalExpr(interp, field.value, env)
             rawset(tbl, key, val)
         else
-            -- sequential
-            if i == #fields then
-                -- last item: expand multi-return
+            # sequential
+            if i == fields.count then
+                # last item: expand multi-return
                 multi = evalExprMulti(interp, field.value, env)
                 if multi then
-                    for j = 1, #multi do
+                    for j = 1, multi.count do
                         rawset(tbl, arrayIdx, multi[j])
                         arrayIdx = arrayIdx + 1
                     end
@@ -1539,16 +1548,16 @@ function evalTableConstructor(interp, node, env)
     return tbl
 end
 
--- Execute a block, return a signal or null
+# Execute a block, return a signal or null
 function execBlock(interp, stmts, env)
-    for i = 1, #stmts do
+    for i = 1, stmts.count do
         result = execStat(interp, stmts[i], env)
         if result then return result end
     end
     return null
 end
 
--- Execute a statement
+# Execute a statement
 function execStat(interp, node, env)
     tag = node.tag
 
@@ -1592,24 +1601,24 @@ function execLocal(interp, node, env)
     values = node.values
     if values then
         vals = {}
-        -- Evaluate all except last for single value
-        for i = 1, #values - 1 do
-            vals[#vals + 1] = evalExpr(interp, values[i], env)
+        # Evaluate all except last for single value
+        for i = 1, values.count - 1 do
+            vals[vals.count + 1] = evalExpr(interp, values[i], env)
         end
-        -- Last value: expand multi-return
-        if #values > 0 then
-            lastResults = evalExprMulti(interp, values[#values], env)
+        # Last value: expand multi-return
+        if values.count > 0 then
+            lastResults = evalExprMulti(interp, values[values.count], env)
             if lastResults then
-                for i = 1, #lastResults do
-                    vals[#vals + 1] = lastResults[i]
+                for i = 1, lastResults.count do
+                    vals[vals.count + 1] = lastResults[i]
                 end
             end
         end
-        for i = 1, #names do
+        for i = 1, names.count do
             envDefine(env, names[i], vals[i])
         end
     else
-        for i = 1, #names do
+        for i = 1, names.count do
             envDefine(env, names[i], null)
         end
     end
@@ -1617,7 +1626,7 @@ function execLocal(interp, node, env)
 end
 
 function execLocalFunc(interp, node, env)
-    -- Define name first (for recursion)
+    # Define name first (for recursion)
     envDefine(env, node.name, null)
     cl = newClosure(node.func, env, interp.globals)
     cl._isClosure = true
@@ -1629,20 +1638,20 @@ function execAssign(interp, node, env)
     targets = node.targets
     values = node.values
     vals = {}
-    -- Evaluate all except last for single value
-    for i = 1, #values - 1 do
-        vals[#vals + 1] = evalExpr(interp, values[i], env)
+    # Evaluate all except last for single value
+    for i = 1, values.count - 1 do
+        vals[vals.count + 1] = evalExpr(interp, values[i], env)
     end
-    -- Last value: expand multi-return
-    if #values > 0 then
-        lastResults = evalExprMulti(interp, values[#values], env)
+    # Last value: expand multi-return
+    if values.count > 0 then
+        lastResults = evalExprMulti(interp, values[values.count], env)
         if lastResults then
-            for i = 1, #lastResults do
-                vals[#vals + 1] = lastResults[i]
+            for i = 1, lastResults.count do
+                vals[vals.count + 1] = lastResults[i]
             end
         end
     end
-    for i = 1, #targets do
+    for i = 1, targets.count do
         target = targets[i]
         val = vals[i]
         if target.tag == "Var" then
@@ -1667,10 +1676,10 @@ end
 function execFuncDef(interp, node, env)
     funcNode = node.func
     if node.isMethod then
-        -- Add implicit self parameter
+        # Add implicit self parameter
         newParams = {"self"}
-        for i = 1, #funcNode.params do
-            newParams[#newParams + 1] = funcNode.params[i]
+        for i = 1, funcNode.params.count do
+            newParams[newParams.count + 1] = funcNode.params[i]
         end
         funcNode = {tag = funcNode.tag, params = newParams, varargs = funcNode.varargs, body = funcNode.body}
     end
@@ -1678,27 +1687,27 @@ function execFuncDef(interp, node, env)
     cl._isClosure = true
 
     names = node.names
-    if #names == 1 then
-        -- Simple global function
+    if names.count == 1 then
+        # Simple global function
         if not envSet(env, names[1], cl) then
             interp.globals[names[1]] = cl
         end
     else
-        -- Dot chain: function a.b.c()
+        # Dot chain: function a.b.c()
         obj = null
         v = envGet(env, names[1])
         if v == null then v = interp.globals[names[1]] end
         obj = v
-        for i = 2, #names - 1 do
+        for i = 2, names.count - 1 do
             obj = tableIndex(interp, obj, names[i])
         end
-        tableNewIndex(interp, obj, names[#names], cl)
+        tableNewIndex(interp, obj, names[names.count], cl)
     end
     return null
 end
 
 function execIf(interp, node, env)
-    for i = 1, #node.clauses do
+    for i = 1, node.clauses.count do
         clause = node.clauses[i]
         cond = evalExpr(interp, clause.cond, env)
         if cond and cond != false then
@@ -1722,9 +1731,9 @@ function execWhile(interp, node, env)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
-                -- continue, just loop
+                # continue, just loop
             else
-                return result -- return signal
+                return result # return signal
             end
         end
     end
@@ -1738,7 +1747,7 @@ function execRepeat(interp, node, env)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
-                -- evaluate condition before continuing
+                # evaluate condition before continuing
                 cond = evalExpr(interp, node.cond, blockEnv)
                 if cond and cond != false then break end
             else
@@ -1775,7 +1784,7 @@ function execNumFor(interp, node, env)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
-                -- continue
+                # continue
             else
                 return result
             end
@@ -1796,14 +1805,14 @@ function execGenFor(interp, node, env)
         if not results or results[1] == null then break end
         control = results[1]
         blockEnv = newEnv(env)
-        for i = 1, #node.names do
+        for i = 1, node.names.count do
             envDefine(blockEnv, node.names[i], results[i])
         end
         result = execBlock(interp, node.body, blockEnv)
         if result then
             if result == SIGNAL_BREAK then break end
             if result == SIGNAL_CONTINUE then
-                -- continue
+                # continue
             else
                 return result
             end
@@ -1814,29 +1823,29 @@ end
 
 function execReturn(interp, node, env)
     values = node.values
-    if not values or #values == 0 then
+    if not values or values.count == 0 then
         return newSignalReturn({})
     end
     vals = {}
-    for i = 1, #values - 1 do
-        vals[#vals + 1] = evalExpr(interp, values[i], env)
+    for i = 1, values.count - 1 do
+        vals[vals.count + 1] = evalExpr(interp, values[i], env)
     end
-    -- Last value: expand multi-return
-    lastResults = evalExprMulti(interp, values[#values], env)
+    # Last value: expand multi-return
+    lastResults = evalExprMulti(interp, values[values.count], env)
     if lastResults then
-        for i = 1, #lastResults do
-            vals[#vals + 1] = lastResults[i]
+        for i = 1, lastResults.count do
+            vals[vals.count + 1] = lastResults[i]
         end
     end
     return newSignalReturn(vals)
 end
 
--- ============================================================================
--- STANDARD LIBRARY
--- ============================================================================
+# ============================================================================
+# STANDARD LIBRARY
+# ============================================================================
 
 function setupStdlib(interp)
-    interp.metatables = {} -- table -> metatable mapping
+    interp.metatables = {} # table -> metatable mapping
     G = interp.globals
 
     G["print"] = function(...)
@@ -1884,14 +1893,14 @@ function setupStdlib(interp)
         if type(n) != "number" then error("bad argument #1 to 'select'") end
         results = {}
         for i = n, select("#", ...) do
-            results[#results + 1] = args[i]
+            results[results.count + 1] = args[i]
         end
         return unpack_(results)
     end
 
     G["unpack"] = function(tbl, i, j)
         i = i or 1
-        j = j or #tbl
+        j = j or tbl.count
         return unpack_(tbl, i, j)
     end
 
@@ -1932,9 +1941,9 @@ function setupStdlib(interp)
             return callFunction(interp, f, args)
         end)
         if ok then
-            if result and #result > 0 then
+            if result and result.count > 0 then
                 ret = {true}
-                for i = 1, #result do ret[#ret + 1] = result[i] end
+                for i = 1, result.count do ret[ret.count + 1] = result[i] end
                 return unpack_(ret)
             end
             return true
@@ -1956,7 +1965,7 @@ function setupStdlib(interp)
     end
 
     G["pairs"] = function(t)
-        -- We return next, t, null for generic for
+        # We return next, t, null for generic for
         return G["next"], t, null
     end
 
@@ -1964,7 +1973,7 @@ function setupStdlib(interp)
         return next(t, k)
     end
 
-    -- String library
+    # String library
     strLib = {}
     strLib.len = function(s) return slen(s) end
     strLib.sub = function(s, i, j) return ssub(s, i, j) end
@@ -1973,7 +1982,7 @@ function setupStdlib(interp)
     strLib.rep = function(s, n) return srep(s, n) end
     strLib.reverse = function(s)
         t = {}
-        for i = slen(s), 1, -1 do t[#t + 1] = ssub(s, i, i) end
+        for i = slen(s), 1, -1 do t[t.count + 1] = ssub(s, i, i) end
         return tconcat(t)
     end
     strLib.lower = function(s) return slower(s) end
@@ -1985,7 +1994,7 @@ function setupStdlib(interp)
         return sformat(fmt, ...)
     end
     strLib.gsub = function(s, pattern, repl, n)
-        -- Simple plain-text replacement
+        # Simple plain-text replacement
         result = {}
         pos = 1
         count = 0
@@ -2018,7 +2027,7 @@ function setupStdlib(interp)
     end
     G["string"] = strLib
 
-    -- Table library
+    # Table library
     tblLib = {}
     tblLib.insert = function(t, ...)
         args = {...}
@@ -2036,7 +2045,7 @@ function setupStdlib(interp)
         if comp then
             tsort(t, function(a, b)
                 r = callFunction(interp, comp, {a, b})
-                if r and #r > 0 then return r[1] end
+                if r and r.count > 0 then return r[1] end
                 return false
             end)
         else
@@ -2052,12 +2061,12 @@ function setupStdlib(interp)
     end
     tblLib.unpack = function(t, i, j)
         i = i or 1
-        j = j or #t
+        j = j or t.count
         return unpack_(t, i, j)
     end
     G["table"] = tblLib
 
-    -- Math library
+    # Math library
     mathLib = {}
     mathLib.floor = floor
     mathLib.ceil = mceil
@@ -2096,7 +2105,7 @@ function interpToString(interp, val)
         handler = getMetafield(interp, val, "__tostring")
         if handler then
             r = callFunction(interp, handler, {val})
-            if r and #r > 0 then return tostring(r[1]) end
+            if r and r.count > 0 then return tostring(r[1]) end
             return ""
         end
         return "table"
@@ -2105,9 +2114,9 @@ function interpToString(interp, val)
     return tostring(val)
 end
 
--- ============================================================================
--- RUN PROGRAM
--- ============================================================================
+# ============================================================================
+# RUN PROGRAM
+# ============================================================================
 
 function runProgram(source)
     interp = newInterp()
@@ -2118,13 +2127,13 @@ function runProgram(source)
     return interp.output
 end
 
--- ============================================================================
--- TEST PROGRAMS
--- ============================================================================
+# ============================================================================
+# TEST PROGRAMS
+# ============================================================================
 
 TEST_PROGRAMS = {}
 
--- Test 1: Fibonacci (recursive + memoized)
+# Test 1: Fibonacci (recursive + memoized)
 TEST_PROGRAMS[1] = [[
 local function fib(n)
     if n <= 1 then return n end
@@ -2136,7 +2145,7 @@ print(fib(1))
 print(fib(5))
 print(fib(10))
 
--- Memoized version
+# Memoized version
 local memo = {}
 local function fibMemo(n)
     if memo[n] then return memo[n] end
@@ -2153,9 +2162,9 @@ print(fibMemo(25))
 print(fibMemo(30))
 ]]
 
--- Test 2: OOP with metatables
+# Test 2: OOP with metatables
 TEST_PROGRAMS[2] = [[
--- Base class
+# Base class
 local Animal = {}
 Animal.__index = Animal
 
@@ -2174,7 +2183,7 @@ function Animal:getName()
     return self.name
 end
 
--- Derived class
+# Derived class
 local Dog = setmetatable({}, {__index = Animal})
 Dog.__index = Dog
 
@@ -2196,7 +2205,7 @@ print(d:speak())
 print(d:fetch("ball"))
 print(d:getName())
 
--- Test inheritance chain
+# Test inheritance chain
 local Puppy = setmetatable({}, {__index = Dog})
 Puppy.__index = Puppy
 
@@ -2215,7 +2224,7 @@ print(p:fetch("stick"))
 print(p:play())
 ]]
 
--- Test 3: Quicksort
+# Test 3: Quicksort
 TEST_PROGRAMS[3] = [[
 local function quicksort(arr, low, high)
     if low < high then
@@ -2244,7 +2253,7 @@ for i = 1, #data do
 end
 print(result)
 
--- Sort strings
+# Sort strings
 local words = {"banana", "apple", "cherry", "date", "elderberry", "fig"}
 table.sort(words)
 local result2 = ""
@@ -2254,7 +2263,7 @@ for i = 1, #words do
 end
 print(result2)
 
--- Custom sort (descending)
+# Custom sort (descending)
 local nums = {5, 2, 8, 1, 9, 3, 7, 4, 6}
 table.sort(nums, function(a, b) return a > b end)
 local result3 = ""
@@ -2265,9 +2274,9 @@ end
 print(result3)
 ]]
 
--- Test 4: String manipulation
+# Test 4: String manipulation
 TEST_PROGRAMS[4] = [[
--- Split function
+# Split function
 local function split(s, delim)
     local result = {}
     local pos = 1
@@ -2283,7 +2292,7 @@ local function split(s, delim)
     return result
 end
 
--- Trim
+# Trim
 local function trim(s)
     local start = 1
     local finish = string.len(s)
@@ -2306,7 +2315,7 @@ local function trim(s)
     return string.sub(s, start, finish)
 end
 
--- Replace
+# Replace
 local function replace(s, old, new)
     local result, count = string.gsub(s, old, new)
     return result
@@ -2322,22 +2331,22 @@ print(trim("\t\ttabs\t\t"))
 
 print(replace("hello world hello", "hello", "hi"))
 
--- String reverse and case
+# String reverse and case
 print(string.reverse("abcdef"))
 print(string.upper("hello"))
 print(string.lower("WORLD"))
 
--- String repeat
+# String repeat
 print(string.rep("ab", 4))
 
--- String byte/char
+# String byte/char
 print(string.byte("A"))
 print(string.char(72, 101, 108, 108, 111))
 ]]
 
--- Test 5: Closure-based iterators
+# Test 5: Closure-based iterators
 TEST_PROGRAMS[5] = [[
--- Range iterator
+# Range iterator
 local function range(start, stop, step)
     step = step or 1
     local current = start - step
@@ -2352,7 +2361,7 @@ local function range(start, stop, step)
     end
 end
 
--- Filter
+# Filter
 local function filter(iter, pred)
     return function()
         while true do
@@ -2363,7 +2372,7 @@ local function filter(iter, pred)
     end
 end
 
--- Map
+# Map
 local function map(iter, func)
     return function()
         local val = iter()
@@ -2372,7 +2381,7 @@ local function map(iter, func)
     end
 end
 
--- Collect to array
+# Collect to array
 local function collect(iter)
     local result = {}
     while true do
@@ -2383,7 +2392,7 @@ local function collect(iter)
     return result
 end
 
--- Test range
+# Test range
 local r = collect(range(1, 10))
 local s = ""
 for i = 1, #r do
@@ -2392,7 +2401,7 @@ for i = 1, #r do
 end
 print(s)
 
--- Filter even numbers
+# Filter even numbers
 local evens = collect(filter(range(1, 20), function(x) return x % 2 == 0 end))
 s = ""
 for i = 1, #evens do
@@ -2401,7 +2410,7 @@ for i = 1, #evens do
 end
 print(s)
 
--- Map: square
+# Map: square
 local squares = collect(map(range(1, 5), function(x) return x * x end))
 s = ""
 for i = 1, #squares do
@@ -2410,7 +2419,7 @@ for i = 1, #squares do
 end
 print(s)
 
--- Chain: filter then map
+# Chain: filter then map
 local result = collect(map(filter(range(1, 10), function(x) return x % 3 == 0 end), function(x) return x * 10 end))
 s = ""
 for i = 1, #result do
@@ -2419,7 +2428,7 @@ for i = 1, #result do
 end
 print(s)
 
--- Range with negative step
+# Range with negative step
 local down = collect(range(10, 1, -1))
 s = ""
 for i = 1, #down do
@@ -2429,7 +2438,7 @@ end
 print(s)
 ]]
 
--- Test 6: Linked list with metamethods
+# Test 6: Linked list with metamethods
 TEST_PROGRAMS[6] = [[
 local List = {}
 List.__index = List
@@ -2479,12 +2488,12 @@ end
 
 List.__concat = function(a, b)
     local result = List.new()
-    -- Add b's elements first (they'll be reversed)
+    # Add b's elements first (they'll be reversed)
     local arrB = b:toArray()
     for i = #arrB, 1, -1 do
         result:push(arrB[i])
     end
-    -- Add a's elements
+    # Add a's elements
     local arrA = a:toArray()
     for i = #arrA, 1, -1 do
         result:push(arrA[i])
@@ -2503,7 +2512,7 @@ local popped = l:pop()
 print(popped)
 print(tostring(l))
 
--- Test concat metamethod
+# Test concat metamethod
 local l2 = List.new()
 l2:push(4)
 l2:push(5)
@@ -2512,9 +2521,9 @@ print(tostring(l3))
 print(#l3)
 ]]
 
--- Test 7: Module pattern
+# Test 7: Module pattern
 TEST_PROGRAMS[7] = [[
--- Math utilities module
+# Math utilities module
 local MathUtils = {}
 
 function MathUtils.factorial(n)
@@ -2541,7 +2550,7 @@ function MathUtils.gcd(a, b)
     return a
 end
 
--- String utilities module
+# String utilities module
 local StringUtils = {}
 
 function StringUtils.startsWith(s, prefix)
@@ -2563,7 +2572,7 @@ function StringUtils.padLeft(s, width, ch)
     return s
 end
 
--- Array utilities module
+# Array utilities module
 local ArrayUtils = {}
 
 function ArrayUtils.sum(arr)
@@ -2587,7 +2596,7 @@ function ArrayUtils.reversed(arr)
     return result
 end
 
--- Use the modules
+# Use the modules
 print(MathUtils.factorial(5))
 print(MathUtils.factorial(10))
 print(tostring(MathUtils.isPrime(17)))
@@ -2611,9 +2620,9 @@ end
 print(s)
 ]]
 
--- Test 8: Coroutine-like state machine using closures
+# Test 8: Coroutine-like state machine using closures
 TEST_PROGRAMS[8] = [[
--- State machine for a simple traffic light
+# State machine for a simple traffic light
 local function trafficLight()
     local states = {"red", "green", "yellow"}
     local current = 1
@@ -2643,7 +2652,7 @@ print(light.state())
 light.next()
 print(light.state())
 
--- Generator-like pattern using closures
+# Generator-like pattern using closures
 local function counter(start, step)
     local val = start - step
     return function()
@@ -2658,7 +2667,7 @@ print(c())
 print(c())
 print(c())
 
--- Accumulator
+# Accumulator
 local function makeAccumulator(init)
     local total = init or 0
     return {
@@ -2676,7 +2685,7 @@ print(acc.get())
 acc.add(-5)
 print(acc.get())
 
--- Pipeline state machine
+# Pipeline state machine
 local function pipeline(...)
     local stages = {...}
     return function(input)
@@ -2697,9 +2706,9 @@ print(proc(3))
 print(proc(5))
 ]]
 
--- Test 9: Numeric algorithms (matrix multiply, Newton's method)
+# Test 9: Numeric algorithms (matrix multiply, Newton's method)
 TEST_PROGRAMS[9] = [[
--- Matrix multiplication
+# Matrix multiplication
 local function matNew(rows, cols, val)
     local m = {}
     for i = 1, rows do
@@ -2739,7 +2748,7 @@ local function matPrint(m)
     print(table.concat(lines, "; "))
 end
 
--- Test: 2x2 matrix multiply
+# Test: 2x2 matrix multiply
 local a = matNew(2, 2)
 a[1][1] = 1; a[1][2] = 2
 a[2][1] = 3; a[2][2] = 4
@@ -2751,7 +2760,7 @@ b[2][1] = 7; b[2][2] = 8
 local c = matMul(a, b)
 matPrint(c)
 
--- 3x3 identity * matrix
+# 3x3 identity * matrix
 local id = matNew(3, 3, 0)
 id[1][1] = 1; id[2][2] = 1; id[3][3] = 1
 
@@ -2763,7 +2772,7 @@ m[3][1] = 7; m[3][2] = 8; m[3][3] = 9
 local r = matMul(id, m)
 matPrint(r)
 
--- Newton's method for sqrt
+# Newton's method for sqrt
 local function newtonSqrt(n, tolerance)
     tolerance = tolerance or 0.0001
     local guess = n / 2
@@ -2779,11 +2788,11 @@ local function newtonSqrt(n, tolerance)
     return guess
 end
 
--- Test Newton's sqrt
+# Test Newton's sqrt
 local sqrt2 = newtonSqrt(2)
 local sqrt9 = newtonSqrt(9)
 local sqrt100 = newtonSqrt(100)
--- Round to 4 decimal places
+# Round to 4 decimal places
 local function round4(x)
     return math.floor(x * 10000 + 0.5) / 10000
 end
@@ -2791,8 +2800,8 @@ print(round4(sqrt2))
 print(round4(sqrt9))
 print(round4(sqrt100))
 
--- Newton's method for finding roots
--- f(x) = x^2 - 4, root at x=2
+# Newton's method for finding roots
+# f(x) = x^2 - 4, root at x=2
 local function findRoot(f, df, x0, tol)
     tol = tol or 0.0001
     local x = x0
@@ -2817,9 +2826,9 @@ local root = findRoot(
 print(round4(root))
 ]]
 
--- Test 10: Repeat/until, continue, break, varargs, pcall, multiple returns
+# Test 10: Repeat/until, continue, break, varargs, pcall, multiple returns
 TEST_PROGRAMS[10] = [[
--- repeat/until
+# repeat/until
 local i = 0
 local sum = 0
 repeat
@@ -2828,7 +2837,7 @@ repeat
 until i >= 10
 print(sum)
 
--- continue in for loop
+# continue in for loop
 local evens = {}
 for x = 1, 20 do
     if x % 2 ~= 0 then continue end
@@ -2841,7 +2850,7 @@ for i = 1, #evens do
 end
 print(s)
 
--- break in while
+# break in while
 local found = -1
 local j = 0
 while j < 100 do
@@ -2853,7 +2862,7 @@ while j < 100 do
 end
 print(found)
 
--- varargs
+# varargs
 local function vsum(...)
     local args = {...}
     local total = 0
@@ -2865,14 +2874,14 @@ end
 print(vsum(1, 2, 3, 4, 5))
 print(vsum(10, 20))
 
--- select with varargs
+# select with varargs
 local function countArgs(...)
     return select("#", ...)
 end
 print(countArgs(1, 2, 3))
 print(countArgs())
 
--- multiple returns
+# multiple returns
 local function multiRet()
     return 10, 20, 30
 end
@@ -2881,21 +2890,21 @@ print(a)
 print(b)
 print(c)
 
--- multiple assignment discards extras
+# multiple assignment discards extras
 local x, y = multiRet()
 print(x)
 print(y)
 
--- pcall success
+# pcall success
 local ok, val = pcall(function() return 42 end)
 print(tostring(ok))
 print(val)
 
--- pcall failure
+# pcall failure
 local ok2, err = pcall(function() error("oops") end)
 print(tostring(ok2))
 
--- nested functions and closures
+# nested functions and closures
 local function makeCounter()
     local n = 0
     return function()
@@ -2911,9 +2920,9 @@ print(c2())
 print(c1())
 ]]
 
--- Test 11: do/end blocks, numeric for step, complex table operations
+# Test 11: do/end blocks, numeric for step, complex table operations
 TEST_PROGRAMS[11] = [[
--- do/end block scoping
+# do/end block scoping
 local x = 10
 do
     local x = 20
@@ -2921,7 +2930,7 @@ do
 end
 print(x)
 
--- numeric for with step
+# numeric for with step
 local s = ""
 for i = 0, 20, 5 do
     if s ~= "" then s = s .. "," end
@@ -2929,7 +2938,7 @@ for i = 0, 20, 5 do
 end
 print(s)
 
--- negative step
+# negative step
 s = ""
 for i = 10, 1, -2 do
     if s ~= "" then s = s .. "," end
@@ -2937,7 +2946,7 @@ for i = 10, 1, -2 do
 end
 print(s)
 
--- table.remove and table.insert
+# table.remove and table.insert
 local arr = {1, 2, 3, 4, 5}
 table.remove(arr, 3)
 local r1 = ""
@@ -2955,11 +2964,11 @@ for i = 1, #arr do
 end
 print(r2)
 
--- table.concat
+# table.concat
 local words = {"hello", "world", "from", "luau"}
 print(table.concat(words, " "))
 
--- Nested tables
+# Nested tables
 local grid = {}
 for i = 1, 3 do
     grid[i] = {}
@@ -2976,11 +2985,11 @@ for i = 1, 3 do
 end
 print(gs)
 
--- String format
+# String format
 print(string.format("%d + %d = %d", 3, 4, 7))
 print(string.format("%s is %d", "age", 25))
 
--- Math operations
+# Math operations
 print(math.floor(3.7))
 print(math.ceil(3.2))
 print(math.abs(-42))
@@ -2988,9 +2997,9 @@ print(math.max(1, 5, 3, 2, 4))
 print(math.min(10, 3, 7, 1, 8))
 ]]
 
--- ============================================================================
--- EXPECTED OUTPUTS
--- ============================================================================
+# ============================================================================
+# EXPECTED OUTPUTS
+# ============================================================================
 
 EXPECTED_OUTPUTS = {}
 
@@ -3078,31 +3087,31 @@ EXPECTED_OUTPUTS[11] = {
     "3", "4", "42", "5", "1"
 }
 
--- ============================================================================
--- CHECKSUM AND BENCHMARK HARNESS
--- ============================================================================
+# ============================================================================
+# CHECKSUM AND BENCHMARK HARNESS
+# ============================================================================
 
 function computeChecksum(outputLines)
     hash = 5381
-    for i = 1, #outputLines do
+    for i = 1, outputLines.count do
         line = outputLines[i]
         for j = 1, slen(line) do
             c = sbyte(line, j)
             hash = ((hash * 33) + c) % 4294967296
         end
-        hash = ((hash * 33) + 10) % 4294967296 -- newline
+        hash = ((hash * 33) + 10) % 4294967296 # newline
     end
     return hash
 end
 
 function verifyOutputs()
-    for idx = 1, #TEST_PROGRAMS do
+    for idx = 1, TEST_PROGRAMS.count do
         output = runProgram(TEST_PROGRAMS[idx])
         expected = EXPECTED_OUTPUTS[idx]
-        if #output != #expected then
-            error("Test " .. idx .. " output count mismatch: got " .. #output .. " expected " .. #expected)
+        if output.count != expected.count then
+            error("Test " .. idx .. " output count mismatch: got " .. output.count .. " expected " .. expected.count)
         end
-        for i = 1, #expected do
+        for i = 1, expected.count do
             if output[i] != expected[i] then
                 error("Test " .. idx .. " line " .. i .. " mismatch: got '" .. tostring(output[i]) .. "' expected '" .. expected[i] .. "'")
             end

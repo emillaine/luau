@@ -1,4 +1,4 @@
---[[
+#[[
 MIT License
 
 Copyright (c) 2017 Gabriel de Quadros Ligneul
@@ -89,7 +89,7 @@ for i=1,N do
   y=ymin+(j-1)*dy
   S = S + level(x,y)
  end
- -- if i % 10 == 0 then print(collectgarbage("count")) end
+ # if i % 10 == 0 then print(collectgarbage("count")) end
 end
 print(S)
 

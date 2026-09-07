@@ -1,4 +1,4 @@
--- forward declarations (implicit-local dialect has no hoisted globals)
+# forward declarations (implicit-local dialect has no hoisted globals)
 base64_decode = null
 cache_delete = null
 get_status_text = null
@@ -23,11 +23,11 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
--- HTTP/1.1 Server Framework benchmark
--- Compatible with: Lute, Lua 5.x, LuaJIT
--- Tests: request parsing, routing, middleware, response building, JSON codec
+# HTTP/1.1 Server Framework benchmark
+# Compatible with: Lute, Lua 5.x, LuaJIT
+# Tests: request parsing, routing, middleware, response building, JSON codec
 
--- ===== Local aliases for hot math/string functions =====
+# ===== Local aliases for hot math/string functions =====
 floor = math.floor
 char = string.char
 byte = string.byte
@@ -41,9 +41,9 @@ concat = table.concat
 insert = table.insert
 clock = os.clock
 
--- =========================================================================
--- URL percent-encoding / decoding
--- =========================================================================
+# =========================================================================
+# URL percent-encoding / decoding
+# =========================================================================
 function url_decode(str)
     str = gsub(str, "+", " ")
     str = gsub(str, "%%(%x%x)", function(h)
@@ -59,15 +59,15 @@ function url_encode(str)
     return str
 end
 
--- =========================================================================
--- Query string parser
--- =========================================================================
+# =========================================================================
+# Query string parser
+# =========================================================================
 function parse_query_string(qs)
     result = {}
     if not qs or qs == "" then return result end
-    -- split on &
+    # split on &
     pos = 1
-    while pos <= #qs do
+    while pos <= qs.count do
         amp = find(qs, "&", pos, true)
         segment = null
         if amp then
@@ -75,7 +75,7 @@ function parse_query_string(qs)
             pos = amp + 1
         else
             segment = sub(qs, pos)
-            pos = #qs + 1
+            pos = qs.count + 1
         end
         eq = find(segment, "=", 1, true)
         if eq then
@@ -89,9 +89,9 @@ function parse_query_string(qs)
     return result
 end
 
--- =========================================================================
--- Header utilities
--- =========================================================================
+# =========================================================================
+# Header utilities
+# =========================================================================
 function create_headers()
     return { _store = {}, _order = {} }
 end
@@ -115,7 +115,7 @@ end
 
 function headers_get(h, name)
     entry = h._store[lower(name)]
-    if entry and #entry.values > 0 then
+    if entry and entry.values.count > 0 then
         return entry.values[1]
     end
     return null
@@ -133,42 +133,42 @@ end
 
 function headers_serialize(h)
     lines = {}
-    for i = 1, #h._order do
+    for i = 1, h._order.count do
         lname = h._order[i]
         entry = h._store[lname]
-        for j = 1, #entry.values do
+        for j = 1, entry.values.count do
             insert(lines, entry.name .. ": " .. entry.values[j])
         end
     end
     return concat(lines, "\r\n")
 end
 
--- =========================================================================
--- Cookie parser
--- =========================================================================
+# =========================================================================
+# Cookie parser
+# =========================================================================
 function parse_cookies(cookie_header)
     cookies = {}
     if not cookie_header or cookie_header == "" then return cookies end
     pos = 1
-    while pos <= #cookie_header do
+    while pos <= cookie_header.count do
         semi = find(cookie_header, ";", pos, true)
         segment = null
         if semi then
             segment = sub(cookie_header, pos, semi - 1)
             pos = semi + 1
-            -- skip space after semicolon
-            if pos <= #cookie_header and sub(cookie_header, pos, pos) == " " then
+            # skip space after semicolon
+            if pos <= cookie_header.count and sub(cookie_header, pos, pos) == " " then
                 pos = pos + 1
             end
         else
             segment = sub(cookie_header, pos)
-            pos = #cookie_header + 1
+            pos = cookie_header.count + 1
         end
         eq = find(segment, "=", 1, true)
         if eq then
             name = sub(segment, 1, eq - 1)
             val = sub(segment, eq + 1)
-            -- trim whitespace from name
+            # trim whitespace from name
             name = gsub(name, "^%s+", "")
             name = gsub(name, "%s+$", "")
             cookies[name] = val
@@ -177,9 +177,9 @@ function parse_cookies(cookie_header)
     return cookies
 end
 
--- =========================================================================
--- Set-Cookie builder
--- =========================================================================
+# =========================================================================
+# Set-Cookie builder
+# =========================================================================
 function build_set_cookie(name, value, opts)
     parts = { name .. "=" .. value }
     if opts then
@@ -194,14 +194,14 @@ function build_set_cookie(name, value, opts)
     return concat(parts, "; ")
 end
 
--- =========================================================================
--- Content negotiation (Accept header with q-values)
--- =========================================================================
+# =========================================================================
+# Content negotiation (Accept header with q-values)
+# =========================================================================
 function parse_accept_header(accept)
     entries = {}
     if not accept or accept == "" then return entries end
     pos = 1
-    while pos <= #accept do
+    while pos <= accept.count do
         comma = find(accept, ",", pos, true)
         segment = null
         if comma then
@@ -209,12 +209,12 @@ function parse_accept_header(accept)
             pos = comma + 1
         else
             segment = sub(accept, pos)
-            pos = #accept + 1
+            pos = accept.count + 1
         end
-        -- trim
+        # trim
         segment = gsub(segment, "^%s+", "")
         segment = gsub(segment, "%s+$", "")
-        -- extract q value
+        # extract q value
         media_type = segment
         q = 1.0
         semi = find(segment, ";", 1, true)
@@ -231,25 +231,25 @@ function parse_accept_header(accept)
         end
         insert(entries, { media_type = media_type, q = q })
     end
-    -- sort by q descending
+    # sort by q descending
     table.sort(entries, function(a, b) return a.q > b.q end)
     return entries
 end
 
 function negotiate_content_type(accept_header, available)
     prefs = parse_accept_header(accept_header)
-    for i = 1, #prefs do
+    for i = 1, prefs.count do
         wanted = prefs[i].media_type
-        for j = 1, #available do
+        for j = 1, available.count do
             if wanted == available[j] or wanted == "*/*" then
                 return available[j]
             end
-            -- check type/* match
+            # check type/* match
             slash = find(wanted, "/", 1, true)
             if slash then
                 wtype = sub(wanted, 1, slash)
                 if sub(wanted, slash + 1) == "*" then
-                    if sub(available[j], 1, #wtype) == wtype then
+                    if sub(available[j], 1, wtype.count) == wtype then
                         return available[j]
                     end
                 end
@@ -259,9 +259,9 @@ function negotiate_content_type(accept_header, available)
     return available[1]
 end
 
--- =========================================================================
--- HTTP Request Parser
--- =========================================================================
+# =========================================================================
+# HTTP Request Parser
+# =========================================================================
 function parse_request(raw)
     req = {}
     req.headers = create_headers()
@@ -272,10 +272,10 @@ function parse_request(raw)
     req.query_string = ""
     req.query = {}
 
-    -- Find end of request line
+    # Find end of request line
     crlf = find(raw, "\r\n", 1, true)
     if not crlf then
-        -- try just \n
+        # try just \n
         crlf = find(raw, "\n", 1, true)
         if not crlf then return req end
         request_line = sub(raw, 1, crlf - 1)
@@ -291,7 +291,7 @@ function parse_request(raw)
 end
 
 function parse_request_line(req, line)
-    -- METHOD PATH VERSION
+    # METHOD PATH VERSION
     sp1 = find(line, " ", 1, true)
     if not sp1 then return end
     req.method = sub(line, 1, sp1 - 1)
@@ -299,7 +299,7 @@ function parse_request_line(req, line)
     if sp2 then
         full_path = sub(line, sp1 + 1, sp2 - 1)
         req.version = sub(line, sp2 + 1)
-        -- split path and query
+        # split path and query
         qmark = find(full_path, "?", 1, true)
         if qmark then
             req.path = sub(full_path, 1, qmark - 1)
@@ -315,9 +315,9 @@ end
 
 function parse_headers_and_body(req, raw, start)
     pos = start
-    rawlen = #raw
+    rawlen = raw.count
     while pos <= rawlen do
-        -- find end of this header line
+        # find end of this header line
         eol = find(raw, "\r\n", pos, true)
         next_pos = null
         if eol then
@@ -327,7 +327,7 @@ function parse_headers_and_body(req, raw, start)
             if eol then
                 next_pos = eol + 1
             else
-                -- rest is one last header
+                # rest is one last header
                 eol = rawlen + 1
                 next_pos = rawlen + 1
             end
@@ -335,17 +335,17 @@ function parse_headers_and_body(req, raw, start)
 
         line = sub(raw, pos, eol - 1)
         if line == "" then
-            -- empty line = end of headers, rest is body
+            # empty line = end of headers, rest is body
             req.body = sub(raw, next_pos)
             return
         end
 
-        -- parse header
+        # parse header
         colon = find(line, ":", 1, true)
         if colon then
             name = sub(line, 1, colon - 1)
             value = sub(line, colon + 1)
-            -- trim leading whitespace from value
+            # trim leading whitespace from value
             value = gsub(value, "^%s+", "")
             headers_add(req.headers, name, value)
         end
@@ -354,9 +354,9 @@ function parse_headers_and_body(req, raw, start)
     end
 end
 
--- =========================================================================
--- Router
--- =========================================================================
+# =========================================================================
+# Router
+# =========================================================================
 function create_router()
     return { routes = {} }
 end
@@ -375,14 +375,14 @@ function split_path(path)
     if path == "/" then return segs end
     pos = 1
     if sub(path, 1, 1) == "/" then pos = 2 end
-    while pos <= #path do
+    while pos <= path.count do
         sl = find(path, "/", pos, true)
         if sl then
             insert(segs, sub(path, pos, sl - 1))
             pos = sl + 1
         else
             insert(segs, sub(path, pos))
-            pos = #path + 1
+            pos = path.count + 1
         end
     end
     return segs
@@ -390,7 +390,7 @@ end
 
 function router_match(router, method, path)
     path_segs = split_path(path)
-    for i = 1, #router.routes do
+    for i = 1, router.routes.count do
         route = router.routes[i]
         if route.method == method or route.method == "*" then
             params = match_segments(route.segments, path_segs)
@@ -405,41 +405,41 @@ end
 function match_segments(pattern_segs, path_segs)
     params = {}
     pi = 1
-    for i = 1, #pattern_segs do
+    for i = 1, pattern_segs.count do
         seg = pattern_segs[i]
         if seg == "*" then
-            -- wildcard matches rest
+            # wildcard matches rest
             rest = {}
-            for j = pi, #path_segs do
+            for j = pi, path_segs.count do
                 insert(rest, path_segs[j])
             end
             params["*"] = concat(rest, "/")
             return params
         else if sub(seg, 1, 1) == ":" then
-            -- parameterized segment
-            if pi > #path_segs then return null end
+            # parameterized segment
+            if pi > path_segs.count then return null end
             param_name = sub(seg, 2)
             params[param_name] = path_segs[pi]
             pi = pi + 1
         else
-            -- exact match
-            if pi > #path_segs then return null end
+            # exact match
+            if pi > path_segs.count then return null end
             if path_segs[pi] != seg then return null end
             pi = pi + 1
         end
     end
-    -- all pattern segments consumed, check path fully consumed
-    if pi != #path_segs + 1 then return null end
+    # all pattern segments consumed, check path fully consumed
+    if pi != path_segs.count + 1 then return null end
     return params
 end
 
--- =========================================================================
--- Middleware chain
--- =========================================================================
+# =========================================================================
+# Middleware chain
+# =========================================================================
 function create_middleware_chain(middlewares, final_handler)
-    -- Build chain from inside out
+    # Build chain from inside out
     handler = final_handler
-    i = #middlewares
+    i = middlewares.count
     while i >= 1 do
         mw = middlewares[i]
         next_handler = handler
@@ -451,13 +451,13 @@ function create_middleware_chain(middlewares, final_handler)
     return handler
 end
 
--- Logging middleware
+# Logging middleware
 function middleware_logging(req, res, next_handler)
     res._log = (res._log or "") .. "[LOG " .. req.method .. " " .. req.path .. "] "
     return next_handler(req, res)
 end
 
--- Auth check middleware
+# Auth check middleware
 function middleware_auth(req, res, next_handler)
     auth = headers_get(req.headers, "Authorization")
     if auth then
@@ -470,7 +470,7 @@ function middleware_auth(req, res, next_handler)
     return next_handler(req, res)
 end
 
--- CORS middleware
+# CORS middleware
 function middleware_cors(req, res, next_handler)
     headers_set(res.headers, "Access-Control-Allow-Origin", "*")
     headers_set(res.headers, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -478,15 +478,15 @@ function middleware_cors(req, res, next_handler)
     return next_handler(req, res)
 end
 
--- Rate limiting middleware (simulated)
+# Rate limiting middleware (simulated)
 function middleware_rate_limit(req, res, next_handler)
     req.rate_limited = false
     return next_handler(req, res)
 end
 
--- =========================================================================
--- Response builder
--- =========================================================================
+# =========================================================================
+# Response builder
+# =========================================================================
 function create_response()
     res = {}
     res.status = 200
@@ -528,7 +528,7 @@ end
 
 function response_set_body(res, body, content_type)
     res.body = body
-    headers_set(res.headers, "Content-Length", tostring(#body))
+    headers_set(res.headers, "Content-Length", tostring(body.count))
     if content_type then
         headers_set(res.headers, "Content-Type", content_type)
     end
@@ -544,15 +544,15 @@ function response_serialize(res)
         insert(parts, "\r\n")
     end
     insert(parts, "\r\n")
-    if res.body and #res.body > 0 then
+    if res.body and res.body.count > 0 then
         insert(parts, res.body)
     end
     return concat(parts)
 end
 
--- =========================================================================
--- JSON encoder
--- =========================================================================
+# =========================================================================
+# JSON encoder
+# =========================================================================
 function json_encode(val)
     t = type(val)
     if val == null then
@@ -569,7 +569,7 @@ function json_encode(val)
     else if t == "string" then
         return json_encode_string(val)
     else if t == "table" then
-        -- check if array
+        # check if array
         if is_json_array(val) then
             return json_encode_array(val)
         else
@@ -581,7 +581,7 @@ end
 
 function json_encode_string(s)
     buf = { '"' }
-    for i = 1, #s do
+    for i = 1, s.count do
         c = byte(s, i)
         if c == 34 then insert(buf, '\\"')
         else if c == 92 then insert(buf, '\\\\')
@@ -599,9 +599,9 @@ function json_encode_string(s)
 end
 
 function is_json_array(t)
-    n = #t
+    n = t.count
     if n == 0 then
-        -- check if empty or object
+        # check if empty or object
         for _ in next, t do
             return false
         end
@@ -612,7 +612,7 @@ end
 
 function json_encode_array(arr)
     parts = {}
-    for i = 1, #arr do
+    for i = 1, arr.count do
         insert(parts, json_encode(arr[i]))
     end
     return "[" .. concat(parts, ",") .. "]"
@@ -625,14 +625,14 @@ function json_encode_object(obj)
             insert(parts, json_encode_string(k) .. ":" .. json_encode(v))
         end
     end
-    -- sort for deterministic output
+    # sort for deterministic output
     table.sort(parts)
     return "{" .. concat(parts, ",") .. "}"
 end
 
--- =========================================================================
--- JSON decoder
--- =========================================================================
+# =========================================================================
+# JSON decoder
+# =========================================================================
 function json_decode(str)
     pos = 1
     val = null
@@ -641,7 +641,7 @@ function json_decode(str)
 end
 
 function json_skip_whitespace(str, pos)
-    while pos <= #str do
+    while pos <= str.count do
         c = byte(str, pos)
         if c == 32 or c == 9 or c == 10 or c == 13 then
             pos = pos + 1
@@ -654,19 +654,19 @@ end
 
 function json_parse_value(str, pos)
     pos = json_skip_whitespace(str, pos)
-    if pos > #str then return null, pos end
+    if pos > str.count then return null, pos end
     c = byte(str, pos)
     if c == 34 then
         return json_parse_string(str, pos)
-    else if c == 123 then  -- {
+    else if c == 123 then  # {
         return json_parse_object(str, pos)
-    else if c == 91 then   -- [
+    else if c == 91 then   # [
         return json_parse_array(str, pos)
-    else if c == 116 then  -- t (true)
+    else if c == 116 then  # t (true)
         return true, pos + 4
-    else if c == 102 then  -- f (false)
+    else if c == 102 then  # f (false)
         return false, pos + 5
-    else if c == 110 then  -- n (null)
+    else if c == 110 then  # n (null)
         return null, pos + 4
     else
         return json_parse_number(str, pos)
@@ -674,13 +674,13 @@ function json_parse_value(str, pos)
 end
 
 function json_parse_string(str, pos)
-    pos = pos + 1  -- skip opening quote
+    pos = pos + 1  # skip opening quote
     buf = {}
-    while pos <= #str do
+    while pos <= str.count do
         c = byte(str, pos)
-        if c == 34 then  -- closing quote
+        if c == 34 then  # closing quote
             return concat(buf), pos + 1
-        else if c == 92 then  -- backslash
+        else if c == 92 then  # backslash
             pos = pos + 1
             esc = byte(str, pos)
             if esc == 34 then insert(buf, '"')
@@ -691,7 +691,7 @@ function json_parse_string(str, pos)
             else if esc == 116 then insert(buf, '\t')
             else if esc == 98 then insert(buf, '\b')
             else if esc == 102 then insert(buf, '\f')
-            else if esc == 117 then  -- \uXXXX
+            else if esc == 117 then  # \uXXXX
                 hex = sub(str, pos + 1, pos + 4)
                 codepoint = tonumber(hex, 16)
                 if codepoint and codepoint < 128 then
@@ -712,22 +712,22 @@ end
 
 function json_parse_number(str, pos)
     start = pos
-    if byte(str, pos) == 45 then pos = pos + 1 end  -- minus
-    while pos <= #str and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
+    if byte(str, pos) == 45 then pos = pos + 1 end  # minus
+    while pos <= str.count and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
         pos = pos + 1
     end
-    if pos <= #str and byte(str, pos) == 46 then  -- decimal point
+    if pos <= str.count and byte(str, pos) == 46 then  # decimal point
         pos = pos + 1
-        while pos <= #str and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
+        while pos <= str.count and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
             pos = pos + 1
         end
     end
-    if pos <= #str and (byte(str, pos) == 101 or byte(str, pos) == 69) then  -- e/E
+    if pos <= str.count and (byte(str, pos) == 101 or byte(str, pos) == 69) then  # e/E
         pos = pos + 1
-        if pos <= #str and (byte(str, pos) == 43 or byte(str, pos) == 45) then
+        if pos <= str.count and (byte(str, pos) == 43 or byte(str, pos) == 45) then
             pos = pos + 1
         end
-        while pos <= #str and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
+        while pos <= str.count and byte(str, pos) >= 48 and byte(str, pos) <= 57 do
             pos = pos + 1
         end
     end
@@ -737,21 +737,21 @@ end
 
 function json_parse_array(str, pos)
     arr = {}
-    pos = pos + 1  -- skip [
+    pos = pos + 1  # skip [
     pos = json_skip_whitespace(str, pos)
-    if pos <= #str and byte(str, pos) == 93 then  -- ]
+    if pos <= str.count and byte(str, pos) == 93 then  # ]
         return arr, pos + 1
     end
-    while pos <= #str do
+    while pos <= str.count do
         val = null
         val, pos = json_parse_value(str, pos)
         insert(arr, val)
         pos = json_skip_whitespace(str, pos)
-        if pos > #str then break end
+        if pos > str.count then break end
         c = byte(str, pos)
-        if c == 93 then  -- ]
+        if c == 93 then  # ]
             return arr, pos + 1
-        else if c == 44 then  -- ,
+        else if c == 44 then  # ,
             pos = pos + 1
         end
     end
@@ -760,72 +760,72 @@ end
 
 function json_parse_object(str, pos)
     obj = {}
-    pos = pos + 1  -- skip {
+    pos = pos + 1  # skip {
     pos = json_skip_whitespace(str, pos)
-    if pos <= #str and byte(str, pos) == 125 then  -- }
+    if pos <= str.count and byte(str, pos) == 125 then  # }
         return obj, pos + 1
     end
-    while pos <= #str do
+    while pos <= str.count do
         pos = json_skip_whitespace(str, pos)
         key = null
         key, pos = json_parse_string(str, pos)
         pos = json_skip_whitespace(str, pos)
-        pos = pos + 1  -- skip :
+        pos = pos + 1  # skip :
         val = null
         val, pos = json_parse_value(str, pos)
         obj[key] = val
         pos = json_skip_whitespace(str, pos)
-        if pos > #str then break end
+        if pos > str.count then break end
         c = byte(str, pos)
-        if c == 125 then  -- }
+        if c == 125 then  # }
             return obj, pos + 1
-        else if c == 44 then  -- ,
+        else if c == 44 then  # ,
             pos = pos + 1
         end
     end
     return obj, pos
 end
 
--- =========================================================================
--- Form parser (application/x-www-form-urlencoded)
--- =========================================================================
+# =========================================================================
+# Form parser (application/x-www-form-urlencoded)
+# =========================================================================
 function parse_form_body(body)
     return parse_query_string(body)
 end
 
--- =========================================================================
--- Multipart form parser (simplified boundary-based)
--- =========================================================================
+# =========================================================================
+# Multipart form parser (simplified boundary-based)
+# =========================================================================
 function parse_multipart(body, boundary)
     parts = {}
     delim = "--" .. boundary
     pos = 1
-    -- Skip preamble - find first boundary
+    # Skip preamble - find first boundary
     start = find(body, delim, pos, true)
     if not start then return parts end
-    pos = start + #delim
-    -- skip CRLF after boundary
+    pos = start + delim.count
+    # skip CRLF after boundary
     if sub(body, pos, pos + 1) == "\r\n" then pos = pos + 2
     else if sub(body, pos, pos) == "\n" then pos = pos + 1
     end
 
-    while pos <= #body do
-        -- Find the next boundary
+    while pos <= body.count do
+        # Find the next boundary
         next_bound = find(body, delim, pos, true)
         if not next_bound then break end
         part_data = sub(body, pos, next_bound - 1)
-        -- Remove trailing CRLF before boundary
+        # Remove trailing CRLF before boundary
         if sub(part_data, -2) == "\r\n" then
             part_data = sub(part_data, 1, -3)
         end
-        -- Parse part headers and body
+        # Parse part headers and body
         part = parse_multipart_part(part_data)
         if part then insert(parts, part) end
-        -- Move past boundary
-        pos = next_bound + #delim
-        -- Check for closing --
+        # Move past boundary
+        pos = next_bound + delim.count
+        # Check for closing --
         if sub(body, pos, pos + 1) == "--" then break end
-        -- skip CRLF
+        # skip CRLF
         if sub(body, pos, pos + 1) == "\r\n" then pos = pos + 2
         else if sub(body, pos, pos) == "\n" then pos = pos + 1
         end
@@ -835,7 +835,7 @@ end
 
 function parse_multipart_part(data)
     part = { headers = {}, body = "" }
-    -- Find header/body separator
+    # Find header/body separator
     sep = find(data, "\r\n\r\n", 1, true)
     if not sep then
         sep = find(data, "\n\n", 1, true)
@@ -856,11 +856,11 @@ end
 
 function parse_multipart_headers(part, header_str)
     pos = 1
-    while pos <= #header_str do
+    while pos <= header_str.count do
         eol = find(header_str, "\r\n", pos, true)
         if not eol then
             eol = find(header_str, "\n", pos, true)
-            if not eol then eol = #header_str + 1 end
+            if not eol then eol = header_str.count + 1 end
         end
         line = sub(header_str, pos, eol - 1)
         colon = find(line, ":", 1, true)
@@ -868,7 +868,7 @@ function parse_multipart_headers(part, header_str)
             name = lower(sub(line, 1, colon - 1))
             value = gsub(sub(line, colon + 1), "^%s+", "")
             part.headers[name] = value
-            -- Extract name from content-disposition
+            # Extract name from content-disposition
             if name == "content-disposition" then
                 nm = find(value, 'name="', 1, true)
                 if nm then
@@ -896,12 +896,12 @@ function parse_multipart_headers(part, header_str)
     end
 end
 
--- =========================================================================
--- Simple template engine (mustache-like: {{variable}}, {{#if}}, {{#each}})
--- =========================================================================
+# =========================================================================
+# Simple template engine (mustache-like: {{variable}}, {{#if}}, {{#each}})
+# =========================================================================
 function template_render(tmpl, context)
     result = tmpl
-    -- Replace simple variables {{name}}
+    # Replace simple variables {{name}}
     result = gsub(result, "{{([^#/}]+)}}", function(key)
         key = gsub(key, "^%s+", "")
         key = gsub(key, "%s+$", "")
@@ -913,10 +913,10 @@ function template_render(tmpl, context)
 end
 
 function template_lookup(context, key)
-    -- Support dotted paths: user.name
+    # Support dotted paths: user.name
     pos = 1
     current = context
-    while pos <= #key do
+    while pos <= key.count do
         dot = find(key, ".", pos, true)
         segment = null
         if dot then
@@ -924,7 +924,7 @@ function template_lookup(context, key)
             pos = dot + 1
         else
             segment = sub(key, pos)
-            pos = #key + 1
+            pos = key.count + 1
         end
         if type(current) != "table" then return null end
         current = current[segment]
@@ -933,17 +933,17 @@ function template_lookup(context, key)
 end
 
 function template_render_loop(tmpl, context, list_key, item_var)
-    -- Render template for each item in context[list_key]
+    # Render template for each item in context[list_key]
     items = context[list_key]
     if not items then return "" end
     parts = {}
-    for i = 1, #items do
+    for i = 1, items.count do
         item_context = {}
-        -- Copy parent context
+        # Copy parent context
         for k, v in next, context do
             item_context[k] = v
         end
-        -- Add item
+        # Add item
         if type(items[i]) == "table" then
             for k, v in next, items[i] do
                 item_context[item_var .. "." .. k] = v
@@ -958,24 +958,24 @@ function template_render_loop(tmpl, context, list_key, item_var)
     return concat(parts)
 end
 
--- =========================================================================
--- ETag generator (simple hash-based)
--- =========================================================================
+# =========================================================================
+# ETag generator (simple hash-based)
+# =========================================================================
 function generate_etag(content)
-    -- Simple FNV-1a-like hash for ETags
+    # Simple FNV-1a-like hash for ETags
     hash = 2166136261
-    for i = 1, #content do
+    for i = 1, content.count do
         hash = hash * 16777619
         hash = hash + byte(content, i)
-        -- Keep in reasonable integer range
+        # Keep in reasonable integer range
         hash = hash % 4294967296
     end
     return format('"%08x"', hash)
 end
 
--- =========================================================================
--- Basic auth decoder
--- =========================================================================
+# =========================================================================
+# Basic auth decoder
+# =========================================================================
 function decode_basic_auth(auth_header)
     if not auth_header then return null, null end
     scheme_end = find(auth_header, " ", 1, true)
@@ -983,7 +983,7 @@ function decode_basic_auth(auth_header)
     scheme = sub(auth_header, 1, scheme_end - 1)
     if lower(scheme) != "basic" then return null, null end
     encoded = sub(auth_header, scheme_end + 1)
-    -- Simple base64 decode (limited for benchmark purposes)
+    # Simple base64 decode (limited for benchmark purposes)
     decoded = base64_decode(encoded)
     if not decoded then return null, null end
     colon = find(decoded, ":", 1, true)
@@ -991,7 +991,7 @@ function decode_basic_auth(auth_header)
     return sub(decoded, 1, colon - 1), sub(decoded, colon + 1)
 end
 
--- Simplified base64 decode
+# Simplified base64 decode
 function base64_decode(input)
     b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     b64lookup = {}
@@ -1002,7 +1002,7 @@ function base64_decode(input)
 
     output = {}
     i = 1
-    while i <= #input do
+    while i <= input.count do
         c1 = b64lookup[byte(input, i)] or 0
         c2 = b64lookup[byte(input, i + 1)] or 0
         c3 = b64lookup[byte(input, i + 2)] or 0
@@ -1011,10 +1011,10 @@ function base64_decode(input)
         n = c1 * 262144 + c2 * 4096 + c3 * 64 + c4
 
         insert(output, char(floor(n / 65536) % 256))
-        if i + 2 <= #input and sub(input, i + 2, i + 2) != "=" then
+        if i + 2 <= input.count and sub(input, i + 2, i + 2) != "=" then
             insert(output, char(floor(n / 256) % 256))
         end
-        if i + 3 <= #input and sub(input, i + 3, i + 3) != "=" then
+        if i + 3 <= input.count and sub(input, i + 3, i + 3) != "=" then
             insert(output, char(n % 256))
         end
         i = i + 4
@@ -1022,27 +1022,27 @@ function base64_decode(input)
     return concat(output)
 end
 
--- Base64 encode
+# Base64 encode
 function base64_encode(input)
     b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     output = {}
     i = 1
-    while i <= #input do
+    while i <= input.count do
         b1 = byte(input, i) or 0
-        b2 = (i + 1 <= #input) and byte(input, i + 1) or 0
-        b3 = (i + 2 <= #input) and byte(input, i + 2) or 0
+        b2 = (i + 1 <= input.count) and byte(input, i + 1) or 0
+        b3 = (i + 2 <= input.count) and byte(input, i + 2) or 0
 
         n = b1 * 65536 + b2 * 256 + b3
 
         insert(output, sub(b64chars, floor(n / 262144) % 64 + 1, floor(n / 262144) % 64 + 1))
         insert(output, sub(b64chars, floor(n / 4096) % 64 + 1, floor(n / 4096) % 64 + 1))
 
-        if i + 1 <= #input then
+        if i + 1 <= input.count then
             insert(output, sub(b64chars, floor(n / 64) % 64 + 1, floor(n / 64) % 64 + 1))
         else
             insert(output, "=")
         end
-        if i + 2 <= #input then
+        if i + 2 <= input.count then
             insert(output, sub(b64chars, n % 64 + 1, n % 64 + 1))
         else
             insert(output, "=")
@@ -1052,9 +1052,9 @@ function base64_encode(input)
     return concat(output)
 end
 
--- =========================================================================
--- Rate limiter (token bucket simulation)
--- =========================================================================
+# =========================================================================
+# Rate limiter (token bucket simulation)
+# =========================================================================
 function create_rate_limiter(capacity, refill_rate)
     return {
         capacity = capacity,
@@ -1065,7 +1065,7 @@ function create_rate_limiter(capacity, refill_rate)
 end
 
 function rate_limiter_allow(limiter, now)
-    -- Refill tokens
+    # Refill tokens
     elapsed = now - limiter.last_refill
     new_tokens = elapsed * limiter.refill_rate
     limiter.tokens = limiter.tokens + new_tokens
@@ -1081,9 +1081,9 @@ function rate_limiter_allow(limiter, now)
     return false
 end
 
--- =========================================================================
--- Cache (LRU-like with TTL)
--- =========================================================================
+# =========================================================================
+# Cache (LRU-like with TTL)
+# =========================================================================
 function create_cache(max_size)
     return {
         max_size = max_size or 100,
@@ -1110,8 +1110,8 @@ function cache_set(cache, key, value, ttl)
         return
     end
     if cache.count >= cache.max_size then
-        -- Evict oldest
-        if #cache.order > 0 then
+        # Evict oldest
+        if cache.order.count > 0 then
             oldest = cache.order[1]
             table.remove(cache.order, 1)
             cache.store[oldest] = null
@@ -1127,8 +1127,8 @@ function cache_delete(cache, key)
     if cache.store[key] then
         cache.store[key] = null
         cache.count = cache.count - 1
-        -- Remove from order
-        for i = 1, #cache.order do
+        # Remove from order
+        for i = 1, cache.order.count do
             if cache.order[i] == key then
                 table.remove(cache.order, i)
                 break
@@ -1137,12 +1137,12 @@ function cache_delete(cache, key)
     end
 end
 
--- =========================================================================
--- Request validation
--- =========================================================================
+# =========================================================================
+# Request validation
+# =========================================================================
 function validate_request(req, rules)
     errors = {}
-    for i = 1, #rules do
+    for i = 1, rules.count do
         rule = rules[i]
         value = null
         if rule.source == "query" then
@@ -1159,10 +1159,10 @@ function validate_request(req, rules)
         if rule.required and (value == null or value == "") then
             insert(errors, rule.field .. " is required")
         end
-        if rule.min_length and value and #tostring(value) < rule.min_length then
+        if rule.min_length and value and tostring.count(value) < rule.min_length then
             insert(errors, rule.field .. " must be at least " .. tostring(rule.min_length) .. " characters")
         end
-        if rule.max_length and value and #tostring(value) > rule.max_length then
+        if rule.max_length and value and tostring.count(value) > rule.max_length then
             insert(errors, rule.field .. " must be at most " .. tostring(rule.max_length) .. " characters")
         end
         if rule.pattern and value then
@@ -1174,17 +1174,17 @@ function validate_request(req, rules)
     return errors
 end
 
--- =========================================================================
--- Compression simulation (run-length encoding for benchmark purposes)
--- =========================================================================
+# =========================================================================
+# Compression simulation (run-length encoding for benchmark purposes)
+# =========================================================================
 function rle_compress(input)
-    if #input == 0 then return "" end
+    if input.count == 0 then return "" end
     output = {}
     i = 1
-    while i <= #input do
+    while i <= input.count do
         ch = sub(input, i, i)
         count = 1
-        while i + count <= #input and sub(input, i + count, i + count) == ch do
+        while i + count <= input.count and sub(input, i + count, i + count) == ch do
             count = count + 1
             if count >= 255 then break end
         end
@@ -1205,8 +1205,8 @@ end
 function rle_decompress(input)
     output = {}
     i = 1
-    while i <= #input do
-        if sub(input, i, i) == "#" and i + 2 <= #input then
+    while i <= input.count do
+        if sub(input, i, i) == "#" and i + 2 <= input.count then
             count = byte(input, i + 1)
             ch = sub(input, i + 2, i + 2)
             for j = 1, count do
@@ -1221,17 +1221,17 @@ function rle_decompress(input)
     return concat(output)
 end
 
--- =========================================================================
--- HTTP/1.1 chunked transfer encoding
--- =========================================================================
+# =========================================================================
+# HTTP/1.1 chunked transfer encoding
+# =========================================================================
 function encode_chunked(body, chunk_size)
     parts = {}
     pos = 1
-    while pos <= #body do
+    while pos <= body.count do
         chunk_end = pos + chunk_size - 1
-        if chunk_end > #body then chunk_end = #body end
+        if chunk_end > body.count then chunk_end = body.count end
         chunk = sub(body, pos, chunk_end)
-        insert(parts, format("%x\r\n%s\r\n", #chunk, chunk))
+        insert(parts, format("%x\r\n%s\r\n", chunk.count, chunk))
         pos = chunk_end + 1
     end
     insert(parts, "0\r\n\r\n")
@@ -1241,8 +1241,8 @@ end
 function decode_chunked(encoded)
     parts = {}
     pos = 1
-    while pos <= #encoded do
-        -- Read chunk size line
+    while pos <= encoded.count do
+        # Read chunk size line
         eol = find(encoded, "\r\n", pos, true)
         if not eol then break end
         size_str = sub(encoded, pos, eol - 1)
@@ -1251,16 +1251,16 @@ function decode_chunked(encoded)
         pos = eol + 2
         chunk = sub(encoded, pos, pos + size - 1)
         insert(parts, chunk)
-        pos = pos + size + 2  -- skip chunk data + CRLF
+        pos = pos + size + 2  # skip chunk data + CRLF
     end
     return concat(parts)
 end
 
--- =========================================================================
--- HTTP Range request handling
--- =========================================================================
+# =========================================================================
+# HTTP Range request handling
+# =========================================================================
 function parse_range_header(range_str, total_size)
-    -- Parse: bytes=0-499 or bytes=500- or bytes=-500
+    # Parse: bytes=0-499 or bytes=500- or bytes=-500
     if not range_str then return null end
     prefix = sub(range_str, 1, 6)
     if prefix != "bytes=" then return null end
@@ -1272,7 +1272,7 @@ function parse_range_header(range_str, total_size)
 
     s, e = null, null
     if range_start == "" then
-        -- suffix: last N bytes
+        # suffix: last N bytes
         e = total_size - 1
         s = total_size - (tonumber(range_end) or 0)
         if s < 0 then s = 0 end
@@ -1289,38 +1289,38 @@ function parse_range_header(range_str, total_size)
     return { start = s, finish = e, total = total_size }
 end
 
--- =========================================================================
--- Server-Sent Events builder
--- =========================================================================
+# =========================================================================
+# Server-Sent Events builder
+# =========================================================================
 function build_sse_event(data, event_type, id)
     parts = {}
     if id then insert(parts, "id: " .. tostring(id) .. "\n") end
     if event_type then insert(parts, "event: " .. event_type .. "\n") end
-    -- Split data by newlines
+    # Split data by newlines
     pos = 1
-    while pos <= #data do
+    while pos <= data.count do
         nl = find(data, "\n", pos, true)
         if nl then
             insert(parts, "data: " .. sub(data, pos, nl - 1) .. "\n")
             pos = nl + 1
         else
             insert(parts, "data: " .. sub(data, pos) .. "\n")
-            pos = #data + 1
+            pos = data.count + 1
         end
     end
     insert(parts, "\n")
     return concat(parts)
 end
 
--- =========================================================================
--- WebSocket frame builder (simplified)
--- =========================================================================
+# =========================================================================
+# WebSocket frame builder (simplified)
+# =========================================================================
 function build_ws_frame(payload, opcode)
-    opcode = opcode or 1  -- text frame
+    opcode = opcode or 1  # text frame
     frame = {}
-    fin_and_opcode = 128 + opcode  -- FIN=1
+    fin_and_opcode = 128 + opcode  # FIN=1
     insert(frame, char(fin_and_opcode))
-    len = #payload
+    len = payload.count
     if len <= 125 then
         insert(frame, char(len))
     else if len <= 65535 then
@@ -1329,7 +1329,7 @@ function build_ws_frame(payload, opcode)
         insert(frame, char(len % 256))
     else
         insert(frame, char(127))
-        -- 8 bytes for length (simplified - only use lower 4 bytes)
+        # 8 bytes for length (simplified - only use lower 4 bytes)
         insert(frame, char(0))
         insert(frame, char(0))
         insert(frame, char(0))
@@ -1344,7 +1344,7 @@ function build_ws_frame(payload, opcode)
 end
 
 function parse_ws_frame(data)
-    if #data < 2 then return null end
+    if data.count < 2 then return null end
     b1 = byte(data, 1)
     b2 = byte(data, 2)
     fin = b1 >= 128
@@ -1353,11 +1353,11 @@ function parse_ws_frame(data)
     payload_len = b2 % 128
     offset = 3
     if payload_len == 126 then
-        if #data < 4 then return null end
+        if data.count < 4 then return null end
         payload_len = byte(data, 3) * 256 + byte(data, 4)
         offset = 5
     else if payload_len == 127 then
-        if #data < 10 then return null end
+        if data.count < 10 then return null end
         payload_len = byte(data, 7) * 16777216 + byte(data, 8) * 65536 + byte(data, 9) * 256 + byte(data, 10)
         offset = 11
     end
@@ -1365,9 +1365,9 @@ function parse_ws_frame(data)
     return { fin = fin, opcode = opcode, masked = masked, payload = payload }
 end
 
--- =========================================================================
--- MIME type lookup
--- =========================================================================
+# =========================================================================
+# MIME type lookup
+# =========================================================================
 MIME_TYPES = {
     html = "text/html",
     htm = "text/html",
@@ -1397,7 +1397,7 @@ MIME_TYPES = {
 
 function get_mime_type(path)
     dot = null
-    for i = #path, 1, -1 do
+    for i = path.count, 1, -1 do
         if sub(path, i, i) == "." then
             dot = i
             break
@@ -1408,13 +1408,13 @@ function get_mime_type(path)
     return MIME_TYPES[ext] or "application/octet-stream"
 end
 
--- =========================================================================
--- Security: CSRF token generation/validation (simulated)
--- =========================================================================
+# =========================================================================
+# Security: CSRF token generation/validation (simulated)
+# =========================================================================
 function generate_csrf_token(session_id)
-    -- Simple hash-based CSRF token
+    # Simple hash-based CSRF token
     hash = 5381
-    for i = 1, #session_id do
+    for i = 1, session_id.count do
         hash = hash * 33 + byte(session_id, i)
         hash = hash % 4294967296
     end
@@ -1426,9 +1426,9 @@ function validate_csrf_token(token, session_id)
     return token == expected
 end
 
--- =========================================================================
--- Request context builder (combines all parsed info)
--- =========================================================================
+# =========================================================================
+# Request context builder (combines all parsed info)
+# =========================================================================
 function build_request_context(req)
     ctx = {}
     ctx.method = req.method
@@ -1441,27 +1441,27 @@ function build_request_context(req)
     ctx.accept = headers_get(req.headers, "Accept") or "*/*"
     ctx.user_agent = headers_get(req.headers, "User-Agent") or ""
     ctx.host = headers_get(req.headers, "Host") or ""
-    ctx.body_size = #req.body
-    ctx.has_body = #req.body > 0
+    ctx.body_size = req.body.count
+    ctx.has_body = req.body.count > 0
     return ctx
 end
 
--- =========================================================================
--- Logging formatter
--- =========================================================================
+# =========================================================================
+# Logging formatter
+# =========================================================================
 function format_log_entry(req, res, duration_ms)
     return format("[%s] %s %s %d %d %.2fms",
         "2024-01-15T10:30:00Z",
         req.method,
         req.path,
         res.status,
-        #res.body,
+        res.body.count,
         duration_ms)
 end
 
--- =========================================================================
--- HTTP/2 HPACK-like header compression (simplified static table)
--- =========================================================================
+# =========================================================================
+# HTTP/2 HPACK-like header compression (simplified static table)
+# =========================================================================
 HPACK_STATIC_TABLE = {
     { name = ":authority", value = "" },
     { name = ":method", value = "GET" },
@@ -1527,13 +1527,13 @@ HPACK_STATIC_TABLE = {
 }
 
 function hpack_find_static(name, value)
-    for i = 1, #HPACK_STATIC_TABLE do
+    for i = 1, HPACK_STATIC_TABLE.count do
         entry = HPACK_STATIC_TABLE[i]
         if entry.name == name then
             if value and entry.value == value then
-                return i, true  -- full match
+                return i, true  # full match
             end
-            return i, false  -- name match only
+            return i, false  # name match only
         end
     end
     return null, false
@@ -1541,26 +1541,26 @@ end
 
 function hpack_encode_headers(headers_list)
     encoded = {}
-    for i = 1, #headers_list do
+    for i = 1, headers_list.count do
         h = headers_list[i]
         idx, full_match = hpack_find_static(h.name, h.value)
         if idx and full_match then
-            -- Indexed header field
+            # Indexed header field
             insert(encoded, format("[I:%d]", idx))
         else if idx then
-            -- Literal with name reference
+            # Literal with name reference
             insert(encoded, format("[R:%d=%s]", idx, h.value))
         else
-            -- Literal new
+            # Literal new
             insert(encoded, format("[N:%s=%s]", h.name, h.value))
         end
     end
     return concat(encoded, " ")
 end
 
--- =========================================================================
--- Redirect chain resolver (simulate following redirects)
--- =========================================================================
+# =========================================================================
+# Redirect chain resolver (simulate following redirects)
+# =========================================================================
 function resolve_redirect_chain(responses, max_redirects)
     max_redirects = max_redirects or 10
     chain = {}
@@ -1571,10 +1571,10 @@ function resolve_redirect_chain(responses, max_redirects)
         if current.status >= 300 and current.status < 400 then
             loc = headers_get(current.headers, "Location")
             if loc then
-                -- Find matching response (simulated)
+                # Find matching response (simulated)
                 count = count + 1
                 found = false
-                for i = 2, #responses do
+                for i = 2, responses.count do
                     if responses[i].path == loc then
                         current = responses[i]
                         found = true
@@ -1592,32 +1592,32 @@ function resolve_redirect_chain(responses, max_redirects)
     return chain
 end
 
--- =========================================================================
--- Path normalization
--- =========================================================================
+# =========================================================================
+# Path normalization
+# =========================================================================
 function normalize_path(path)
-    -- Remove double slashes, resolve . and ..
+    # Remove double slashes, resolve . and ..
     segments = split_path(path)
     normalized = {}
-    for i = 1, #segments do
+    for i = 1, segments.count do
         seg = segments[i]
         if seg == "." then
-            -- skip
+            # skip
         else if seg == ".." then
-            if #normalized > 0 then
+            if normalized.count > 0 then
                 table.remove(normalized)
             end
         else if seg != "" then
             insert(normalized, seg)
         end
     end
-    if #normalized == 0 then return "/" end
+    if normalized.count == 0 then return "/" end
     return "/" .. concat(normalized, "/")
 end
 
--- =========================================================================
--- Framework: full request processing
--- =========================================================================
+# =========================================================================
+# Framework: full request processing
+# =========================================================================
 function create_framework()
     fw = {}
     fw.router = create_router()
@@ -1637,7 +1637,7 @@ function framework_handle_request(fw, raw_request)
     req = parse_request(raw_request)
     res = create_response()
 
-    -- Parse cookies
+    # Parse cookies
     cookie_hdr = headers_get(req.headers, "Cookie")
     if cookie_hdr then
         req.cookies = parse_cookies(cookie_hdr)
@@ -1645,15 +1645,15 @@ function framework_handle_request(fw, raw_request)
         req.cookies = {}
     end
 
-    -- Find handler
+    # Find handler
     handler, params = router_match(fw.router, req.method, req.path)
     if handler then
         req.params = params or {}
-        -- Build middleware chain
+        # Build middleware chain
         chain = create_middleware_chain(fw.middlewares, handler)
         chain(req, res)
     else
-        -- 404
+        # 404
         response_set_status(res, 404, "Not Found")
         response_set_body(res, '{"error":"Not Found","path":"' .. req.path .. '"}', "application/json")
     end
@@ -1661,33 +1661,33 @@ function framework_handle_request(fw, raw_request)
     return res
 end
 
--- =========================================================================
--- Setup the framework with routes and handlers
--- =========================================================================
+# =========================================================================
+# Setup the framework with routes and handlers
+# =========================================================================
 function setup_framework()
     fw = create_framework()
 
-    -- Add middlewares
+    # Add middlewares
     framework_use(fw, middleware_logging)
     framework_use(fw, middleware_auth)
     framework_use(fw, middleware_cors)
     framework_use(fw, middleware_rate_limit)
 
-    -- Route: GET /
+    # Route: GET /
     framework_route(fw, "GET", "/", function(req, res)
         response_set_status(res, 200, "OK")
         body = json_encode({ message = "Welcome to the API", version = "1.0.0" })
         response_set_body(res, body, "application/json")
     end)
 
-    -- Route: GET /health
+    # Route: GET /health
     framework_route(fw, "GET", "/health", function(req, res)
         response_set_status(res, 200, "OK")
         body = json_encode({ status = "healthy", uptime = 12345 })
         response_set_body(res, body, "application/json")
     end)
 
-    -- Route: GET /users
+    # Route: GET /users
     framework_route(fw, "GET", "/users", function(req, res)
         response_set_status(res, 200, "OK")
         users = {
@@ -1698,7 +1698,7 @@ function setup_framework()
         response_set_body(res, json_encode(users), "application/json")
     end)
 
-    -- Route: GET /users/:id
+    # Route: GET /users/:id
     framework_route(fw, "GET", "/users/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         if id > 0 and id <= 3 then
@@ -1711,7 +1711,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: POST /users
+    # Route: POST /users
     framework_route(fw, "POST", "/users", function(req, res)
         ct = headers_get(req.headers, "Content-Type") or ""
         data = null
@@ -1732,7 +1732,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: PUT /users/:id
+    # Route: PUT /users/:id
     framework_route(fw, "PUT", "/users/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         data = json_decode(req.body)
@@ -1746,7 +1746,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: DELETE /users/:id
+    # Route: DELETE /users/:id
     framework_route(fw, "DELETE", "/users/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         if id > 0 then
@@ -1758,7 +1758,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: GET /posts
+    # Route: GET /posts
     framework_route(fw, "GET", "/posts", function(req, res)
         response_set_status(res, 200, "OK")
         posts = {}
@@ -1768,7 +1768,7 @@ function setup_framework()
         response_set_body(res, json_encode(posts), "application/json")
     end)
 
-    -- Route: GET /posts/:id
+    # Route: GET /posts/:id
     framework_route(fw, "GET", "/posts/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         if id > 0 and id <= 5 then
@@ -1781,7 +1781,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: POST /posts
+    # Route: POST /posts
     framework_route(fw, "POST", "/posts", function(req, res)
         data = json_decode(req.body)
         if data and data.title then
@@ -1793,7 +1793,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: GET /comments/:id
+    # Route: GET /comments/:id
     framework_route(fw, "GET", "/comments/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         response_set_status(res, 200, "OK")
@@ -1801,7 +1801,7 @@ function setup_framework()
         response_set_body(res, json_encode(comment), "application/json")
     end)
 
-    -- Route: POST /login
+    # Route: POST /login
     framework_route(fw, "POST", "/login", function(req, res)
         data = json_decode(req.body)
         if data and data.username == "admin" and data.password == "secret" then
@@ -1818,7 +1818,7 @@ function setup_framework()
         end
     end)
 
-    -- Route: POST /logout
+    # Route: POST /logout
     framework_route(fw, "POST", "/logout", function(req, res)
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ message = "Logged out" }), "application/json")
@@ -1826,7 +1826,7 @@ function setup_framework()
         headers_set(res.headers, "Set-Cookie", cookie)
     end)
 
-    -- Route: GET /search
+    # Route: GET /search
     framework_route(fw, "GET", "/search", function(req, res)
         q = req.query.q or ""
         page = tonumber(req.query.page) or 1
@@ -1840,21 +1840,21 @@ function setup_framework()
         response_set_body(res, body, "application/json")
     end)
 
-    -- Route: OPTIONS /users (CORS preflight)
+    # Route: OPTIONS /users (CORS preflight)
     framework_route(fw, "OPTIONS", "/users", function(req, res)
         response_set_status(res, 204, "No Content")
         res.body = ""
         headers_set(res.headers, "Content-Length", "0")
     end)
 
-    -- Route: GET /files/*
+    # Route: GET /files/*
     framework_route(fw, "GET", "/files/*", function(req, res)
         filepath = req.params["*"] or ""
         response_set_status(res, 200, "OK")
-        response_set_body(res, json_encode({ file = filepath, size = #filepath * 100 }), "application/json")
+        response_set_body(res, json_encode({ file = filepath, size = filepath.count * 100 }), "application/json")
     end)
 
-    -- Route: PATCH /users/:id
+    # Route: PATCH /users/:id
     framework_route(fw, "PATCH", "/users/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         data = json_decode(req.body)
@@ -1864,7 +1864,7 @@ function setup_framework()
         response_set_body(res, json_encode(patched), "application/json")
     end)
 
-    -- Route: GET /negotiate
+    # Route: GET /negotiate
     framework_route(fw, "GET", "/negotiate", function(req, res)
         accept = headers_get(req.headers, "Accept") or "*/*"
         chosen = negotiate_content_type(accept, {
@@ -1880,27 +1880,27 @@ function setup_framework()
         end
     end)
 
-    -- Route: POST /upload
+    # Route: POST /upload
     framework_route(fw, "POST", "/upload", function(req, res)
-        size = #req.body
+        size = req.body.count
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ uploaded = true, size = size }), "application/json")
     end)
 
-    -- Route: GET /redirect
+    # Route: GET /redirect
     framework_route(fw, "GET", "/redirect", function(req, res)
         response_set_status(res, 302, "Found")
         headers_set(res.headers, "Location", "/users")
         response_set_body(res, "", "text/plain")
     end)
 
-    -- Route: GET /error
+    # Route: GET /error
     framework_route(fw, "GET", "/error", function(req, res)
         response_set_status(res, 500, "Internal Server Error")
         response_set_body(res, json_encode({ error = "Something went wrong", code = 500 }), "application/json")
     end)
 
-    -- Route: GET /api/v1/items
+    # Route: GET /api/v1/items
     framework_route(fw, "GET", "/api/v1/items", function(req, res)
         response_set_status(res, 200, "OK")
         items = {}
@@ -1910,14 +1910,14 @@ function setup_framework()
         response_set_body(res, json_encode(items), "application/json")
     end)
 
-    -- Route: GET /api/v1/items/:id
+    # Route: GET /api/v1/items/:id
     framework_route(fw, "GET", "/api/v1/items/:id", function(req, res)
         id = tonumber(req.params.id) or 0
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode({ id = id, name = "Item" .. tostring(id), price = id * 9.99 }), "application/json")
     end)
 
-    -- Route: POST /api/v1/orders
+    # Route: POST /api/v1/orders
     framework_route(fw, "POST", "/api/v1/orders", function(req, res)
         data = json_decode(req.body)
         response_set_status(res, 201, "Created")
@@ -1925,7 +1925,7 @@ function setup_framework()
         response_set_body(res, json_encode(order), "application/json")
     end)
 
-    -- Route: GET /headers
+    # Route: GET /headers
     framework_route(fw, "GET", "/headers", function(req, res)
         response_set_status(res, 200, "OK")
         info = {
@@ -1936,7 +1936,7 @@ function setup_framework()
         response_set_body(res, json_encode(info), "application/json")
     end)
 
-    -- Route: GET /cookies
+    # Route: GET /cookies
     framework_route(fw, "GET", "/cookies", function(req, res)
         response_set_status(res, 200, "OK")
         response_set_body(res, json_encode(req.cookies), "application/json")
@@ -1945,168 +1945,168 @@ function setup_framework()
     return fw
 end
 
--- =========================================================================
--- Test HTTP requests (raw strings)
--- =========================================================================
+# =========================================================================
+# Test HTTP requests (raw strings)
+# =========================================================================
 function build_test_requests()
     reqs = {}
 
-    -- 1. Simple GET /
+    # 1. Simple GET /
     insert(reqs, "GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: TestClient/1.0\r\nAccept: */*\r\n\r\n")
 
-    -- 2. GET /health
+    # 2. GET /health
     insert(reqs, "GET /health HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 3. GET /users
+    # 3. GET /users
     insert(reqs, "GET /users HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nAuthorization: Bearer token123\r\n\r\n")
 
-    -- 4. GET /users/1
+    # 4. GET /users/1
     insert(reqs, "GET /users/1 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 5. GET /users/2
+    # 5. GET /users/2
     insert(reqs, "GET /users/2 HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Bearer mytoken\r\nAccept: application/json\r\n\r\n")
 
-    -- 6. GET /users/999 (not found)
+    # 6. GET /users/999 (not found)
     insert(reqs, "GET /users/999 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 7. POST /users with JSON body
+    # 7. POST /users with JSON body
     insert(reqs, "POST /users HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\nContent-Length: 27\r\n\r\n{\"name\":\"Dave\",\"age\":30}")
 
-    -- 8. POST /users with form body
+    # 8. POST /users with form body
     insert(reqs, "POST /users HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nname=Eve&age=25")
 
-    -- 9. PUT /users/1
+    # 9. PUT /users/1
     insert(reqs, "PUT /users/1 HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\nAuthorization: Bearer admin_token\r\n\r\n{\"name\":\"Alice Updated\",\"email\":\"alice_new@example.com\"}")
 
-    -- 10. DELETE /users/2
+    # 10. DELETE /users/2
     insert(reqs, "DELETE /users/2 HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Bearer admin_token\r\n\r\n")
 
-    -- 11. GET /posts
+    # 11. GET /posts
     insert(reqs, "GET /posts HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nCookie: session=abc123; theme=dark\r\n\r\n")
 
-    -- 12. GET /posts/1
+    # 12. GET /posts/1
     insert(reqs, "GET /posts/1 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 13. GET /posts/3
+    # 13. GET /posts/3
     insert(reqs, "GET /posts/3 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nCookie: user=bob; lang=en\r\n\r\n")
 
-    -- 14. GET /posts/99 (not found)
+    # 14. GET /posts/99 (not found)
     insert(reqs, "GET /posts/99 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 15. POST /posts with JSON
+    # 15. POST /posts with JSON
     insert(reqs, "POST /posts HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"title\":\"New Post\",\"body\":\"This is the content\"}")
 
-    -- 16. POST /login success
+    # 16. POST /login success
     insert(reqs, "POST /login HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"username\":\"admin\",\"password\":\"secret\"}")
 
-    -- 17. POST /login failure
+    # 17. POST /login failure
     insert(reqs, "POST /login HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"username\":\"admin\",\"password\":\"wrong\"}")
 
-    -- 18. POST /logout
+    # 18. POST /logout
     insert(reqs, "POST /logout HTTP/1.1\r\nHost: localhost:8080\r\nCookie: session=abc123xyz\r\n\r\n")
 
-    -- 19. GET /search with query
+    # 19. GET /search with query
     insert(reqs, "GET /search?q=hello+world&page=2&limit=5 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 20. OPTIONS /users (CORS preflight)
+    # 20. OPTIONS /users (CORS preflight)
     insert(reqs, "OPTIONS /users HTTP/1.1\r\nHost: localhost:8080\r\nOrigin: http://example.com\r\nAccess-Control-Request-Method: POST\r\n\r\n")
 
-    -- 21. GET /files/documents/report.pdf
+    # 21. GET /files/documents/report.pdf
     insert(reqs, "GET /files/documents/report.pdf HTTP/1.1\r\nHost: localhost:8080\r\nAccept: */*\r\n\r\n")
 
-    -- 22. GET /files/images/photo.jpg
+    # 22. GET /files/images/photo.jpg
     insert(reqs, "GET /files/images/photo.jpg HTTP/1.1\r\nHost: localhost:8080\r\nAccept: image/*\r\n\r\n")
 
-    -- 23. PATCH /users/1
+    # 23. PATCH /users/1
     insert(reqs, "PATCH /users/1 HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\nAuthorization: Bearer patchtoken\r\n\r\n{\"name\":\"Alice Patched\"}")
 
-    -- 24. GET /negotiate (wants JSON)
+    # 24. GET /negotiate (wants JSON)
     insert(reqs, "GET /negotiate HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json, text/html;q=0.9, */*;q=0.1\r\n\r\n")
 
-    -- 25. GET /negotiate (wants HTML)
+    # 25. GET /negotiate (wants HTML)
     insert(reqs, "GET /negotiate HTTP/1.1\r\nHost: localhost:8080\r\nAccept: text/html, application/json;q=0.5\r\n\r\n")
 
-    -- 26. GET /negotiate (wants plain text)
+    # 26. GET /negotiate (wants plain text)
     insert(reqs, "GET /negotiate HTTP/1.1\r\nHost: localhost:8080\r\nAccept: text/plain, */*;q=0.1\r\n\r\n")
 
-    -- 27. POST /upload with body
+    # 27. POST /upload with body
     insert(reqs, "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 13\r\n\r\nHello, World!")
 
-    -- 28. GET /redirect
+    # 28. GET /redirect
     insert(reqs, "GET /redirect HTTP/1.1\r\nHost: localhost:8080\r\n\r\n")
 
-    -- 29. GET /error
+    # 29. GET /error
     insert(reqs, "GET /error HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 30. GET /nonexistent (404)
+    # 30. GET /nonexistent (404)
     insert(reqs, "GET /nonexistent HTTP/1.1\r\nHost: localhost:8080\r\n\r\n")
 
-    -- 31. GET /api/v1/items
+    # 31. GET /api/v1/items
     insert(reqs, "GET /api/v1/items HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nAuthorization: Bearer apikey\r\n\r\n")
 
-    -- 32. GET /api/v1/items/5
+    # 32. GET /api/v1/items/5
     insert(reqs, "GET /api/v1/items/5 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 33. POST /api/v1/orders
+    # 33. POST /api/v1/orders
     insert(reqs, "POST /api/v1/orders HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\nAuthorization: Bearer ordertoken\r\n\r\n{\"items\":[1,2,3],\"shipping\":\"express\"}")
 
-    -- 34. GET /headers
+    # 34. GET /headers
     insert(reqs, "GET /headers HTTP/1.1\r\nHost: api.example.com\r\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64)\r\nAccept: text/html,application/xhtml+xml\r\n\r\n")
 
-    -- 35. GET /cookies with many cookies
+    # 35. GET /cookies with many cookies
     insert(reqs, "GET /cookies HTTP/1.1\r\nHost: localhost:8080\r\nCookie: session=xyz789; user=alice; pref=dark; lang=en; tz=UTC\r\n\r\n")
 
-    -- 36. GET /users with complex headers
+    # 36. GET /users with complex headers
     insert(reqs, "GET /users HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: en-US,en;q=0.9,fr;q=0.8\r\nCache-Control: no-cache\r\nConnection: keep-alive\r\n\r\n")
 
-    -- 37. POST /users with unicode-like content
+    # 37. POST /users with unicode-like content
     insert(reqs, "POST /users HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"name\":\"Test User\",\"bio\":\"Hello \\\"World\\\"\"}")
 
-    -- 38. GET /search with encoded query
+    # 38. GET /search with encoded query
     insert(reqs, "GET /search?q=foo%20bar%26baz&page=1&limit=20 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 39. DELETE /users/0 (invalid)
+    # 39. DELETE /users/0 (invalid)
     insert(reqs, "DELETE /users/0 HTTP/1.1\r\nHost: localhost:8080\r\nAuthorization: Bearer del_token\r\n\r\n")
 
-    -- 40. GET /comments/42
+    # 40. GET /comments/42
     insert(reqs, "GET /comments/42 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nCookie: session=mysession\r\n\r\n")
 
-    -- 41. PUT /users/3
+    # 41. PUT /users/3
     insert(reqs, "PUT /users/3 HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"name\":\"Charlie Updated\"}")
 
-    -- 42. GET /search with no query
+    # 42. GET /search with no query
     insert(reqs, "GET /search HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\n\r\n")
 
-    -- 43. POST /login with empty body
+    # 43. POST /login with empty body
     insert(reqs, "POST /login HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{}")
 
-    -- 44. GET /files/deep/nested/path/to/file.txt
+    # 44. GET /files/deep/nested/path/to/file.txt
     insert(reqs, "GET /files/deep/nested/path/to/file.txt HTTP/1.1\r\nHost: localhost:8080\r\n\r\n")
 
-    -- 45. POST /users with missing name
+    # 45. POST /users with missing name
     insert(reqs, "POST /users HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"age\":25}")
 
-    -- 46. GET /users/3
+    # 46. GET /users/3
     insert(reqs, "GET /users/3 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nIf-None-Match: \"abc123\"\r\n\r\n")
 
-    -- 47. POST /upload large body
+    # 47. POST /upload large body
     insert(reqs, "POST /upload HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/octet-stream\r\nContent-Length: 100\r\n\r\n" .. string.rep("X", 100))
 
-    -- 48. GET /headers with many headers
+    # 48. GET /headers with many headers
     insert(reqs, "GET /headers HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: CustomBot/2.0\r\nAccept: */*\r\nX-Forwarded-For: 192.168.1.1\r\nX-Request-Id: req-12345\r\nX-Correlation-Id: corr-67890\r\n\r\n")
 
-    -- 49. PUT /users/2 with complex JSON
+    # 49. PUT /users/2 with complex JSON
     insert(reqs, "PUT /users/2 HTTP/1.1\r\nHost: localhost:8080\r\nContent-Type: application/json\r\n\r\n{\"name\":\"Bob Updated\",\"email\":\"bob_new@test.com\",\"roles\":[\"admin\",\"user\"]}")
 
-    -- 50. GET /api/v1/items/10
+    # 50. GET /api/v1/items/10
     insert(reqs, "GET /api/v1/items/10 HTTP/1.1\r\nHost: localhost:8080\r\nAccept: application/json\r\nCache-Control: max-age=3600\r\n\r\n")
 
     return reqs
 end
 
--- =========================================================================
--- Additional workload: URL encoding/decoding stress
--- =========================================================================
+# =========================================================================
+# Additional workload: URL encoding/decoding stress
+# =========================================================================
 function url_encode_decode_workload(iterations)
     test_strings = {
         "hello world",
@@ -2122,18 +2122,18 @@ function url_encode_decode_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_strings do
+        for i = 1, test_strings.count do
             encoded = url_encode(test_strings[i])
             decoded = url_decode(encoded)
-            checksum = checksum + #encoded + #decoded
+            checksum = checksum + encoded.count + decoded.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: JSON encode/decode stress
--- =========================================================================
+# =========================================================================
+# Additional workload: JSON encode/decode stress
+# =========================================================================
 function json_codec_workload(iterations)
     test_objects = {
         { id = 1, name = "Alice", active = true, score = 95.5 },
@@ -2147,12 +2147,12 @@ function json_codec_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_objects do
+        for i = 1, test_objects.count do
             encoded = json_encode(test_objects[i])
             decoded = json_decode(encoded)
-            checksum = checksum + #encoded
+            checksum = checksum + encoded.count
             if type(decoded) == "table" then
-                -- count keys
+                # count keys
                 n = 0
                 for _ in next, decoded do n = n + 1 end
                 checksum = checksum + n
@@ -2162,9 +2162,9 @@ function json_codec_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: header parsing stress
--- =========================================================================
+# =========================================================================
+# Additional workload: header parsing stress
+# =========================================================================
 function header_parse_workload(iterations)
     raw_headers = {
         "Content-Type: application/json\r\nContent-Length: 256\r\nX-Request-Id: abc123\r\n",
@@ -2175,11 +2175,11 @@ function header_parse_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #raw_headers do
+        for i = 1, raw_headers.count do
             h = create_headers()
             raw = raw_headers[i]
             pos = 1
-            while pos <= #raw do
+            while pos <= raw.count do
                 eol = find(raw, "\r\n", pos, true)
                 if not eol then break end
                 line = sub(raw, pos, eol - 1)
@@ -2191,18 +2191,18 @@ function header_parse_workload(iterations)
                 end
                 pos = eol + 2
             end
-            checksum = checksum + #h._order
+            checksum = checksum + h._order.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: routing stress
--- =========================================================================
+# =========================================================================
+# Additional workload: routing stress
+# =========================================================================
 function routing_workload(iterations)
     router = create_router()
-    -- Add many routes
+    # Add many routes
     router_add(router, "GET", "/", function() end)
     router_add(router, "GET", "/users", function() end)
     router_add(router, "GET", "/users/:id", function() end)
@@ -2247,7 +2247,7 @@ function routing_workload(iterations)
 
     matches = 0
     for iter = 1, iterations do
-        for i = 1, #test_paths do
+        for i = 1, test_paths.count do
             handler = router_match(router, test_paths[i][1], test_paths[i][2])
             if handler then matches = matches + 1 end
         end
@@ -2255,9 +2255,9 @@ function routing_workload(iterations)
     return matches
 end
 
--- =========================================================================
--- Additional workload: query string parsing stress
--- =========================================================================
+# =========================================================================
+# Additional workload: query string parsing stress
+# =========================================================================
 function query_string_workload(iterations)
     test_queries = {
         "q=hello&page=1&limit=10",
@@ -2271,7 +2271,7 @@ function query_string_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_queries do
+        for i = 1, test_queries.count do
             parsed = parse_query_string(test_queries[i])
             count = 0
             for _ in next, parsed do count = count + 1 end
@@ -2281,9 +2281,9 @@ function query_string_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: cookie parsing stress
--- =========================================================================
+# =========================================================================
+# Additional workload: cookie parsing stress
+# =========================================================================
 function cookie_workload(iterations)
     test_cookies = {
         "session=abc123; user=alice; theme=dark",
@@ -2294,7 +2294,7 @@ function cookie_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_cookies do
+        for i = 1, test_cookies.count do
             cookies = parse_cookies(test_cookies[i])
             count = 0
             for _ in next, cookies do count = count + 1 end
@@ -2304,13 +2304,13 @@ function cookie_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: response building stress
--- =========================================================================
+# =========================================================================
+# Additional workload: response building stress
+# =========================================================================
 function response_build_workload(iterations)
     checksum = 0
     for iter = 1, iterations do
-        -- Build various responses
+        # Build various responses
         for code = 200, 204 do
             res = create_response()
             response_set_status(res, code)
@@ -2320,24 +2320,24 @@ function response_build_workload(iterations)
             body = json_encode({ status = code, iteration = iter })
             response_set_body(res, body, "application/json")
             serialized = response_serialize(res)
-            checksum = checksum + #serialized
+            checksum = checksum + serialized.count
         end
-        -- Error responses
+        # Error responses
         for _, code in next, { 400, 401, 403, 404, 500 } do
             res = create_response()
             response_set_status(res, code)
             body = json_encode({ error = get_status_text(code), code = code })
             response_set_body(res, body, "application/json")
             serialized = response_serialize(res)
-            checksum = checksum + #serialized
+            checksum = checksum + serialized.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: content negotiation stress
--- =========================================================================
+# =========================================================================
+# Additional workload: content negotiation stress
+# =========================================================================
 function content_negotiation_workload(iterations)
     accept_headers = {
         "application/json",
@@ -2352,17 +2352,17 @@ function content_negotiation_workload(iterations)
     available = { "application/json", "text/html", "text/plain", "application/xml" }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #accept_headers do
+        for i = 1, accept_headers.count do
             chosen = negotiate_content_type(accept_headers[i], available)
-            checksum = checksum + #chosen
+            checksum = checksum + chosen.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: multipart parsing stress
--- =========================================================================
+# =========================================================================
+# Additional workload: multipart parsing stress
+# =========================================================================
 function multipart_workload(iterations)
     boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
     test_body = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
@@ -2383,18 +2383,18 @@ function multipart_workload(iterations)
     checksum = 0
     for iter = 1, iterations do
         parts = parse_multipart(test_body, "----WebKitFormBoundary7MA4YWxkTrZu0gW")
-        checksum = checksum + #parts
-        for i = 1, #parts do
-            checksum = checksum + #parts[i].body
-            if parts[i].name then checksum = checksum + #parts[i].name end
+        checksum = checksum + parts.count
+        for i = 1, parts.count do
+            checksum = checksum + parts[i].body.count
+            if parts[i].name then checksum = checksum + parts[i].name.count end
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: template rendering stress
--- =========================================================================
+# =========================================================================
+# Additional workload: template rendering stress
+# =========================================================================
 function template_workload(iterations)
     templates = {
         "<html><head><title>{{title}}</title></head><body><h1>{{heading}}</h1><p>{{content}}</p></body></html>",
@@ -2412,12 +2412,12 @@ function template_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #templates do
-            ctx = contexts[((i - 1) % #contexts) + 1]
+        for i = 1, templates.count do
+            ctx = contexts[((i - 1) % contexts.count) + 1]
             rendered = template_render(templates[i], ctx)
-            checksum = checksum + #rendered
+            checksum = checksum + rendered.count
         end
-        -- Also test loop rendering
+        # Also test loop rendering
         list_tmpl = "<li>{{item.name}} ({{item.id}})</li>"
         list_ctx = {
             items = {
@@ -2429,14 +2429,14 @@ function template_workload(iterations)
             }
         }
         list_result = template_render_loop(list_tmpl, list_ctx, "items", "item")
-        checksum = checksum + #list_result
+        checksum = checksum + list_result.count
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: base64 encode/decode stress
--- =========================================================================
+# =========================================================================
+# Additional workload: base64 encode/decode stress
+# =========================================================================
 function base64_workload(iterations)
     test_strings = {
         "Hello, World!",
@@ -2450,18 +2450,18 @@ function base64_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_strings do
+        for i = 1, test_strings.count do
             encoded = base64_encode(test_strings[i])
             decoded = base64_decode(encoded)
-            checksum = checksum + #encoded + #decoded
+            checksum = checksum + encoded.count + decoded.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: chunked transfer encoding stress
--- =========================================================================
+# =========================================================================
+# Additional workload: chunked transfer encoding stress
+# =========================================================================
 function chunked_workload(iterations)
     test_bodies = {
         "Short body",
@@ -2473,19 +2473,19 @@ function chunked_workload(iterations)
     chunk_sizes = { 8, 16, 32, 64, 128 }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_bodies do
-            cs = chunk_sizes[((i - 1) % #chunk_sizes) + 1]
+        for i = 1, test_bodies.count do
+            cs = chunk_sizes[((i - 1) % chunk_sizes.count) + 1]
             encoded = encode_chunked(test_bodies[i], cs)
             decoded = decode_chunked(encoded)
-            checksum = checksum + #encoded + #decoded
+            checksum = checksum + encoded.count + decoded.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: ETag and caching stress
--- =========================================================================
+# =========================================================================
+# Additional workload: ETag and caching stress
+# =========================================================================
 function etag_workload(iterations)
     test_contents = {
         "Page content version 1",
@@ -2498,18 +2498,18 @@ function etag_workload(iterations)
     checksum = 0
     for iter = 1, iterations do
         cache = create_cache(50)
-        for i = 1, #test_contents do
+        for i = 1, test_contents.count do
             etag = generate_etag(test_contents[i])
-            checksum = checksum + #etag
+            checksum = checksum + etag.count
             cache_set(cache, "page_" .. tostring(i), { etag = etag, body = test_contents[i] }, 0)
         end
-        -- Test cache hits/misses
+        # Test cache hits/misses
         for i = 1, 10 do
-            key = "page_" .. tostring((i % #test_contents) + 1)
+            key = "page_" .. tostring((i % test_contents.count) + 1)
             cached = cache_get(cache, key)
-            if cached then checksum = checksum + #cached.etag end
+            if cached then checksum = checksum + cached.etag.count end
         end
-        -- Test eviction
+        # Test eviction
         for i = 1, 60 do
             cache_set(cache, "extra_" .. tostring(i), { etag = "\"000\"", body = "x" }, 0)
         end
@@ -2518,9 +2518,9 @@ function etag_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: WebSocket frame building stress
--- =========================================================================
+# =========================================================================
+# Additional workload: WebSocket frame building stress
+# =========================================================================
 function websocket_workload(iterations)
     test_messages = {
         "Hello",
@@ -2532,27 +2532,27 @@ function websocket_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_messages do
+        for i = 1, test_messages.count do
             frame = build_ws_frame(test_messages[i], 1)
-            checksum = checksum + #frame
+            checksum = checksum + frame.count
             parsed = parse_ws_frame(frame)
             if parsed then
-                checksum = checksum + #parsed.payload
+                checksum = checksum + parsed.payload.count
             end
         end
-        -- Binary frames
+        # Binary frames
         for i = 1, 3 do
             binary = string.rep(char(i * 37 % 256), 200)
             frame = build_ws_frame(binary, 2)
-            checksum = checksum + #frame
+            checksum = checksum + frame.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: HPACK header compression stress
--- =========================================================================
+# =========================================================================
+# Additional workload: HPACK header compression stress
+# =========================================================================
 function hpack_workload(iterations)
     test_header_sets = {
         {
@@ -2586,17 +2586,17 @@ function hpack_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_header_sets do
+        for i = 1, test_header_sets.count do
             encoded = hpack_encode_headers(test_header_sets[i])
-            checksum = checksum + #encoded
+            checksum = checksum + encoded.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: path normalization stress
--- =========================================================================
+# =========================================================================
+# Additional workload: path normalization stress
+# =========================================================================
 function path_normalize_workload(iterations)
     test_paths = {
         "/users/../admin/./dashboard",
@@ -2612,17 +2612,17 @@ function path_normalize_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_paths do
+        for i = 1, test_paths.count do
             normalized = normalize_path(test_paths[i])
-            checksum = checksum + #normalized
+            checksum = checksum + normalized.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: MIME type lookup stress
--- =========================================================================
+# =========================================================================
+# Additional workload: MIME type lookup stress
+# =========================================================================
 function mime_type_workload(iterations)
     test_files = {
         "/static/style.css",
@@ -2643,21 +2643,21 @@ function mime_type_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_files do
+        for i = 1, test_files.count do
             mime = get_mime_type(test_files[i])
-            checksum = checksum + #mime
+            checksum = checksum + mime.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: rate limiter simulation stress
--- =========================================================================
+# =========================================================================
+# Additional workload: rate limiter simulation stress
+# =========================================================================
 function rate_limiter_workload(iterations)
     checksum = 0
     for iter = 1, iterations do
-        limiter = create_rate_limiter(10, 2.0)  -- 10 capacity, 2 tokens/sec
+        limiter = create_rate_limiter(10, 2.0)  # 10 capacity, 2 tokens/sec
         allowed = 0
         denied = 0
         time_now = 0.0
@@ -2667,16 +2667,16 @@ function rate_limiter_workload(iterations)
             else
                 denied = denied + 1
             end
-            time_now = time_now + 0.1  -- 100ms between requests
+            time_now = time_now + 0.1  # 100ms between requests
         end
         checksum = checksum + allowed + denied * 2
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: RLE compression stress
--- =========================================================================
+# =========================================================================
+# Additional workload: RLE compression stress
+# =========================================================================
 function compression_workload(iterations)
     test_data = {
         string.rep("A", 100) .. string.rep("B", 50) .. string.rep("C", 30),
@@ -2690,11 +2690,11 @@ function compression_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_data do
+        for i = 1, test_data.count do
             compressed = rle_compress(test_data[i])
             decompressed = rle_decompress(compressed)
-            checksum = checksum + #compressed + #decompressed
-            -- Verify roundtrip
+            checksum = checksum + compressed.count + decompressed.count
+            # Verify roundtrip
             if decompressed == test_data[i] then
                 checksum = checksum + 1
             end
@@ -2703,9 +2703,9 @@ function compression_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: SSE event building stress
--- =========================================================================
+# =========================================================================
+# Additional workload: SSE event building stress
+# =========================================================================
 function sse_workload(iterations)
     events = {
         { data = "Hello World", event_type = "message", id = "1" },
@@ -2716,18 +2716,18 @@ function sse_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #events do
+        for i = 1, events.count do
             evt = events[i]
             built = build_sse_event(evt.data, evt.event_type, evt.id)
-            checksum = checksum + #built
+            checksum = checksum + built.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: request validation stress
--- =========================================================================
+# =========================================================================
+# Additional workload: request validation stress
+# =========================================================================
 function validation_workload(iterations)
     rules = {
         { source = "body", field = "name", required = true, min_length = 2, max_length = 50 },
@@ -2742,25 +2742,25 @@ function validation_workload(iterations)
         { body = '{"email":"test@test.com"}', headers = create_headers(), query = {} },
         { body = '{"name":"ValidName","email":"valid@email.com"}', headers = create_headers(), query = { page = "5" } },
     }
-    -- Add auth header to some
+    # Add auth header to some
     headers_set(test_requests_for_validation[1].headers, "Authorization", "Bearer token")
     headers_set(test_requests_for_validation[4].headers, "Authorization", "Bearer admin")
 
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_requests_for_validation do
+        for i = 1, test_requests_for_validation.count do
             req = test_requests_for_validation[i]
             req.params = {}
             errors = validate_request(req, rules)
-            checksum = checksum + #errors
+            checksum = checksum + errors.count
         end
     end
     return checksum
 end
 
--- =========================================================================
--- Additional workload: CSRF token stress
--- =========================================================================
+# =========================================================================
+# Additional workload: CSRF token stress
+# =========================================================================
 function csrf_workload(iterations)
     sessions = {
         "session_abc123",
@@ -2771,13 +2771,13 @@ function csrf_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #sessions do
+        for i = 1, sessions.count do
             token = generate_csrf_token(sessions[i])
-            checksum = checksum + #token
+            checksum = checksum + token.count
             if validate_csrf_token(token, sessions[i]) then
                 checksum = checksum + 1
             end
-            -- Test invalid token
+            # Test invalid token
             if not validate_csrf_token("invalid", sessions[i]) then
                 checksum = checksum + 1
             end
@@ -2786,9 +2786,9 @@ function csrf_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: range request parsing stress
--- =========================================================================
+# =========================================================================
+# Additional workload: range request parsing stress
+# =========================================================================
 function range_request_workload(iterations)
     test_ranges = {
         { header = "bytes=0-499", size = 1000 },
@@ -2802,7 +2802,7 @@ function range_request_workload(iterations)
     }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #test_ranges do
+        for i = 1, test_ranges.count do
             r = test_ranges[i]
             range = parse_range_header(r.header, r.size)
             if range then
@@ -2815,30 +2815,30 @@ function range_request_workload(iterations)
     return checksum
 end
 
--- =========================================================================
--- Additional workload: logging formatter stress
--- =========================================================================
+# =========================================================================
+# Additional workload: logging formatter stress
+# =========================================================================
 function logging_workload(iterations)
     methods = { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" }
     paths = { "/", "/users", "/api/v1/items/5", "/search?q=test", "/files/doc.pdf" }
     statuses = { 200, 201, 204, 301, 400, 401, 403, 404, 500 }
     checksum = 0
     for iter = 1, iterations do
-        for i = 1, #methods do
-            for j = 1, #paths do
+        for i = 1, methods.count do
+            for j = 1, paths.count do
                 req = { method = methods[i], path = paths[j] }
-                res = { status = statuses[((i + j) % #statuses) + 1], body = string.rep("x", (i + j) * 10) }
+                res = { status = statuses[((i + j) % statuses.count) + 1], body = string.rep("x", (i + j) * 10) }
                 entry = format_log_entry(req, res, 12.5 + i)
-                checksum = checksum + #entry
+                checksum = checksum + entry.count
             end
         end
     end
     return checksum
 end
 
--- =========================================================================
--- HTTP method validation
--- =========================================================================
+# =========================================================================
+# HTTP method validation
+# =========================================================================
 VALID_HTTP_METHODS = {
     GET = true,
     POST = true,
@@ -2855,9 +2855,9 @@ function is_valid_method(method)
     return VALID_HTTP_METHODS[upper(method)] == true
 end
 
--- =========================================================================
--- HTTP version parsing
--- =========================================================================
+# =========================================================================
+# HTTP version parsing
+# =========================================================================
 function parse_http_version(version_str)
     if not version_str then return 1, 1 end
     slash = find(version_str, "/", 1, true)
@@ -2870,23 +2870,23 @@ function parse_http_version(version_str)
     return major, minor
 end
 
--- =========================================================================
--- Connection management simulation
--- =========================================================================
+# =========================================================================
+# Connection management simulation
+# =========================================================================
 function should_keep_alive(req)
     connection = headers_get(req.headers, "Connection")
     if connection then
         if lower(connection) == "close" then return false end
         if lower(connection) == "keep-alive" then return true end
     end
-    -- HTTP/1.1 defaults to keep-alive
+    # HTTP/1.1 defaults to keep-alive
     major, minor = parse_http_version(req.version)
     return major >= 1 and minor >= 1
 end
 
--- =========================================================================
--- Request fingerprinting (for rate limiting / abuse detection)
--- =========================================================================
+# =========================================================================
+# Request fingerprinting (for rate limiting / abuse detection)
+# =========================================================================
 function fingerprint_request(req)
     parts = {}
     insert(parts, req.method)
@@ -2894,17 +2894,17 @@ function fingerprint_request(req)
     insert(parts, headers_get(req.headers, "User-Agent") or "")
     insert(parts, headers_get(req.headers, "Accept-Language") or "")
     combined = concat(parts, "|")
-    -- Simple hash
+    # Simple hash
     hash = 0
-    for i = 1, #combined do
+    for i = 1, combined.count do
         hash = (hash * 31 + byte(combined, i)) % 4294967296
     end
     return format("%08x", hash)
 end
 
--- =========================================================================
--- Security headers builder
--- =========================================================================
+# =========================================================================
+# Security headers builder
+# =========================================================================
 function add_security_headers(res)
     headers_set(res.headers, "X-Content-Type-Options", "nosniff")
     headers_set(res.headers, "X-Frame-Options", "DENY")
@@ -2914,14 +2914,14 @@ function add_security_headers(res)
     headers_set(res.headers, "Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 end
 
--- =========================================================================
--- Link header parser (for pagination)
--- =========================================================================
+# =========================================================================
+# Link header parser (for pagination)
+# =========================================================================
 function parse_link_header(link_str)
     links = {}
     if not link_str or link_str == "" then return links end
     pos = 1
-    while pos <= #link_str do
+    while pos <= link_str.count do
         comma = find(link_str, ",", pos, true)
         segment = null
         if comma then
@@ -2929,17 +2929,17 @@ function parse_link_header(link_str)
             pos = comma + 1
         else
             segment = sub(link_str, pos)
-            pos = #link_str + 1
+            pos = link_str.count + 1
         end
-        -- trim
+        # trim
         segment = gsub(segment, "^%s+", "")
         segment = gsub(segment, "%s+$", "")
-        -- Extract URL from <...>
+        # Extract URL from <...>
         url_start = find(segment, "<", 1, true)
         url_end = find(segment, ">", 1, true)
         if url_start and url_end then
             url = sub(segment, url_start + 1, url_end - 1)
-            -- Extract rel from rel="..."
+            # Extract rel from rel="..."
             rel_start = find(segment, 'rel="', 1, true)
             rel = "unknown"
             if rel_start then
@@ -2954,9 +2954,9 @@ function parse_link_header(link_str)
     return links
 end
 
--- =========================================================================
--- Build Link header for pagination
--- =========================================================================
+# =========================================================================
+# Build Link header for pagination
+# =========================================================================
 function build_link_header(base_url, page, per_page, total)
     last_page = math.ceil(total / per_page)
     parts = {}
@@ -2971,15 +2971,15 @@ function build_link_header(base_url, page, per_page, total)
     return concat(parts, ", ")
 end
 
--- =========================================================================
--- Main benchmark
--- =========================================================================
+# =========================================================================
+# Main benchmark
+# =========================================================================
 function run_benchmark()
     fw = setup_framework()
     test_requests = build_test_requests()
-    num_requests = #test_requests
+    num_requests = test_requests.count
 
-    -- Determine iteration count to target ~200-800ms runtime
+    # Determine iteration count to target ~200-800ms runtime
     ITERATIONS = 10
 
     t_start = clock()
@@ -2991,11 +2991,11 @@ function run_benchmark()
         for i = 1, num_requests do
             res = framework_handle_request(fw, test_requests[i])
             total_status_checksum = total_status_checksum + res.status
-            total_body_length = total_body_length + #res.body
+            total_body_length = total_body_length + res.body.count
         end
     end
 
-    -- Run additional workloads
+    # Run additional workloads
     url_checksum = url_encode_decode_workload(500)
     json_checksum = json_codec_workload(400)
     header_checksum = header_parse_workload(500)

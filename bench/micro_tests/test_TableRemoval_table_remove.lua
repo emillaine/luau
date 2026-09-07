@@ -13,7 +13,7 @@ function test()
         table.remove(t, 1)
     end
 
-    assert(#t == (iterations - 100))
+    assert(t.count == (iterations - 100))
 
     ts1 = os.clock()
 

@@ -3,14 +3,14 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-	-- 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
+	# 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
 	function add64(ah, al, bh, bl)
 		lo = al + bl
 		hi = ah + bh + lo // 0x100000000
 		return bit32.bor(hi, 0), bit32.bor(lo, 0)
 	end
 
-	-- 64-bit wrapping subtract: (ah:al) - (bh:bl) -> (rh, rl)
+	# 64-bit wrapping subtract: (ah:al) - (bh:bl) -> (rh, rl)
 	function sub64(ah, al, bh, bl)
 		lo = al - bl
 		borrow = 0
@@ -23,8 +23,8 @@ function test()
 		return bit32.bor(hi, 0), bit32.bor(lo, 0)
 	end
 
-	-- 64-bit wrapping multiply via 16-bit limb schoolbook with carry propagation.
-	-- All intermediates stay within double precision (< 2^53).
+	# 64-bit wrapping multiply via 16-bit limb schoolbook with carry propagation.
+	# All intermediates stay within double precision (< 2^53).
 	function mul64(ah, al, bh, bl)
 		a0 = bit32.band(al, 0xFFFF)
 		a1 = bit32.rshift(al, 16)
@@ -35,14 +35,14 @@ function test()
 		b2 = bit32.band(bh, 0xFFFF)
 		b3 = bit32.rshift(bh, 16)
 
-		-- Column sums at each 16-bit position (positions 4+ are discarded)
+		# Column sums at each 16-bit position (positions 4+ are discarded)
 		c0 = a0 * b0
 		c1 = a1 * b0 + a0 * b1
 		c2 = a2 * b0 + a1 * b1 + a0 * b2
 		c3 = a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3
 
-		-- Propagate carries through 16-bit columns using arithmetic (not bit32)
-		-- to avoid truncation on values > 2^32
+		# Propagate carries through 16-bit columns using arithmetic (not bit32)
+		# to avoid truncation on values > 2^32
 		r0 = c0 % 0x10000
 		c1 = c1 + (c0 - r0) / 0x10000
 		r1 = c1 % 0x10000
@@ -54,25 +54,25 @@ function test()
 		return r2 + r3 * 0x10000, r0 + r1 * 0x10000
 	end
 
-	-- 64-bit left rotate by n (0 < n < 32)
+	# 64-bit left rotate by n (0 < n < 32)
 	function lrotate64(ah, al, n)
 		return bit32.bor(bit32.lshift(ah, n), bit32.rshift(al, 32 - n)),
 		       bit32.bor(bit32.lshift(al, n), bit32.rshift(ah, 32 - n))
 	end
 
-	-- 64-bit xor
+	# 64-bit xor
 	function xor64(ah, al, bh, bl)
 		return bit32.bxor(ah, bh), bit32.bxor(al, bl)
 	end
 
-	-- Constants split into (hi, lo)
+	# Constants split into (hi, lo)
 	P1h, P1l = 0x9E3779B1, 0x85EBCA87
 	P2h, P2l = 0xC2B2AE3D, 0x27D4EB4F
 	P3h, P3l = 0x165667B1, 0x9E3779F9
 	P4h, P4l = 0x85EBCA77, 0xC2B2AE63
 	P5h, P5l = 0x27D4EB2F, 0x165667C5
 
-	-- XXH64 round: acc = mul(lrotate(add(acc, mul(lane, P2)), 31), P1)
+	# XXH64 round: acc = mul(lrotate(add(acc, mul(lane, P2)), 31), P1)
 	function round(ach, acl, lanh, lanl)
 		th, tl = add64(ach, acl, mul64(lanh, lanl, P2h, P2l))
 		th, tl = lrotate64(th, tl, 31)
@@ -101,7 +101,7 @@ function test()
 			a4h, a4l = sub64(seedh, seedl, P1h, P1l)
 
 			while offset <= len - 32 do
-				-- read64: hi = readu32(off+4), lo = readu32(off) (both LE, matching readinteger)
+				# read64: hi = readu32(off+4), lo = readu32(off) (both LE, matching readinteger)
 				a1h, a1l = round(a1h, a1l, buffer.readu32(buf, offset + 4), buffer.readu32(buf, offset))
 				a2h, a2l = round(a2h, a2l, buffer.readu32(buf, offset + 12), buffer.readu32(buf, offset + 8))
 				a3h, a3l = round(a3h, a3l, buffer.readu32(buf, offset + 20), buffer.readu32(buf, offset + 16))
@@ -127,7 +127,7 @@ function test()
 
 		hh, hl = add64(hh, hl, 0, len)
 
-		-- 8-byte tail lanes
+		# 8-byte tail lanes
 		while offset <= len - 8 do
 			lanh = buffer.readu32(buf, offset + 4)
 			lanl = buffer.readu32(buf, offset)
@@ -141,7 +141,7 @@ function test()
 			offset += 8
 		end
 
-		-- 4-byte tail
+		# 4-byte tail
 		if offset <= len - 4 then
 			v = buffer.readu32(buf, offset)
 			ph, pl = mul64(0, v, P1h, P1l)
@@ -152,7 +152,7 @@ function test()
 			offset += 4
 		end
 
-		-- 1-byte tail
+		# 1-byte tail
 		while offset < len do
 			b = buffer.readu8(buf, offset)
 			ph, pl = mul64(0, b, P5h, P5l)
@@ -162,7 +162,7 @@ function test()
 			offset += 1
 		end
 
-		-- avalanche: hash ^= hash >> 33; hash *= P2; hash ^= hash >> 29; hash *= P3; hash ^= hash >> 32
+		# avalanche: hash ^= hash >> 33; hash *= P2; hash ^= hash >> 29; hash *= P3; hash ^= hash >> 32
 		hh, hl = xor64(hh, hl, 0, bit32.rshift(hh, 1))
 		hh, hl = mul64(hh, hl, P2h, P2l)
 		hh, hl = xor64(hh, hl, bit32.rshift(hh, 29), bit32.bor(bit32.rshift(hl, 29), bit32.lshift(hh, 3)))

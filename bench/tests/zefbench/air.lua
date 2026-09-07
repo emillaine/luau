@@ -1,4 +1,4 @@
--- forward declarations (no hoisted globals)
+# forward declarations (no hoisted globals)
 Inst_forEachArg = null
 Inst_hash = null
 function prequire(name) success, result = pcall(require, name); return success and result end
@@ -7,12 +7,12 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- Air benchmark - Lua port
--- Compatible with: Lua 5.5, LuaJIT 2.x, Lute
+# Air benchmark - Lua port
+# Compatible with: Lua 5.5, LuaJIT 2.x, Lute
 
--- -------------------------------------------------------------------------
--- 32-bit arithmetic helpers
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# 32-bit arithmetic helpers
+# -------------------------------------------------------------------------
 C = {
     MOD32 = 4294967296,
     GP = 0,
@@ -211,46 +211,46 @@ function int32(x)
 end
 function uint32(x) return x % C.MOD32 end
 
--- -------------------------------------------------------------------------
--- Type / kind / frequency constants
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Type / kind / frequency constants
+# -------------------------------------------------------------------------
 
 
 
--- -------------------------------------------------------------------------
--- Relational conditions (values == relCondCode output)
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Relational conditions (values == relCondCode output)
+# -------------------------------------------------------------------------
 
--- -------------------------------------------------------------------------
--- Result conditions (values == resCondCode output)
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Result conditions (values == resCondCode output)
+# -------------------------------------------------------------------------
 
--- -------------------------------------------------------------------------
--- Double conditions (values == doubleCondCode output)
--- -------------------------------------------------------------------------
-DoubleEqual                        = 36  -- 4|0x20
-DoubleLessThan                     = 23  -- 7|0x10
-DoubleLessThanOrEqual              = 19  -- 3|0x10
-DoubleNotEqualOrUnordered          = 37  -- 5|0x20
-DoubleGreaterThanOrUnordered       = 18  -- 2|0x10
-DoubleGreaterThanOrEqualOrUnordered= 22  -- 6|0x10
+# -------------------------------------------------------------------------
+# Double conditions (values == doubleCondCode output)
+# -------------------------------------------------------------------------
+DoubleEqual                        = 36  # 4|0x20
+DoubleLessThan                     = 23  # 7|0x10
+DoubleLessThanOrEqual              = 19  # 3|0x10
+DoubleNotEqualOrUnordered          = 37  # 5|0x20
+DoubleGreaterThanOrUnordered       = 18  # 2|0x10
+DoubleGreaterThanOrEqualOrUnordered= 22  # 6|0x10
 
--- -------------------------------------------------------------------------
--- Opcode constants (== opcodeCode values)
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Opcode constants (== opcodeCode values)
+# -------------------------------------------------------------------------
 
 
--- -------------------------------------------------------------------------
--- ArgKind constants (== Arg.kindCode values)
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# ArgKind constants (== Arg.kindCode values)
+# -------------------------------------------------------------------------
 
--- -------------------------------------------------------------------------
--- ArgRole constants
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# ArgRole constants
+# -------------------------------------------------------------------------
 
--- -------------------------------------------------------------------------
--- ArgRole predicates
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# ArgRole predicates
+# -------------------------------------------------------------------------
 function Arg_isAnyUse(role)
     return role==0 or role==1 or role==2 or role==3 or role==6 or role==7 or role==9
 end
@@ -273,9 +273,9 @@ function Arg_isZDef(role)
     return role==5 or role==7
 end
 
--- -------------------------------------------------------------------------
--- Registers (global singleton tables)
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Registers (global singleton tables)
+# -------------------------------------------------------------------------
 function makeReg(index, rtype, name, isCalleeSave)
     return {index=index, type=rtype, name=name, isCalleeSave=isCalleeSave or false,
             isReg=true}
@@ -325,9 +325,9 @@ Reg_fprs = {Reg_xmm0,Reg_xmm1,Reg_xmm2,Reg_xmm3,Reg_xmm4,Reg_xmm5,
 Reg_callFrameRegister   = Reg_rbp
 Reg_stackPointerRegister= Reg_rsp
 
--- -------------------------------------------------------------------------
--- StackSlot
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# StackSlot
+# -------------------------------------------------------------------------
 function StackSlot_new(index, byteSize, kind)
     return {index=index, byteSize=byteSize, kind=kind, offsetFromFP=null}
 end
@@ -347,7 +347,7 @@ function StackSlot_setOffsetFromFP(slot, val)
     slot.offsetFromFP = val
 end
 
--- StackSlot.forEach: only acts on Stack args
+# StackSlot.forEach: only acts on Stack args
 function StackSlot_forEach(arg, role, type, width, func)
     if arg.kind != C.ArgStack then return null end
     replacement = func(arg.slot, role, type, width)
@@ -357,48 +357,48 @@ function StackSlot_forEach(arg, role, type, width, func)
     return null
 end
 
--- -------------------------------------------------------------------------
--- BasicBlock / FrequentedBlock
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# BasicBlock / FrequentedBlock
+# -------------------------------------------------------------------------
 function BasicBlock_new(index, frequency)
     return {index=index, frequency=frequency, insts={}, successors={}, predecessors={}}
 end
-function BasicBlock_size(bb) return #bb.insts end
-function BasicBlock_at(bb, idx) return bb.insts[idx+1] end  -- 0-based
-function BasicBlock_get(bb, idx)  -- 0-based, returns null if out of range
-    if idx < 0 or idx >= #bb.insts then return null end
+function BasicBlock_size(bb) return bb.insts.count end
+function BasicBlock_at(bb, idx) return bb.insts[idx+1] end  # 0-based
+function BasicBlock_get(bb, idx)  # 0-based, returns null if out of range
+    if idx < 0 or idx >= bb.insts.count then return null end
     return bb.insts[idx+1]
 end
-function BasicBlock_last(bb) return bb.insts[#bb.insts] end
-function BasicBlock_append(bb, inst) bb.insts[#bb.insts+1] = inst end
+function BasicBlock_last(bb) return bb.insts[bb.insts.count] end
+function BasicBlock_append(bb, inst) bb.insts[bb.insts.count+1] = inst end
 
--- FrequentedBlock
+# FrequentedBlock
 function FrequentedBlock_new(block, frequency)
     return {block=block, frequency=frequency}
 end
 
--- -------------------------------------------------------------------------
--- Code
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Code
+# -------------------------------------------------------------------------
 function Code_new()
     return {blocks={}, stackSlots={}, gpTmps={}, fpTmps={},
             callArgAreaSize=0, frameSize=0}
 end
 function Code_addBlock(code, frequency)
     frequency = frequency or 1
-    bb = BasicBlock_new(#code.blocks, frequency)
-    code.blocks[#code.blocks+1] = bb
+    bb = BasicBlock_new(code.blocks.count, frequency)
+    code.blocks[code.blocks.count+1] = bb
     return bb
 end
 function Code_addStackSlot(code, byteSize, kind)
-    slot = StackSlot_new(#code.stackSlots, byteSize, kind)
-    code.stackSlots[#code.stackSlots+1] = slot
+    slot = StackSlot_new(code.stackSlots.count, byteSize, kind)
+    code.stackSlots[code.stackSlots.count+1] = slot
     return slot
 end
 function Code_newTmp(code, type)
     arr = (type == C.GP) and code.gpTmps or code.fpTmps
-    tmp = {index=#arr, type=type, isReg=false}
-    arr[#arr+1] = tmp
+    tmp = {index=arr.count, type=type, isReg=false}
+    arr[arr.count+1] = tmp
     return tmp
 end
 function Code_requestCallArgAreaSize(code, size)
@@ -433,9 +433,9 @@ function Code_hash(code)
     return uint32(result)
 end
 
--- -------------------------------------------------------------------------
--- Arg factory functions
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Arg factory functions
+# -------------------------------------------------------------------------
 function Arg_createTmp(tmp)
     return {kind=C.ArgTmp, tmp=tmp}
 end
@@ -479,20 +479,20 @@ function Arg_createWidth(width)
     return {kind=C.ArgWidth, width=width}
 end
 function Arg_createStackAddr(offsetFromFP, frameSize, width)
-    -- isValidAddrForm always returns true, so always use callFrameRegister
+    # isValidAddrForm always returns true, so always use callFrameRegister
     return Arg_createAddr(Reg_callFrameRegister, offsetFromFP)
 end
 
--- -------------------------------------------------------------------------
--- Arg hash
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Arg hash
+# -------------------------------------------------------------------------
 function Arg_hash(arg)
-    result = arg.kind  -- kindCode == kind value
+    result = arg.kind  # kindCode == kind value
     k = arg.kind
     if k == C.ArgTmp then
         t = arg.tmp
         if t.isReg then result = result + Reg_hash(t)
-        else result = result end  -- Tmp.hash() never called for virtual tmps
+        else result = result end  # Tmp.hash() never called for virtual tmps
         result = int32(result)
     else if k == C.ArgImm or k == C.ArgBitImm then
         result = result + arg.value
@@ -506,13 +506,13 @@ function Arg_hash(arg)
         result = result + arg.offset
         result = int32(result)
     else if k == C.ArgRelCond then
-        result = result + arg.condition  -- condition IS the relCondCode
+        result = result + arg.condition  # condition IS the relCondCode
         result = int32(result)
     else if k == C.ArgResCond then
-        result = result + arg.condition  -- condition IS the resCondCode
+        result = result + arg.condition  # condition IS the resCondCode
         result = int32(result)
     else if k == C.ArgDoubleCond then
-        result = result + arg.condition  -- condition IS the doubleCondCode
+        result = result + arg.condition  # condition IS the doubleCondCode
         result = int32(result)
     else if k == C.ArgWidth then
         result = result + arg.width
@@ -540,9 +540,9 @@ function Arg_hash(arg)
     return uint32(result)
 end
 
--- -------------------------------------------------------------------------
--- Inst
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Inst
+# -------------------------------------------------------------------------
 function Inst_new(opcode)
     return {opcode=opcode, args={}}
 end
@@ -551,7 +551,7 @@ function Inst_clear(inst)
     inst.args = {}
 end
 function Inst_hash(inst)
-    result = inst.opcode  -- opcodeCode == opcode value
+    result = inst.opcode  # opcodeCode == opcode value
     for _, arg in ipairs(inst.args) do
         result = result + Arg_hash(arg)
         result = int32(result)
@@ -559,20 +559,20 @@ function Inst_hash(inst)
     return uint32(result)
 end
 function Inst_visitArg(inst, index, func, role, type, width)
-    -- index is 1-based
+    # index is 1-based
     replacement = func(inst.args[index], role, type, width)
     if replacement then inst.args[index] = replacement end
 end
 
--- Allow OOP-style calls: inst:visitArg(...)
+# Allow OOP-style calls: inst:visitArg(...)
 Inst_mt = {__index = {
     visitArg = Inst_visitArg,
-    append = function(self, ...) for _,v in ipairs({...}) do self.args[#self.args+1]=v end end,
+    append = function(self, ...) for _,v in ipairs({...}) do self.args[self.args.count+1]=v end end,
 }}
 
--- We don't actually set metatables; instead use module-style calls below.
--- But for payload code which calls inst:visitArg, we need metatables.
--- Set up so all Inst tables get the methods:
+# We don't actually set metatables; instead use module-style calls below.
+# But for payload code which calls inst:visitArg, we need metatables.
+# Set up so all Inst tables get the methods:
 Inst_proto = {}
 Inst_proto.visitArg = function(self, index, func, role, type, width)
     replacement = func(self.args[index], role, type, width)
@@ -582,17 +582,17 @@ Inst_proto.forEachArg = function(self, func)
     Inst_forEachArg(self, func)
 end
 
--- We'll set metatables on each new inst:
+# We'll set metatables on each new inst:
 Inst_meta = {__index = Inst_proto}
 function Inst_new(opcode)
     return setmetatable({opcode=opcode, args={}}, Inst_meta)
 end
 
--- -------------------------------------------------------------------------
--- PatchCustom
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# PatchCustom
+# -------------------------------------------------------------------------
 function PatchCustom_forEachArg(inst, func)
-    for i = 1, #inst.args do
+    for i = 1, inst.args.count do
         pd = inst.patchArgData[i]
         inst:visitArg(i, func, pd.role, pd.type, pd.width)
     end
@@ -601,7 +601,7 @@ function PatchCustom_hasNonArgNonControlEffects(inst)
     return inst.patchHasNonArgEffects
 end
 
--- CCall/ColdCCall stubs (not used in payloads but needed for completeness)
+# CCall/ColdCCall stubs (not used in payloads but needed for completeness)
 function CCallCustom_forEachArg(inst, func) end
 function ColdCCallCustom_forEachArg(inst, func) end
 function CCallCustom_hasNonArgNonControlEffects(inst) return true end
@@ -613,7 +613,7 @@ Inst_forEachArg_dispatch[C.Nop] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Add32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -635,7 +635,7 @@ Inst_forEachArg_dispatch[C.Add16] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Add64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 2 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_UseDef, C.GP, 64)
@@ -647,7 +647,7 @@ Inst_forEachArg_dispatch[C.Add64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.AddDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 64)
@@ -659,7 +659,7 @@ Inst_forEachArg_dispatch[C.AddDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.AddFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -681,7 +681,7 @@ Inst_forEachArg_dispatch[C.Sub64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.SubDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 64)
@@ -693,7 +693,7 @@ Inst_forEachArg_dispatch[C.SubDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.SubFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -718,7 +718,7 @@ Inst_forEachArg_dispatch[C.NegateDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Mul32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 2 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_UseZDef, C.GP, 32)
@@ -730,7 +730,7 @@ Inst_forEachArg_dispatch[C.Mul32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Mul64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 2 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_UseDef, C.GP, 64)
@@ -794,7 +794,7 @@ Inst_forEachArg_dispatch[C.Div64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MulDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 64)
@@ -806,7 +806,7 @@ Inst_forEachArg_dispatch[C.MulDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MulFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -818,7 +818,7 @@ Inst_forEachArg_dispatch[C.MulFloat] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.DivDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -830,7 +830,7 @@ Inst_forEachArg_dispatch[C.DivDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.DivFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -869,7 +869,7 @@ Inst_forEachArg_dispatch[C.Lea] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.And32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -881,7 +881,7 @@ Inst_forEachArg_dispatch[C.And32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.And64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -893,7 +893,7 @@ Inst_forEachArg_dispatch[C.And64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.AndDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 64)
@@ -905,7 +905,7 @@ Inst_forEachArg_dispatch[C.AndDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.AndFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -917,7 +917,7 @@ Inst_forEachArg_dispatch[C.AndFloat] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.XorDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 64)
@@ -929,7 +929,7 @@ Inst_forEachArg_dispatch[C.XorDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.XorFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.FP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -941,7 +941,7 @@ Inst_forEachArg_dispatch[C.XorFloat] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Lshift32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -953,7 +953,7 @@ Inst_forEachArg_dispatch[C.Lshift32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Lshift64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -965,7 +965,7 @@ Inst_forEachArg_dispatch[C.Lshift64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Rshift32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -977,7 +977,7 @@ Inst_forEachArg_dispatch[C.Rshift32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Rshift64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -989,7 +989,7 @@ Inst_forEachArg_dispatch[C.Rshift64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Urshift32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1001,7 +1001,7 @@ Inst_forEachArg_dispatch[C.Urshift32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Urshift64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1013,7 +1013,7 @@ Inst_forEachArg_dispatch[C.Urshift64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Or32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1025,7 +1025,7 @@ Inst_forEachArg_dispatch[C.Or32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Or64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1037,7 +1037,7 @@ Inst_forEachArg_dispatch[C.Or64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Xor32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1049,7 +1049,7 @@ Inst_forEachArg_dispatch[C.Xor32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Xor64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1061,7 +1061,7 @@ Inst_forEachArg_dispatch[C.Xor64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Not32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 2 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_ZDef, C.GP, 32)
@@ -1071,7 +1071,7 @@ Inst_forEachArg_dispatch[C.Not32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Not64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 2 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 64)
     inst:visitArg(2, func, C.ArgRole_Def, C.GP, 64)
@@ -1364,7 +1364,7 @@ Inst_forEachArg_dispatch[C.BranchFloat] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.BranchAdd32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 4 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1378,7 +1378,7 @@ Inst_forEachArg_dispatch[C.BranchAdd32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.BranchAdd64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 4 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1392,7 +1392,7 @@ Inst_forEachArg_dispatch[C.BranchAdd64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.BranchMul32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1413,7 +1413,7 @@ Inst_forEachArg_dispatch[C.BranchMul32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.BranchMul64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 3 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1451,7 +1451,7 @@ Inst_forEachArg_dispatch[C.BranchNeg64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MoveConditionally32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 5 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1469,7 +1469,7 @@ Inst_forEachArg_dispatch[C.MoveConditionally32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MoveConditionally64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 5 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1487,7 +1487,7 @@ Inst_forEachArg_dispatch[C.MoveConditionally64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MoveConditionallyTest32] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 5 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 32)
@@ -1505,7 +1505,7 @@ Inst_forEachArg_dispatch[C.MoveConditionallyTest32] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MoveConditionallyTest64] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 5 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.GP, 64)
@@ -1523,7 +1523,7 @@ Inst_forEachArg_dispatch[C.MoveConditionallyTest64] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MoveConditionallyDouble] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 6 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 64)
@@ -1541,7 +1541,7 @@ Inst_forEachArg_dispatch[C.MoveConditionallyDouble] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.MoveConditionallyFloat] = function(inst, func)
-    n = #inst.args
+    n = inst.args.count
     if n == 6 then
     inst:visitArg(1, func, C.ArgRole_Use, C.GP, 32)
     inst:visitArg(2, func, C.ArgRole_Use, C.FP, 32)
@@ -1635,8 +1635,8 @@ Inst_forEachArg_dispatch[C.Oops] = function(inst, func)
 end
 
 Inst_forEachArg_dispatch[C.Shuffle] = function(inst, func)
-    PatchCustom_forEachArg(inst, func)  -- NOTE: Shuffle not fully impl
-    -- ShuffleCustom not needed for payloads
+    PatchCustom_forEachArg(inst, func)  # NOTE: Shuffle not fully impl
+    # ShuffleCustom not needed for payloads
 end
 
 Inst_forEachArg_dispatch[C.Patch] = function(inst, func)
@@ -1688,9 +1688,9 @@ function Inst_hasNonArgEffects(inst)
     return false
 end
 
--- -------------------------------------------------------------------------
--- Inst_forEach helpers (for StackSlot liveness)
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Inst_forEach helpers (for StackSlot liveness)
+# -------------------------------------------------------------------------
 function Inst_forEachArg(inst, func)
     d = Inst_forEachArg_dispatch[inst.opcode]
     if d then d(inst, func)
@@ -1718,9 +1718,9 @@ function Inst_forEachDef_StackSlot(prevInst, nextInst, callback)
     end
 end
 
--- -------------------------------------------------------------------------
--- Liveness
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Liveness
+# -------------------------------------------------------------------------
 function mergeIntoSet(target, source)
     didAdd = false
     for v, _ in pairs(source) do
@@ -1740,8 +1740,8 @@ function Liveness_new(code)
         liveAtHead[block] = {}
         lat = {}
         liveAtTail[block] = lat
-        -- Seed from late uses of last instruction
-        lastInst = block.insts[#block.insts]
+        # Seed from late uses of last instruction
+        lastInst = block.insts[block.insts.count]
         if lastInst then
             Inst_forEach_StackSlot(lastInst, function(value, role, type, width)
                 if Arg_isLateUse(role) then lat[value] = true end
@@ -1755,20 +1755,20 @@ function Liveness_new(code)
     changed = null
     repeat
         changed = false
-        for blockIndex = #code.blocks, 1, -1 do
+        for blockIndex = code.blocks.count, 1, -1 do
             block = code.blocks[blockIndex]
             if dirtyBlocks[block] then
                 dirtyBlocks[block] = null
 
-                -- Build local liveSet starting from liveAtTail
+                # Build local liveSet starting from liveAtTail
                 liveSet = {}
                 for v, _ in pairs(liveAtTail[block]) do liveSet[v] = true end
 
-                -- Run backward through instructions
-                for instIndex = #block.insts, 1, -1 do
+                # Run backward through instructions
+                for instIndex = block.insts.count, 1, -1 do
                     inst = block.insts[instIndex]
 
-                    -- Early defs of NEXT instruction kill from liveSet
+                    # Early defs of NEXT instruction kill from liveSet
                     nextInst = block.insts[instIndex + 1]
                     if nextInst then
                         Inst_forEach_StackSlot(nextInst, function(value, role, type, width)
@@ -1776,17 +1776,17 @@ function Liveness_new(code)
                         end)
                     end
 
-                    -- Late defs of current instruction kill from liveSet
+                    # Late defs of current instruction kill from liveSet
                     Inst_forEach_StackSlot(inst, function(value, role, type, width)
                         if Arg_isLateDef(role) then liveSet[value] = null end
                     end)
 
-                    -- Early uses of current instruction add to liveSet
+                    # Early uses of current instruction add to liveSet
                     Inst_forEach_StackSlot(inst, function(value, role, type, width)
                         if Arg_isEarlyUse(role) then liveSet[value] = true end
                     end)
 
-                    -- Late uses of PREVIOUS instruction add to liveSet
+                    # Late uses of PREVIOUS instruction add to liveSet
                     prevInst = block.insts[instIndex - 1]
                     if prevInst then
                         Inst_forEach_StackSlot(prevInst, function(value, role, type, width)
@@ -1795,8 +1795,8 @@ function Liveness_new(code)
                     end
                 end
 
-                -- Handle early defs of first instruction (line 69-74 in liveness.js)
-                -- liveSet.remove() is never triggered per analysis, skip
+                # Handle early defs of first instruction (line 69-74 in liveness.js)
+                # liveSet.remove() is never triggered per analysis, skip
 
                 lah = liveAtHead[block]
                 if mergeIntoSet(lah, liveSet) then
@@ -1818,10 +1818,10 @@ function Liveness_new(code)
                 return {
                     liveSet = liveSet,
                     execute = function(lcSelf, instIndex)
-                        -- instIndex is 0-based (JS convention)
+                        # instIndex is 0-based (JS convention)
                         inst = block.insts[instIndex + 1]
-                        nextInst = block.insts[instIndex + 2]  -- instIndex+1+1
-                        prevInst = block.insts[instIndex]      -- instIndex-1+1
+                        nextInst = block.insts[instIndex + 2]  # instIndex+1+1
+                        prevInst = block.insts[instIndex]      # instIndex-1+1
 
                         if nextInst then
                             Inst_forEach_StackSlot(nextInst, function(value, role, type, width)
@@ -1844,21 +1844,21 @@ function Liveness_new(code)
             end}
 end
 
--- -------------------------------------------------------------------------
--- InsertionSet
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# InsertionSet
+# -------------------------------------------------------------------------
 function InsertionSet_new()
     return {insertions={}}
 end
 
 function InsertionSet_append(iset, index, element)
-    iset.insertions[#iset.insertions+1] = {index=index, element=element}
+    iset.insertions[iset.insertions.count+1] = {index=index, element=element}
 end
 
 function bubbleSort(arr, lessThan)
     function swap(i,j) arr[i],arr[j]=arr[j],arr[i] end
     begin_i = 1
-    end_i = #arr
+    end_i = arr.count
     while true do
         changed = false
         limit = end_i - begin_i
@@ -1884,29 +1884,29 @@ function bubbleSort(arr, lessThan)
 end
 
 function InsertionSet_execute(iset, target)
-    -- target is a 1-based Lua array
-    -- insertion.index is 0-based (JS convention)
+    # target is a 1-based Lua array
+    # insertion.index is 0-based (JS convention)
     bubbleSort(iset.insertions, function(a,b) return a.index < b.index end)
-    numInsertions = #iset.insertions
+    numInsertions = iset.insertions.count
     if numInsertions == 0 then return 0 end
-    originalTargetSize = #target
-    -- extend target
+    originalTargetSize = target.count
+    # extend target
     for i = 1, numInsertions do target[originalTargetSize + i] = false end
-    lastIndex = originalTargetSize + numInsertions  -- 1-based last index (exclusive end in JS)
+    lastIndex = originalTargetSize + numInsertions  # 1-based last index (exclusive end in JS)
 
     for indexInInsertions = numInsertions, 1, -1 do
         ins = iset.insertions[indexInInsertions]
-        -- JS: let firstIndex = insertion.index + indexInInsertions;  (0-based)
-        -- Lua 1-based: firstIndex_1 = ins.index + indexInInsertions (because indexInInsertions is already 1-based offset)
-        -- Wait: in JS, indexInInsertions goes numInsertions-1 down to 0
-        -- We go numInsertions down to 1, so (indexInInsertions - 1) is the JS value
-        js_iii = indexInInsertions - 1  -- 0-based
-        firstIndex_js = ins.index + js_iii  -- 0-based
-        firstIndex_1 = firstIndex_js + 1    -- 1-based
-        indexOffset = js_iii + 1            -- JS indexOffset
-        -- JS: for (let i = lastIndex; --i > firstIndex;) target[i] = target[i - indexOffset]
-        -- i runs from lastIndex-1 down to firstIndex+1 (exclusive) in JS 0-based
-        -- In 1-based: i runs from lastIndex (which = lastIndex_js) down to firstIndex_1+1
+        # JS: let firstIndex = insertion.index + indexInInsertions;  (0-based)
+        # Lua 1-based: firstIndex_1 = ins.index + indexInInsertions (because indexInInsertions is already 1-based offset)
+        # Wait: in JS, indexInInsertions goes numInsertions-1 down to 0
+        # We go numInsertions down to 1, so (indexInInsertions - 1) is the JS value
+        js_iii = indexInInsertions - 1  # 0-based
+        firstIndex_js = ins.index + js_iii  # 0-based
+        firstIndex_1 = firstIndex_js + 1    # 1-based
+        indexOffset = js_iii + 1            # JS indexOffset
+        # JS: for (let i = lastIndex; --i > firstIndex;) target[i] = target[i - indexOffset]
+        # i runs from lastIndex-1 down to firstIndex+1 (exclusive) in JS 0-based
+        # In 1-based: i runs from lastIndex (which = lastIndex_js) down to firstIndex_1+1
         for i = lastIndex, firstIndex_1 + 1, -1 do
             target[i] = target[i - indexOffset]
         end
@@ -1917,9 +1917,9 @@ function InsertionSet_execute(iset, target)
     return numInsertions
 end
 
--- -------------------------------------------------------------------------
--- Utility
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Utility
+# -------------------------------------------------------------------------
 function rangesOverlap(leftMin, leftMax, rightMin, rightMax)
     if leftMin == leftMax then return false end
     if rightMin == rightMax then return false end
@@ -1930,18 +1930,18 @@ end
 
 function removeAllMatching(array, pred)
     dst = 1
-    for src = 1, #array do
+    for src = 1, array.count do
         if not pred(array[src]) then
             array[dst] = array[src]
             dst = dst + 1
         end
     end
-    while #array >= dst do array[#array] = null end
+    while array.count >= dst do array[array.count] = null end
 end
 
--- -------------------------------------------------------------------------
--- allocateStack
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# allocateStack
+# -------------------------------------------------------------------------
 function allocateStack(code)
     if code.frameSize != 0 then error("Frame size already determined") end
 
@@ -1976,28 +1976,28 @@ function allocateStack(code)
         error("Assignment failed")
     end
 
-    -- Partition escaped (Locked) slots
+    # Partition escaped (Locked) slots
     assignedEscapedStackSlots = {}
     escapedStackSlotsWorklist = {}
     for _, slot in ipairs(code.stackSlots) do
         if slot.kind == C.Locked then
             if slot.offsetFromFP then
-                assignedEscapedStackSlots[#assignedEscapedStackSlots+1] = slot
+                assignedEscapedStackSlots[assignedEscapedStackSlots.count+1] = slot
             else
-                escapedStackSlotsWorklist[#escapedStackSlotsWorklist+1] = slot
+                escapedStackSlotsWorklist[escapedStackSlotsWorklist.count+1] = slot
             end
         else
             if slot.offsetFromFP then error("Offset already assigned") end
         end
     end
 
-    while #escapedStackSlotsWorklist > 0 do
+    while escapedStackSlotsWorklist.count > 0 do
         slot = table.remove(escapedStackSlotsWorklist)
         assign(slot, assignedEscapedStackSlots)
-        assignedEscapedStackSlots[#assignedEscapedStackSlots+1] = slot
+        assignedEscapedStackSlots[assignedEscapedStackSlots.count+1] = slot
     end
 
-    -- Spill slot liveness / interference
+    # Spill slot liveness / interference
     liveness = Liveness_new(code)
     interference = {}
     for _, slot in ipairs(code.stackSlots) do
@@ -2008,7 +2008,7 @@ function allocateStack(code)
         localCalc = liveness:localCalc(block)
 
         function interfere(instIndex)
-            -- instIndex is 0-based
+            # instIndex is 0-based
             Inst_forEachDef_StackSlot(
                 BasicBlock_get(block, instIndex),
                 BasicBlock_get(block, instIndex + 1),
@@ -2021,7 +2021,7 @@ function allocateStack(code)
                 end)
         end
 
-        for instIndex = #block.insts - 1, 0, -1 do
+        for instIndex = block.insts.count - 1, 0, -1 do
             inst = block.insts[instIndex + 1]
             if not Inst_hasNonArgEffects(inst) then
                 ok = true
@@ -2043,20 +2043,20 @@ function allocateStack(code)
         removeAllMatching(block.insts, function(inst) return inst.opcode == C.Nop end)
     end
 
-    -- Assign spill slots
+    # Assign spill slots
     for _, slot in ipairs(code.stackSlots) do
         if not slot.offsetFromFP then
             others = {}
-            for k, _ in pairs(interference[slot]) do others[#others+1] = k end
-            -- Also include assignedEscapedStackSlots
+            for k, _ in pairs(interference[slot]) do others[others.count+1] = k end
+            # Also include assignedEscapedStackSlots
             combined = {}
-            for _, s in ipairs(assignedEscapedStackSlots) do combined[#combined+1] = s end
-            for _, s in ipairs(others) do combined[#combined+1] = s end
+            for _, s in ipairs(assignedEscapedStackSlots) do combined[combined.count+1] = s end
+            for _, s in ipairs(others) do combined[combined.count+1] = s end
             assign(slot, combined)
         end
     end
 
-    -- Frame size for stack slots
+    # Frame size for stack slots
     frameSizeForStackSlots = 0
     for _, slot in ipairs(code.stackSlots) do
         neg = -slot.offsetFromFP
@@ -2064,7 +2064,7 @@ function allocateStack(code)
     end
     frameSizeForStackSlots = math.ceil(frameSizeForStackSlots / 16) * 16
 
-    -- CallArg area
+    # CallArg area
     for _, block in ipairs(code.blocks) do
         for _, inst in ipairs(block.insts) do
             for _, arg in ipairs(inst.args) do
@@ -2078,10 +2078,10 @@ function allocateStack(code)
 
     Code_setFrameSize(code, frameSizeForStackSlots + code.callArgAreaSize)
 
-    -- Transform Stack/CallArg args to Addr
+    # Transform Stack/CallArg args to Addr
     insertionSet = InsertionSet_new()
     for _, block in ipairs(code.blocks) do
-        for instIndex = 1, #block.insts do
+        for instIndex = 1, block.insts.count do
             inst = block.insts[instIndex]
             Inst_forEachArg(inst, function(arg, role, type, width)
                 if arg.kind == C.ArgStack then
@@ -2090,9 +2090,9 @@ function allocateStack(code)
                         and slot.byteSize > width/8 then
                         if slot.byteSize != 8 then error("Bad spill slot size for ZDef") end
                         if width != 32 then error("Bad width for ZDef") end
-                        InsertionSet_append(insertionSet, instIndex,  -- 0-based = instIndex (1-based lua index)
+                        InsertionSet_append(insertionSet, instIndex,  # 0-based = instIndex (1-based lua index)
                             Inst_new(C.StoreZero32))
-                        newInst = insertionSet.insertions[#insertionSet.insertions].element
+                        newInst = insertionSet.insertions[insertionSet.insertions.count].element
                         newInst.args[1] = Arg_createStackAddr(arg.offset + 4 + slot.offsetFromFP, code.frameSize, width)
                     end
                     return Arg_createStackAddr(arg.offset + slot.offsetFromFP, code.frameSize, width)
@@ -2106,9 +2106,9 @@ function allocateStack(code)
     end
 end
 
--- -------------------------------------------------------------------------
--- Main benchmark runner
--- -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# Main benchmark runner
+# -------------------------------------------------------------------------
 payloads = {}
 
 function runIteration()
@@ -2124,7 +2124,7 @@ function runIteration()
             error("Wrong late hash for " .. payload.name .. ": got " .. hash .. " expected " .. payload.lateHash)
         end
     end
-    -- print("All hashes passed!")
+    # print("All hashes passed!")
 end
 
 function createPayloadGbemuExecuteIteration()
@@ -2186,7 +2186,7 @@ function createPayloadGbemuExecuteIteration()
     slot11 = Code_addStackSlot(code, 8, C.Spill)
     slot12 = Code_addStackSlot(code, 40, C.Locked)
     StackSlot_setOffsetFromFP(slot12, -40)
-    T = {}  -- temp pool table (register pressure)
+    T = {}  # temp pool table (register pressure)
 
     T.tmp190 = Code_newTmp(code, C.GP)
     T.tmp189 = Code_newTmp(code, C.GP)
@@ -2389,2725 +2389,2725 @@ function createPayloadGbemuExecuteIteration()
     T.ftmp0 = Code_newTmp(code, C.FP)
     inst = null
     arg = null
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb2, C.Normal)
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb1, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb2, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb1, C.Normal)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286904960, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(2, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(21)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createAddr(Reg_rbx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286506544, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot10, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286455168, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot4, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287131344, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot6, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot3, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286474592, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot2, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287209728, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot11, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(0, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287112728, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(0, 65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot9, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287112720, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286506192, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot7, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(862)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
-    bb1.successors[#bb1.successors+1] = FrequentedBlock_new(bb41, C.Normal)
-    bb1.successors[#bb1.successors+1] = FrequentedBlock_new(bb3, C.Normal)
-    bb1.predecessors[#bb1.predecessors+1] = bb0
+    bb1.successors[bb1.successors.count+1] = FrequentedBlock_new(bb41, C.Normal)
+    bb1.successors[bb1.successors.count+1] = FrequentedBlock_new(bb3, C.Normal)
+    bb1.predecessors[bb1.predecessors.count+1] = bb0
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(881)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 224)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
-    bb2.successors[#bb2.successors+1] = FrequentedBlock_new(bb41, C.Normal)
-    bb2.successors[#bb2.successors+1] = FrequentedBlock_new(bb3, C.Normal)
-    bb2.predecessors[#bb2.predecessors+1] = bb0
+    bb2.successors[bb2.successors.count+1] = FrequentedBlock_new(bb41, C.Normal)
+    bb2.successors[bb2.successors.count+1] = FrequentedBlock_new(bb3, C.Normal)
+    bb2.predecessors[bb2.predecessors.count+1] = bb0
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 224)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb2, inst)
-    bb3.successors[#bb3.successors+1] = FrequentedBlock_new(bb5, C.Normal)
-    bb3.successors[#bb3.successors+1] = FrequentedBlock_new(bb4, C.Normal)
-    bb3.predecessors[#bb3.predecessors+1] = bb1
-    bb3.predecessors[#bb3.predecessors+1] = bb40
-    bb3.predecessors[#bb3.predecessors+1] = bb39
-    bb3.predecessors[#bb3.predecessors+1] = bb2
+    bb3.successors[bb3.successors.count+1] = FrequentedBlock_new(bb5, C.Normal)
+    bb3.successors[bb3.successors.count+1] = FrequentedBlock_new(bb4, C.Normal)
+    bb3.predecessors[bb3.predecessors.count+1] = bb1
+    bb3.predecessors[bb3.predecessors.count+1] = bb40
+    bb3.predecessors[bb3.predecessors.count+1] = bb39
+    bb3.predecessors[bb3.predecessors.count+1] = bb2
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1144)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
-    bb4.successors[#bb4.successors+1] = FrequentedBlock_new(bb6, C.Normal)
-    bb4.successors[#bb4.successors+1] = FrequentedBlock_new(bb7, C.Normal)
-    bb4.predecessors[#bb4.predecessors+1] = bb3
+    bb4.successors[bb4.successors.count+1] = FrequentedBlock_new(bb6, C.Normal)
+    bb4.successors[bb4.successors.count+1] = FrequentedBlock_new(bb7, C.Normal)
+    bb4.predecessors[bb4.predecessors.count+1] = bb3
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
-    bb5.successors[#bb5.successors+1] = FrequentedBlock_new(bb6, C.Normal)
-    bb5.predecessors[#bb5.predecessors+1] = bb3
+    bb5.successors[bb5.successors.count+1] = FrequentedBlock_new(bb6, C.Normal)
+    bb5.predecessors[bb5.predecessors.count+1] = bb3
     inst = Inst_new(C.Move)
     arg = Arg_createImm(7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 232)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 256)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 248)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.And32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.And32)
     arg = Arg_createImm(31)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 240)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb5, inst)
-    bb6.successors[#bb6.successors+1] = FrequentedBlock_new(bb7, C.Normal)
-    bb6.predecessors[#bb6.predecessors+1] = bb4
-    bb6.predecessors[#bb6.predecessors+1] = bb5
+    bb6.successors[bb6.successors.count+1] = FrequentedBlock_new(bb7, C.Normal)
+    bb6.predecessors[bb6.predecessors.count+1] = bb4
+    bb6.predecessors[bb6.predecessors.count+1] = bb5
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1144)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb6, inst)
-    bb7.successors[#bb7.successors+1] = FrequentedBlock_new(bb8, C.Normal)
-    bb7.successors[#bb7.successors+1] = FrequentedBlock_new(bb9, C.Normal)
-    bb7.predecessors[#bb7.predecessors+1] = bb4
-    bb7.predecessors[#bb7.predecessors+1] = bb6
+    bb7.successors[bb7.successors.count+1] = FrequentedBlock_new(bb8, C.Normal)
+    bb7.successors[bb7.successors.count+1] = FrequentedBlock_new(bb9, C.Normal)
+    bb7.predecessors[bb7.predecessors.count+1] = bb4
+    bb7.predecessors[bb7.predecessors.count+1] = bb6
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 240)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
-    bb8.successors[#bb8.successors+1] = FrequentedBlock_new(bb9, C.Normal)
-    bb8.predecessors[#bb8.predecessors+1] = bb7
+    bb8.successors[bb8.successors.count+1] = FrequentedBlock_new(bb9, C.Normal)
+    bb8.predecessors[bb8.predecessors.count+1] = bb7
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286455168, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286455168, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb8, inst)
-    bb9.successors[#bb9.successors+1] = FrequentedBlock_new(bb12, C.Normal)
-    bb9.successors[#bb9.successors+1] = FrequentedBlock_new(bb10, C.Normal)
-    bb9.predecessors[#bb9.predecessors+1] = bb7
-    bb9.predecessors[#bb9.predecessors+1] = bb8
+    bb9.successors[bb9.successors.count+1] = FrequentedBlock_new(bb12, C.Normal)
+    bb9.successors[bb9.successors.count+1] = FrequentedBlock_new(bb10, C.Normal)
+    bb9.predecessors[bb9.predecessors.count+1] = bb7
+    bb9.predecessors[bb9.predecessors.count+1] = bb8
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 304)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 128)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_r8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(80)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r8, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createIndex(Reg_rax, Reg_rsi, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.MoveConditionallyTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(23)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rcx, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot7, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
-    bb10.successors[#bb10.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb10.successors[#bb10.successors+1] = FrequentedBlock_new(bb13, C.Normal)
-    bb10.predecessors[#bb10.predecessors+1] = bb9
+    bb10.successors[bb10.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb10.successors[bb10.successors.count+1] = FrequentedBlock_new(bb13, C.Normal)
+    bb10.predecessors[bb10.predecessors.count+1] = bb9
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot10, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
-    bb11.successors[#bb11.successors+1] = FrequentedBlock_new(bb14, C.Normal)
-    bb11.predecessors[#bb11.predecessors+1] = bb10
+    bb11.successors[bb11.successors.count+1] = FrequentedBlock_new(bb14, C.Normal)
+    bb11.predecessors[bb11.predecessors.count+1] = bb10
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 344)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(502)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdi, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Load8)
     arg = Arg_createIndex(Reg_rsi, Reg_rax, 1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb11, inst)
-    bb12.successors[#bb12.successors+1] = FrequentedBlock_new(bb14, C.Normal)
-    bb12.predecessors[#bb12.predecessors+1] = bb9
+    bb12.successors[bb12.successors.count+1] = FrequentedBlock_new(bb14, C.Normal)
+    bb12.predecessors[bb12.predecessors.count+1] = bb9
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 336)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 456)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(502)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdi, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Load8)
     arg = Arg_createIndex(Reg_rsi, Reg_rax, 1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb12, inst)
-    bb13.predecessors[#bb13.predecessors+1] = bb10
+    bb13.predecessors[bb13.predecessors.count+1] = bb10
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb13, inst)
-    bb14.successors[#bb14.successors+1] = FrequentedBlock_new(bb15, C.Normal)
-    bb14.successors[#bb14.successors+1] = FrequentedBlock_new(bb16, C.Normal)
-    bb14.predecessors[#bb14.predecessors+1] = bb11
-    bb14.predecessors[#bb14.predecessors+1] = bb12
+    bb14.successors[bb14.successors.count+1] = FrequentedBlock_new(bb15, C.Normal)
+    bb14.successors[bb14.successors.count+1] = FrequentedBlock_new(bb16, C.Normal)
+    bb14.predecessors[bb14.predecessors.count+1] = bb11
+    bb14.predecessors[bb14.predecessors.count+1] = bb12
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.ZeroExtend16To32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 128)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 216)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
-    bb15.predecessors[#bb15.predecessors+1] = bb14
+    bb15.predecessors[bb15.predecessors.count+1] = bb14
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb15, inst)
-    bb16.successors[#bb16.successors+1] = FrequentedBlock_new(bb18, C.Normal)
-    bb16.successors[#bb16.successors+1] = FrequentedBlock_new(bb17, C.Normal)
-    bb16.predecessors[#bb16.predecessors+1] = bb14
+    bb16.successors[bb16.successors.count+1] = FrequentedBlock_new(bb18, C.Normal)
+    bb16.successors[bb16.successors.count+1] = FrequentedBlock_new(bb17, C.Normal)
+    bb16.predecessors[bb16.predecessors.count+1] = bb14
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, -1752)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdx, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdx, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Load8)
     arg = Arg_createIndex(Reg_rax, Reg_rcx, 1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 272)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287112720, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(80)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createBigImm(287112720, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287112728, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createIndex(Reg_rax, Reg_rcx, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.MoveConditionallyTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287112720, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdx, -1088)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 272)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 280)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Rshift32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdx, -1088)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdx, -88)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdx, -1176)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(80)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rcx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createIndex(Reg_rax, Reg_rdx, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.MoveConditionallyTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(23)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 272)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 280)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Rshift32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1048)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1048)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1072)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
-    bb17.successors[#bb17.successors+1] = FrequentedBlock_new(bb19, C.Normal)
-    bb17.predecessors[#bb17.predecessors+1] = bb16
+    bb17.successors[bb17.successors.count+1] = FrequentedBlock_new(bb19, C.Normal)
+    bb17.predecessors[bb17.predecessors.count+1] = bb16
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb17, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb17, inst)
-    bb18.successors[#bb18.successors+1] = FrequentedBlock_new(bb19, C.Normal)
-    bb18.predecessors[#bb18.predecessors+1] = bb16
+    bb18.successors[bb18.successors.count+1] = FrequentedBlock_new(bb19, C.Normal)
+    bb18.predecessors[bb18.predecessors.count+1] = bb16
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb18, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb18, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb18, inst)
-    bb19.successors[#bb19.successors+1] = FrequentedBlock_new(bb20, C.Normal)
-    bb19.successors[#bb19.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb19.predecessors[#bb19.predecessors+1] = bb17
-    bb19.predecessors[#bb19.predecessors+1] = bb18
+    bb19.successors[bb19.successors.count+1] = FrequentedBlock_new(bb20, C.Normal)
+    bb19.successors[bb19.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb19.predecessors[bb19.predecessors.count+1] = bb17
+    bb19.predecessors[bb19.predecessors.count+1] = bb18
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.AddDouble)
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.MoveDoubleTo64)
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(0, 65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1072)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1080)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1080)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1104)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
-    bb20.successors[#bb20.successors+1] = FrequentedBlock_new(bb21, C.Normal)
-    bb20.successors[#bb20.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb20.predecessors[#bb20.predecessors+1] = bb19
+    bb20.successors[bb20.successors.count+1] = FrequentedBlock_new(bb21, C.Normal)
+    bb20.successors[bb20.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb20.predecessors[bb20.predecessors.count+1] = bb19
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1096)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1096)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1112)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
-    bb21.successors[#bb21.successors+1] = FrequentedBlock_new(bb23, C.Normal)
-    bb21.predecessors[#bb21.predecessors+1] = bb20
+    bb21.successors[bb21.successors.count+1] = FrequentedBlock_new(bb23, C.Normal)
+    bb21.predecessors[bb21.predecessors.count+1] = bb20
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 344)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_r12, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(502)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r12, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createAddr(Reg_r12, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.BelowOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(65286)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 232)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 256)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb21, inst)
-    bb22.successors[#bb22.successors+1] = FrequentedBlock_new(bb23, C.Normal)
-    bb22.predecessors[#bb22.predecessors+1] = bb30
-    bb22.predecessors[#bb22.predecessors+1] = bb31
-    bb22.predecessors[#bb22.predecessors+1] = bb29
+    bb22.successors[bb22.successors.count+1] = FrequentedBlock_new(bb23, C.Normal)
+    bb22.predecessors[bb22.predecessors.count+1] = bb30
+    bb22.predecessors[bb22.predecessors.count+1] = bb31
+    bb22.predecessors[bb22.predecessors.count+1] = bb29
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb22, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb22, inst)
-    bb23.successors[#bb23.successors+1] = FrequentedBlock_new(bb25, C.Normal)
-    bb23.successors[#bb23.successors+1] = FrequentedBlock_new(bb24, C.Normal)
-    bb23.predecessors[#bb23.predecessors+1] = bb21
-    bb23.predecessors[#bb23.predecessors+1] = bb22
+    bb23.successors[bb23.successors.count+1] = FrequentedBlock_new(bb25, C.Normal)
+    bb23.successors[bb23.successors.count+1] = FrequentedBlock_new(bb24, C.Normal)
+    bb23.predecessors[bb23.predecessors.count+1] = bb21
+    bb23.predecessors[bb23.predecessors.count+1] = bb22
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rsi, -1096)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Load8)
     arg = Arg_createAddr(Reg_rdi, 65285)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.BelowOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(65285)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
-    bb24.successors[#bb24.successors+1] = FrequentedBlock_new(bb26, C.Normal)
-    bb24.successors[#bb24.successors+1] = FrequentedBlock_new(bb30, C.Normal)
-    bb24.predecessors[#bb24.predecessors+1] = bb23
+    bb24.successors[bb24.successors.count+1] = FrequentedBlock_new(bb26, C.Normal)
+    bb24.successors[bb24.successors.count+1] = FrequentedBlock_new(bb30, C.Normal)
+    bb24.predecessors[bb24.predecessors.count+1] = bb23
     inst = Inst_new(C.Store8)
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 65285)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(256)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
-    bb25.successors[#bb25.successors+1] = FrequentedBlock_new(bb26, C.Normal)
-    bb25.successors[#bb25.successors+1] = FrequentedBlock_new(bb30, C.Normal)
-    bb25.predecessors[#bb25.predecessors+1] = bb23
+    bb25.successors[bb25.successors.count+1] = FrequentedBlock_new(bb26, C.Normal)
+    bb25.successors[bb25.successors.count+1] = FrequentedBlock_new(bb30, C.Normal)
+    bb25.predecessors[bb25.predecessors.count+1] = bb23
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(256)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb25, inst)
-    bb26.successors[#bb26.successors+1] = FrequentedBlock_new(bb28, C.Normal)
-    bb26.successors[#bb26.successors+1] = FrequentedBlock_new(bb27, C.Normal)
-    bb26.predecessors[#bb26.predecessors+1] = bb24
-    bb26.predecessors[#bb26.predecessors+1] = bb25
+    bb26.successors[bb26.successors.count+1] = FrequentedBlock_new(bb28, C.Normal)
+    bb26.successors[bb26.successors.count+1] = FrequentedBlock_new(bb27, C.Normal)
+    bb26.predecessors[bb26.predecessors.count+1] = bb24
+    bb26.predecessors[bb26.predecessors.count+1] = bb25
     inst = Inst_new(C.Load8)
     arg = Arg_createAddr(Reg_rdi, 65286)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb26, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.BelowOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(65285)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb26, inst)
-    bb27.successors[#bb27.successors+1] = FrequentedBlock_new(bb28, C.Normal)
-    bb27.predecessors[#bb27.predecessors+1] = bb26
+    bb27.successors[bb27.successors.count+1] = FrequentedBlock_new(bb28, C.Normal)
+    bb27.predecessors[bb27.predecessors.count+1] = bb26
     inst = Inst_new(C.Store8)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 65285)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb27, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb27, inst)
-    bb28.successors[#bb28.successors+1] = FrequentedBlock_new(bb29, C.Normal)
-    bb28.successors[#bb28.successors+1] = FrequentedBlock_new(bb31, C.Normal)
-    bb28.predecessors[#bb28.predecessors+1] = bb26
-    bb28.predecessors[#bb28.predecessors+1] = bb27
+    bb28.successors[bb28.successors.count+1] = FrequentedBlock_new(bb29, C.Normal)
+    bb28.successors[bb28.successors.count+1] = FrequentedBlock_new(bb31, C.Normal)
+    bb28.predecessors[bb28.predecessors.count+1] = bb26
+    bb28.predecessors[bb28.predecessors.count+1] = bb27
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 248)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
     inst = Inst_new(C.Or32)
     arg = Arg_createImm(4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 248)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb28, inst)
-    bb29.successors[#bb29.successors+1] = FrequentedBlock_new(bb22, C.Normal)
-    bb29.successors[#bb29.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb29.predecessors[#bb29.predecessors+1] = bb28
+    bb29.successors[bb29.successors.count+1] = FrequentedBlock_new(bb22, C.Normal)
+    bb29.successors[bb29.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb29.predecessors[bb29.predecessors.count+1] = bb28
     inst = Inst_new(C.And32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb29, inst)
     inst = Inst_new(C.And32)
     arg = Arg_createImm(31)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb29, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb29, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 240)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb29, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb29, inst)
-    bb30.successors[#bb30.successors+1] = FrequentedBlock_new(bb22, C.Normal)
-    bb30.successors[#bb30.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb30.predecessors[#bb30.predecessors+1] = bb24
-    bb30.predecessors[#bb30.predecessors+1] = bb25
+    bb30.successors[bb30.successors.count+1] = FrequentedBlock_new(bb22, C.Normal)
+    bb30.successors[bb30.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb30.predecessors[bb30.predecessors.count+1] = bb24
+    bb30.predecessors[bb30.predecessors.count+1] = bb25
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb30, inst)
-    bb31.successors[#bb31.successors+1] = FrequentedBlock_new(bb22, C.Normal)
-    bb31.successors[#bb31.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb31.predecessors[#bb31.predecessors+1] = bb28
+    bb31.successors[bb31.successors.count+1] = FrequentedBlock_new(bb22, C.Normal)
+    bb31.successors[bb31.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb31.predecessors[bb31.predecessors.count+1] = bb28
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb31, inst)
-    bb32.successors[#bb32.successors+1] = FrequentedBlock_new(bb33, C.Normal)
-    bb32.successors[#bb32.successors+1] = FrequentedBlock_new(bb34, C.Normal)
-    bb32.predecessors[#bb32.predecessors+1] = bb19
-    bb32.predecessors[#bb32.predecessors+1] = bb20
-    bb32.predecessors[#bb32.predecessors+1] = bb30
-    bb32.predecessors[#bb32.predecessors+1] = bb31
-    bb32.predecessors[#bb32.predecessors+1] = bb29
+    bb32.successors[bb32.successors.count+1] = FrequentedBlock_new(bb33, C.Normal)
+    bb32.successors[bb32.successors.count+1] = FrequentedBlock_new(bb34, C.Normal)
+    bb32.predecessors[bb32.predecessors.count+1] = bb19
+    bb32.predecessors[bb32.predecessors.count+1] = bb20
+    bb32.predecessors[bb32.predecessors.count+1] = bb30
+    bb32.predecessors[bb32.predecessors.count+1] = bb31
+    bb32.predecessors[bb32.predecessors.count+1] = bb29
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rsi, -1120)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
-    bb33.predecessors[#bb33.predecessors+1] = bb32
+    bb33.predecessors[bb33.predecessors.count+1] = bb32
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb33, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb33, inst)
-    bb34.successors[#bb34.successors+1] = FrequentedBlock_new(bb36, C.Normal)
-    bb34.successors[#bb34.successors+1] = FrequentedBlock_new(bb35, C.Normal)
-    bb34.predecessors[#bb34.predecessors+1] = bb32
+    bb34.successors[bb34.successors.count+1] = FrequentedBlock_new(bb36, C.Normal)
+    bb34.successors[bb34.successors.count+1] = FrequentedBlock_new(bb35, C.Normal)
+    bb34.predecessors[bb34.predecessors.count+1] = bb32
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 136)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
-    bb35.successors[#bb35.successors+1] = FrequentedBlock_new(bb37, C.Normal)
-    bb35.successors[#bb35.successors+1] = FrequentedBlock_new(bb38, C.Normal)
-    bb35.predecessors[#bb35.predecessors+1] = bb34
+    bb35.successors[bb35.successors.count+1] = FrequentedBlock_new(bb37, C.Normal)
+    bb35.successors[bb35.successors.count+1] = FrequentedBlock_new(bb38, C.Normal)
+    bb35.predecessors[bb35.predecessors.count+1] = bb34
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb35, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(C.DoubleGreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb35, inst)
-    bb36.successors[#bb36.successors+1] = FrequentedBlock_new(bb37, C.Normal)
-    bb36.successors[#bb36.successors+1] = FrequentedBlock_new(bb38, C.Normal)
-    bb36.predecessors[#bb36.predecessors+1] = bb34
+    bb36.successors[bb36.successors.count+1] = FrequentedBlock_new(bb37, C.Normal)
+    bb36.successors[bb36.successors.count+1] = FrequentedBlock_new(bb38, C.Normal)
+    bb36.predecessors[bb36.predecessors.count+1] = bb34
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb36, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb36, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(C.DoubleGreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb36, inst)
-    bb37.successors[#bb37.successors+1] = FrequentedBlock_new(bb38, C.Normal)
-    bb37.predecessors[#bb37.predecessors+1] = bb35
-    bb37.predecessors[#bb37.predecessors+1] = bb36
+    bb37.successors[bb37.successors.count+1] = FrequentedBlock_new(bb38, C.Normal)
+    bb37.predecessors[bb37.predecessors.count+1] = bb35
+    bb37.predecessors[bb37.predecessors.count+1] = bb36
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286474592, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286474592, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb37, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb37, inst)
-    bb38.successors[#bb38.successors+1] = FrequentedBlock_new(bb39, C.Normal)
-    bb38.successors[#bb38.successors+1] = FrequentedBlock_new(bb40, C.Normal)
-    bb38.predecessors[#bb38.predecessors+1] = bb35
-    bb38.predecessors[#bb38.predecessors+1] = bb37
-    bb38.predecessors[#bb38.predecessors+1] = bb36
+    bb38.successors[bb38.successors.count+1] = FrequentedBlock_new(bb39, C.Normal)
+    bb38.successors[bb38.successors.count+1] = FrequentedBlock_new(bb40, C.Normal)
+    bb38.predecessors[bb38.predecessors.count+1] = bb35
+    bb38.predecessors[bb38.predecessors.count+1] = bb37
+    bb38.predecessors[bb38.predecessors.count+1] = bb36
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(881)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdx, -1824)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdx, -1824)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdx, -1832)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb38, inst)
-    bb39.successors[#bb39.successors+1] = FrequentedBlock_new(bb42, C.Normal)
-    bb39.successors[#bb39.successors+1] = FrequentedBlock_new(bb3, C.Normal)
-    bb39.predecessors[#bb39.predecessors+1] = bb38
+    bb39.successors[bb39.successors.count+1] = FrequentedBlock_new(bb42, C.Normal)
+    bb39.successors[bb39.successors.count+1] = FrequentedBlock_new(bb3, C.Normal)
+    bb39.predecessors[bb39.predecessors.count+1] = bb38
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286474592, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(286474592, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 224)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Or32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 224)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287131344, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287131344, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(287209728, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 224)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb39, inst)
-    bb40.successors[#bb40.successors+1] = FrequentedBlock_new(bb42, C.Normal)
-    bb40.successors[#bb40.successors+1] = FrequentedBlock_new(bb3, C.Normal)
-    bb40.predecessors[#bb40.predecessors+1] = bb38
+    bb40.successors[bb40.successors.count+1] = FrequentedBlock_new(bb42, C.Normal)
+    bb40.successors[bb40.successors.count+1] = FrequentedBlock_new(bb3, C.Normal)
+    bb40.predecessors[bb40.predecessors.count+1] = bb38
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 224)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb40, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb40, inst)
-    bb41.predecessors[#bb41.predecessors+1] = bb1
-    bb41.predecessors[#bb41.predecessors+1] = bb2
+    bb41.predecessors[bb41.predecessors.count+1] = bb1
+    bb41.predecessors[bb41.predecessors.count+1] = bb2
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb41, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb41, inst)
-    bb42.predecessors[#bb42.predecessors+1] = bb40
-    bb42.predecessors[#bb42.predecessors+1] = bb39
+    bb42.predecessors[bb42.predecessors.count+1] = bb40
+    bb42.predecessors[bb42.predecessors.count+1] = bb39
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb42, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb42, inst)
     return code
 end
@@ -5160,7 +5160,7 @@ function createPayloadImagingGaussianBlurGaussianBlur()
     slot5 = Code_addStackSlot(code, 8, C.Spill)
     slot6 = Code_addStackSlot(code, 40, C.Locked)
     StackSlot_setOffsetFromFP(slot6, -40)
-    T = {}  -- temp pool table (register pressure)
+    T = {}  # temp pool table (register pressure)
 
     T.tmp141 = Code_newTmp(code, C.GP)
     T.tmp140 = Code_newTmp(code, C.GP)
@@ -5381,2755 +5381,2755 @@ function createPayloadImagingGaussianBlurGaussianBlur()
     T.ftmp0 = Code_newTmp(code, C.FP)
     inst = null
     arg = null
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb2, C.Normal)
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb1, C.Rare)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb2, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb1, C.Rare)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(144305904, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547168, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547184, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547192, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547200, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547208, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547216, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547224, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547232, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(142547240, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(0, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(DoubleEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
-    bb1.successors[#bb1.successors+1] = FrequentedBlock_new(bb2, C.Normal)
-    bb1.predecessors[#bb1.predecessors+1] = bb0
+    bb1.successors[bb1.successors.count+1] = FrequentedBlock_new(bb2, C.Normal)
+    bb1.predecessors[bb1.predecessors.count+1] = bb0
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb1, inst)
-    bb2.successors[#bb2.successors+1] = FrequentedBlock_new(bb4, C.Normal)
-    bb2.successors[#bb2.successors+1] = FrequentedBlock_new(bb3, C.Rare)
-    bb2.predecessors[#bb2.predecessors+1] = bb0
-    bb2.predecessors[#bb2.predecessors+1] = bb1
+    bb2.successors[bb2.successors.count+1] = FrequentedBlock_new(bb4, C.Normal)
+    bb2.successors[bb2.successors.count+1] = FrequentedBlock_new(bb3, C.Rare)
+    bb2.predecessors[bb2.predecessors.count+1] = bb0
+    bb2.predecessors[bb2.predecessors.count+1] = bb1
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(DoubleEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb2, inst)
-    bb3.successors[#bb3.successors+1] = FrequentedBlock_new(bb4, C.Normal)
-    bb3.predecessors[#bb3.predecessors+1] = bb2
+    bb3.successors[bb3.successors.count+1] = FrequentedBlock_new(bb4, C.Normal)
+    bb3.predecessors[bb3.predecessors.count+1] = bb2
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb3, inst)
-    bb4.successors[#bb4.successors+1] = FrequentedBlock_new(bb6, C.Normal)
-    bb4.successors[#bb4.successors+1] = FrequentedBlock_new(bb5, C.Rare)
-    bb4.predecessors[#bb4.predecessors+1] = bb2
-    bb4.predecessors[#bb4.predecessors+1] = bb3
+    bb4.successors[bb4.successors.count+1] = FrequentedBlock_new(bb6, C.Normal)
+    bb4.successors[bb4.successors.count+1] = FrequentedBlock_new(bb5, C.Rare)
+    bb4.predecessors[bb4.predecessors.count+1] = bb2
+    bb4.predecessors[bb4.predecessors.count+1] = bb3
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(DoubleEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
-    bb5.successors[#bb5.successors+1] = FrequentedBlock_new(bb6, C.Normal)
-    bb5.predecessors[#bb5.predecessors+1] = bb4
+    bb5.successors[bb5.successors.count+1] = FrequentedBlock_new(bb6, C.Normal)
+    bb5.predecessors[bb5.predecessors.count+1] = bb4
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb5, inst)
-    bb6.successors[#bb6.successors+1] = FrequentedBlock_new(bb8, C.Normal)
-    bb6.successors[#bb6.successors+1] = FrequentedBlock_new(bb7, C.Rare)
-    bb6.predecessors[#bb6.predecessors+1] = bb4
-    bb6.predecessors[#bb6.predecessors+1] = bb5
+    bb6.successors[bb6.successors.count+1] = FrequentedBlock_new(bb8, C.Normal)
+    bb6.successors[bb6.successors.count+1] = FrequentedBlock_new(bb7, C.Rare)
+    bb6.predecessors[bb6.predecessors.count+1] = bb4
+    bb6.predecessors[bb6.predecessors.count+1] = bb5
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(DoubleEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
-    bb7.successors[#bb7.successors+1] = FrequentedBlock_new(bb8, C.Normal)
-    bb7.predecessors[#bb7.predecessors+1] = bb6
+    bb7.successors[bb7.successors.count+1] = FrequentedBlock_new(bb8, C.Normal)
+    bb7.predecessors[bb7.predecessors.count+1] = bb6
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb7, inst)
-    bb8.successors[#bb8.successors+1] = FrequentedBlock_new(bb10, C.Normal)
-    bb8.successors[#bb8.successors+1] = FrequentedBlock_new(bb9, C.Rare)
-    bb8.predecessors[#bb8.predecessors+1] = bb6
-    bb8.predecessors[#bb8.predecessors+1] = bb7
+    bb8.successors[bb8.successors.count+1] = FrequentedBlock_new(bb10, C.Normal)
+    bb8.successors[bb8.successors.count+1] = FrequentedBlock_new(bb9, C.Rare)
+    bb8.predecessors[bb8.predecessors.count+1] = bb6
+    bb8.predecessors[bb8.predecessors.count+1] = bb7
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(117076488, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Move64ToDouble)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.BranchDouble)
     arg = Arg_createDoubleCond(DoubleEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
-    bb9.successors[#bb9.successors+1] = FrequentedBlock_new(bb10, C.Normal)
-    bb9.predecessors[#bb9.predecessors+1] = bb8
+    bb9.successors[bb9.successors.count+1] = FrequentedBlock_new(bb10, C.Normal)
+    bb9.predecessors[bb9.predecessors.count+1] = bb8
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.ConvertInt32ToDouble)
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb9, inst)
-    bb10.successors[#bb10.successors+1] = FrequentedBlock_new(bb18, C.Normal)
-    bb10.predecessors[#bb10.predecessors+1] = bb8
-    bb10.predecessors[#bb10.predecessors+1] = bb9
+    bb10.successors[bb10.successors.count+1] = FrequentedBlock_new(bb18, C.Normal)
+    bb10.predecessors[bb10.predecessors.count+1] = bb8
+    bb10.predecessors[bb10.predecessors.count+1] = bb9
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(144506584, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createAddr(Reg_r9, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(144506544, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(80)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createBigImm(144506544, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(144506552, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot2, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createAddr(Reg_rdi, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot3, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.MoveZeroToDouble)
     arg = Arg_createTmp(Reg_xmm7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot4, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(2, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb10, inst)
-    bb11.successors[#bb11.successors+1] = FrequentedBlock_new(bb13, C.Normal)
-    bb11.predecessors[#bb11.predecessors+1] = bb35
+    bb11.successors[bb11.successors.count+1] = FrequentedBlock_new(bb13, C.Normal)
+    bb11.predecessors[bb11.predecessors.count+1] = bb35
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb11, inst)
-    bb12.successors[#bb12.successors+1] = FrequentedBlock_new(bb13, C.Normal)
-    bb12.predecessors[#bb12.predecessors+1] = bb34
+    bb12.successors[bb12.successors.count+1] = FrequentedBlock_new(bb13, C.Normal)
+    bb12.predecessors[bb12.predecessors.count+1] = bb34
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb12, inst)
-    bb13.successors[#bb13.successors+1] = FrequentedBlock_new(bb15, C.Normal)
-    bb13.predecessors[#bb13.predecessors+1] = bb11
-    bb13.predecessors[#bb13.predecessors+1] = bb12
+    bb13.successors[bb13.successors.count+1] = FrequentedBlock_new(bb15, C.Normal)
+    bb13.predecessors[bb13.predecessors.count+1] = bb11
+    bb13.predecessors[bb13.predecessors.count+1] = bb12
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb13, inst)
-    bb14.successors[#bb14.successors+1] = FrequentedBlock_new(bb15, C.Normal)
-    bb14.predecessors[#bb14.predecessors+1] = bb31
+    bb14.successors[bb14.successors.count+1] = FrequentedBlock_new(bb15, C.Normal)
+    bb14.predecessors[bb14.predecessors.count+1] = bb31
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb14, inst)
-    bb15.successors[#bb15.successors+1] = FrequentedBlock_new(bb28, C.Normal)
-    bb15.successors[#bb15.successors+1] = FrequentedBlock_new(bb16, C.Normal)
-    bb15.predecessors[#bb15.predecessors+1] = bb13
-    bb15.predecessors[#bb15.predecessors+1] = bb14
+    bb15.successors[bb15.successors.count+1] = FrequentedBlock_new(bb28, C.Normal)
+    bb15.successors[bb15.successors.count+1] = FrequentedBlock_new(bb16, C.Normal)
+    bb15.predecessors[bb15.predecessors.count+1] = bb13
+    bb15.predecessors[bb15.predecessors.count+1] = bb14
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
-    bb16.successors[#bb16.successors+1] = FrequentedBlock_new(bb29, C.Normal)
-    bb16.successors[#bb16.successors+1] = FrequentedBlock_new(bb17, C.Normal)
-    bb16.predecessors[#bb16.predecessors+1] = bb15
+    bb16.successors[bb16.successors.count+1] = FrequentedBlock_new(bb29, C.Normal)
+    bb16.successors[bb16.successors.count+1] = FrequentedBlock_new(bb17, C.Normal)
+    bb16.predecessors[bb16.predecessors.count+1] = bb15
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(267)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb16, inst)
-    bb17.successors[#bb17.successors+1] = FrequentedBlock_new(bb18, C.Normal)
-    bb17.predecessors[#bb17.predecessors+1] = bb16
+    bb17.successors[bb17.successors.count+1] = FrequentedBlock_new(bb18, C.Normal)
+    bb17.predecessors[bb17.predecessors.count+1] = bb16
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb17, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb17, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb17, inst)
-    bb18.successors[#bb18.successors+1] = FrequentedBlock_new(bb20, C.Normal)
-    bb18.successors[#bb18.successors+1] = FrequentedBlock_new(bb19, C.Rare)
-    bb18.predecessors[#bb18.predecessors+1] = bb10
-    bb18.predecessors[#bb18.predecessors+1] = bb17
+    bb18.successors[bb18.successors.count+1] = FrequentedBlock_new(bb20, C.Normal)
+    bb18.successors[bb18.successors.count+1] = FrequentedBlock_new(bb19, C.Rare)
+    bb18.predecessors[bb18.predecessors.count+1] = bb10
+    bb18.predecessors[bb18.predecessors.count+1] = bb17
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb18, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb18, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(400)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb18, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb18, inst)
-    bb19.successors[#bb19.successors+1] = FrequentedBlock_new(bb20, C.Normal)
-    bb19.predecessors[#bb19.predecessors+1] = bb18
+    bb19.successors[bb19.successors.count+1] = FrequentedBlock_new(bb20, C.Normal)
+    bb19.predecessors[bb19.predecessors.count+1] = bb18
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb19, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb19, inst)
-    bb20.successors[#bb20.successors+1] = FrequentedBlock_new(bb22, C.Normal)
-    bb20.predecessors[#bb20.predecessors+1] = bb18
-    bb20.predecessors[#bb20.predecessors+1] = bb19
+    bb20.successors[bb20.successors.count+1] = FrequentedBlock_new(bb22, C.Normal)
+    bb20.predecessors[bb20.predecessors.count+1] = bb18
+    bb20.predecessors[bb20.predecessors.count+1] = bb19
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Rshift32)
     arg = Arg_createImm(31)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Xor32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot3, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createStack(slot2, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createIndex(Reg_rsi, Reg_rdi, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.MoveConditionallyTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rdi, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(79)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rdi, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createAddr(Reg_r12, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb20, inst)
-    bb21.successors[#bb21.successors+1] = FrequentedBlock_new(bb22, C.Normal)
-    bb21.predecessors[#bb21.predecessors+1] = bb27
+    bb21.successors[bb21.successors.count+1] = FrequentedBlock_new(bb22, C.Normal)
+    bb21.predecessors[bb21.predecessors.count+1] = bb27
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb21, inst)
-    bb22.successors[#bb22.successors+1] = FrequentedBlock_new(bb25, C.Normal)
-    bb22.successors[#bb22.successors+1] = FrequentedBlock_new(bb23, C.Normal)
-    bb22.predecessors[#bb22.predecessors+1] = bb20
-    bb22.predecessors[#bb22.predecessors+1] = bb21
+    bb22.successors[bb22.successors.count+1] = FrequentedBlock_new(bb25, C.Normal)
+    bb22.successors[bb22.successors.count+1] = FrequentedBlock_new(bb23, C.Normal)
+    bb22.predecessors[bb22.predecessors.count+1] = bb20
+    bb22.predecessors[bb22.predecessors.count+1] = bb21
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb22, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb22, inst)
-    bb23.successors[#bb23.successors+1] = FrequentedBlock_new(bb26, C.Normal)
-    bb23.successors[#bb23.successors+1] = FrequentedBlock_new(bb24, C.Normal)
-    bb23.predecessors[#bb23.predecessors+1] = bb22
+    bb23.successors[bb23.successors.count+1] = FrequentedBlock_new(bb26, C.Normal)
+    bb23.successors[bb23.successors.count+1] = FrequentedBlock_new(bb24, C.Normal)
+    bb23.predecessors[bb23.predecessors.count+1] = bb22
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(400)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
-    bb24.successors[#bb24.successors+1] = FrequentedBlock_new(bb27, C.Normal)
-    bb24.predecessors[#bb24.predecessors+1] = bb23
+    bb24.successors[bb24.successors.count+1] = FrequentedBlock_new(bb27, C.Normal)
+    bb24.predecessors[bb24.predecessors.count+1] = bb23
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createIndex(Reg_r9, Reg_r15, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Rshift32)
     arg = Arg_createImm(31)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Xor32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createIndex(Reg_r12, Reg_rbx, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.MulDouble)
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.AddDouble)
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.MulDouble)
     arg = Arg_createIndex(Reg_r9, Reg_rsi, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.AddDouble)
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.MulDouble)
     arg = Arg_createIndex(Reg_r9, Reg_r15, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.AddDouble)
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.MulDouble)
     arg = Arg_createIndex(Reg_r9, Reg_r14, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.AddDouble)
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb24, inst)
-    bb25.successors[#bb25.successors+1] = FrequentedBlock_new(bb27, C.Normal)
-    bb25.predecessors[#bb25.predecessors+1] = bb22
+    bb25.successors[bb25.successors.count+1] = FrequentedBlock_new(bb27, C.Normal)
+    bb25.predecessors[bb25.predecessors.count+1] = bb22
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb25, inst)
-    bb26.successors[#bb26.successors+1] = FrequentedBlock_new(bb27, C.Normal)
-    bb26.predecessors[#bb26.predecessors+1] = bb23
+    bb26.successors[bb26.successors.count+1] = FrequentedBlock_new(bb27, C.Normal)
+    bb26.predecessors[bb26.predecessors.count+1] = bb23
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb26, inst)
-    bb27.successors[#bb27.successors+1] = FrequentedBlock_new(bb21, C.Normal)
-    bb27.successors[#bb27.successors+1] = FrequentedBlock_new(bb30, C.Normal)
-    bb27.predecessors[#bb27.predecessors+1] = bb24
-    bb27.predecessors[#bb27.predecessors+1] = bb26
-    bb27.predecessors[#bb27.predecessors+1] = bb25
+    bb27.successors[bb27.successors.count+1] = FrequentedBlock_new(bb21, C.Normal)
+    bb27.successors[bb27.successors.count+1] = FrequentedBlock_new(bb30, C.Normal)
+    bb27.predecessors[bb27.predecessors.count+1] = bb24
+    bb27.predecessors[bb27.predecessors.count+1] = bb26
+    bb27.predecessors[bb27.predecessors.count+1] = bb25
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb27, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb27, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb27, inst)
-    bb28.successors[#bb28.successors+1] = FrequentedBlock_new(bb31, C.Normal)
-    bb28.predecessors[#bb28.predecessors+1] = bb15
+    bb28.successors[bb28.successors.count+1] = FrequentedBlock_new(bb31, C.Normal)
+    bb28.predecessors[bb28.predecessors.count+1] = bb15
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb28, inst)
-    bb29.successors[#bb29.successors+1] = FrequentedBlock_new(bb31, C.Normal)
-    bb29.predecessors[#bb29.predecessors+1] = bb16
+    bb29.successors[bb29.successors.count+1] = FrequentedBlock_new(bb31, C.Normal)
+    bb29.predecessors[bb29.predecessors.count+1] = bb16
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb29, inst)
-    bb30.successors[#bb30.successors+1] = FrequentedBlock_new(bb31, C.Normal)
-    bb30.predecessors[#bb30.predecessors+1] = bb27
+    bb30.successors[bb30.successors.count+1] = FrequentedBlock_new(bb31, C.Normal)
+    bb30.predecessors[bb30.predecessors.count+1] = bb27
     inst = Inst_new(C.Move)
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb30, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb30, inst)
-    bb31.successors[#bb31.successors+1] = FrequentedBlock_new(bb14, C.Normal)
-    bb31.successors[#bb31.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb31.predecessors[#bb31.predecessors+1] = bb30
-    bb31.predecessors[#bb31.predecessors+1] = bb29
-    bb31.predecessors[#bb31.predecessors+1] = bb28
+    bb31.successors[bb31.successors.count+1] = FrequentedBlock_new(bb14, C.Normal)
+    bb31.successors[bb31.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb31.predecessors[bb31.predecessors.count+1] = bb30
+    bb31.predecessors[bb31.predecessors.count+1] = bb29
+    bb31.predecessors[bb31.predecessors.count+1] = bb28
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb31, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb31, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(7)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb31, inst)
-    bb32.successors[#bb32.successors+1] = FrequentedBlock_new(bb34, C.Normal)
-    bb32.successors[#bb32.successors+1] = FrequentedBlock_new(bb33, C.Rare)
-    bb32.predecessors[#bb32.predecessors+1] = bb31
+    bb32.successors[bb32.successors.count+1] = FrequentedBlock_new(bb34, C.Normal)
+    bb32.successors[bb32.successors.count+1] = FrequentedBlock_new(bb33, C.Rare)
+    bb32.predecessors[bb32.predecessors.count+1] = bb31
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(400)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
-    bb33.successors[#bb33.successors+1] = FrequentedBlock_new(bb34, C.Normal)
-    bb33.predecessors[#bb33.predecessors+1] = bb32
+    bb33.successors[bb33.successors.count+1] = FrequentedBlock_new(bb34, C.Normal)
+    bb33.predecessors[bb33.predecessors.count+1] = bb32
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb33, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb33, inst)
-    bb34.successors[#bb34.successors+1] = FrequentedBlock_new(bb12, C.Normal)
-    bb34.successors[#bb34.successors+1] = FrequentedBlock_new(bb35, C.Normal)
-    bb34.predecessors[#bb34.predecessors+1] = bb32
-    bb34.predecessors[#bb34.predecessors+1] = bb33
+    bb34.successors[bb34.successors.count+1] = FrequentedBlock_new(bb12, C.Normal)
+    bb34.successors[bb34.successors.count+1] = FrequentedBlock_new(bb35, C.Normal)
+    bb34.predecessors[bb34.predecessors.count+1] = bb32
+    bb34.predecessors[bb34.predecessors.count+1] = bb33
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(4)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.DivDouble)
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createDoubleCond(DoubleNotEqualOrUnordered)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createIndex(Reg_r9, Reg_rsi, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.DivDouble)
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createDoubleCond(DoubleNotEqualOrUnordered)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createIndex(Reg_r9, Reg_rdi, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Add32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.DivDouble)
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createDoubleCond(DoubleNotEqualOrUnordered)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createIndex(Reg_r9, Reg_rsi, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.DivDouble)
     arg = Arg_createTmp(Reg_xmm6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createDoubleCond(DoubleNotEqualOrUnordered)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.FP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.MoveDouble)
     arg = Arg_createTmp(Reg_xmm5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createIndex(Reg_r9, Reg_rax, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(400)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
-    bb35.successors[#bb35.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb35.successors[#bb35.successors+1] = FrequentedBlock_new(bb36, C.Normal)
-    bb35.predecessors[#bb35.predecessors+1] = bb34
+    bb35.successors[bb35.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb35.successors[bb35.successors.count+1] = FrequentedBlock_new(bb36, C.Normal)
+    bb35.predecessors[bb35.predecessors.count+1] = bb34
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb35, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb35, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(267)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb35, inst)
-    bb36.predecessors[#bb36.predecessors+1] = bb35
+    bb36.predecessors[bb36.predecessors.count+1] = bb35
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(144506576, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb36, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb36, inst)
     return code
 end
@@ -8183,7 +8183,7 @@ function createPayloadTypescriptScanIdentifier()
     slot8 = Code_addStackSlot(code, 8, C.Spill)
     slot9 = Code_addStackSlot(code, 40, C.Locked)
     StackSlot_setOffsetFromFP(slot9, -40)
-    T = {}  -- temp pool table (register pressure)
+    T = {}  # temp pool table (register pressure)
 
     T.tmp98 = Code_newTmp(code, C.GP)
     T.tmp97 = Code_newTmp(code, C.GP)
@@ -8286,1551 +8286,1551 @@ function createPayloadTypescriptScanIdentifier()
     T.tmp0 = Code_newTmp(code, C.GP)
     inst = null
     arg = null
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb5, C.Normal)
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb4, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb5, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb4, C.Normal)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(177329888, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(2, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(21)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(2540)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 72)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Compare32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(92)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(154991936, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(80)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createBigImm(154991936, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(154991944, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createAddr(Reg_r12, -8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createIndex(Reg_r12, Reg_rax, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.MoveConditionallyTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Xor64)
     arg = Arg_createImm(6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot2, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(129987312, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot4, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(108418352, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(0, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
-    bb1.predecessors[#bb1.predecessors+1] = bb6
+    bb1.predecessors[bb1.predecessors.count+1] = bb6
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb1, inst)
-    bb2.predecessors[#bb2.predecessors+1] = bb23
+    bb2.predecessors[bb2.predecessors.count+1] = bb23
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb2, inst)
-    bb3.predecessors[#bb3.predecessors+1] = bb32
+    bb3.predecessors[bb3.predecessors.count+1] = bb32
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb3, inst)
-    bb4.predecessors[#bb4.predecessors+1] = bb0
+    bb4.predecessors[bb4.predecessors.count+1] = bb0
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb4, inst)
-    bb5.successors[#bb5.successors+1] = FrequentedBlock_new(bb8, C.Normal)
-    bb5.successors[#bb5.successors+1] = FrequentedBlock_new(bb6, C.Rare)
-    bb5.predecessors[#bb5.predecessors+1] = bb0
+    bb5.successors[bb5.successors.count+1] = FrequentedBlock_new(bb8, C.Normal)
+    bb5.successors[bb5.successors.count+1] = FrequentedBlock_new(bb6, C.Rare)
+    bb5.predecessors[bb5.predecessors.count+1] = bb0
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 56)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, -24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r10, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
-    bb6.successors[#bb6.successors+1] = FrequentedBlock_new(bb1, C.Rare)
-    bb6.successors[#bb6.successors+1] = FrequentedBlock_new(bb7, C.Normal)
-    bb6.predecessors[#bb6.predecessors+1] = bb5
+    bb6.successors[bb6.successors.count+1] = FrequentedBlock_new(bb1, C.Rare)
+    bb6.successors[bb6.successors.count+1] = FrequentedBlock_new(bb7, C.Normal)
+    bb6.predecessors[bb6.predecessors.count+1] = bb5
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 36)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot7, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot6, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createStack(slot8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createStack(slot7, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createStack(slot6, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(129987312, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
-    bb7.successors[#bb7.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb7.predecessors[#bb7.predecessors+1] = bb6
+    bb7.successors[bb7.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb7.predecessors[bb7.predecessors.count+1] = bb6
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb7, inst)
-    bb8.successors[#bb8.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb8.predecessors[#bb8.predecessors+1] = bb5
+    bb8.successors[bb8.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb8.predecessors[bb8.predecessors.count+1] = bb5
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb8, inst)
-    bb9.successors[#bb9.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb9.predecessors[#bb9.predecessors+1] = bb15
+    bb9.successors[bb9.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb9.predecessors[bb9.predecessors.count+1] = bb15
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb9, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb9, inst)
-    bb10.successors[#bb10.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb10.predecessors[#bb10.predecessors+1] = bb18
+    bb10.successors[bb10.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb10.predecessors[bb10.predecessors.count+1] = bb18
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb10, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb10, inst)
-    bb11.successors[#bb11.successors+1] = FrequentedBlock_new(bb12, C.Normal)
-    bb11.successors[#bb11.successors+1] = FrequentedBlock_new(bb16, C.Normal)
-    bb11.predecessors[#bb11.predecessors+1] = bb7
-    bb11.predecessors[#bb11.predecessors+1] = bb10
-    bb11.predecessors[#bb11.predecessors+1] = bb9
-    bb11.predecessors[#bb11.predecessors+1] = bb8
+    bb11.successors[bb11.successors.count+1] = FrequentedBlock_new(bb12, C.Normal)
+    bb11.successors[bb11.successors.count+1] = FrequentedBlock_new(bb16, C.Normal)
+    bb11.predecessors[bb11.predecessors.count+1] = bb7
+    bb11.predecessors[bb11.predecessors.count+1] = bb10
+    bb11.predecessors[bb11.predecessors.count+1] = bb9
+    bb11.predecessors[bb11.predecessors.count+1] = bb8
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.Overflow)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_UseZDef, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateColdUse, type=C.GP, width=32}
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThan)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb11, inst)
-    bb12.successors[#bb12.successors+1] = FrequentedBlock_new(bb13, C.Normal)
-    bb12.successors[#bb12.successors+1] = FrequentedBlock_new(bb14, C.Normal)
-    bb12.predecessors[#bb12.predecessors+1] = bb11
+    bb12.successors[bb12.successors.count+1] = FrequentedBlock_new(bb13, C.Normal)
+    bb12.successors[bb12.successors.count+1] = FrequentedBlock_new(bb14, C.Normal)
+    bb12.predecessors[bb12.predecessors.count+1] = bb11
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_r10, 12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r10, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
     inst = Inst_new(C.BranchTest32)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb12, inst)
-    bb13.successors[#bb13.successors+1] = FrequentedBlock_new(bb15, C.Normal)
-    bb13.predecessors[#bb13.predecessors+1] = bb12
+    bb13.successors[bb13.successors.count+1] = FrequentedBlock_new(bb15, C.Normal)
+    bb13.predecessors[bb13.predecessors.count+1] = bb12
     inst = Inst_new(C.Load8)
     arg = Arg_createIndex(Reg_r9, Reg_rdx, 1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb13, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb13, inst)
-    bb14.successors[#bb14.successors+1] = FrequentedBlock_new(bb15, C.Normal)
-    bb14.predecessors[#bb14.predecessors+1] = bb12
+    bb14.successors[bb14.successors.count+1] = FrequentedBlock_new(bb15, C.Normal)
+    bb14.predecessors[bb14.predecessors.count+1] = bb12
     inst = Inst_new(C.Load16)
     arg = Arg_createIndex(Reg_r9, Reg_rdx, 2, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb14, inst)
-    bb15.successors[#bb15.successors+1] = FrequentedBlock_new(bb9, C.Normal)
-    bb15.successors[#bb15.successors+1] = FrequentedBlock_new(bb17, C.Normal)
-    bb15.predecessors[#bb15.predecessors+1] = bb14
-    bb15.predecessors[#bb15.predecessors+1] = bb13
+    bb15.successors[bb15.successors.count+1] = FrequentedBlock_new(bb9, C.Normal)
+    bb15.successors[bb15.successors.count+1] = FrequentedBlock_new(bb17, C.Normal)
+    bb15.predecessors[bb15.predecessors.count+1] = bb14
+    bb15.predecessors[bb15.predecessors.count+1] = bb13
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Add64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 72)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.AboveOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createIndex(Reg_r12, Reg_rax, 8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.MoveConditionallyTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Xor64)
     arg = Arg_createImm(6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
-    bb16.predecessors[#bb16.predecessors+1] = bb11
+    bb16.predecessors[bb16.predecessors.count+1] = bb11
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb16, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb16, inst)
-    bb17.successors[#bb17.successors+1] = FrequentedBlock_new(bb18, C.Normal)
-    bb17.successors[#bb17.successors+1] = FrequentedBlock_new(bb19, C.Normal)
-    bb17.predecessors[#bb17.predecessors+1] = bb15
+    bb17.successors[bb17.successors.count+1] = FrequentedBlock_new(bb18, C.Normal)
+    bb17.successors[bb17.successors.count+1] = FrequentedBlock_new(bb19, C.Normal)
+    bb17.predecessors[bb17.predecessors.count+1] = bb15
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(48)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb17, inst)
-    bb18.successors[#bb18.successors+1] = FrequentedBlock_new(bb10, C.Normal)
-    bb18.successors[#bb18.successors+1] = FrequentedBlock_new(bb19, C.Normal)
-    bb18.predecessors[#bb18.predecessors+1] = bb17
+    bb18.successors[bb18.successors.count+1] = FrequentedBlock_new(bb10, C.Normal)
+    bb18.successors[bb18.successors.count+1] = FrequentedBlock_new(bb19, C.Normal)
+    bb18.predecessors[bb18.predecessors.count+1] = bb17
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.LessThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(57)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb18, inst)
-    bb19.successors[#bb19.successors+1] = FrequentedBlock_new(bb20, C.Normal)
-    bb19.successors[#bb19.successors+1] = FrequentedBlock_new(bb21, C.Normal)
-    bb19.predecessors[#bb19.predecessors+1] = bb17
-    bb19.predecessors[#bb19.predecessors+1] = bb18
+    bb19.successors[bb19.successors.count+1] = FrequentedBlock_new(bb20, C.Normal)
+    bb19.successors[bb19.successors.count+1] = FrequentedBlock_new(bb21, C.Normal)
+    bb19.predecessors[bb19.predecessors.count+1] = bb17
+    bb19.predecessors[bb19.predecessors.count+1] = bb18
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.GreaterThanOrEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(128)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb19, inst)
-    bb20.predecessors[#bb20.predecessors+1] = bb19
+    bb20.predecessors[bb20.predecessors.count+1] = bb19
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb20, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb20, inst)
-    bb21.successors[#bb21.successors+1] = FrequentedBlock_new(bb22, C.Normal)
-    bb21.successors[#bb21.successors+1] = FrequentedBlock_new(bb23, C.Normal)
-    bb21.predecessors[#bb21.predecessors+1] = bb19
+    bb21.successors[bb21.successors.count+1] = FrequentedBlock_new(bb22, C.Normal)
+    bb21.successors[bb21.successors.count+1] = FrequentedBlock_new(bb23, C.Normal)
+    bb21.predecessors[bb21.predecessors.count+1] = bb19
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
     BasicBlock_append(bb21, inst)
     inst = Inst_new(C.Branch32)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(92)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb21, inst)
-    bb22.predecessors[#bb22.predecessors+1] = bb21
+    bb22.predecessors[bb22.predecessors.count+1] = bb21
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot5, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb22, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb22, inst)
-    bb23.successors[#bb23.successors+1] = FrequentedBlock_new(bb2, C.Rare)
-    bb23.successors[#bb23.successors+1] = FrequentedBlock_new(bb24, C.Normal)
-    bb23.predecessors[#bb23.predecessors+1] = bb21
+    bb23.successors[bb23.successors.count+1] = FrequentedBlock_new(bb2, C.Rare)
+    bb23.successors[bb23.successors.count+1] = FrequentedBlock_new(bb24, C.Normal)
+    bb23.predecessors[bb23.predecessors.count+1] = bb21
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 48)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(155021568, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r11)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(155041288, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, -1336)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r13, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 36)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(108356304, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot3, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(129987312, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb23, inst)
-    bb24.successors[#bb24.successors+1] = FrequentedBlock_new(bb25, C.Normal)
-    bb24.successors[#bb24.successors+1] = FrequentedBlock_new(bb26, C.Normal)
-    bb24.predecessors[#bb24.predecessors+1] = bb23
+    bb24.successors[bb24.successors.count+1] = FrequentedBlock_new(bb25, C.Normal)
+    bb24.successors[bb24.successors.count+1] = FrequentedBlock_new(bb26, C.Normal)
+    bb24.predecessors[bb24.predecessors.count+1] = bb23
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb24, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb24, inst)
-    bb25.successors[#bb25.successors+1] = FrequentedBlock_new(bb27, C.Normal)
-    bb25.successors[#bb25.successors+1] = FrequentedBlock_new(bb26, C.Normal)
-    bb25.predecessors[#bb25.predecessors+1] = bb24
+    bb25.successors[bb25.successors.count+1] = FrequentedBlock_new(bb27, C.Normal)
+    bb25.successors[bb25.successors.count+1] = FrequentedBlock_new(bb26, C.Normal)
+    bb25.predecessors[bb25.predecessors.count+1] = bb24
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb25, inst)
     inst = Inst_new(C.And64)
     arg = Arg_createImm(-9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb25, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb25, inst)
-    bb26.successors[#bb26.successors+1] = FrequentedBlock_new(bb29, C.Normal)
-    bb26.successors[#bb26.successors+1] = FrequentedBlock_new(bb28, C.Normal)
-    bb26.predecessors[#bb26.predecessors+1] = bb24
-    bb26.predecessors[#bb26.predecessors+1] = bb25
+    bb26.successors[bb26.successors.count+1] = FrequentedBlock_new(bb29, C.Normal)
+    bb26.successors[bb26.successors.count+1] = FrequentedBlock_new(bb28, C.Normal)
+    bb26.predecessors[bb26.predecessors.count+1] = bb24
+    bb26.predecessors[bb26.predecessors.count+1] = bb25
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb26, inst)
-    bb27.successors[#bb27.successors+1] = FrequentedBlock_new(bb30, C.Normal)
-    bb27.predecessors[#bb27.predecessors+1] = bb25
+    bb27.successors[bb27.successors.count+1] = FrequentedBlock_new(bb30, C.Normal)
+    bb27.predecessors[bb27.predecessors.count+1] = bb25
     inst = Inst_new(C.Move)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb27, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb27, inst)
-    bb28.successors[#bb28.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb28.predecessors[#bb28.predecessors+1] = bb26
+    bb28.successors[bb28.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb28.predecessors[bb28.predecessors.count+1] = bb26
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb28, inst)
-    bb29.successors[#bb29.successors+1] = FrequentedBlock_new(bb30, C.Normal)
-    bb29.predecessors[#bb29.predecessors+1] = bb26
+    bb29.successors[bb29.successors.count+1] = FrequentedBlock_new(bb30, C.Normal)
+    bb29.predecessors[bb29.predecessors.count+1] = bb26
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb29, inst)
-    bb30.successors[#bb30.successors+1] = FrequentedBlock_new(bb34, C.Normal)
-    bb30.successors[#bb30.successors+1] = FrequentedBlock_new(bb31, C.Normal)
-    bb30.predecessors[#bb30.predecessors+1] = bb29
-    bb30.predecessors[#bb30.predecessors+1] = bb27
+    bb30.successors[bb30.successors.count+1] = FrequentedBlock_new(bb34, C.Normal)
+    bb30.successors[bb30.successors.count+1] = FrequentedBlock_new(bb31, C.Normal)
+    bb30.predecessors[bb30.predecessors.count+1] = bb29
+    bb30.predecessors[bb30.predecessors.count+1] = bb27
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb30, inst)
     inst = Inst_new(C.And64)
     arg = Arg_createImm(-9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb30, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb30, inst)
-    bb31.successors[#bb31.successors+1] = FrequentedBlock_new(bb32, C.Normal)
-    bb31.predecessors[#bb31.predecessors+1] = bb30
+    bb31.successors[bb31.successors.count+1] = FrequentedBlock_new(bb32, C.Normal)
+    bb31.predecessors[bb31.predecessors.count+1] = bb30
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb31, inst)
-    bb32.successors[#bb32.successors+1] = FrequentedBlock_new(bb3, C.Rare)
-    bb32.successors[#bb32.successors+1] = FrequentedBlock_new(bb33, C.Normal)
-    bb32.predecessors[#bb32.predecessors+1] = bb28
-    bb32.predecessors[#bb32.predecessors+1] = bb31
+    bb32.successors[bb32.successors.count+1] = FrequentedBlock_new(bb3, C.Rare)
+    bb32.successors[bb32.successors.count+1] = FrequentedBlock_new(bb33, C.Normal)
+    bb32.predecessors[bb32.predecessors.count+1] = bb28
+    bb32.predecessors[bb32.predecessors.count+1] = bb31
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 36)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(154991632, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createBigImm(108356304, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_xmm0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.FP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.FP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(129987312, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(-1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb32, inst)
-    bb33.predecessors[#bb33.predecessors+1] = bb32
+    bb33.predecessors[bb33.predecessors.count+1] = bb32
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb33, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb33, inst)
-    bb34.predecessors[#bb34.predecessors+1] = bb30
+    bb34.predecessors[bb34.predecessors.count+1] = bb30
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(153835296, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(3)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb34, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb34, inst)
     return code
 end
@@ -9860,7 +9860,7 @@ function createPayloadAirJSACLj8C()
     slot3 = Code_addStackSlot(code, 8, C.Spill)
     slot4 = Code_addStackSlot(code, 40, C.Locked)
     StackSlot_setOffsetFromFP(slot4, -40)
-    T = {}  -- temp pool table (register pressure)
+    T = {}  # temp pool table (register pressure)
 
     T.tmp61 = Code_newTmp(code, C.GP)
     T.tmp60 = Code_newTmp(code, C.GP)
@@ -9926,1500 +9926,1500 @@ function createPayloadAirJSACLj8C()
     T.tmp0 = Code_newTmp(code, C.GP)
     inst = null
     arg = null
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb1, C.Normal)
-    bb0.successors[#bb0.successors+1] = FrequentedBlock_new(bb15, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb1, C.Normal)
+    bb0.successors[bb0.successors.count+1] = FrequentedBlock_new(bb15, C.Normal)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276424800, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbp, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbp)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Scratch, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 72)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 64)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 56)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 48)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(2, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbp, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(0, -65536)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rcx, 32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rcx, 40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276327648, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_r8, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(21)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_r12, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(372)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r12, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, -40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276321024, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 72)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 64)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 56)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 48)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Xor64)
     arg = Arg_createImm(6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot2, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot3, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb0, inst)
-    bb1.successors[#bb1.successors+1] = FrequentedBlock_new(bb3, C.Normal)
-    bb1.successors[#bb1.successors+1] = FrequentedBlock_new(bb2, C.Normal)
-    bb1.predecessors[#bb1.predecessors+1] = bb0
+    bb1.successors[bb1.successors.count+1] = FrequentedBlock_new(bb3, C.Normal)
+    bb1.successors[bb1.successors.count+1] = FrequentedBlock_new(bb2, C.Normal)
+    bb1.predecessors[bb1.predecessors.count+1] = bb0
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_r8, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(468)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r8, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276741160, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb1, inst)
-    bb2.predecessors[#bb2.predecessors+1] = bb1
+    bb2.predecessors[bb2.predecessors.count+1] = bb1
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb2, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb2, inst)
-    bb3.successors[#bb3.successors+1] = FrequentedBlock_new(bb4, C.Normal)
-    bb3.successors[#bb3.successors+1] = FrequentedBlock_new(bb7, C.Normal)
-    bb3.predecessors[#bb3.predecessors+1] = bb1
+    bb3.successors[bb3.successors.count+1] = FrequentedBlock_new(bb4, C.Normal)
+    bb3.successors[bb3.successors.count+1] = FrequentedBlock_new(bb7, C.Normal)
+    bb3.predecessors[bb3.predecessors.count+1] = bb1
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_r8, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(23)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(275739616, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
     inst = Inst_new(C.Branch64)
     arg = Arg_createRelCond(C.Equal)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rbx, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb3, inst)
-    bb4.successors[#bb4.successors+1] = FrequentedBlock_new(bb5, C.Normal)
-    bb4.successors[#bb4.successors+1] = FrequentedBlock_new(bb6, C.Normal)
-    bb4.predecessors[#bb4.predecessors+1] = bb3
+    bb4.successors[bb4.successors.count+1] = FrequentedBlock_new(bb5, C.Normal)
+    bb4.successors[bb4.successors.count+1] = FrequentedBlock_new(bb6, C.Normal)
+    bb4.predecessors[bb4.predecessors.count+1] = bb3
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rbx, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createAddr(Reg_rax, 32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot0, 8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276645872, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276646496, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Xor64)
     arg = Arg_createImm(6)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(-2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb4, inst)
-    bb5.successors[#bb5.successors+1] = FrequentedBlock_new(bb8, C.Normal)
-    bb5.predecessors[#bb5.predecessors+1] = bb4
+    bb5.successors[bb5.successors.count+1] = FrequentedBlock_new(bb8, C.Normal)
+    bb5.predecessors[bb5.predecessors.count+1] = bb4
     inst = Inst_new(C.Move)
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_LateUse, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rcx, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(419)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createBigImm(276168608, 1)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createStack(slot1, 0)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb5, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb5, inst)
-    bb6.successors[#bb6.successors+1] = FrequentedBlock_new(bb8, C.Normal)
-    bb6.predecessors[#bb6.predecessors+1] = bb4
+    bb6.successors[bb6.successors.count+1] = FrequentedBlock_new(bb8, C.Normal)
+    bb6.predecessors[bb6.predecessors.count+1] = bb4
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb6, inst)
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb6, inst)
-    bb7.successors[#bb7.successors+1] = FrequentedBlock_new(bb12, C.Normal)
-    bb7.successors[#bb7.successors+1] = FrequentedBlock_new(bb9, C.Normal)
-    bb7.predecessors[#bb7.predecessors+1] = bb3
+    bb7.successors[bb7.successors.count+1] = FrequentedBlock_new(bb12, C.Normal)
+    bb7.successors[bb7.successors.count+1] = FrequentedBlock_new(bb9, C.Normal)
+    bb7.predecessors[bb7.predecessors.count+1] = bb3
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rbx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move32)
     arg = Arg_createImm(5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_r13)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rsi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(48)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rdi)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(56)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(8)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(16)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(24)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(32)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(40)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(48)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createCallArg(56)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r14)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Def, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb7, inst)
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb7, inst)
-    bb8.successors[#bb8.successors+1] = FrequentedBlock_new(bb13, C.Normal)
-    bb8.successors[#bb8.successors+1] = FrequentedBlock_new(bb10, C.Normal)
-    bb8.predecessors[#bb8.predecessors+1] = bb6
-    bb8.predecessors[#bb8.predecessors+1] = bb5
+    bb8.successors[bb8.successors.count+1] = FrequentedBlock_new(bb13, C.Normal)
+    bb8.successors[bb8.successors.count+1] = FrequentedBlock_new(bb10, C.Normal)
+    bb8.predecessors[bb8.predecessors.count+1] = bb6
+    bb8.predecessors[bb8.predecessors.count+1] = bb5
     inst = Inst_new(C.BranchTest64)
     arg = Arg_createResCond(C.NonZero)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r15)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb8, inst)
-    bb9.successors[#bb9.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb9.predecessors[#bb9.predecessors+1] = bb7
+    bb9.successors[bb9.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb9.predecessors[bb9.predecessors.count+1] = bb7
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb9, inst)
-    bb10.successors[#bb10.successors+1] = FrequentedBlock_new(bb11, C.Normal)
-    bb10.predecessors[#bb10.predecessors+1] = bb8
+    bb10.successors[bb10.successors.count+1] = FrequentedBlock_new(bb11, C.Normal)
+    bb10.predecessors[bb10.predecessors.count+1] = bb8
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb10, inst)
-    bb11.predecessors[#bb11.predecessors+1] = bb9
-    bb11.predecessors[#bb11.predecessors+1] = bb10
+    bb11.predecessors[bb11.predecessors.count+1] = bb9
+    bb11.predecessors[bb11.predecessors.count+1] = bb10
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.Below)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createAddr(Reg_rax, 5)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(20)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=8}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb11, inst)
     inst = Inst_new(C.Oops)
     BasicBlock_append(bb11, inst)
-    bb12.successors[#bb12.successors+1] = FrequentedBlock_new(bb14, C.Normal)
-    bb12.predecessors[#bb12.predecessors+1] = bb7
+    bb12.successors[bb12.successors.count+1] = FrequentedBlock_new(bb14, C.Normal)
+    bb12.predecessors[bb12.predecessors.count+1] = bb7
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb12, inst)
-    bb13.successors[#bb13.successors+1] = FrequentedBlock_new(bb14, C.Normal)
-    bb13.predecessors[#bb13.predecessors+1] = bb8
+    bb13.successors[bb13.successors.count+1] = FrequentedBlock_new(bb14, C.Normal)
+    bb13.predecessors[bb13.predecessors.count+1] = bb8
     inst = Inst_new(C.Jump)
     BasicBlock_append(bb13, inst)
-    bb14.predecessors[#bb14.predecessors+1] = bb12
-    bb14.predecessors[#bb14.predecessors+1] = bb13
+    bb14.predecessors[bb14.predecessors.count+1] = bb12
+    bb14.predecessors[bb14.predecessors.count+1] = bb13
     inst = Inst_new(C.Move)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.And64)
     arg = Arg_createImm(-9)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Patch)
     arg = Arg_createSpecial()
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createRelCond(C.NotEqual)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rcx)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createImm(2)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_r12)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     inst.patchHasNonArgEffects = true
     inst.patchArgData = {}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
-    inst.patchArgData[#inst.patchArgData+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=32}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_Use, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
+    inst.patchArgData[inst.patchArgData.count+1] = {role=C.ArgRole_ColdUse, type=C.GP, width=64}
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb14, inst)
-    bb15.predecessors[#bb15.predecessors+1] = bb0
+    bb15.predecessors[bb15.predecessors.count+1] = bb0
     inst = Inst_new(C.Move)
     arg = Arg_createImm(10)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     inst = Inst_new(C.Ret64)
     arg = Arg_createTmp(Reg_rax)
-    inst.args[#inst.args+1] = arg
+    inst.args[inst.args.count+1] = arg
     BasicBlock_append(bb15, inst)
     return code
 end
 
 
 
--- Register payloads and run
+# Register payloads and run
 payloads[1] = {generate=createPayloadGbemuExecuteIteration,              name="gbemu",      earlyHash=632653144,  lateHash=372715518}
 payloads[2] = {generate=createPayloadImagingGaussianBlurGaussianBlur,    name="imaging",    earlyHash=3677819581, lateHash=1252116304}
 payloads[3] = {generate=createPayloadTypescriptScanIdentifier,           name="typescript", earlyHash=1914852601, lateHash=837339551}

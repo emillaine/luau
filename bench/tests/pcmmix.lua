@@ -3,11 +3,11 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 samples = 100_000
 
--- create two 16-bit stereo pcm audio buffers
+# create two 16-bit stereo pcm audio buffers
 ch1 = buffer.create(samples * 2 * 2)
 ch2 = buffer.create(samples * 2 * 2)
 
--- just init with random data
+# just init with random data
 for i = 0, samples * 2 - 1 do
   buffer.writei16(ch1, i * 2, math.random(-32768, 32767))
   buffer.writei16(ch2, i * 2, math.random(-32768, 32767))

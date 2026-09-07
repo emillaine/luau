@@ -10,10 +10,10 @@ arr_numk = {}
 for i=1,10000 do table.insert(arr_numk, math.sin(i)) end
 
 function test(arr)
-    t = table.create(#arr)
+    t = table.create(arr.count)
 
-    for i=1,1e6/#arr do
-        table.move(arr, 1, #arr, 1, t)
+    for i=1,1e6/arr.count do
+        table.move(arr, 1, arr.count, 1, t)
         table.sort(t)
     end
 end

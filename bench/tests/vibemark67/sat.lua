@@ -1,4 +1,4 @@
--- forward declarations (implicit-local dialect has no hoisted globals)
+# forward declarations (implicit-local dialect has no hoisted globals)
 compute_lbd = null
 get_clause = null
 is_clause_locked = null
@@ -11,10 +11,10 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
--- SAT Solver Benchmark: CDCL (Conflict-Driven Clause Learning)
--- Implements a modern SAT solver with two-watched literals, VSIDS, 1-UIP learning,
--- non-chronological backtracking, restarts, clause cleanup, and phase saving.
--- Target runtimes: Luau (lute), Lua 5.5, LuaJIT.
+# SAT Solver Benchmark: CDCL (Conflict-Driven Clause Learning)
+# Implements a modern SAT solver with two-watched literals, VSIDS, 1-UIP learning,
+# non-chronological backtracking, restarts, clause cleanup, and phase saving.
+# Target runtimes: Luau (lute), Lua 5.5, LuaJIT.
 
 math_floor = math.floor
 math_abs = math.abs
@@ -27,9 +27,9 @@ table_insert = table.insert
 table_remove = table.remove
 os_clock = os.clock
 
--- ============================================================================
--- Deterministic PRNG
--- ============================================================================
+# ============================================================================
+# Deterministic PRNG
+# ============================================================================
 
 prng_state = 42
 
@@ -50,9 +50,9 @@ function prng_range(lo, hi)
     return lo + math_floor(prng_float() * (hi - lo + 1))
 end
 
--- ============================================================================
--- DIMACS CNF Parser
--- ============================================================================
+# ============================================================================
+# DIMACS CNF Parser
+# ============================================================================
 
 function parse_dimacs(text)
     num_vars = 0
@@ -60,10 +60,10 @@ function parse_dimacs(text)
     clauses = {}
     current_clause = {}
     pos = 1
-    len = #text
+    len = text.count
 
     while pos <= len do
-        -- Skip whitespace
+        # Skip whitespace
         while pos <= len do
             ch = string_sub(text, pos, pos)
             if ch == " " or ch == "\t" or ch == "\r" then
@@ -78,13 +78,13 @@ function parse_dimacs(text)
         if ch == "\n" then
             pos = pos + 1
         else if ch == "c" then
-            -- Comment line, skip to newline
+            # Comment line, skip to newline
             while pos <= len and string_sub(text, pos, pos) != "\n" do
                 pos = pos + 1
             end
             if pos <= len then pos = pos + 1 end
         else if ch == "p" then
-            -- Problem line
+            # Problem line
             line_end = string_find(text, "\n", pos) or (len + 1)
             line = string_sub(text, pos, line_end - 1)
             nv, nc = string_match(line, "p%s+cnf%s+(%d+)%s+(%d+)")
@@ -94,10 +94,10 @@ function parse_dimacs(text)
             end
             pos = line_end + 1
         else if ch == "%" then
-            -- End marker (some DIMACS files)
+            # End marker (some DIMACS files)
             break
         else
-            -- Clause data: read integers
+            # Clause data: read integers
             neg = false
             if ch == "-" then
                 neg = true
@@ -116,7 +116,7 @@ function parse_dimacs(text)
                 val = tonumber(string_sub(text, num_start, pos - 1))
                 if neg then val = -val end
                 if val == 0 then
-                    if #current_clause > 0 then
+                    if current_clause.count > 0 then
                         table_insert(clauses, current_clause)
                         current_clause = {}
                     end
@@ -128,65 +128,65 @@ function parse_dimacs(text)
             end
         end
     end
-    -- Handle clause not terminated by 0
-    if #current_clause > 0 then
+    # Handle clause not terminated by 0
+    if current_clause.count > 0 then
         table_insert(clauses, current_clause)
     end
 
     return num_vars, clauses
 end
 
--- ============================================================================
--- Constants
--- ============================================================================
+# ============================================================================
+# Constants
+# ============================================================================
 
 UNDEF = 0
 TRUE_VAL = 1
 FALSE_VAL = -1
 
--- ============================================================================
--- Solver State Creation
--- ============================================================================
+# ============================================================================
+# Solver State Creation
+# ============================================================================
 
 function solver_new(num_vars, clauses)
     s = {}
     s.num_vars = num_vars
-    s.num_original_clauses = #clauses
+    s.num_original_clauses = clauses.count
 
-    -- Variable assignments: 0=undef, 1=true, -1=false
+    # Variable assignments: 0=undef, 1=true, -1=false
     s.assigns = {}
     for i = 1, num_vars do
         s.assigns[i] = UNDEF
     end
 
-    -- Decision level for each variable
+    # Decision level for each variable
     s.level = {}
     for i = 1, num_vars do
         s.level[i] = -1
     end
 
-    -- Reason clause for each variable (null if decision)
+    # Reason clause for each variable (null if decision)
     s.reason = {}
 
-    -- Trail: ordered list of assignments
+    # Trail: ordered list of assignments
     s.trail = {}
-    s.trail_lim = {} -- trail_lim[dl] = index in trail where decision level dl starts
+    s.trail_lim = {} # trail_lim[dl] = index in trail where decision level dl starts
 
-    -- Current decision level
+    # Current decision level
     s.decision_level = 0
 
-    -- Clause database
+    # Clause database
     s.clauses = {}
     s.learned = {}
 
-    -- Watch lists: for each literal, list of clause indices watching it
-    -- Literal encoding: var > 0 => 2*var, var < 0 => 2*(-var)+1
+    # Watch lists: for each literal, list of clause indices watching it
+    # Literal encoding: var > 0 => 2*var, var < 0 => 2*(-var)+1
     s.watches = {}
     for i = 1, 2 * num_vars + 1 do
         s.watches[i] = {}
     end
 
-    -- VSIDS activity scores
+    # VSIDS activity scores
     s.activity = {}
     for i = 1, num_vars do
         s.activity[i] = 0.0
@@ -194,44 +194,44 @@ function solver_new(num_vars, clauses)
     s.var_inc = 1.0
     s.var_decay = 0.95
 
-    -- Phase saving
+    # Phase saving
     s.phase = {}
     for i = 1, num_vars do
         s.phase[i] = FALSE_VAL
     end
 
-    -- Clause activities (for learned clause cleanup)
+    # Clause activities (for learned clause cleanup)
     s.clause_activity = {}
     s.clause_inc = 1.0
     s.clause_decay = 0.999
 
-    -- Propagation queue pointer
+    # Propagation queue pointer
     s.qhead = 1
 
-    -- Statistics
+    # Statistics
     s.conflicts = 0
     s.decisions = 0
     s.propagations = 0
     s.restarts = 0
     s.learned_removed = 0
 
-    -- Restart parameters (geometric)
+    # Restart parameters (geometric)
     s.restart_base = 100
     s.restart_mult = 1.5
     s.next_restart = 100
 
-    -- Cleanup parameters
+    # Cleanup parameters
     s.cleanup_interval = 500
     s.next_cleanup = 500
 
-    -- Seen array for conflict analysis
+    # Seen array for conflict analysis
     s.seen = {}
     for i = 1, num_vars do
         s.seen[i] = false
     end
 
-    -- Add original clauses
-    for i = 1, #clauses do
+    # Add original clauses
+    for i = 1, clauses.count do
         ok = solver_add_clause(s, clauses[i], false)
         if not ok then
             s.conflict_at_root = true
@@ -243,9 +243,9 @@ function solver_new(num_vars, clauses)
     return s
 end
 
--- ============================================================================
--- Literal helpers
--- ============================================================================
+# ============================================================================
+# Literal helpers
+# ============================================================================
 
 function lit_var(lit)
     if lit > 0 then return lit else return -lit end
@@ -270,23 +270,23 @@ function lit_value(s, lit)
     if lit > 0 then return a else return -a end
 end
 
--- ============================================================================
--- Clause addition
--- ============================================================================
+# ============================================================================
+# Clause addition
+# ============================================================================
 
 function solver_add_clause(s, lits, is_learned)
-    -- Remove false literals at level 0, detect tautologies
+    # Remove false literals at level 0, detect tautologies
     cleaned = {}
     seen_lits = {}
 
-    for i = 1, #lits do
+    for i = 1, lits.count do
         l = lits[i]
         val = lit_value(s, l)
-        -- At level 0, skip falsified literals
+        # At level 0, skip falsified literals
         if s.decision_level == 0 and val == FALSE_VAL then
-            -- skip
+            # skip
         else if seen_lits[-l] then
-            -- Tautology
+            # Tautology
             return true
         else if not seen_lits[l] then
             seen_lits[l] = true
@@ -294,29 +294,29 @@ function solver_add_clause(s, lits, is_learned)
         end
     end
 
-    if #cleaned == 0 then
-        return false -- Empty clause = conflict
+    if cleaned.count == 0 then
+        return false # Empty clause = conflict
     end
 
-    if #cleaned == 1 then
-        -- Unit clause: enqueue
+    if cleaned.count == 1 then
+        # Unit clause: enqueue
         return solver_enqueue(s, cleaned[1], null)
     end
 
-    -- Create clause record
+    # Create clause record
     clause = {}
     clause.lits = cleaned
     clause.is_learned = is_learned
     clause.activity = 0.0
     clause.lbd = 0
 
-    -- For watched literals, put the two best literals first
-    -- (highest decision level or undefined)
+    # For watched literals, put the two best literals first
+    # (highest decision level or undefined)
     if is_learned then
-        -- Put asserting literal first, highest level second
+        # Put asserting literal first, highest level second
         max_level = -1
         max_idx = 2
-        for i = 2, #cleaned do
+        for i = 2, cleaned.count do
             v = lit_var(cleaned[i])
             if s.level[v] > max_level then
                 max_level = s.level[v]
@@ -331,15 +331,15 @@ function solver_add_clause(s, lits, is_learned)
     ci = null
     if is_learned then
         table_insert(s.learned, clause)
-        ci = { learned = true, idx = #s.learned }
-        s.clause_activity[#s.learned] = s.clause_inc
+        ci = { learned = true, idx = s.learned.count }
+        s.clause_activity[s.learned.count] = s.clause_inc
         clause.lbd = compute_lbd(s, cleaned)
     else
         table_insert(s.clauses, clause)
-        ci = { learned = false, idx = #s.clauses }
+        ci = { learned = false, idx = s.clauses.count }
     end
 
-    -- Add watches on first two literals
+    # Add watches on first two literals
     w1 = lit_index(cleaned[1])
     w2 = lit_index(cleaned[2])
     table_insert(s.watches[w1], ci)
@@ -348,14 +348,14 @@ function solver_add_clause(s, lits, is_learned)
     return true
 end
 
--- ============================================================================
--- Compute LBD (Literal Block Distance) for a clause
--- ============================================================================
+# ============================================================================
+# Compute LBD (Literal Block Distance) for a clause
+# ============================================================================
 
 function compute_lbd(s, lits)
     levels = {}
     count = 0
-    for i = 1, #lits do
+    for i = 1, lits.count do
         v = lit_var(lits[i])
         lv = s.level[v]
         if lv > 0 and not levels[lv] then
@@ -366,14 +366,14 @@ function compute_lbd(s, lits)
     return count
 end
 
--- ============================================================================
--- Assignment and trail management
--- ============================================================================
+# ============================================================================
+# Assignment and trail management
+# ============================================================================
 
 function solver_enqueue(s, lit, reason_clause)
     v = lit_var(lit)
     if s.assigns[v] != UNDEF then
-        -- Already assigned; check consistency
+        # Already assigned; check consistency
         if lit_value(s, lit) == FALSE_VAL then
             return false
         end
@@ -390,7 +390,7 @@ end
 
 function solver_new_decision_level(s)
     s.decision_level = s.decision_level + 1
-    s.trail_lim[s.decision_level] = #s.trail + 1
+    s.trail_lim[s.decision_level] = s.trail.count + 1
 end
 
 function solver_backtrack(s, target_level)
@@ -399,7 +399,7 @@ function solver_backtrack(s, target_level)
     backtrack_point = s.trail_lim[target_level + 1]
     if not backtrack_point then backtrack_point = 1 end
 
-    for i = #s.trail, backtrack_point, -1 do
+    for i = s.trail.count, backtrack_point, -1 do
         lit = s.trail[i]
         v = lit_var(lit)
         s.assigns[v] = UNDEF
@@ -408,10 +408,10 @@ function solver_backtrack(s, target_level)
         s.trail[i] = null
     end
 
-    -- Reset propagation queue
+    # Reset propagation queue
     s.qhead = backtrack_point
 
-    -- Remove trail_lim entries above target_level
+    # Remove trail_lim entries above target_level
     for i = s.decision_level, target_level + 1, -1 do
         s.trail_lim[i] = null
     end
@@ -419,17 +419,17 @@ function solver_backtrack(s, target_level)
     s.decision_level = target_level
 end
 
--- ============================================================================
--- Two-Watched-Literal Propagation (BCP)
--- ============================================================================
+# ============================================================================
+# Two-Watched-Literal Propagation (BCP)
+# ============================================================================
 
 function solver_propagate(s)
-    while s.qhead <= #s.trail do
+    while s.qhead <= s.trail.count do
         p = s.trail[s.qhead]
         s.qhead = s.qhead + 1
         s.propagations = s.propagations + 1
 
-        -- p was assigned true, so ~p is false => look at watches of ~p
+        # p was assigned true, so ~p is false => look at watches of ~p
         false_lit = lit_neg(p)
         wi = lit_index(false_lit)
         watch_list = s.watches[wi]
@@ -437,36 +437,36 @@ function solver_propagate(s)
         new_watch_list = {}
         conflict_clause = null
         j = 1
-        wlen = #watch_list
+        wlen = watch_list.count
 
         while j <= wlen do
             ci = watch_list[j]
             clause = get_clause(s, ci)
             if not clause then
-                -- Clause was removed
+                # Clause was removed
                 j = j + 1
             else
                 lits = clause.lits
 
-                -- Make sure false_lit is lits[2]
+                # Make sure false_lit is lits[2]
                 if lits[1] == false_lit then
                     lits[1], lits[2] = lits[2], lits[1]
                 end
 
-                -- Check if first watched literal is already true
+                # Check if first watched literal is already true
                 first_val = lit_value(s, lits[1])
                 if first_val == TRUE_VAL then
                     table_insert(new_watch_list, ci)
                     j = j + 1
                 else
-                    -- Look for a new literal to watch
+                    # Look for a new literal to watch
                     found_new = false
-                    for k = 3, #lits do
+                    for k = 3, lits.count do
                         lk_val = lit_value(s, lits[k])
                         if lk_val != FALSE_VAL then
-                            -- Swap lits[2] and lits[k]
+                            # Swap lits[2] and lits[k]
                             lits[2], lits[k] = lits[k], lits[2]
-                            -- Add watch for new lits[2]
+                            # Add watch for new lits[2]
                             new_wi = lit_index(lits[2])
                             table_insert(s.watches[new_wi], ci)
                             found_new = true
@@ -475,22 +475,22 @@ function solver_propagate(s)
                     end
 
                     if found_new then
-                        -- This watch is no longer here
+                        # This watch is no longer here
                         j = j + 1
                     else
-                        -- No new watch found
+                        # No new watch found
                         table_insert(new_watch_list, ci)
                         if first_val == FALSE_VAL then
-                            -- Conflict!
+                            # Conflict!
                             conflict_clause = ci
-                            -- Copy remaining watches
+                            # Copy remaining watches
                             j = j + 1
                             while j <= wlen do
                                 table_insert(new_watch_list, watch_list[j])
                                 j = j + 1
                             end
                         else
-                            -- Unit propagation
+                            # Unit propagation
                             ok = solver_enqueue(s, lits[1], ci)
                             if not ok then
                                 conflict_clause = ci
@@ -515,12 +515,12 @@ function solver_propagate(s)
         end
     end
 
-    return null -- No conflict
+    return null # No conflict
 end
 
--- ============================================================================
--- Get clause from clause index
--- ============================================================================
+# ============================================================================
+# Get clause from clause index
+# ============================================================================
 
 function get_clause(s, ci)
     if ci.learned then
@@ -530,14 +530,14 @@ function get_clause(s, ci)
     end
 end
 
--- ============================================================================
--- VSIDS: Variable activity
--- ============================================================================
+# ============================================================================
+# VSIDS: Variable activity
+# ============================================================================
 
 function var_bump_activity(s, v)
     s.activity[v] = s.activity[v] + s.var_inc
     if s.activity[v] > 1e100 then
-        -- Rescale
+        # Rescale
         for i = 1, s.num_vars do
             s.activity[i] = s.activity[i] * 1e-100
         end
@@ -549,16 +549,16 @@ function var_decay_activity(s)
     s.var_inc = s.var_inc / s.var_decay
 end
 
--- ============================================================================
--- Clause activity
--- ============================================================================
+# ============================================================================
+# Clause activity
+# ============================================================================
 
 function clause_bump_activity(s, ci)
     if ci.learned then
         old = s.clause_activity[ci.idx] or 0
         s.clause_activity[ci.idx] = old + s.clause_inc
         if s.clause_activity[ci.idx] > 1e20 then
-            for i = 1, #s.learned do
+            for i = 1, s.learned.count do
                 s.clause_activity[i] = (s.clause_activity[i] or 0) * 1e-20
             end
             s.clause_inc = s.clause_inc * 1e-20
@@ -570,9 +570,9 @@ function clause_decay_activity(s)
     s.clause_inc = s.clause_inc / s.clause_decay
 end
 
--- ============================================================================
--- Decision: VSIDS heuristic with phase saving
--- ============================================================================
+# ============================================================================
+# Decision: VSIDS heuristic with phase saving
+# ============================================================================
 
 function solver_pick_decision(s)
     best_var = -1
@@ -588,10 +588,10 @@ function solver_pick_decision(s)
     end
 
     if best_var == -1 then
-        return 0 -- All assigned
+        return 0 # All assigned
     end
 
-    -- Use phase saving
+    # Use phase saving
     pol = s.phase[best_var]
     if pol == TRUE_VAL then
         return best_var
@@ -600,9 +600,9 @@ function solver_pick_decision(s)
     end
 end
 
--- ============================================================================
--- Conflict analysis: 1-UIP scheme
--- ============================================================================
+# ============================================================================
+# Conflict analysis: 1-UIP scheme
+# ============================================================================
 
 function solver_analyze(s, conflict_ci)
     learned_lits = {}
@@ -610,14 +610,14 @@ function solver_analyze(s, conflict_ci)
     p = null
     p_reason = conflict_ci
 
-    -- Clear seen
-    -- (already cleared from prior call)
+    # Clear seen
+    # (already cleared from prior call)
 
     btlevel = 0
-    trail_idx = #s.trail
+    trail_idx = s.trail.count
 
     repeat
-        -- Process reason clause
+        # Process reason clause
         clause = get_clause(s, p_reason)
         if clause then
             clause_bump_activity(s, p_reason)
@@ -625,12 +625,12 @@ function solver_analyze(s, conflict_ci)
             if p then start_idx = 1 end
 
             lits = clause.lits
-            for i = 1, #lits do
+            for i = 1, lits.count do
                 lit = lits[i]
                 v = lit_var(lit)
                 if v != (p and lit_var(p) or 0) and not s.seen[v] then
                     if s.level[v] == 0 then
-                        -- Level 0 literals are always false, skip
+                        # Level 0 literals are always false, skip
                     else if s.level[v] >= s.decision_level then
                         s.seen[v] = true
                         counter = counter + 1
@@ -647,7 +647,7 @@ function solver_analyze(s, conflict_ci)
             end
         end
 
-        -- Find next literal on trail at current decision level
+        # Find next literal on trail at current decision level
         repeat
             p = s.trail[trail_idx]
             trail_idx = trail_idx - 1
@@ -659,39 +659,39 @@ function solver_analyze(s, conflict_ci)
         if counter > 0 then
             p_reason = s.reason[lit_var(p)]
             if not p_reason then
-                -- This shouldn't happen in a correct solver, but safeguard
+                # This shouldn't happen in a correct solver, but safeguard
                 break
             end
         end
     until counter <= 0
 
-    -- The 1-UIP literal
+    # The 1-UIP literal
     uip_lit = lit_neg(p)
-    -- Insert at front
+    # Insert at front
     table_insert(learned_lits, 1, uip_lit)
 
-    -- Clear seen flags
-    for i = 1, #learned_lits do
+    # Clear seen flags
+    for i = 1, learned_lits.count do
         s.seen[lit_var(learned_lits[i])] = false
     end
 
-    -- Minimize learned clause (simple self-subsumption)
+    # Minimize learned clause (simple self-subsumption)
     learned_lits = minimize_clause(s, learned_lits)
 
-    -- Determine backtrack level
-    if #learned_lits == 1 then
+    # Determine backtrack level
+    if learned_lits.count == 1 then
         btlevel = 0
     else
-        -- Find second highest level
+        # Find second highest level
         max_i = 2
-        for i = 3, #learned_lits do
+        for i = 3, learned_lits.count do
             v = lit_var(learned_lits[i])
             vi = lit_var(learned_lits[max_i])
             if s.level[v] > s.level[vi] then
                 max_i = i
             end
         end
-        -- Swap
+        # Swap
         learned_lits[2], learned_lits[max_i] = learned_lits[max_i], learned_lits[2]
         btlevel = s.level[lit_var(learned_lits[2])]
     end
@@ -702,15 +702,15 @@ function solver_analyze(s, conflict_ci)
     return learned_lits, btlevel
 end
 
--- ============================================================================
--- Clause minimization
--- ============================================================================
+# ============================================================================
+# Clause minimization
+# ============================================================================
 
 function minimize_clause(s, lits)
-    if #lits <= 2 then return lits end
+    if lits.count <= 2 then return lits end
 
     dominated = {}
-    for i = 2, #lits do
+    for i = 2, lits.count do
         v = lit_var(lits[i])
         r = s.reason[v]
         if r then
@@ -718,7 +718,7 @@ function minimize_clause(s, lits)
             if rc then
                 dominated_flag = true
                 rlits = rc.lits
-                for j = 1, #rlits do
+                for j = 1, rlits.count do
                     rv = lit_var(rlits[j])
                     if rv != v then
                         if not s.seen[rv] and s.level[rv] > 0 then
@@ -735,7 +735,7 @@ function minimize_clause(s, lits)
     end
 
     result = { lits[1] }
-    for i = 2, #lits do
+    for i = 2, lits.count do
         if not dominated[i] then
             table_insert(result, lits[i])
         end
@@ -743,24 +743,24 @@ function minimize_clause(s, lits)
     return result
 end
 
--- ============================================================================
--- Learned clause cleanup
--- ============================================================================
+# ============================================================================
+# Learned clause cleanup
+# ============================================================================
 
 function solver_reduce_db(s)
-    n = #s.learned
+    n = s.learned.count
     if n < 10 then return end
 
-    -- Sort learned clauses by activity (keep high activity)
+    # Sort learned clauses by activity (keep high activity)
     indices = {}
     for i = 1, n do
         indices[i] = i
     end
 
-    -- Simple selection: remove bottom half by activity
+    # Simple selection: remove bottom half by activity
     limit = math_floor(n / 2)
     threshold = 0.0
-    -- Find median activity approximately
+    # Find median activity approximately
     sum_act = 0.0
     for i = 1, n do
         sum_act = sum_act + (s.clause_activity[i] or 0)
@@ -773,7 +773,7 @@ function solver_reduce_db(s)
         clause = s.learned[i]
         if clause then
             act = s.clause_activity[i] or 0
-            -- Don't remove short clauses (LBD <= 2) or locked clauses
+            # Don't remove short clauses (LBD <= 2) or locked clauses
             if act < threshold and clause.lbd > 2 and not is_clause_locked(s, i) then
                 if removed_count < limit then
                     to_remove[i] = true
@@ -783,7 +783,7 @@ function solver_reduce_db(s)
         end
     end
 
-    -- Remove clauses
+    # Remove clauses
     for idx in next, to_remove do
         remove_learned_clause(s, idx)
     end
@@ -795,7 +795,7 @@ function is_clause_locked(s, learned_idx)
     clause = s.learned[learned_idx]
     if not clause then return false end
     lits = clause.lits
-    if #lits == 0 then return false end
+    if lits.count == 0 then return false end
     v = lit_var(lits[1])
     r = s.reason[v]
     if r and r.learned and r.idx == learned_idx then
@@ -805,14 +805,14 @@ function is_clause_locked(s, learned_idx)
 end
 
 function remove_learned_clause(s, learned_idx)
-    -- Mark as null (watches will skip null clauses)
+    # Mark as null (watches will skip null clauses)
     s.learned[learned_idx] = null
     s.clause_activity[learned_idx] = 0
 end
 
--- ============================================================================
--- Restart
--- ============================================================================
+# ============================================================================
+# Restart
+# ============================================================================
 
 function solver_should_restart(s)
     return s.conflicts >= s.next_restart
@@ -824,37 +824,37 @@ function solver_do_restart(s)
     s.next_restart = math_floor(s.next_restart * s.restart_mult)
 end
 
--- ============================================================================
--- Main CDCL solve loop
--- ============================================================================
+# ============================================================================
+# Main CDCL solve loop
+# ============================================================================
 
 function solver_solve(s)
     if s.conflict_at_root then
         return "UNSAT", null
     end
 
-    -- Initial propagation
+    # Initial propagation
     conf = solver_propagate(s)
     if conf then
         return "UNSAT", null
     end
 
     while true do
-        -- Check restart
+        # Check restart
         if solver_should_restart(s) then
             solver_do_restart(s)
         end
 
-        -- Check cleanup
+        # Check cleanup
         if s.conflicts >= s.next_cleanup then
             solver_reduce_db(s)
             s.next_cleanup = s.next_cleanup + s.cleanup_interval
         end
 
-        -- Decide
+        # Decide
         lit = solver_pick_decision(s)
         if lit == 0 then
-            -- All variables assigned => SAT
+            # All variables assigned => SAT
             assignment = {}
             for v = 1, s.num_vars do
                 assignment[v] = s.assigns[v]
@@ -866,7 +866,7 @@ function solver_solve(s)
         solver_new_decision_level(s)
         solver_enqueue(s, lit, null)
 
-        -- Propagate
+        # Propagate
         conflict = solver_propagate(s)
 
         while conflict do
@@ -876,18 +876,18 @@ function solver_solve(s)
                 return "UNSAT", null
             end
 
-            -- Analyze conflict
+            # Analyze conflict
             learned_lits, btlevel = solver_analyze(s, conflict)
 
-            -- Backtrack
+            # Backtrack
             solver_backtrack(s, btlevel)
 
-            -- Add learned clause
-            if #learned_lits == 1 then
-                -- Unit clause at level 0
+            # Add learned clause
+            if learned_lits.count == 1 then
+                # Unit clause at level 0
                 solver_enqueue(s, learned_lits[1], null)
             else
-                -- Create new clause
+                # Create new clause
                 clause = {}
                 clause.lits = learned_lits
                 clause.is_learned = true
@@ -895,34 +895,34 @@ function solver_solve(s)
                 clause.lbd = compute_lbd(s, learned_lits)
 
                 table_insert(s.learned, clause)
-                ci = { learned = true, idx = #s.learned }
-                s.clause_activity[#s.learned] = s.clause_inc
+                ci = { learned = true, idx = s.learned.count }
+                s.clause_activity[s.learned.count] = s.clause_inc
 
-                -- Watch first two literals
+                # Watch first two literals
                 w1 = lit_index(learned_lits[1])
                 w2 = lit_index(learned_lits[2])
                 table_insert(s.watches[w1], ci)
                 table_insert(s.watches[w2], ci)
 
-                -- Assert the first literal (it's the UIP)
+                # Assert the first literal (it's the UIP)
                 solver_enqueue(s, learned_lits[1], ci)
             end
 
-            -- Propagate again
+            # Propagate again
             conflict = solver_propagate(s)
         end
     end
 end
 
--- ============================================================================
--- Verify SAT assignment
--- ============================================================================
+# ============================================================================
+# Verify SAT assignment
+# ============================================================================
 
 function verify_sat(num_vars, clauses, assignment)
-    for i = 1, #clauses do
+    for i = 1, clauses.count do
         clause = clauses[i]
         satisfied = false
-        for j = 1, #clause do
+        for j = 1, clause.count do
             lit = clause[j]
             v = lit_var(lit)
             if v <= num_vars then
@@ -940,15 +940,15 @@ function verify_sat(num_vars, clauses, assignment)
     return true, 0
 end
 
--- ============================================================================
--- Compute checksum of assignment
--- ============================================================================
+# ============================================================================
+# Compute checksum of assignment
+# ============================================================================
 
 function assignment_checksum(assignment, num_vars)
     sum = 0
     for i = 1, num_vars do
         val = assignment[i] or 0
-        -- Mix bits
+        # Mix bits
         if val == TRUE_VAL then
             sum = sum + i * 7919
         else if val == FALSE_VAL then
@@ -959,9 +959,9 @@ function assignment_checksum(assignment, num_vars)
     return sum
 end
 
--- ============================================================================
--- Random 3-SAT generator (near phase transition ratio ~4.26)
--- ============================================================================
+# ============================================================================
+# Random 3-SAT generator (near phase transition ratio ~4.26)
+# ============================================================================
 
 function generate_random_3sat(num_vars, num_clauses)
     clauses = {}
@@ -986,16 +986,16 @@ function generate_random_3sat(num_vars, num_clauses)
     return clauses
 end
 
--- ============================================================================
--- Convert clauses to DIMACS string (for internal consistency)
--- ============================================================================
+# ============================================================================
+# Convert clauses to DIMACS string (for internal consistency)
+# ============================================================================
 
 function clauses_to_dimacs(num_vars, clauses)
     parts = {}
-    table_insert(parts, "p cnf " .. num_vars .. " " .. #clauses .. "\n")
-    for i = 1, #clauses do
+    table_insert(parts, "p cnf " .. num_vars .. " " .. clauses.count .. "\n")
+    for i = 1, clauses.count do
         line = ""
-        for j = 1, #clauses[i] do
+        for j = 1, clauses[i].count do
             if j > 1 then line = line .. " " end
             line = line .. clauses[i][j]
         end
@@ -1005,9 +1005,9 @@ function clauses_to_dimacs(num_vars, clauses)
     return table.concat(parts)
 end
 
--- ============================================================================
--- Test instances: Trivially satisfiable (< 20 vars)
--- ============================================================================
+# ============================================================================
+# Test instances: Trivially satisfiable (< 20 vars)
+# ============================================================================
 
 TRIVIAL_SAT_1 = [[
 p cnf 5 6
@@ -1052,9 +1052,9 @@ p cnf 10 15
 1 3 -5 0
 ]]
 
--- ============================================================================
--- Test instances: Challenging satisfiable (50-100 vars, 200-400 clauses)
--- ============================================================================
+# ============================================================================
+# Test instances: Challenging satisfiable (50-100 vars, 200-400 clauses)
+# ============================================================================
 
 CHALLENGING_SAT_1 = [[
 p cnf 50 213
@@ -1980,11 +1980,11 @@ p cnf 100 400
 28 29 30 0
 ]]
 
--- ============================================================================
--- Test instances: Unsatisfiable
--- ============================================================================
+# ============================================================================
+# Test instances: Unsatisfiable
+# ============================================================================
 
--- Small UNSAT: contradictory unit clauses + implications
+# Small UNSAT: contradictory unit clauses + implications
 UNSAT_1 = [[
 p cnf 4 8
 1 2 0
@@ -1997,7 +1997,7 @@ p cnf 4 8
 -3 -4 0
 ]]
 
--- UNSAT: parity-like constraints
+# UNSAT: parity-like constraints
 UNSAT_2 = [[
 p cnf 6 18
 1 2 3 0
@@ -2020,13 +2020,13 @@ p cnf 6 18
 -3 5 -6 0
 ]]
 
--- ============================================================================
--- Structured problems: Pigeonhole principle (4 pigeons, 3 holes)
--- PHP(4,3): 4 pigeons must go into 3 holes, no two pigeons in same hole
--- This is classically unsatisfiable.
--- Variables: p_i_j means pigeon i goes to hole j
--- var(i,j) = (i-1)*3 + j for i=1..4, j=1..3  => 12 vars
--- ============================================================================
+# ============================================================================
+# Structured problems: Pigeonhole principle (4 pigeons, 3 holes)
+# PHP(4,3): 4 pigeons must go into 3 holes, no two pigeons in same hole
+# This is classically unsatisfiable.
+# Variables: p_i_j means pigeon i goes to hole j
+# var(i,j) = (i-1)*3 + j for i=1..4, j=1..3  => 12 vars
+# ============================================================================
 
 PIGEONHOLE_4_3 = [[
 p cnf 12 22
@@ -2058,13 +2058,13 @@ c At-most-one pigeon per hole:
 -9 -12 0
 ]]
 
--- ============================================================================
--- Structured problems: Graph coloring (3-coloring on K4)
--- K4 has 4 vertices, each pair connected. 3 colors.
--- var(v,c) = (v-1)*3 + c for v=1..4, c=1..3  => 12 vars
--- SAT for K4 with 4 colors, UNSAT for K4 with 2 colors
--- Let's do 3-coloring of a 5-cycle (which IS 3-colorable)
--- ============================================================================
+# ============================================================================
+# Structured problems: Graph coloring (3-coloring on K4)
+# K4 has 4 vertices, each pair connected. 3 colors.
+# var(v,c) = (v-1)*3 + c for v=1..4, c=1..3  => 12 vars
+# SAT for K4 with 4 colors, UNSAT for K4 with 2 colors
+# Let's do 3-coloring of a 5-cycle (which IS 3-colorable)
+# ============================================================================
 
 GRAPH_COLORING_5CYCLE = [[
 p cnf 15 35
@@ -2115,9 +2115,9 @@ c Edge 5-1:
 -15 -3 0
 ]]
 
--- ============================================================================
--- Run a single SAT instance and return result + stats
--- ============================================================================
+# ============================================================================
+# Run a single SAT instance and return result + stats
+# ============================================================================
 
 function run_instance(name, dimacs_text, expected_result)
     num_vars, clauses = parse_dimacs(dimacs_text)
@@ -2126,7 +2126,7 @@ function run_instance(name, dimacs_text, expected_result)
 
     checksum = 0
     if result == "SAT" and assignment then
-        -- Verify
+        # Verify
         ok, bad_clause = verify_sat(num_vars, clauses, assignment)
         if not ok then
             error(name .. ": SAT verification failed at clause " .. bad_clause)
@@ -2141,15 +2141,15 @@ function run_instance(name, dimacs_text, expected_result)
     return result, checksum, s.conflicts, s.decisions, s.propagations
 end
 
--- ============================================================================
--- Run generated random 3-SAT instances
--- ============================================================================
+# ============================================================================
+# Run generated random 3-SAT instances
+# ============================================================================
 
 function run_random_instances()
     total_checksum = 0
 
-    -- Generate several random 3-SAT instances near phase transition
-    -- ratio ~4.26, use 20 vars => ~85 clauses
+    # Generate several random 3-SAT instances near phase transition
+    # ratio ~4.26, use 20 vars => ~85 clauses
     for trial = 1, 5 do
         nv = 20
         nc = math_floor(nv * 4.26)
@@ -2164,12 +2164,12 @@ function run_random_instances()
             end
             total_checksum = (total_checksum + assignment_checksum(assignment, nv)) % 1000000007
         else
-            -- UNSAT is valid for random instances
+            # UNSAT is valid for random instances
             total_checksum = (total_checksum + trial * 999983) % 1000000007
         end
     end
 
-    -- Larger random instances: 40 vars, ~170 clauses
+    # Larger random instances: 40 vars, ~170 clauses
     for trial = 1, 3 do
         nv = 40
         nc = math_floor(nv * 4.26)
@@ -2191,15 +2191,15 @@ function run_random_instances()
     return total_checksum
 end
 
--- ============================================================================
--- Full benchmark iteration
--- ============================================================================
+# ============================================================================
+# Full benchmark iteration
+# ============================================================================
 
 function run_one_iteration()
     total_checksum = 0
     instance_count = 0
 
-    -- Trivially satisfiable
+    # Trivially satisfiable
     r, cs = null, null
     r, cs = run_instance("trivial_sat_1", TRIVIAL_SAT_1, "SAT")
     total_checksum = (total_checksum + cs) % 1000000007
@@ -2213,7 +2213,7 @@ function run_one_iteration()
     total_checksum = (total_checksum + cs) % 1000000007
     instance_count = instance_count + 1
 
-    -- Challenging satisfiable
+    # Challenging satisfiable
     r, cs = run_instance("challenging_sat_1", CHALLENGING_SAT_1, "SAT")
     total_checksum = (total_checksum + cs) % 1000000007
     instance_count = instance_count + 1
@@ -2226,23 +2226,23 @@ function run_one_iteration()
     total_checksum = (total_checksum + cs) % 1000000007
     instance_count = instance_count + 1
 
-    -- Unsatisfiable
+    # Unsatisfiable
     r, cs = run_instance("unsat_1", UNSAT_1, "UNSAT")
     instance_count = instance_count + 1
 
     r, cs = run_instance("unsat_2", UNSAT_2, "UNSAT")
     instance_count = instance_count + 1
 
-    -- Structured: Pigeonhole (UNSAT)
+    # Structured: Pigeonhole (UNSAT)
     r, cs = run_instance("pigeonhole_4_3", PIGEONHOLE_4_3, "UNSAT")
     instance_count = instance_count + 1
 
-    -- Structured: Graph coloring (SAT)
+    # Structured: Graph coloring (SAT)
     r, cs = run_instance("graph_coloring_5cycle", GRAPH_COLORING_5CYCLE, "SAT")
     total_checksum = (total_checksum + cs) % 1000000007
     instance_count = instance_count + 1
 
-    -- Random instances
+    # Random instances
     prng_reset()
     rand_cs = run_random_instances()
     total_checksum = (total_checksum + rand_cs) % 1000000007
@@ -2251,9 +2251,9 @@ function run_one_iteration()
     return total_checksum, instance_count
 end
 
--- ============================================================================
--- Main: loop until target time reached
--- ============================================================================
+# ============================================================================
+# Main: loop until target time reached
+# ============================================================================
 
 function main()
     for i = 1, 20 do
