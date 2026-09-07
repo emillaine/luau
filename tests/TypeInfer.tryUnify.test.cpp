@@ -220,7 +220,7 @@ TEST_CASE_FIXTURE(Fixture, "result_of_failed_typepack_unification_is_constrained
 TEST_CASE_FIXTURE(Fixture, "typepack_unification_should_trim_free_tails")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(v: number)
             if v % 2 == 0 then
                 return true
@@ -260,7 +260,7 @@ TEST_CASE_FIXTURE(TryUnifyFixture, "variadic_tails_respect_progress")
 TEST_CASE_FIXTURE(Fixture, "variadics_should_use_reversed_properly")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(...: T): ...T
             return ...
         end
@@ -279,7 +279,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_41095_concat_log_in_sealed_table_unifica
 {
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         table.insert()
     )");
 

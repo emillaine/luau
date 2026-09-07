@@ -1,18 +1,18 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing tables, next, and for')
 
 unpack = table.unpack
 
--- testing table.insert return value
+# testing table.insert return value
 assert(select('#', table.insert({}, 42)) == 0)
 
 a = {}
 
--- make sure table has lots of space in hash part
+# make sure table has lots of space in hash part
 for i=1,100 do a[i.."+"] = true end
 for i=1,100 do a[i.."+"] = null end
--- fill hash part with numeric indices testing size operator
+# fill hash part with numeric indices testing size operator
 for i=1,100 do
   a[i] = true
   assert(a.count == i)
@@ -20,12 +20,12 @@ end
 
 
 if T then
--- testing table sizes
+# testing table sizes
 
 l2 = math.log(2)
 function log2 (x) return math.log(x)/l2 end
 
-function mp2 (n)   -- minimum power of 2 >= n
+function mp2 (n)   # minimum power of 2 >= n
   mp = 2^math.ceil(log2(n))
   assert(n == 0 or (mp/2 < n and n <= mp))
   return mp
@@ -37,7 +37,7 @@ function fb (n)
   return nn
 end
 
--- test fb function
+# test fb function
 a = 1
 lim = 2^30
 while a < lim do
@@ -55,7 +55,7 @@ function check (t, na, nh)
   end
 end
 
--- testing constructor sizes
+# testing constructor sizes
 lim = 40
 s = 'return {'
 for i=1,lim do
@@ -70,9 +70,9 @@ for i=1,lim do
 end
 
 
--- tests with unknown number of elements
+# tests with unknown number of elements
 a = {}
-for i=1,lim do a[i] = i end   -- build auxiliary table
+for i=1,lim do a[i] = i end   # build auxiliary table
 for k=0,lim do
   a = {unpack(a,1,k)}
   assert(a.count == k)
@@ -85,7 +85,7 @@ end
 
 print'+'
 
--- testing tables dynamically built
+# testing tables dynamically built
 lim = 130
 
 do
@@ -114,17 +114,17 @@ do
   for i=1,16 do a[i] = i end
   check(a, 16, 0)
   for i=1,11 do a[i] = null end
-  for i=30,40 do a[i] = null end   -- force a rehash (?)
+  for i=30,40 do a[i] = null end   # force a rehash (?)
   check(a, 0, 8)
   a[10] = 1
-  for i=30,40 do a[i] = null end   -- force a rehash (?)
+  for i=30,40 do a[i] = null end   # force a rehash (?)
   check(a, 0, 8)
   for i=1,14 do a[i] = null end
-  for i=30,50 do a[i] = null end   -- force a rehash (?)
+  for i=30,50 do a[i] = null end   # force a rehash (?)
   check(a, 0, 4)
 end
 
-do   -- rehash moving elements from array to hash
+do   # rehash moving elements from array to hash
   a = {}
   for i = 1, 100 do a[i] = i end
   check(a, 128, 0)
@@ -132,7 +132,7 @@ do   -- rehash moving elements from array to hash
   for i = 5, 95 do a[i] = null end
   check(a, 128, 0)
 
-  a.x = 1     -- force a re-hash
+  a.x = 1     # force a re-hash
   check(a, 4, 8)
 
   for i = 1, 4 do assert(a[i] == i) end
@@ -141,14 +141,14 @@ do   -- rehash moving elements from array to hash
   assert(a.x == 1)
 end
 
--- reverse filling
+# reverse filling
 for i=1,lim do
   a = {}
-  for i=i,1,-1 do a[i] = i end   -- fill in reverse
+  for i=i,1,-1 do a[i] = i end   # fill in reverse
   check(a, mp2(i), 0)
 end
 
--- size tests for vararg
+# size tests for vararg
 lim = 35
 function foo (n, ...)
   arg = {...}
@@ -165,7 +165,7 @@ for i=1,lim do a[i] = true; foo(i, unpack(a)) end
 end
 
 
--- test size operation on empty tables
+# test size operation on empty tables
 assert(({}).count == 0)
 assert(({null}).count == 0)
 assert(({null, null}).count == 0)
@@ -193,10 +193,10 @@ function find1 (name)
   for n,v in pairs(_G) do
     if n==name then return v end
   end
-  return null  -- not found
+  return null  # not found
 end
 
-do   -- create 10000 new global variables
+do   # create 10000 new global variables
   for i=1,10000 do _G[i] = i end
 end
 
@@ -219,15 +219,15 @@ assert(table.foreachi({'a', 'b', 'c'}, function (i,v)
        end) == 'b')
 
 
--- assert(print==find("print") and print == find1("print"))
--- assert(_G["print"]==find("print"))
--- assert(assert==find1("assert"))
+# assert(print==find("print") and print == find1("print"))
+# assert(_G["print"]==find("print"))
+# assert(assert==find1("assert"))
 assert(nofind==find("return"))
 assert(not find1("return"))
 _G["ret" .. "urn"] = null
 assert(nofind==find("return"))
 _G["xxx"] = 1
--- assert(xxx==find("xxx"))
+# assert(xxx==find("xxx"))
 print('+')
 
 a = {}
@@ -245,10 +245,10 @@ end
 assert(n.n == 9000)
 a = null
 
--- remove those 10000 new global variables
+# remove those 10000 new global variables
 for i=1,10000 do _G[i] = null end
 
-do   -- clear global table
+do   # clear global table
   a = {}
   preserve = {io = 1, string = 1, debug = 1, os = 1,
                     coroutine = 1, table = 1, math = 1}
@@ -316,7 +316,7 @@ a[20] = null
 assert(table.maxn(a) == 10)
 
 
--- int overflow
+# int overflow
 a = {}
 for i=0,50 do a[math.pow(2,i)] = true end
 assert(a[table.getn(a)])
@@ -324,7 +324,7 @@ assert(a[table.getn(a)])
 print("+")
 
 
--- erasing values
+# erasing values
 t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
            [100.3] = 4, [4] = 5}
 
@@ -377,7 +377,7 @@ assert(table.remove(a, 1) == 'b')
 assert(table.getn(a) == 0 and a.n == null)
 print("+")
 
--- out of range insertion
+# out of range insertion
 a = {1, 2, 3}
 table.insert(a, 0, 0)
 assert(a[0] == 0 and table.concat(a) == "123")
@@ -385,7 +385,7 @@ table.insert(a, 10, 10)
 assert(a[0] == 0 and table.concat(a) == "123" and table.maxn(a) == 10 and a[10] == 10)
 table.insert(a, -10^9, 42)
 assert(a[0] == 0 and table.concat(a) == "123" and table.maxn(a) == 10 and a[10] == 10 and a[-10^9] == 42)
-table.insert(a, 0 / 0, 42) -- platform-dependent behavior atm so hard to validate
+table.insert(a, 0 / 0, 42) # platform-dependent behavior atm so hard to validate
 
 a = {}
 for i=1,1000 do
@@ -396,12 +396,12 @@ assert(next(a,null) == 1000 and next(a,1000) == null)
 assert(next({}) == null)
 assert(next({}, null) == null)
 
--- testing table.create and table.find
+# testing table.create and table.find
 do
   t = table.create(5)
-  assert(t.count == 0) -- filled with null!
+  assert(t.count == 0) # filled with null!
   t[5] = 5
-  assert(t.count == 5) -- magic
+  assert(t.count == 5) # magic
 
   t2 = table.create(5, "nice")
   assert(table.concat(t2,"!") == "nice!nice!nice!nice!nice")
@@ -412,10 +412,10 @@ do
 
   assert(table.find({false, true}, true) == 2)
 
-  -- make sure table.find checks the hash portion as well
+  # make sure table.find checks the hash portion as well
   assert(table.find({[(2)] = true}, true, 2) == 2)
 
-  -- table.find respects __eq
+  # table.find respects __eq
   objameta = {
       __eq = function(a, b)
         return a.x == b.x and a.y == b.y
@@ -434,7 +434,7 @@ do
   assert(table.find(t3, t3[2]) == 2)
   assert(table.find(t3, t3[3]) == 3)
 
-  -- table.find respects __eq effects
+  # table.find respects __eq effects
   function addnrec(n)
       return if n == 1 then 1 else n + addnrec(n - 1)
   end
@@ -455,16 +455,16 @@ do
   assert(table.find(t4, makeobjb(500)) == null)
 end
 
--- test table.concat
+# test table.concat
 do
-  -- regular usage
+  # regular usage
   assert(table.concat({}) == "")
   assert(table.concat({}, ",") == "")
   assert(table.concat({"a", "b", "c"}, ",") == "a,b,c")
   assert(table.concat({"a", "b", "c"}, ",", 2) == "b,c")
   assert(table.concat({"a", "b", "c"}, ",", 1, 2) == "a,b")
 
-  -- hash elements
+  # hash elements
   t = {}
   t[123] = "a"
   t[124] = "b"
@@ -473,17 +473,17 @@ do
   assert(table.concat(t, ",", 123, 124) == "a,b")
   assert(table.concat(t, ",", 123, 123) == "a")
 
-  -- numeric values
+  # numeric values
   assert(table.concat({1, 2, 3}, ",") == "1,2,3")
   assert(table.concat({"a", 2, "c"}, ",") == "a,2,c")
 
-  -- error cases
+  # error cases
   assert(pcall(table.concat, "") == false)
   assert(pcall(table.concat, t, false) == false)
   assert(pcall(table.concat, t, ",", 1, 100) == false)
 end
 
--- test indexing with strings that have zeroes embedded in them
+# test indexing with strings that have zeroes embedded in them
 do
 	t = {}
 	t['start\0end'] = 1
@@ -492,14 +492,14 @@ do
 	assert(t['start'] == 2)
 end
 
--- test table freezing
+# test table freezing
 do
   t = {}
   assert(not table.isfrozen(t))
   t[1] = 1
   t.a = 2
 
-  -- basic freeze test to validate invariants
+  # basic freeze test to validate invariants
   assert(table.freeze(t) == t)
   assert(table.isfrozen(t))
   assert(not pcall(rawset, t, 1, 2))
@@ -507,15 +507,15 @@ do
   assert(not pcall(function() t.a = 3 end))
   assert(not pcall(function() t[1] = 3 end))
   assert(not pcall(setmetatable, t, {}))
-  assert(not pcall(table.freeze, t)) -- already frozen
+  assert(not pcall(table.freeze, t)) # already frozen
 
-  -- can't freeze tables with protected metatable
+  # can't freeze tables with protected metatable
   t = {}
   setmetatable(t, { __metatable = "nope" })
   assert(not pcall(table.freeze, t))
   assert(not table.isfrozen(t))
 
-  -- note that it's valid to freeze a table with a metatable and protect it later, freeze doesn't freeze metatable automatically
+  # note that it's valid to freeze a table with a metatable and protect it later, freeze doesn't freeze metatable automatically
   mt = {}
   t = setmetatable({}, mt)
   table.freeze(t)
@@ -524,7 +524,7 @@ do
   assert(getmetatable(t) == "nope")
 end
 
--- test t.count
+# test t.count
 do
   t = table.create(10, 1)
   assert(t.count == 10)
@@ -565,7 +565,7 @@ do
   assert(t.count == 7)
 end
 
--- test clone
+# test clone
 do
   t = {a = 1, b = 2, 3, 4, 5}
   tt = table.clone(t)
@@ -603,27 +603,27 @@ do
   assert(not pcall(table.clone, 42))
 end
 
--- test boundary invariant maintenance during rehash
+# test boundary invariant maintenance during rehash
 do
   arr = table.create(5, 42)
 
   arr[1] = null
-  arr.a = 'a' -- trigger rehash
+  arr.a = 'a' # trigger rehash
 
-  assert(arr.count == 5) -- technically 0 is also valid, but it happens to be 5 because array capacity is 5
+  assert(arr.count == 5) # technically 0 is also valid, but it happens to be 5 because array capacity is 5
 end
 
--- test boundary invariant maintenance when replacing hash keys
+# test boundary invariant maintenance when replacing hash keys
 do
   arr = {}
   arr.a = 'a'
   arr.a = null
-  arr[1] = 1 -- should rehash and resize array part, otherwise # won't find the boundary in array part
+  arr[1] = 1 # should rehash and resize array part, otherwise # won't find the boundary in array part
 
   assert(arr.count == 1)
 end
 
--- test boundary invariant maintenance when table is filled from the end
+# test boundary invariant maintenance when table is filled from the end
 do
   arr = {}
   for i=5,2,-1 do
@@ -634,13 +634,13 @@ do
   assert(arr.count == 5)
 end
 
--- test boundary invariant maintenance when table is filled using SETLIST opcode
+# test boundary invariant maintenance when table is filled using SETLIST opcode
 do
   arr = {[2]=2,1}
   assert(arr.count == 2)
 end
 
--- test boundary invariant maintenance when table is filled using table.move
+# test boundary invariant maintenance when table is filled using table.move
 do
   t1 = {1, 2, 3, 4, 5}
   t2 = {[6] = 6}
@@ -649,14 +649,14 @@ do
   assert(t2.count == 6)
 end
 
--- test boundary invariant in sparse arrays or various kinds
+# test boundary invariant in sparse arrays or various kinds
 do
   function obscuredalloc() return {} end
 
   bits = 16
 
   for i = 1, 2^bits - 1 do
-      t1 = obscuredalloc() -- to avoid NEWTABLE guessing correct size
+      t1 = obscuredalloc() # to avoid NEWTABLE guessing correct size
 
       for k = 1, bits do
           t1[k] = if bit32.extract(i, k - 1) == 1 then true else null
@@ -664,7 +664,7 @@ do
   end
 end
 
--- test table.unpack fastcall for rejecting large unpacks
+# test table.unpack fastcall for rejecting large unpacks
 do
   ok, res = pcall(function()
     a = table.create(7999, 0)
@@ -677,7 +677,7 @@ do
   assert(not ok)
 end
 
--- test iteration with lightuserdata keys
+# test iteration with lightuserdata keys
 do
   function _G.countud()
     t = {}
@@ -695,14 +695,14 @@ do
   assert(_G.countud() == 3)
 end
 
--- test iteration with lightuserdata keys with a substituted environment
+# test iteration with lightuserdata keys with a substituted environment
 do
   env = { makelud = makelud, pairs = pairs }
   setfenv(_G.countud, env)
   assert(_G.countud() == 3)
 end
 
--- test __newindex-as-a-table indirection: this had memory safety bugs in Lua 5.1.0
+# test __newindex-as-a-table indirection: this had memory safety bugs in Lua 5.1.0
 do
   hit = false
 
@@ -722,12 +722,12 @@ do
   assert(hit and child.foo == null and parent.foo == null)
 end
 
--- testing next x GC of deleted keys
+# testing next x GC of deleted keys
 do
   co = coroutine.wrap(function (t)
     for k, v in pairs(t) do
-        k1 = next(t)    -- all previous keys were deleted
-        assert(k == k1)       -- current key is the first in the table
+        k1 = next(t)    # all previous keys were deleted
+        assert(k == k1)       # current key is the first in the table
         t[k] = null
         expected = (type(k) == "table" and k[1] or
                           type(k) == "function" and k() or
@@ -737,22 +737,22 @@ do
     end
   end)
   t = {}
-  t[{1}] = 1    -- add several unanchored, collectable keys
+  t[{1}] = 1    # add several unanchored, collectable keys
   t[{2}] = 2
-  t[string.rep("a", 50)] = "a"    -- long string
+  t[string.rep("a", 50)] = "a"    # long string
   t[string.rep("b", 50)] = "b"
   t[{3}] = 3
-  t[string.rep("c", 10)] = "c"    -- short string
+  t[string.rep("c", 10)] = "c"    # short string
   t[function () return 10 end] = 10
   count = 7
   while co(t) do
-    collectgarbage("collect")   -- collect dead keys
+    collectgarbage("collect")   # collect dead keys
     count = count - 1
   end
-  assert(count == 0 and next(t) == null)    -- traversed the whole table
+  assert(count == 0 and next(t) == null)    # traversed the whole table
 end
   
--- test error cases for table functions
+# test error cases for table functions
 do
   assert(pcall(table.insert, {}) == false)
   assert(pcall(table.insert, {}, 1, 2, 3) == false)
@@ -772,7 +772,7 @@ do
   assert(pcall(table.clear, table.freeze({})) == false)
 end
 
--- check that namecall lookup doesn't give up on entries missing from cached slot position
+# check that namecall lookup doesn't give up on entries missing from cached slot position
 do
   for i = 1,10 do
     t = setmetatable({}, { __index = { foo = 1 }})
@@ -786,7 +786,7 @@ do
   end
 end
 
--- check that fast path for table lookup can't be tricked into assuming a light user data with string pointer is a string
+# check that fast path for table lookup can't be tricked into assuming a light user data with string pointer is a string
 assert((function ()
   t = {}
   t[makelud("hi")] = "no"
@@ -794,8 +794,8 @@ assert((function ()
 end)() == null)
 
 
--- check that tables with constant keys maintain their insertion/iteration order
--- this is important to maintain for backwards compat
+# check that tables with constant keys maintain their insertion/iteration order
+# this is important to maintain for backwards compat
 do
   ordering = {
     foo = 1,
@@ -821,7 +821,7 @@ do
 end
 
 do
-  -- any optimization related to constant fields must preserve side effects that may be relied upon
+  # any optimization related to constant fields must preserve side effects that may be relied upon
   should_change = false
 
   function side_effect()
@@ -834,10 +834,10 @@ do
   assert(t.a == 3)
 end
 
--- constant folding of table properties must respect aliasing: a mutation through
--- one local must be visible when the same table is read through any other local.
+# constant folding of table properties must respect aliasing: a mutation through
+# one local must be visible when the same table is read through any other local.
 do
-	-- mutate via alias, read via original
+	# mutate via alias, read via original
 	t = { a = 32 }
 	copy = t
 	copy.a = 1
@@ -845,7 +845,7 @@ do
 end
 
 do
-	-- mutate via original, read via alias
+	# mutate via original, read via alias
 	t = { a = 32 }
 	copy = t
 	t.a = 1
@@ -853,7 +853,7 @@ do
 end
 
 do
-	-- multiple aliases all observe the mutation
+	# multiple aliases all observe the mutation
 	t = { a = 1 }
 	a1 = t
 	a2 = t
@@ -863,7 +863,7 @@ do
 end
 
 do
-	-- tables passed by closure also observe the mutation
+	# tables passed by closure also observe the mutation
 	t = { a = 32 }
 	function f()
 		return t

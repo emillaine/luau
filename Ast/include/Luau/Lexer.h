@@ -52,6 +52,8 @@ struct Lexeme
 
         Comment,
         BlockComment,
+        DashComment,
+        DashBlockComment,
 
         Attribute,
         AttributeOpen,

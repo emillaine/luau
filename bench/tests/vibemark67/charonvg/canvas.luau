@@ -1,4 +1,4 @@
---!native
+#!native
 Surface = require("./surface")
 Path = require("./path")
 Matrix = require("./matrix")
@@ -55,21 +55,21 @@ function Canvas.create(surface)
     return self
 end
 
--- State management
+# State management
 
 function Canvas:save()
-    self._stateStack[#self._stateStack + 1] = copyState(self._state)
+    self._stateStack[self._stateStack.count + 1] = copyState(self._state)
 end
 
 function Canvas:restore()
-    n = #self._stateStack
+    n = self._stateStack.count
     if n > 0 then
         self._state = self._stateStack[n]
         self._stateStack[n] = null
     end
 end
 
--- Paint
+# Paint
 
 function Canvas:setRgb(r, g, b)
     self._state.color = Color.rgba(r, g, b, 1)
@@ -102,7 +102,7 @@ function Canvas:getPaint()
     return self._state.paint, self._state.color
 end
 
--- Stroke style
+# Stroke style
 
 function Canvas:setLineWidth(width)
     self._state.lineWidth = width
@@ -157,7 +157,7 @@ function Canvas:getDashArray()
     return self._state.dashArray
 end
 
--- Fill rule & compositing
+# Fill rule & compositing
 
 function Canvas:setFillRule(rule)
     self._state.fillRule = rule
@@ -183,7 +183,7 @@ function Canvas:getOpacity()
     return self._state.opacity
 end
 
--- Transform
+# Transform
 
 function Canvas:translate(tx, ty)
     self._state.matrix = Matrix.translate(tx, ty):multiply(self._state.matrix)
@@ -221,7 +221,7 @@ function Canvas:map(x, y)
     return self._state.matrix:mapPoint(x, y)
 end
 
--- Path building
+# Path building
 
 function Canvas:moveTo(x, y)
     self._path:moveTo(x, y)
@@ -283,7 +283,7 @@ function Canvas:getPath()
     return self._path
 end
 
--- Internal rendering helpers
+# Internal rendering helpers
 
 function blendSpans(self, spans)
     state = self._state
@@ -308,7 +308,7 @@ end
 function rasterizeStroke(self, path)
     state = self._state
     strokePath = path
-    if state.dashArray and #state.dashArray > 0 then
+    if state.dashArray and state.dashArray.count > 0 then
         strokePath = path:cloneDashed(state.dashOffset, state.dashArray)
     end
     stroked = Stroker.stroke(strokePath, state.lineWidth, state.lineCap, state.lineJoin, state.miterLimit)
@@ -319,7 +319,7 @@ function rasterizeStroke(self, path)
     return spans
 end
 
--- Drawing operations
+# Drawing operations
 
 function Canvas:fillPreserve()
     spans = rasterizeFill(self, self._path)
@@ -362,7 +362,7 @@ function Canvas:paint()
     h = self._surface:getHeight()
     spans = {}
     for y = 0, h - 1 do
-        spans[#spans + 1] = { x = 0, y = y, len = w, coverage = 255 }
+        spans[spans.count + 1] = { x = 0, y = y, len = w, coverage = 255 }
     end
     if state.clipping and state.clipSpans then
         spans = Rasterizer.intersectSpans(spans, state.clipSpans)
@@ -370,7 +370,7 @@ function Canvas:paint()
     blendSpans(self, spans)
 end
 
--- Convenience drawing
+# Convenience drawing
 
 function Canvas:fillRect(x, y, w, h)
     self._path:reset()
@@ -408,7 +408,7 @@ function Canvas:clipPath(path)
     self:clip()
 end
 
--- Hit testing
+# Hit testing
 
 function Canvas:fillContains(x, y)
     spans = rasterizeFill(self, self._path)
@@ -434,15 +434,15 @@ function Canvas:strokeContains(x, y)
     return false
 end
 
--- Extents
+# Extents
 
 function Canvas:fillExtents()
     spans = rasterizeFill(self, self._path)
-    if #spans == 0 then
+    if spans.count == 0 then
         return { x = 0, y = 0, w = 0, h = 0 }
     end
     minX, minY = math.huge, spans[1].y
-    maxX, maxY = -math.huge, spans[#spans].y
+    maxX, maxY = -math.huge, spans[spans.count].y
     for _, s in ipairs(spans) do
         if s.x < minX then
             minX = s.x
@@ -456,11 +456,11 @@ end
 
 function Canvas:strokeExtents()
     spans = rasterizeStroke(self, self._path)
-    if #spans == 0 then
+    if spans.count == 0 then
         return { x = 0, y = 0, w = 0, h = 0 }
     end
     minX, minY = math.huge, spans[1].y
-    maxX, maxY = -math.huge, spans[#spans].y
+    maxX, maxY = -math.huge, spans[spans.count].y
     for _, s in ipairs(spans) do
         if s.x < minX then
             minX = s.x
@@ -472,7 +472,7 @@ function Canvas:strokeExtents()
     return { x = minX, y = minY, w = maxX - minX, h = maxY - minY + 1 }
 end
 
--- Surface access
+# Surface access
 
 function Canvas:getSurface()
     return self._surface

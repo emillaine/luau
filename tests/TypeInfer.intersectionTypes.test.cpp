@@ -495,7 +495,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "overload_is_not_a_function")
 {
     check(R"(
---!nonstrict
+#!nonstrict
 function _(...):((typeof(not _))&(typeof(not _)))&((typeof(not _))&(typeof(not _)))
 _(...)(setfenv,_,not _,"")[_] = null
 end
@@ -524,8 +524,8 @@ TEST_CASE_FIXTURE(Fixture, "intersect_bool_and_false")
 {
     CheckResult result = check(R"(
         function f(x: boolean & false)
-            const y : false = x -- OK
-            const z : true = x  -- Not OK
+            const y : false = x # OK
+            const z : true = x  # Not OK
         end
     )");
 
@@ -552,8 +552,8 @@ TEST_CASE_FIXTURE(Fixture, "intersect_false_and_bool_and_false")
 {
     CheckResult result = check(R"(
         function f(x: false & (boolean & false))
-            const y : false = x -- OK
-            const z : true = x  -- Not OK
+            const y : false = x # OK
+            const z : true = x  # Not OK
         end
     )");
 
@@ -584,8 +584,8 @@ TEST_CASE_FIXTURE(Fixture, "intersect_saturate_overloaded_functions")
 {
     CheckResult result = check(R"(
         function foo(x: ((number?) -> number?) & ((string?) -> string?))
-            const y : (null) -> null = x -- Not OK (fixed in DCR)
-            const z : (number) -> number = x -- Not OK
+            const y : (null) -> null = x # Not OK (fixed in DCR)
+            const z : (number) -> number = x # Not OK
         end
     )");
 
@@ -654,8 +654,8 @@ TEST_CASE_FIXTURE(Fixture, "union_saturate_overloaded_functions")
 
     CheckResult result = check(R"(
         function f(x: ((number) -> number) & ((string) -> string))
-            const y : ((number | string) -> (number | string)) = x -- OK
-            const z : ((number | boolean) -> (number | boolean)) = x -- Not OK
+            const y : ((number | string) -> (number | string)) = x # OK
+            const z : ((number | boolean) -> (number | boolean)) = x # Not OK
         end
     )");
 
@@ -673,8 +673,8 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_tables")
 {
     CheckResult result = check(R"(
         function f(x: { p : number?, q : string? } & { p : number?, q : number?, r : number? })
-            const y : { p : number?, q : null, r : number? } = x -- OK
-            const z : { p : null } = x -- Not OK
+            const y : { p : number?, q : null, r : number? } = x # OK
+            const z : { p : null } = x # Not OK
         end
     )");
 
@@ -707,8 +707,8 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_tables_with_top_properties")
 {
     CheckResult result = check(R"(
         function f(x : { p : number?, q : any } & { p : unknown, q : string? })
-            const y : { p : number?, q : string? } = x -- OK
-            const z : { p : string?, q : number? } = x -- Not OK
+            const y : { p : number?, q : string? } = x # OK
+            const z : { p : string?, q : number? } = x # Not OK
         end
     )");
 
@@ -760,8 +760,8 @@ TEST_CASE_FIXTURE(Fixture, "intersection_of_tables_with_never_properties")
 {
     CheckResult result = check(R"(
         function f(x : { p : number?, q : never } & { p : never, q : string? })
-            const y : { p : never, q : never } = x -- OK
-            const z : never = x -- OK
+            const y : { p : never, q : never } = x # OK
+            const z : never = x # OK
         end
     )");
 
@@ -772,8 +772,8 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_returning_intersections")
 {
     CheckResult result = check(R"(
         function f(x : ((number?) -> ({ p : number } & { q : number })) & ((string?) -> ({ p : number } & { r : number })))
-            const y : (null) -> { p : number, q : number, r : number} = x -- OK
-            const z : (number?) -> { p : number, q : number, r : number} = x -- Not OK
+            const y : (null) -> { p : number, q : number, r : number} = x # OK
+            const z : (number?) -> { p : number, q : number, r : number} = x # Not OK
         end
     )");
 
@@ -859,8 +859,8 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_mentioning_generic")
     CheckResult result = check(R"(
         function f<a>()
             function g(x : ((number?) -> (a | number)) & ((string?) -> (a | string)))
-                const y : (null) -> a = x -- OK
-                const z : (number?) -> a = x -- Not OK
+                const y : (null) -> a = x # OK
+                const z : (number?) -> a = x # Not OK
             end
         end
     )");
@@ -884,8 +884,8 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_mentioning_generics")
     CheckResult result = check(R"(
         function f<a,b,c>()
             function g(x : ((a?) -> (a | b)) & ((c?) -> (b | c)))
-                const y : (null) -> ((a & c) | b) = x -- OK
-                const z : (a?) -> ((a & c) | b) = x -- Not OK
+                const y : (null) -> ((a & c) | b) = x # OK
+                const z : (a?) -> ((a & c) | b) = x # Not OK
             end
         end
     )");
@@ -911,9 +911,9 @@ TEST_CASE_FIXTURE(Fixture, "overloaded_functions_mentioning_generic_packs")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number?, a...) -> (number?, b...)) & ((string?, a...) -> (string?, b...)))
-                const y : ((null, a...) -> (null, b...)) = x -- OK in the old solver, not OK in the new
-                const z : ((null, b...) -> (null, a...)) = x -- Not OK
-                const w : ((number?, a...) -> (number?, b...)) = x -- OK in both solvers
+                const y : ((null, a...) -> (null, b...)) = x # OK in the old solver, not OK in the new
+                const z : ((null, b...) -> (null, a...)) = x # Not OK
+                const w : ((number?, a...) -> (number?, b...)) = x # OK in both solvers
             end
         end
     )");
@@ -1006,8 +1006,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_unknown_result")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number) -> number) & ((null) -> unknown))
-                const y : (number?) -> unknown = x -- OK
-                const z : (number?) -> number? = x -- Not OK
+                const y : (number?) -> unknown = x # OK
+                const z : (number?) -> number? = x # Not OK
             end
         end
     )");
@@ -1030,8 +1030,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_unknown_arguments")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number) -> number?) & ((unknown) -> string?))
-                const y : (number) -> null = x -- OK
-                const z : (number?) -> null = x -- Not OK
+                const y : (number) -> null = x # OK
+                const z : (number?) -> null = x # Not OK
             end
         end
     )");
@@ -1051,8 +1051,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_never_result")
     CheckResult result = check(R"(
     function f<a...,b...>()
         function g(x : ((number) -> number) & ((null) -> never))
-            const y : (number?) -> number = x -- OK
-            const z : (number?) -> never = x -- Not OK
+            const y : (number?) -> number = x # OK
+            const z : (number?) -> never = x # Not OK
         end
     end
     )");
@@ -1123,8 +1123,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_never_arguments")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((number) -> number?) & ((never) -> string?))
-                const y : (never) -> null = x -- OK
-                const z : (number?) -> null = x -- Not OK
+                const y : (never) -> null = x # OK
+                const z : (number?) -> null = x # Not OK
             end
         end
     )");
@@ -1205,8 +1205,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_overlapping_results_and_
 
     CheckResult result = check(R"(
         function f(x : ((string?) -> (string | number)) & ((number?) -> ...number))
-            const y : ((null) -> (number, number?)) = x -- OK
-            const z : ((string | number) -> (number, number?)) = x -- Not OK
+            const y : ((null) -> (number, number?)) = x # OK
+            const z : ((string | number) -> (number, number?)) = x # Not OK
         end
     )");
 
@@ -1225,8 +1225,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_1")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : (() -> a...) & (() -> b...))
-                const y : (() -> b...) & (() -> a...) = x -- OK
-                const z : () -> () = x -- Not OK
+                const y : (() -> b...) & (() -> a...) = x # OK
+                const z : () -> () = x # Not OK
             end
         end
     )");
@@ -1250,8 +1250,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_2")
     CheckResult result = check(R"(
         function f<a...,b...>()
             function g(x : ((a...) -> ()) & ((b...) -> ()))
-                const y : ((b...) -> ()) & ((a...) -> ()) = x -- OK
-                const z : () -> () = x -- Not OK
+                const y : ((b...) -> ()) & ((a...) -> ()) = x # OK
+                const z : () -> () = x # Not OK
             end
         end
     )");
@@ -1279,8 +1279,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_3")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : (() -> a...) & (() -> (number?,a...)))
-                const y : (() -> (number?,a...)) & (() -> a...) = x -- OK
-                const z : () -> (number) = x -- Not OK
+                const y : (() -> (number?,a...)) & (() -> a...) = x # OK
+                const z : () -> (number) = x # Not OK
             end
         end
     )");
@@ -1309,8 +1309,8 @@ TEST_CASE_FIXTURE(Fixture, "overloadeded_functions_with_weird_typepacks_4")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : ((a...) -> ()) & ((number,a...) -> number))
-                const y : ((number,a...) -> number) & ((a...) -> ()) = x -- OK
-                const z : (number?) -> () = x -- Not OK
+                const y : ((number,a...) -> number) & ((a...) -> ()) = x # OK
+                const z : (number?) -> () = x # Not OK
             end
         end
     )");
@@ -1492,7 +1492,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "intersect_metatable_with_table")
             type Y = { b : string }
             type Z = typeof(z)
 
-            -- TODO: once we have shape types, we should be able to initialize these with z
+            # TODO: once we have shape types, we should be able to initialize these with z
             const xy : X&Y;
             const yx : Y&X;
             z = xy;
@@ -1519,9 +1519,9 @@ TEST_CASE_FIXTURE(Fixture, "CLI-44817")
 
         const xNy, xNyNz = f({x = 0, y = 0}, {x = 0, y = 0, z = 0})
 
-        const t1: XY = xNy -- Type 'X & Y' could not be converted into 'XY'
-        const t2: XY = xNyNz -- Type 'X & Y & Z' could not be converted into 'XY'
-        const t3: XYZ = xNyNz -- Type 'X & Y & Z' could not be converted into 'XYZ'
+        const t1: XY = xNy # Type 'X & Y' could not be converted into 'XY'
+        const t2: XY = xNyNz # Type 'X & Y & Z' could not be converted into 'XY'
+        const t3: XYZ = xNyNz # Type 'X & Y & Z' could not be converted into 'XYZ'
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);

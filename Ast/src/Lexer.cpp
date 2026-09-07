@@ -35,7 +35,8 @@ Lexeme::Lexeme(const Location& location, Type type, const char* data, size_t siz
 {
     LUAU_ASSERT(
         type == RawString || type == QuotedString || type == InterpStringBegin || type == InterpStringMid || type == InterpStringEnd ||
-        type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment
+        type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment ||
+        type == DashComment || type == DashBlockComment
     );
 }
 
@@ -52,7 +53,8 @@ unsigned int Lexeme::getLength() const
 {
     LUAU_ASSERT(
         type == RawString || type == QuotedString || type == InterpStringBegin || type == InterpStringMid || type == InterpStringEnd ||
-        type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment
+        type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment ||
+        type == DashComment || type == DashBlockComment
     );
 
     return length;
@@ -139,7 +141,12 @@ std::string Lexeme::toString() const
         return name ? format("'%s'", name) : "identifier";
 
     case Comment:
+    case DashComment:
         return "comment";
+
+    case BlockComment:
+    case DashBlockComment:
+        return "block comment";
 
     case Attribute:
         return name ? format("'%s'", name) : "attribute";
@@ -310,7 +317,7 @@ static char unescape(char ch)
 
 unsigned int Lexeme::getBlockDepth() const
 {
-    LUAU_ASSERT(type == Lexeme::RawString || type == Lexeme::BlockComment);
+    LUAU_ASSERT(type == Lexeme::RawString || type == Lexeme::BlockComment || type == Lexeme::DashBlockComment);
 
     // If we have a well-formed string, we are guaranteed to see 2 `]` characters after the end of the string contents
     LUAU_ASSERT(*(data + length) == ']');
@@ -382,7 +389,8 @@ const Lexeme& Lexer::next(bool skipComments, bool updatePrevLocation)
 
         lexeme = readNext();
         updatePrevLocation = false;
-    } while (skipComments && (lexeme.type == Lexeme::Comment || lexeme.type == Lexeme::BlockComment));
+    } while (skipComments && (lexeme.type == Lexeme::Comment || lexeme.type == Lexeme::BlockComment || lexeme.type == Lexeme::DashComment ||
+                                lexeme.type == Lexeme::DashBlockComment));
 
     return lexeme;
 }
@@ -473,9 +481,18 @@ Lexeme Lexer::readCommentBody()
 {
     Position start = position();
 
-    LUAU_ASSERT(peekch(0) == '-' && peekch(1) == '-');
-    consume();
-    consume();
+    bool dash = peekch() == '-';
+    if (dash)
+    {
+        LUAU_ASSERT(peekch(1) == '-');
+        consume();
+        consume();
+    }
+    else
+    {
+        LUAU_ASSERT(peekch() == '#');
+        consume();
+    }
 
     size_t startOffset = offset;
 
@@ -485,7 +502,7 @@ Lexeme Lexer::readCommentBody()
 
         if (sep >= 0)
         {
-            return readLongString(start, sep, Lexeme::BlockComment, Lexeme::BrokenComment);
+            return readLongString(start, sep, dash ? Lexeme::DashBlockComment : Lexeme::BlockComment, Lexeme::BrokenComment);
         }
     }
 
@@ -493,7 +510,7 @@ Lexeme Lexer::readCommentBody()
     while (peekch() != 0 && peekch() != '\r' && !isNewline(peekch()))
         consume();
 
-    return Lexeme(Location(start, position()), Lexeme::Comment, &buffer[startOffset], offset - startOffset);
+    return Lexeme(Location(start, position()), dash ? Lexeme::DashComment : Lexeme::Comment, &buffer[startOffset], offset - startOffset);
 }
 
 // Given a sequence [===[ or ]===], returns:
@@ -747,6 +764,9 @@ Lexeme Lexer::readNext()
         }
     }
 
+    case '#':
+        return readCommentBody();
+
     case '[':
     {
         int sep = skipLongSeparator();
@@ -969,7 +989,6 @@ Lexeme Lexer::readNext()
     case ']':
     case ';':
     case ',':
-    case '#':
     case '?':
     case '&':
     case '|':

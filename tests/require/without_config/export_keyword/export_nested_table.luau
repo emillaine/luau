@@ -1,4 +1,4 @@
--- nested table, where the binding is immutable but contents mutable
+# nested table, where the binding is immutable but contents mutable
 export const triangle = {}
 
 triangle.name = "triangle"

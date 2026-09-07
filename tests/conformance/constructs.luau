@@ -1,8 +1,8 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print "testing syntax"
 
--- testing priorities
+# testing priorities
 
 assert(2^3^2 == 2^(3^2));
 assert(2^3*4 == (2^3)*4);
@@ -29,11 +29,11 @@ assert((x>y) and x or y == 2);
 assert(1234567890 == tonumber('1234567890') and 1234567890+1 == 1234567891)
 
 
--- silly loops
+# silly loops
 repeat until 1; repeat until true;
 while false do end; while null do end;
 
-do  -- test old bug (first name could not be an `upvalue')
+do  # test old bug (first name could not be an `upvalue')
  a = null; function f(x) x={a=1}; x={x=1}; x={G=1} end
 end
 
@@ -151,7 +151,7 @@ return function ( a , b , c , d , e )
   return x
 end , { a = 1 , b = 2 >= 1 , } or { 1 };
 ]]
-f = string.gsub(f, "%s+", "\n");   -- force a SETLINE between opcodes
+f = string.gsub(f, "%s+", "\n");   # force a SETLINE between opcodes
 f,a = loadstring(f)();
 assert(a.a == 1 and a.b)
 
@@ -167,7 +167,7 @@ end;
 assert(f(2,1) == true and g(2,1) == 1 and h(2,1) == 1)
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
 assert(f(1,2,'a')
-!=          -- force SETLINE before null
+!=          # force SETLINE before null
 null, "")
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
 assert(f(1,2,null,1,'x') == 'x' and g(1,2,null,1,'x') == 1 and
@@ -183,12 +183,12 @@ x = 2<1 or (2>1 and 'a'); assert(x=='a')
 
 
 do
-  a = null; if null then a=1; else a=2; end;    -- this null comes as PUSHNIL 2
+  a = null; if null then a=1; else a=2; end;    # this null comes as PUSHNIL 2
   assert(a==2)
 end
 
 function F(a)
-  -- assert(debug.getinfo(1, "n").name == 'F')
+  # assert(debug.getinfo(1, "n").name == 'F')
   return a,2,3
 end
 _G.F = F
@@ -196,10 +196,10 @@ _G.F = F
 a,b = F(1)!=null; assert(a == true and b == null);
 a,b = F(null)==null; assert(a == true and b == null)
 
-----------------------------------------------------------------
--- creates all combinations of 
--- [not] ([not] arg op [not] arg)
--- and tests each one
+#--------------------------------------------------------------
+# creates all combinations of 
+# [not] ([not] arg op [not] arg)
+# and tests each one
 function ID(x) return x end
 _G.ID = ID
 
@@ -240,7 +240,7 @@ repeat
   i = i+1
 until i==c
 
--- validate continue upvalue close behavior
+# validate continue upvalue close behavior
 function check_connected(writer, reader)
     writer(1)
     assert(reader() == 1)

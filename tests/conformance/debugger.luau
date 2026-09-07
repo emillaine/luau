@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
-print "testing debugger" -- note, this file can't run in isolation from C tests
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+print "testing debugger" # note, this file can't run in isolation from C tests
 
 a = 5
 
@@ -12,7 +12,7 @@ breakpoint(8)
 
 foo(50, 42)
 
-breakpoint(16) -- next line
+breakpoint(16) # next line
 print("here")
 
 function coro(arg)
@@ -22,16 +22,16 @@ function coro(arg)
 	return 42
 end
 
-breakpoint(20) -- break inside coro()
+breakpoint(20) # break inside coro()
 
 a = 7
 
 co = coroutine.create(coro)
-_, res = coroutine.resume(co, 8) -- this breaks and resumes!
+_, res = coroutine.resume(co, 8) # this breaks and resumes!
 assert(res == 42)
 
 cof = coroutine.wrap(coro)
-assert(cof(9) == 42) -- this breaks and resumes!
+assert(cof(9) == 42) # this breaks and resumes!
 
 function corobad()
 	print("before coro break")
@@ -40,17 +40,17 @@ end
 
 assert(a == 9)
 
-breakpoint(38) -- break inside corobad()
+breakpoint(38) # break inside corobad()
 
 co = coroutine.create(corobad)
-assert(coroutine.resume(co) == false) -- this breaks, resumes and dies!
+assert(coroutine.resume(co) == false) # this breaks, resumes and dies!
 
 function bar()
 	print("in bar")
 end
 
 breakpoint(49)
-breakpoint(49, false) -- validate that disabling breakpoints works
+breakpoint(49, false) # validate that disabling breakpoints works
 
 bar()
 
@@ -69,7 +69,7 @@ end
 
 breakpointSetFromMetamethod()
 
--- break inside function with non-monotonic line info
+# break inside function with non-monotonic line info
 function cond(a)
 	if a then
 		print('a')
@@ -80,7 +80,7 @@ end
 
 breakpoint(77)
 
-pcall(cond, null) -- prevent inlining
+pcall(cond, null) # prevent inlining
 
 function continueLocals()
 	repeat
@@ -97,6 +97,6 @@ end
 
 breakpoint(93)
 
-pcall(continueLocals, null) -- prevent inlining
+pcall(continueLocals, null) # prevent inlining
 
 return 'OK'

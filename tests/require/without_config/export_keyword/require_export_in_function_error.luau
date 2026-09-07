@@ -1,4 +1,4 @@
--- verify export inside function body causes error
+# verify export inside function body causes error
 success, err = pcall(function()
     m = require("./export_in_function_error")
 end)

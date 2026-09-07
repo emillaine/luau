@@ -325,7 +325,7 @@ decoded = buffer.create(PIXEL_BYTES)
 encodeIndex = buffer.create(64 * 4)
 decodeIndex = buffer.create(64 * 4)
 
--- Verify correctness and opcode coverage once, outside the timed samples.
+# Verify correctness and opcode coverage once, outside the timed samples.
 encodedSize = encodeQoi(source, WIDTH, HEIGHT, encoded, encodeIndex)
 decodedWidth, decodedHeight, decodedChannels, decodedColorspace = decodeQoi(encoded, encodedSize, decoded, decodeIndex)
 assert(decodedWidth == WIDTH and decodedHeight == HEIGHT)

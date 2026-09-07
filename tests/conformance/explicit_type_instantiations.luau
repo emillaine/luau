@@ -1,4 +1,4 @@
--- Tests to ensure explicit type instantiations don't change runtime behavior
+# Tests to ensure explicit type instantiations don't change runtime behavior
 function identity<T>(x: T): T
     return x
 end

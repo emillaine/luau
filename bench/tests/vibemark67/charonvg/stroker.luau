@@ -1,4 +1,4 @@
---!native
+#!native
 Path = require("./path")
 
 Stroker = {}
@@ -13,7 +13,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
 
     result = Path.create()
 
-    -- Collect flattened contours
+    # Collect flattened contours
     contours = {}
     current = null
 
@@ -21,14 +21,14 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
         if cmd == Path.MOVE_TO then
             x, y = ...
             current = { { x, y } }
-            contours[#contours + 1] = current
+            contours[contours.count + 1] = current
         else if cmd == Path.LINE_TO then
             x, y = ...
             if current then
-                current[#current + 1] = { x, y }
+                current[current.count + 1] = { x, y }
             end
         else if cmd == Path.CLOSE then
-            if current and #current > 1 then
+            if current and current.count > 1 then
                 current.closed = true
             end
         end
@@ -36,21 +36,21 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
 
     for _, contour in ipairs(contours) do
         repeat
-            n = #contour
+            n = contour.count
             if n < 2 then
                 break
             end
 
-            -- Remove duplicate consecutive points
+            # Remove duplicate consecutive points
             pts = { contour[1] }
             for i = 2, n do
-                prev = pts[#pts]
+                prev = pts[pts.count]
                 cur = contour[i]
                 if cur[1] != prev[1] or cur[2] != prev[2] then
-                    pts[#pts + 1] = cur
+                    pts[pts.count + 1] = cur
                 end
             end
-            n = #pts
+            n = pts.count
             if n < 2 then
                 break
             end
@@ -68,7 +68,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                 end
             end
 
-            -- Compute normals for each segment
+            # Compute normals for each segment
             normals = {}
             for i = 1, n - 1 do
                 dx = pts[i + 1][1] - pts[i][1]
@@ -91,7 +91,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                 end
             end
 
-            -- Build left and right offset contours
+            # Build left and right offset contours
             left = {}
             right = {}
 
@@ -106,7 +106,7 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                 steps = math.max(2, math.ceil(math.abs(da) / (PI / 8)))
                 for i = 1, steps do
                     a = startAngle + da * (i / steps)
-                    arr[#arr + 1] = { cx + math.cos(a) * r, cy + math.sin(a) * r }
+                    arr[arr.count + 1] = { cx + math.cos(a) * r, cy + math.sin(a) * r }
                 end
             end
 
@@ -119,26 +119,26 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                     a1 = math.atan2(ny1 * sign, nx1 * sign)
                     a2 = math.atan2(ny2 * sign, nx2 * sign)
                     arr = side == "left" and left or right
-                    arr[#arr + 1] = { pt[1] + nx1 * sign * radius, pt[2] + ny1 * sign * radius }
+                    arr[arr.count + 1] = { pt[1] + nx1 * sign * radius, pt[2] + ny1 * sign * radius }
                     addArc(arr, pt[1], pt[2], a1, a2, radius)
                 else if join == "bevel" then
                     if side == "left" then
-                        left[#left + 1] = { pt[1] + nx1 * radius, pt[2] + ny1 * radius }
-                        left[#left + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }
+                        left[left.count + 1] = { pt[1] + nx1 * radius, pt[2] + ny1 * radius }
+                        left[left.count + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }
                     else
-                        right[#right + 1] = { pt[1] - nx1 * radius, pt[2] - ny1 * radius }
-                        right[#right + 1] = { pt[1] - nx2 * radius, pt[2] - ny2 * radius }
+                        right[right.count + 1] = { pt[1] - nx1 * radius, pt[2] - ny1 * radius }
+                        right[right.count + 1] = { pt[1] - nx2 * radius, pt[2] - ny2 * radius }
                     end
                 else
-                    -- Miter join
+                    # Miter join
                     mx = nx1 + nx2
                     my = ny1 + ny2
                     len = math.sqrt(mx * mx + my * my)
                     if len < 1e-10 then
                         if side == "left" then
-                            left[#left + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }
+                            left[left.count + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }
                         else
-                            right[#right + 1] = { pt[1] - nx2 * radius, pt[2] - ny2 * radius }
+                            right[right.count + 1] = { pt[1] - nx2 * radius, pt[2] - ny2 * radius }
                         end
                     else
                         mx = mx / len
@@ -150,33 +150,33 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                         miterLen = radius / dot
                         if miterLen / radius > miterLimit then
                             if side == "left" then
-                                left[#left + 1] = { pt[1] + nx1 * radius, pt[2] + ny1 * radius }
-                                left[#left + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }
+                                left[left.count + 1] = { pt[1] + nx1 * radius, pt[2] + ny1 * radius }
+                                left[left.count + 1] = { pt[1] + nx2 * radius, pt[2] + ny2 * radius }
                             else
-                                right[#right + 1] = { pt[1] - nx1 * radius, pt[2] - ny1 * radius }
-                                right[#right + 1] = { pt[1] - nx2 * radius, pt[2] - ny2 * radius }
+                                right[right.count + 1] = { pt[1] - nx1 * radius, pt[2] - ny1 * radius }
+                                right[right.count + 1] = { pt[1] - nx2 * radius, pt[2] - ny2 * radius }
                             end
                         else
                             if side == "left" then
-                                left[#left + 1] = { pt[1] + mx * miterLen, pt[2] + my * miterLen }
+                                left[left.count + 1] = { pt[1] + mx * miterLen, pt[2] + my * miterLen }
                             else
-                                right[#right + 1] = { pt[1] - mx * miterLen, pt[2] - my * miterLen }
+                                right[right.count + 1] = { pt[1] - mx * miterLen, pt[2] - my * miterLen }
                             end
                         end
                     end
                 end
             end
 
-            -- First point
+            # First point
             if closed then
                 addJoin(pts[1], normals[n], normals[1], "left")
                 addJoin(pts[1], normals[n], normals[1], "right")
             else
                 nx, ny = normals[1][1], normals[1][2]
-                left[#left + 1] = { pts[1][1] + nx * radius, pts[1][2] + ny * radius }
-                right[#right + 1] = { pts[1][1] - nx * radius, pts[1][2] - ny * radius }
+                left[left.count + 1] = { pts[1][1] + nx * radius, pts[1][2] + ny * radius }
+                right[right.count + 1] = { pts[1][1] - nx * radius, pts[1][2] - ny * radius }
 
-                -- Start cap
+                # Start cap
                 if cap == "square" then
                     dx = pts[2][1] - pts[1][1]
                     dy = pts[2][2] - pts[1][2]
@@ -189,55 +189,55 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                 end
             end
 
-            -- Interior points
+            # Interior points
             for i = 2, n - 1 do
                 addJoin(pts[i], normals[i - 1], normals[i], "left")
                 addJoin(pts[i], normals[i - 1], normals[i], "right")
             end
 
-            -- Last point
+            # Last point
             if closed then
                 addJoin(pts[n], normals[n - 1], normals[n], "left")
                 addJoin(pts[n], normals[n - 1], normals[n], "right")
             else
                 nx, ny = normals[n - 1][1], normals[n - 1][2]
-                left[#left + 1] = { pts[n][1] + nx * radius, pts[n][2] + ny * radius }
-                right[#right + 1] = { pts[n][1] - nx * radius, pts[n][2] - ny * radius }
+                left[left.count + 1] = { pts[n][1] + nx * radius, pts[n][2] + ny * radius }
+                right[right.count + 1] = { pts[n][1] - nx * radius, pts[n][2] - ny * radius }
 
-                -- End cap
+                # End cap
                 if cap == "square" then
                     dx = pts[n][1] - pts[n - 1][1]
                     dy = pts[n][2] - pts[n - 1][2]
                     len = math.sqrt(dx * dx + dy * dy)
                     if len > 0 then
                         tx, ty = dx / len * radius, dy / len * radius
-                        left[#left] = { left[#left][1] + tx, left[#left][2] + ty }
-                        right[#right] = { right[#right][1] + tx, right[#right][2] + ty }
+                        left[left.count] = { left[left.count][1] + tx, left[left.count][2] + ty }
+                        right[right.count] = { right[right.count][1] + tx, right[right.count][2] + ty }
                     end
                 end
             end
 
-            -- Emit the stroke outline
-            if #left > 0 then
+            # Emit the stroke outline
+            if left.count > 0 then
                 if closed then
-                    -- Two separate closed contours (outer + inner) for clean nonzero fill
+                    # Two separate closed contours (outer + inner) for clean nonzero fill
                     result:moveTo(right[1][1], right[1][2])
-                    for i = 2, #right do
+                    for i = 2, right.count do
                         result:lineTo(right[i][1], right[i][2])
                     end
                     result:close()
-                    result:moveTo(left[#left][1], left[#left][2])
-                    for i = #left - 1, 1, -1 do
+                    result:moveTo(left[left.count][1], left[left.count][2])
+                    for i = left.count - 1, 1, -1 do
                         result:lineTo(left[i][1], left[i][2])
                     end
                     result:close()
                 else
-                    -- Open path: left forward, end cap, right backward, start cap
+                    # Open path: left forward, end cap, right backward, start cap
                     result:moveTo(left[1][1], left[1][2])
-                    for i = 2, #left do
+                    for i = 2, left.count do
                         result:lineTo(left[i][1], left[i][2])
                     end
-                    -- End cap (from last left point to last right point)
+                    # End cap (from last left point to last right point)
                     if cap == "round" then
                         endNx, endNy = normals[n - 1][1], normals[n - 1][2]
                         endAngle = math.atan2(endNy, endNx)
@@ -247,10 +247,10 @@ function Stroker.stroke(path, width, cap, join, miterLimit)
                             result:lineTo(pts[n][1] + math.cos(a) * radius, pts[n][2] + math.sin(a) * radius)
                         end
                     end
-                    for i = #right, 1, -1 do
+                    for i = right.count, 1, -1 do
                         result:lineTo(right[i][1], right[i][2])
                     end
-                    -- Start cap (from first right point back to first left point)
+                    # Start cap (from first right point back to first left point)
                     if cap == "round" then
                         startNx, startNy = normals[1][1], normals[1][2]
                         startAngle = math.atan2(-startNy, -startNx)

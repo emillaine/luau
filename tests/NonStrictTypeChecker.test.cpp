@@ -107,7 +107,7 @@ struct NonStrictTypeCheckerFixture : Fixture
 declare function cond() : boolean
 @checked declare function contrived(n : Not<number>) : number
 
--- interesting types of things that we would like to mark as checked
+# interesting types of things that we would like to mark as checked
 @checked declare function onlyNums(...: number) : number
 @checked declare function mixedArgs(x: string, ...: number) : number
 @checked declare function optionalArg(x: string?) : number
@@ -506,11 +506,11 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "phi_node_assignment")
 {
     ScopedFastFlag sff{FFlag::LuauExportValueSyntax, true};
     CheckResult result = checkNonStrict(R"(
-export x = "a" -- x1
+export x = "a" # x1
 if cond() then
-    x = 3 -- x2
+    x = 3 # x2
 end
-lower(x) -- phi {x1, x2}
+lower(x) # phi {x1, x2}
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -603,8 +603,8 @@ optionalArgsAtTheEnd1("a", null, 3)
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "generic_type_packs_in_non_strict")
 {
     CheckResult result = checkNonStrict(R"(
-        --!nonstrict
-        const test: <T...>(T...) -> () = null as any -- TypeError: Unknown type 'T'
+        #!nonstrict
+        const test: <T...>(T...) -> () = null as any # TypeError: Unknown type 'T'
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -613,10 +613,10 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "generic_type_packs_in_non_strict
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "optionals_in_checked_function_in_middle_cannot_be_omitted")
 {
     CheckResult result = checkNonStrict(R"(
-optionalArgsAtTheEnd2("a", "a") -- error
+optionalArgsAtTheEnd2("a", "a") # error
 optionalArgsAtTheEnd2("a", null, "b")
 optionalArgsAtTheEnd2("a", 3, "b")
-optionalArgsAtTheEnd2("a", "b", "c") -- error
+optionalArgsAtTheEnd2("a", "b", "c") # error
 )");
     LUAU_REQUIRE_ERROR_COUNT(3, result);
     NONSTRICT_REQUIRE_CHECKED_ERR(Position(1, 27), "optionalArgsAtTheEnd2", result);
@@ -640,7 +640,7 @@ os.time({year = 0, month = 0, day = 0, min = 0, isdst = null})
 TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "non_strict_shouldnt_warn_on_require_module")
 {
     fileResolver.source["Modules/A"] = R"(
---!strict
+#!strict
 type t = {x : number}
 const e : t = {x = 3}
 return e
@@ -648,7 +648,7 @@ return e
     fileResolver.sourceTypes["Modules/A"] = SourceCode::Module;
 
     fileResolver.source["Modules/B"] = R"(
---!nonstrict
+#!nonstrict
 const E = require(script.Parent.A)
 )";
 
@@ -709,7 +709,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_globals_in_non_strict_1")
 TEST_CASE_FIXTURE(BuiltinsFixture, "unknown_types_in_non_strict")
 {
     CheckResult result = check(Mode::Nonstrict, R"(
-        --!nonstrict
+        #!nonstrict
         const foo: Foo = 1
     )");
 
@@ -722,7 +722,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unknown_types_in_non_strict")
 TEST_CASE_FIXTURE(BuiltinsFixture, "unknown_types_in_non_strict_2")
 {
     CheckResult result = check(Mode::Nonstrict, R"(
-        --!nonstrict
+        #!nonstrict
         const foo = 1 as Foo
     )");
 
@@ -906,7 +906,7 @@ TEST_CASE_FIXTURE(NonStrictTypeCheckerFixture, "typecheck_class_method_bodies")
     };
 
     CheckResult result = checkNonStrict(R"(
-        --!nonstrict
+        #!nonstrict
         class Student
             public name: number
             function greet(self)

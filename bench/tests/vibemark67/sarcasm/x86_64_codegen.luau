@@ -1,9 +1,9 @@
---!nonstrict
--- x86_64 codegen: the per-arch instruction emitter used by the shared GIMSO transform
--- (transform.luau). It exposes (a) static config — calling convention, operand analysis —
--- and (b) make(ctx) returning a `cg` of neutral "micro-ops" the shared transform composes
--- into access checks, invisicap loads/stores, calls, pollchecks and allocations. Output is
--- always AT&T (see x86_64_render); the IR nodes are dest-first.
+#!nonstrict
+# x86_64 codegen: the per-arch instruction emitter used by the shared GIMSO transform
+# (transform.luau). It exposes (a) static config — calling convention, operand analysis —
+# and (b) make(ctx) returning a `cg` of neutral "micro-ops" the shared transform composes
+# into access checks, invisicap loads/stores, calls, pollchecks and allocations. Output is
+# always AT&T (see x86_64_render); the IR nodes are dest-first.
 
 build = require("./build")
 isa = require("./x86_64_isa")
@@ -11,24 +11,24 @@ xparse = require("./x86_64_parse")
 
 M = {}
 
--- ISA passthrough ---------------------------------------------------------
+# ISA passthrough #-------------------------------------------------------
 M.classify = isa.classify
 M.baseMnemonic = isa.baseMnemonic
 M.precolorName = function(num) return xparse.regName(num, 64) end
 M.ALLOCATABLE = isa.ALLOCATABLE
 
--- Calling convention (numbers are register encodings; see x86_64_isa).
--- Fast entrypoint: rdi=myth, (rdx,rcx)=arg0, (r8,r9)=arg1; ret al=flags, rdx=iv, rcx=lo.
--- Runtime (SysV) calls: rdi,rsi,rdx,... ; result in rax.  yolo params arrive in SysV regs.
+# Calling convention (numbers are register encodings; see x86_64_isa).
+# Fast entrypoint: rdi=myth, (rdx,rcx)=arg0, (r8,r9)=arg1; ret al=flags, rdx=iv, rcx=lo.
+# Runtime (SysV) calls: rdi,rsi,rdx,... ; result in rax.  yolo params arrive in SysV regs.
 M.cc = {
 	myth = isa.CC.myth, retFlag = isa.CC.retFlag, retIv = isa.CC.retIv, retLo = isa.CC.retLo,
 	argIv = isa.CC.argIv, argLo = isa.CC.argLo,
 	yoloArg = function(k) return isa.SYSV[k] end,
-	rtArg = function(k) return isa.SYSV[k] end,   -- runtime-call arg registers
-	rtRet = 0,                                    -- rax
+	rtArg = function(k) return isa.SYSV[k] end,   # runtime-call arg registers
+	rtRet = 0,                                    # rax
 }
 
--- Static operand analysis -------------------------------------------------
+# Static operand analysis #-----------------------------------------------
 function M.memOperand(stmt)
 	for _, op in stmt.operands do if op.kind == "mem" then return op end end
 	return null
@@ -37,7 +37,7 @@ end
 WIDTH_LETTER = { b = 1, w = 2, l = 4, q = 8 }
 function M.accessSizeAlign(stmt)
 	mnem = string.lower(stmt.mnemonic)
-	zs = string.match(mnem, "^mov[zs]([bw])")  -- movzbl/movswq/... source width letter
+	zs = string.match(mnem, "^mov[zs]([bw])")  # movzbl/movswq/... source width letter
 	if zs then s = WIDTH_LETTER[zs]; return s, s end
 	mem = null
 	for _, op in stmt.operands do if op.kind == "mem" then mem = op end end
@@ -52,21 +52,21 @@ function M.accessSizeAlign(stmt)
 	return sz, sz
 end
 
--- x86 uses `lea`/`mov` for address arithmetic, so there is no `mov rd, rsp` alloca-base
--- idiom to recognize for fixed-size regions (gcc emits `lea`, handled as a region result).
+# x86 uses `lea`/`mov` for address arithmetic, so there is no `mov rd, rsp` alloca-base
+# idiom to recognize for fixed-size regions (gcc emits `lea`, handled as a region result).
 function M.allocaRegionBase(stmt) return null end
 
--- Is this a load/store the transform models? On x86 most instructions can carry a memory
--- operand (it is a load/store architecture only in spirit), so any mem operand is a real
--- access to bounds-check; nothing to reject as "mem on a non-load/store".
+# Is this a load/store the transform models? On x86 most instructions can carry a memory
+# operand (it is a load/store architecture only in spirit), so any mem operand is a real
+# access to bounds-check; nothing to reject as "mem on a non-load/store".
 function M.isMemInsn(mnem) return true end
 
--- `alloca size` size operand: `sub rsp, X` -> X is operands[2] (dest-first).
+# `alloca size` size operand: `sub rsp, X` -> X is operands[2] (dest-first).
 function M.allocaSizeOperand(stmt) return stmt.operands[2] end
--- a store writes memory when the (dest-first) first operand is the memory operand.
+# a store writes memory when the (dest-first) first operand is the memory operand.
 function M.isStoreInsn(stmt) return stmt.operands[1] and stmt.operands[1].kind == "mem" end
 
--- x86 conditions for the neutral cmp/test conditions used by the shared transform.
+# x86 conditions for the neutral cmp/test conditions used by the shared transform.
 JCC = { ult = "jb", uge = "jae", ugt = "ja", ule = "jbe", eq = "je", ne = "jne" }
 
 function M.make(ctx)
@@ -88,7 +88,7 @@ function M.make(ctx)
 	function cg.movBig(dst, hex) emit(build.insn("mov", { rt(dst), build.imm(hex) }, { defs = {dst} })) end
 
 	function cg.load(dst, base, off, size)
-		-- byte loads zero-extend into a 32-bit dest (mirrors ARM `ldrb`); wider loads are plain.
+		# byte loads zero-extend into a 32-bit dest (mirrors ARM `ldrb`); wider loads are plain.
 		mnem = (size == 1) and "movzbl" or "mov"
 		w = (size == 1) and 32 or (size and size * 8 or 64)
 		emit(build.insn(mnem, { rt(dst, w),
@@ -106,27 +106,27 @@ function M.make(ctx)
 		emit(build.insn("mov", { build.memx(rt(base), { index = rt(idx), scale = scale or 1 }), rt(src) },
 			{ uses = {src, base, idx} }))
 	end
-	-- dst = base + off + idx*scale (lea; base/idx are temps, may be null)
+	# dst = base + off + idx*scale (lea; base/idx are temps, may be null)
 	function cg.effAddr(dst, base, off, idx, scale)
 		uses, mopts = {}, { dispVal = (off != 0) and off or null }
 		if base then table.insert(uses, base) end
 		if idx then mopts.index = rt(idx); mopts.scale = scale or 1; table.insert(uses, idx) end
 		emit(build.insn("lea", { rt(dst), build.memx(base and rt(base) or null, mopts) }, { defs = {dst}, uses = uses }))
 	end
-	function cg.addImm(dst, src, imm)  -- dst = src + imm
+	function cg.addImm(dst, src, imm)  # dst = src + imm
 		emit(build.insn("lea", { rt(dst), build.memx(rt(src), { dispVal = imm }) }, { defs = {dst}, uses = {src} }))
 	end
-	function cg.subImm(dst, src, imm)  -- dst = src - imm
+	function cg.subImm(dst, src, imm)  # dst = src - imm
 		emit(build.insn("lea", { rt(dst), build.memx(rt(src), { dispVal = -imm }) }, { defs = {dst}, uses = {src} }))
 	end
-	function cg.subReg(dst, a, b)      -- dst = a - b
+	function cg.subReg(dst, a, b)      # dst = a - b
 		cg.move(dst, a)
 		emit(build.insn("sub", { rt(dst), rt(b) }, { defs = {dst}, uses = {dst, b} }))
 	end
-	function cg.andImmInPlace(dst, mask)  -- dst = dst & mask
+	function cg.andImmInPlace(dst, mask)  # dst = dst & mask
 		emit(build.insn("and", { rt(dst), build.imm(mask) }, { defs = {dst}, uses = {dst} }))
 	end
-	function cg.maskLow48(dst)  -- dst = dst & 0xffffffffffff  (shl 16; shr 16 clears top 16)
+	function cg.maskLow48(dst)  # dst = dst & 0xffffffffffff  (shl 16; shr 16 clears top 16)
 		emit(build.insn("shl", { rt(dst), build.imm(16) }, { defs = {dst}, uses = {dst} }))
 		emit(build.insn("shr", { rt(dst), build.imm(16) }, { defs = {dst}, uses = {dst} }))
 	end
@@ -143,8 +143,8 @@ function M.make(ctx)
 	function cg.cmpImmBranch(a, imm, cond, lbl)
 		emit(build.insn("cmp", { rt(a), build.imm(imm) }, { uses = {a} })); branch(JCC[cond], lbl)
 	end
-	-- branch if (reg & mask) cond 0   (cond "eq"/"ne"). x86 `test` only takes a 32-bit
-	-- (sign-extended) immediate, so a mask that doesn't fit imm32 must go through a register.
+	# branch if (reg & mask) cond 0   (cond "eq"/"ne"). x86 `test` only takes a 32-bit
+	# (sign-extended) immediate, so a mask that doesn't fit imm32 must go through a register.
 	function cg.testMaskBranch(reg, mask, cond, lbl, width)
 		mval = (type(mask) == "number") and mask or tonumber(mask)
 		big = (mval == null) or mval > 0x7fffffff or mval < -0x80000000
@@ -172,12 +172,12 @@ function M.make(ctx)
 		for _, rn in isa.CALLER_SAVED_NUMS do table.insert(clob, pColored(rn)) end
 		return clob
 	end
-	function cg.leaGlobal(destPhys, sym)  -- destPhys is a physical reg num
+	function cg.leaGlobal(destPhys, sym)  # destPhys is a physical reg num
 		emit(build.insn("lea", { build.rp(destPhys), build.memx({ kind = "reg", rc = "rip" }, { dispSym = sym }) },
 			{ defs = { pColored(destPhys) } }))
 	end
 
-	-- effective address + capability selection for a memory operand.
+	# effective address + capability selection for a memory operand.
 	function cg.computeAddr(node, mem)
 		baseTemp = mem.base and node.opTemp[mem.base] or null
 		indexTemp = (mem.index and mem.index.kind == "reg") and node.opTemp[mem.index] or null
@@ -193,7 +193,7 @@ function M.make(ctx)
 		return effTemp, capLo
 	end
 
-	-- store-barrier marking-state test: branch to `lbl` if FUGC marking is active.
+	# store-barrier marking-state test: branch to `lbl` if FUGC marking is active.
 	function cg.markingStateNonzeroBranch(lbl)
 		msp = allocTemp({ role = "scratch" })
 		emit(build.insn("mov", { rt(msp), build.memx({ kind = "reg", rc = "rip" },
@@ -202,7 +202,7 @@ function M.make(ctx)
 		emit(build.insn("mov", { rt(msv, 32), build.memx(rt(msp), {}) }, { defs = {msv}, uses = {msp} }))
 		emit(build.insn("test", { rt(msv, 32), rt(msv, 32) }, { uses = {msv} })); branch("jne", lbl)
 	end
-	-- branch to exception epilogue if the call's return flag bit 0 is set (al bit0).
+	# branch to exception epilogue if the call's return flag bit 0 is set (al bit0).
 	function cg.exceptionBranch(lbl)
 		emit(build.insn("test", { build.rp(M.cc.retFlag, 8), build.imm(1) }, { uses = { pColored(M.cc.retFlag) } }))
 		branch("jne", lbl)
@@ -211,8 +211,8 @@ function M.make(ctx)
 	function cg.clearRetFlag()
 		emit(build.insn("mov", { build.rp(M.cc.retFlag, 32), build.imm(0) }, { defs = { pColored(M.cc.retFlag) } }))
 	end
-	-- passthrough special-casing: cltq -> renameable movslq on the rax web; lea does not
-	-- access memory (its [mem] is an address computation), so pass it through unchecked.
+	# passthrough special-casing: cltq -> renameable movslq on the rax web; lea does not
+	# access memory (its [mem] is an address computation), so pass it through unchecked.
 	function cg.lowerSpecial(node, mem)
 		base = isa.baseMnemonic(node.stmt.mnemonic)
 		if base == "cltq" then
@@ -224,9 +224,9 @@ function M.make(ctx)
 		end
 		return false
 	end
-	function cg.checkMemInsn(node, mem) end  -- x86: any memory operand is a real access
+	function cg.checkMemInsn(node, mem) end  # x86: any memory operand is a real access
 
-	-- one access-check-fail stub, appended to `list` (arch-specific arg regs + rip origin).
+	# one access-check-fail stub, appended to `list` (arch-specific arg regs + rip origin).
 	function cg.failStub(list, lbl, ivTemp, loTemp, acoSym)
 		a1, a2, a3 = M.cc.rtArg(1), M.cc.rtArg(2), M.cc.rtArg(3)
 		table.insert(list, build.label(lbl))

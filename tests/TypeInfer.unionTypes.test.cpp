@@ -61,7 +61,7 @@ TEST_CASE_FIXTURE(Fixture, "return_types_can_be_disjoint_using_compound_assignme
         export count = 0
         function most_of_the_natural_numbers(): number?
             if count < 10 then
-                -- count = count + 1
+                # count = count + 1
                 count += 1
                 return count
             else
@@ -499,15 +499,15 @@ y = x
 TEST_CASE_FIXTURE(Fixture, "unify_sealed_table_union_check")
 {
     CheckResult result = check(R"(
- -- the difference between this and unify_unsealed_table_union_check is the type annotation on x
+ # the difference between this and unify_unsealed_table_union_check is the type annotation on x
 const t = { x = 3, y = true }
 const x: { x: number } = t
 type A = number?
 type B = string?
 const y: { x: number, y: A | B }
--- Shouldn't typecheck!
+# Shouldn't typecheck!
 y = x
--- If it does, we can convert any type to any other type
+# If it does, we can convert any type to any other type
 y.y = 5
 const oh : boolean = t.y
     )");
@@ -606,7 +606,7 @@ Table type 'a' not compatible with type 'X' because the former is missing field 
 TEST_CASE_FIXTURE(Fixture, "dont_allow_cyclic_unions_to_be_inferred")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f(a, b)
             a:g(b or {})
@@ -690,10 +690,10 @@ TEST_CASE_FIXTURE(Fixture, "union_true_and_false")
 {
     CheckResult result = check(R"(
         function f(x : boolean)
-            const y1 : (true | false) = x -- OK
-            const y2 : (true | false | (string & number)) = x -- OK
-            const y3 : (true | (string & number) | false) = x -- OK
-            const y4 : (true | (boolean & true) | false) = x -- OK
+            const y1 : (true | false) = x # OK
+            const y2 : (true | false | (string & number)) = x # OK
+            const y3 : (true | (string & number) | false) = x # OK
+            const y4 : (true | (boolean & true) | false) = x # OK
         end
     )");
 
@@ -704,7 +704,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions")
 {
     CheckResult result = check(R"(
         function f(x : (number) -> number?)
-            const y : ((number?) -> number?) | ((number) -> number) = x -- OK
+            const y : ((number?) -> number?) | ((number) -> number) = x # OK
         end
      )");
 
@@ -715,7 +715,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_generic_functions")
 {
     CheckResult result = check(R"(
         function f(x : <a>(a) -> a?)
-            const y : (<a>(a?) -> a?) | (<b>(b) -> b) = x -- Not OK
+            const y : (<a>(a?) -> a?) | (<b>(b) -> b) = x # Not OK
         end
      )");
 
@@ -727,7 +727,7 @@ TEST_CASE_FIXTURE(Fixture, "union_of_generic_typepack_functions")
 {
     CheckResult result = check(R"(
         function f(x : <a...>(number, a...) -> (number?, a...))
-            const y : (<a...>(number?, a...) -> (number?, a...)) | (<b...>(number, b...) -> (number, b...)) = x -- Not OK
+            const y : (<a...>(number?, a...) -> (number?, a...)) | (<b...>(number, b...) -> (number, b...)) = x # Not OK
         end
      )");
 
@@ -742,8 +742,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generics")
     CheckResult result = check(R"(
         function f<a,b>()
             function g(x : (a) -> a?)
-                const y : ((a?) -> null) | ((a) -> a) = x -- OK
-                const z : ((b?) -> null) | ((b) -> b) = x -- Not OK
+                const y : ((a?) -> null) | ((a) -> a) = x # OK
+                const z : ((b?) -> null) | ((b) -> b) = x # Not OK
             end
         end
     )");
@@ -762,8 +762,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_mentioning_generic_typepacks")
     CheckResult result = check(R"(
         function f<a...>()
             function g(x : (number, a...) -> (number?, a...))
-                const y : ((number | string, a...) -> (number, a...)) | ((number?, a...) -> (null, a...)) = x -- OK
-                const z : ((number) -> number) | ((number?, a...) -> (number?, a...)) = x -- Not OK
+                const y : ((number | string, a...) -> (number, a...)) | ((number?, a...) -> (null, a...)) = x # OK
+                const z : ((number) -> number) | ((number?, a...) -> (number?, a...)) = x # Not OK
             end
         end
     )");
@@ -784,8 +784,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_arg_arities")
 
     CheckResult result = check(R"(
         function f(x : (number) -> number?)
-            const y : ((number?) -> number) | ((number | string) -> null) = x -- OK
-            const z : ((number, string?) -> number) | ((number) -> null) = x -- Not OK
+            const y : ((number?) -> number) | ((number | string) -> null) = x # OK
+            const z : ((number, string?) -> number) | ((number) -> null) = x # Not OK
         end
      )");
 
@@ -805,8 +805,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_result_arities")
 
     CheckResult result = check(R"(
         function f(x : () -> (number | string))
-            const y : (() -> number) | (() -> string) = x -- OK
-            const z : (() -> number) | (() -> (string, string)) = x -- Not OK
+            const y : (() -> number) | (() -> string) = x # OK
+            const z : (() -> number) | (() -> (string, string)) = x # Not OK
         end
      )");
 
@@ -826,8 +826,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_variadics")
 
     CheckResult result = check(R"(
         function f(x : (...null) -> (...number?))
-            const y : ((...string?) -> (...number)) | ((...number?) -> null) = x -- OK
-            const z : ((...string?) -> (...number)) | ((...string?) -> null) = x -- OK
+            const y : ((...string?) -> (...number)) | ((...number?) -> null) = x # OK
+            const z : ((...string?) -> (...number)) | ((...string?) -> null) = x # OK
         end
      )");
 
@@ -845,8 +845,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_arg_variadics")
 {
     CheckResult result = check(R"(
         function f(x : (number) -> ())
-            const y : ((number?) -> ()) | ((...number) -> ()) = x -- OK
-            const z : ((number?) -> ()) | ((...number?) -> ()) = x -- Not OK
+            const y : ((number?) -> ()) | ((...number) -> ()) = x # OK
+            const z : ((number?) -> ()) | ((...number?) -> ()) = x # Not OK
         end
      )");
 
@@ -879,8 +879,8 @@ TEST_CASE_FIXTURE(Fixture, "union_of_functions_with_mismatching_result_variadics
 
     CheckResult result = check(R"(
         function f(x : () -> (number?, ...number))
-            const y : (() -> (...number)) | (() -> null) = x -- OK
-            const z : (() -> (...number)) | (() -> number) = x -- OK
+            const y : (() -> (...number)) | (() -> null) = x # OK
+            const z : (() -> (...number)) | (() -> number) = x # OK
         end
      )");
 
@@ -931,8 +931,8 @@ TEST_CASE_FIXTURE(Fixture, "union_table_any_property")
 {
     CheckResult result = check(R"(
         function f(x)
-            -- x : X
-            -- sup : { p : { q : X } }?
+            # x : X
+            # sup : { p : { q : X } }?
             sup = if true then { p = { q = x } } else null
             const sub : { p : any } = null as any
             sup = null
@@ -1091,7 +1091,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2134")
 TEST_CASE_FIXTURE(Fixture, "oss_2393")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type Example<T> = {
             foo: () -> T,

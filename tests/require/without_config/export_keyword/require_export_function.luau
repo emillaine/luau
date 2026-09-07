@@ -1,4 +1,4 @@
--- verify exported functions can be required and called
+# verify exported functions can be required and called
 m = require("./export_function")
 
 assert(m.add(1, 2) == 3, "add function should work")

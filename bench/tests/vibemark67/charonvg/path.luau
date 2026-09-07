@@ -1,4 +1,4 @@
---!native
+#!native
 Matrix = require("./matrix")
 
 Path = {}
@@ -32,9 +32,9 @@ end
 
 function Path:moveTo(x, y)
     cmds, data = self.cmds, self.data
-    cmds[#cmds + 1] = MOVE_TO
-    data[#data + 1] = x
-    data[#data + 1] = y
+    cmds[cmds.count + 1] = MOVE_TO
+    data[data.count + 1] = x
+    data[data.count + 1] = y
     self.startX = x
     self.startY = y
     self.numContours = self.numContours + 1
@@ -42,27 +42,27 @@ end
 
 function Path:lineTo(x, y)
     cmds, data = self.cmds, self.data
-    if #cmds == 0 then
+    if cmds.count == 0 then
         self:moveTo(x, y)
         return
     end
-    cmds[#cmds + 1] = LINE_TO
-    data[#data + 1] = x
-    data[#data + 1] = y
+    cmds[cmds.count + 1] = LINE_TO
+    data[data.count + 1] = x
+    data[data.count + 1] = y
 end
 
 function Path:cubicTo(x1, y1, x2, y2, x3, y3)
     cmds, data = self.cmds, self.data
-    if #cmds == 0 then
+    if cmds.count == 0 then
         self:moveTo(0, 0)
     end
-    cmds[#cmds + 1] = CUBIC_TO
-    data[#data + 1] = x1
-    data[#data + 1] = y1
-    data[#data + 1] = x2
-    data[#data + 1] = y2
-    data[#data + 1] = x3
-    data[#data + 1] = y3
+    cmds[cmds.count + 1] = CUBIC_TO
+    data[data.count + 1] = x1
+    data[data.count + 1] = y1
+    data[data.count + 1] = x2
+    data[data.count + 1] = y2
+    data[data.count + 1] = x3
+    data[data.count + 1] = y3
     self.numCurves = self.numCurves + 1
 end
 
@@ -77,17 +77,17 @@ end
 
 function Path:close()
     cmds, data = self.cmds, self.data
-    if #cmds == 0 then
+    if cmds.count == 0 then
         return
     end
-    cmds[#cmds + 1] = CLOSE
-    data[#data + 1] = self.startX
-    data[#data + 1] = self.startY
+    cmds[cmds.count + 1] = CLOSE
+    data[data.count + 1] = self.startX
+    data[data.count + 1] = self.startY
 end
 
 function Path:getCurrentPoint()
     data = self.data
-    n = #data
+    n = data.count
     if n < 2 then
         return 0, 0
     end
@@ -103,7 +103,7 @@ function Path:reset()
     self.numCurves = 0
 end
 
--- Shape helpers
+# Shape helpers
 
 function Path:addRect(x, y, w, h)
     self:moveTo(x, y)
@@ -177,7 +177,7 @@ function Path:addArc(cx, cy, r, a0, a1, ccw)
 
     startX = cx + r * math.cos(a0)
     startY = cy + r * math.sin(a0)
-    if #self.cmds == 0 then
+    if self.cmds.count == 0 then
         self:moveTo(startX, startY)
     else
         self:lineTo(startX, startY)
@@ -205,7 +205,7 @@ function Path:addArc(cx, cy, r, a0, a1, ccw)
     end
 end
 
--- SVG arc-to endpoint parameterization
+# SVG arc-to endpoint parameterization
 function Path:arcTo(rx, ry, angle, largeArc, sweep, x, y)
     cx, cy = self:getCurrentPoint()
 
@@ -320,22 +320,22 @@ function Path:arcTo(rx, ry, angle, largeArc, sweep, x, y)
     end
 end
 
--- Transform all points in the path
+# Transform all points in the path
 function Path:transform(matrix)
     data = self.data
-    for i = 1, #data, 2 do
+    for i = 1, data.count, 2 do
         x, y = data[i], data[i + 1]
         data[i], data[i + 1] = matrix:mapPoint(x, y)
     end
     self.startX, self.startY = matrix:mapPoint(self.startX, self.startY)
 end
 
--- Append another path with optional transform
+# Append another path with optional transform
 function Path:addPath(source, matrix)
     srcCmds = source.cmds
     srcData = source.data
     di = 1
-    for ci = 1, #srcCmds do
+    for ci = 1, srcCmds.count do
         cmd = srcCmds[ci]
         if cmd == MOVE_TO or cmd == LINE_TO or cmd == CLOSE then
             x, y = srcData[di], srcData[di + 1]
@@ -369,10 +369,10 @@ function Path:clone()
     new = Path.create()
     cmds, data = self.cmds, self.data
     nc, nd = new.cmds, new.data
-    for i = 1, #cmds do
+    for i = 1, cmds.count do
         nc[i] = cmds[i]
     end
-    for i = 1, #data do
+    for i = 1, data.count do
         nd[i] = data[i]
     end
     new.startX = self.startX
@@ -382,12 +382,12 @@ function Path:clone()
     return new
 end
 
--- Traverse the path, calling callback(cmd, x1, y1, ...) for each command
+# Traverse the path, calling callback(cmd, x1, y1, ...) for each command
 function Path:traverse(callback)
     cmds = self.cmds
     data = self.data
     di = 1
-    for ci = 1, #cmds do
+    for ci = 1, cmds.count do
         cmd = cmds[ci]
         if cmd == MOVE_TO then
             callback(MOVE_TO, data[di], data[di + 1])
@@ -405,11 +405,11 @@ function Path:traverse(callback)
     end
 end
 
--- Adaptive de Casteljau flattening
+# Adaptive de Casteljau flattening
 FLATTEN_THRESHOLD = 0.25
 
 function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
-    -- Stack-based iterative approach (max depth 32)
+    # Stack-based iterative approach (max depth 32)
     stack = {}
     top = 0
 
@@ -440,7 +440,7 @@ function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
         if flat or top >= 31 then
             callback(LINE_TO, bx4, by4)
         else
-            -- de Casteljau split
+            # de Casteljau split
             mx12 = (bx1 + bx2) * 0.5
             my12 = (by1 + by2) * 0.5
             mx23 = (bx2 + bx3) * 0.5
@@ -454,7 +454,7 @@ function flattenCubic(callback, x1, y1, x2, y2, x3, y3, x4, y4)
             mx1234 = (mx123 + mx234) * 0.5
             my1234 = (my123 + my234) * 0.5
 
-            -- Push right half first (so left is processed first)
+            # Push right half first (so left is processed first)
             top = top + 1
             stack[top] = { mx1234, my1234, mx234, my234, mx34, my34, bx4, by4 }
             top = top + 1
@@ -474,7 +474,7 @@ function Path:traverseFlatten(callback)
     di = 1
     curX, curY = 0, 0
 
-    for ci = 1, #cmds do
+    for ci = 1, cmds.count do
         cmd = cmds[ci]
         if cmd == MOVE_TO then
             callback(MOVE_TO, data[di], data[di + 1])
@@ -499,9 +499,9 @@ function Path:traverseFlatten(callback)
     end
 end
 
--- Dashed path traversal
+# Dashed path traversal
 function Path:traverseDashed(offset, dashes, callback)
-    ndashes = #dashes
+    ndashes = dashes.count
     if ndashes == 0 then
         self:traverseFlatten(callback)
         return
@@ -516,13 +516,13 @@ function Path:traverseDashed(offset, dashes, callback)
         return
     end
 
-    -- Normalize offset
+    # Normalize offset
     offset = offset % totalDash
     if offset < 0 then
         offset = offset + totalDash
     end
 
-    -- Find starting dash index and phase
+    # Find starting dash index and phase
     dashIndex = 1
     dashRemaining = dashes[1]
     drawing = true
@@ -636,7 +636,7 @@ function Path:cloneDashed(offset, dashes)
     return new
 end
 
--- Bounding box and path length
+# Bounding box and path length
 function Path:extents(tight)
     minX, minY = math.huge, math.huge
     maxX, maxY = -math.huge, -math.huge
@@ -707,7 +707,7 @@ function Path:length()
     return len
 end
 
--- SVG path string parsing
+# SVG path string parsing
 
 function isWs(c)
     return c == 32 or c == 9 or c == 10 or c == 13
@@ -718,7 +718,7 @@ function isNum(c)
 end
 
 function skipWs(str, pos)
-    while pos <= #str and isWs(string.byte(str, pos)) do
+    while pos <= str.count and isWs(string.byte(str, pos)) do
         pos = pos + 1
     end
     return pos
@@ -726,7 +726,7 @@ end
 
 function skipWsOrComma(str, pos)
     pos = skipWs(str, pos)
-    if pos <= #str and string.byte(str, pos) == 44 then
+    if pos <= str.count and string.byte(str, pos) == 44 then
         pos = pos + 1
         pos = skipWs(str, pos)
     end
@@ -734,7 +734,7 @@ function skipWsOrComma(str, pos)
 end
 
 function parseNumber(str, pos)
-    len = #str
+    len = str.count
     sign = 1
 
     if pos > len then
@@ -820,7 +820,7 @@ end
 
 function parseFlag(str, pos)
     pos = skipWsOrComma(str, pos)
-    if pos > #str then
+    if pos > str.count then
         return null
     end
     c = string.byte(str, pos)
@@ -834,13 +834,13 @@ function parseFlag(str, pos)
 end
 
 function Path.parse(str)
-    if type(str) != "string" or #str == 0 then
+    if type(str) != "string" or str.count == 0 then
         return null
     end
 
     p = Path.create()
     pos = skipWs(str, 1)
-    len = #str
+    len = str.count
     curX, curY = 0, 0
     startX, startY = 0, 0
     lastCpX, lastCpY = 0, 0
@@ -854,7 +854,7 @@ function Path.parse(str)
             cmd = string.char(c)
             pos = pos + 1
         else if lastCmd then
-            -- implicit repeat
+            # implicit repeat
             if lastCmd == "M" then
                 cmd = "L"
             else if lastCmd == "m" then

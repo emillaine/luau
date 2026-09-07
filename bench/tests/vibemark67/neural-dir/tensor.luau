@@ -1,4 +1,4 @@
--- Tensor/matrix operations for neural network
+# Tensor/matrix operations for neural network
 
 Tensor = {}
 Tensor.__index = Tensor

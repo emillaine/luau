@@ -1,4 +1,4 @@
--- Bit-level I/O for DEFLATE compression
+# Bit-level I/O for DEFLATE compression
 
 BitWriter = {}
 BitWriter.__index = BitWriter
@@ -45,7 +45,7 @@ function BitWriter.getBytes(self: BitWriter): {number}
 end
 
 function BitWriter.size(self: BitWriter): number
-    return #self.buffer
+    return self.buffer.count
 end
 
 BitReader = {}
@@ -69,7 +69,7 @@ end
 
 function BitReader.readBits(self: BitReader, numBits: number): number
     while self.bitCount < numBits do
-        if self.pos > #self.data then
+        if self.pos > self.data.count then
             self.bitCount += 8
         else
             self.bitBuf = bit32.bor(self.bitBuf, bit32.lshift(self.data[self.pos], self.bitCount))

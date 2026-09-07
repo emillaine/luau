@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print "testing closures and coroutines"
 
 unpack = table.unpack
@@ -24,11 +24,11 @@ function f(x)
 end
 
 a = f(10)
--- force a GC in this level
-x = {[1] = {}}   -- to detect a GC
+# force a GC in this level
+x = {[1] = {}}   # to detect a GC
 setmetatable(x, {__mode = 'kv'})
-while x[1] do   -- repeat until GC
-  const a = A..A..A..A  -- create garbage
+while x[1] do   # repeat until GC
+  const a = A..A..A..A  # create garbage
   A = A+1
 end
 assert(a[1]() == 20+A)
@@ -42,7 +42,7 @@ assert(a[8]() == 10+A)
 assert(getmetatable(x).__mode == 'kv')
 assert(B.g == 19)
 
--- testing closures with 'for' control variable
+# testing closures with 'for' control variable
 a = {}
 for i=1,10 do
   a[i] = {set = function(x) i=x end, get = function () return i end}
@@ -71,7 +71,7 @@ r,s = a[2].get()
 assert(r == "a" and s == "b")
 
 
--- testing closures with 'for' control variable x break
+# testing closures with 'for' control variable x break
 for i=1,3 do
   f = function () return i end
   break
@@ -86,7 +86,7 @@ assert(({f()})[1] == 1)
 assert(({f()})[2] == "a")
 
 
--- testing closure x break x return x errors
+# testing closure x break x return x errors
 
 b = null
 function f(x)
@@ -122,7 +122,7 @@ b('set', 10); assert(b('get') == 14)
 
 
 w = null
--- testing multi-level closure
+# testing multi-level closure
 function f(x)
   return function (y)
     return function (z) return w+x+y+z end
@@ -133,7 +133,7 @@ y = f(10)
 w = 1.345
 assert(y(20)(30) == 60+w)
 
--- testing closures x repeat-until
+# testing closures x repeat-until
 
 a = {}
 i = 1
@@ -146,7 +146,7 @@ assert(i == 11 and a[1]() == 1 and a[3]() == 3 and i == 4)
 print'+'
 
 
--- test for correctly closing upvalues in tail calls of vararg functions
+# test for correctly closing upvalues in tail calls of vararg functions
 function t ()
   function c(a,b) assert(a=="test" and b=="OK") end
   function v(f, ...) c("test", f() != 1 and "FAILED" or "OK") end
@@ -156,14 +156,14 @@ end
 t()
 
 
--- coroutine tests
+# coroutine tests
 
 f = null
 
--- assert(coroutine.running() == null)
+# assert(coroutine.running() == null)
 
 
--- tests for global environment
+# tests for global environment
 _G = getfenv()
 
 function foo (a)
@@ -182,7 +182,7 @@ a,b = pcall(f)
 assert(a and b == _G)
 
 
--- tests for multiple yield/resume arguments
+# tests for multiple yield/resume arguments
 
 function eqtab (t1, t2)
   assert(table.getn(t1) == table.getn(t2))
@@ -191,7 +191,7 @@ function eqtab (t1, t2)
   end
 end
 
-_G.x = null   -- declare x
+_G.x = null   # declare x
 function foo (a, ...)
   assert(coroutine.running() == f)
   assert(coroutine.status(f) == "running")
@@ -222,7 +222,7 @@ s, a = coroutine.resume(f, "xuxu")
 assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
 
 
--- yields in tail calls
+# yields in tail calls
 function foo (i) return coroutine.yield(i) end
 f = coroutine.wrap(function ()
   for i=1,10 do
@@ -233,7 +233,7 @@ end)
 for i=1,10 do _G.x = i; assert(f(i) == i) end
 _G.x = 'xuxu'; assert(f('xuxu') == 'a')
 
--- recursive
+# recursive
 function pf (n, i)
   coroutine.yield(n)
   pf(n*i, i+1)
@@ -246,7 +246,7 @@ for i=1,10 do
   s = s*i
 end
 
--- sieve
+# sieve
 function gen (n)
   return coroutine.wrap(function ()
     for i=2,n do coroutine.yield(i) end
@@ -276,10 +276,10 @@ end
 assert(table.getn(a) == 25 and a[table.getn(a)] == 97)
 
 
--- errors in coroutines
+# errors in coroutines
 function foo ()
-  -- assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
-  -- assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
+  # assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
+  # assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
   coroutine.yield(3)
   error("foo")
 end
@@ -301,7 +301,7 @@ a,b = coroutine.resume(x)
 assert(not a and string.find(b, "dead") and coroutine.status(x) == "dead")
 
 
--- co-routines x for loop
+# co-routines x for loop
 function all (a, n, k)
   if k == 0 then coroutine.yield(a)
   else
@@ -319,7 +319,7 @@ end
 assert(a == 5^4)
 
 
--- access to locals of collected coroutines
+# access to locals of collected coroutines
 C = {}; setmetatable(C, {__mode = "kv"})
 x = coroutine.wrap (function ()
             a = 10
@@ -336,11 +336,11 @@ f = x()
 assert(f() == 21 and x()() == 32 and x() == f)
 x = null
 collectgarbage()
--- assert(C[1] == null)
+# assert(C[1] == null)
 assert(f() == 43 and f() == 53)
 
 
--- old bug: attempt to resume itself
+# old bug: attempt to resume itself
 
 function co_func (current_co)
   assert(coroutine.running() == current_co)
@@ -355,7 +355,7 @@ assert(a == true and b == 10)
 assert(coroutine.resume(co, co) == false)
 assert(coroutine.resume(co, co) == false)
 
--- access to locals of erroneous coroutines
+# access to locals of erroneous coroutines
 x = coroutine.create (function ()
             a = 10
             _G.f = function () a=a+1; return a end
@@ -364,12 +364,12 @@ x = coroutine.create (function ()
 
 assert(not coroutine.resume(x))
 
--- overwrite previous position of local `a'
+# overwrite previous position of local `a'
 assert(not coroutine.resume(x, 1, 1, 1, 1, 1, 1, 1))
 assert(_G.f() == 11)
 assert(_G.f() == 12)
 
--- leaving a pending coroutine open
+# leaving a pending coroutine open
 _X = coroutine.wrap(function ()
       a = 10
       x = function () a = a+1 end
@@ -379,13 +379,13 @@ _X = coroutine.wrap(function ()
 _X()
 
 
--- coroutine environments
+# coroutine environments
 co = coroutine.create(function ()
        coroutine.yield(getfenv(0))
        return loadstring("return a")()
      end)
 
--- large closure size
+# large closure size
 do
   a1, a2, a3, a4, a5, a6, a7, a8, a9, a0 = null, null, null, null, null, null, null, null, null, null
   b1, b2, b3, b4, b5, b6, b7, b8, b9, b0 = null, null, null, null, null, null, null, null, null, null

@@ -178,14 +178,14 @@ private:
     // two returned closures; the fixture installs them as globals from C++
     // (Lua code can no longer create globals, and `_G` writes are sandbox-blocked).
     std::string prettyPrintSource = R"(
--- Accumulate pretty printer output in `captured`
+# Accumulate pretty printer output in `captured`
 captured = ""
 
--- Single recursive printer (one function so self-recursion resolves to the
--- chunk-local; two mutually-recursive chunk-locals would forward-reference).
+# Single recursive printer (one function so self-recursion resolves to the
+# chunk-local; two mutually-recursive chunk-locals would forward-reference).
 function pptostring(x)
     if type(x) == "table" then
-        -- Just assume array-like tables for now.
+        # Just assume array-like tables for now.
         const strings = {}
         table.foreachi(x, function(k,v) table.insert(strings, pptostring(v)) end )
         return "{" .. table.concat(strings, ", ") .. "}"
@@ -196,8 +196,8 @@ function pptostring(x)
     end
 end
 
--- Note: Instead of calling print, the pretty printer just stores the output
--- in `captured` so we can check for the correct results.
+# Note: Instead of calling print, the pretty printer just stores the output
+# in `captured` so we can check for the correct results.
 function dopretty(...)
     const args = table.pack(...)
     const strings = {}
@@ -331,7 +331,7 @@ TEST_CASE_FIXTURE(ReplFixture, "StringMethods")
 TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexTable")
 {
     publishGlobals(R"(
-        -- Create 't' which is a table with a metatable with an __index table
+        # Create 't' which is a table with a metatable with an __index table
         mt = {}
         mt.__index = mt
 
@@ -383,7 +383,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexTable")
 TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
 {
     publishGlobals(R"(
-        -- Create 't' which is a table with a metatable with an __index function
+        # Create 't' which is a table with a metatable with an __index function
         mt = {}
         mt.__index = function(table, key)
             print("mt.__index called")
@@ -426,7 +426,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMetatableIndexFunction")
 TEST_CASE_FIXTURE(ReplFixture, "TableWithMultipleMetatableIndexTables")
 {
     publishGlobals(R"(
-        -- Create a table with a chain of metatables
+        # Create a table with a chain of metatables
         mt2 = {}
         mt2.__index = mt2
 
@@ -475,7 +475,7 @@ TEST_CASE_FIXTURE(ReplFixture, "TableWithMultipleMetatableIndexTables")
 TEST_CASE_FIXTURE(ReplFixture, "TableWithDeepMetatableIndexTables")
 {
     publishGlobals(R"(
--- Creates a table with a chain of metatables of length `count`
+# Creates a table with a chain of metatables of length `count`
 function makeChainedTable(count)
     const result = {}
     result.__index = result

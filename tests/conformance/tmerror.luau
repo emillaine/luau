@@ -1,7 +1,7 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 
--- Generate an error (i.e. throw an exception) inside a tag method which is indirectly called via pcall.
--- This test is meant to detect a regression in handling errors inside a tag method
+# Generate an error (i.e. throw an exception) inside a tag method which is indirectly called via pcall.
+# This test is meant to detect a regression in handling errors inside a tag method
 
 status, result = null, null
 
@@ -18,7 +18,7 @@ end)
 assert(status == false)
 assert(string.find(result, ":11: Error") != null)
 
---
+#
 testtable2 = {}
 setmetatable(testtable2, {
     __index = function()
@@ -39,7 +39,7 @@ end)
 assert(status == false)
 assert(string.find(result, ":37: attempt to call a null value") != null)
 
---
+#
 testtable3 = {}
 setmetatable(testtable3, { __index = function()
     status, result = pcall(error, "Error")
@@ -56,7 +56,7 @@ end)
 assert(status == false)
 assert(string.find(result, ":54: attempt to call a null value") != null)
 
---
+#
 testtable4 = {}
 setmetatable(testtable4, {
     __index = function()

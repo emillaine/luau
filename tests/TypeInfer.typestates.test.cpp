@@ -208,14 +208,14 @@ TEST_CASE_FIXTURE(TypeStateFixture, "parameter_x_was_constrained_by_two_types_2"
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        export y: string? = null  -- 'y <: string?
+        export y: string? = null  # 'y <: string?
 
         function f(x): number?
-            y = x                   -- 'y ~ 'x
-            return y                -- 'y <: number?
+            y = x                   # 'y ~ 'x
+            return y                # 'y <: number?
 
-                                    -- We therefore infer 'y <: (string | null) & (number | null)
-                                    -- or 'y <: null
+                                    # We therefore infer 'y <: (string | null) & (number | null)
+                                    # or 'y <: null
         end
     )");
 
@@ -470,7 +470,7 @@ TEST_CASE_FIXTURE(TypeStateFixture, "typestates_preserve_error_suppression")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
         export a: any = 51
-        a = "pickles" -- We'll have a new DefId for this iteration of `a`.  Its type must also be error-suppressing
+        a = "pickles" # We'll have a new DefId for this iteration of `a`.  Its type must also be error-suppressing
         print(a)
     )");
 
@@ -666,7 +666,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_else_branch")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export x = null
         const coinflip : () -> boolean = (null as any)
 
@@ -688,7 +688,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export x = null
         const coinflip : () -> boolean = (null as any)
 
@@ -710,7 +710,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch")
 TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Payload = { payload: number }
 
         function decode(s: string): Payload?
@@ -735,7 +735,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring_in_loop")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         x = null
 
@@ -754,7 +754,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refinement_through_erroring_in_loop")
 TEST_CASE_FIXTURE(BuiltinsFixture, "type_refinement_in_loop")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function onEachString(t: { string | number })
             for _, v in t do
                 if type(v) != "string" then
@@ -776,7 +776,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "throw_in_if_branch_and_do_nothing_in_else")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const x = null
         const coinflip : () -> boolean = (null as any)
 
@@ -799,7 +799,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_in_an_if_branch_without_else")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export x = null
         const coinflip : () -> boolean = (null as any)
 

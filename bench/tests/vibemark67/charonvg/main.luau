@@ -1,4 +1,4 @@
---!native
+#!native
 charonvg = {}
 
 charonvg.Surface = require("./surface")

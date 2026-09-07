@@ -1,4 +1,4 @@
--- verify exported values can be required
+# verify exported values can be required
 m = require("./export_value")
 
 assert(m.version == "1.0.0", "version should be exported")

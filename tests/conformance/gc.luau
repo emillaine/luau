@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing garbage collection')
 
 collectgarbage()
@@ -45,7 +45,7 @@ end
 
 a:test()
 
--- collection of functions without locals, globals, etc.
+# collection of functions without locals, globals, etc.
 do f = function () end end
 
 
@@ -69,7 +69,7 @@ assert(_G["while"] == 234)
 bytes = gcinfo()
 while 1 do
   nbytes = gcinfo()
-  if nbytes < bytes then break end   -- run until gc
+  if nbytes < bytes then break end   # run until gc
   bytes = nbytes
   a = {}
 end
@@ -98,8 +98,8 @@ end
 assert(dosteps(0) > 10)
 assert(dosteps(6) < dosteps(2))
 assert(dosteps(10000) == 1)
--- assert(collectgarbage("step", 1000000) == true)
--- assert(collectgarbage("step", 1000000))
+# assert(collectgarbage("step", 1000000) == true)
+# assert(collectgarbage("step", 1000000))
 
 
 do
@@ -122,11 +122,11 @@ end
 
 lim = 15
 a = {}
--- fill a with `collectable' indices
+# fill a with `collectable' indices
 for i=1,lim do a[{}] = i end
 b = {}
 for k,v in pairs(a) do b[k]=v end
--- remove all indices and collect them
+# remove all indices and collect them
 for n in pairs(b) do
   a[n] = null
   assert(type(n) == 'table' and next(n) == null)
@@ -141,9 +141,9 @@ for i=1,lim do assert(a[i] == i) end
 
 print('weak tables')
 a = {}; setmetatable(a, {__mode = 'k'});
--- fill a with some `collectable' indices
+# fill a with some `collectable' indices
 for i=1,lim do a[{}] = i end
--- and some non-collectable ones
+# and some non-collectable ones
 for i=1,lim do t={}; a[t]=t end
 for i=1,lim do a[i] = i end
 for i=1,lim do s=string.rep('@', i); a[s] = s..'#' end
@@ -155,12 +155,12 @@ assert(i == 3*lim)
 a = {}; setmetatable(a, {__mode = 'v'});
 a[1] = string.rep('b', 21)
 collectgarbage()
-assert(a[1])   -- strings are *values*
+assert(a[1])   # strings are *values*
 a[1] = null
--- fill a with some `collectable' values (in both parts of the table)
+# fill a with some `collectable' values (in both parts of the table)
 for i=1,lim do a[i] = {} end
 for i=1,lim do a[i..'x'] = {} end
--- and some non-collectable ones
+# and some non-collectable ones
 for i=1,lim do t={}; a[t]=t end
 for i=1,lim do a[i+lim]=i..'x' end
 collectgarbage()
@@ -170,10 +170,10 @@ assert(i == 2*lim)
 
 a = {}; setmetatable(a, {__mode = 'vk'});
 x, y, z = {}, {}, {}
--- keep only some items
+# keep only some items
 a[1], a[2], a[3] = x, y, z
 a[string.rep('$', 11)] = string.rep('$', 11)
--- fill a with some `collectable' values
+# fill a with some `collectable' values
 for i=4,lim do a[i] = {} end
 for i=1,lim do a[{}] = i end
 for i=1,lim do t={}; a[t]=t end
@@ -191,23 +191,23 @@ x,y,z=null
 collectgarbage()
 assert(next(a) == string.rep('$', 11))
 
--- shrinking tables reduce their capacity; confirming the shrinking is difficult but we can at least test the surface level behavior
+# shrinking tables reduce their capacity; confirming the shrinking is difficult but we can at least test the surface level behavior
 a = {}; setmetatable(a, {__mode = 'ks'})
 for i=1,lim do a[{}] = i end
 collectgarbage()
 assert(next(a) == null)
 
--- shrinking a table should be robust against an OOM
+# shrinking a table should be robust against an OOM
 do
     count = 100000
     extra = 1000
     a = {}
     setmetatable(a, {__mode = 'ks'})
 
-    -- items to be collected
+    # items to be collected
     for i = 1,count do a[{}] = i end
 
-    -- items that will still be reachable
+    # items that will still be reachable
     for i = 1,extra do a[tostring(i)] = {} end
 
     setblockallocations(true)
@@ -217,7 +217,7 @@ do
     for k,v in a do assert(type(k) == "string") end
 end
 
--- shrinking strings should be robust against an OOM
+# shrinking strings should be robust against an OOM
 do
     count = 100000
     a = {}
@@ -230,7 +230,7 @@ do
     setblockallocations(false)
 end
 
--- shrinking thread stacks should be robust against an OOM
+# shrinking thread stacks should be robust against an OOM
 do
     function recurse(n, ...) return n <= 1 and (1 + ({...}).count) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
     recurse(100)
@@ -240,13 +240,13 @@ do
     setblockallocations(false)
 end
 
--- testing userdata
-collectgarbage("stop")   -- stop collection
+# testing userdata
+collectgarbage("stop")   # stop collection
 u = newproxy(true)
 s = 0
 a = {[u] = 0}; setmetatable(a, {__mode = 'vk'})
 for i=1,10 do a[newproxy(true)] = i end
--- for k in pairs(a) do assert(getmetatable(k) == getmetatable(u)) end
+# for k in pairs(a) do assert(getmetatable(k) == getmetatable(u)) end
 a1 = {}; for k,v in pairs(a) do a1[k] = v end
 for k,v in pairs(a1) do a[v] = k end
 for i =1,10 do assert(a[i]) end
@@ -256,7 +256,7 @@ do
   u = u
   getmetatable(u).__gc = function (o)
     assert(a[o] == 10-s)
-    assert(a[10-s] == null) -- udata already removed from weak table
+    assert(a[10-s] == null) # udata already removed from weak table
     assert(getmetatable(o) == getmetatable(u))
     assert(getmetatable(o).a[o] == 10-s)
     s=s+1
@@ -265,15 +265,15 @@ end
 a1, u = null
 assert(next(a) != null)
 collectgarbage()
--- assert(s==11)
+# assert(s==11)
 collectgarbage()
-assert(next(a) == null)  -- finalized keys are removed in two cycles
+assert(next(a) == null)  # finalized keys are removed in two cycles
 
 
--- __gc x weak tables
+# __gc x weak tables
 u = newproxy(true)
 setmetatable(getmetatable(u), {__mode = "v"})
-getmetatable(u).__gc = function (o) os.exit(1) end  -- cannot happen
+getmetatable(u).__gc = function (o) os.exit(1) end  # cannot happen
 collectgarbage()
 
 u = newproxy(true)
@@ -285,14 +285,14 @@ m.__gc = function (o)
 end
 u, m = null
 collectgarbage()
--- assert(m==10)
+# assert(m==10)
 
 
--- errors during collection
+# errors during collection
 u = newproxy(true)
 getmetatable(u).__gc = function () error "!!!" end
 u = null
--- assert(not pcall(collectgarbage))
+# assert(not pcall(collectgarbage))
 collectgarbage()
 
 
@@ -305,7 +305,7 @@ if not rawget(_G, "_soft") then
   collectgarbage()
 end
 
--- create many threads with self-references and open upvalues
+# create many threads with self-references and open upvalues
 do
   thread_id = 0
   threads = {}
@@ -326,36 +326,36 @@ do
 
   collectgarbage()
 
-  -- ensure that we no longer have a lot of reachable threads for subsequent tests
+  # ensure that we no longer have a lot of reachable threads for subsequent tests
   threads = {}
 end
 
--- create a userdata to be collected when state is closed
+# create a userdata to be collected when state is closed
 do
   newproxy,assert,type,print,getmetatable =
         newproxy,assert,type,print,getmetatable
   u = newproxy(true)
   tt = getmetatable(u)
-  _G.___Glob = {u}   -- avoid udata being collected before program end
+  _G.___Glob = {u}   # avoid udata being collected before program end
   tt.__gc = function (o)
     assert(getmetatable(o) == tt)
-    -- create new objects during GC
+    # create new objects during GC
     a = 'xuxu'..(10+3)..'joao', {}
-    _G.___Glob = o  -- resurrect object!
-    newproxy(o)  -- creates a new one with same metatable
+    _G.___Glob = o  # resurrect object!
+    newproxy(o)  # creates a new one with same metatable
     print(">>> closing state " .. "<<<\n")
   end
 end
 
--- create several udata to raise errors when collected while closing state
+# create several udata to raise errors when collected while closing state
 do
   u = newproxy(true)
   getmetatable(u).__gc = function (o) return o + 1 end
-  table.insert(_G.___Glob, u)  -- preserve udata until the end
+  table.insert(_G.___Glob, u)  # preserve udata until the end
   for i = 1,10 do table.insert(_G.___Glob, newproxy(true)) end
 end
 
--- create threads that die together with their unmarked upvalues
+# create threads that die together with their unmarked upvalues
 do
   t = {}
 
@@ -381,7 +381,7 @@ do
   collectgarbage()
 end
 
--- create a lot of threads with upvalues to force a case where full gc happens after we've marked some upvalues
+# create a lot of threads with upvalues to force a case where full gc happens after we've marked some upvalues
 do
   t = {}
   for i = 1,100 do

@@ -130,7 +130,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "sort")
 TEST_CASE_FIXTURE(BuiltinsFixture, "sort_with_predicate")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {1, 2, 3}
         function p(a: number, b: number) return a < b end
         table.sort(t, p)
@@ -144,7 +144,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "sort_with_bad_predicate")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {'one', 'two', 'three'}
         function p(a: number, b: number) return a < b end
         table.sort(t, p)
@@ -230,26 +230,26 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "lua_51_exported_globals_all_exist")
 
         const v_xpcall = xpcall
 
-        --local v_package_loadlib = package.loadlib
-        --local v_package_loaders_1_ = package.loaders[1]
-        --local v_package_loaders_2_ = package.loaders[2]
-        --local v_package_loaders_3_ = package.loaders[3]
-        --local v_package_loaders_4_ = package.loaders[4]
+        #local v_package_loadlib = package.loadlib
+        #local v_package_loaders_1_ = package.loaders[1]
+        #local v_package_loaders_2_ = package.loaders[2]
+        #local v_package_loaders_3_ = package.loaders[3]
+        #local v_package_loaders_4_ = package.loaders[4]
 
         const v_tostring = tostring
         const v_print = print
 
-        --local v_os_exit = os.exit
-        --local v_os_setlocale = os.setlocale
+        #local v_os_exit = os.exit
+        #local v_os_setlocale = os.setlocale
         const v_os_date = os.date
-        --local v_os_getenv = os.getenv
+        #local v_os_getenv = os.getenv
         const v_os_difftime = os.difftime
-        --local v_os_remove = os.remove
+        #local v_os_remove = os.remove
         const v_os_time = os.time
-        --local v_os_clock = os.clock
-        --local v_os_tmpname = os.tmpname
-        --local v_os_rename = os.rename
-        --local v_os_execute = os.execute
+        #local v_os_clock = os.clock
+        #local v_os_tmpname = os.tmpname
+        #local v_os_rename = os.rename
+        #local v_os_execute = os.execute
 
         const v_unpack = unpack
         const v_require = require
@@ -259,23 +259,23 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "lua_51_exported_globals_all_exist")
         const v_assert = assert
         const v_tonumber = tonumber
 
-        --local v_io_lines = io.lines
-        --local v_io_write = io.write
-        --local v_io_close = io.close
-        --local v_io_flush = io.flush
-        --local v_io_open = io.open
-        --local v_io_output = io.output
-        --local v_io_type = io.type
-        --local v_io_read = io.read
-        --local v_io_stderr = io.stderr
-        --local v_io_stdin = io.stdin
-        --local v_io_input = io.input
-        --local v_io_stdout = io.stdout
-        --local v_io_popen = io.popen
-        --local v_io_tmpfile = io.tmpfile
+        #local v_io_lines = io.lines
+        #local v_io_write = io.write
+        #local v_io_close = io.close
+        #local v_io_flush = io.flush
+        #local v_io_open = io.open
+        #local v_io_output = io.output
+        #local v_io_type = io.type
+        #local v_io_read = io.read
+        #local v_io_stderr = io.stderr
+        #local v_io_stdin = io.stdin
+        #local v_io_input = io.input
+        #local v_io_stdout = io.stdout
+        #local v_io_popen = io.popen
+        #local v_io_tmpfile = io.tmpfile
 
         const v_rawequal = rawequal
-        --local v_collectgarbage = collectgarbage
+        #local v_collectgarbage = collectgarbage
         const v_getmetatable = getmetatable
         const v_rawset = rawset
 
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "lua_51_exported_globals_all_exist")
         const v_math_modf = math.modf
         const v_math_asin = math.asin
         const v_math_min = math.min
-        --local v_math_mod = math.mod
+        #local v_math_mod = math.mod
         const v_math_fmod = math.fmod
         const v_math_log10 = math.log10
         const v_math_atan2 = math.atan2
@@ -311,29 +311,29 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "lua_51_exported_globals_all_exist")
         const v_math_sin = math.sin
         const v_math_atan = math.atan
 
-        --local v_debug_getupvalue = debug.getupvalue
-        --local v_debug_debug = debug.debug
-        --local v_debug_sethook = debug.sethook
-        --local v_debug_getmetatable = debug.getmetatable
-        --local v_debug_gethook = debug.gethook
-        --local v_debug_setmetatable = debug.setmetatable
-        --local v_debug_setlocal = debug.setlocal
-        --local v_debug_traceback = debug.traceback
-        --local v_debug_setfenv = debug.setfenv
-        --local v_debug_getinfo = debug.getinfo
-        --local v_debug_setupvalue = debug.setupvalue
-        --local v_debug_getlocal = debug.getlocal
-        --local v_debug_getregistry = debug.getregistry
-        --local v_debug_getfenv = debug.getfenv
+        #local v_debug_getupvalue = debug.getupvalue
+        #local v_debug_debug = debug.debug
+        #local v_debug_sethook = debug.sethook
+        #local v_debug_getmetatable = debug.getmetatable
+        #local v_debug_gethook = debug.gethook
+        #local v_debug_setmetatable = debug.setmetatable
+        #local v_debug_setlocal = debug.setlocal
+        #local v_debug_traceback = debug.traceback
+        #local v_debug_setfenv = debug.setfenv
+        #local v_debug_getinfo = debug.getinfo
+        #local v_debug_setupvalue = debug.setupvalue
+        #local v_debug_getlocal = debug.getlocal
+        #local v_debug_getregistry = debug.getregistry
+        #local v_debug_getfenv = debug.getfenv
 
         const v_pcall = pcall
 
-        --local v_table_setn = table.setn
+        #local v_table_setn = table.setn
         const v_table_insert = table.insert
-        --local v_table_getn = table.getn
-        --local v_table_foreachi = table.foreachi
+        #local v_table_getn = table.getn
+        #local v_table_foreachi = table.foreachi
         const v_table_maxn = table.maxn
-        --local v_table_foreach = table.foreach
+        #local v_table_foreach = table.foreach
         const v_table_concat = table.concat
         const v_table_sort = table.sort
         const v_table_remove = table.remove
@@ -355,11 +355,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "lua_51_exported_globals_all_exist")
         const v_loadstring = loadstring
         const v_ipairs = ipairs
         const v__VERSION = _VERSION
-        --local v_dofile = dofile
+        #local v_dofile = dofile
         const v_setfenv = setfenv
-        --local v_load = load
+        #local v_load = load
         const v_error = error
-        --local v_loadfile = loadfile
+        #local v_loadfile = loadfile
     )");
 
     dumpErrors(result);
@@ -469,7 +469,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_pack")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_pack_variadic")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 function f(): (string, ...number)
     return "str", 2, 3, 4
 end
@@ -587,7 +587,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "coroutine_resume_anything_goes")
 TEST_CASE_FIXTURE(BuiltinsFixture, "coroutine_wrap_anything_goes")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function nifty(x, y)
             print(x, y)
             const z = coroutine.yield(1, 2)
@@ -624,7 +624,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "setmetatable_should_not_mutate_persisted_typ
 TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_arg_types_inference")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(a, b, c)
             return string.format("%f %d %s", a, b, c)
         end
@@ -637,7 +637,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_arg_types_inference")
 TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_arg_count_mismatch")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         string.format("%f %d %s")
         string.format("%s", "hi", 42)
         string.format("%s", "hi", 42, ...)
@@ -657,7 +657,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_correctly_ordered_types")
         return;
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         string.format("%s", 123)
     )");
 
@@ -671,7 +671,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_correctly_ordered_types")
 TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_tostring_specifier")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         string.format("%* %* %* %*", "string", 1, true, function() end)
     )");
 
@@ -694,7 +694,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_tostring_specifier_type_constr
 TEST_CASE_FIXTURE(BuiltinsFixture, "xpcall")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const a, b, c = xpcall(
             function() return 5, true end,
             function(e) return 0, false end
@@ -836,7 +836,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "select_slightly_out_of_range")
 TEST_CASE_FIXTURE(BuiltinsFixture, "select_with_variadic_typepack_tail")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function f(...)
             return ...
         end
@@ -859,7 +859,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "select_with_variadic_typepack_tail_and_strin
         return;
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function f(...)
             return ...
         end
@@ -939,7 +939,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "debug_traceback_is_crazy")
 {
     CheckResult result = check(R"(
         function f(co: thread)
-            -- debug.traceback takes thread?, message?, level? - yes, all optional!
+            # debug.traceback takes thread?, message?, level? - yes, all optional!
             debug.traceback()
             debug.traceback(null, 1)
             debug.traceback("msg")
@@ -957,7 +957,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "debug_info_is_crazy")
 {
     CheckResult result = check(R"(
         function f(co: thread, f: () -> ())
-            -- debug.info takes thread?, level, options or function, options
+            # debug.info takes thread?, level, options or function, options
             debug.info(1, "n")
             debug.info(co, 1, "n")
             debug.info(f, "n")
@@ -981,7 +981,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "aliased_string_format")
 TEST_CASE_FIXTURE(BuiltinsFixture, "string_lib_self_noself")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const a1 = string.byte("abcdef", 2)
         const a2 = string.find("abcdef", "def")
         const a3 = string.gmatch("ab ab", "%a+")
@@ -1061,7 +1061,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_report_all_type_errors_at_corr
 TEST_CASE_FIXTURE(BuiltinsFixture, "tonumber_returns_optional_number_type")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const b: number = tonumber('asdf')
     )");
 
@@ -1091,7 +1091,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tonumber_returns_optional_number_type")
 TEST_CASE_FIXTURE(BuiltinsFixture, "tonumber_returns_optional_number_type2")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const b: number = tonumber('asdf') or 1
     )");
 
@@ -1285,7 +1285,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_no_generic_table")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type k = {
             read k: string,
         }
@@ -1303,7 +1303,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_no_generic_table")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_on_metatable")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const meta = {
             __index = function()
                 return "foo"
@@ -1320,7 +1320,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_on_metatable")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_errors_on_no_args")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         table.freeze()
     )");
 
@@ -1332,7 +1332,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_errors_on_no_args")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_freeze_errors_on_non_tables")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         table.freeze(42)
     )");
 
@@ -1369,7 +1369,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_clone_persistent_skip")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_clone_should_support_variadic_any_in_old_solver")
 {
     fileResolver.source["game/A"] = R"(
-        --!nonstrict
+        #!nonstrict
         return function()
             return {}
         end
@@ -1412,7 +1412,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_clone_intersection_of_tables")
         }
 
         const b: SECOND = null as any
-        -- c's type used to be FIRST, but should be the full type of SECOND
+        # c's type used to be FIRST, but should be the full type of SECOND
         const c = table.clone(b)
     )");
 
@@ -1570,10 +1570,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gmatch_capture_types_set_containing_lbracket
 TEST_CASE_FIXTURE(BuiltinsFixture, "gmatch_capture_types_leading_end_bracket_is_part_of_set")
 {
     CheckResult result = check(R"END(
-        -- An immediate right-bracket following a left-bracket is included within the set;
-        -- thus, '[]]'' is the set containing ']', and '[]' is an invalid set missing an enclosing
-        -- right-bracket. We detect an invalid set in this case and fall back to to default gmatch
-        -- typing.
+        # An immediate right-bracket following a left-bracket is included within the set;
+        # thus, '[]]'' is the set containing ']', and '[]' is an invalid set missing an enclosing
+        # right-bracket. We detect an invalid set in this case and fall back to to default gmatch
+        # typing.
         const foo = string.gmatch("T[hi%]s]]]() is a string", "([]s)")
     )END");
 
@@ -1801,7 +1801,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_should_support_any_2")
         const x = "world" as any
         print(string.format(fmt, x))
         print(string.format(fmt, "hello"))
-        print(string.format(fmt, 5)) -- unchecked because the format string is `any`!
+        print(string.format(fmt, 5)) # unchecked because the format string is `any`!
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1814,7 +1814,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "string_format_should_support_singleton_types
     CheckResult result = check(R"(
         const fmt: "Hello, %s!" = "Hello, %s!"
         print(string.format(fmt, "hello"))
-        print(string.format(fmt, 5)) -- should still produce an error since the expected type is `string`!
+        print(string.format(fmt, 5)) # should still produce an error since the expected type is `string`!
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1899,7 +1899,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "next_with_refined_any")
     ScopedFastFlag lsv2{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t: any = {"hello", "world"}
         if type(t) == "table" and next(t) then
             const foo, bar = next(t)
@@ -1919,7 +1919,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pairs_with_refined_any")
     ScopedFastFlag lsv2{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t: any = {"hello", "world"}
         if type(t) == "table" and pairs(t) then
 	        const foo, bar, lorem = pairs(t)
@@ -1950,7 +1950,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "instantiation_works_on_builtins")
     CheckResult result = check(R"(
         const foo = table.create<<string>>(4)
         const bar = table.unpack<<string>>({})
-        const baz = table.find<<string>>({}, 1) -- should error
+        const baz = table.find<<string>>({}, 1) # should error
         assert<<string>>("asd", "lol")
     )");
 
@@ -2052,7 +2052,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "variadic_return_to_single_parameter_function
         end
 
         function foo(x: string)
-            print(x) -- null
+            print(x) # null
         end
 
         foo(bar())

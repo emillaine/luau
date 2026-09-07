@@ -13,7 +13,7 @@ namespace CodeGen
 
 enum CodeGenFlags
 {
-    // Only run native codegen for modules that have been marked with --!native
+    // Only run native codegen for modules that have been marked with #!native
     CodeGen_OnlyNativeModules = 1 << 0,
     // Run native codegen for functions that the compiler considers not profitable
     CodeGen_ColdFunctions = 1 << 1,

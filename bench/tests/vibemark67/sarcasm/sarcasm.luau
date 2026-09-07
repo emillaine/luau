@@ -1,11 +1,11 @@
---!nonstrict
--- sarcasm: SAfe Runtime Capability-enforced Assembler. Rewrites annotated Yolo-C ARM64
--- assembly into memory-safe, Fil-C-linkable assembly, then (by default) invokes `as`.
+#!nonstrict
+# sarcasm: SAfe Runtime Capability-enforced Assembler. Rewrites annotated Yolo-C ARM64
+# assembly into memory-safe, Fil-C-linkable assembly, then (by default) invokes `as`.
 
--- fs = require("@lute/fs")
--- process = require("@lute/process")
+# fs = require("@lute/fs")
+# process = require("@lute/process")
 
--- Shared modules.
+# Shared modules.
 sig = require("./sig")
 transform = require("./transform")
 regalloc = require("./regalloc")
@@ -13,7 +13,7 @@ emit = require("./emit")
 build = require("./build")
 detect = require("./detect")
 
--- Per-architecture module pairs (arm64_* / x86_64_*).
+# Per-architecture module pairs (arm64_* / x86_64_*).
 arm64_parse = require("./arm64_parse")
 x86_64_parse = require("./x86_64_parse")
 arm64_glue = require("./arm64_glue")
@@ -27,12 +27,12 @@ x86_64_render = require("./x86_64_render")
 
 sarcasm = {}
 
--- Keys of a table in ascending order. Used wherever iteration order over a set/map would
--- otherwise leak the VM's hash order into emitted assembly (spill reload/store ordering,
--- callsite-thunk ordering). Handles mixed key types defensively.
+# Keys of a table in ascending order. Used wherever iteration order over a set/map would
+# otherwise leak the VM's hash order into emitted assembly (spill reload/store ordering,
+# callsite-thunk ordering). Handles mixed key types defensively.
 function sortedKeys(t)
 	out = {}
-	for k in t do out[#out + 1] = k end
+	for k in t do out[out.count + 1] = k end
 	table.sort(out, function(a, b)
 		ta, tb = type(a), type(b)
 		if ta != tb then return ta < tb end
@@ -41,8 +41,8 @@ function sortedKeys(t)
 	return out
 end
 
--- Per-architecture backend bundle. `spillReload`/`spillStore` build the load/store IR for
--- a spilled temp at frame offset `off`; `emitFip` renders (x86 always emits AT&T output).
+# Per-architecture backend bundle. `spillReload`/`spillStore` build the load/store IR for
+# a spilled temp at frame offset `off`; `emitFip` renders (x86 always emits AT&T output).
 function makeTarget(arch, syntax)
 	if arch == "x86_64" then
 		backend = { cg = x86_64_codegen, frame = x86_64_frame }
@@ -80,14 +80,14 @@ function makeTarget(arch, syntax)
 	}
 end
 
--- Split parsed statements into functions. A function starts at a label carrying a
--- `;! signature` annotation and ends at its `.size NAME, .-NAME` directive. Every
--- symbol declared as a function (`.type NAME, %function` / `@function`) that is defined
--- here (has a label) MUST carry a signature annotation; otherwise we cannot make it
--- memory-safe, so it is a compile-time error rather than a silently dropped function.
--- Returns { functions = { {name, sigAnn, body={stmts}} }, consumed }.
+# Split parsed statements into functions. A function starts at a label carrying a
+# `;! signature` annotation and ends at its `.size NAME, .-NAME` directive. Every
+# symbol declared as a function (`.type NAME, %function` / `@function`) that is defined
+# here (has a label) MUST carry a signature annotation; otherwise we cannot make it
+# memory-safe, so it is a compile-time error rather than a silently dropped function.
+# Returns { functions = { {name, sigAnn, body={stmts}} }, consumed }.
 function splitFunctions(stmts)
-	-- pass 1: collect declared function symbols
+	# pass 1: collect declared function symbols
 	funcSyms = {}
 	for _, st in stmts do
 		if st.kind == "directive" and st.name == ".type" then
@@ -98,7 +98,7 @@ function splitFunctions(stmts)
 		end
 	end
 
-	-- pass 2: split into functions, enforcing that declared functions are annotated
+	# pass 2: split into functions, enforcing that declared functions are annotated
 	functions = {}
 	consumed = {}
 	cur = null
@@ -128,7 +128,7 @@ function splitFunctions(stmts)
 end
 sarcasm.splitFunctions = splitFunctions
 
--- Build the regalloc instruction array from transform IR nodes.
+# Build the regalloc instruction array from transform IR nodes.
 function buildRaInsns(nodes)
 	ra = {}
 	for _, node in nodes do
@@ -160,7 +160,7 @@ function buildRaInsns(nodes)
 	return ra
 end
 
--- Redirect every reference to a spilled temp in `node` to its fresh replacement.
+# Redirect every reference to a spilled temp in `node` to its fresh replacement.
 function remapNodeTemps(node, remap)
 	function replList(list)
 		if list then for i, t in list do if remap[t] then list[i] = remap[t] end end end
@@ -186,9 +186,9 @@ function remapNodeTemps(node, remap)
 	if ops then for _, op in ops do remapOp(op) end end
 end
 
--- Rewrite spilled temps: around each def/use of a spilled temp, insert a store/reload
--- through a fresh short-lived temp (tagged so the emitter can eliminate redundant
--- reloads and size the frame). Returns the new node list.
+# Rewrite spilled temps: around each def/use of a spilled temp, insert a store/reload
+# through a fresh short-lived temp (tagged so the emitter can eliminate redundant
+# reloads and size the frame). Returns the new node list.
 function rewriteSpills(nodes, spilledSet, slotOf, allocTemp, spillBase, target)
 	out = {}
 	for _, node in nodes do
@@ -223,18 +223,18 @@ function rewriteSpills(nodes, spilledSet, slotOf, allocTemp, spillBase, target)
 	return out
 end
 
--- Pack spill slots by coloring their interference graph: two spilled values whose live
--- ranges never overlap can share one stack offset. Without this, every spilled temp gets a
--- unique slot and frames balloon (e.g. large-arm64 needed ~7.7 KB). We build a
--- slot-variable view of the final code (a spill store defines its slot, a reload uses it),
--- run the same backward liveness the register allocator uses, then greedily color slots
--- (a slot's store interferes with everything live across it). Rewrites each spill node's
--- offset and returns the packed slot count.
+# Pack spill slots by coloring their interference graph: two spilled values whose live
+# ranges never overlap can share one stack offset. Without this, every spilled temp gets a
+# unique slot and frames balloon (e.g. large-arm64 needed ~7.7 KB). We build a
+# slot-variable view of the final code (a spill store defines its slot, a reload uses it),
+# run the same backward liveness the register allocator uses, then greedily color slots
+# (a slot's store interferes with everything live across it). Rewrites each spill node's
+# offset and returns the packed slot count.
 function packSpillSlots(tr, spillBase, numSlots, target)
 	if numSlots <= 1 then return numSlots end
 	function slotIdOf(off) return math.floor((off - spillBase) / 8) end
 
-	-- slot-variable insns parallel to fipNodes, preserving the CFG (labels + control flow).
+	# slot-variable insns parallel to fipNodes, preserving the CFG (labels + control flow).
 	slotInsns = {}
 	for _, node in tr.fipNodes do
 		if node.kind == "label" then
@@ -255,12 +255,12 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 	end
 
 	liveOut = regalloc.liveOut(slotInsns)
-	-- interference: a slot's store (its only def point) interferes with every slot live
-	-- across that store. This def-to-live-out construction is the standard, complete
-	-- interference relation (the register allocator uses the same one): any two slots that
-	-- are ever simultaneously live get an edge at whichever's store sees the other live. It
-	-- only does work at spill stores, so it's linear in the spill traffic (an all-pairs
-	-- build would be quadratic in the live set at every instruction).
+	# interference: a slot's store (its only def point) interferes with every slot live
+	# across that store. This def-to-live-out construction is the standard, complete
+	# interference relation (the register allocator uses the same one): any two slots that
+	# are ever simultaneously live get an edge at whichever's store sees the other live. It
+	# only does work at spill stores, so it's linear in the spill traffic (an all-pairs
+	# build would be quadratic in the live set at every instruction).
 	adj = {}
 	for s = 0, numSlots - 1 do adj[s] = {} end
 	for i, ins in slotInsns do
@@ -273,7 +273,7 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 			end
 		end
 	end
-	-- greedy graph coloring (colors = compact slot offsets)
+	# greedy graph coloring (colors = compact slot offsets)
 	color = {}
 	ncolors = 0
 	for s = 0, numSlots - 1 do
@@ -284,9 +284,9 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 		color[s] = c
 		if c + 1 > ncolors then ncolors = c + 1 end
 	end
-	-- Rewrite spill nodes to their packed offset. The offset lives inside the memory
-	-- operand (target-specific shape), so rebuild the node via the target constructor rather
-	-- than poking a field; that keeps the rendered address and the reload-elim key in sync.
+	# Rewrite spill nodes to their packed offset. The offset lives inside the memory
+	# operand (target-specific shape), so rebuild the node via the target constructor rather
+	# than poking a field; that keeps the rendered address and the reload-elim key in sync.
 	for i, node in tr.fipNodes do
 		if node.kind == "insn" and node.spillReload then
 			tr.fipNodes[i] = target.spillReload(node.spillTemp, spillBase + 8 * color[slotIdOf(node.spillOff)])
@@ -297,21 +297,21 @@ function packSpillSlots(tr, spillBase, numSlots, target)
 	return ncolors
 end
 
--- Color the function, spilling to the stack and re-running IRC until it converges.
--- Sets tr.numSpillSlots and returns the final coloring.
+# Color the function, spilling to the stack and re-running IRC until it converges.
+# Sets tr.numSpillSlots and returns the final coloring.
 function allocateWithSpilling(tr, target)
 	nextTemp = tr.nextTemp or 0
 	function allocTemp()
 		nextTemp += 1
-		tr.temps[nextTemp] = { spillCost = 1e9 }  -- reload temps are short-lived; never re-spill
+		tr.temps[nextTemp] = { spillCost = 1e9 }  # reload temps are short-lived; never re-spill
 		return nextTemp
 	end
 	slotOf, numSlots = {}, 0
 	spillBase = 16 + 8 * (tr.numRoots or 0)
 	for _ = 1, 32 do
-		-- spill-cost heuristic: cost ~ number of def/use occurrences, so IRC prefers
-		-- spilling rarely-used temps (a value used once is cheap to reload; a value used
-		-- many times, like a base pointer, is kept in a register). noSpill temps keep 1e9.
+		# spill-cost heuristic: cost ~ number of def/use occurrences, so IRC prefers
+		# spilling rarely-used temps (a value used once is cheap to reload; a value used
+		# many times, like a base pointer, is kept in a register). noSpill temps keep 1e9.
 		cnt = {}
 		for _, node in tr.fipNodes do
 			for _, t in (node.defTemps or {}) do cnt[t] = (cnt[t] or 0) + 1 end
@@ -321,8 +321,8 @@ function allocateWithSpilling(tr, target)
 			if (d.spillCost or 0) < 1e9 then d.spillCost = math.max(cnt[t] or 1, 1) end
 		end
 		cr = regalloc.color(buildRaInsns(tr.fipNodes), tr.temps, { allocatable = target.allocatable })
-		if #cr.spilled == 0 then
-			-- allocation converged; pack spill slots (reuse offsets for non-overlapping slots)
+		if cr.spilled.count == 0 then
+			# allocation converged; pack spill slots (reuse offsets for non-overlapping slots)
 			tr.numSpillSlots = packSpillSlots(tr, spillBase, numSlots, target)
 			return cr
 		end
@@ -336,8 +336,8 @@ function allocateWithSpilling(tr, target)
 	error("sarcasm: register allocation did not converge (excessive register pressure)")
 end
 
--- Compile one parsed input into output assembly text. `debug` (from -g) makes origins
--- carry source file/line/column (pointing at the input assembly) for runtime diagnostics.
+# Compile one parsed input into output assembly text. `debug` (from -g) makes origins
+# carry source file/line/column (pointing at the input assembly) for runtime diagnostics.
 function sarcasm.compile(stmts, fileDirective, debug, target)
 	target = target or makeTarget("arm64", null)
 	glue = target.glue
@@ -346,23 +346,23 @@ function sarcasm.compile(stmts, fileDirective, debug, target)
 	if fileDirective then table.insert(out, "\t.file\t\"" .. fileDirective .. "\"") end
 	table.insert(out, "\t.text")
 
-	calledExterns = {}   -- sig-name -> desc, for callsite thunks
-	definedFI = {}       -- FI symbols defined here (skip resolver thunks for these)
+	calledExterns = {}   # sig-name -> desc, for callsite thunks
+	definedFI = {}       # FI symbols defined here (skip resolver thunks for these)
 
 	for _, fn in functions do
 		sigDesc = sig.parseSignature(fn.sigAnn)
-		-- body = statements after the function label up to (not incl) .size
+		# body = statements after the function label up to (not incl) .size
 		body = {}
 		for _, st in fn.body do table.insert(body, st) end
 		tr = target.transformFunction(fn.name, sigDesc, body)
 
-		-- allocate registers (spilling to the stack + re-running IRC as needed)
+		# allocate registers (spilling to the stack + re-running IRC as needed)
 		colorResult = allocateWithSpilling(tr, target)
 
-		-- source-location info for -g origins (points at the input assembly)
+		# source-location info for -g origins (points at the input assembly)
 		fnDbg = debug and { filename = fileDirective or "?", funcLine = tr.funcLine or 0 } or null
 
-		-- emit getter, FIP body, generic thunk, FO/origins, access origins, alias
+		# emit getter, FIP body, generic thunk, FO/origins, access origins, alias
 		glue.getter(out, fn.name)
 		target.emitFip(out, tr, colorResult)
 		glue.genericThunk(out, sigDesc.signature, sigDesc.argWords, sigDesc.retWords, sigDesc.retIsPtr)
@@ -379,8 +379,8 @@ function sarcasm.compile(stmts, fileDirective, debug, target)
 		end
 	end
 
-	-- Emit weak/hidden callsite resolver thunks for called externals (deduped, and only
-	-- when we don't define the same FI symbol locally).
+	# Emit weak/hidden callsite resolver thunks for called externals (deduped, and only
+	# when we don't define the same FI symbol locally).
 	for _, sigName in sortedKeys(calledExterns) do
 		if not definedFI[sigName] then
 			glue.callsiteThunk(out, calledExterns[sigName].name, calledExterns[sigName].sigDesc)
@@ -423,24 +423,24 @@ HELP = table.concat({
 	"Only ARM64 is supported. Assembly that cannot be proven safe is rejected.",
 }, "\n")
 
--- Report a command-line usage error (clean message, no stack trace); exit code 2.
+# Report a command-line usage error (clean message, no stack trace); exit code 2.
 function usageError(msg: string): number
 	print(PROGNAME .. ": error: " .. msg)
-	print("Try '" .. PROGNAME .. " --help' for more information.")
+	print("Try '" .. PROGNAME .. " #help' for more information.")
 	return 2
 end
 
--- Report a processing diagnostic (clean message, no stack trace); exit code 1.
+# Report a processing diagnostic (clean message, no stack trace); exit code 1.
 function diag(msg: string): number
 	print(PROGNAME .. ": " .. msg)
 	return 1
 end
 
--- CLI: as-like. Args: [-o OUT] [-S|--no-assemble] [--as CMD] INPUT.s
+# CLI: as-like. Args: [-o OUT] [-S|#no-assemble] [--as CMD] INPUT.s
 function sarcasm.main(argv)
 	input, output, noAssemble, asCmd, debug = null, null, false, "as", false
 	i = 2
-	while i <= #argv do
+	while i <= argv.count do
 		a = argv[i]
 		if a == "-h" or a == "--help" then
 			print(HELP); return 0
@@ -483,9 +483,9 @@ function sarcasm.main(argv)
 	ok, asm = pcall(sarcasm.compile, stmts, fileName, debug, target)
 	if not ok then
 		msg = tostring(asm)
-		-- Errors we raise deliberately are prefixed "sarcasm:" and are user-facing:
-		-- present them cleanly. Anything else is an unexpected internal error, which we
-		-- re-raise so the underlying stack trace is preserved for debugging.
+		# Errors we raise deliberately are prefixed "sarcasm:" and are user-facing:
+		# present them cleanly. Anything else is an unexpected internal error, which we
+		# re-raise so the underlying stack trace is preserved for debugging.
 		idx = string.find(msg, "sarcasm:", 1, true)
 		if idx then
 			return diag(input .. ": " .. string.sub(msg, idx + 8):gsub("^%s+", ""))
@@ -501,7 +501,7 @@ function sarcasm.main(argv)
 		return 0
 	end
 
-	-- default: write temp .yolo.s next to the .o then run `as` to produce the object.
+	# default: write temp .yolo.s next to the .o then run `as` to produce the object.
 	objOut = output or (stripExt(input) .. ".o")
 	tmpAsm = stripExt(objOut) .. ".yolo.s"
 	fs.write(fs.open(tmpAsm, "w+"), asm)

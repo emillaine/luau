@@ -356,7 +356,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "generalization_should_not_leak_free_type")
 
             local function updateSearch()
                 for product, button in pairs(productButtonPairs) do
-                    -- This line may have a floating free type pack.
+                    # This line may have a floating free type pack.
                     button.LayoutOrder = func(product) * dir
                 end
             end

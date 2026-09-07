@@ -1,4 +1,4 @@
--- verify reassigning exported value causes error
+# verify reassigning exported value causes error
 success, err = pcall(function()
     m = require("./export_const_error")
 end)

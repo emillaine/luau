@@ -1,8 +1,8 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print("testing functions and calls")
 
--- get the opportunity to test 'type' too ;)
+# get the opportunity to test 'type' too ;)
 
 assert(type(1<2) == 'boolean')
 assert(type(true) == 'boolean' and type(false) == 'boolean')
@@ -17,7 +17,7 @@ assert(type(f) == 'function')
 pack = table.pack
 unpack = table.unpack
 
--- testing local-function recursion
+# testing local-function recursion
 fact = false
 do
   const res = 1
@@ -30,7 +30,7 @@ do
 end
 assert(fact == false)
 
--- testing declarations
+# testing declarations
 a = {i = 10}
 self = 20
 function a:x (x) return x+self.i end
@@ -58,13 +58,13 @@ a.b.c:f2('k', 12); assert(a.b.c.k == 12)
 
 print('+')
 
-t = null   -- 'declare' t
+t = null   # 'declare' t
 function f(a,b,c) d = 'a'; t={a,b,c,d} end
 
-f(      -- this line change must be valid
+f(      # this line change must be valid
   1,2)
 assert(t[1] == 1 and t[2] == 2 and t[3] == null and t[4] == 'a')
-f(1,2,   -- this one too
+f(1,2,   # this one too
       3,4)
 assert(t[1] == 1 and t[2] == 2 and t[3] == 3 and t[4] == 'a')
 
@@ -102,7 +102,7 @@ end
 deep(10)
 deep(200)
 
--- testing tail call
+# testing tail call
 function deep (n) if n>0 then return deep(n-1) else return 101 end end
 assert(deep(10000) == 101)
 a = {}
@@ -128,9 +128,9 @@ assert(table.getn(x) == lim and x[1] == 1 and x[lim] == lim)
 x = {unpack(a, lim-2)}
 assert(table.getn(x) == 3 and x[1] == lim-2 and x[3] == lim)
 x = {unpack(a, 10, 6)}
-assert(next(x) == null)   -- no elements
+assert(next(x) == null)   # no elements
 x = {unpack(a, 11, 10)}
-assert(next(x) == null)   -- no elements
+assert(next(x) == null)   # no elements
 x,y = unpack(a, 10, 10)
 assert(x == 10 and y == null)
 x,y,z = unpack(a, 10, 11)
@@ -141,9 +141,9 @@ a,x = unpack({1,2}, 1, 1)
 assert(a==1 and x==null)
 
 
--- testing closures
+# testing closures
 
--- fixed-point operator
+# fixed-point operator
 Y = function (le)
       function a (f)
         return le(function (x) return f(f)(x) end)
@@ -152,7 +152,7 @@ Y = function (le)
     end
 
 
--- non-recursive factorial
+# non-recursive factorial
 
 F = function (f)
       return function (n)
@@ -178,7 +178,7 @@ assert(f(9, 16) == 10+11+12+13+10+9+16+10)
 Y, F, f = null
 print('+')
 
--- testing multiple returns
+# testing multiple returns
 
 function unlpack (t, i)
   i = i or 1
@@ -213,20 +213,20 @@ a = ret2{ unlpack{1,2,3}, unlpack{3,2,1}, unlpack{"a", "b"}}
 assert(a[1] == 1 and a[2] == 3 and a[3] == "a" and a[4] == "b")
 
 
--- testing calls with 'incorrect' arguments
+# testing calls with 'incorrect' arguments
 rawget({}, "x", 1)
 rawset({}, "x", 1, 2)
 assert(math.sin(1,2) == math.sin(1))
 table.sort({10,9,8,4,19,23,0,0}, function (a,b) return a<b end, "extra arg")
 
 
--- test for bug in parameter adjustment
+# test for bug in parameter adjustment
 assert((function () return null end)(4) == null)
 assert((function () a = null; return a end)(4) == null)
 assert((function (a) return a end)() == null)
 
- -- test for a bug in clobbering stack variables 
- -- this call to print will clobber x and y if the call to f is not properly setup
+ # test for a bug in clobbering stack variables 
+ # this call to print will clobber x and y if the call to f is not properly setup
 function clobber()
    print("abcdefg", "hijklmnop")
 
@@ -243,7 +243,7 @@ clobber()
 assert(x[1] == 1234)
 assert(x[2] == 4567)
 
--- C-stack overflow while handling C-stack overflow
+# C-stack overflow while handling C-stack overflow
 if not limitedstack then
   function loop ()
     assert(pcall(loop))
@@ -253,7 +253,7 @@ if not limitedstack then
   assert(not err and string.find(msg, "error"))
 end
 
--- testing deep nested calls with a large thread stack
+# testing deep nested calls with a large thread stack
 if not limitedstack then
   function recurse(n, ...) return n <= 1 and (1 + ({...}).count) or recurse(n-1, table.unpack(table.create(4000, 1))) + 1 end
 

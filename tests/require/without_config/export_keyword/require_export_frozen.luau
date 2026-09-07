@@ -1,4 +1,4 @@
--- verify export table is frozen
+# verify export table is frozen
 m = require("./export_value")
 
 success, err = pcall(function()

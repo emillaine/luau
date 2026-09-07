@@ -1,4 +1,4 @@
--- Neural network layers: Dense and Conv1D
+# Neural network layers: Dense and Conv1D
 
 tensorMod = require("./tensor")
 Tensor = tensorMod.Tensor

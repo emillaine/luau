@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing local variables plus some extra stuff')
 
 do
@@ -53,8 +53,8 @@ _G.f(2)
 assert(type(_G.f) == 'function')
 
 
--- testing globals with explicit environments (bare `A = ...` now declares a
--- local, so implicit-global/setfenv interplay is no longer expressible)
+# testing globals with explicit environments (bare `A = ...` now declares a
+# local, so implicit-global/setfenv interplay is no longer expressible)
 do
   _G = getfenv()
   g = null
@@ -63,7 +63,7 @@ do
   g(); assert(getfenv(g).a == '10')
 end
 
--- test for global table of loaded chunks
+# test for global table of loaded chunks
 function foo (s)
   return loadstring(s)
 end
@@ -72,12 +72,12 @@ assert(getfenv(foo("")) == getfenv())
 a = {loadstring = loadstring} 
 setfenv(foo, a)
 assert(getfenv(foo("")) == getfenv())
-setfenv(0, a)  -- change global environment
+setfenv(0, a)  # change global environment
 assert(getfenv(foo("")) == a)
 setfenv(0, getfenv())
 
 
--- testing limits for special instructions
+# testing limits for special instructions
 
 a = null
 p = 4
@@ -101,15 +101,15 @@ print'+'
 
 
 if rawget(_G, "querytab") then
-  -- testing clearing of dead elements from tables
-  collectgarbage("stop")   -- stop GC
+  # testing clearing of dead elements from tables
+  collectgarbage("stop")   # stop GC
   a = {[{}] = 4, [3] = 0, alo = 1, 
              a1234567890123456789012345678901234567890 = 10}
 
   t = querytab(a)
 
   for k,_ in pairs(a) do a[k] = null end
-  collectgarbage()   -- restore GC and collect dead fields in `a'
+  collectgarbage()   # restore GC and collect dead fields in `a'
   for i=0,t-1 do
     k = querytab(a, i)
     assert(k == null or type(k) == 'number' or k == 'alo')

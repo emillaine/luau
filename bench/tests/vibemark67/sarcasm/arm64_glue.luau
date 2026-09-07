@@ -1,14 +1,14 @@
---!nonstrict
--- Emits the Fil-C calling-convention "glue" for an exported function: the function
--- getter, the FO (function object), the generic (buffer) entrypoint thunk, the
--- per-function origin objects, and the direct-call alias. These templates are
--- validated against the live runtime (see ABI-NOTES.md / hash.yolo.s).
+#!nonstrict
+# Emits the Fil-C calling-convention "glue" for an exported function: the function
+# getter, the FO (function object), the generic (buffer) entrypoint thunk, the
+# per-function origin objects, and the direct-call alias. These templates are
+# validated against the live runtime (see ABI-NOTES.md / hash.yolo.s).
 
 glue = {}
 
-FUNCTION_UPPER_FLAGS = "36873221949095936" -- 0x83 << 48
+FUNCTION_UPPER_FLAGS = "36873221949095936" # 0x83 << 48
 
--- Function getter: returns the FO flight pointer (intval in x0, lower in x1).
+# Function getter: returns the FO flight pointer (intval in x0, lower in x1).
 function glue.getter(out, name: string)
 	fo = "pizlonatedFO_" .. name
 	table.insert(out, "\t.text")
@@ -25,10 +25,10 @@ function glue.getter(out, name: string)
 	table.insert(out, "")
 end
 
--- Generic (buffer-based) entrypoint thunk pizlonated2ET<sig>. Marshals args from the
--- thread CC buffers into the register CC, calls the fast entrypoint, marshals the
--- return value back. argWords/retWords count 8-byte words. retIsPtr controls whether
--- the return lower is copied (else zeroed).
+# Generic (buffer-based) entrypoint thunk pizlonated2ET<sig>. Marshals args from the
+# thread CC buffers into the register CC, calls the fast entrypoint, marshals the
+# return value back. argWords/retWords count 8-byte words. retIsPtr controls whether
+# the return lower is copied (else zeroed).
 function glue.genericThunk(out, signature: number, argWords: number, retWords: number, retIsPtr: boolean)
 	assert(argWords <= 3, "sarcasm: >3 register args not yet supported")
 	sym = "pizlonated2ET" .. tostring(signature)
@@ -43,7 +43,7 @@ function glue.genericThunk(out, signature: number, argWords: number, retWords: n
 	table.insert(out, "\tstp\tx30, x19, [sp, #-16]!")
 	table.insert(out, "\tcmp\tx2, #" .. tostring(argBytes))
 	table.insert(out, "\tb.lo\t" .. lend .. "_fail")
-	-- load args: intval reg = x2 + 2*i, lower reg = x3 + 2*i
+	# load args: intval reg = x2 + 2*i, lower reg = x3 + 2*i
 	for i = 0, argWords - 1 do
 		ivReg = "x" .. tostring(2 + 2 * i)
 		loReg = "x" .. tostring(3 + 2 * i)
@@ -80,10 +80,10 @@ function glue.genericThunk(out, signature: number, argWords: number, retWords: n
 	table.insert(out, "")
 end
 
--- The FO object plus per-function origin objects.
--- numRoots = number of GC pointer-root slots in the frame (matches origin count field).
--- `dbg`, when present, is { filename = <string>, funcLine = <number> } and makes the
--- function origin reference a filename string and carry the function's source line.
+# The FO object plus per-function origin objects.
+# numRoots = number of GC pointer-root slots in the frame (matches origin count field).
+# `dbg`, when present, is { filename = <string>, funcLine = <number> } and makes the
+# function origin reference a filename string and carry the function's source line.
 function glue.foAndOrigins(out, name: string, signature: number, numRoots: number, dbg)
 	fo = "pizlonatedFO_" .. name
 	strSym = ".Lfilc_string_" .. name
@@ -108,17 +108,17 @@ function glue.foAndOrigins(out, name: string, signature: number, numRoots: numbe
 	table.insert(out, "\t.p2align\t2, 0x0")
 	table.insert(out, strSym .. ":")
 	table.insert(out, "\t.asciz\t\"" .. name .. "\"")
-	table.insert(out, "\t.size\t" .. strSym .. ", " .. tostring(#name + 1))
+	table.insert(out, "\t.size\t" .. strSym .. ", " .. tostring(name.count + 1))
 	table.insert(out, "")
 
-	-- optional filename string (only with -g)
+	# optional filename string (only with -g)
 	if dbg then
 		table.insert(out, "\t.type\t" .. fileSym .. ",@object")
 		table.insert(out, "\t.section\t.rodata.str1.4,\"aMS\",@progbits,1")
 		table.insert(out, "\t.p2align\t2, 0x0")
 		table.insert(out, fileSym .. ":")
 		table.insert(out, "\t.asciz\t\"" .. dbg.filename .. "\"")
-		table.insert(out, "\t.size\t" .. fileSym .. ", " .. tostring(#dbg.filename + 1))
+		table.insert(out, "\t.size\t" .. fileSym .. ", " .. tostring(dbg.filename.count + 1))
 		table.insert(out, "")
 	end
 
@@ -149,14 +149,14 @@ function glue.foAndOrigins(out, name: string, signature: number, numRoots: numbe
 	table.insert(out, "")
 end
 
--- An optimized-access-check origin (one per distinct access site).
--- size = access size in bytes, align = required alignment, isWrite marks a store.
--- `dbg`, when present, is { line = <number> } and gives this access its own source-line
--- origin (rather than sharing the function origin).
+# An optimized-access-check origin (one per distinct access site).
+# size = access size in bytes, align = required alignment, isWrite marks a store.
+# `dbg`, when present, is { line = <number> } and gives this access its own source-line
+# origin (rather than sharing the function origin).
 function glue.accessOrigin(out, sym: string, size: number, align: number, funcName: string, isWrite: boolean?, dbg)
 	origin = ".Lfilc_origin_" .. funcName
 	if dbg then
-		-- per-access origin referencing the function origin, with this access's line
+		# per-access origin referencing the function origin, with this access's line
 		origin = sym .. "_o"
 		table.insert(out, "\t.type\t" .. origin .. ",@object")
 		table.insert(out, "\t.section\t.data.rel.ro,\"aw\",@progbits")
@@ -184,7 +184,7 @@ function glue.accessOrigin(out, sym: string, size: number, align: number, funcNa
 	table.insert(out, "")
 end
 
--- The direct-call alias pizlonatedFI<sig>_<name> = pizlonatedFIP<sig>_<name>.
+# The direct-call alias pizlonatedFI<sig>_<name> = pizlonatedFIP<sig>_<name>.
 function glue.alias(out, name: string, signature: number)
 	table.insert(out, "\t.globl\tpizlonatedFI" .. tostring(signature) .. "_" .. name)
 	table.insert(out, "\t.type\tpizlonatedFI" .. tostring(signature) .. "_" .. name .. ",@function")
@@ -196,22 +196,22 @@ function glue.originName(funcName: string): string
 	return ".Lfilc_origin_" .. funcName
 end
 
--- Emit a weak/hidden callsite resolver thunk pizlonatedFI<sig>_NAME for a called
--- external function. It resolves the callee's function object via the pizlonated_NAME
--- getter, validates that it is a function object whose intval is the canonical
--- entrypoint and whose signature matches, then tail-calls the fast entrypoint. On a
--- signature mismatch it marshals through the generic (buffer) calling convention. On a
--- non-function object it raises filc_check_function_call_fail. (Template: clang's
--- pizlonatedFI<sig>_NAME in test3.c output.)
+# Emit a weak/hidden callsite resolver thunk pizlonatedFI<sig>_NAME for a called
+# external function. It resolves the callee's function object via the pizlonated_NAME
+# getter, validates that it is a function object whose intval is the canonical
+# entrypoint and whose signature matches, then tail-calls the fast entrypoint. On a
+# signature mismatch it marshals through the generic (buffer) calling convention. On a
+# non-function object it raises filc_check_function_call_fail. (Template: clang's
+# pizlonatedFI<sig>_NAME in test3.c output.)
 function glue.callsiteThunk(out, callee: string, sigDesc)
 	sig = sigDesc.signature
 	sym = "pizlonatedFI" .. tostring(sig) .. "_" .. callee
 	L = ".Lcsr_" .. callee .. "_" .. tostring(sig)
 
-	-- register save plan: x19 = myth; then per-arg iv (+ lo if pointer)
+	# register save plan: x19 = myth; then per-arg iv (+ lo if pointer)
 	myth = 19
 	nextReg = 20
-	args = {}  -- k -> { iv = reg, lo = reg|null, isPtr = bool }
+	args = {}  # k -> { iv = reg, lo = reg|null, isPtr = bool }
 	for k = 1, sigDesc.argWords do
 		isPtr = sigDesc.argTypes[k] == 7
 		ent = { iv = nextReg, isPtr = isPtr }
@@ -224,7 +224,7 @@ function glue.callsiteThunk(out, callee: string, sigDesc)
 		table.insert(saved, args[k].iv)
 		if args[k].lo then table.insert(saved, args[k].lo) end
 	end
-	total = math.floor((8 * (1 + #saved) + 15) / 16) * 16
+	total = math.floor((8 * (1 + saved.count) + 15) / 16) * 16
 	argBytes = sigDesc.argWords * 8
 	retBytes = sigDesc.retWords * 8
 
@@ -238,27 +238,27 @@ function glue.callsiteThunk(out, callee: string, sigDesc)
 	e("\tsub\tsp, sp, #" .. total)
 	e("\tstr\tx30, [sp, #0]")
 	for i, r in saved do e("\tstr\tx" .. r .. ", [sp, #" .. (8 * i) .. "]") end
-	-- save incoming CC registers into callee-saved
+	# save incoming CC registers into callee-saved
 	e("\tmov\tx" .. myth .. ", x0")
 	for k = 1, sigDesc.argWords do
 		e("\tmov\tx" .. args[k].iv .. ", x" .. (2 + 2 * (k - 1)))
 		if args[k].lo then e("\tmov\tx" .. args[k].lo .. ", x" .. (3 + 2 * (k - 1))) end
 	end
-	-- resolve the function object
+	# resolve the function object
 	e("\tbl\tpizlonated_" .. callee)
 	e("\tcbz\tx1, " .. L .. "_fail")
 	e("\tldur\tx8, [x1, #-8]")
-	e("\tmov\tx10, #36028797018963968")          -- 0x80000000000000
+	e("\tmov\tx10, #36028797018963968")          # 0x80000000000000
 	e("\tand\tx9, x8, #0x780000000000000")
 	e("\tcmp\tx9, x10")
 	e("\tb.ne\t" .. L .. "_fail")
 	e("\tand\tx8, x8, #0xffffffffffff")
 	e("\tcmp\tx0, x8")
 	e("\tb.ne\t" .. L .. "_fail")
-	e("\tldr\tx8, [x1, #16]")                      -- signature
+	e("\tldr\tx8, [x1, #16]")                      # signature
 	e("\tcmp\tx8, #" .. tostring(sig))
 	e("\tb.ne\t" .. L .. "_generic")
-	-- direct fast call
+	# direct fast call
 	e("\tmov\tx0, x" .. myth)
 	for k = 1, sigDesc.argWords do
 		e("\tmov\tx" .. (2 + 2 * (k - 1)) .. ", x" .. args[k].iv)
@@ -269,7 +269,7 @@ function glue.callsiteThunk(out, callee: string, sigDesc)
 	e("\tldr\tx30, [sp, #0]")
 	e("\tadd\tsp, sp, #" .. total)
 	e("\tbr\tx5")
-	-- generic buffer call
+	# generic buffer call
 	e(L .. "_generic:")
 	for k = 1, sigDesc.argWords do
 		e("\tstr\tx" .. args[k].iv .. ", [x" .. myth .. ", #" .. (128 + 8 * (k - 1)) .. "]")

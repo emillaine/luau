@@ -1,4 +1,4 @@
---!nocheck
+#!nocheck
 
 function expectpass(s, f)
     f()
@@ -9,9 +9,9 @@ function expectfail(s, expected, f)
     success, actual = pcall(f)
     assert(not success)
     assert(type(actual) == "string", `{s}: error message was not a string, but a {type(actual)}`)
-    -- We have pass true for the last argument to string.find to disable pattern matching, since error messages
-    -- can have characters in them that would be interpreted as patterns, and we want to match the error message exactly.
-    -- e.g. parens in error messages can be interpreted as pattern groups
+    # We have pass true for the last argument to string.find to disable pattern matching, since error messages
+    # can have characters in them that would be interpreted as patterns, and we want to match the error message exactly.
+    # e.g. parens in error messages can be interpreted as pattern groups
     assert(string.find(actual, expected, 1, true), `{s} expected:\n\t{expected}\nActual:\n\t{actual}`)
     print(`ok: {s}`)
 end
@@ -104,7 +104,7 @@ expectpass("classof returns null for non-classinstance values", function()
     assert(class.classof(42) == null)
     assert(class.classof("hello") == null)
     assert(class.classof({}) == null)
-    -- A class object is not itself a class instance.
+    # A class object is not itself a class instance.
     assert(class.classof(Point) == null)
 end)
 
@@ -122,16 +122,16 @@ end)
 expectpass("classof result is usable as the second arg to isinstance", function()
     p = Point.new({ x = 3, y = 4 })
     notAPoint = NotAPoint.new({ x = 1 })
-    -- classof(notAPoint) is NotAPoint, so a Point instance is not an instance of it.
+    # classof(notAPoint) is NotAPoint, so a Point instance is not an instance of it.
     assert(not class.isinstance(p, class.classof(notAPoint)))
-    -- classof(p) is Point, so p is an instance of it.
+    # classof(p) is Point, so p is an instance of it.
     assert(class.isinstance(p, class.classof(p)))
 end)
 
 expectpass("basic printing", function ()
     assert(typeof(Point) == "class")
     assert(typeof(Point.zero) == "function")
-    -- For now we can pass tables to instance methods that expect objects
+    # For now we can pass tables to instance methods that expect objects
     assert(Point.magnitude({x = 4, y = 3}) == 5)
 end)
 
@@ -357,7 +357,7 @@ class Entry
             else if other.tier == "S" then
                 return false
             else
-                -- Assume it's a letter tier.
+                # Assume it's a letter tier.
                 return self.tier < other.tier
             end
         end
@@ -403,7 +403,7 @@ end)
 expectfail("classes cannot be iterated over", "attempt to iterate over a object value", function ()
     p = Point.new({ x = 1, y = 2 })
     for k, v in p do
-        -- This should be unreachable!
+        # This should be unreachable!
         print(k, v)
     end
 end)
@@ -558,7 +558,7 @@ class Parent
     public children: {Child}
 
     function createChild(self)
-        child = Child.new({parent = self}) -- forward reference to Child
+        child = Child.new({parent = self}) # forward reference to Child
         table.insert(self.children, child)
         return child
     end
@@ -586,7 +586,7 @@ expectpass("hoisting: mutually referential classes work via capture by ref", fun
 end)
 
 function makeWidget(id)
-    return Widget.new({ id = id }) -- forward reference to Widget
+    return Widget.new({ id = id }) # forward reference to Widget
 end
 
 class Widget
@@ -851,7 +851,7 @@ end)
 expectpass("class inheritance operator overload overridden", function()
     t = Truck.new({ speed = 80, payload = 5000 })
     assert(tostring(t) == "Truck(speed=80, payload=5000)")
-    -- __lt and __add should still be inherited from Vehicle
+    # __lt and __add should still be inherited from Vehicle
     t2 = Truck.new({ speed = 60, payload = 3000 })
     assert(t2 < t)
     combined = t + t2
@@ -887,8 +887,8 @@ end
 
 expectpass("class inheritance virtual dispatch via self", function()
     rp = RegularPolygon.new({ sides = 6, length = 5 })
-    -- perimeter() is inherited from Shape, but it calls self:sideLength()
-    -- which should dispatch to RegularPolygon's override
+    # perimeter() is inherited from Shape, but it calls self:sideLength()
+    # which should dispatch to RegularPolygon's override
     assert(rp:perimeter() == 30)
 end)
 
@@ -946,7 +946,7 @@ expectpass("class inheritance GC stress", function()
         end
     end
     collectgarbage()
-    -- Verify objects created after GC still work
+    # Verify objects created after GC still work
     c = Cat.new({ species = "final", breed = "test" })
     assert(c.species == "final")
     assert(c:live() == "I am alive")

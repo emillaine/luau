@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print"testing sort"
 
 function checksort(t, f, ...)
@@ -9,11 +9,11 @@ function checksort(t, f, ...)
   for i=1,t.count do assert(copy[i] == select(i, ...)) end
 end
 
--- basic edge cases
+# basic edge cases
 checksort({}, null)
 checksort({1}, null, 1)
 
--- small inputs
+# small inputs
 checksort({1, 2}, null, 1, 2)
 checksort({2, 1}, null, 1, 2)
 
@@ -23,26 +23,26 @@ checksort({1, 3, 2}, null, 1, 2, 3)
 checksort({3, 2, 1}, null, 1, 2, 3)
 checksort({3, 1, 2}, null, 1, 2, 3)
 
--- "large" input
+# "large" input
 checksort({3, 8, 1, 7, 10, 2, 5, 4, 9, 6}, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 checksort({"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}, null, "Apr", "Aug", "Dec", "Feb", "Jan", "Jul", "Jun", "Mar", "May", "Nov", "Oct", "Sep")
 
--- duplicates
+# duplicates
 checksort({3, 1, 1, 7, 1, 3, 5, 1, 9, 3}, null, 1, 1, 1, 1, 3, 3, 3, 5, 7, 9)
 
--- predicates
+# predicates
 checksort({3, 8, 1, 7, 10, 2, 5, 4, 9, 6}, function (a, b) return a > b end, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
--- can't sort readonly tables
+# can't sort readonly tables
 assert(pcall(table.sort, table.freeze({2, 1})) == false)
 
--- first argument must be a table, second argument must be null or function
+# first argument must be a table, second argument must be null or function
 assert(pcall(table.sort) == false)
 assert(pcall(table.sort, "abc") == false)
 assert(pcall(table.sort, {}, 42) == false)
 assert(pcall(table.sort, {}, {}) == false)
 
--- legacy Lua tests
+# legacy Lua tests
 function check (a, f)
   f = f or function (x,y) return x<y end;
   for n=table.getn(a),2,-1 do
@@ -86,7 +86,7 @@ print(string.format("Invert-sorting other %d elements in %.2f sec., with %i comp
 check(a, function(x,y) return y<x end)
 
 
-table.sort{}  -- empty array
+table.sort{}  # empty array
 
 for i=1,limit do a[i] = false end
 x = os.clock();
@@ -113,10 +113,10 @@ table.sort(a)
 check(a, tt.__lt)
 check(a)
 
--- force quicksort to degrade to heap sort
+# force quicksort to degrade to heap sort
 do
-  -- discover quick sort killer (this triggers heap sort which is what we want more or less; note that the "internal" heap sort iterations will result in a different order that wouldn't fully defeat a vanilla quicksort)
-  -- see https://igoro.com/archive/quicksort-killer/
+  # discover quick sort killer (this triggers heap sort which is what we want more or less; note that the "internal" heap sort iterations will result in a different order that wouldn't fully defeat a vanilla quicksort)
+  # see https://igoro.com/archive/quicksort-killer/
   keys = {}
   candidate = 0
   next = 0
@@ -145,7 +145,7 @@ do
     return keys[x] < keys[y]
   end)
 
-  -- repeat the sort for the generated sequence; it should produce an integer sequence and trigger heap sort, although we can't confirm the latter
+  # repeat the sort for the generated sequence; it should produce an integer sequence and trigger heap sort, although we can't confirm the latter
   arr = table.create(t.count)
   for k,v in t do
     arr[v] = k

@@ -1,8 +1,8 @@
---!strict
--- SHA-256 (FIPS 180-4) plus HMAC-SHA256, used as the Noise hash function.
---
--- Words are 32-bit. Logical operations use `bit32`; additions accumulate a few
--- 32-bit terms (sum < 2^35, exact as a double) and are masked back to 32 bits.
+#!strict
+# SHA-256 (FIPS 180-4) plus HMAC-SHA256, used as the Noise hash function.
+#
+# Words are 32-bit. Logical operations use `bit32`; additions accumulate a few
+# 32-bit terms (sum < 2^35, exact as a double) and are masked back to 32 bits.
 
 wordmath = require("./wordmath")
 
@@ -11,8 +11,8 @@ sha256 = {}
 TWO32 = 0x100000000
 rotr = wordmath.rotr32
 
--- Round constants (first 32 bits of the fractional parts of the cube roots of
--- the first 64 primes).
+# Round constants (first 32 bits of the fractional parts of the cube roots of
+# the first 64 primes).
 K = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 	0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -24,11 +24,11 @@ K = {
 	0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 }
 
--- Initial hash value (first 32 bits of the fractional parts of the square roots
--- of the first 8 primes).
+# Initial hash value (first 32 bits of the fractional parts of the square roots
+# of the first 8 primes).
 H0 = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 }
 
--- Read a big-endian 32-bit word from a buffer.
+# Read a big-endian 32-bit word from a buffer.
 function readBE32(buf: buffer, off: number): number
 	return buffer.readu8(buf, off) * 0x1000000
 		+ buffer.readu8(buf, off + 1) * 0x10000
@@ -36,7 +36,7 @@ function readBE32(buf: buffer, off: number): number
 		+ buffer.readu8(buf, off + 3)
 end
 
--- Write a big-endian 32-bit word into a buffer.
+# Write a big-endian 32-bit word into a buffer.
 function writeBE32(buf: buffer, off: number, value: number)
 	buffer.writeu8(buf, off, bit32.band(bit32.rshift(value, 24), 0xff))
 	buffer.writeu8(buf, off + 1, bit32.band(bit32.rshift(value, 16), 0xff))
@@ -44,17 +44,17 @@ function writeBE32(buf: buffer, off: number, value: number)
 	buffer.writeu8(buf, off + 3, bit32.band(value, 0xff))
 end
 
--- Pad a message per FIPS 180-4 and return a new buffer whose length is a
--- multiple of 64 bytes.
+# Pad a message per FIPS 180-4 and return a new buffer whose length is a
+# multiple of 64 bytes.
 function pad(msg: buffer): buffer
 	len = buffer.len(msg)
 	bitLen = len * 8
-	-- 1 byte 0x80, then k zero bytes, then 8 bytes length: total multiple of 64.
+	# 1 byte 0x80, then k zero bytes, then 8 bytes length: total multiple of 64.
 	padded = ((len + 1 + 8 + 63) // 64) * 64
 	out = buffer.create(padded)
 	buffer.copy(out, 0, msg, 0, len)
 	buffer.writeu8(out, len, 0x80)
-	-- 64-bit big-endian bit length (split into high/low 32-bit words).
+	# 64-bit big-endian bit length (split into high/low 32-bit words).
 	writeBE32(out, padded - 8, math.floor(bitLen / TWO32))
 	writeBE32(out, padded - 4, bitLen % TWO32)
 	return out
@@ -63,14 +63,14 @@ end
 sha256.DIGEST_SIZE = 32
 sha256.BLOCK_SIZE = 64
 
--- Compute the SHA-256 digest of `msg`, returning a 32-byte buffer.
+# Compute the SHA-256 digest of `msg`, returning a 32-byte buffer.
 function sha256.hash(msg: buffer): buffer
 	data = pad(msg)
 	h = table.clone(H0)
 	w = table.create(64)
 
 	for base = 0, buffer.len(data) - 1, 64 do
-		-- Message schedule.
+		# Message schedule.
 		for t = 0, 15 do
 			w[t + 1] = readBE32(data, base + t * 4)
 		end
@@ -119,10 +119,10 @@ function sha256.hash(msg: buffer): buffer
 	return out
 end
 
--- HMAC-SHA256 (RFC 2104) over `msg` with `key`. Returns a 32-byte tag.
+# HMAC-SHA256 (RFC 2104) over `msg` with `key`. Returns a 32-byte tag.
 function sha256.hmac(key: buffer, msg: buffer): buffer
 	blockSize = 64
-	-- Keys longer than the block size are hashed first.
+	# Keys longer than the block size are hashed first.
 	k = buffer.create(blockSize)
 	if buffer.len(key) > blockSize then
 		hk = sha256.hash(key)

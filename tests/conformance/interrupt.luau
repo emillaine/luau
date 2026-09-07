@@ -1,7 +1,7 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing interrupts")
 
--- this function will be called by C code with a special interrupt handler that validates hit locations
+# this function will be called by C code with a special interrupt handler that validates hit locations
 _G.test = function()
 	function foo()
 		for i=1,10 do end
@@ -25,7 +25,7 @@ _G.test = function()
 	baz()
 end
 
--- these functions will be called by C code with a special interrupt handler that terminates after a few invocations
+# these functions will be called by C code with a special interrupt handler that terminates after a few invocations
 _G.infloop1 = function()
 	while true do end
 end
@@ -59,7 +59,7 @@ _G.infloop8 = function()
 end
 
 _G.infloop9 = function()
-	-- technically not a loop, but an exponentially recursive function
+	# technically not a loop, but an exponentially recursive function
 	function boom()
 		boom()
 		boom()
@@ -101,7 +101,7 @@ _G.hang5 = function()
 end
 
 _G.hang6 = function()
-	-- the reason an interrupt in RETURN is needed, CALL alone is not enough
+	# the reason an interrupt in RETURN is needed, CALL alone is not enough
 	obj = setmetatable({}, {
 		__index = function(obj, n)
 			return if n < 2 then 1 else obj[n - 1] + obj[n - 2]
@@ -112,7 +112,7 @@ _G.hang6 = function()
 end
 
 _G.hang7 = function()
-	-- technically not a loop, but an exponentially recursive function
+	# technically not a loop, but an exponentially recursive function
 	function l0()
 		pcall(l0)
 		pcall(l0)

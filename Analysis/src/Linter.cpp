@@ -3350,7 +3350,7 @@ static void lintComments(LintContext& context, const std::vector<HotComment>& ho
 
     for (const HotComment& hc : hotcomments)
     {
-        // We reserve --!<space> for various informational (non-directive) comments
+        // We reserve #!<space> for various informational (non-directive) comments
         if (hc.content.empty() || hc.content[0] == ' ' || hc.content[0] == '\t')
             continue;
 

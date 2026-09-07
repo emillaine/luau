@@ -52,7 +52,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_nil_methods_work")
             if ty:is("null") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getnil<>): null return idx end
@@ -86,7 +86,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_unknown_methods_work")
             if ty:is("unknown") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getunknown<>): unknown return idx end
@@ -120,7 +120,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_never_methods_work")
             if ty:is("never") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getnever<>): never return idx end
@@ -154,7 +154,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_any_methods_work")
             if ty:is("any") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getany<>): any return idx end
@@ -188,7 +188,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_boolean_methods_work")
             if ty:is("boolean") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getboolean<>): boolean return idx end
@@ -222,7 +222,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_number_methods_work")
             if ty:is("number") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getnumber<>): number return idx end
@@ -283,7 +283,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_string_methods_work")
             if ty:is("string") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.boolean
         end
         function ok(idx: getstring<>): string return idx end
@@ -317,7 +317,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_boolsingleton_methods_work")
             if ty:is("singleton") and ty:value() then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getboolsingleton<>): true return idx end
@@ -351,7 +351,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_strsingleton_methods_work")
             if ty:is("singleton") and ty:value() == "hungry hippo" then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
         function ok(idx: getstrsingleton<>): "hungry hippo" return idx end
@@ -369,7 +369,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_union_serialization_works")
             return arg
         end
         type type_being_serialized = number | string | boolean
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: serialize_union<type_being_serialized>): null return idx end
     )");
 
@@ -387,7 +387,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optional_works")
         type function numberhuh()
             return types.optional(types.number)
         end
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: numberhuh<>): never return idx end
     )");
 
@@ -406,7 +406,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_optional_works_on_unions")
             const ty = types.unionof(types.string, types.number, types.boolean)
             return types.optional(ty)
         end
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: foobar<>): never return idx end
     )");
 
@@ -424,17 +424,17 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_union_methods_work")
         type function getunion()
             const ty = types.unionof(types.string, types.number, types.boolean)
             if ty:is("union") then
-                -- creating a copy of `ty`
+                # creating a copy of `ty`
                 const arr = {}
                 for _, value in ty:components() do
                     table.insert(arr, value)
                 end
                 return types.unionof(table.unpack(arr))
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: getunion<>): never return idx end
     )");
 
@@ -457,7 +457,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof")
             end
             return result
         end
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: foobar<>): never return idx end
     )");
 
@@ -491,7 +491,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_unionof_two_things")
         type function foobar()
             return types.unionof(types.string, types.never)
         end
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: foobar<>): never return idx end
     )");
 
@@ -546,7 +546,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_flatten_on_intersectionof_two_things")
         type function foobar()
             return types.intersectionof(types.unknown, types.string)
         end
-        -- forcing an error here to check the exact type of the union
+        # forcing an error here to check the exact type of the union
         function ok(idx: foobar<>): never return idx end
     )");
 
@@ -565,7 +565,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_serialization_works")
             return arg
         end
         type type_being_serialized = { boolean: boolean, number: number } & { boolean: boolean, string: string }
-        -- forcing an error here to check the exact type of the intersection
+        # forcing an error here to check the exact type of the intersection
         function ok(idx: serialize_intersection<type_being_serialized>): null return idx end
     )");
 
@@ -583,24 +583,24 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_intersection_methods_work")
     CheckResult result = check(R"(
         type function getintersection()
             const tbl1 = types.newtable(null, null, null)
-            tbl1:setproperty(types.singleton("boolean"), types.boolean) -- {boolean: boolean}
-            tbl1:setproperty(types.singleton("number"), types.number) -- {boolean: boolean, number: number}
+            tbl1:setproperty(types.singleton("boolean"), types.boolean) # {boolean: boolean}
+            tbl1:setproperty(types.singleton("number"), types.number) # {boolean: boolean, number: number}
             const tbl2 = types.newtable(null, null, null)
-            tbl2:setproperty(types.singleton("boolean"), types.boolean) -- {boolean: boolean}
-            tbl2:setproperty(types.singleton("string"), types.string) -- {boolean: boolean, string: string}
+            tbl2:setproperty(types.singleton("boolean"), types.boolean) # {boolean: boolean}
+            tbl2:setproperty(types.singleton("string"), types.string) # {boolean: boolean, string: string}
             const ty = types.intersectionof(tbl1, tbl2)
             if ty:is("intersection") then
-                -- creating a copy of `ty`
+                # creating a copy of `ty`
                 const arr = {}
                 for index, value in ty:components() do
                     table.insert(arr, value)
                 end
                 return types.intersectionof(table.unpack(arr))
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
-        -- forcing an error here to check the exact type of the intersection
+        # forcing an error here to check the exact type of the intersection
         function ok(idx: getintersection<>): never return idx end
     )");
 
@@ -620,11 +620,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_negation_methods_work")
             if ty:is("negation") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
 
-        -- forcing an error here to check the exact type of the negation
+        # forcing an error here to check the exact type of the negation
         function ok(idx: getnegation<>): never return idx end
     )");
 
@@ -750,7 +750,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_serialization_works")
             return arg
         end
         type type_being_serialized = { boolean: boolean, number: number, [string]: number }
-        -- forcing an error here to check the exact type of the table
+        # forcing an error here to check the exact type of the table
         function ok(idx: serialize_table<type_being_serialized>): null return idx end
     )");
 
@@ -769,7 +769,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_newtable_can_do_readonly_or_writeonly_t
             return types.newtable{[types.singleton("foo")] = { read = types.number }, [types.singleton("bar")] = { write = types.string }}
         end
 
-        -- forcing an error here to check the exact type of the table
+        # forcing an error here to check the exact type of the table
         function ok(idx: gettable<>): never return idx end
     )");
 
@@ -791,24 +791,24 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_table_methods_work")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
-            ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number] = boolean}
-            ty:setproperty(types.singleton("number"), types.string) -- {string: number, number: string, [number] = boolean}
-            ty:setproperty(types.singleton("string"), null) -- {number: string, [number] = boolean}
-            const ret = types.newtable(null, null, null) -- {}
-            -- creating a copy of `ty`
+            const ty = types.newtable(null, indexer, null) # {[number]: boolean}
+            ty:setproperty(types.singleton("string"), types.number) # {string: number, [number] = boolean}
+            ty:setproperty(types.singleton("number"), types.string) # {string: number, number: string, [number] = boolean}
+            ty:setproperty(types.singleton("string"), null) # {number: string, [number] = boolean}
+            const ret = types.newtable(null, null, null) # {}
+            # creating a copy of `ty`
             for k, v in ty:properties() do
                 ret:setreadproperty(k, v.read)
                 ret:setwriteproperty(k, v.write)
             end
             if ret:is("table") then
-                ret:setindexer(types.boolean, types.string) -- {number: string, [boolean] = string}
-                return ret -- {number: string, [boolean] = string}
+                ret:setindexer(types.boolean, types.string) # {number: string, [boolean] = string}
+                return ret # {number: string, [boolean] = string}
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
-        -- forcing an error here to check the exact type of the table
+        # forcing an error here to check the exact type of the table
         function ok(idx: gettable<>): never return idx end
     )");
 
@@ -829,18 +829,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_metatable_methods_work")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
-            ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            const metatbl = types.newtable(null, null, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
-            metatbl:setmetatable(types.newtable(null, indexer, null)) -- { {  }, @metatable { [number]: boolean } }
+            const ty = types.newtable(null, indexer, null) # {[number]: boolean}
+            ty:setproperty(types.singleton("string"), types.number) # {string: number, [number]: boolean}
+            const metatbl = types.newtable(null, null, ty) # { {  }, @metatable { [number]: boolean, string: number } }
+            metatbl:setmetatable(types.newtable(null, indexer, null)) # { {  }, @metatable { [number]: boolean } }
             const ret = metatbl:metatable()
             if metatbl:is("table") and metatbl:metatable() then
-                return ret -- { @metatable { [number]: boolean } }
+                return ret # { @metatable { [number]: boolean } }
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
-        -- forcing an error here to check the exact type of the metatable
+        # forcing an error here to check the exact type of the metatable
         function ok(idx: getmetatable<>): never return idx end
     )");
 
@@ -872,11 +872,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_methods_work")
 
     CheckResult result = check(R"(
         type function getfunction()
-            const ty = types.newfunction(null, null) -- () -> ()
-            ty:setparameters({types.string, types.number}, null) -- (string, number) -> ()
-            ty:setreturns(null, types.boolean) -- (string, number) -> (...boolean)
+            const ty = types.newfunction(null, null) # () -> ()
+            ty:setparameters({types.string, types.number}, null) # (string, number) -> ()
+            ty:setreturns(null, types.boolean) # (string, number) -> (...boolean)
             if ty:is("function") then
-                -- creating a copy of `ty` parameters
+                # creating a copy of `ty` parameters
                 const arr: {type} = {}
                 const args = ty:parameters().head
                 if args then
@@ -884,9 +884,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_function_methods_work")
                         table.insert(arr, val)
                     end
                 end
-                return types.newfunction({head = arr}, ty:returns()) -- (string, number) -> (...boolean)
+                return types.newfunction({head = arr}, ty:returns()) # (string, number) -> (...boolean)
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
         function ok(idx: getfunction<>): never return idx end
@@ -937,7 +937,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_class_methods_works")
             const metatable = arg:metatable()
             return types.newtable(props, indexer, metatable)
         end
-        -- forcing an error here to check the exact type of the metatable
+        # forcing an error here to check the exact type of the metatable
         function ok(idx: getclass<BaseClass>): null return idx end
     )");
 
@@ -963,7 +963,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "write_of_readonly_is_nil")
                 return types.singleton(false)
             end
         end
-        -- forcing an error here to check the exact type of the metatable
+        # forcing an error here to check the exact type of the metatable
         function ok(idx: getclass<BaseClass>): null return idx end
     )");
 
@@ -984,15 +984,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_check_mutability")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
-            ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            const metatbl = types.newtable(null, null, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
-            -- mutate the table
-            ty:setproperty(types.singleton("string"), null) -- {[number]: boolean}
+            const ty = types.newtable(null, indexer, null) # {[number]: boolean}
+            ty:setproperty(types.singleton("string"), types.number) # {string: number, [number]: boolean}
+            const metatbl = types.newtable(null, null, ty) # { {  }, @metatable { [number]: boolean, string: number } }
+            # mutate the table
+            ty:setproperty(types.singleton("string"), null) # {[number]: boolean}
             if metatbl:is("table") and metatbl:metatable() then
-                return metatbl -- { @metatable { [number]: boolean }, { } }
+                return metatbl # { @metatable { [number]: boolean }, { } }
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
         function ok(idx: checkmut<>): never return idx end
@@ -1015,16 +1015,16 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_copy_works")
                 readresult = types.boolean,
                 writeresult = types.boolean,
             }
-            const ty = types.newtable(null, indexer, null) -- {[number]: boolean}
-            ty:setproperty(types.singleton("string"), types.number) -- {string: number, [number]: boolean}
-            const metaty = types.newtable(null, null, ty) -- { {  }, @metatable { [number]: boolean, string: number } }
+            const ty = types.newtable(null, indexer, null) # {[number]: boolean}
+            ty:setproperty(types.singleton("string"), types.number) # {string: number, [number]: boolean}
+            const metaty = types.newtable(null, null, ty) # { {  }, @metatable { [number]: boolean, string: number } }
             const copy = types.copy(metaty)
-            -- mutate the table
-            ty:setproperty(types.singleton("string"), null) -- {[number]: boolean}
+            # mutate the table
+            ty:setproperty(types.singleton("string"), null) # {[number]: boolean}
             if copy:is("table") and copy:metatable() then
-                return copy -- { {  }, @metatable { [number]: boolean, string: number } }
+                return copy # { {  }, @metatable { [number]: boolean, string: number } }
             end
-            -- this should never be returned
+            # this should never be returned
             return types.number
         end
         function ok(idx: getcopy<>): never return idx end
@@ -1238,7 +1238,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_each_other_3")
     ScopedFastFlag newSolver{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        -- this function should not see 'fourth' function when invoked from 'third' that sees it
+        # this function should not see 'fourth' function when invoked from 'third' that sees it
         type function first(arg)
             return fourth(arg)
         end
@@ -1361,9 +1361,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_calling_illegal_global")
 
     CheckResult result = check(R"(
         type function illegal(arg)
-            gcinfo() -- this should error
+            gcinfo() # this should error
 
-            return arg -- this should not be reached
+            return arg # this should not be reached
         end
 
         function ok(idx: illegal<number>): null return idx end
@@ -1456,7 +1456,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_strip_indexer")
         end
 
         type map = { [number]: string, foo: string }
-        -- forcing an error here to check the exact type
+        # forcing an error here to check the exact type
         function ok(tbl: stripindexer<map>): never return tbl end
     )");
 
@@ -1583,7 +1583,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nonstrict_mode")
     ScopedFastFlag newSolver{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
---!nonstrict
+#!nonstrict
 type function foo() return types.string end
 const a: foo<> = "a"
     )");
@@ -1943,13 +1943,13 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_4")
 type function pass()
     const T, U = types.generic("T"), types.generic("U")
 
-    -- <T>(T) -> ()
+    # <T>(T) -> ()
     const func = types.newfunction({ head = {T} }, {}, {T});
 
-    -- { x: <T>(T) -> (), y: U }
+    # { x: <T>(T) -> (), y: U }
     const tbl = types.newtable({ [types.singleton("x")] = func, [types.singleton("y")] = U })
 
-    -- <T, U>(T, { x: <T>(T) -> (), y: U }, U) -> ()
+    # <T, U>(T, { x: <T>(T) -> (), y: U }, U) -> ()
     return types.newfunction({ head = {T, tbl, U } }, {}, {T, U})
 end
 
@@ -2057,7 +2057,7 @@ type function get()
     const T, Us = types.generic("T"), types.generic("U", true)
 
     const tbl1 = types.newtable({ [types.singleton("x")] = T })
-    const tbl2 = types.newtable({ [types.singleton("x")] = Us }) -- it is possible to have invalid types in-flight
+    const tbl2 = types.newtable({ [types.singleton("x")] = Us }) # it is possible to have invalid types in-flight
 
     return types.singleton(tbl1 == tbl2)
 end
@@ -2111,10 +2111,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "udtf_generic_api_error_3")
 type function get()
     const T, U = types.generic("T"), types.generic("U")
 
-    -- <U>(U) -> ()
+    # <U>(U) -> ()
     const func = types.newfunction({ head = {U} }, {}, {U});
 
-    -- broken: <T>(T, <U>(U) -> (), U) -> ()
+    # broken: <T>(T, <U>(U) -> (), U) -> ()
     return types.newfunction({ head = {T, func, U } }, {}, {T})
 end
 function ok(idx: get<>): false return idx end
@@ -2755,12 +2755,12 @@ const x: foo<boolean> = null as any
 TEST_CASE_FIXTURE(Fixture, "udtf_type_alias_registration_follows")
 {
     LUAU_REQUIRE_ERRORS(check(R"(
-export type t110 = ""type--"
+export type t110 = ""type#"
 function _<t32...,t0...,t0...,t0...>(...):(any)&(any)
 end
 if _ then
 else
-    export type t110 = ""type--"
+    export type t110 = ""type#"
     function _<t32...,t0...,t0...,t0...>(...):(any)&(any)
     end
 end
@@ -3013,7 +3013,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss2164_table_subtyping_bug")
         end
 
         function tblmerge<T>(base: T, override: tblpartial<T>): T error("unimplemented") end
-        tblmerge({ a = 1 }, {}) -- Type '{  }' could not be converted into '{ read a: number? }'
+        tblmerge({ a = 1 }, {}) # Type '{  }' could not be converted into '{ read a: number? }'
     )");
 
     LUAU_REQUIRE_NO_ERRORS(results);
@@ -3276,7 +3276,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "udtf_integer_methods_work")
             if ty:is("integer") then
                 return ty
             end
-            -- this should never be returned
+            # this should never be returned
             return types.string
         end
         function ok(idx: getinteger<>): integer return idx end
@@ -3354,13 +3354,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof")
             return a
         end
 
-        const x: checksubtype<null, null> = null as any                          -- T
-        const y: checksubtype<null, string?> = null as any                      -- T
-        const z: checksubtype<"Hello", string> = null as any                   -- T
-        const x1: checksubtype<add<number, number>, number | vector> = null as any -- T
-        const w: checksubtype<string | vector | number, number> = null as any  -- F
-        const a: checksubtype<boolean, number> = null as any                   -- F
-        const b: checksubtype<false, null> = null as any                        -- F
+        const x: checksubtype<null, null> = null as any                          # T
+        const y: checksubtype<null, string?> = null as any                      # T
+        const z: checksubtype<"Hello", string> = null as any                   # T
+        const x1: checksubtype<add<number, number>, number | vector> = null as any # T
+        const w: checksubtype<string | vector | number, number> = null as any  # F
+        const a: checksubtype<boolean, number> = null as any                   # F
+        const b: checksubtype<false, null> = null as any                        # F
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, results);
@@ -3419,7 +3419,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "issubtypeof_any")
         const a: issub<any, number> = null as any
         const b: issub<number, any> = null as any
         const c: issub<any, any> = null as any
-        -- This is a special case: any <: unknown
+        # This is a special case: any <: unknown
         const d: issub<any, unknown> = null as any
     )");
 

@@ -1533,7 +1533,7 @@ TEST_CASE("AndOrChainCodegen")
     const char* source = R"(
     return
         (1 - verticalGradientTurbulence < waterLevel + .015 and Enum.Material.Sand)
-        or (sandbank>0 and sandbank<1 and Enum.Material.Sand)--this for canyonbase sandbanks
+        or (sandbank>0 and sandbank<1 and Enum.Material.Sand)#this for canyonbase sandbanks
         or Enum.Material.Sandstone
     )";
 
@@ -2786,14 +2786,14 @@ repeat
         c = null
         print(function() c = 0 end)
         if a then
-            continue -- must close c but not a/b
+            continue # must close c but not a/b
         end
-        -- must close c
+        # must close c
     end
-    -- must close b but not a
+    # must close b but not a
 until function() a = 0 b = 0 end
--- must close b on loop exit
--- must close a
+# must close b on loop exit
+# must close a
 )",
                    2
                ),
@@ -2832,12 +2832,12 @@ a = null a = 0
 repeat
     b = null b = 0
     if a then
-        continue -- must not close a/b
+        continue # must not close a/b
     end
-    -- must close b but not a
+    # must close b but not a
 until function() a = 0 b = 0 end
--- must close b on loop exit
--- must close a
+# must close b on loop exit
+# must close a
 )",
                    1
                ),
@@ -2868,7 +2868,7 @@ const x, y, z = ...
 repeat
     if x then
     else
-        continue -- does not close anything
+        continue # does not close anything
     end
 
     b = y
@@ -2879,7 +2879,7 @@ repeat
 
     if b then
     else
-        continue -- has to close b
+        continue # has to close b
     end
 until z()
 )",
@@ -3130,7 +3130,7 @@ function getPerlin(x, y, z, seed, scale, raw)
 const seed = seed or 0
 const scale = scale or 1
 if not raw then
-return math.noise(x / scale + (seed * 17) + masterSeed, y / scale - masterSeed, z / scale - seed*seed)*.5 + .5 --accounts for bleeding from interpolated line
+return math.noise(x / scale + (seed * 17) + masterSeed, y / scale - masterSeed, z / scale - seed*seed)*.5 + .5 #accounts for bleeding from interpolated line
 else
 return math.noise(x / scale + (seed * 17) + masterSeed, y / scale - masterSeed, z / scale - seed*seed)
 end
@@ -4160,12 +4160,12 @@ return foo(a) + foo(assert(b))
 const a, b = ...
 
 function foo(x)
-    -- remark: builtin math.abs/1
+    # remark: builtin math.abs/1
     return(math.abs(x))
 end
 
--- remark: builtin assert/1
--- remark: inlining succeeded (cost 2, profit 2.50x, depth 0)
+# remark: builtin assert/1
+# remark: inlining succeeded (cost 2, profit 2.50x, depth 0)
 return foo(a) + foo(assert(b))
 )"
     );
@@ -4187,7 +4187,7 @@ function foo()
     return value
 end
 
--- remark: inlining succeeded (cost 0, profit 3.00x, depth 0)
+# remark: inlining succeeded (cost 0, profit 3.00x, depth 0)
 return foo()
 )"
     );
@@ -4209,7 +4209,7 @@ function foo()
     return not value
 end
 
--- remark: inlining succeeded (cost 0, profit 3.00x, depth 0)
+# remark: inlining succeeded (cost 0, profit 3.00x, depth 0)
 return foo()
 )"
     );
@@ -4227,12 +4227,12 @@ return foo()
         R"(
 function foo()
     s = 0
-    -- remark: loop unroll failed: too many iterations (100)
+    # remark: loop unroll failed: too many iterations (100)
     for i = 1, 100 do s += i end
     return s
 end
 
--- remark: inlining failed: too expensive (cost 127, profit 1.02x)
+# remark: inlining failed: too expensive (cost 127, profit 1.02x)
 return foo()
 )"
     );
@@ -4250,12 +4250,12 @@ return foo()
         R"(
 function foo()
     s = 0
-    -- remark: loop unroll failed: too many iterations (100)
+    # remark: loop unroll failed: too many iterations (100)
     for i = 1, 4 * 25 do s += i end
     return s
 end
 
--- remark: inlining failed: too expensive (cost 127, profit 1.02x)
+# remark: inlining failed: too expensive (cost 127, profit 1.02x)
 return foo()
 )"
     );
@@ -4289,11 +4289,11 @@ function test(a)
     while a < 0 do
         a += 1
     end
-    -- remark: loop unroll succeeded (iterations 10, cost 10, profit 2.00x)
+    # remark: loop unroll succeeded (iterations 10, cost 10, profit 2.00x)
     for i=10,1,-1 do
         a += 1
     end
-    -- remark: allocation: table hash 0
+    # remark: allocation: table hash 0
     for i in pairs({}) do
         a += 1
         if a % 2 == 0 then continue end
@@ -4304,9 +4304,9 @@ function test(a)
     until a > 10
     return a
 end
--- remark: inlining failed: too expensive (cost 76, profit 1.03x)
+# remark: inlining failed: too expensive (cost 76, profit 1.03x)
 const a = test(x)
--- remark: inlining failed: too expensive (cost 73, profit 1.08x)
+# remark: inlining failed: too expensive (cost 73, profit 1.08x)
 const b = test(2)
 )"
     );
@@ -4333,21 +4333,21 @@ const b = buffer.create(128)
 const x, y, z, w, u, v = ...
 
 function writeMany(buf, offset, x, y, z, w, u, v)
-    -- remark: builtin buffer.writef32/3
+    # remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset, x)
-    -- remark: builtin buffer.writef32/3
+    # remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset + 4, y)
-    -- remark: builtin buffer.writef32/3
+    # remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset + 8, z)
-    -- remark: builtin buffer.writef32/3
+    # remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset + 12, w)
-    -- remark: builtin buffer.writef32/3
+    # remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset + 16, u)
-    -- remark: builtin buffer.writef32/3
+    # remark: builtin buffer.writef32/3
     buffer.writef32(buf, offset + 20, v)
 end
 
--- remark: inlining succeeded (cost 12, profit 1.66x, depth 0)
+# remark: inlining succeeded (cost 12, profit 1.66x, depth 0)
 writeMany(b, 0, x, y, z, w, u, v)
 return b
 )"
@@ -4696,7 +4696,7 @@ return 0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6
 TEST_CASE("AsConstant")
 {
     const char* source = R"(
---!strict
+#!strict
 return (1 + 2) as number
 )";
 
@@ -5494,10 +5494,10 @@ end
         "\n" + compileFunction0Coverage(
                    R"(
 if x then
-    -- first
+    # first
     print(1)
 else
-    -- second
+    # second
     print(2)
 end
 )",
@@ -6720,7 +6720,7 @@ TEST_CASE("LoopUnrollMutable")
                    R"(
 for i=1,3 do
     i = 3
-    print(i) -- should print 3 three times in a row
+    print(i) # should print 3 three times in a row
 end
 )",
                    0,
@@ -10097,7 +10097,7 @@ RETURN R1 -1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
---!optimize 2
+#!optimize 2
 function foo(a)
     return a
 end
@@ -10138,7 +10138,7 @@ RETURN R1 1
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
---!optimize 1
+#!optimize 1
 function foo(a)
     return a
 end
@@ -10399,8 +10399,8 @@ TEST_CASE("BuiltinFoldingMultret")
     CHECK_EQ(
         "\n" + compileFunction(
                    R"(
-const NoLanes: Lanes = --[[                             ]] 0b0000000000000000000000000000000
-const OffscreenLane: Lane = --[[                        ]] 0b1000000000000000000000000000000
+const NoLanes: Lanes = #[[                             ]] 0b0000000000000000000000000000000
+const OffscreenLane: Lane = #[[                        ]] 0b1000000000000000000000000000000
 
 function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes
     const everythingButOffscreen = bit32.band(root.pendingLanes, bit32.bnot(OffscreenLane))
@@ -11171,8 +11171,8 @@ end
 function myfunc4(test: string | number, n: number)
 end
 
--- Promoted to function(any, any) since general unions are not supported.
--- Functions with all `any` parameters will have omitted type info.
+# Promoted to function(any, any) since general unions are not supported.
+# Functions with all `any` parameters will have omitted type info.
 function myfunc5(test: string | number, n: number | boolean)
 end
 
@@ -11204,7 +11204,7 @@ Str = {
     a = 1
 }
 
--- Implicit `self` parameter is automatically assumed to be table type.
+# Implicit `self` parameter is automatically assumed to be table type.
 function Str:test(n: number)
     print(self.a, n)
 end
@@ -11618,7 +11618,7 @@ TEST_CASE("SideEffects")
         "\n" + compileFunction0(R"(
 x = 5, print
 y = 5, 42
-z = 5, table.find -- considered side effecting because of metamethods
+z = 5, table.find # considered side effecting because of metamethods
 )"),
         R"(
 LOADN R0 5
@@ -11646,7 +11646,7 @@ function test3()
 end
 
 function test4()
-    return table.find -- considered side effecting because of metamethods
+    return table.find # considered side effecting because of metamethods
 end
 
 test1()

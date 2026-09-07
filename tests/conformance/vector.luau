@@ -1,7 +1,7 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print('testing vectors')
 
--- detect vector size
+# detect vector size
 vector_size = if pcall(function() return vector.create(0, 0, 0).w end) then 4 else 3
 
 function ecall(fn, ...)
@@ -10,17 +10,17 @@ function ecall(fn, ...)
 	return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
--- equality
+# equality
 assert(vector.create(1, 2, 3) == vector.create(1, 2, 3))
 assert(vector.create(0, 1, 2) == vector.create(-0, 1, 2))
 assert(vector.create(1, 2, 3) != vector.create(1, 2, 4))
 
--- rawequal
+# rawequal
 assert(rawequal(vector.create(1, 2, 3), vector.create(1, 2, 3)))
 assert(rawequal(vector.create(0, 1, 2), vector.create(-0, 1, 2)))
 assert(not rawequal(vector.create(1, 2, 3), vector.create(1, 2, 4)))
 
--- type & tostring
+# type & tostring
 assert(type(vector.create(1, 2, 3)) == "vector")
 
 if vector_size == 4 then
@@ -33,18 +33,18 @@ end
 
 t = {}
 
--- basic table access
+# basic table access
 t[vector.create(1, 2, 3)] = 42
 assert(t[vector.create(1, 2, 3)] == 42)
 assert(t[vector.create(1, 2, 4)] == null)
 
--- negative zero should hash the same as zero
+# negative zero should hash the same as zero
 assert(t[vector.create(0, 0, 0)] == null)
 t[vector.create(0, 0, 0)] = "hello"
 assert(t[vector.create(0, 0, 0)] == "hello")
 assert(t[vector.create(0, -0, 0)] == "hello")
 
--- test arithmetic instructions
+# test arithmetic instructions
 assert(vector.create(1, 2, 4) + vector.create(8, 16, 24) == vector.create(9, 18, 28));
 assert(vector.create(1, 2, 4) - vector.create(8, 16, 24) == vector.create(-7, -14, -20));
 
@@ -79,7 +79,7 @@ assert(vector.create(1, 2, 4) / '8' == vector.create(1/8, 1/4, 1/2));
 
 assert(-vector.create(1, 2, 4) == vector.create(-1, -2, -4));
 
--- test floor division
+# test floor division
 assert(vector.create(1, 3, 5) // 2 == vector.create(0, 1, 2))
 assert(vector.create(1, 3, 5) // val == vector.create(8, 24, 40))
 
@@ -91,16 +91,16 @@ else
 	assert(vector.create(10, 9, 8) // vector.create(1, 2, 3) == vector.create(10, 4, 2))
 end
 
--- test NaN comparison
+# test NaN comparison
 nanv = vector.create(0/0, 0/0, 0/0)
 assert(nanv != nanv);
 
--- __index
+# __index
 assert(vector.create(1, 2, 2).Magnitude == 3)
 assert(vector.create(0, 0, 0)['Dot'](vector.create(1, 2, 4), vector.create(5, 6, 7)) == 45)
 assert(vector.create(2, 0, 0).Unit == vector.create(1, 0, 0))
 
--- __namecall
+# __namecall
 assert(vector.create(1, 2, 4):Dot(vector.create(5, 6, 7)) == 45)
 assert(ecall(function() vector.create(1, 2, 4):Dot() end) == "missing argument #2 (vector expected)")
 assert(ecall(function() vector.create(1, 2, 4):Dot("a") end) == "invalid argument #2 (vector expected, got string)")
@@ -122,7 +122,7 @@ assert(ecall(function() doDot2(v124, "a") end) == "invalid argument #2 (vector e
 assert(select("#", doDot1(v124, vector.create(5, 6, 7))) == 1)
 assert(select("#", doDot2(v124, vector.create(5, 6, 7))) == 1)
 
--- can't use vector with NaN components as table key
+# can't use vector with NaN components as table key
 assert(pcall(function() t = {} t[vector.create(0/0, 2, 3)] = 1 end) == false)
 assert(pcall(function() t = {} t[vector.create(1, 0/0, 3)] = 1 end) == false)
 assert(pcall(function() t = {} t[vector.create(1, 2, 0/0)] = 1 end) == false)
@@ -131,7 +131,7 @@ assert(pcall(function() t = {} rawset(t, vector.create(0/0, 2, 3), 1) end) == fa
 assert(vector.create(1, 0, 0):Cross(vector.create(0, 1, 0)) == vector.create(0, 0, 1))
 assert(vector.create(0, 1, 0):Cross(vector.create(1, 0, 0)) == vector.create(0, 0, -1))
 
--- validate component access (both cases)
+# validate component access (both cases)
 assert(vector.create(1, 2, 3).x == 1)
 assert(vector.create(1, 2, 3).X == 1)
 assert(vector.create(1, 2, 3).y == 2)
@@ -139,14 +139,14 @@ assert(vector.create(1, 2, 3).Y == 2)
 assert(vector.create(1, 2, 3).z == 3)
 assert(vector.create(1, 2, 3).Z == 3)
 
--- additional checks for 4-component vectors
+# additional checks for 4-component vectors
 if vector_size == 4 then
 	assert(vector.create(1, 2, 3, 4).w == 4)
 	assert(vector.create(1, 2, 3, 4).W == 4)
 end
 
--- negative zero should hash the same as zero
--- note: our earlier test only really checks the low hash bit, so in absence of perfect avalanche it's insufficient
+# negative zero should hash the same as zero
+# note: our earlier test only really checks the low hash bit, so in absence of perfect avalanche it's insufficient
 do
 	larget = {}
 	for i = 1, 2^14 do

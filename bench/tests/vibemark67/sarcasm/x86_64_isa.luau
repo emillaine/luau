@@ -1,11 +1,11 @@
---!nonstrict
--- x86_64 instruction semantics: classify a parsed (dest-first, syntax-normalized)
--- instruction into register defs/uses and control flow. Operands come from x86parse
--- (already normalized to destination-first, so ops[1] is the destination).
+#!nonstrict
+# x86_64 instruction semantics: classify a parsed (dest-first, syntax-normalized)
+# instruction into register defs/uses and control flow. Operands come from x86parse
+# (already normalized to destination-first, so ops[1] is the destination).
 
 x86 = {}
 
--- Normalize a mnemonic to its base operation (strip AT&T size suffix; unify movz*/movs*).
+# Normalize a mnemonic to its base operation (strip AT&T size suffix; unify movz*/movs*).
 BASE = {}
 for _, m in { "mov","add","sub","and","or","xor","sal","shl","sar","shr","cmp","test",
 	"lea","imul","inc","dec","neg","not","push","pop","adc","sbb","mul","idiv","div","ror","rol" } do
@@ -26,7 +26,7 @@ function x86.baseMnemonic(m)
 	m = string.lower(m)
 	if FIXED[m] then return FIXED[m] end
 	if BASE[m] then return BASE[m] end
-	-- conditional jumps: je/jne/jb/jae/ja/jbe/jl/jge/jg/jle/js/jns/jc/jnc/jz/jnz/jo/jno/jp/jnp
+	# conditional jumps: je/jne/jb/jae/ja/jbe/jl/jge/jg/jle/js/jns/jc/jnc/jz/jnz/jo/jno/jp/jnp
 	if string.match(m, "^j%a+$") then return "jcc" end
 	if string.match(m, "^set%a+$") then return "setcc" end
 	if string.match(m, "^cmov%a+$") then return "cmov" end
@@ -37,7 +37,7 @@ ALU2 = { add=true, sub=true, ["and"]=true, ["or"]=true, xor=true, sal=true, shl=
 	sar=true, shr=true, imul=true, adc=true, sbb=true, ror=true, rol=true }
 FLAGS_ONLY = { cmp=true, test=true }
 DST_ONLY = { inc=true, dec=true, neg=true, ["not"]=true }
--- condition -> whether it's an unsigned/eq branch we generate; classify only needs control.
+# condition -> whether it's an unsigned/eq branch we generate; classify only needs control.
 COND_JMP = { jcc = true }
 
 function isGpr(op) return op and op.kind == "reg" and op.rc == "gpr" end
@@ -47,7 +47,7 @@ function memRegs(op, uses)
 	if op.index and isGpr(op.index) then table.insert(uses, op.index) end
 end
 
--- Classify. Returns { defs, uses, rmw, control, targets, fallsThrough }.
+# Classify. Returns { defs, uses, rmw, control, targets, fallsThrough }.
 function x86.classify(insn)
 	m = x86.baseMnemonic(insn.mnemonic)
 	ops = insn.operands or {}
@@ -72,7 +72,7 @@ function x86.classify(insn)
 	else if m == "ret" then
 		control, fallsThrough = "return", false
 	else if m == "nop" or m == "ud2" or m == "leave" then
-		-- no gpr effects we model (leave restores rsp/rbp; frame handled elsewhere)
+		# no gpr effects we model (leave restores rsp/rbp; frame handled elsewhere)
 	else if m == "cltq" or m == "cqo" then
 		table.insert(defs, { kind="reg", rc="gpr", num=0, width=64, name="rax" })
 		table.insert(uses, { kind="reg", rc="gpr", num=0, width=64, name="rax" })
@@ -80,20 +80,20 @@ function x86.classify(insn)
 	else if FLAGS_ONLY[m] then
 		for _, o in ops do useOperand(o) end
 	else if ALU2[m] then
-		-- dst = dst OP src : ops[1] is def+use, rest are uses
+		# dst = dst OP src : ops[1] is def+use, rest are uses
 		if isGpr(ops[1]) then table.insert(defs, ops[1]); table.insert(uses, ops[1]); table.insert(rmw, ops[1].num)
 		else if ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
-		for i = 2, #ops do useOperand(ops[i]) end
+		for i = 2, ops.count do useOperand(ops[i]) end
 	else if DST_ONLY[m] then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]); table.insert(uses, ops[1]); table.insert(rmw, ops[1].num)
 		else if ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
 	else if m == "mov" or m == "movzx" or m == "movsx" or m == "lea" or m == "cmov" or m == "setcc" then
-		-- ops[1] def, ops[2..] use (mem regs used); a store (mem dst) uses the value instead.
+		# ops[1] def, ops[2..] use (mem regs used); a store (mem dst) uses the value instead.
 		if isGpr(ops[1]) then table.insert(defs, ops[1])
 		else if ops[1] and ops[1].kind == "mem" then memRegs(ops[1], uses) end
 		if (ops[1] and ops[1].kind == "mem") and isGpr(ops[2]) then table.insert(uses, ops[2]) end
 		if m == "cmov" and isGpr(ops[1]) then table.insert(uses, ops[1]); table.insert(rmw, ops[1].num) end
-		for i = 2, #ops do
+		for i = 2, ops.count do
 			o = ops[i]
 			if o and o.kind == "mem" then memRegs(o, uses)
 			else if isGpr(o) and not (ops[1] and ops[1].kind == "mem") then table.insert(uses, o) end
@@ -103,7 +103,7 @@ function x86.classify(insn)
 	else if m == "pop" then
 		if isGpr(ops[1]) then table.insert(defs, ops[1]) end
 	else
-		-- unknown: conservative (first reg def, rest use)
+		# unknown: conservative (first reg def, rest use)
 		first = true
 		for _, o in ops do
 			if isGpr(o) then
@@ -118,29 +118,29 @@ end
 
 x86.isGpr = isGpr
 
--- Register/calling-convention configuration (SysV AMD64 + Fil-C fast entrypoint) -------
--- Reserved: rsp (stack), r11 (dedicated glue/epilogue scratch, like ARM x8).
--- Allocatable = the other 14 GPRs. rbp is allocatable (we synthesize rsp-relative frames).
+# Register/calling-convention configuration (SysV AMD64 + Fil-C fast entrypoint) -------
+# Reserved: rsp (stack), r11 (dedicated glue/epilogue scratch, like ARM x8).
+# Allocatable = the other 14 GPRs. rbp is allocatable (we synthesize rsp-relative frames).
 x86.ALLOCATABLE = { "rax","rcx","rdx","rbx","rbp","rsi","rdi","r8","r9","r10","r12","r13","r14","r15" }
 x86.CALLEE_SAVED = { rbx=true, rbp=true, r12=true, r13=true, r14=true, r15=true }
-x86.CALLEE_SAVED_ORDER = { "rbx","rbp","r12","r13","r14","r15" }  -- push order (r15 pushed last)
+x86.CALLEE_SAVED_ORDER = { "rbx","rbp","r12","r13","r14","r15" }  # push order (r15 pushed last)
 x86.CALLER_SAVED = { rax=true, rcx=true, rdx=true, rsi=true, rdi=true, r8=true, r9=true, r10=true }
-x86.SCRATCH = "r11"       -- non-allocatable glue scratch
+x86.SCRATCH = "r11"       # non-allocatable glue scratch
 x86.SCRATCH_NUM = 11
--- caller-saved register numbers clobbered by a call (used to model call defs).
+# caller-saved register numbers clobbered by a call (used to model call defs).
 x86.CALLER_SAVED_NUMS = { 0, 1, 2, 6, 7, 8, 9, 10 }
 
--- Fil-C fast-entrypoint calling convention (register numbers).
+# Fil-C fast-entrypoint calling convention (register numbers).
 x86.CC = {
-	myth = 7,       -- rdi
-	fo = 6,         -- rsi
-	argIv = function(k) return k == 1 and 2 or 8 end,      -- arg0 iv=rdx(2), arg1 iv=r8(8)
-	argLo = function(k) return k == 1 and 1 or 9 end,      -- arg0 lo=rcx(1), arg1 lo=r9(9)
-	retFlag = 0,    -- al (rax)
-	retIv = 2,      -- rdx
-	retLo = 1,      -- rcx
+	myth = 7,       # rdi
+	fo = 6,         # rsi
+	argIv = function(k) return k == 1 and 2 or 8 end,      # arg0 iv=rdx(2), arg1 iv=r8(8)
+	argLo = function(k) return k == 1 and 1 or 9 end,      # arg0 lo=rcx(1), arg1 lo=r9(9)
+	retFlag = 0,    # al (rax)
+	retIv = 2,      # rdx
+	retLo = 1,      # rcx
 }
--- SysV C-call argument registers: rdi, rsi, rdx, rcx, r8, r9.
+# SysV C-call argument registers: rdi, rsi, rdx, rcx, r8, r9.
 x86.SYSV = { 7, 6, 2, 1, 8, 9 }
 
 return x86

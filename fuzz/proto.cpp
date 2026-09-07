@@ -300,7 +300,7 @@ DEFINE_PROTO_FUZZER(const luau::ModuleSet& message)
     if (debug)
     {
         for (std::string& source : sources)
-            fprintf(stdout, "--\n%s\n", source.c_str());
+            fprintf(stdout, "#\n%s\n", source.c_str());
         fflush(stdout);
     }
 

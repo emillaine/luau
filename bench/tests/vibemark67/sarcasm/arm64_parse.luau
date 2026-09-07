@@ -1,20 +1,20 @@
---!nonstrict
--- sarcasm assembly parser for ARM64 GNU-as / clang assembly.
---
--- Produces a flat list of "statements". Each statement is one of:
---   { kind = "blank",     text = <original> }
---   { kind = "label",     name = <string>, annotation = <string?> }
---   { kind = "directive", name = ".text", args = <string>, raw = <string>, annotation = <string?> }
---   { kind = "insn",      mnemonic = "ldr", operands = { <operand>... }, cond = <string?>,
---                         annotation = <string?>, raw = <string> }
---
--- Operands are structured:
---   { kind = "reg",  name = "x0", rc = "gpr"|"neon"|"sp"|"zr", width = 32|64|..., shift = <shift?> }
---   { kind = "imm",  text = "5381", value = <number?> }
---   { kind = "sym",  text = "foo+16", reloc = <string?> }   -- reloc e.g. "lo12","got","got_lo12"
---   { kind = "mem",  base = <reg>, index = <operand?>, writeback = "pre"|"post"|null,
---                    shift = <shift?>, text = <original> }
--- A shift is { op = "lsl"|"lsr"|"asr"|"ror"|"uxtb"|... , amount = <number?>, amountText = <string?> }
+#!nonstrict
+# sarcasm assembly parser for ARM64 GNU-as / clang assembly.
+#
+# Produces a flat list of "statements". Each statement is one of:
+#   { kind = "blank",     text = <original> }
+#   { kind = "label",     name = <string>, annotation = <string?> }
+#   { kind = "directive", name = ".text", args = <string>, raw = <string>, annotation = <string?> }
+#   { kind = "insn",      mnemonic = "ldr", operands = { <operand>... }, cond = <string?>,
+#                         annotation = <string?>, raw = <string> }
+#
+# Operands are structured:
+#   { kind = "reg",  name = "x0", rc = "gpr"|"neon"|"sp"|"zr", width = 32|64|..., shift = <shift?> }
+#   { kind = "imm",  text = "5381", value = <number?> }
+#   { kind = "sym",  text = "foo+16", reloc = <string?> }   # reloc e.g. "lo12","got","got_lo12"
+#   { kind = "mem",  base = <reg>, index = <operand?>, writeback = "pre"|"post"|null,
+#                    shift = <shift?>, text = <original> }
+# A shift is { op = "lsl"|"lsr"|"asr"|"ror"|"uxtb"|... , amount = <number?>, amountText = <string?> }
 
 parse = {}
 
@@ -24,9 +24,9 @@ SHIFT_OPS = {
 	sxtb = true, sxth = true, sxtw = true, sxtx = true,
 }
 
--- Registers ---------------------------------------------------------------
+# Registers #-------------------------------------------------------------
 
--- Classify a bare register token. Returns a reg operand table, or null.
+# Classify a bare register token. Returns a reg operand table, or null.
 function classifyReg(tok: string)
 	low = string.lower(tok)
 	if low == "sp" then
@@ -56,7 +56,7 @@ function classifyReg(tok: string)
 end
 parse.classifyReg = classifyReg
 
--- Given a gpr num and desired width, return the canonical name.
+# Given a gpr num and desired width, return the canonical name.
 function parse.gprName(num: number, width: number): string
 	if width == 32 then
 		return "w" .. tostring(num)
@@ -64,16 +64,16 @@ function parse.gprName(num: number, width: number): string
 	return "x" .. tostring(num)
 end
 
--- Operand tokenization ----------------------------------------------------
+# Operand tokenization #--------------------------------------------------
 
--- Split an operand string into top-level comma-separated fields, respecting
--- [] and () nesting.
+# Split an operand string into top-level comma-separated fields, respecting
+# [] and () nesting.
 function splitTopLevel(s: string): { string }
 	out = {}
 	depth = 0
 	cur = {}
 	i = 1
-	n = #s
+	n = s.count
 	while i <= n do
 		c = string.sub(s, i, i)
 		if c == "[" or c == "(" then
@@ -91,7 +91,7 @@ function splitTopLevel(s: string): { string }
 		i += 1
 	end
 	table.insert(out, table.concat(cur))
-	-- trim
+	# trim
 	for idx, field in out do
 		out[idx] = (string.gsub(field, "^%s*(.-)%s*$", "%1"))
 	end
@@ -99,7 +99,7 @@ function splitTopLevel(s: string): { string }
 end
 parse.splitTopLevel = splitTopLevel
 
--- Parse a shift/extend field like "lsl 5", "lsl #5", "uxtb", "sxtw".
+# Parse a shift/extend field like "lsl 5", "lsl #5", "uxtb", "sxtw".
 function parseShift(field: string)
 	op, rest = string.match(field, "^(%a+)%s*(.*)$")
 	if not op or not SHIFT_OPS[string.lower(op)] then
@@ -116,14 +116,14 @@ function parseShift(field: string)
 	return { op = op, amount = amount, amountText = amountText }
 end
 
--- Parse a single (non-memory, non-shift) operand field.
+# Parse a single (non-memory, non-shift) operand field.
 function parseSimple(field: string)
-	-- register?
+	# register?
 	reg = classifyReg(field)
 	if reg then
 		return reg
 	end
-	-- immediate: #num, num, 0x..., -num
+	# immediate: #num, num, 0x..., -num
 	imm = string.match(field, "^#(.+)$")
 	if imm then
 		return { kind = "imm", text = imm, value = tonumber(imm) }
@@ -131,16 +131,16 @@ function parseSimple(field: string)
 	if string.match(field, "^-?%d") or string.match(field, "^0[xX]") then
 		return { kind = "imm", text = field, value = tonumber(field) }
 	end
-	-- reloc-decorated symbol: :lo12:sym, :got:sym, etc.
+	# reloc-decorated symbol: :lo12:sym, :got:sym, etc.
 	reloc, sym = string.match(field, "^:(%w+):(.+)$")
 	if reloc then
 		return { kind = "sym", text = sym, reloc = reloc }
 	end
-	-- plain symbol / label / expression
+	# plain symbol / label / expression
 	return { kind = "sym", text = field }
 end
 
--- Parse a memory operand starting with '['.
+# Parse a memory operand starting with '['.
 function parseMem(field: string, postIndex: string?)
 	writeback = null
 	inner = field
@@ -148,14 +148,14 @@ function parseMem(field: string, postIndex: string?)
 		writeback = "pre"
 		inner = string.sub(inner, 1, -2)
 	end
-	-- strip [ ]
+	# strip [ ]
 	inner = string.match(inner, "^%[(.*)%]$") or inner
 	inner = (string.gsub(inner, "^%s*(.-)%s*$", "%1"))
 	parts = splitTopLevel(inner)
 	base = parseSimple(parts[1])
 	mem = { kind = "mem", base = base, text = field, writeback = writeback }
-	if #parts >= 2 then
-		-- second part is index/offset; third (if any) is a shift/extend on the index
+	if parts.count >= 2 then
+		# second part is index/offset; third (if any) is a shift/extend on the index
 		idx = parts[2]
 		sh = parseShift(idx)
 		if sh then
@@ -163,7 +163,7 @@ function parseMem(field: string, postIndex: string?)
 		else
 			mem.index = parseSimple(idx)
 		end
-		if #parts >= 3 then
+		if parts.count >= 3 then
 			mem.shift = parseShift(parts[3])
 		end
 	end
@@ -179,7 +179,7 @@ function parseMem(field: string, postIndex: string?)
 	return mem
 end
 
--- Parse the full operand list of an instruction.
+# Parse the full operand list of an instruction.
 function parseOperands(s: string)
 	s = (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 	if s == "" then
@@ -188,14 +188,14 @@ function parseOperands(s: string)
 	fields = splitTopLevel(s)
 	operands = {}
 	i = 1
-	while i <= #fields do
+	while i <= fields.count do
 		field = fields[i]
 		if field == "" then
 			i += 1
 		else if string.sub(field, 1, 1) == "[" then
-			-- memory operand; check for post-index (a following field that is
-			-- not a shift and this bracket has no '!').
-			if string.sub(field, -1) != "!" and i + 1 <= #fields and not parseShift(fields[i + 1]) then
+			# memory operand; check for post-index (a following field that is
+			# not a shift and this bracket has no '!').
+			if string.sub(field, -1) != "!" and i + 1 <= fields.count and not parseShift(fields[i + 1]) then
 				table.insert(operands, parseMem(field, fields[i + 1]))
 				i += 2
 			else
@@ -204,9 +204,9 @@ function parseOperands(s: string)
 			end
 		else
 			sh = parseShift(field)
-			if sh and #operands > 0 then
-				-- attach to previous operand
-				operands[#operands].shift = sh
+			if sh and operands.count > 0 then
+				# attach to previous operand
+				operands[operands.count].shift = sh
 			else
 				table.insert(operands, parseSimple(field))
 			end
@@ -217,13 +217,13 @@ function parseOperands(s: string)
 end
 parse.parseOperands = parseOperands
 
--- Line splitting ----------------------------------------------------------
+# Line splitting #--------------------------------------------------------
 
--- Remove a trailing // comment that is not inside a string literal.
+# Remove a trailing // comment that is not inside a string literal.
 function stripLineComment(s: string): string
 	inStr = false
 	i = 1
-	n = #s
+	n = s.count
 	while i <= n do
 		c = string.sub(s, i, i)
 		if c == '"' then
@@ -236,7 +236,7 @@ function stripLineComment(s: string): string
 	return s
 end
 
--- Split off a ;! annotation (returns code, annotation-or-null).
+# Split off a ;! annotation (returns code, annotation-or-null).
 function splitAnnotation(s: string): (string, string?)
 	idx = string.find(s, ";!", 1, true)
 	if idx then
@@ -252,7 +252,7 @@ function trim(s: string): string
 	return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
 
--- Parse one source line into zero or more statements, appending to `out`.
+# Parse one source line into zero or more statements, appending to `out`.
 function parseLine(rawLine: string, out)
 	code, annotation = splitAnnotation(rawLine)
 	code = stripLineComment(code)
@@ -260,7 +260,7 @@ function parseLine(rawLine: string, out)
 
 	if trimmed == "" then
 		if annotation then
-			-- annotation on an otherwise-blank line: attach to a blank marker
+			# annotation on an otherwise-blank line: attach to a blank marker
 			table.insert(out, { kind = "blank", text = rawLine, annotation = annotation })
 		else
 			table.insert(out, { kind = "blank", text = rawLine })
@@ -268,7 +268,7 @@ function parseLine(rawLine: string, out)
 		return
 	end
 
-	-- Peel labels off the front: NAME:
+	# Peel labels off the front: NAME:
 	while true do
 		name, rest = string.match(trimmed, "^([%w_.$][%w_.$@]*):%s*(.*)$")
 		if not name then
@@ -281,16 +281,16 @@ function parseLine(rawLine: string, out)
 		end
 	end
 
-	-- Attach annotation to the last produced statement for this line (if any),
-	-- but if there's remaining code, it will be attached below instead.
+	# Attach annotation to the last produced statement for this line (if any),
+	# but if there's remaining code, it will be attached below instead.
 	if trimmed == "" then
-		if annotation and #out > 0 then
-			out[#out].annotation = annotation
+		if annotation and out.count > 0 then
+			out[out.count].annotation = annotation
 		end
 		return
 	end
 
-	-- Directive or instruction.
+	# Directive or instruction.
 	mnemonic, rest = string.match(trimmed, "^([%.%w_][%w_.]*)%s*(.*)$")
 	if not mnemonic then
 		table.insert(out, { kind = "directive", name = trimmed, args = "", raw = trimmed, annotation = annotation })
@@ -309,7 +309,7 @@ function parseLine(rawLine: string, out)
 		return
 	end
 
-	-- Instruction. Split optional condition suffix off branch mnemonics like b.hs.
+	# Instruction. Split optional condition suffix off branch mnemonics like b.hs.
 	operands = parseOperands(rest)
 	table.insert(out, {
 		kind = "insn",
@@ -322,15 +322,15 @@ end
 
 function parse.parseString(text: string)
 	out = {}
-	-- normalize CRLF
+	# normalize CRLF
 	text = (string.gsub(text, "\r\n", "\n"))
 	lineNo = 0
 	for line in (text .. "\n"):gmatch("(.-)\n") do
 		lineNo += 1
-		before = #out
+		before = out.count
 		parseLine(line, out)
-		-- stamp every statement produced from this source line with its line number
-		for k = before + 1, #out do out[k].line = lineNo end
+		# stamp every statement produced from this source line with its line number
+		for k = before + 1, out.count do out[k].line = lineNo end
 	end
 	return out
 end

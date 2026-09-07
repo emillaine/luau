@@ -182,7 +182,7 @@ TEST_CASE_FIXTURE(Fixture, "parenthesized_varargs_returns_any")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export value = null
 
         function f(...)
@@ -227,7 +227,7 @@ TEST_CASE_FIXTURE(Fixture, "variadic_packs")
     freeze(arena);
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         foo(1, 2, 3, "foo")
         bar(1, "foo", "bar", 3)
@@ -250,7 +250,7 @@ TEST_CASE_FIXTURE(Fixture, "variadic_packs")
 TEST_CASE_FIXTURE(Fixture, "variadic_pack_syntax")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function foo(...: number)
         end
@@ -265,7 +265,7 @@ TEST_CASE_FIXTURE(Fixture, "variadic_pack_syntax")
 TEST_CASE_FIXTURE(Fixture, "type_pack_hidden_free_tail_infinite_growth")
 {
     CheckResult result = check(R"(
---!nonstrict
+#!nonstrict
 if _ then
     _[function(l0)end],l0 = _
 else if _ then
@@ -311,7 +311,7 @@ const c: Packed<string, number> = null as any
     CHECK_EQ(toString(requireType("c")), "(string, number) -> (string, number)");
 
     result = check(R"(
--- (U..., T) cannot be parsed right now
+# (U..., T) cannot be parsed right now
 type Packed<T, U...> = { f: (a: T, U...) -> (T, U...) }
 const a: Packed<number> = null as any
 const b: Packed<string, number> = null as any
@@ -1099,7 +1099,7 @@ TEST_CASE_FIXTURE(Fixture, "unifying_vararg_pack_with_fixed_length_pack_produces
 TEST_CASE_FIXTURE(Fixture, "dont_ice_if_a_TypePack_is_an_error")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(s)
             print(s)
             return f
@@ -1113,7 +1113,7 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_type_packs")
 {
     // this has a risk of creating cyclic type packs, causing infinite loops / OOMs
     check(R"(
---!nonstrict
+#!nonstrict
 _ += _(_,...)
 repeat
 _ += _(...)
@@ -1121,7 +1121,7 @@ until ... + _
 )");
 
     check(R"(
---!nonstrict
+#!nonstrict
 _ += _(_(...,...),_(...))
 repeat
 until _

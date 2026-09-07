@@ -1,4 +1,4 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 
 const INLINING_THREASHOLD = 64
 
@@ -61,9 +61,9 @@ do
 end
 
 do
-    -- select("#", ...) / select(i, ...) inside a vararg function (Immutable.Append pattern).
-    -- select fuses to a FASTCALL with GETVARARGS between it and the paired CALL; inlining it would
-    -- shift the CALL and break the FASTCALL skip offset. The inliner must refuse to inline `append`.
+    # select("#", ...) / select(i, ...) inside a vararg function (Immutable.Append pattern).
+    # select fuses to a FASTCALL with GETVARARGS between it and the paired CALL; inlining it would
+    # shift the CALL and break the FASTCALL skip offset. The inliner must refuse to inline `append`.
     function append(list, ...)
         new = {}
         len = list.count
@@ -93,7 +93,7 @@ _G.fuzzfail_infinite1 = function()
             (function(...) end)()
         until x
 
-        -- unreachable SCC that closes upvalues
+        # unreachable SCC that closes upvalues
         repeat
             y = {}
         until not function() y = null end

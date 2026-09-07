@@ -1,4 +1,4 @@
--- verify mutually recursive functions work
+# verify mutually recursive functions work
 m = require("./export_mutual_recursion")
 
 assert(m.a() == 43, "a() should call b() and return 43")

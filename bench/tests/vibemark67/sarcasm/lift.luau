@@ -1,32 +1,32 @@
---!nonstrict
--- Lift a function's parsed body into a virtual-register IR built from register "webs"
--- (reaching-definitions connected components). Each web becomes a temp so the IRC
--- allocator can reallocate the whole GPR file.
---
--- Input: `body` = array of parsed statements (labels + insns) for one function.
--- Output: {
---   nodes = { <node>... },       -- one per statement, in order (labels kept as markers)
---   temps = { tempId -> {reg=num, precolor=null} },
---   insnDefTemps/UseTemps via node.defTemps / node.useTemps
---   node fields: kind="insn"/"label", stmt=<parsed>, defTemps={}, useTemps={},
---                opTemps = { <operand occurrence> -> tempId } keyed by identity
--- }
+#!nonstrict
+# Lift a function's parsed body into a virtual-register IR built from register "webs"
+# (reaching-definitions connected components). Each web becomes a temp so the IRC
+# allocator can reallocate the whole GPR file.
+#
+# Input: `body` = array of parsed statements (labels + insns) for one function.
+# Output: {
+#   nodes = { <node>... },       -- one per statement, in order (labels kept as markers)
+#   temps = { tempId -> {reg=num, precolor=null} },
+#   insnDefTemps/UseTemps via node.defTemps / node.useTemps
+#   node fields: kind="insn"/"label", stmt=<parsed>, defTemps={}, useTemps={},
+#                opTemps = { <operand occurrence> -> tempId } keyed by identity
+# }
 
 arm64 = require("./arm64_isa")
 
 lift = {}
 
--- Keys of a set, in ascending order. Used where the iteration order over a
--- register-number-keyed set would otherwise leak the VM's hash order into temp-id
--- assignment (and hence into the final register allocation / emitted assembly).
+# Keys of a set, in ascending order. Used where the iteration order over a
+# register-number-keyed set would otherwise leak the VM's hash order into temp-id
+# assignment (and hence into the final register allocation / emitted assembly).
 function sortedKeys(set)
 	out = {}
-	for k in set do out[#out + 1] = k end
+	for k in set do out[out.count + 1] = k end
 	table.sort(out)
 	return out
 end
 
--- Union-find.
+# Union-find.
 function makeUF()
 	parent = {}
 	function find(x)
@@ -47,14 +47,14 @@ end
 
 function lift.liftFunction(body, opts)
 	opts = opts or {}
-	classify = opts.classify or arm64.classify  -- per-target instruction semantics
-	returnRegs = opts.returnRegs  -- array of reg nums that `ret` reads (AAPCS return)
-	-- Separate into ordered instruction list; keep label markers.
-	insns = {}      -- { {stmt, classify, index} } real instructions, 1-based
-	labelIndex = {} -- label name -> position in `insns` (the following insn) ; we use a marker approach
-	nodes = {}      -- ordered nodes matching `body` (labels + insns)
-	-- We build a parallel array `flow` of just instructions for dataflow, and record
-	-- for each label the index of the next instruction (its CFG entry).
+	classify = opts.classify or arm64.classify  # per-target instruction semantics
+	returnRegs = opts.returnRegs  # array of reg nums that `ret` reads (AAPCS return)
+	# Separate into ordered instruction list; keep label markers.
+	insns = {}      # { {stmt, classify, index} } real instructions, 1-based
+	labelIndex = {} # label name -> position in `insns` (the following insn) ; we use a marker approach
+	nodes = {}      # ordered nodes matching `body` (labels + insns)
+	# We build a parallel array `flow` of just instructions for dataflow, and record
+	# for each label the index of the next instruction (its CFG entry).
 	flow = {}
 	labelToFlow = {}
 	pendingLabels = {}
@@ -80,7 +80,7 @@ function lift.liftFunction(body, opts)
 					end
 				end
 			end
-			fi = #flow + 1
+			fi = flow.count + 1
 			table.insert(flow, { stmt = st, c = c, fi = fi })
 			for _, ln in pendingLabels do labelToFlow[ln] = fi end
 			pendingLabels = {}
@@ -89,9 +89,9 @@ function lift.liftFunction(body, opts)
 			table.insert(nodes, { kind = "other", stmt = st })
 		end
 	end
-	n = #flow
+	n = flow.count
 
-	-- CFG successors over flow indices. Index 0 = virtual ENTRY -> flows to 1.
+	# CFG successors over flow indices. Index 0 = virtual ENTRY -> flows to 1.
 	succ = {}
 	for i = 1, n do succ[i] = {} end
 	for i = 1, n do
@@ -107,46 +107,46 @@ function lift.liftFunction(body, opts)
 			table.insert(succ[i], i + 1)
 		end
 	end
-	-- predecessors
+	# predecessors
 	pred = {}
 	for i = 0, n do pred[i] = {} end
-	table.insert(pred[1] or {}, 0)  -- entry
+	table.insert(pred[1] or {}, 0)  # entry
 	pred[1] = pred[1] or {}
 	if n >= 1 then table.insert(pred[1], 0) end
 	for i = 1, n do
 		for _, s in succ[i] do table.insert(pred[s], i) end
 	end
 
-	-- Def sites. Each def of reg num at flow i is a site id. ENTRY (i=0) defs all regs.
-	sites = {}          -- id -> { fi, reg }
-	siteId = {}         -- key "fi:reg" -> id
+	# Def sites. Each def of reg num at flow i is a site id. ENTRY (i=0) defs all regs.
+	sites = {}          # id -> { fi, reg }
+	siteId = {}         # key "fi:reg" -> id
 	function keyOf(fi, reg) return tostring(fi) .. ":" .. tostring(reg) end
 	function addSite(fi, reg)
 		k = keyOf(fi, reg)
 		if siteId[k] then return siteId[k] end
-		id = #sites + 1
+		id = sites.count + 1
 		sites[id] = { fi = fi, reg = reg }
 		siteId[k] = id
 		return id
 	end
-	-- Which regs are used anywhere (to bound entry pseudo-defs).
+	# Which regs are used anywhere (to bound entry pseudo-defs).
 	usedRegs = {}
 	for i = 1, n do
 		for _, r in flow[i].c.uses do usedRegs[r.num] = true end
 		for _, r in flow[i].c.defs do usedRegs[r.num] = true end
 	end
-	-- ENTRY defs for every used reg.
+	# ENTRY defs for every used reg.
 	entrySites = {}
 	for _, reg in sortedKeys(usedRegs) do
 		id = addSite(0, reg)
 		entrySites[reg] = id
 	end
-	-- Real def sites.
+	# Real def sites.
 	for i = 1, n do
 		for _, r in flow[i].c.defs do addSite(i, r.num) end
 	end
 
-	-- GEN/KILL per flow index (over site ids). GEN[i] = sites defined at i.
+	# GEN/KILL per flow index (over site ids). GEN[i] = sites defined at i.
 	gen = {}
 	defRegs = {}
 	for i = 0, n do gen[i] = {}; defRegs[i] = {} end
@@ -158,10 +158,10 @@ function lift.liftFunction(body, opts)
 		end
 	end
 
-	-- Reaching definitions fixpoint (per flow index).
+	# Reaching definitions fixpoint (per flow index).
 	IN, OUT = {}, {}
 	for i = 0, n do IN[i] = {}; OUT[i] = {} end
-	-- OUT[0] = gen[0]
+	# OUT[0] = gen[0]
 	for id in gen[0] do OUT[0][id] = true end
 	changed = true
 	while changed do
@@ -177,7 +177,7 @@ function lift.liftFunction(body, opts)
 				s = sites[id]
 				if not defRegs[i][s.reg] then newOut[id] = true end
 			end
-			-- compare
+			# compare
 			function differ(a, b)
 				for k in a do if not b[k] then return true end end
 				for k in b do if not a[k] then return true end end
@@ -189,30 +189,30 @@ function lift.liftFunction(body, opts)
 		end
 	end
 
-	-- Build webs: union def-sites reaching common uses.
+	# Build webs: union def-sites reaching common uses.
 	uf = makeUF()
-	for id = 1, #sites do uf.ensure(id) end
-	-- reaching defs of reg at instruction i = { id in IN[i] : sites[id].reg == reg }
+	for id = 1, sites.count do uf.ensure(id) end
+	# reaching defs of reg at instruction i = { id in IN[i] : sites[id].reg == reg }
 	function reachingDefs(i, reg)
 		out = {}
 		for id in IN[i] do if sites[id].reg == reg then table.insert(out, id) end end
 		return out
 	end
-	-- For each use, union reaching defs.
-	useWeb = {}  -- "fi:reg" -> web root (for the use occurrence)
+	# For each use, union reaching defs.
+	useWeb = {}  # "fi:reg" -> web root (for the use occurrence)
 	for i = 1, n do
 		for _, r in flow[i].c.uses do
 			ds = reachingDefs(i, r.num)
-			if #ds > 0 then
+			if ds.count > 0 then
 				root = ds[1]
-				for k = 2, #ds do root = uf.union(root, ds[k]) end
+				for k = 2, ds.count do root = uf.union(root, ds[k]) end
 				useWeb[keyOf(i, r.num)] = uf.find(root)
 			end
 		end
 	end
-	-- RMW: only genuine read-modify-write regs (writeback bases, movk/bfi) must share a
-	-- single register for use+def. A load whose destination reuses the base register is
-	-- NOT rmw (base and dest are independent values), so it is not unioned here.
+	# RMW: only genuine read-modify-write regs (writeback bases, movk/bfi) must share a
+	# single register for use+def. A load whose destination reuses the base register is
+	# NOT rmw (base and dest are independent values), so it is not unioned here.
 	for i = 1, n do
 		for _, rn in (flow[i].c.rmw or {}) do
 			uw = useWeb[keyOf(i, rn)]
@@ -221,7 +221,7 @@ function lift.liftFunction(body, opts)
 		end
 	end
 
-	-- Assign temp ids per web root.
+	# Assign temp ids per web root.
 	temps = {}
 	rootToTemp = {}
 	nextTemp = 0
@@ -233,20 +233,20 @@ function lift.liftFunction(body, opts)
 		end
 		return rootToTemp[root]
 	end
-	-- entry temps
-	entryTemp = {}   -- reg num -> temp id (the live-in value)
+	# entry temps
+	entryTemp = {}   # reg num -> temp id (the live-in value)
 	for _, reg in sortedKeys(entrySites) do
 		entryTemp[reg] = tempFor(uf.find(entrySites[reg]))
 	end
 
-	-- Annotate nodes with def/use temps and per-operand temp mapping.
+	# Annotate nodes with def/use temps and per-operand temp mapping.
 	for _, node in nodes do
 		if node.kind == "insn" then
 			i = node.fi
 			c = node.c
 			node.defTemps = {}
 			node.useTemps = {}
-			node.opTemp = {}   -- reg-operand table -> tempId
+			node.opTemp = {}   # reg-operand table -> tempId
 			for _, r in c.defs do
 				t = tempFor(uf.find(addSite(i, r.num)))
 				table.insert(node.defTemps, t)
@@ -254,7 +254,7 @@ function lift.liftFunction(body, opts)
 			end
 			for _, r in c.uses do
 				uw = useWeb[keyOf(i, r.num)]
-				-- re-canonicalize: later unions may have merged this web.
+				# re-canonicalize: later unions may have merged this web.
 				t = uw and tempFor(uf.find(uw)) or (entryTemp[r.num])
 				if t then
 					table.insert(node.useTemps, t)

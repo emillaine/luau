@@ -1,6 +1,6 @@
--- Context modeling for PPM compression
+# Context modeling for PPM compression
 
-ALPHABET_SIZE = 257 -- 256 bytes + 1 escape symbol
+ALPHABET_SIZE = 257 # 256 bytes + 1 escape symbol
 ESCAPE_SYMBOL = 257
 MAX_ORDER = 4
 
@@ -32,7 +32,7 @@ end
 
 function getContext(model: PPMModel, history: {number}, order: number): ContextNode?
     node = model.root
-    histLen = #history
+    histLen = history.count
     startIdx = histLen - order + 1
     if startIdx < 1 then return null end
 
@@ -49,7 +49,7 @@ end
 
 function ensureContext(model: PPMModel, history: {number}, order: number): ContextNode
     node = model.root
-    histLen = #history
+    histLen = history.count
     startIdx = histLen - order + 1
     if startIdx < 1 then startIdx = 1 end
 
@@ -134,7 +134,7 @@ function decodeSymbolFromContext(node: ContextNode, target: number, total: numbe
 end
 
 function updateModel(model: PPMModel, history: {number}, symbol: number)
-    for order = 0, math.min(model.maxOrder, #history) do
+    for order = 0, math.min(model.maxOrder, history.count) do
         node = ensureContext(model, history, order)
         node.counts[symbol] += 1
         node.total += 1

@@ -1,13 +1,13 @@
---!strict
--- ML-KEM-768 (FIPS 203), the post-quantum key-encapsulation mechanism.
---
--- Polynomials live in R_q = Z_q[X]/(X^256 + 1) with q = 3329, represented as
--- 0-based coefficient tables (coeffs[0..255]). q^2 and even q^3 fit exactly in
--- a double, so plain `%` arithmetic is exact.
---
--- The structure mirrors FIPS 203: small poly/vector/matrix helpers, sampling
--- (SampleNTT and the centered binomial distribution), byte (de)serialization,
--- the K-PKE public-key scheme, and the ML-KEM Fujisaki-Okamoto wrapper.
+#!strict
+# ML-KEM-768 (FIPS 203), the post-quantum key-encapsulation mechanism.
+#
+# Polynomials live in R_q = Z_q[X]/(X^256 + 1) with q = 3329, represented as
+# 0-based coefficient tables (coeffs[0..255]). q^2 and even q^3 fit exactly in
+# a double, so plain `%` arithmetic is exact.
+#
+# The structure mirrors FIPS 203: small poly/vector/matrix helpers, sampling
+# (SampleNTT and the centered binomial distribution), byte (de)serialization,
+# the K-PKE public-key scheme, and the ML-KEM Fujisaki-Okamoto wrapper.
 
 keccak = require("./keccak")
 
@@ -15,24 +15,24 @@ mlkem = {}
 
 N = 256
 Q = 3329
-K = 3 -- module rank for ML-KEM-768
+K = 3 # module rank for ML-KEM-768
 ETA1 = 2
 ETA2 = 2
 DU = 10
 DV = 4
-NTT_F = 3303 -- 128^-1 mod q
+NTT_F = 3303 # 128^-1 mod q
 
-mlkem.EK_SIZE = 384 * K + 32 -- 1184
-mlkem.DK_SIZE = 768 * K + 96 -- 2400
-mlkem.C_SIZE = 32 * (DU * K + DV) -- 1088
+mlkem.EK_SIZE = 384 * K + 32 # 1184
+mlkem.DK_SIZE = 768 * K + 96 # 2400
+mlkem.C_SIZE = 32 * (DU * K + DV) # 1088
 mlkem.SS_SIZE = 32
 mlkem.D_SIZE = 32
 mlkem.Z_SIZE = 32
 mlkem.M_SIZE = 32
 
--- === zeta table ==========================================================
+# === zeta table ==========================================================
 
--- Bit-reversal of the low 7 bits of `i`.
+# Bit-reversal of the low 7 bits of `i`.
 function bitRev7(i: number): number
 	r = 0
 	for b = 0, 6 do
@@ -43,11 +43,11 @@ function bitRev7(i: number): number
 	return r
 end
 
--- ZETAS[i] = 17^bitRev7(i) mod q, for i in 0..127 (0-based table).
+# ZETAS[i] = 17^bitRev7(i) mod q, for i in 0..127 (0-based table).
 ZETAS = {}
 do
 	z = 1
-	-- Build 17^e mod q on demand via fast exponentiation.
+	# Build 17^e mod q on demand via fast exponentiation.
 	function powmod(base: number, exp: number): number
 		result = 1
 		b = base % Q
@@ -63,10 +63,10 @@ do
 	for i = 0, 127 do
 		ZETAS[i] = powmod(17, bitRev7(i))
 	end
-	z = z -- silence unused
+	z = z # silence unused
 end
 
--- === polynomial arithmetic ===============================================
+# === polynomial arithmetic ===============================================
 
 function polyZero(): { number }
 	p = {}
@@ -100,7 +100,7 @@ function polySub(a: { number }, b: { number }): { number }
 	return p
 end
 
--- Forward NTT, in place (Cooley-Tukey). Standard order in, bit-reversed out.
+# Forward NTT, in place (Cooley-Tukey). Standard order in, bit-reversed out.
 function ntt(f: { number }): { number }
 	k = 1
 	len = 128
@@ -121,7 +121,7 @@ function ntt(f: { number }): { number }
 	return f
 end
 
--- Inverse NTT, in place (Gentleman-Sande), including the 128^-1 scaling.
+# Inverse NTT, in place (Gentleman-Sande), including the 128^-1 scaling.
 function invNtt(f: { number }): { number }
 	k = 127
 	len = 2
@@ -145,14 +145,14 @@ function invNtt(f: { number }): { number }
 	return f
 end
 
--- Base-case multiply of two degree-1 polynomials mod (X^2 - zeta).
+# Base-case multiply of two degree-1 polynomials mod (X^2 - zeta).
 function baseMul(a0: number, a1: number, b0: number, b1: number, zeta: number): (number, number)
 	r0 = (a0 * b0 + zeta * a1 * b1) % Q
 	r1 = (a1 * b0 + a0 * b1) % Q
 	return r0, r1
 end
 
--- Pointwise multiply two NTT-domain polynomials.
+# Pointwise multiply two NTT-domain polynomials.
 function nttMul(f: { number }, g: { number }): { number }
 	h = {}
 	for i = 0, 63 do
@@ -167,7 +167,7 @@ function nttMul(f: { number }, g: { number }): { number }
 	return h
 end
 
--- === vector / matrix (module) arithmetic =================================
+# === vector / matrix (module) arithmetic =================================
 
 type Vector = { { number } }
 type Matrix = { { { number } } }
@@ -194,7 +194,7 @@ function vecAdd(a: Vector, b: Vector): Vector
 	return r
 end
 
--- Matrix-vector product in the NTT domain. With `transpose`, uses A[j][i].
+# Matrix-vector product in the NTT domain. With `transpose`, uses A[j][i].
 function matVecMul(A: Matrix, v: Vector, transpose: boolean): Vector
 	w = {}
 	for i = 1, K do
@@ -208,7 +208,7 @@ function matVecMul(A: Matrix, v: Vector, transpose: boolean): Vector
 	return w
 end
 
--- Inner product of two NTT-domain vectors -> single NTT-domain polynomial.
+# Inner product of two NTT-domain vectors -> single NTT-domain polynomial.
 function dotNtt(u: Vector, v: Vector): { number }
 	acc = polyZero()
 	for i = 1, K do
@@ -217,19 +217,19 @@ function dotNtt(u: Vector, v: Vector): { number }
 	return acc
 end
 
--- === sampling ============================================================
+# === sampling ============================================================
 
--- SampleNTT (FIPS 203 Algorithm 7): rejection-sample an NTT-domain polynomial
--- from a 34-byte seed via SHAKE128. The 12-bit values < q are kept.
+# SampleNTT (FIPS 203 Algorithm 7): rejection-sample an NTT-domain polynomial
+# from a 34-byte seed via SHAKE128. The 12-bit values < q are kept.
 function sampleNtt(seed: buffer): { number }
 	poly = polyZero()
-	outLen = 864 -- multiple of 3; usually enough for 256 coefficients
+	outLen = 864 # multiple of 3; usually enough for 256 coefficients
 	xof = keccak.shake128(seed, outLen)
 	i = 0
 	j = 0
 	while j < 256 do
 		if i + 3 > outLen then
-			-- Extremely rare: extend the (identical-prefix) SHAKE stream.
+			# Extremely rare: extend the (identical-prefix) SHAKE stream.
 			outLen *= 2
 			xof = keccak.shake128(seed, outLen)
 		end
@@ -251,8 +251,8 @@ function sampleNtt(seed: buffer): { number }
 	return poly
 end
 
--- SamplePolyCBD (FIPS 203 Algorithm 8): centered binomial distribution from a
--- PRF byte stream, reading 2*eta bits per coefficient (LSB first).
+# SamplePolyCBD (FIPS 203 Algorithm 8): centered binomial distribution from a
+# PRF byte stream, reading 2*eta bits per coefficient (LSB first).
 function samplePolyCbd(buf: buffer, eta: number): { number }
 	poly = {}
 	acc = 0
@@ -280,9 +280,9 @@ function samplePolyCbd(buf: buffer, eta: number): { number }
 	return poly
 end
 
--- === byte (de)serialization ==============================================
+# === byte (de)serialization ==============================================
 
--- ByteEncode_d: pack 256 d-bit coefficients into 32*d bytes (LSB first).
+# ByteEncode_d: pack 256 d-bit coefficients into 32*d bytes (LSB first).
 function byteEncode(poly: { number }, d: number): buffer
 	out = buffer.create(32 * d)
 	acc = 0
@@ -301,8 +301,8 @@ function byteEncode(poly: { number }, d: number): buffer
 	return out
 end
 
--- ByteDecode_d: unpack 32*d bytes into 256 coefficients. For d == 12 the values
--- are reduced mod q (canonical decoding).
+# ByteDecode_d: unpack 32*d bytes into 256 coefficients. For d == 12 the values
+# are reduced mod q (canonical decoding).
 function byteDecode(buf: buffer, off: number, d: number): { number }
 	poly = {}
 	acc = 0
@@ -326,7 +326,7 @@ function byteDecode(buf: buffer, off: number, d: number): { number }
 	return poly
 end
 
--- Compress / decompress a single coefficient (FIPS 203 Section 4.2.1).
+# Compress / decompress a single coefficient (FIPS 203 Section 4.2.1).
 function compressEle(x: number, d: number): number
 	t = 2 ^ d
 	return math.floor((t * x + 1664) / Q) % t
@@ -353,7 +353,7 @@ function decompressPoly(poly: { number }, d: number): { number }
 	return p
 end
 
--- Encode / decode a whole vector (concatenated per-polynomial encodings).
+# Encode / decode a whole vector (concatenated per-polynomial encodings).
 function encodeVector(v: Vector, d: number): buffer
 	out = buffer.create(K * 32 * d)
 	for i = 1, K do
@@ -387,9 +387,9 @@ function decompressVector(v: Vector, d: number): Vector
 	return r
 end
 
--- === hash / PRF / XOF helpers ============================================
+# === hash / PRF / XOF helpers ============================================
 
--- Concatenate a list of buffers into one.
+# Concatenate a list of buffers into one.
 function concat(parts: { buffer }): buffer
 	total = 0
 	for _, p in parts do
@@ -410,7 +410,7 @@ function byteBuf(v: number): buffer
 	return b
 end
 
--- H = SHA3-256, J = SHAKE256(.,32), G = SHA3-512 split into two halves.
+# H = SHA3-256, J = SHAKE256(.,32), G = SHA3-512 split into two halves.
 function H(s: buffer): buffer
 	return keccak.sha3_256(s)
 end
@@ -428,13 +428,13 @@ function G(s: buffer): (buffer, buffer)
 	return a, b
 end
 
--- PRF_eta(s, b) = SHAKE256(s || b, 64*eta).
+# PRF_eta(s, b) = SHAKE256(s || b, 64*eta).
 function PRF(eta: number, s: buffer, b: number): buffer
 	return keccak.shake256(concat({ s, byteBuf(b) }), 64 * eta)
 end
 
--- Generate the matrix A_hat from seed rho. A[i][j] = SampleNTT(rho || j || i),
--- matching FIPS 203 / the reference (indices j then i in the XOF input).
+# Generate the matrix A_hat from seed rho. A[i][j] = SampleNTT(rho || j || i),
+# matching FIPS 203 / the reference (indices j then i in the XOF input).
 function genMatrix(rho: buffer): Matrix
 	A = {}
 	for i = 1, K do
@@ -447,9 +447,9 @@ function genMatrix(rho: buffer): Matrix
 	return A
 end
 
--- === K-PKE ===============================================================
+# === K-PKE ===============================================================
 
--- K-PKE.KeyGen (FIPS 203 Algorithm 13).
+# K-PKE.KeyGen (FIPS 203 Algorithm 13).
 function kpkeKeygen(d: buffer): (buffer, buffer)
 	rho, sigma = G(concat({ d, byteBuf(K) }))
 	A = genMatrix(rho)
@@ -475,7 +475,7 @@ function kpkeKeygen(d: buffer): (buffer, buffer)
 	return ekPke, dkPke
 end
 
--- K-PKE.Encrypt (FIPS 203 Algorithm 14).
+# K-PKE.Encrypt (FIPS 203 Algorithm 14).
 function kpkeEncrypt(ekPke: buffer, m: buffer, r: buffer): buffer
 	t = decodeVector(ekPke, 0, 12)
 	rho = buffer.create(32)
@@ -508,7 +508,7 @@ function kpkeEncrypt(ekPke: buffer, m: buffer, r: buffer): buffer
 	return concat({ c1, c2 })
 end
 
--- K-PKE.Decrypt (FIPS 203 Algorithm 15).
+# K-PKE.Decrypt (FIPS 203 Algorithm 15).
 function kpkeDecrypt(dkPke: buffer, c: buffer): buffer
 	c1Len = 32 * DU * K
 	u = decompressVector(decodeVector(c, 0, DU), DU)
@@ -520,9 +520,9 @@ function kpkeDecrypt(dkPke: buffer, c: buffer): buffer
 	return byteEncode(compressPoly(w, 1), 1)
 end
 
--- === ML-KEM ==============================================================
+# === ML-KEM ==============================================================
 
--- Constant-time buffer equality (length is public).
+# Constant-time buffer equality (length is public).
 function bufEqual(a: buffer, b: buffer): boolean
 	if buffer.len(a) != buffer.len(b) then
 		return false
@@ -534,7 +534,7 @@ function bufEqual(a: buffer, b: buffer): boolean
 	return diff == 0
 end
 
--- ML-KEM.KeyGen_internal (FIPS 203 Algorithm 16): deterministic from d, z.
+# ML-KEM.KeyGen_internal (FIPS 203 Algorithm 16): deterministic from d, z.
 function mlkem.keygenDerand(d: buffer, z: buffer): (buffer, buffer)
 	assert(buffer.len(d) == 32 and buffer.len(z) == 32, "d and z must be 32 bytes")
 	ekPke, dkPke = kpkeKeygen(d)
@@ -543,7 +543,7 @@ function mlkem.keygenDerand(d: buffer, z: buffer): (buffer, buffer)
 	return ek, dk
 end
 
--- ML-KEM.Encaps_internal (FIPS 203 Algorithm 17): deterministic from m.
+# ML-KEM.Encaps_internal (FIPS 203 Algorithm 17): deterministic from m.
 function mlkem.encapsDerand(ek: buffer, m: buffer): (buffer, buffer)
 	assert(buffer.len(ek) == mlkem.EK_SIZE, "ek has wrong length")
 	assert(buffer.len(m) == 32, "m must be 32 bytes")
@@ -552,7 +552,7 @@ function mlkem.encapsDerand(ek: buffer, m: buffer): (buffer, buffer)
 	return sharedKey, c
 end
 
--- ML-KEM.Decaps_internal (FIPS 203 Algorithm 18), with implicit rejection.
+# ML-KEM.Decaps_internal (FIPS 203 Algorithm 18), with implicit rejection.
 function mlkem.decaps(dk: buffer, c: buffer): buffer
 	assert(buffer.len(dk) == mlkem.DK_SIZE, "dk has wrong length")
 	assert(buffer.len(c) == mlkem.C_SIZE, "c has wrong length")
@@ -571,7 +571,7 @@ function mlkem.decaps(dk: buffer, c: buffer): buffer
 	kBar = J(concat({ z, c }))
 	cPrime = kpkeEncrypt(ek, mPrime, rPrime)
 
-	-- Implicit rejection: on ciphertext mismatch return the z-derived key.
+	# Implicit rejection: on ciphertext mismatch return the z-derived key.
 	if bufEqual(c, cPrime) then
 		return kPrime
 	else
@@ -579,8 +579,8 @@ function mlkem.decaps(dk: buffer, c: buffer): buffer
 	end
 end
 
--- Randomness source: injected so both a real RNG and tests can drive it.
--- Defaults to null; callers must set mlkem.randomBytes for the non-derand API.
+# Randomness source: injected so both a real RNG and tests can drive it.
+# Defaults to null; callers must set mlkem.randomBytes for the non-derand API.
 mlkem.randomBytes = (null as any) as ((n: number) -> buffer)?
 
 function randBytes(n: number): buffer
@@ -589,12 +589,12 @@ function randBytes(n: number): buffer
 	return rng(n)
 end
 
--- Randomized ML-KEM.KeyGen (FIPS 203 Algorithm 19).
+# Randomized ML-KEM.KeyGen (FIPS 203 Algorithm 19).
 function mlkem.keygen(): (buffer, buffer)
 	return mlkem.keygenDerand(randBytes(32), randBytes(32))
 end
 
--- Randomized ML-KEM.Encaps (FIPS 203 Algorithm 20).
+# Randomized ML-KEM.Encaps (FIPS 203 Algorithm 20).
 function mlkem.encaps(ek: buffer): (buffer, buffer)
 	return mlkem.encapsDerand(ek, randBytes(32))
 end

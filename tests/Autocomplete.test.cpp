@@ -51,7 +51,7 @@ struct ACFixtureImpl : BaseType
         opts.forAutocomplete = true;
         opts.retainFullTypeGraphs = true;
         // NOTE: Autocomplete does *not* require strict checking, meaning we should
-        // try to check all of these examples in `--!nocheck` mode.
+        // try to check all of these examples in `#!nocheck` mode.
         this->configResolver.defaultConfig.mode = Mode::NoCheck;
         this->getFrontend().check("MainModule", opts);
 
@@ -64,7 +64,7 @@ struct ACFixtureImpl : BaseType
         opts.forAutocomplete = true;
         opts.retainFullTypeGraphs = true;
         // NOTE: Autocomplete does *not* require strict checking, meaning we should
-        // try to check all of these examples in `--!nocheck` mode.
+        // try to check all of these examples in `#!nocheck` mode.
         this->configResolver.defaultConfig.mode = Mode::NoCheck;
         this->getFrontend().check("MainModule", opts);
 
@@ -77,7 +77,7 @@ struct ACFixtureImpl : BaseType
         opts.forAutocomplete = true;
         opts.retainFullTypeGraphs = true;
         // NOTE: Autocomplete does *not* require strict checking, meaning we should
-        // try to check all of these examples in `--!nocheck` mode.
+        // try to check all of these examples in `#!nocheck` mode.
         this->configResolver.defaultConfig.mode = Mode::NoCheck;
         this->getFrontend().check(name, opts);
 
@@ -130,7 +130,7 @@ struct ACFixtureImpl : BaseType
         LUAU_ASSERT("Digit expected after @ symbol" && prevChar != '@');
 
         // NOTE: Autocomplete does *not* require strict checking, meaning we should
-        // try to check all of these examples in `--!nocheck` mode.
+        // try to check all of these examples in `#!nocheck` mode.
         return BaseType::check(Mode::NoCheck, filteredSource, std::nullopt);
     }
 
@@ -622,11 +622,11 @@ TEST_CASE_FIXTURE(ACFixture, "do_not_overwrite_context_sensitive_kws")
 TEST_CASE_FIXTURE(ACFixture, "dont_offer_any_suggestions_from_within_a_comment")
 {
     check(R"(
-        --!strict
+        #!strict
         foo = {}
         function foo:bar() end
 
-        --[[
+        #[[
             foo:@1
         ]]
     )");
@@ -640,7 +640,7 @@ TEST_CASE_FIXTURE(ACFixture, "dont_offer_any_suggestions_from_within_a_comment")
 TEST_CASE_FIXTURE(ACFixture, "dont_offer_any_suggestions_from_within_a_broken_comment")
 {
     check(R"(
-        --[[ @1
+        #[[ @1
     )");
 
     auto ac = autocomplete('1');
@@ -651,7 +651,7 @@ TEST_CASE_FIXTURE(ACFixture, "dont_offer_any_suggestions_from_within_a_broken_co
 
 TEST_CASE_FIXTURE(ACFixture, "dont_offer_any_suggestions_from_within_a_broken_comment_at_the_very_end_of_the_file")
 {
-    check("--[[@1");
+    check("#[[@1");
 
     auto ac = autocomplete('1');
     CHECK_EQ(0, ac.entryMap.size());
@@ -1331,7 +1331,7 @@ TEST_CASE_FIXTURE(ACFixture, "sometimes_the_metatable_is_an_error")
         T.__index = T
 
         function T.new()
-            return setmetatable({x=6}, X) -- oops!
+            return setmetatable({x=6}, X) # oops!
         end
         t = T.new()
         t.  @1
@@ -2478,7 +2478,7 @@ const a: aaa.do
 
 TEST_CASE_FIXTURE(ACFixture, "comments")
 {
-    fileResolver.source["Comments"] = "--foo";
+    fileResolver.source["Comments"] = "#foo";
 
     auto ac = autocomplete("Comments", Position{0, 5});
     CHECK_EQ(0, ac.entryMap.size());
@@ -2495,8 +2495,8 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "autocompleteProp_index_function_metamethod
             end
         })
 
-        const a = t. -- Line 9
-        --          | Column 20
+        const a = t. # Line 9
+        #          | Column 20
     )";
 
     auto ac = autocomplete("Module/A", Position{9, 20});
@@ -2949,13 +2949,13 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_interpolated_string_expression")
 
 TEST_CASE_FIXTURE(ACFixture, "autocomplete_interpolated_string_expression_with_comments")
 {
-    check(R"(f(`expression = {--[[ bla bla bla ]]@1`))");
+    check(R"(f(`expression = {#[[ bla bla bla ]]@1`))");
 
     auto ac = autocomplete('1');
     CHECK(ac.entryMap.count("table"));
     CHECK_EQ(ac.context, AutocompleteContext::Expression);
 
-    check(R"(f(`expression = {@1 --[[ bla bla bla ]]`))");
+    check(R"(f(`expression = {@1 #[[ bla bla bla ]]`))");
     ac = autocomplete('1');
     CHECK(!ac.entryMap.empty());
     CHECK(ac.entryMap.count("table"));
@@ -2965,7 +2965,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_interpolated_string_expression_with_c
 TEST_CASE_FIXTURE(ACFixture, "autocomplete_interpolated_string_as_singleton")
 {
     check(R"(
-        --!strict
+        #!strict
         function f(a: "cat" | "dog") end
 
         f(`@1`)
@@ -3072,7 +3072,7 @@ type A<T... = ...@1> = () -> T
 TEST_CASE_FIXTURE(ACBuiltinsFixture, "autocomplete_oop_implicit_self")
 {
     check(R"(
---!strict
+#!strict
 Class = {}
 Class.__index = Class
 type Class = typeof(setmetatable({} as { x: number }, Class))
@@ -3097,7 +3097,7 @@ end
 TEST_CASE_FIXTURE(ACBuiltinsFixture, "autocomplete_on_string_singletons")
 {
     check(R"(
-        --!strict
+        #!strict
         const foo: "hello" | "bye" = "hello"
         foo:@1
     )");
@@ -3241,7 +3241,7 @@ TEST_CASE_FIXTURE(ACFixture, "string_singleton_in_if_statement")
     };
 
     check(R"(
-        --!strict
+        #!strict
 
         type Direction = "left" | "right"
 
@@ -3327,11 +3327,11 @@ TEST_CASE_FIXTURE(ACFixture, "string_singleton_in_if_statement2")
     ScopedFastFlag sff{FFlag::LuauExportValueSyntax, true};
 
     check(R"(
-        --!strict
+        #!strict
 
         type Direction = "left" | "right"
 
-        -- typestate here means dir is actually typed as `"left"`
+        # typestate here means dir is actually typed as `"left"`
         export dir: Direction
         dir = "left"
 
@@ -4107,7 +4107,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_subtyping_recursion_limit")
 TEST_CASE_FIXTURE(ACFixture, "strict_mode_force")
 {
     check(R"(
---!nonstrict
+#!nonstrict
 const a: {x: number} = {x=1}
 b = a
 c = b.@1
@@ -5212,7 +5212,7 @@ TEST_CASE_FIXTURE(ACFixture, "autocomplete_exclude_break_continue_in_incomplete_
 
 TEST_CASE_FIXTURE(ACFixture, "autocomplete_suggest_hot_comments")
 {
-    check("--!@1");
+    check("#!@1");
 
     auto ac = autocomplete('1');
 
@@ -5748,7 +5748,7 @@ TEST_CASE_FIXTURE(ACBuiltinsFixture, "cli_197197_autocomplete_generic_keyof")
 
     check(R"(
         function ToggleButton<T>(Table: T, Key: keyof<T>)
-            -- don't need to do anything here.
+            # don't need to do anything here.
         end
 
         const tbl: { Changed: bool, RemoveTag: bool } = null as any

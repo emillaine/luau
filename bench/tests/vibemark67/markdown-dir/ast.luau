@@ -1,4 +1,4 @@
--- AST node types for CommonMark-like parser
+# AST node types for CommonMark-like parser
 
 export type Node = {
     type: string,

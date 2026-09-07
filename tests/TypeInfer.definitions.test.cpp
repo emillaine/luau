@@ -615,7 +615,7 @@ TEST_CASE_FIXTURE(Fixture, "vector3_overflow")
     )");
 
     CheckResult result = check(R"(
---!strict
+#!strict
 function graphPoint(t : number, points : { Vector3 }) : Vector3
     const n : number = points.count - 1
     p = (null as any)
@@ -641,7 +641,7 @@ TEST_CASE_FIXTURE(Fixture, "vector_readonly")
     )");
 
     CheckResult result = check(R"(
---!strict
+#!strict
 function read(n: number | boolean)
 end
 
@@ -672,7 +672,7 @@ TEST_CASE_FIXTURE(Fixture, "extern_writeonly_props")
     )");
 
     CheckResult result = check(R"(
---!strict
+#!strict
 function read(v: buffer | boolean)
 end
 
@@ -705,7 +705,7 @@ TEST_CASE_FIXTURE(Fixture, "extern_read_write_dual_attribute")
     )");
 
     CheckResult result = check(R"(
---!strict
+#!strict
 const da: dual_attribute = null as any
 const x: boolean = da.value
 const y: number = da.value

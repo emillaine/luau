@@ -1,7 +1,7 @@
---!nonstrict
--- ARM64 frame policy for the shared frame preprocessor (frame.luau). Provides frame-size
--- analysis and the per-statement rewrite: dropping AAPCS frame setup, virtualising
--- sp/x29-relative slots as pseudo-registers, and rejecting stack-address escapes.
+#!nonstrict
+# ARM64 frame policy for the shared frame preprocessor (frame.luau). Provides frame-size
+# analysis and the per-statement rewrite: dropping AAPCS frame setup, virtualising
+# sp/x29-relative slots as pseudo-registers, and rejecting stack-address escapes.
 
 arm64_frame = {}
 
@@ -14,7 +14,7 @@ function immVal(op)
 	return 0
 end
 
--- Pre-scan: total frame size (sum of sp decrements) and fp offset (x29 = sp + fpOffset).
+# Pre-scan: total frame size (sum of sp decrements) and fp offset (x29 = sp + fpOffset).
 function arm64_frame.analyzeFrame(body)
 	frameSize, fpOffset = 0, 0
 	for _, st in body do
@@ -44,8 +44,8 @@ function arm64_frame.rewrite(st, ctx)
 	m = string.lower(st.mnemonic)
 	ops = st.operands
 
-	-- sp-relative accesses that fall inside a fixed-size alloca region are redirected to the
-	-- allocation by the transform; pass them through untouched here.
+	# sp-relative accesses that fall inside a fixed-size alloca region are redirected to the
+	# allocation by the transform; pass them through untouched here.
 	function immVal2(op) return (op and op.kind == "imm") and (op.value or tonumber(op.text) or 0) or null end
 	if m == "add" and ops[2] and ops[2].name == "sp" and ops[1] and ops[1].name != "sp" then
 		off = immVal2(ops[3])
@@ -63,19 +63,19 @@ function arm64_frame.rewrite(st, ctx)
 		end
 	end
 
-	-- sp adjustments and fp setup: drop.
+	# sp adjustments and fp setup: drop.
 	if (m == "sub" or m == "add") and ops[1] and ops[1].name == "sp" then return end
 	if (m == "mov" or m == "add") and ops[1] and ops[1].name == "x29" then return end
-	if m == "mov" and ops[1] and ops[1].name == "sp" then return end  -- e.g. `mov sp, x29` (restore)
+	if m == "mov" and ops[1] and ops[1].name == "sp" then return end  # e.g. `mov sp, x29` (restore)
 
 	mem = null
 	for _, o in ops do if o.kind == "mem" then mem = o end end
 	if mem and isFrameBase(mem.base) then
-		-- Only writeback stp/ldp (the classic `stp x29,x30,[sp,-N]!`/`ldp ...,[sp],N`) is pure
-		-- frame setup we drop. A plain `str/ldr x30` (or x29) must NOT be dropped: in a leaf
-		-- function gcc reuses x30 (lr) as a general register and spills it, so those are real
-		-- values to virtualise. A genuine fp/lr save becomes a dead slot.
-		if mem.writeback then return end  -- frame-setup writeback store
+		# Only writeback stp/ldp (the classic `stp x29,x30,[sp,-N]!`/`ldp ...,[sp],N`) is pure
+		# frame setup we drop. A plain `str/ldr x30` (or x29) must NOT be dropped: in a leaf
+		# function gcc reuses x30 (lr) as a general register and spills it, so those are real
+		# values to virtualise. A genuine fp/lr save becomes a dead slot.
+		if mem.writeback then return end  # frame-setup writeback store
 		base = (mem.base.name == "sp") and 0 or ctx.fpOffset
 		off = base + immVal(mem.index)
 		if m == "str" or m == "stur" then
@@ -98,7 +98,7 @@ function arm64_frame.rewrite(st, ctx)
 		return
 	end
 
-	-- Reject taking the address of the stack frame (potential escape).
+	# Reject taking the address of the stack frame (potential escape).
 	if (m == "add" or m == "mov" or m == "sub") then
 		for _, o in ops do
 			if o.kind == "reg" and o.name == "sp" and ops[1] and ops[1].name != "sp" then

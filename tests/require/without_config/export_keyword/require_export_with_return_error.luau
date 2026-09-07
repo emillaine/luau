@@ -1,5 +1,5 @@
--- verify returning custom value with exports causes error
--- should fail because value/function exports cannot coexist with explicit return
+# verify returning custom value with exports causes error
+# should fail because value/function exports cannot coexist with explicit return
 success, err = pcall(function()
     m = require("./export_with_return_error")
 end)

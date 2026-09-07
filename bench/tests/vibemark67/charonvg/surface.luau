@@ -1,4 +1,4 @@
---!native
+#!native
 Color = require("./color")
 
 Surface = {}
@@ -47,14 +47,14 @@ function Surface:clear(color)
     r = math.floor(color.r * a + 0.5)
     g = math.floor(color.g * a + 0.5)
     b = math.floor(color.b * a + 0.5)
-    -- Fast path: if all bytes are the same value, use buffer.fill
+    # Fast path: if all bytes are the same value, use buffer.fill
     if a == r and r == g and g == b then
         buffer.fill(self._data, 0, a, size)
         return
     end
     pixel = bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
     data = self._data
-    -- Write first pixel, then copy in doubling chunks
+    # Write first pixel, then copy in doubling chunks
     buffer.writeu32(data, 0, pixel)
     written = 4
     while written < size do
@@ -77,7 +77,7 @@ function Surface:getPixel(x, y)
     r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
     g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
     b = bit32.band(pixel, 0xFF)
-    -- Unpremultiply
+    # Unpremultiply
     if a == 0 then
         return 0, 0, 0, 0
     else if a == 255 then
@@ -94,7 +94,7 @@ function Surface:setPixel(x, y, r, g, b, a)
     if x < 0 or x >= self._width or y < 0 or y >= self._height then
         return
     end
-    -- Premultiply
+    # Premultiply
     pr = math.floor(r * a / 255 + 0.5)
     pg = math.floor(g * a / 255 + 0.5)
     pb = math.floor(b * a / 255 + 0.5)
@@ -113,13 +113,13 @@ function Surface.convertARGBtoRGBA(dst, src, width, height, stride)
             r = bit32.band(bit32.rshift(pixel, 16), 0xFF)
             g = bit32.band(bit32.rshift(pixel, 8), 0xFF)
             b = bit32.band(pixel, 0xFF)
-            -- Unpremultiply
+            # Unpremultiply
             if a > 0 and a < 255 then
                 r = math.min(255, math.floor(r * 255 / a + 0.5))
                 g = math.min(255, math.floor(g * 255 / a + 0.5))
                 b = math.min(255, math.floor(b * 255 / a + 0.5))
             end
-            -- Write as RGBA byte order
+            # Write as RGBA byte order
             buffer.writeu8(dst, off, r)
             buffer.writeu8(dst, off + 1, g)
             buffer.writeu8(dst, off + 2, b)
@@ -198,7 +198,7 @@ function Surface:getRGBA()
         i = i + 8
     end
 
-    -- Handle remainder
+    # Handle remainder
     while i < size do
         pixel = buffer.readu32(src, i)
         a = bit32.rshift(pixel, 24)
@@ -235,7 +235,7 @@ function Surface.convertRGBAtoARGB(dst, src, width, height, stride)
             g = buffer.readu8(src, off + 1)
             b = buffer.readu8(src, off + 2)
             a = buffer.readu8(src, off + 3)
-            -- Premultiply
+            # Premultiply
             if a < 255 then
                 r = math.floor(r * a / 255 + 0.5)
                 g = math.floor(g * a / 255 + 0.5)

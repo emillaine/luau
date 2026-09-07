@@ -1,4 +1,4 @@
---!native
+#!native
 Matrix = require("./matrix")
 Path = require("./path")
 
@@ -35,10 +35,10 @@ function idiv(a, b)
     end
 end
 
--- Rasterizer state with stateful current cell
+# Rasterizer state with stateful current cell
 function createRaster()
     return {
-        cells = {}, -- cells[y] = { [x] = {cover, area}, ... }
+        cells = {}, # cells[y] = { [x] = {cover, area}, ... }
         cellX = -1,
         cellY = -1,
         area = 0,
@@ -319,10 +319,10 @@ function renderCubic(ras, x1, y1, x2, y2, x3, y3, x4, y4, depth)
     renderCubic(ras, x1234, y1234, x234, y234, x34, y34, x4, y4, depth + 1)
 end
 
--- Coverage conversion (inlined in sweep for speed)
+# Coverage conversion (inlined in sweep for speed)
 COVERAGE_SHIFT = 9
 
--- Sweep cells to produce spans
+# Sweep cells to produce spans
 function sweep(ras, fillRule, clipMinX, clipMaxX, clipMinY, clipMaxY)
     spans = {}
     nspans = 0
@@ -333,7 +333,7 @@ function sweep(ras, fillRule, clipMinX, clipMaxX, clipMinY, clipMaxY)
         if ey >= clipMinY and ey < clipMaxY then
             row = cells[ey]
             if row then
-                -- Collect and sort x keys
+                # Collect and sort x keys
                 xs = {}
                 nxs = 0
                 for x in pairs(row) do
@@ -349,7 +349,7 @@ function sweep(ras, fillRule, clipMinX, clipMaxX, clipMinY, clipMaxY)
                     cellCover = cell[1]
                     cellArea = cell[2]
 
-                    -- Gap span before this cell
+                    # Gap span before this cell
                     if i > 1 then
                         prevX = xs[i - 1] + 1
                         if prevX < x and cover != 0 then
@@ -377,7 +377,7 @@ function sweep(ras, fillRule, clipMinX, clipMaxX, clipMinY, clipMaxY)
                         end
                     end
 
-                    -- Cell span
+                    # Cell span
                     cover = cover + cellCover
                     area = cover * 512 - cellArea
                     cov = bit32.rshift(math.abs(area), COVERAGE_SHIFT)
@@ -425,7 +425,7 @@ function Rasterizer.rasterize(path, matrix, clipRect, fillRule)
     curX, curY = 0, 0
     startX, startY = 0, 0
 
-    for ci = 1, #cmds do
+    for ci = 1, cmds.count do
         cmd = cmds[ci]
         if cmd == Path.MOVE_TO then
             px, py = data[di], data[di + 1]
@@ -482,7 +482,7 @@ function Rasterizer.intersectSpans(a, b)
     result = {}
     nresult = 0
     ai, bi = 1, 1
-    na, nb = #a, #b
+    na, nb = a.count, b.count
 
     while ai <= na and bi <= nb do
         aSpan = a[ai]

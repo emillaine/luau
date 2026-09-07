@@ -1,21 +1,21 @@
---!strict
--- X25519 Elliptic-Curve Diffie-Hellman (RFC 7748).
---
--- Field arithmetic is over GF(2^255 - 19). Field elements are represented as
--- fifteen uniform limbs of 17 bits (little-endian): 17 * 15 = 255 bits, so the
--- number lines up exactly on 2^255 and the reduction 2^255 ≡ 19 (mod p) is a
--- clean per-limb fold. Every limb*limb product is < 2^34 and each output column
--- sums at most ~15 of them (times the small 19 fold factor), staying well below
--- 2^53 -- the exactness limit for Luau doubles.
+#!strict
+# X25519 Elliptic-Curve Diffie-Hellman (RFC 7748).
+#
+# Field arithmetic is over GF(2^255 - 19). Field elements are represented as
+# fifteen uniform limbs of 17 bits (little-endian): 17 * 15 = 255 bits, so the
+# number lines up exactly on 2^255 and the reduction 2^255 ≡ 19 (mod p) is a
+# clean per-limb fold. Every limb*limb product is < 2^34 and each output column
+# sums at most ~15 of them (times the small 19 fold factor), staying well below
+# 2^53 # the exactness limit for Luau doubles.
 
 x25519 = {}
 
 LIMBS = 15
 RADIX = 17
-BASE = 131072 -- 2^17
-MASK = 131071 -- 2^17 - 1
+BASE = 131072 # 2^17
+MASK = 131071 # 2^17 - 1
 
--- === field element construction ==========================================
+# === field element construction ==========================================
 
 function feZero(): { number }
 	f = table.create(LIMBS)
@@ -39,11 +39,11 @@ function feCopy(a: { number }): { number }
 	return f
 end
 
--- === carry / reduction ===================================================
+# === carry / reduction ===================================================
 
--- Propagate carries so every limb is < 2^17, folding overflow past bit 255
--- back in as (carry * 19), since 2^255 ≡ 19 (mod p). A few passes converge
--- because each pass shrinks the residual carry sharply.
+# Propagate carries so every limb is < 2^17, folding overflow past bit 255
+# back in as (carry * 19), since 2^255 ≡ 19 (mod p). A few passes converge
+# because each pass shrinks the residual carry sharply.
 function carry(f: { number })
 	for _ = 1, 4 do
 		c = 0
@@ -59,9 +59,9 @@ function carry(f: { number })
 	end
 end
 
--- === field arithmetic ====================================================
+# === field arithmetic ====================================================
 
--- Multiply two field elements modulo p.
+# Multiply two field elements modulo p.
 function feMul(a: { number }, b: { number }): { number }
 	c = table.create(2 * LIMBS - 1)
 	for k = 1, 2 * LIMBS - 1 do
@@ -77,7 +77,7 @@ function feMul(a: { number }, b: { number }): { number }
 		end
 	end
 
-	-- Fold product limbs at bit >= 255 (index >= LIMBS) into low limbs * 19.
+	# Fold product limbs at bit >= 255 (index >= LIMBS) into low limbs * 19.
 	for k = 2 * LIMBS - 1, LIMBS + 1, -1 do
 		c[k - LIMBS] += 19 * c[k]
 	end
@@ -90,12 +90,12 @@ function feMul(a: { number }, b: { number }): { number }
 	return out
 end
 
--- Square (just a multiply by itself; correctness over micro-optimization).
+# Square (just a multiply by itself; correctness over micro-optimization).
 function feSquare(a: { number }): { number }
 	return feMul(a, a)
 end
 
--- Add two reduced field elements.
+# Add two reduced field elements.
 function feAdd(a: { number }, b: { number }): { number }
 	out = table.create(LIMBS)
 	for i = 1, LIMBS do
@@ -105,8 +105,8 @@ function feAdd(a: { number }, b: { number }): { number }
 	return out
 end
 
--- Precomputed 2*p in this radix, used to keep subtraction non-negative.
--- p = 2^255 - 19, so p_0 = 2^17 - 19 and p_1..p_14 = 2^17 - 1.
+# Precomputed 2*p in this radix, used to keep subtraction non-negative.
+# p = 2^255 - 19, so p_0 = 2^17 - 19 and p_1..p_14 = 2^17 - 1.
 TWO_P = {}
 do
 	TWO_P[1] = 2 * (BASE - 19)
@@ -115,8 +115,8 @@ do
 	end
 end
 
--- Subtract reduced `b` from reduced `a`. Adding 2*p (≡ 0 mod p) first keeps
--- every limb non-negative before the carry.
+# Subtract reduced `b` from reduced `a`. Adding 2*p (≡ 0 mod p) first keeps
+# every limb non-negative before the carry.
 function feSub(a: { number }, b: { number }): { number }
 	out = table.create(LIMBS)
 	for i = 1, LIMBS do
@@ -126,7 +126,7 @@ function feSub(a: { number }, b: { number }): { number }
 	return out
 end
 
--- Multiply a field element by a small (< 2^17) constant.
+# Multiply a field element by a small (< 2^17) constant.
 function feMulConst(a: { number }, k: number): { number }
 	out = table.create(LIMBS)
 	for i = 1, LIMBS do
@@ -136,9 +136,9 @@ function feMulConst(a: { number }, k: number): { number }
 	return out
 end
 
--- Reduce to the canonical representative in [0, p): conditionally subtract p.
--- After carry(), f < 2^255, so at most one subtraction is needed. Adding 19 and
--- checking for a carry past bit 255 tells us whether f >= p.
+# Reduce to the canonical representative in [0, p): conditionally subtract p.
+# After carry(), f < 2^255, so at most one subtraction is needed. Adding 19 and
+# checking for a carry past bit 255 tells us whether f >= p.
 function feFreeze(f: { number })
 	carry(f)
 	c = 19
@@ -149,14 +149,14 @@ function feFreeze(f: { number })
 		c = math.floor(v / BASE)
 	end
 	if c > 0 then
-		-- f + 19 >= 2^255  =>  f >= p; g is f + 19 - 2^255 = f - p.
+		# f + 19 >= 2^255  =>  f >= p; g is f + 19 - 2^255 = f - p.
 		for i = 1, LIMBS do
 			f[i] = g[i]
 		end
 	end
 end
 
--- Square `a` repeatedly, `k` times.
+# Square `a` repeatedly, `k` times.
 function fePow2k(a: { number }, k: number): { number }
 	r = a
 	for _ = 1, k do
@@ -165,36 +165,36 @@ function fePow2k(a: { number }, k: number): { number }
 	return r
 end
 
--- Modular inverse via Fermat: a^(p-2). Uses the standard curve25519 addition
--- chain (djb ref10 fe_invert) to reach the exponent 2^255 - 21.
+# Modular inverse via Fermat: a^(p-2). Uses the standard curve25519 addition
+# chain (djb ref10 fe_invert) to reach the exponent 2^255 - 21.
 function feInvert(z: { number }): { number }
-	t0 = feSquare(z) -- z^2
-	t1 = fePow2k(t0, 2) -- z^8
-	t1 = feMul(z, t1) -- z^9
-	t0 = feMul(t0, t1) -- z^11
-	t2 = feSquare(t0) -- z^22
-	t1 = feMul(t1, t2) -- z^(2^5 - 1)
+	t0 = feSquare(z) # z^2
+	t1 = fePow2k(t0, 2) # z^8
+	t1 = feMul(z, t1) # z^9
+	t0 = feMul(t0, t1) # z^11
+	t2 = feSquare(t0) # z^22
+	t1 = feMul(t1, t2) # z^(2^5 - 1)
 	t2 = fePow2k(t1, 5)
-	t1 = feMul(t2, t1) -- 2^10 - 1
+	t1 = feMul(t2, t1) # 2^10 - 1
 	t2 = fePow2k(t1, 10)
-	t2 = feMul(t2, t1) -- 2^20 - 1
+	t2 = feMul(t2, t1) # 2^20 - 1
 	t3 = fePow2k(t2, 20)
-	t2 = feMul(t3, t2) -- 2^40 - 1
+	t2 = feMul(t3, t2) # 2^40 - 1
 	t2 = fePow2k(t2, 10)
-	t1 = feMul(t2, t1) -- 2^50 - 1
+	t1 = feMul(t2, t1) # 2^50 - 1
 	t2 = fePow2k(t1, 50)
-	t2 = feMul(t2, t1) -- 2^100 - 1
+	t2 = feMul(t2, t1) # 2^100 - 1
 	t3 = fePow2k(t2, 100)
-	t2 = feMul(t3, t2) -- 2^200 - 1
+	t2 = feMul(t3, t2) # 2^200 - 1
 	t2 = fePow2k(t2, 50)
-	t1 = feMul(t2, t1) -- 2^250 - 1
+	t1 = feMul(t2, t1) # 2^250 - 1
 	t1 = fePow2k(t1, 5)
-	return feMul(t1, t0) -- 2^255 - 21
+	return feMul(t1, t0) # 2^255 - 21
 end
 
--- === encode / decode =====================================================
+# === encode / decode =====================================================
 
--- Decode 32 little-endian bytes into a field element (15 limbs of 17 bits).
+# Decode 32 little-endian bytes into a field element (15 limbs of 17 bits).
 function feFromBytes(buf: buffer): { number }
 	limbs = feZero()
 	acc = 0
@@ -213,7 +213,7 @@ function feFromBytes(buf: buffer): { number }
 	return limbs
 end
 
--- Encode a field element into 32 little-endian bytes (canonical form).
+# Encode a field element into 32 little-endian bytes (canonical form).
 function feToBytes(f: { number }): buffer
 	feFreeze(f)
 	out = buffer.create(32)
@@ -238,11 +238,11 @@ function feToBytes(f: { number }): buffer
 	return out
 end
 
--- === scalar / ladder =====================================================
+# === scalar / ladder =====================================================
 
--- Constant-time conditional swap of two field elements, in place.
--- With swapv in {0,1}: a'[i] = a[i] - swap*(a[i]-b[i]), which is a[i] when
--- swap=0 and b[i] when swap=1. Branch-free.
+# Constant-time conditional swap of two field elements, in place.
+# With swapv in {0,1}: a'[i] = a[i] - swap*(a[i]-b[i]), which is a[i] when
+# swap=0 and b[i] when swap=1. Branch-free.
 function cswap(swapv: number, a: { number }, b: { number })
 	for i = 1, LIMBS do
 		ai = a[i]
@@ -252,7 +252,7 @@ function cswap(swapv: number, a: { number }, b: { number })
 	end
 end
 
--- Clamp a 32-byte scalar per RFC 7748 and return a copy.
+# Clamp a 32-byte scalar per RFC 7748 and return a copy.
 function clampScalar(scalar: buffer): buffer
 	s = buffer.create(32)
 	buffer.copy(s, 0, scalar, 0, 32)
@@ -262,7 +262,7 @@ function clampScalar(scalar: buffer): buffer
 	return s
 end
 
--- Extract bit `t` (0-based) from a little-endian byte buffer.
+# Extract bit `t` (0-based) from a little-endian byte buffer.
 function scalarBit(s: buffer, t: number): number
 	byte = buffer.readu8(s, t // 8)
 	return bit32.band(bit32.rshift(byte, t % 8), 1)
@@ -271,15 +271,15 @@ end
 x25519.SCALAR_SIZE = 32
 x25519.POINT_SIZE = 32
 
--- Compute the X25519 scalar multiplication of `scalar` (32 bytes) and the
--- u-coordinate `uBytes` (32 bytes). Returns the resulting 32-byte u-coordinate.
+# Compute the X25519 scalar multiplication of `scalar` (32 bytes) and the
+# u-coordinate `uBytes` (32 bytes). Returns the resulting 32-byte u-coordinate.
 function x25519.scalarMult(scalar: buffer, uBytes: buffer): buffer
 	assert(buffer.len(scalar) == 32, "scalar must be 32 bytes")
 	assert(buffer.len(uBytes) == 32, "u-coordinate must be 32 bytes")
 
 	k = clampScalar(scalar)
 
-	-- Decode u with the high bit of the last byte masked off (RFC 7748).
+	# Decode u with the high bit of the last byte masked off (RFC 7748).
 	uMasked = buffer.create(32)
 	buffer.copy(uMasked, 0, uBytes, 0, 32)
 	buffer.writeu8(uMasked, 31, bit32.band(buffer.readu8(uMasked, 31), 127))
@@ -314,7 +314,7 @@ function x25519.scalarMult(scalar: buffer, uBytes: buffer): buffer
 		z3 = feMul(x1, feSquare(daMinusCb))
 
 		x2 = feMul(AA, BB)
-		-- a24 = 121665
+		# a24 = 121665
 		z2 = feMul(E, feAdd(AA, feMulConst(E, 121665)))
 	end
 
@@ -325,12 +325,12 @@ function x25519.scalarMult(scalar: buffer, uBytes: buffer): buffer
 	return feToBytes(result)
 end
 
--- The Curve25519 base point u = 9.
+# The Curve25519 base point u = 9.
 BASEPOINT = buffer.create(32)
 buffer.writeu8(BASEPOINT, 0, 9)
 x25519.BASEPOINT = BASEPOINT
 
--- Derive the public key for a given 32-byte secret scalar.
+# Derive the public key for a given 32-byte secret scalar.
 function x25519.publicKey(secret: buffer): buffer
 	return x25519.scalarMult(secret, BASEPOINT)
 end

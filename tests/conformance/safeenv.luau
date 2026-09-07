@@ -1,8 +1,8 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("safeenv reset")
 
 function envChangeInMetamethod()
-	-- declare constant so that at O2 this test doesn't interfere with constant folding which we can't deoptimize
+	# declare constant so that at O2 this test doesn't interfere with constant folding which we can't deoptimize
 	ten = null
 	ten = 10
 

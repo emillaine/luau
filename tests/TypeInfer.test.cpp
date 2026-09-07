@@ -162,11 +162,11 @@ TEST_CASE_FIXTURE(Fixture, "infer_in_nocheck_mode")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!nocheck
+        #!nocheck
         function f(x)
             return x
         end
-         -- we get type information even if there's type errors
+         # we get type information even if there's type errors
         f(1, 2)
     )");
 
@@ -178,7 +178,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_in_nocheck_mode")
 TEST_CASE_FIXTURE(Fixture, "obvious_type_error_in_nocheck_mode")
 {
     CheckResult result = check(R"(
-        --!nocheck
+        #!nocheck
         const x: string = 5
     )");
 
@@ -282,7 +282,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_ice_when_failing_the_occurs_check")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const s = null
         s(s, 'a')
     )");
@@ -292,7 +292,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_ice_when_failing_the_occurs_check")
 TEST_CASE_FIXTURE(Fixture, "occurs_check_does_not_recurse_forever_if_asked_to_traverse_a_cyclic_type")
 {
     CheckResult result = check(R"(
-         --!strict
+         #!strict
         function u(t, w)
             u(u, t)
         end
@@ -304,7 +304,7 @@ TEST_CASE_FIXTURE(Fixture, "occurs_check_does_not_recurse_forever_if_asked_to_tr
 TEST_CASE_FIXTURE(Fixture, "crazy_complexity")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         A:A():A():A():A():A():A():A():A():A():A():A()
     )");
 }
@@ -354,27 +354,27 @@ TEST_CASE_FIXTURE(Fixture, "should_be_able_to_infer_this_without_stack_overflowi
 TEST_CASE_FIXTURE(Fixture, "exponential_blowup_from_copying_types")
 {
     CheckResult result = check(R"(
-        --!strict
-        -- An example of exponential blowup in number of types
-        -- The problem is that if we define function f(a) return x end
-        -- then this has type <t>(t)->T where x:T
-        -- *but* it copies T each time f is applied
-        -- so { left = f("hi"), right = f(5) }
-        -- has type { left : T_L, right : T_R }
-        -- where T_L and T_R are copies of T.
-        -- x0 : T0 where T0 = {}
+        #!strict
+        # An example of exponential blowup in number of types
+        # The problem is that if we define function f(a) return x end
+        # then this has type <t>(t)->T where x:T
+        # *but* it copies T each time f is applied
+        # so { left = f("hi"), right = f(5) }
+        # has type { left : T_L, right : T_R }
+        # where T_L and T_R are copies of T.
+        # x0 : T0 where T0 = {}
         const x0 = {}
-        -- f0 : <t>(t)->T0
+        # f0 : <t>(t)->T0
         function f0(a) return x0 end
-        -- x1 : T1 where T1 = { left : T0_L, right : T0_R }
+        # x1 : T1 where T1 = { left : T0_L, right : T0_R }
         const x1 = { left = f0("hi"), right = f0(5) }
-        -- f1 : <t>(t)->T1
+        # f1 : <t>(t)->T1
         function f1(a) return x1 end
-        -- x2 : T2 where T2 = { left : T1_L, right : T1_R }
+        # x2 : T2 where T2 = { left : T1_L, right : T1_R }
         const x2 = { left = f1("hi"), right = f1(5) }
-        -- f2 : <t>(t)->T2
+        # f2 : <t>(t)->T2
         function f2(a) return x2 end
-        -- etc etc
+        # etc etc
         const x3 = { left = f2("hi"), right = f2(5) }
         function f3(a) return x3 end
         const x4 = { left = f3("hi"), right = f3(5) }
@@ -481,7 +481,7 @@ TEST_CASE_FIXTURE(Fixture, "globals")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         export foo: any = true
         foo = "now i'm a string!"
     )");
@@ -496,7 +496,7 @@ TEST_CASE_FIXTURE(Fixture, "globals2")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         export foo: () -> (...any) = function() return 1 end
         foo = "now i'm a string!"
     )");
@@ -513,7 +513,7 @@ TEST_CASE_FIXTURE(Fixture, "globals2")
 TEST_CASE_FIXTURE(Fixture, "globals_are_banned_in_strict_mode")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const x = foo
     )");
 
@@ -531,7 +531,7 @@ TEST_CASE_FIXTURE(Fixture, "correctly_scope_locals_do")
             const a = 1
         end
 
-        const b = a -- oops!
+        const b = a # oops!
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -546,7 +546,7 @@ TEST_CASE_FIXTURE(Fixture, "checking_should_not_ice")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CHECK_NOTHROW(check(R"(
-        --!nonstrict
+        #!nonstrict
         f,g = ...
         f(g(...))[...] = null
         f,xpcall = ...
@@ -559,7 +559,7 @@ TEST_CASE_FIXTURE(Fixture, "checking_should_not_ice")
 TEST_CASE_FIXTURE(Fixture, "cyclic_follow")
 {
     check(R"(
---!nonstrict
+#!nonstrict
 l0,table,_,_,_ = ...
 _,_,_,_.time(...)._.n0,l0,_ = function(l0)
 end,_.__index,(_),_.time(_.n0 or _,...)
@@ -573,7 +573,7 @@ do end
 TEST_CASE_FIXTURE(Fixture, "cyclic_follow_2")
 {
     check(R"(
---!nonstrict
+#!nonstrict
 n13,_,table,_,l0,_,_ = ...
 _,n0[(_)],_,_._(...)._.n39,l0,_._ = function(l84,...)
 end,_.__index,"",_,l0._(null)
@@ -640,7 +640,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tc_after_error_recovery_no_replacement_name_
         DOES_NOT_PASS_NEW_SOLVER_GUARD();
         getFrontend().setLuauSolverMode(!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old);
         CheckResult result = check(R"(
-            --!strict
+            #!strict
             const t = { x = 10, y = 20 }
             return t.
         )");
@@ -651,7 +651,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tc_after_error_recovery_no_replacement_name_
     {
         getFrontend().setLuauSolverMode(!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old);
         CheckResult result = check(R"(
-            --!strict
+            #!strict
             export type = number
             export type = string
         )");
@@ -663,7 +663,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tc_after_error_recovery_no_replacement_name_
         DOES_NOT_PASS_NEW_SOLVER_GUARD();
         getFrontend().setLuauSolverMode(!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old);
         CheckResult result = check(R"(
-            --!strict
+            #!strict
             function string.() end
         )");
 
@@ -673,7 +673,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tc_after_error_recovery_no_replacement_name_
     {
         getFrontend().setLuauSolverMode(!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old);
         CheckResult result = check(R"(
-            --!strict
+            #!strict
             function () end
             function () end
         )");
@@ -684,7 +684,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "tc_after_error_recovery_no_replacement_name_
     {
         getFrontend().setLuauSolverMode(!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old);
         CheckResult result = check(R"(
-            --!strict
+            #!strict
             const dm = {}
             function dm.() end
             function dm.() end
@@ -724,7 +724,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_expr_should_be_checked")
 TEST_CASE_FIXTURE(Fixture, "stringify_nested_unions_with_optionals")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const a: number | (string | boolean) | null = null
         const b: number = a
     )");
@@ -780,7 +780,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_ice_on_astexprerror")
 TEST_CASE_FIXTURE(Fixture, "luau_resolves_symbols_the_same_way_lua_does")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function Funky()
             const a: number = foo
         end
@@ -859,7 +859,7 @@ TEST_CASE_FIXTURE(Fixture, "no_infinite_loop_when_trying_to_unify_uh_this")
 TEST_CASE_FIXTURE(BuiltinsFixture, "no_heap_use_after_free_error")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         _ += _:n0(xpcall,_)
         const l0 = null
         do end
@@ -1023,7 +1023,7 @@ TEST_CASE_FIXTURE(Fixture, "tc_interpolated_string_constant_type")
 TEST_CASE_FIXTURE(Fixture, "free_types_introduced_within_control_flow_constructs_do_not_get_an_elevated_TypeLevel")
 {
     check(R"(
-        --!strict
+        #!strict
         if _ then
             _[_], _ = null
             _()
@@ -1151,8 +1151,8 @@ TEST_CASE_FIXTURE(Fixture, "cli_50041_committing_txnlog_in_apollo_client_error")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!strict
-        --!nolint
+        #!strict
+        #!nolint
 
         type FieldSpecifier = {
             fieldName: string,
@@ -1330,8 +1330,8 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_checking_of_higher_order_function")
     CheckResult result = check(R"(
         function higher(cb: (number) -> ()) end
 
-        higher(function(n)      -- no error here.  n : number
-            const e: string = n -- error here.  n /: string
+        higher(function(n)      # no error here.  n : number
+            const e: string = n # error here.  n /: string
         end)
     )");
 
@@ -1345,7 +1345,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_checking_of_higher_order_function")
 TEST_CASE_FIXTURE(BuiltinsFixture, "it_is_ok_to_have_inconsistent_number_of_return_values_in_nonstrict")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function validate(stats, hits, misses)
             const checked = {}
 
@@ -1402,9 +1402,9 @@ const b = typeof(foo) != 'null'
 TEST_CASE_FIXTURE(Fixture, "occurs_isnt_always_failure")
 {
     CheckResult result = check(R"(
-function f(x, c)                   -- x : X
-    y = if c then x else null -- y : X?
-    const z = if c then x else null -- z : X?
+function f(x, c)                   # x : X
+    y = if c then x else null # y : X?
+    const z = if c then x else null # z : X?
     y = z
 end
     )");
@@ -1535,7 +1535,7 @@ TEST_CASE_FIXTURE(Fixture, "handle_self_referential_HasProp_constraints")
             const topMostOpaquePage = null
             if self.props.avatarRoute then
                 topMostOpaquePage = self.props.avatarRoute.opaque.name
-                --                  ^--------------------------------^
+                #                  ^#------------------------------^
             else
                 topMostOpaquePage = self.props.opaquePage
             end
@@ -1557,7 +1557,7 @@ TEST_CASE_FIXTURE(Fixture, "promote_tail_type_packs")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         const A: any = null
 
@@ -1779,7 +1779,7 @@ TEST_CASE_FIXTURE(Fixture, "visit_error_nodes_in_lvalue")
     // be used during typechecking. We didn't descend into error nodes
     // in lvalue positions.
     LUAU_REQUIRE_ERRORS(check(R"(
-        --!strict
+        #!strict
         (as,
     )"));
 }
@@ -1789,7 +1789,7 @@ TEST_CASE_FIXTURE(Fixture, "avoid_blocking_type_function")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_CHECK_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function foo(a : string?)
             const b = a or ""
             return b:upper()
@@ -1802,7 +1802,7 @@ TEST_CASE_FIXTURE(Fixture, "avoid_double_reference_to_free_type")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_CHECK_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function wtf(name: string?)
             message = null
             message = "invalid alternate fiber: " .. (name or "UNNAMED alternate")
@@ -1815,7 +1815,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_types_of_globals")
     ScopedFastFlag sff_LuauSolverV2{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         foo = 5
         print(foo)
         print(bar)
@@ -2287,7 +2287,7 @@ TEST_CASE_FIXTURE(Fixture, "self_bound_due_to_compound_assign")
     )");
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function MT_UPDATE(CAMERA: Camera, Enum: any, totalOffsets: number, focusToCFrame: number, magnitude: number)
             if CAMERA.CameraType != Enum.CameraType.Custom then
                 return
@@ -2295,7 +2295,7 @@ TEST_CASE_FIXTURE(Fixture, "self_bound_due_to_compound_assign")
 
             goalCFrame = (CAMERA.CFrame) * totalOffsets
             if goalCFrame != CAMERA.CFrame then
-                goalCFrame -= (focusToCFrame * magnitude) -- Offset the goalCFrame the raycast direction based on the cutoff distance.
+                goalCFrame -= (focusToCFrame * magnitude) # Offset the goalCFrame the raycast direction based on the cutoff distance.
             end
         end
 
@@ -2315,7 +2315,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "config_reader_example")
         return;
 
     fileResolver.source["game/ConfigReader"] = R"(
-        --!strict
+        #!strict
         const ConfigReader = {}
         ConfigReader.Defaults = {}
 
@@ -2348,7 +2348,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "config_reader_example")
     )";
 
     fileResolver.source["game/Util"] = R"(
-        --!strict
+        #!strict
         const ConfigReader = require(script.Parent.ConfigReader)
         const _ = ConfigReader:read("foobar")()
     )";
@@ -2359,19 +2359,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "config_reader_example")
 TEST_CASE_FIXTURE(BuiltinsFixture, "is_safe_integer_example")
 {
     fileResolver.source["game/isInteger"] = R"(
-        --!strict
+        #!strict
         return function(value)
             return type(value) == "number" and value != math.huge and value == math.floor(value)
         end
     )";
 
     fileResolver.source["game/MAX_SAFE_INTEGER"] = R"(
-        --!strict
+        #!strict
         return 42
     )";
 
     fileResolver.source["game/Util"] = R"(
-        --!strict
+        #!strict
         const isInteger = require(script.Parent.isInteger)
         const MAX_SAFE_INTEGER = require(script.Parent.MAX_SAFE_INTEGER)
         return function(value)
@@ -2455,7 +2455,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1815_verbatim")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult results = check(R"(
-        --!strict
+        #!strict
         export item: "foo" = "bar"
         item = if true then "foo" else "foo"
 
@@ -2627,7 +2627,7 @@ TEST_CASE_FIXTURE(Fixture, "txnlog_checks_for_occurrence_before_self_binding_a_t
             end
             a.b = x
             if x.q != null then
-                f1(x) -- things go bad here
+                f1(x) # things go bad here
             end
         end
 
@@ -2664,7 +2664,7 @@ TEST_CASE_FIXTURE(Fixture, "nested_functions_can_depend_on_outer_generics")
         end
 
         const funcTest = name(null)
-        const out = funcTest(1) -- Doesn't report type mismatch error anymore
+        const out = funcTest(1) # Doesn't report type mismatch error anymore
     )");
 
     CHECK("(null) -> null" == toString(requireType("funcTest")));
@@ -2722,7 +2722,7 @@ export type t12 = {
 TEST_CASE_FIXTURE(BuiltinsFixture, "any_type_in_function_argument_should_not_error")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(u: string) end
 
         const t: {[any]: any} = {}
@@ -2751,7 +2751,7 @@ TEST_CASE_FIXTURE(Fixture, "captured_globals_are_not_blocked")
     // We do not care about the errors here, only that there are no internal
     // types in the final typed AST.
     LUAU_REQUIRE_ERRORS(check(R"(
-        --!strict
+        #!strict
         const Cancelled: boolean = false
 
         function Start()
@@ -2785,7 +2785,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_table_with_optional_indexer_val
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Bar = {x: number}
         type Foo = {[string]: Bar?}
 
@@ -2804,7 +2804,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_local_table_with_optional_index
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type TypeA = {Value: any}
 
         const list = {} as {[string]: TypeA?}
@@ -2823,7 +2823,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "2236_iterate_over_table_with_values_as_optio
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t: { number? } = {}
 
         for _, v in t do

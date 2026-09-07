@@ -122,23 +122,23 @@ TEST_CASE_FIXTURE(Fixture, "slightly_more_complex")
 TEST_CASE_FIXTURE(Fixture, "reorder_functions_after_dependent_assigns")
 {
     AstStatBlock* program = parse(R"(
-        const T = {}                -- 0
+        const T = {}                # 0
 
-        function T.a()              -- 1 depends on (2)
+        function T.a()              # 1 depends on (2)
             T.b()
         end
 
-        function T.b()              -- 2 depends on (4)
+        function T.b()              # 2 depends on (4)
             T.c()
         end
 
-        function make_function()    -- 3
+        function make_function()    # 3
             return function() end
         end
 
-        T.c = make_function()       -- 4 depends on (3)
+        T.c = make_function()       # 4 depends on (3)
 
-        T.a()                       -- 5 depends on (1)
+        T.a()                       # 5 depends on (1)
     )");
 
     auto sorted = toposort(*program);
@@ -156,23 +156,23 @@ TEST_CASE_FIXTURE(Fixture, "reorder_functions_after_dependent_assigns")
 TEST_CASE_FIXTURE(Fixture, "dont_reorder_assigns")
 {
     AstStatBlock* program = parse(R"(
-        const T = {}                -- 0
+        const T = {}                # 0
 
-        function T.a()              -- 1 depends on (2)
+        function T.a()              # 1 depends on (2)
             T.b()
         end
 
-        function T.b()              -- 2 depends on (5)
+        function T.b()              # 2 depends on (5)
             T.c()
         end
 
-        function make_function()    -- 3
+        function make_function()    # 3
             return function() end
         end
 
-        T.a()                       -- 4 depends on (1 -> 2 -> 5), but we cannot reorder it after 5!
+        T.a()                       # 4 depends on (1 -> 2 -> 5), but we cannot reorder it after 5!
 
-        T.c = make_function()       -- 5 depends on (3)
+        T.c = make_function()       # 5 depends on (3)
     )");
 
     auto sorted = toposort(*program);
@@ -211,18 +211,18 @@ TEST_CASE_FIXTURE(Fixture, "dont_reorder_function_after_assignment_to_global")
 TEST_CASE_FIXTURE(Fixture, "local_functions_need_sorting_too")
 {
     AstStatBlock* program = parse(R"(
-        a = null                       -- 0
+        a = null                       # 0
 
-        function f()                  -- 1 depends on 4
+        function f()                  # 1 depends on 4
             a.c = 4
         end
 
-        function g()                  -- 2 depends on 1
+        function g()                  # 2 depends on 1
             f()
         end
 
-        a = {}                              -- 3
-        a.c = null                           -- 4
+        a = {}                              # 3
+        a.c = null                           # 4
     )");
 
     auto sorted = toposort(*program);
@@ -243,12 +243,12 @@ TEST_CASE_FIXTURE(Fixture, "dont_force_checking_until_an_AstExprCall_needs_the_s
             _G.C(obj)
         end
 
-        const B = _G.A             -- It would be an error to force checking of A at this point just because the definition of B is an imperative
+        const B = _G.A             # It would be an error to force checking of A at this point just because the definition of B is an imperative
 
         function _G.C(player)
         end
 
-        const D = _G.A(null)        -- The real dependency on A is here, where A is invoked.
+        const D = _G.A(null)        # The real dependency on A is here, where A is invoked.
     )");
 
     auto sorted = toposort(*program);

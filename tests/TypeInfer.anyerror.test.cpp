@@ -349,7 +349,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_of_any_can_be_a_table")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
---!strict
+#!strict
 export T: any = null as any
 T = {}
 T.__index = T
@@ -369,7 +369,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "type_error_addition")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 const foo = makesandwich()
 const bar = foo.nutrition + 100
     )");
@@ -397,7 +397,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "union_of_types_regression_test")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
---!strict
+#!strict
 export stat = null
 stat = stat and tonumber(stat) or stat
     )");

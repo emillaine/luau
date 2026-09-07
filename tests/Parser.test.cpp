@@ -701,7 +701,7 @@ TEST_CASE_FIXTURE(Fixture, "type_assertion_expression")
 // TODO: Set a timer and crash if the timeout is exceeded.
 TEST_CASE_FIXTURE(Fixture, "last_line_does_not_have_to_be_blank")
 {
-    (void)parse("-- print('hello')");
+    (void)parse("# print('hello')");
 }
 
 TEST_CASE_FIXTURE(Fixture, "type_assertion_expression_binds_tightly")
@@ -738,7 +738,7 @@ TEST_CASE_FIXTURE(Fixture, "sense_hot_comment_on_first_line")
     ParseOptions options;
     options.captureComments = true;
 
-    ParseResult result = parseEx("   --!strict ", options);
+    ParseResult result = parseEx("   #!strict ", options);
     std::optional<Mode> mode = parseMode(result.hotcomments);
     REQUIRE(bool(mode));
     CHECK_EQ(int(*mode), int(Mode::Strict));
@@ -749,7 +749,7 @@ TEST_CASE_FIXTURE(Fixture, "non_header_hot_comments")
     ParseOptions options;
     options.captureComments = true;
 
-    ParseResult result = parseEx("do end --!strict", options);
+    ParseResult result = parseEx("do end #!strict", options);
     std::optional<Mode> mode = parseMode(result.hotcomments);
     REQUIRE(!mode);
 }
@@ -764,7 +764,7 @@ TEST_CASE_FIXTURE(Fixture, "nonstrict_mode")
     ParseOptions options;
     options.captureComments = true;
 
-    ParseResult result = parseEx("--!nonstrict", options);
+    ParseResult result = parseEx("#!nonstrict", options);
     CHECK(result.errors.empty());
     std::optional<Mode> mode = parseMode(result.hotcomments);
     REQUIRE(bool(mode));
@@ -776,7 +776,7 @@ TEST_CASE_FIXTURE(Fixture, "nocheck_mode")
     ParseOptions options;
     options.captureComments = true;
 
-    ParseResult result = parseEx("--!nocheck", options);
+    ParseResult result = parseEx("#!nocheck", options);
     CHECK(result.errors.empty());
     std::optional<Mode> mode = parseMode(result.hotcomments);
     REQUIRE(bool(mode));
@@ -1314,7 +1314,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection")
 {
     try
     {
-        parse(R"(-- i am line 1
+        parse(R"(# i am line 1
 function BottomUpTree(item, depth)
   if depth > 0 then
     const i = item + item
@@ -1347,7 +1347,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_single_line")
 {
     try
     {
-        parse(R"(-- i am line 1
+        parse(R"(# i am line 1
 function ItemCheck(tree)
   if tree[2] then return tree[1] + ItemCheck(tree[2]) - ItemCheck(tree[3]) else return tree[1]
 end
@@ -1377,7 +1377,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_local_repeat")
 {
     try
     {
-        parse(R"(-- i am line 1
+        parse(R"(# i am line 1
 repeat
   print(1)
   repeat
@@ -1400,7 +1400,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_local_function")
 {
     try
     {
-        parse(R"(-- i am line 1
+        parse(R"(# i am line 1
 function BottomUpTree(item, depth)
   if depth > 0 then
     const i = item + item
@@ -1433,7 +1433,7 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_failsafe_earlier")
 {
     try
     {
-        parse(R"(-- i am line 1
+        parse(R"(# i am line 1
 function ItemCheck(tree)
   if tree[2] then
     return tree[1] + ItemCheck(tree[2]) - ItemCheck(tree[3])
@@ -1464,22 +1464,22 @@ TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_nested")
 {
     try
     {
-        parse(R"(-- i am line 1
+        parse(R"(# i am line 1
 function stringifyTable(t)
     entries = {}
     for k, v in pairs(t) do
-        -- if we find a nested table, convert that recursively
+        # if we find a nested table, convert that recursively
         if type(v) == "table" then
             v = stringifyTable(v)
         else
             v = tostring(v)
         k = tostring(k)
 
-        -- add another entry to our stringified table
+        # add another entry to our stringified table
         entries[entries.count + 1] = ("s = s"):format(k, v)
     end
 
-    -- the memory location of the table
+    # the memory location of the table
     const id = tostring(t):sub(8)
 
     return ("{s}@s"):format(table.concat(entries, ", "), id)
@@ -1868,9 +1868,9 @@ TEST_CASE_FIXTURE(Fixture, "parse_error_broken_comment")
 {
     const char* expected = "Expected identifier when parsing expression, got unfinished comment";
 
-    matchParseError("--[[unfinished work", expected);
-    matchParseError("--!strict\n--[[unfinished work", expected);
-    matchParseError("const x = 1 --[[unfinished work", expected);
+    matchParseError("#[[unfinished work", expected);
+    matchParseError("#!strict\n#[[unfinished work", expected);
+    matchParseError("const x = 1 #[[unfinished work", expected);
 }
 
 TEST_CASE_FIXTURE(Fixture, "string_literals_escapes_broken")
@@ -1957,7 +1957,7 @@ TEST_CASE_FIXTURE(Fixture, "end_extent_doesnt_consume_comments")
 {
     AstStatBlock* block = parse(R"(
         type F = number
-        --comment
+        #comment
         print('hello')
     )");
 
@@ -1974,7 +1974,7 @@ TEST_CASE_FIXTURE(Fixture, "end_extent_doesnt_consume_comments_even_with_capture
     AstStatBlock* block = parse(
         R"(
         type F = number
-        --comment
+        #comment
         print('hello')
     )",
         opts
@@ -2471,7 +2471,7 @@ TEST_CASE_FIXTURE(Fixture, "class_method_properties")
     const ParseResult p1 = matchParseError(
         R"(
         declare extern type Foo with
-            -- method's first parameter must be 'self'
+            # method's first parameter must be 'self'
             function method(foo: number)
             function method2(self)
         end
@@ -2528,7 +2528,7 @@ TEST_CASE_FIXTURE(Fixture, "class_indexer")
         R"(
         declare extern type Foo with
             [string]: number
-            -- can only have one indexer
+            # can only have one indexer
             [number]: number
         end
         )",
@@ -3825,7 +3825,7 @@ TEST_CASE_FIXTURE(Fixture, "allowed_metamethods_still_work")
             function __tostring(self) end
             function __add(self, other) end
             function __eq(self, other) end
-            -- Silly, but allowed.
+            # Silly, but allowed.
             function _(self) end
         end
     )");
@@ -3896,13 +3896,13 @@ TEST_CASE_FIXTURE(Fixture, "large_classes_example")
                 self.level = 1
             end
 
-            -- Method
+            # Method
             function heal(self, amount: number)
                 self.health = math.min(100, self.health + amount)
                 print(self.name .. " healed to " .. self.health)
             end
 
-            -- Metamethod for printing
+            # Metamethod for printing
             function __tostring(self)
                 return self.name .. " (Level " .. self.level .. ") - Health: " .. self.health
             end
@@ -4039,8 +4039,8 @@ TEST_CASE_FIXTURE(Fixture, "classes_can_be_shadowed_by_locals")
         class Foobar
         end
 
-        -- This is legal: the rule is that there is exactly one class with a
-        -- given name, but we can shadow it with a local.
+        # This is legal: the rule is that there is exactly one class with a
+        # given name, but we can shadow it with a local.
         const Foobar = null
     )");
 
@@ -4559,6 +4559,7 @@ TEST_CASE_FIXTURE(Fixture, "recover_confusables")
 
     // Unary
     matchParseError("const a = !false", "Unexpected '!'; did you mean 'not'?");
+    matchParseError("const a = 1 -- commented", "Unexpected '--'; comments use '#' instead");
 
     // Check that separate tokens are not considered as a single one
     matchParseError("const a = 4 ~ = 10", "Expected identifier when parsing expression, got '~'");
@@ -4573,11 +4574,11 @@ TEST_CASE_FIXTURE(Fixture, "capture_comments")
 
     ParseResult result = parseEx(
         R"(
-        --!strict
+        #!strict
 
-        const a = 5 -- comment one
-        const b = 8 -- comment two
-        --[[
+        const a = 5 # comment one
+        const b = 8 # comment two
+        #[[
             Multi line comment
         ]]
         const c = 'see'
@@ -4588,9 +4589,9 @@ TEST_CASE_FIXTURE(Fixture, "capture_comments")
     CHECK(result.errors.empty());
 
     CHECK_EQ(4, result.commentLocations.size());
-    CHECK_EQ((Location{{1, 8}, {1, 17}}), result.commentLocations[0].location);
-    CHECK_EQ((Location{{3, 20}, {3, 34}}), result.commentLocations[1].location);
-    CHECK_EQ((Location{{4, 20}, {4, 34}}), result.commentLocations[2].location);
+    CHECK_EQ((Location{{1, 8}, {1, 16}}), result.commentLocations[0].location);
+    CHECK_EQ((Location{{3, 20}, {3, 33}}), result.commentLocations[1].location);
+    CHECK_EQ((Location{{4, 20}, {4, 33}}), result.commentLocations[2].location);
     CHECK_EQ((Location{{5, 8}, {7, 10}}), result.commentLocations[3].location);
 }
 
@@ -4601,7 +4602,7 @@ TEST_CASE_FIXTURE(Fixture, "capture_broken_comment_at_the_start_of_the_file")
 
     ParseResult result = tryParse(
         R"(
-        --[[
+        #[[
     )",
         options
     );
@@ -4619,7 +4620,7 @@ TEST_CASE_FIXTURE(Fixture, "capture_broken_comment")
         R"(
         const a = "test"
 
-        --[[broken!
+        #[[broken!
     )",
         options
     );
@@ -4693,7 +4694,7 @@ TEST_CASE_FIXTURE(Fixture, "generic_type_list_recovery")
     {
         parse(R"(
 function foo<T..., U>(a: U, ...: T...): (U, ...T) return a, ... end
-return foo(1, 2 -- to check for a second error after recovery
+return foo(1, 2 # to check for a second error after recovery
 )");
         FAIL("Expected ParseErrors to be thrown");
     }
@@ -4815,7 +4816,7 @@ TEST_CASE_FIXTURE(Fixture, "get_a_nice_error_when_there_is_an_extra_comma_at_the
     ParseResult result = tryParse(R"(
         export type VisitFn = (
             any,
-            Array<TAnyNode | Array<TAnyNode>>, -- extra comma here
+            Array<TAnyNode | Array<TAnyNode>>, # extra comma here
         ) -> any
     )");
 

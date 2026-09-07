@@ -1,18 +1,18 @@
---!nonstrict
--- x86_64 assembly parser (both AT&T and Intel syntax) producing the common operand
--- model used by the rest of sarcasm. Registers are canonicalized to an encoding number
--- (rax=0..r15=15) plus a width in bits.
---
--- Operand model (shared with the ARM64 parser):
---   { kind="reg",  num, width, name, rc="gpr"|"sp"|"rip", indirect=<bool?> }
---   { kind="imm",  value, text }
---   { kind="sym",  text, reloc=<@PLT/@GOTPCREL/null> }
---   { kind="mem",  base=<reg?>, index=<reg?>, scale=<1|2|4|8>, dispVal=<num?>,
---                  dispSym=<str?>, size=<bytes?>, indirect=<bool?> }
+#!nonstrict
+# x86_64 assembly parser (both AT&T and Intel syntax) producing the common operand
+# model used by the rest of sarcasm. Registers are canonicalized to an encoding number
+# (rax=0..r15=15) plus a width in bits.
+#
+# Operand model (shared with the ARM64 parser):
+#   { kind="reg",  num, width, name, rc="gpr"|"sp"|"rip", indirect=<bool?> }
+#   { kind="imm",  value, text }
+#   { kind="sym",  text, reloc=<@PLT/@GOTPCREL/null> }
+#   { kind="mem",  base=<reg?>, index=<reg?>, scale=<1|2|4|8>, dispVal=<num?>,
+#                  dispSym=<str?>, size=<bytes?>, indirect=<bool?> }
 
 x86parse = {}
 
--- name -> { num, width } ---------------------------------------------------
+# name -> { num, width } #-------------------------------------------------
 REG = {}
 do
 	q = { "rax","rcx","rdx","rbx","rsp","rbp","rsi","rdi",
@@ -29,7 +29,7 @@ do
 		REG[w[i]] = { num = i - 1, width = 16 }
 		REG[b[i]] = { num = i - 1, width = 8 }
 	end
-	REG["ah"] = { num = 0, width = 8 }  -- high byte (rare); treated as reg 0
+	REG["ah"] = { num = 0, width = 8 }  # high byte (rare); treated as reg 0
 end
 
 function classifyReg(name)
@@ -37,16 +37,16 @@ function classifyReg(name)
 	if low == "rip" then return { kind = "reg", rc = "rip", name = "rip", width = 64 } end
 	r = REG[low]
 	if not r then return null end
-	rc = (r.num == 4) and "sp" or "gpr"  -- rsp is the stack pointer
+	rc = (r.num == 4) and "sp" or "gpr"  # rsp is the stack pointer
 	return { kind = "reg", rc = rc, num = r.num, width = r.width, name = low }
 end
 x86parse.classifyReg = classifyReg
 
--- canonical name for (num, width)
+# canonical name for (num, width)
 NAMES = { [64] = {}, [32] = {}, [16] = {}, [8] = {} }
 do
 	for name, r in REG do NAMES[r.width][r.num] = NAMES[r.width][r.num] or name end
-	-- prefer the standard names
+	# prefer the standard names
 	pref64 = { [0]="rax","rcx","rdx","rbx","rsp","rbp","rsi","rdi","r8","r9","r10","r11","r12","r13","r14","r15" }
 	for n, nm in pref64 do NAMES[64][n] = nm end
 end
@@ -54,15 +54,15 @@ function x86parse.regName(num, width)
 	return NAMES[width] and NAMES[width][num] or ("r" .. num)
 end
 
--- PTR size specifier -> bytes
+# PTR size specifier -> bytes
 PTRSIZE = { byte = 1, word = 2, dword = 4, qword = 8, xmmword = 16 }
 
 function trim(s) return (string.gsub(s, "^%s*(.-)%s*$", "%1")) end
 
--- Split an operand string into top-level comma fields, respecting () and [].
+# Split an operand string into top-level comma fields, respecting () and [].
 function splitOperands(s)
 	out, depth, cur = {}, 0, {}
-	for i = 1, #s do
+	for i = 1, s.count do
 		c = string.sub(s, i, i)
 		if c == "(" or c == "[" then depth += 1; table.insert(cur, c)
 		else if c == ")" or c == "]" then depth -= 1; table.insert(cur, c)
@@ -74,7 +74,7 @@ function splitOperands(s)
 	return out
 end
 
--- Parse a symbol reference possibly decorated with @PLT/@GOTPCREL and +disp.
+# Parse a symbol reference possibly decorated with @PLT/@GOTPCREL and +disp.
 function parseSym(text)
 	reloc = null
 	at = string.find(text, "@", 1, true)
@@ -82,7 +82,7 @@ function parseSym(text)
 	return { kind = "sym", text = text, reloc = reloc }
 end
 
--- AT&T operand ------------------------------------------------------------
+# AT&T operand #----------------------------------------------------------
 function parseAttOperand(field)
 	indirect = false
 	if string.sub(field, 1, 1) == "*" then indirect = true; field = string.sub(field, 2) end
@@ -94,7 +94,7 @@ function parseAttOperand(field)
 		r = classifyReg(string.sub(field, 2))
 		if r then r.indirect = indirect; return r end
 	end
-	-- memory: disp(base, index, scale)  [disp and any component optional]
+	# memory: disp(base, index, scale)  [disp and any component optional]
 	pre, inside = string.match(field, "^(.-)%((.*)%)$")
 	if inside != null then
 		mem = { kind = "mem", scale = 1, indirect = indirect }
@@ -110,21 +110,21 @@ function parseAttOperand(field)
 		if parts[3] and parts[3] != "" then mem.scale = tonumber(parts[3]) or 1 end
 		return mem
 	end
-	-- bare symbol / label / number
+	# bare symbol / label / number
 	if string.match(field, "^-?%d") or string.match(field, "^0[xX]") then
 		return { kind = "imm", text = field, value = tonumber(field) }
 	end
 	s = parseSym(field); s.indirect = indirect; return s
 end
 
--- Intel operand -----------------------------------------------------------
+# Intel operand #---------------------------------------------------------
 function parseIntelOperand(field)
 	indirect = false
 	size = null
-	-- size specifier: BYTE PTR / WORD PTR / ...
+	# size specifier: BYTE PTR / WORD PTR / ...
 	sz, rest = string.match(field, "^(%a+)%s+PTR%s+(.*)$")
 	if sz and PTRSIZE[string.lower(sz)] then size = PTRSIZE[string.lower(sz)]; field = trim(rest) end
-	-- memory: optional leading disp then [ ... ]  (GAS Intel: `8[rbx]`, `[rbx+8]`, `[rip+sym]`)
+	# memory: optional leading disp then [ ... ]  (GAS Intel: `8[rbx]`, `[rbx+8]`, `[rip+sym]`)
 	pre, inside = string.match(field, "^(.-)%[(.*)%]$")
 	if inside != null then
 		mem = { kind = "mem", scale = 1, size = size }
@@ -133,11 +133,11 @@ function parseIntelOperand(field)
 			n = tonumber(pre)
 			if n then mem.dispVal = n else mem.dispSym = pre end
 		end
-		-- inside: base [+ index*scale] [+/- disp]  (also `rip + sym`)
+		# inside: base [+ index*scale] [+/- disp]  (also `rip + sym`)
 		inside = (string.gsub(inside, "%s+", ""))
-		-- split on + / - keeping sign
+		# split on + / - keeping sign
 		terms = {}
-		i, n = 1, #inside
+		i, n = 1, inside.count
 		sign = 1
 		tok = {}
 		function flush()
@@ -179,22 +179,22 @@ function parseIntelOperand(field)
 	return parseSym(field)
 end
 
--- Strip an AT&T size suffix (movq->mov, addl->add) when the base mnemonic exists in both.
--- We keep the full mnemonic but also record a `.opsize` (bytes) when a suffix is present.
+# Strip an AT&T size suffix (movq->mov, addl->add) when the base mnemonic exists in both.
+# We keep the full mnemonic but also record a `.opsize` (bytes) when a suffix is present.
 ATT_SUFFIX = { b = 1, w = 2, l = 4, q = 8 }
 function attMnemonic(m)
-	-- movzbl/movsbl etc. keep as-is (semantic); only strip a trailing size on plain ops
+	# movzbl/movsbl etc. keep as-is (semantic); only strip a trailing size on plain ops
 	base, suf = string.match(m, "^(.-)([bwlq])$")
-	if base and ATT_SUFFIX[suf] and #base >= 2 then
+	if base and ATT_SUFFIX[suf] and base.count >= 2 then
 		return base, ATT_SUFFIX[suf]
 	end
 	return m, null
 end
 
--- comments: strip `#` to end of line (not inside strings); `;!` handled separately.
+# comments: strip `#` to end of line (not inside strings); `;!` handled separately.
 function stripComment(s)
 	inStr = false
-	for i = 1, #s do
+	for i = 1, s.count do
 		c = string.sub(s, i, i)
 		if c == '"' then inStr = not inStr
 		else if not inStr and c == "#" then return string.sub(s, 1, i - 1) end
@@ -217,11 +217,11 @@ function x86parse.parseString(text, syntax)
 		code, annotation = splitAnnotation(raw)
 		code = stripComment(code)
 		t = trim(code)
-		before = #out
+		before = out.count
 		if t == "" then
 			table.insert(out, { kind = "blank", text = raw, annotation = annotation })
 		else
-			-- peel labels
+			# peel labels
 			while true do
 				name, rest = string.match(t, "^([%w_.$][%w_.$@]*):%s*(.*)$")
 				if not name then break end
@@ -243,10 +243,10 @@ function x86parse.parseString(text, syntax)
 							table.insert(ops, syntax == "att" and parseAttOperand(f) or parseIntelOperand(f))
 						end
 					end
-					-- AT&T lists operands source-first; normalize to dest-first (like Intel/ARM)
-					if syntax == "att" and #ops >= 2 then
+					# AT&T lists operands source-first; normalize to dest-first (like Intel/ARM)
+					if syntax == "att" and ops.count >= 2 then
 						rev = {}
-						for i = #ops, 1, -1 do table.insert(rev, ops[i]) end
+						for i = ops.count, 1, -1 do table.insert(rev, ops[i]) end
 						ops = rev
 					end
 					table.insert(out, { kind = "insn", mnemonic = string.lower(mnem), operands = ops,
@@ -254,8 +254,8 @@ function x86parse.parseString(text, syntax)
 				end
 			end
 		end
-		if annotation and #out > before then out[#out].annotation = annotation end
-		for k = before + 1, #out do out[k].line = out[k].line or lineNo end
+		if annotation and out.count > before then out[out.count].annotation = annotation end
+		for k = before + 1, out.count do out[k].line = out[k].line or lineNo end
 	end
 	return out
 end

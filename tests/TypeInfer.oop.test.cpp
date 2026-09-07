@@ -37,7 +37,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_not_defi
             abs(Arg1)
         end
 
-        someTable.Function1() -- Argument count mismatch
+        someTable.Function1() # Argument count mismatch
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -62,7 +62,7 @@ TEST_CASE_FIXTURE(Fixture, "dont_suggest_using_colon_rather_than_dot_if_it_wont_
             abs(Arg2)
         end
 
-        someTable.Function2() -- Argument count mismatch
+        someTable.Function2() # Argument count mismatch
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -85,9 +85,9 @@ TEST_CASE_FIXTURE(Fixture, "method_depends_on_table")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        -- This catches a bug where x:m didn't count as a use of x
-        -- so toposort would happily reorder a definition of
-        -- function x:m before the definition of x.
+        # This catches a bug where x:m didn't count as a use of x
+        # so toposort would happily reorder a definition of
+        # function x:m before the definition of x.
         export f
         function g() f() end
         const x = {}
@@ -203,7 +203,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
 {
     // CLI-30902
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         type Foo = {
             fooConn: () -> () | null
@@ -219,7 +219,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
             setmetatable(self, Foo)
 
             self.fooConn = function()
-                self:method() -- Key 'method' not found in table self
+                self:method() # Key 'method' not found in table self
             end
 
             return self
@@ -231,11 +231,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "object_constructor_can_refer_to_method_of_se
 
         const foo = Foo.new()
 
-        -- TODO This is the best our current refinement support can offer :(
+        # TODO This is the best our current refinement support can offer :(
         const bar = foo.fooConn
         if bar then bar() end
 
-        -- foo.fooConn()
+        # foo.fooConn()
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -256,7 +256,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "nonstrict_self_mismatch_tail")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const f = {}
         function f:foo(a: number, b: number) end
 
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(Fixture, "inferred_methods_of_free_tables_have_the_same_level_
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_oop")
 {
     CheckResult result = check(R"(
-   --!strict
+   #!strict
 const Class = {}
 Class.__index = Class
 
@@ -473,7 +473,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "promise_type_error_too_complex" * doctest::t
     // Used `luau-reduce` tool to extract a minimal reproduction.
     // Credit: https://github.com/evaera/roblox-lua-promise/blob/v4.0.0/lib/init.lua
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         const Promise = {}
         Promise.prototype = {}
@@ -572,7 +572,7 @@ TEST_CASE_FIXTURE(Fixture, "method_should_not_create_cyclic_type")
 TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_metatable")
 {
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         const cls = {}
         cls.__index = cls
         function cls:abc() return 4 end
@@ -580,7 +580,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_metatable")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const cls = require(game.A)
         const tbl = {}
         setmetatable(tbl, cls)
@@ -667,7 +667,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "textbook_class_pattern_2")
 
         const account = Account.new("Hina", 500)
 
-        if account:hasBalance(123) then -- TypeError: Value of type 'unknown' could be null
+        if account:hasBalance(123) then # TypeError: Value of type 'unknown' could be null
         end
     )");
 
@@ -792,7 +792,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
         return;
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         const Base = {}
         Base.__index = Base
@@ -815,8 +815,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assign_to_prop_of_intersection_of_metatables
         function Sub.new() : Sub
             const self: Sub = setmetatable(Base.new(), Sub) as any
 
-            self.SubString = 5 -- Line 24
-            self.BaseString = 5 -- Line 25
+            self.SubString = 5 # Line 24
+            self.BaseString = 5 # Line 25
 
             return self
         end
@@ -1180,10 +1180,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typecheck_class_annotations")
             public y: number
             public name: string
             function magnitude(self): string
-                -- self.name is not a number
+                # self.name is not a number
                 self.name = self.x
 
-                -- This function is declared to return string.
+                # This function is declared to return string.
                 return math.sqrt(self.x * self.x + self.y * self.y)
             end
         end
@@ -1244,7 +1244,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "writes_to_class_object_properties_are_forbid
             end
 
             function magnitude(self): number
-                return 5 -- stochastic approximation for performance
+                return 5 # stochastic approximation for performance
             end
         end
 
@@ -1288,7 +1288,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "writes_to_unknown_class_instance_properties_
             end
 
             function magnitude(self): number
-                return 5 -- stochastic approximation for performance
+                return 5 # stochastic approximation for performance
             end
         end
 
@@ -1349,14 +1349,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subclass_property_access")
         const Derived = setmetatable({}, Base)
         Derived.__index = Derived
 
-        export type Subclass = setmetatable<Class & { --[[ new members here ]] }, typeof(Derived)>
+        export type Subclass = setmetatable<Class & { #[[ new members here ]] }, typeof(Derived)>
 
         function Derived.new(instance: Instance): Subclass
             return table.freeze(setmetatable(Base.new(instance), Derived))
         end
 
         function Derived.ChangeName(self: Subclass, name: string): ()
-            self.instance.Name = name -- TypeError: Type 'Class' does not have key 'instance'
+            self.instance.Name = name # TypeError: Type 'Class' does not have key 'instance'
         end
 
         return Derived

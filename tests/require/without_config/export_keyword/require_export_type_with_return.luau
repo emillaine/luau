@@ -1,4 +1,4 @@
--- verify type-only exports can coexist with explicit return
+# verify type-only exports can coexist with explicit return
 m = require("./export_type_with_return")
 
 assert(m.value == 42, "explicit return should work with type-only exports")

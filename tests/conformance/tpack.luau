@@ -1,12 +1,12 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 pack = string.pack
 packsize = string.packsize
 unpack = string.unpack
 
 print "testing pack/unpack"
 
--- maximum size for integers
+# maximum size for integers
 NB = 16
 
 sizeshort = packsize("h")
@@ -34,14 +34,14 @@ print("\t" .. (little and "little" or "big") .. " endian")
 print("\talignment: " .. align)
 
 
--- check errors in arguments
+# check errors in arguments
 function checkerror (msg, f, ...)
   status, err = pcall(f, ...)
-  -- print(status, err, msg)
+  # print(status, err, msg)
   assert(not status and string.find(err, msg))
 end
 
--- minimum behavior for integer formats
+# minimum behavior for integer formats
 assert(unpack("B", pack("B", 0xff)) == 0xff)
 assert(unpack("b", pack("b", 0x7f)) == 0x7f)
 assert(unpack("b", pack("b", -0x80)) == -0x80)
@@ -59,13 +59,13 @@ assert(unpack("j", pack("j", 0x7fffffff)) == 0x7fffffff)
 assert(unpack("j", pack("j", -0x80000000)) == -0x80000000)
 
 for i = 1, NB do
-  -- small numbers with signal extension ("\xFF...")
+  # small numbers with signal extension ("\xFF...")
   s = string.rep("\xff", i)
   assert(pack("i" .. i, -1) == s)
   assert(packsize("i" .. i) == s.count)
   assert(unpack("i" .. i, s) == -1)
 
-  -- small unsigned number ("\0...\xAA")
+  # small unsigned number ("\0...\xAA")
   s = "\xAA" .. string.rep("\0", i - 1)
   assert(pack("<I" .. i, 0xAA) == s)
   assert(unpack("<I" .. i, s) == 0xAA)
@@ -74,7 +74,7 @@ for i = 1, NB do
 end
 
 do
-  lnum = 0x060504030201 -- 48-bit
+  lnum = 0x060504030201 # 48-bit
   s = pack("<l", lnum)
   assert(unpack("<l", s) == lnum)
   assert(unpack("<i" .. sizeMI + 1, s .. "\0") == lnum)
@@ -83,12 +83,12 @@ do
   for i = sizeMI + 1, NB do
     s = pack("<l", -lnum)
     assert(unpack("<l", s) == -lnum)
-    -- strings with (correct) extra bytes
+    # strings with (correct) extra bytes
     assert(unpack("<i" .. i, s .. ("\xFF"):rep(i - sizeMI)) == -lnum)
     assert(unpack(">i" .. i, ("\xFF"):rep(i - sizeMI) .. s:reverse()) == -lnum)
     assert(unpack("<I" .. i, s .. ("\0"):rep(i - sizeMI)) == 2^64-lnum)
 
-    -- overflows
+    # overflows
     checkerror("does not fit", unpack, "<I" .. i, ("\x00"):rep(i - 1) .. "\1")
     checkerror("does not fit", unpack, ">i" .. i, "\1" .. ("\x00"):rep(i - 1))
   end
@@ -104,7 +104,7 @@ for i = 1, 4 do
   assert(unpack(">i" .. i, s:reverse()) == n)
 end
 
--- sign extension
+# sign extension
 do
   u = 0xf0
   for i = 1, sizeLI - 1 do
@@ -114,7 +114,7 @@ do
   end
 end
 
--- mixed endianness
+# mixed endianness
 do
   assert(pack(">i2 <i2", 10, 20) == "\0\10\20\0")
   a, b = unpack("<i2 >i2", "\10\0\0\20")
@@ -136,17 +136,17 @@ checkerror("variable%-length format", packsize, "s")
 checkerror("variable%-length format", packsize, "z")
 
 if packsize("i") == 4 then
-  -- result would be 2^31  (2^3 repetitions of 2^28 strings)
+  # result would be 2^31  (2^3 repetitions of 2^28 strings)
   s = string.rep("c268435456", 2^3)
   checkerror("too large", packsize, s)
-  -- one less would be OK... except that we limit string sizes to 1GB
+  # one less would be OK... except that we limit string sizes to 1GB
   s = string.rep("c268435456", 2^3 - 1) .. "c268435453"
   checkerror("too large", packsize, s)
-  -- but 1GB is reachable
+  # but 1GB is reachable
   assert(packsize("c1073741824") == 2^30)
 end
 
--- overflow in packing
+# overflow in packing
 for i = 1, 3 do
   umax = bit32.lshift(1, i * 8) - 1
   max = bit32.rshift(umax, 1)
@@ -180,7 +180,7 @@ for _, n in ipairs{0, -1.1, 1.9, 1/0, -1/0, 1e20, -1e20, 0.1, 2000.7} do
     assert(pack(">d", n) == pack("<d", n):reverse())
 end
 
--- for non-native precisions, test only with "round" numbers
+# for non-native precisions, test only with "round" numbers
 for _, n in ipairs{0, -1.5, 1/0, -1/0, 1e10, -1e9, 0.5, 2000.25} do
   assert(unpack("<f", pack("<f", n)) == n)
   assert(unpack(">f", pack(">f", n)) == n)
@@ -234,7 +234,7 @@ do
 end
 
 
--- testing multiple types and sequence
+# testing multiple types and sequence
 do
   x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
   assert(x.count == packsize("<b h b f d f n i"))
@@ -245,7 +245,7 @@ end
 
 print "testing alignment"
 do
-  assert(pack(" < i1 i2 ", 2, 3) == "\2\3\0")   -- no alignment by default
+  assert(pack(" < i1 i2 ", 2, 3) == "\2\3\0")   # no alignment by default
   x = pack(">!8 b Xh i4 i8 c1 Xi8", -12, 100, 200, "\xEC")
   assert(x.count == packsize(">!8 b Xh i4 i8 c1 Xi8"))
   assert(x == "\xf4" .. "\0\0\0" ..
@@ -268,7 +268,7 @@ do
   a, b, c, pos = unpack("bbXdb", x)
   assert(a == 1 and b == 2 and c == 3 and pos == x.count)
 
-  -- only alignment
+  # only alignment
   assert(packsize("!8 xXi8") == 8)
   pos = unpack("!8 xXi8", "0123456701234567"); assert(pos == 9)
   assert(packsize("!8 xXi2") == 2)
@@ -286,20 +286,20 @@ do
   checkerror("invalid next option", pack, "Xc1")
 end
 
-do    -- testing initial position
+do    # testing initial position
   x = pack("i4i4i4i4", 1, 2, 3, 4)
   for pos = 1, 16, 4 do
     i, p = unpack("i4", x, pos)
     assert(i == math.floor(pos/4) + 1 and p == pos + 4)
   end
 
-  -- with alignment
-  for pos = 0, 12 do    -- will always round position to power of 2
+  # with alignment
+  for pos = 0, 12 do    # will always round position to power of 2
     i, p = unpack("!4 i4", x, pos + 1)
     assert(i == math.floor((pos + 3)/4) + 1 and p == i*4 + 1)
   end
 
-  -- negative indices
+  # negative indices
   i, p = unpack("!4 i4", x, -4)
   assert(i == 4 and p == 17)
   i, p = unpack("!4 i4", x, -7)
@@ -309,7 +309,7 @@ do    -- testing initial position
   i, p = unpack("!4 i4", x, 0)
   assert(i == 1 and p == 5)
 
-  -- limits
+  # limits
   for i = 1, x.count + 1 do
     assert(unpack("c0", x, i) == "")
   end
@@ -317,7 +317,7 @@ do    -- testing initial position
  
 end
 
-do    -- testing out of range values
+do    # testing out of range values
   checkerror("out of limits", unpack, "i17", "")
   checkerror("out of limits", unpack, "i987654321", "")
   checkerror("too large", unpack, "i9876543210", "")

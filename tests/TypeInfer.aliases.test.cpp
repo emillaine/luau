@@ -174,7 +174,7 @@ TEST_CASE_FIXTURE(Fixture, "saturate_to_first_type_pack")
 TEST_CASE_FIXTURE(Fixture, "cyclic_types_of_named_table_fields_do_not_expand_when_stringified")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Node = { Parent: Node?; }
 
         function f(node: Node)
@@ -193,7 +193,7 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_types_of_named_table_fields_do_not_expand_whe
 TEST_CASE_FIXTURE(Fixture, "mutually_recursive_aliases")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type T = { f: number, g: U }
         type U = { h: number, i: T? }
         const x: T = { f = 37, g = { h = 5, i = null } }
@@ -240,7 +240,7 @@ TEST_CASE_FIXTURE(Fixture, "dependent_generic_aliases")
 TEST_CASE_FIXTURE(Fixture, "mutually_recursive_generic_aliases")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type T<a> = { f: a, g: U<a> }
         type U<a> = { h: a, i: T<a>? }
         const x: T<number> = { f = 37, g = { h = 5, i = null } }
@@ -255,7 +255,7 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_generic_aliases")
 TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_errors")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type T<a> = { f: a, g: U<a> }
         type U<b> = { h: b, i: T<b>? }
         const x: T<number> = { f = 37, g = { h = 5, i = null } }
@@ -303,8 +303,8 @@ TEST_CASE_FIXTURE(Fixture, "dont_stop_typechecking_after_reporting_duplicate_typ
 {
     CheckResult result = check(R"(
         type A = number
-        type A = string -- Redefinition of type 'A', previously defined at line 1
-        const foo: string = 1 -- "Type 'number' could not be converted into 'string'"
+        type A = string # Redefinition of type 'A', previously defined at line 1
+        const foo: string = 1 # "Type 'number' could not be converted into 'string'"
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -407,7 +407,7 @@ TEST_CASE_FIXTURE(Fixture, "corecursive_function_types")
 TEST_CASE_FIXTURE(Fixture, "generic_param_remap")
 {
     const std::string code = R"(
-        -- An example of a forwarded use of a type that has different type arguments than parameters
+        # An example of a forwarded use of a type that has different type arguments than parameters
         type A<T,U> = {t:T, u:U, next:A<U,T>?}
         const aa:A<number,string> = { t = 5, u = 'hi', next = { t = 'lo', u = 8 } }
         const bb = aa
@@ -465,7 +465,7 @@ TEST_CASE_FIXTURE(Fixture, "stringify_optional_parameterized_alias")
 
         function visitor<T>(node: Node<T>?, a: Node<T>)
             if node then
-                a = node.child -- Observe the output of the error message.
+                a = node.child # Observe the output of the error message.
             end
         end
     )");
@@ -699,7 +699,7 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_restriction_ok")
 TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_restriction_not_ok_1")
 {
     CheckResult result = check(R"(
-        -- OK because forwarded types are used with their parameters.
+        # OK because forwarded types are used with their parameters.
         type Tree<T> = { data: T, children: Forest<T> }
         type Forest<T> = {Tree<{T}>}
     )");
@@ -710,7 +710,7 @@ TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_restriction_not_ok_1")
 TEST_CASE_FIXTURE(Fixture, "mutually_recursive_types_restriction_not_ok_2")
 {
     CheckResult result = check(R"(
-        -- Not OK because forwarded types are used with different types than their parameters.
+        # Not OK because forwarded types are used with different types than their parameters.
         type Forest<T> = {Tree<{T}>}
         type Tree<T> = { data: T, children: Forest<T> }
     )");
@@ -742,7 +742,7 @@ TEST_CASE_FIXTURE(Fixture, "free_variables_from_typeof_in_aliases")
 {
     CheckResult result = check(R"(
         function f(x) return x[1] end
-        -- x has type X? for a free type variable X
+        # x has type X? for a free type variable X
         const x = f ({})
         type ContainsFree<a> = { this: a, that: typeof(x) }
         type ContainsContainsFree = { that: ContainsFree<number> }
@@ -776,7 +776,7 @@ TEST_CASE_FIXTURE(Fixture, "non_recursive_aliases_that_reuse_a_generic_name")
 TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_quantify_unresolved_aliases")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         const KeyPool = {}
 
@@ -831,7 +831,7 @@ TEST_CASE_FIXTURE(Fixture, "forward_declared_alias_is_not_clobbered_by_prior_uni
             return 1
         end
         type FutureType = { foo: typeof(x()) }
-        const d: FutureType = { smth = true } -- missing error, 'd' is resolved to 'any'
+        const d: FutureType = { smth = true } # missing error, 'd' is resolved to 'any'
     )");
 
     CHECK_EQ("{ foo: number }", toString(requireType("d"), {true}));
@@ -851,7 +851,7 @@ TEST_CASE_FIXTURE(Fixture, "recursive_types_restriction_ok")
 TEST_CASE_FIXTURE(Fixture, "recursive_types_restriction_not_ok")
 {
     CheckResult result = check(R"(
-        -- this would be an infinite type if we allowed it
+        # this would be an infinite type if we allowed it
         type Tree<T> = { data: T, children: {Tree<{T}>} }
     )");
 
@@ -1009,7 +1009,7 @@ TEST_CASE_FIXTURE(Fixture, "another_thing_from_roact")
 TEST_CASE_FIXTURE(BuiltinsFixture, "alias_expands_to_bare_reference_to_imported_type")
 {
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export type Object = {[string]: any}
         return {}
     )";
@@ -1152,7 +1152,7 @@ TEST_CASE_FIXTURE(Fixture, "bound_type_in_alias_segfault")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         type Map<T, V> = {[K]: V}
         function foo:bar(): Config<any, any> end
         type Config<TSource, TContext> = Map<TSource, TContext> & { fields: FieldConfigMap<any, any>}
@@ -1173,7 +1173,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1632_no_infinite_recursion_in_normalizatio
         type Node<T> = {
             value: T,
             next: Node<T>?,
-            -- remove `prev`, solves issue
+            # remove `prev`, solves issue
             prev: Node<T>?,
         };
 
@@ -1182,7 +1182,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1632_no_infinite_recursion_in_normalizatio
         }
 
         function IsFront(list: List<any>, nodeB: Node<any>)
-            -- remove if statement below, solves issue
+            # remove if statement below, solves issue
             if (list.head == nodeB) then
             end
         end

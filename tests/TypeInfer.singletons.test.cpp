@@ -15,7 +15,7 @@ TEST_SUITE_BEGIN("TypeSingletons");
 TEST_CASE_FIXTURE(Fixture, "function_args_infer_singletons")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Phase = "A" | "B" | "C"
 function f(e : Phase) : number
     return 0
@@ -303,7 +303,7 @@ TEST_CASE_FIXTURE(Fixture, "table_has_a_boolean")
 TEST_CASE_FIXTURE(Fixture, "table_properties_singleton_strings")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type T = {
             ["foo"] : number,
             ["$$bar"] : string,
@@ -327,7 +327,7 @@ TEST_CASE_FIXTURE(Fixture, "table_properties_singleton_strings")
 TEST_CASE_FIXTURE(Fixture, "table_properties_singleton_strings_mismatch")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type T = {
             ["$$bar"] : string,
         }
@@ -344,7 +344,7 @@ TEST_CASE_FIXTURE(Fixture, "table_properties_singleton_strings_mismatch")
 TEST_CASE_FIXTURE(Fixture, "table_properties_alias_or_parens_is_indexer")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type S = "bar"
         type T = {
             [("foo")] : number,
@@ -383,7 +383,7 @@ TEST_CASE_FIXTURE(Fixture, "table_properties_type_error_escapes")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export x: { ["<>"] : number } = null as any
         x = { ["\n"] = 5 }
     )");
@@ -459,7 +459,7 @@ TEST_CASE_FIXTURE(Fixture, "parametric_tagged_union_alias")
         type Result<O, E> = Ok<O> | Err<E>
 
         const a : Result<string, number> = {success = false, result = "hotdogs"}
-        -- local b : Result<string, number> = {success = true, result = "hotdogs"}
+        # local b : Result<string, number> = {success = true, result = "hotdogs"}
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -508,7 +508,7 @@ TEST_CASE_FIXTURE(Fixture, "return_type_of_f_is_not_widened")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        function foo(f, x): "hello"? -- anyone there?
+        function foo(f, x): "hello"? # anyone there?
             return if x == "hi"
                 then f(x)
                 else null
@@ -651,9 +651,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "singletons_stick_around_under_assignment")
 
         const foo = (null as any) as Foo
 
-        print(foo.kind == "Bar") -- type of equality refines to `false`
+        print(foo.kind == "Bar") # type of equality refines to `false`
         const kind = foo.kind
-        print(kind == "Bar") -- type of equality refines to `false`
+        print(kind == "Bar") # type of equality refines to `false`
     )");
 
     if (!FFlag::DebugLuauForceOldSolver)
@@ -707,7 +707,7 @@ TEST_CASE_FIXTURE(Fixture, "singleton_type_mismatch_via_variable")
 TEST_CASE_FIXTURE(Fixture, "cli_163481_any_indexer_pushes_type")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type test = "A"
         type test2 = "A"|"B"|"C"
@@ -743,7 +743,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1773")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         export type T = "foo" | "bar" | "toto"
 
@@ -770,7 +770,7 @@ TEST_CASE_FIXTURE(Fixture, "bidirectionally_infer_indexers_errored")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         export type T = "foo" | "bar" | "toto"
 

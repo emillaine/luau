@@ -301,10 +301,10 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "higher_order_function_arguments_are_contra
 {
     CheckResult result = check(R"(
         function apply(f: (BaseClass) -> ())
-            f(ChildClass.New()) -- 2
+            f(ChildClass.New()) # 2
         end
 
-        apply(function (c: ChildClass) end) -- 5
+        apply(function (c: ChildClass) end) # 5
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -348,14 +348,14 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_properties_are_invariant")
         end
 
         const t: {foo: ChildClass} = null as any
-        f(t) -- line 6.  Breaks soundness.
+        f(t) # line 6.  Breaks soundness.
 
         function g(t: {foo: ChildClass})
         end
 
         const t2: {foo: BaseClass} = {foo=BaseClass.New()}
         t2.foo = AnotherChild.New()
-        g(t2) -- line 13.  Breaks soundness
+        g(t2) # line 13.  Breaks soundness
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -371,14 +371,14 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_indexers_are_invariant")
         end
 
         const t: {[number]: ChildClass} = null as any
-        f(t) -- line 6.  Breaks soundness.
+        f(t) # line 6.  Breaks soundness.
 
         function g(t: {[number]: ChildClass})
         end
 
         const t2: {[number]: BaseClass} = {BaseClass.New()}
         t2[1] = AnotherChild.New()
-        g(t2) -- line 13.  Breaks soundness
+        g(t2) # line 13.  Breaks soundness
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -390,9 +390,9 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "table_class_unification_reports_sane_error
 {
     CheckResult result = check(R"(
         function foo(bar)
-            bar.Y = 1 -- valid
-            bar.x = 2 -- invalid, wanted 'X'
-            bar.w = 2 -- invalid
+            bar.Y = 1 # valid
+            bar.x = 2 # invalid, wanted 'X'
+            bar.w = 2 # invalid
         end
 
         const a: Vector2 = null as any
@@ -432,7 +432,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "optional_class_field_access_error")
 const b: Vector2? = null
 const a = b.X + b.Z
 
-b.X = 2 -- real Vector2.X is also read-only
+b.X = 2 # real Vector2.X is also read-only
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(4, result);
@@ -532,7 +532,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "index_instance_property")
 TEST_CASE_FIXTURE(ExternTypeFixture, "index_instance_property_nonstrict")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function execute(object: BaseClass, name: string)
             print(object[name])
@@ -636,14 +636,14 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
         CheckResult result = check(R"(
             const x : IndexableClass = null as any
             const str : string = null as any
-            const y = x[str]            -- Index with a non-const string
+            const y = x[str]            # Index with a non-const string
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
             const x : IndexableClass = null as any
-            const y = x[7]              -- Index with a numeric key
+            const y = x[7]              # Index with a numeric key
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
@@ -667,14 +667,14 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
         CheckResult result = check(R"(
             const x : IndexableClass = null as any
             const str : string = null as any
-            x[str] = 42                 -- Index with a non-const string
+            x[str] = 42                 # Index with a non-const string
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
     {
         CheckResult result = check(R"(
             const x : IndexableClass = null as any
-            x[1] = 42                   -- Index with a numeric key
+            x[1] = 42                   # Index with a numeric key
         )");
         LUAU_REQUIRE_NO_ERRORS(result);
     }
@@ -758,7 +758,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
         CheckResult result = check(R"(
             const x : IndexableNumericKeyClass = null as any
             const str : string = null as any
-            x[str] = 1                  -- Index with a non-const string
+            x[str] = 1                  # Index with a non-const string
         )");
 
         CHECK_EQ(toString(result.errors.at(0)), "Expected this to be 'number', but got 'string'");
@@ -784,7 +784,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "indexable_extern_types")
         CheckResult result = check(R"(
             const x : IndexableNumericKeyClass = null as any
             const str : string = null as any
-            const y = x[str]            -- Index with a non-const string
+            const y = x[str]            # Index with a non-const string
         )");
 
         CHECK_EQ(toString(result.errors.at(0)), "Expected this to be 'number', but got 'string'");
@@ -929,7 +929,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "ice_while_checking_script_due_to_scopes_no
 
     auto result = check(R"(
 function ExitSeat(player, character, seat, weld)
-    --Find vehicle model
+    #Find vehicle model
     const model = null
     const newParent = seat
     repeat
@@ -1181,10 +1181,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "extern_type_indexer_interactions")
     CheckResult result = check(R"(
         const c: Container = null as any
         const p: Point = null as any
-        const _: { [ string | number ]: boolean | string } = c -- OK
-        const _: { [string]: boolean | string } = c -- not OK
-        const _: { [ string | number ]: boolean } = c -- not OK
-        const _: { [string]: number } = p -- not OK
+        const _: { [ string | number ]: boolean | string } = c # OK
+        const _: { [string]: boolean | string } = c # not OK
+        const _: { [ string | number ]: boolean } = c # not OK
+        const _: { [string]: number } = p # not OK
     )");
     LUAU_REQUIRE_ERROR_COUNT(3, result);
     for (const auto& err : result.errors)

@@ -251,7 +251,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_generic_type_pack_reference_generates_one_er
     ScopedFastFlag sff{FFlag::LuauStrictVisitInstantiatedType, true};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type F = (IDoNotExist...) -> ()
     )");
 
@@ -268,7 +268,7 @@ TEST_CASE_FIXTURE(Fixture, "unknown_generic_type_pack_vararg_generates_one_error
     ScopedFastFlag sff{FFlag::LuauStrictVisitInstantiatedType, true};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(...: IDoNotExist...) end
     )");
 
@@ -286,18 +286,18 @@ TEST_CASE_FIXTURE(Fixture, "unknown_generic_type_pack_in_explicit_instantiation_
 
     for (const char* source : {
              R"(
-                --!strict
+                #!strict
                 function f<T...>() end
                 f<<IDoNotExist...>>()
             )",
              R"(
-                --!strict
+                #!strict
                 const t = {}
                 function t:f<T...>() end
                 t:f<<IDoNotExist...>>()
             )",
              R"(
-                --!nonstrict
+                #!nonstrict
                 const t = {}
                 function t:f<T...>() end
                 t:f<<IDoNotExist...>>()
@@ -553,10 +553,10 @@ TEST_CASE_FIXTURE(Fixture, "define_generic_type_alias")
 TEST_CASE_FIXTURE(Fixture, "use_generic_type_alias")
 {
     CheckResult result = check(R"(
-        type Array<T> = {[number]: T}   -- 1
-        const p: Array<number> = {}     -- 2
-        p[1] = 5                        -- 3 OK
-        p[2] = 'hello'                  -- 4 Error.
+        type Array<T> = {[number]: T}   # 1
+        const p: Array<number> = {}     # 2
+        p[1] = 5                        # 3 OK
+        p[2] = 'hello'                  # 4 Error.
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -571,7 +571,7 @@ TEST_CASE_FIXTURE(Fixture, "two_type_params")
         type Map<K, V> = {[K]: V}
         const m: Map<string, number> = {}
         const a = m['foo']
-        const b = m[9]                  -- error here
+        const b = m[9]                  # error here
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -720,7 +720,7 @@ TEST_CASE_FIXTURE(Fixture, "cloned_interface_maintains_pointers_between_definiti
     CheckResult result = check(R"(
         export type Record = { name: string, location: string }
         const a: Record = { name="Waldo", location="?????" }
-        const b: Record = { name="Santa Claus", location="Maui" } -- FIXME
+        const b: Record = { name="Santa Claus", location="Maui" } # FIXME
 
         return {a=a, b=b}
     )");
@@ -758,7 +758,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "use_type_required_from_another_file")
     addGlobalBinding(getFrontend().globals, "script", getBuiltins()->anyType, "@test");
 
     fileResolver.source["Modules/Main"] = R"(
-        --!strict
+        #!strict
         const Test = require(script.Parent.Thing)
 
         export type Foo = { [any]: Test.TestType }
@@ -767,7 +767,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "use_type_required_from_another_file")
     )";
 
     fileResolver.source["Modules/Thing"] = R"(
-        --!strict
+        #!strict
 
         export type TestType = {bar: boolean}
 
@@ -784,7 +784,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cannot_use_nonexported_type")
     addGlobalBinding(getFrontend().globals, "script", getBuiltins()->anyType, "@test");
 
     fileResolver.source["Modules/Main"] = R"(
-        --!strict
+        #!strict
         const Test = require(script.Parent.Thing)
 
         export type Foo = { [any]: Test.TestType }
@@ -793,7 +793,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cannot_use_nonexported_type")
     )";
 
     fileResolver.source["Modules/Thing"] = R"(
-        --!strict
+        #!strict
 
         type TestType = {bar: boolean}
 
@@ -810,7 +810,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "builtin_types_are_not_exported")
     addGlobalBinding(getFrontend().globals, "script", getBuiltins()->anyType, "@test");
 
     fileResolver.source["Modules/Main"] = R"(
-        --!strict
+        #!strict
         const Test = require(script.Parent.Thing)
 
         export type Foo = { [any]: Test.number }
@@ -819,7 +819,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "builtin_types_are_not_exported")
     )";
 
     fileResolver.source["Modules/Thing"] = R"(
-        --!strict
+        #!strict
 
         return {}
     )";

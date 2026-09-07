@@ -1,4 +1,4 @@
--- Adam optimizer
+# Adam optimizer
 
 tensorMod = require("./tensor")
 Tensor = tensorMod.Tensor
@@ -38,7 +38,7 @@ function adamUpdate(
     bc1 = 1 - math.pow(beta1, t)
     bc2 = 1 - math.pow(beta2, t)
 
-    for i = 1, #param.data do
+    for i = 1, param.data.count do
         g = grad.data[i]
         m.data[i] = beta1 * m.data[i] + (1 - beta1) * g
         v.data[i] = beta2 * v.data[i] + (1 - beta2) * g * g
@@ -65,7 +65,7 @@ function adamUpdateScalars(
     bc1 = 1 - math.pow(beta1, t)
     bc2 = 1 - math.pow(beta2, t)
 
-    for i = 1, #params do
+    for i = 1, params.count do
         g = grads[i]
         m[i] = beta1 * m[i] + (1 - beta1) * g
         v[i] = beta2 * v[i] + (1 - beta2) * g * g

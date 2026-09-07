@@ -118,10 +118,10 @@ end
 const p1 = Point.new { x = 1, y = 2 }
 const p2 = Box.new { x = 1 }
 const _ = p1 == p1
--- This one too
+# This one too
 const _ = p1 != p2
 const _ = Box == Box
--- This line should error...
+# This line should error...
 const _ = Point != Box
 )");
 
@@ -936,8 +936,8 @@ TEST_CASE_FIXTURE(ClassesFixture, "variadic_constructor")
             end
         end
 
-        const f = Foo.new(3, 4, 5) -- OK
-        const g = Foo.new(3, 4, 5, "six") -- Error
+        const f = Foo.new(3, 4, 5) # OK
+        const g = Foo.new(3, 4, 5, "six") # Error
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -958,8 +958,8 @@ TEST_CASE_FIXTURE(ClassesFixture, "variadic_constructor_with_leading_positional_
             end
         end
 
-        const f = Foo.new(3, "four", 5) -- OK
-        const g = Foo.new(3, "four", 5, "six") -- Error
+        const f = Foo.new(3, "four", 5) # OK
+        const g = Foo.new(3, "four", 5, "six") # Error
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);

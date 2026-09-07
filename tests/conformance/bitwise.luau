@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print("testing bitwise operations")
 
 function noinline(x, ...) s, r = pcall(function(y) return y end, x) return r end
@@ -13,7 +13,7 @@ assert(bit32.band() == bit32.band(0xffffffff))
 assert(bit32.band(1,2) == 0)
 
 
--- out-of-range numbers
+# out-of-range numbers
 assert(bit32.band(-1) == 0xffffffff)
 assert(bit32.band(2^33 - 1) == 0xffffffff)
 assert(bit32.band(-2^33 - 1) == 0xffffffff)
@@ -93,7 +93,7 @@ assert(bit32.arshift(noinline(-1), 32) == 0xffffffff)
 assert(bit32.arshift(noinline(-1), -1) == (-1 * 2) % 2^32)
 
 print("+")
--- some special cases
+# some special cases
 c = {0, 1, 2, 3, 10, 0x80000000, 0xaaaaaaaa, 0x55555555,
            0xffffffff, 0x7fffffff}
 
@@ -134,7 +134,7 @@ assert(not pcall(bit32.rshift, 45, print))
 print("+")
 
 
--- testing extract/replace
+# testing extract/replace
 
 assert(bit32.extract(0x12345678, 0, 4) == 8)
 assert(bit32.extract(0x12345678, 4, 4) == 7)
@@ -161,7 +161,7 @@ assert(bit32.extract(noinline(0xa0001111), 31) == 1)
 assert(bit32.extract(noinline(42), 1, 3) == 5)
 
 pos = 1
-assert(bit32.extract(42, pos, 3) == 5) -- test bit32.extract builtin instead of bit32.extractk
+assert(bit32.extract(42, pos, 3) == 5) # test bit32.extract builtin instead of bit32.extractk
 
 assert(not pcall(bit32.extract, 0, -1))
 assert(not pcall(bit32.extract, 0, 32))
@@ -185,7 +185,7 @@ assert(bit32.replace(noinline(0), -1, 4) == 2^4)
 assert(bit32.replace(noinline(-1), 0, 31) == 2^31 - 1)
 assert(bit32.replace(noinline(-1), 0, 1, 2) == 2^32 - 7)
 
--- testing countlz/countrc
+# testing countlz/countrc
 assert(bit32.countlz(0) == 32)
 assert(bit32.countlz(42) == 26)
 assert(bit32.countlz(0xffffffff) == 0)
@@ -212,7 +212,7 @@ assert(bit32.countrz(noinline(0x80000000)) == 31)
 assert(bit32.countrz(noinline(0x40000000)) == 30)
 assert(bit32.countrz(noinline(0x7fffffff)) == 0)
 
--- testing byteswap
+# testing byteswap
 assert(bit32.byteswap(0x10203040) == 0x40302010)
 assert(bit32.byteswap(0) == 0)
 assert(bit32.byteswap(-1) == 0xffffffff)
@@ -221,21 +221,21 @@ assert(bit32.byteswap(noinline(0x10203040)) == 0x40302010)
 assert(bit32.byteswap(noinline(0)) == 0)
 assert(bit32.byteswap(noinline(-1)) == 0xffffffff)
 
--- bit32.bor(n, 0) must clear top bits
--- we check this obscuring the constant through a global to make sure this gets evaluated fully
+# bit32.bor(n, 0) must clear top bits
+# we check this obscuring the constant through a global to make sure this gets evaluated fully
 high32 = 0x42_1234_5678
 assert(bit32.bor(high32, 0) == 0x1234_5678)
 
---[[
+#[[
 This test verifies a fix in luauF_replace() where if the 4th
 parameter was not a number, but the first three are numbers, it will
 cause the Luau math library to crash.
-]]--
+]]#
 
 assert(bit32.replace(-1, 0, 1, "2") == 2^32 - 7)
 
--- many of the tests above go through fastcall path
--- to make sure the basic implementations are also correct we test some functions with string->number coercions
+# many of the tests above go through fastcall path
+# to make sure the basic implementations are also correct we test some functions with string->number coercions
 assert(bit32.lrotate("0x12345678", 4) == 0x23456781)
 assert(bit32.rrotate("0x12345678", -4) == 0x23456781)
 assert(bit32.arshift("0x12345678", 1) == 0x12345678 / 2)

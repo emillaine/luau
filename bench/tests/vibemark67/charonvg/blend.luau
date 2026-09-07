@@ -1,8 +1,8 @@
---!native
+#!native
 Blend = {}
 
 
--- Premultiply a color {r,g,b,a} (0-1 floats) into a u32 ARGB pixel
+# Premultiply a color {r,g,b,a} (0-1 floats) into a u32 ARGB pixel
 function colorToPixel(color)
     a = math.floor(color.a * 255 + 0.5)
     r = math.floor(color.r * a + 0.5)
@@ -11,8 +11,8 @@ function colorToPixel(color)
     return bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
 end
 
--- BYTE_MUL: multiply each channel of a premultiplied pixel by a 0-255 value
--- Uses the standard rounding trick: (x*a + 128) >> 8 approximates x*a/255
+# BYTE_MUL: multiply each channel of a premultiplied pixel by a 0-255 value
+# Uses the standard rounding trick: (x*a + 128) >> 8 approximates x*a/255
 function byteMul(pixel, a)
     if a == 255 then
         return pixel
@@ -29,7 +29,7 @@ function byteMul(pixel, a)
     return bit32.bor(rb, bit32.lshift(ga, 8))
 end
 
--- Porter-Duff compositing operators
+# Porter-Duff compositing operators
 function compositeClear()
     return 0
 end
@@ -143,8 +143,8 @@ COMPOSITORS = {
 
 compositeSourceOver = compositeSrcOver
 
--- Blend solid color spans onto a surface
--- This is the minimal blend needed for filled shapes with src-over
+# Blend solid color spans onto a surface
+# This is the minimal blend needed for filled shapes with src-over
 function Blend.solidSrcOver(surface, spans, color, opacity)
     pixel = colorToPixel(color)
     data = surface:getData()
@@ -152,7 +152,7 @@ function Blend.solidSrcOver(surface, spans, color, opacity)
     width = surface:getWidth()
     height = surface:getHeight()
 
-    for i = 1, #spans do
+    for i = 1, spans.count do
         span = spans[i]
         sx = span.x
         sy = span.y
@@ -160,7 +160,7 @@ function Blend.solidSrcOver(surface, spans, color, opacity)
         coverage = span.coverage
 
         if sy >= 0 and sy < height then
-            -- Apply opacity to coverage
+            # Apply opacity to coverage
             constAlpha = coverage
             if opacity and opacity < 1 then
                 constAlpha = math.floor(coverage * opacity + 0.5)
@@ -189,7 +189,7 @@ function Blend.solidSrcOver(surface, spans, color, opacity)
     end
 end
 
--- Blend with operator "src" (replace destination)
+# Blend with operator "src" (replace destination)
 function Blend.solidSrc(surface, spans, color, opacity)
     pixel = colorToPixel(color)
     data = surface:getData()
@@ -197,7 +197,7 @@ function Blend.solidSrc(surface, spans, color, opacity)
     width = surface:getWidth()
     height = surface:getHeight()
 
-    for i = 1, #spans do
+    for i = 1, spans.count do
         span = spans[i]
         sx = span.x
         sy = span.y
@@ -234,7 +234,7 @@ function Blend.solidSrc(surface, spans, color, opacity)
     end
 end
 
--- Paint-based blending (gradient/texture support)
+# Paint-based blending (gradient/texture support)
 function Blend.paintSrcOver(surface, spans, paint, opacity)
     if paint.type == "solid" then
         Blend.solidSrcOver(surface, spans, paint.color, opacity)
@@ -252,13 +252,13 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
         return
     end
 
-    -- Pre-extract paint fields to avoid repeated table lookups in the inner loop
+    # Pre-extract paint fields to avoid repeated table lookups in the inner loop
     colorTable = paint.colorTable
     spread = paint.spread
     paintMatrix = paint.matrix
     invMatrix = paintMatrix and paintMatrix:invert()
 
-    -- Linear gradient constants
+    # Linear gradient constants
     gx1, gy1, gdx, gdy, glen2 = null, null, null, null, null
     if isLinear then
         gx1 = paint.x1
@@ -267,7 +267,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
         gdy = paint.y2 - paint.y1
         glen2 = gdx * gdx + gdy * gdy
     end
-    -- Radial gradient constants
+    # Radial gradient constants
     rcx, rcy, rcr, rfx, rfy, rfr = null, null, null, null, null, null
     if isRadial then
         rcx = paint.cx
@@ -283,7 +283,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
     mathSqrt = math.sqrt
     mathAbs = math.abs
 
-    for i = 1, #spans do
+    for i = 1, spans.count do
         span = spans[i]
         sx = span.x
         sy = span.y
@@ -341,7 +341,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
                         pos = mathFloor(t * 1023 + 0.5)
                     end
 
-                    -- Spread clamping
+                    # Spread clamping
                     if spread == "pad" then
                         if pos < 0 then
                             pos = 0
@@ -377,7 +377,7 @@ function Blend.paintSrcOver(surface, spans, paint, opacity)
     end
 end
 
--- General solid blend with any operator
+# General solid blend with any operator
 function Blend.solid(surface, spans, color, opacity, operator)
     comp = COMPOSITORS[operator]
     if not comp or operator == "src-over" then
@@ -393,7 +393,7 @@ function Blend.solid(surface, spans, color, opacity, operator)
     width = surface:getWidth()
     height = surface:getHeight()
 
-    for i = 1, #spans do
+    for i = 1, spans.count do
         span = spans[i]
         sx = span.x
         sy = span.y

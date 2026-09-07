@@ -1,4 +1,4 @@
--- mixed exports: values, functions, and types together
+# mixed exports: values, functions, and types together
 export version = "2.0.0"
 
 export type Config = {

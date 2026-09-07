@@ -55,11 +55,11 @@ TEST_SUITE_BEGIN("RuntimeLimits");
 TEST_CASE_FIXTURE(LimitFixture, "typescript_port_of_Result_type")
 {
     constexpr const char* src = R"LUAU(
-        --!strict
+        #!strict
 
-        -- Big thanks to Dionysusnu by letting us use this code as part of our test suite!
-        -- https://github.com/Dionysusnu/rbxts-rust-classes
-        -- Licensed under the MPL 2.0: https://raw.githubusercontent.com/Dionysusnu/rbxts-rust-classes/master/LICENSE
+        # Big thanks to Dionysusnu by letting us use this code as part of our test suite!
+        # https://github.com/Dionysusnu/rbxts-rust-classes
+        # Licensed under the MPL 2.0: https://raw.githubusercontent.com/Dionysusnu/rbxts-rust-classes/master/LICENSE
 
         const TS = _G[script]
         const lazyGet = TS.import(script, script.Parent.Parent, "util", "lazyLoad").lazyGet
@@ -408,7 +408,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
     }
 
     export type ApolloCache<TSerialized> = {
-	    -- something here needed
+	    # something here needed
 	    read: <T, TVariables>(self: ApolloCache<TSerialized>, query: Cache_ReadOptions<TVariables, T>) -> T | null,
 	    write: <TResult, TVariables>(
 		    self: ApolloCache<TSerialized>,
@@ -423,8 +423,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 	    removeOptimistic: (self: ApolloCache<TSerialized>, id: string) -> (),
 	    batch: (self: ApolloCache<TSerialized>, options: Cache_BatchOptions<_ApolloCache>) -> (),
 	    performTransaction: (self: ApolloCache<TSerialized>, transaction: _Transaction, optimisticId: string) -> (),
-	    -- bottom text
-	    -- TOP
+	    # bottom text
+	    # TOP
 	    recordOptimisticTransaction: (
 		    self: ApolloCache<TSerialized>,
 		    transaction: _Transaction,
@@ -434,7 +434,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
 	    identify: (self: ApolloCache<TSerialized>, object: StoreObject | Reference) -> string | null,
 	    gc: (self: ApolloCache<TSerialized>) -> Array<string>,
 	    modify: (self: ApolloCache<TSerialized>, options: Cache_ModifyOptions) -> boolean,
-	    -- BOTTOM
+	    # BOTTOM
 
 	    transformForLink: (self: ApolloCache<TSerialized>, document: DocumentNode) -> DocumentNode,
 	    readQuery: <QueryType, TVariables>(
@@ -466,18 +466,18 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "subtyping_should_cache_pairs_in_seen_set" * 
     }
 
     type InMemoryCachePrivate = InMemoryCache & {
-	    broadcastWatches: (self: InMemoryCachePrivate) -> (), -- ROBLOX NOTE: protected method
+	    broadcastWatches: (self: InMemoryCachePrivate) -> (), # ROBLOX NOTE: protected method
     }
 
     const InMemoryCache = {}
     InMemoryCache.__index = InMemoryCache
 
-    -- InMemoryCache.batch = null as any
+    # InMemoryCache.batch = null as any
     function InMemoryCache:batch()
 	    self = self as InMemoryCachePrivate
 
 	    if self.txCount == 0 then
-		    self:broadcastWatches() --  problematic call?
+		    self:broadcastWatches() #  problematic call?
 	    end
     end
     )LUAU";

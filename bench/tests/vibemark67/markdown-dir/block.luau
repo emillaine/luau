@@ -1,4 +1,4 @@
--- Block-level parsing for Markdown
+# Block-level parsing for Markdown
 
 ast = require("./ast")
 
@@ -15,12 +15,12 @@ function trim(s: string): string
 end
 
 function startsWith(s: string, prefix: string): boolean
-    return string.sub(s, 1, #prefix) == prefix
+    return string.sub(s, 1, prefix.count) == prefix
 end
 
 function countLeading(line: string, char: string): number
     count = 0
-    for i = 1, #line do
+    for i = 1, line.count do
         if string.sub(line, i, i) == char then
             count += 1
         else
@@ -36,10 +36,10 @@ end
 
 function isThematicBreak(line: string): boolean
     stripped = string.gsub(trim(line), " ", "")
-    if #stripped < 3 then return false end
+    if stripped.count < 3 then return false end
     ch = string.sub(stripped, 1, 1)
     if ch != "*" and ch != "-" and ch != "_" then return false end
-    for i = 1, #stripped do
+    for i = 1, stripped.count do
         if string.sub(stripped, i, i) != ch then return false end
     end
     return true
@@ -47,11 +47,11 @@ end
 
 function isATXHeading(line: string): (number?, string?)
     trimmed = trimLeft(line)
-    indent = #line - #trimmed
+    indent = line.count - trimmed.count
     if indent > 3 then return null, null end
     level = countLeading(trimmed, "#")
     if level < 1 or level > 6 then return null, null end
-    if #trimmed > level and string.sub(trimmed, level + 1, level + 1) != " " then
+    if trimmed.count > level and string.sub(trimmed, level + 1, level + 1) != " " then
         return null, null
     end
     content = trim(string.sub(trimmed, level + 1))
@@ -62,7 +62,7 @@ end
 
 function isFencedCodeStart(line: string): (string?, string?)
     trimmed = trimLeft(line)
-    indent = #line - #trimmed
+    indent = line.count - trimmed.count
     if indent > 3 then return null, null end
     ch = string.sub(trimmed, 1, 1)
     if ch != "`" and ch != "~" then return null, null end
@@ -76,18 +76,18 @@ end
 
 function isFencedCodeEnd(line: string, fence: string): boolean
     trimmed = trimLeft(line)
-    indent = #line - #trimmed
+    indent = line.count - trimmed.count
     if indent > 3 then return false end
     ch = string.sub(fence, 1, 1)
     fenceLen = countLeading(trimmed, ch)
-    if fenceLen < #fence then return false end
+    if fenceLen < fence.count then return false end
     rest = trim(string.sub(trimmed, fenceLen + 1))
     return rest == ""
 end
 
 function isBlockquoteLine(line: string): (boolean, string)
     trimmed = trimLeft(line)
-    indent = #line - #trimmed
+    indent = line.count - trimmed.count
     if indent > 3 then return false, line end
     if string.sub(trimmed, 1, 1) == ">" then
         rest = string.sub(trimmed, 2)
@@ -101,13 +101,13 @@ end
 
 function isOrderedListItem(line: string): (number?, string?)
     trimmed = trimLeft(line)
-    indent = #line - #trimmed
+    indent = line.count - trimmed.count
     if indent > 3 then return null, null end
     num, rest = string.match(trimmed, "^(%d+)([%.%)])")
     if num and rest then
-        afterMarker = string.sub(trimmed, #num + 2)
+        afterMarker = string.sub(trimmed, num.count + 2)
         if afterMarker == "" or string.sub(afterMarker, 1, 1) == " " then
-            content = if #afterMarker > 0 then string.sub(afterMarker, 2) else ""
+            content = if afterMarker.count > 0 then string.sub(afterMarker, 2) else ""
             return tonumber(num), content
         end
     end
@@ -116,11 +116,11 @@ end
 
 function isBulletListItem(line: string): (string?, string?)
     trimmed = trimLeft(line)
-    indent = #line - #trimmed
+    indent = line.count - trimmed.count
     if indent > 3 then return null, null end
     ch = string.sub(trimmed, 1, 1)
     if ch == "-" or ch == "*" or ch == "+" then
-        if #trimmed == 1 then return ch, "" end
+        if trimmed.count == 1 then return ch, "" end
         if string.sub(trimmed, 2, 2) == " " then
             return ch, string.sub(trimmed, 3)
         end
@@ -130,10 +130,10 @@ end
 
 function isSetextHeading(line: string): number?
     trimmed = trim(line)
-    if #trimmed == 0 then return null end
+    if trimmed.count == 0 then return null end
     ch = string.sub(trimmed, 1, 1)
     if ch != "=" and ch != "-" then return null end
-    for i = 1, #trimmed do
+    for i = 1, trimmed.count do
         if string.sub(trimmed, i, i) != ch then return null end
     end
     return if ch == "=" then 1 else 2
@@ -148,14 +148,14 @@ export type BlockParser = {
 function createBlockParser(text: string): BlockParser
     lines = {}
     current = 1
-    while current <= #text do
+    while current <= text.count do
         nlPos = string.find(text, "\n", current, true)
         if nlPos then
             table.insert(lines, string.sub(text, current, nlPos - 1))
             current = nlPos + 1
         else
             table.insert(lines, string.sub(text, current))
-            current = #text + 1
+            current = text.count + 1
         end
     end
     return {
@@ -182,7 +182,7 @@ end
 function parseBlocks(parser: BlockParser): ast.Node
     doc = ast.createDocument()
 
-    while parser.pos <= #parser.lines do
+    while parser.pos <= parser.lines.count do
         line = parser.lines[parser.pos]
 
         if isBlankLine(line) then
@@ -200,7 +200,7 @@ function parseBlocks(parser: BlockParser): ast.Node
                 if fence and info then
                     parser.pos += 1
                     codeLines = {}
-                    while parser.pos <= #parser.lines do
+                    while parser.pos <= parser.lines.count do
                         codeLine = parser.lines[parser.pos]
                         if isFencedCodeEnd(codeLine, fence) then
                             parser.pos += 1
@@ -214,7 +214,7 @@ function parseBlocks(parser: BlockParser): ast.Node
                     isQuote, quoteContent = isBlockquoteLine(line)
                     if isQuote then
                         quoteLines = {}
-                        while parser.pos <= #parser.lines do
+                        while parser.pos <= parser.lines.count do
                             ql = parser.lines[parser.pos]
                             isQ, qc = isBlockquoteLine(ql)
                             if isQ then
@@ -238,14 +238,14 @@ function parseBlocks(parser: BlockParser): ast.Node
                         bullet, bulletContent = isBulletListItem(line)
                         if bullet then
                             list = ast.createList(false, 1)
-                            while parser.pos <= #parser.lines do
+                            while parser.pos <= parser.lines.count do
                                 ll = parser.lines[parser.pos]
                                 b, bc = isBulletListItem(ll)
                                 if b then
                                     item = ast.createListItem()
                                     itemLines = {bc}
                                     parser.pos += 1
-                                    while parser.pos <= #parser.lines do
+                                    while parser.pos <= parser.lines.count do
                                         il = parser.lines[parser.pos]
                                         if isBlankLine(il) then
                                             list.tight = false
@@ -272,14 +272,14 @@ function parseBlocks(parser: BlockParser): ast.Node
                             num, olContent = isOrderedListItem(line)
                             if num then
                                 list = ast.createList(true, num)
-                                while parser.pos <= #parser.lines do
+                                while parser.pos <= parser.lines.count do
                                     ll = parser.lines[parser.pos]
                                     n, oc = isOrderedListItem(ll)
                                     if n then
                                         item = ast.createListItem()
                                         itemLines = {oc}
                                         parser.pos += 1
-                                        while parser.pos <= #parser.lines do
+                                        while parser.pos <= parser.lines.count do
                                             il = parser.lines[parser.pos]
                                             if isBlankLine(il) then
                                                 list.tight = false
@@ -305,7 +305,7 @@ function parseBlocks(parser: BlockParser): ast.Node
                             else
                                 if not parseLinkRef(parser, parser.pos) then
                                     paraLines = {}
-                                    while parser.pos <= #parser.lines do
+                                    while parser.pos <= parser.lines.count do
                                         pl = parser.lines[parser.pos]
                                         if isBlankLine(pl) then break end
                                         if isThematicBreak(pl) then break end
@@ -318,7 +318,7 @@ function parseBlocks(parser: BlockParser): ast.Node
                                         oNum, _ = isOrderedListItem(pl)
                                         if oNum then break end
 
-                                        if #paraLines > 0 then
+                                        if paraLines.count > 0 then
                                             setextLevel = isSetextHeading(pl)
                                             if setextLevel then
                                                 headingContent = table.concat(paraLines, " ")
@@ -332,7 +332,7 @@ function parseBlocks(parser: BlockParser): ast.Node
                                         table.insert(paraLines, pl)
                                         parser.pos += 1
                                     end
-                                    if #paraLines > 0 then
+                                    if paraLines.count > 0 then
                                         content = table.concat(paraLines, "\n")
                                         ast.addChild(doc, ast.createParagraph(trim(content)))
                                     end

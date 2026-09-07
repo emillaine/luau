@@ -1,4 +1,4 @@
--- Hydraulic and thermal erosion simulation
+# Hydraulic and thermal erosion simulation
 
 function hydraulicErosion(
     heightmap: {number},

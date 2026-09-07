@@ -1,4 +1,4 @@
--- DEFLATE compressor and decompressor
+# DEFLATE compressor and decompressor
 
 bitstream = require("./bitstream")
 huffman = require("./huffman")
@@ -19,8 +19,8 @@ distExtra = {
 }
 
 function lengthToCode(length: number): (number, number, number)
-    for i = 1, #lengthBase do
-        if i == #lengthBase or lengthBase[i + 1] > length then
+    for i = 1, lengthBase.count do
+        if i == lengthBase.count or lengthBase[i + 1] > length then
             code = 257 + i
             extra = lengthExtra[i]
             extraBits = length - lengthBase[i]
@@ -31,8 +31,8 @@ function lengthToCode(length: number): (number, number, number)
 end
 
 function distToCode(dist: number): (number, number, number)
-    for i = 1, #distBase do
-        if i == #distBase or distBase[i + 1] > dist then
+    for i = 1, distBase.count do
+        if i == distBase.count or distBase[i + 1] > dist then
             code = i
             extra = distExtra[i]
             extraBits = dist - distBase[i]
@@ -48,8 +48,8 @@ function compress(data: {number}): {number}
     litTree = huffman.buildFixedLitTree()
     distTree = huffman.buildFixedDistTree()
 
-    writer:writeBits(1, 1) -- final block
-    writer:writeBits(1, 2) -- fixed Huffman
+    writer:writeBits(1, 1) # final block
+    writer:writeBits(1, 2) # fixed Huffman
 
     for _, token in tokens do
         if token.literal then
@@ -69,7 +69,7 @@ function compress(data: {number}): {number}
         end
     end
 
-    huffman.writeCode(writer, litTree, 257) -- end of block (symbol 256 is at index 257)
+    huffman.writeCode(writer, litTree, 257) # end of block (symbol 256 is at index 257)
     return writer:getBytes()
 end
 

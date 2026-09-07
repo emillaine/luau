@@ -1,4 +1,4 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print('testing yields from C functions')
 
 function ecall(fn, ...)
@@ -22,14 +22,14 @@ function eresume(co, ...)
     return err:sub(err:find(": ") + 2, err.count)
 end
 
--- Regular yield from a C function
+# Regular yield from a C function
 do
     co = coroutine.wrap(singleYield)
     assert(co() == 2)
     assert(co() == 4)
 end
 
--- Multiple yields from a C function
+# Multiple yields from a C function
 do
     co = coroutine.wrap(multipleYields)
     assert(co(10) == 11)
@@ -38,7 +38,7 @@ do
     assert(co() == 14)
 end
 
--- Multiple yields from a C function (unused extra arguments)
+# Multiple yields from a C function (unused extra arguments)
 do
     co = coroutine.wrap(multipleYields)
     assert(co(10, -1) == 11)
@@ -47,7 +47,7 @@ do
     assert(co(-1, -2) == 14)
 end
 
--- Multiple yields from nested yieldable C functions
+# Multiple yields from nested yieldable C functions
 do
     co = coroutine.wrap(multipleYieldsWithNestedCall)
     assert(co(10, true) == 105)
@@ -56,7 +56,7 @@ do
     assert(co() == 220)
 end
 
--- Multiple yields from nested yieldable C functions (unused extra arguments)
+# Multiple yields from nested yieldable C functions (unused extra arguments)
 do
     co = coroutine.wrap(multipleYieldsWithNestedCall)
     assert(co(10, true, -1) == 105)
@@ -87,7 +87,7 @@ function yieldable(x, y)
     return x / y
 end
 
--- yieldable Luau function that acts as a pass-through
+# yieldable Luau function that acts as a pass-through
 do
     co = coroutine.create(function(x, y)
         return yieldable(x, y)
@@ -111,7 +111,7 @@ do
     assert(x == 0.5)
 end
 
--- yieldable C function that acts as a pass-through (regular)
+# yieldable C function that acts as a pass-through (regular)
 function passthroughcheck(f)
     x = f(nonyieldable, 1, 2)
     assert(x == 0.5)
@@ -123,7 +123,7 @@ passthroughcheck(passthroughCallArgReuse)
 passthroughcheck(passthroughCallVaradic)
 passthroughcheck(passthroughCallWithState)
 
--- yieldable C function that acts as a pass-through (yield)
+# yieldable C function that acts as a pass-through (yield)
 function passthroughcheckyield(f)
     co = coroutine.create(function(x, y)
         return f(yieldable, x, y)
@@ -153,7 +153,7 @@ passthroughcheckyield(passthroughCallArgReuse)
 passthroughcheckyield(passthroughCallVaradic)
 passthroughcheckyield(passthroughCallWithState)
 
--- yieldable C function that acts as a pass-through (regular, pcall to Luau)
+# yieldable C function that acts as a pass-through (regular, pcall to Luau)
 function nonyieldablepcall(x, y)
     status, result = pcall(nonyieldable, x, y)
     assert(status)
@@ -171,7 +171,7 @@ passthroughcheckpcall(passthroughCallArgReuse)
 passthroughcheckpcall(passthroughCallVaradic)
 passthroughcheckpcall(passthroughCallWithState)
 
--- yieldable C function that acts as a pass-through (regular, pcall to C)
+# yieldable C function that acts as a pass-through (regular, pcall to C)
 function nonyieldablepcallc(x, y)
     status, result = pcall(assert, x / y)
     assert(status)
@@ -189,18 +189,18 @@ passthroughcheckpcallc(passthroughCallArgReuse)
 passthroughcheckpcallc(passthroughCallVaradic)
 passthroughcheckpcallc(passthroughCallWithState)
 
--- yieldable C function that acts as a pass-through (regular, direct pcall)
+# yieldable C function that acts as a pass-through (regular, direct pcall)
 function passthroughcheckpcallcdirect(f)
     status, x = f(pcall, function(y) return 1 / y end, 2)
     assert(status)
     assert(x == 0.5)
 end
 
--- only variadic functions are tested here because pcall returns status as well
+# only variadic functions are tested here because pcall returns status as well
 passthroughcheckpcallcdirect(passthroughCallVaradic)
 passthroughcheckpcallcdirect(passthroughCallWithState)
 
--- test that error throws correctly restore C call counter
+# test that error throws correctly restore C call counter
 if not limitedstack then
 	function errf()
 		error("boom")
@@ -306,7 +306,7 @@ do
     assert(resume(co) == -1 * 5)
 end
 
--- extra tests where second call in continuation is also protected
+# extra tests where second call in continuation is also protected
 do
     co = coroutine.create(function() return pcallThenPcall(yield_then_ok, ok_simple) end)
 

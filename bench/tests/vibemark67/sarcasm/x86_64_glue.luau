@@ -1,12 +1,12 @@
---!nonstrict
--- x86_64 Fil-C calling-convention glue (AT&T output): function getter, generic (buffer)
--- entrypoint thunk, FO object + origins, direct-call alias, and callsite resolver thunk.
--- Templates validated against the reference Fil-C clang x86_64 output (hash-filc-x86.s).
--- Data layout is identical to ARM64 (only .xword->.quad, .word->.long).
+#!nonstrict
+# x86_64 Fil-C calling-convention glue (AT&T output): function getter, generic (buffer)
+# entrypoint thunk, FO object + origins, direct-call alias, and callsite resolver thunk.
+# Templates validated against the reference Fil-C clang x86_64 output (hash-filc-x86.s).
+# Data layout is identical to ARM64 (only .xword->.quad, .word->.long).
 
 glue_x86 = {}
 
-FUNCTION_UPPER_FLAGS = "36873221949095936" -- 0x83 << 48
+FUNCTION_UPPER_FLAGS = "36873221949095936" # 0x83 << 48
 
 function glue_x86.getter(out, name)
 	fo = "pizlonatedFO_" .. name
@@ -23,7 +23,7 @@ function glue_x86.getter(out, name)
 	table.insert(out, "")
 end
 
--- generic (buffer) entrypoint pizlonated2ET<sig>.
+# generic (buffer) entrypoint pizlonated2ET<sig>.
 function glue_x86.genericThunk(out, signature, argWords, retWords, retIsPtr)
 	assert(argWords <= 3, "sarcasm: >3 register args not yet supported")
 	sym = "pizlonated2ET" .. tostring(signature)
@@ -31,7 +31,7 @@ function glue_x86.genericThunk(out, signature, argWords, retWords, retIsPtr)
 	retBytes = retWords * 8
 	L = ".LBB_2ET" .. signature
 	function e(s) table.insert(out, s) end
-	-- CC iv/lo register for arg k (1-based): iv=rdx,r8,(r10?); lo=rcx,r9. Support up to 3.
+	# CC iv/lo register for arg k (1-based): iv=rdx,r8,(r10?); lo=rcx,r9. Support up to 3.
 	ivReg = { "%rdx", "%r8", "%r10" }
 	loReg = { "%rcx", "%r9", "%r11" }
 	e("\t.text")
@@ -92,7 +92,7 @@ function glue_x86.foAndOrigins(out, name, signature, numRoots, dbg)
 	table.insert(out, "\t.section\t.rodata.str1.1,\"aMS\",@progbits,1")
 	table.insert(out, strSym .. ":")
 	table.insert(out, "\t.asciz\t\"" .. name .. "\"")
-	table.insert(out, "\t.size\t" .. strSym .. ", " .. tostring(#name + 1))
+	table.insert(out, "\t.size\t" .. strSym .. ", " .. tostring(name.count + 1))
 	table.insert(out, "")
 
 	if dbg then
@@ -100,7 +100,7 @@ function glue_x86.foAndOrigins(out, name, signature, numRoots, dbg)
 		table.insert(out, "\t.section\t.rodata.str1.1,\"aMS\",@progbits,1")
 		table.insert(out, fileSym .. ":")
 		table.insert(out, "\t.asciz\t\"" .. dbg.filename .. "\"")
-		table.insert(out, "\t.size\t" .. fileSym .. ", " .. tostring(#dbg.filename + 1))
+		table.insert(out, "\t.size\t" .. fileSym .. ", " .. tostring(dbg.filename.count + 1))
 		table.insert(out, "")
 	end
 
@@ -170,17 +170,17 @@ end
 
 function glue_x86.originName(funcName) return ".Lfilc_origin_" .. funcName end
 
--- Callsite resolver thunk pizlonatedFI<sig>_NAME (weak/hidden), validated against the
--- reference Fil-C clang x86_64 output (test3.c -> pizlonatedFI2529_foo). Resolves the
--- callee's FO via pizlonated_NAME, validates it is a function object with the canonical
--- intval and matching signature, then tail-calls the fast entrypoint; on a signature
--- mismatch it marshals through the generic (buffer) CC.
+# Callsite resolver thunk pizlonatedFI<sig>_NAME (weak/hidden), validated against the
+# reference Fil-C clang x86_64 output (test3.c -> pizlonatedFI2529_foo). Resolves the
+# callee's FO via pizlonated_NAME, validates it is a function object with the canonical
+# intval and matching signature, then tail-calls the fast entrypoint; on a signature
+# mismatch it marshals through the generic (buffer) CC.
 function glue_x86.callsiteThunk(out, callee, sigDesc)
 	sig = sigDesc.signature
 	sym = "pizlonatedFI" .. tostring(sig) .. "_" .. callee
 	L = ".Lcsr_" .. callee .. "_" .. tostring(sig)
-	ivReg = { "%rdx", "%r8", "%r10" }   -- incoming fast-call arg iv registers
-	loReg = { "%rcx", "%r9", "%r11" }   -- incoming fast-call arg lo registers
+	ivReg = { "%rdx", "%r8", "%r10" }   # incoming fast-call arg iv registers
+	loReg = { "%rcx", "%r9", "%r11" }   # incoming fast-call arg lo registers
 	myth = "%rbx"
 	pool = { "%r12", "%r13", "%r14", "%r15" }
 	nextHold = 1
@@ -195,16 +195,16 @@ function glue_x86.callsiteThunk(out, callee, sigDesc)
 	retBytes = sigDesc.retWords * 8
 	function e(s) table.insert(out, s) end
 
-	-- push list (must leave rsp 16-byte aligned at the call: retaddr + N pushes, N odd).
+	# push list (must leave rsp 16-byte aligned at the call: retaddr + N pushes, N odd).
 	pushList = { myth }
 	for k = 1, sigDesc.argWords do
 		table.insert(pushList, args[k].iv)
 		if args[k].lo then table.insert(pushList, args[k].lo) end
 	end
-	filler = (#pushList % 2) == 0
+	filler = (pushList.count % 2) == 0
 	function restore()
 		if filler then e("\taddq\t$8, %rsp") end
-		for i = #pushList, 1, -1 do e("\tpopq\t" .. pushList[i]) end
+		for i = pushList.count, 1, -1 do e("\tpopq\t" .. pushList[i]) end
 	end
 
 	e("\t.text")
@@ -215,19 +215,19 @@ function glue_x86.callsiteThunk(out, callee, sigDesc)
 	e(sym .. ":")
 	for _, r in pushList do e("\tpushq\t" .. r) end
 	if filler then e("\tpushq\t%rax") end
-	-- stash incoming CC (myth + args) into callee-saved holds
+	# stash incoming CC (myth + args) into callee-saved holds
 	e("\tmovq\t%rdi, " .. myth)
 	for k = 1, sigDesc.argWords do
 		e("\tmovq\t" .. ivReg[k] .. ", " .. args[k].iv)
 		if args[k].lo then e("\tmovq\t" .. loReg[k] .. ", " .. args[k].lo) end
 	end
-	-- resolve FO
+	# resolve FO
 	e("\txorl\t%esi, %esi")
-	e("\tcallq\tpizlonated_" .. callee .. "@PLT")   -- rax = iv, rdx = lower(FO)
-	e("\tmovq\t%rdx, %rsi")                          -- rsi = FO payload
+	e("\tcallq\tpizlonated_" .. callee .. "@PLT")   # rax = iv, rdx = lower(FO)
+	e("\tmovq\t%rdx, %rsi")                          # rsi = FO payload
 	e("\ttestq\t%rdx, %rdx")
 	e("\tje\t" .. L .. "_fail")
-	e("\tmovq\t-8(%rsi), %rcx")                       -- aux word (flags)
+	e("\tmovq\t-8(%rsi), %rcx")                       # aux word (flags)
 	e("\tmovabsq\t$0x780000000000000, %rdx")
 	e("\tandq\t%rcx, %rdx")
 	e("\tmovabsq\t$0x80000000000000, %rdi")
@@ -235,12 +235,12 @@ function glue_x86.callsiteThunk(out, callee, sigDesc)
 	e("\tjne\t" .. L .. "_fail")
 	e("\tmovabsq\t$0xffffffffffff, %rdx")
 	e("\tandq\t%rdx, %rcx")
-	e("\tcmpq\t%rcx, %rax")                           -- intval must equal canonical entrypoint
+	e("\tcmpq\t%rcx, %rax")                           # intval must equal canonical entrypoint
 	e("\tjne\t" .. L .. "_fail")
-	e("\tcmpq\t$" .. tostring(sig) .. ", 16(%rsi)")   -- signature
+	e("\tcmpq\t$" .. tostring(sig) .. ", 16(%rsi)")   # signature
 	e("\tjne\t" .. L .. "_generic")
-	-- direct fast call
-	e("\tmovq\t(%rsi), %rax")                         -- fast entrypoint
+	# direct fast call
+	e("\tmovq\t(%rsi), %rax")                         # fast entrypoint
 	e("\tmovq\t" .. myth .. ", %rdi")
 	for k = 1, sigDesc.argWords do
 		e("\tmovq\t" .. args[k].iv .. ", " .. ivReg[k])
@@ -248,7 +248,7 @@ function glue_x86.callsiteThunk(out, callee, sigDesc)
 	end
 	restore()
 	e("\tjmpq\t*%rax")
-	-- generic (buffer) call
+	# generic (buffer) call
 	e(L .. "_generic:")
 	for k = 1, sigDesc.argWords do
 		e("\tmovq\t" .. args[k].iv .. ", " .. tostring(128 + 8 * (k - 1)) .. "(" .. myth .. ")")
@@ -260,7 +260,7 @@ function glue_x86.callsiteThunk(out, callee, sigDesc)
 	end
 	e("\tmovl\t$" .. tostring(argBytes) .. ", %edx")
 	e("\tmovq\t" .. myth .. ", %rdi")
-	e("\tcallq\t*8(%rsi)")                            -- generic entrypoint
+	e("\tcallq\t*8(%rsi)")                            # generic entrypoint
 	e("\ttestb\t$1, %al")
 	e("\tjne\t" .. L .. "_exc")
 	if sigDesc.retWords >= 1 then

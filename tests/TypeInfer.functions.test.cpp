@@ -36,7 +36,7 @@ TEST_SUITE_BEGIN("TypeInferFunctions");
 TEST_CASE_FIXTURE(Fixture, "general_case_table_literal_blocks")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 function f(x : {[any]: number})
    return x
 end
@@ -330,7 +330,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_arguments")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function g(a: number) end
 
@@ -351,7 +351,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_arguments")
 TEST_CASE_FIXTURE(Fixture, "too_many_arguments_error_location")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function myfunction(a: number, b:number) end
         myfunction(1)
@@ -605,7 +605,7 @@ TEST_CASE_FIXTURE(Fixture, "duplicate_functions2")
 TEST_CASE_FIXTURE(Fixture, "duplicate_functions_allowed_in_nonstrict")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function foo() end
 
         function foo() end
@@ -624,7 +624,7 @@ TEST_CASE_FIXTURE(Fixture, "duplicate_functions_with_different_signatures_not_al
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function foo(): number
             return 1
         end
@@ -831,7 +831,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "mutual_recursion")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         export startGui
         export characterAddedConnection: any = null as any
@@ -852,11 +852,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "toposort_doesnt_break_mutual_recursion")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export x = null
         export g
         function f() g() end
-        -- make sure print(x) doesn't get toposorted here, breaking the mutual block
+        # make sure print(x) doesn't get toposorted here, breaking the mutual block
         function g() x = f end
         print(x)
     )");
@@ -868,7 +868,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "toposort_doesnt_break_mutual_recursion")
 TEST_CASE_FIXTURE(Fixture, "check_function_before_lambda_that_uses_it")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function f()
             return 114
@@ -913,7 +913,7 @@ TEST_CASE_FIXTURE(Fixture, "report_exiting_without_return_nonstrict")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function f1(v): number?
             if v then
@@ -948,7 +948,7 @@ TEST_CASE_FIXTURE(Fixture, "report_exiting_without_return_nonstrict")
 TEST_CASE_FIXTURE(Fixture, "report_exiting_without_return_strict")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f1(v): number?
             if v then
@@ -1019,7 +1019,7 @@ TEST_CASE_FIXTURE(Fixture, "calling_function_with_incorrect_argument_type_yields
 TEST_CASE_FIXTURE(BuiltinsFixture, "calling_function_with_anytypepack_doesnt_leak_free_types")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function Test(a)
             return 1, ""
@@ -1045,7 +1045,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "calling_function_with_anytypepack_doesnt_lea
 TEST_CASE_FIXTURE(Fixture, "too_many_return_values")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f()
             return 55
@@ -1070,7 +1070,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_return_values_in_parentheses")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f()
             return 55
@@ -1095,7 +1095,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_return_values_no_function")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         export a, b = 55
     )");
@@ -1112,7 +1112,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_return_values_no_function")
 TEST_CASE_FIXTURE(Fixture, "ignored_return_values")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f()
             return 55, ""
@@ -1127,7 +1127,7 @@ TEST_CASE_FIXTURE(Fixture, "ignored_return_values")
 TEST_CASE_FIXTURE(Fixture, "function_does_not_return_enough_values")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f(): (number, string)
             return 55
@@ -1165,7 +1165,7 @@ TEST_CASE_FIXTURE(Fixture, "function_cast_error_uses_correct_language")
         const a: (string)->number = foo
         const b: (number, number)->(number, number) = foo
 
-        const c: (string, number)->number = foo -- no error
+        const c: (string, number)->number = foo # no error
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -1192,13 +1192,13 @@ TEST_CASE_FIXTURE(Fixture, "function_cast_error_uses_correct_language")
 TEST_CASE_FIXTURE(Fixture, "no_lossy_function_type")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const tbl = {}
         function tbl:abc(a: number, b: number)
             return a
         end
-        tbl:abc(1, 2) -- Line 6
-        --   | Column 14
+        tbl:abc(1, 2) # Line 6
+        #   | Column 14
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1461,7 +1461,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "infer_generic_lib_function_function_argument
 TEST_CASE_FIXTURE(Fixture, "variadic_any_is_compatible_with_a_generic_TypePack")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(...) return ... end
         const g = function(...) return f(...) end
     )");
@@ -1478,7 +1478,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "variadic_any_is_compatible_with_a_generic_Ty
         end
 
         function x<T...>(...: T...)
-            somethingThatsAny(...) -- Failed to unify variadic type packs
+            somethingThatsAny(...) # Failed to unify variadic type packs
         end
     )");
 
@@ -1642,14 +1642,14 @@ const b: B = a
 TEST_CASE_FIXTURE(BuiltinsFixture, "function_decl_quantify_right_type")
 {
     fileResolver.source["game/isAMagicMock"] = R"(
---!nonstrict
+#!nonstrict
 return function(value)
     return false
 end
     )";
 
     CheckResult result = check(R"(
---!nonstrict
+#!nonstrict
 const MagicMock = {}
 MagicMock.is = require(game.isAMagicMock)
 
@@ -1690,12 +1690,12 @@ const t: { f: ((x: number) -> number)? } = {}
 
 function t.f(x)
     print(x + 5)
-    return x .. "asd" -- 1st error: we know that return type is a number, not a string
+    return x .. "asd" # 1st error: we know that return type is a number, not a string
 end
 
 t.f = function(x)
     print(x + 5)
-    return x .. "asd" -- 2nd error: we know that return type is a number, not a string
+    return x .. "asd" # 2nd error: we know that return type is a number, not a string
 end
     )");
 
@@ -1716,7 +1716,7 @@ TEST_CASE_FIXTURE(Fixture, "inferred_higher_order_functions_are_quantified_at_th
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function resolveDispatcher()
             return (null as any) as {useContext: (number?) -> any}
@@ -1763,13 +1763,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_decl_non_self_unsealed_overwrite")
     CheckResult result = check(R"(
 const t = { f = null as ((x: number) -> number)? }
 
-function t.f(x: string): string -- 1st error: new function value type is incompatible
+function t.f(x: string): string # 1st error: new function value type is incompatible
     return x .. "asd"
 end
 
 t.f = function(x)
     print(x + 5)
-    return x .. "asd" -- 2nd error: we know that return type is a number, not a string
+    return x .. "asd" # 2nd error: we know that return type is a number, not a string
 end
     )");
 
@@ -1816,8 +1816,8 @@ TEST_CASE_FIXTURE(Fixture, "function_statement_sealed_table_assignment_through_i
     CheckResult result = check(R"(
 const t: {[string]: () -> number} = {}
 
-function t.a() return 1 end -- OK
-function t:b() return 2 end -- not OK
+function t.a() return 1 end # OK
+function t:b() return 2 end # not OK
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1995,7 +1995,7 @@ foo1()
 function foo2(a: number, b: string?) end
 foo2()
 
-function foo3(a: number, b: string?, c: any) end -- any is optional
+function foo3(a: number, b: string?, c: any) end # any is optional
 foo3()
 
 string.find()
@@ -2049,7 +2049,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "improved_function_arg_mismatch_error_nonstri
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function foo(a, b) end
         foo(string.find("hello", "e"))
     )");
@@ -2065,12 +2065,12 @@ TEST_CASE_FIXTURE(Fixture, "luau_subtyping_is_np_hard")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
---!strict
+#!strict
 
--- An example of coding up graph coloring in the Luau type system.
--- This codes a three-node, two color problem.
--- A three-node triangle is uncolorable,
--- but a three-node line is colorable.
+# An example of coding up graph coloring in the Luau type system.
+# This codes a three-node, two color problem.
+# A three-node triangle is uncolorable,
+# but a three-node line is colorable.
 
 type Red = "red"
 type Blue = "blue"
@@ -2091,8 +2091,8 @@ type Triangle = Line
 const x : Triangle = null as any
 const y : Line = null as any
 export z : Uncolorable = null as any
-z = x -- OK, so the triangle is uncolorable
-z = y -- Not OK, so the line is colorable
+z = x # OK, so the triangle is uncolorable
+z = y # Not OK, so the line is colorable
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2253,8 +2253,8 @@ TEST_CASE_FIXTURE(Fixture, "function_exprs_are_generalized_at_signature_scope_no
         export foo = null
         const bar = null
 
-        -- foo being a function expression is deliberate: the bug we're testing
-        -- only existed for function expressions, not for function statements.
+        # foo being a function expression is deliberate: the bug we're testing
+        # only existed for function expressions, not for function statements.
         foo = function(a)
             return bar
         end
@@ -2769,8 +2769,8 @@ TEST_CASE_FIXTURE(Fixture, "bidirectional_checking_of_callback_property")
         type Point = {x: number, y: number}
         const T : {callback: ((Point) -> ())?} = {}
 
-        T.callback = function(p) -- No error here
-            print(p.z)           -- error here.  Point has no property z
+        T.callback = function(p) # No error here
+            print(p.z)           # error here.  Point has no property z
         end
     )");
 
@@ -2803,7 +2803,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "bidirectional_inference_of_class_methods")
     CheckResult result = check(R"(
         const c = ChildClass.New()
 
-        -- Instead of reporting that the lambda is the wrong type, report that we are using its argument improperly.
+        # Instead of reporting that the lambda is the wrong type, report that we are using its argument improperly.
         c.Touched:Connect(function(other)
             print(other.ThisDoesNotExist)
         end)
@@ -2870,16 +2870,16 @@ TEST_CASE_FIXTURE(Fixture, "param_y_is_bounded_by_x_of_type_string")
 TEST_CASE_FIXTURE(BuiltinsFixture, "function_that_could_return_anything_is_compatible_with_function_that_is_expected_to_return_nothing")
 {
     CheckResult result = check(R"(
-        -- We infer foo : (g: (number) -> (...unknown)) -> ()
+        # We infer foo : (g: (number) -> (...unknown)) -> ()
         function foo(g)
             g(0)
         end
 
-        -- a requires a function that returns no values
+        # a requires a function that returns no values
         function a(f: ((number) -> ()) -> ())
         end
 
-        -- "Returns an unknown number of values" is close enough to "returns no values."
+        # "Returns an unknown number of values" is close enough to "returns no values."
         a(foo)
     )");
 
@@ -3105,7 +3105,7 @@ _ = _,{}
 TEST_CASE_FIXTURE(BuiltinsFixture, "overload_resolution_crash_when_argExprs_is_smaller_than_type_args")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 const parseError = null
 type Set<T> = {[T]: any}
 function captureDependencies(
@@ -3121,7 +3121,7 @@ function captureDependencies(
 TEST_CASE_FIXTURE(Fixture, "unpack_depends_on_rhs_pack_to_be_fully_resolved")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 function id(x)
     return x
 end
@@ -3135,7 +3135,7 @@ const u,v = id(3), id(id(44))
 TEST_CASE_FIXTURE(Fixture, "hidden_variadics_should_not_break_subtyping")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type FooType = {
             SetValue: (Value: number) -> ()
         }
@@ -3167,10 +3167,10 @@ TEST_CASE_FIXTURE(Fixture, "recursive_function_calls_should_not_use_the_generali
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function random()
-            return true -- chosen by fair coin toss
+            return true # chosen by fair coin toss
         end
 
         export f = null
@@ -3191,10 +3191,10 @@ TEST_CASE_FIXTURE(Fixture, "recursive_function_calls_should_not_use_the_generali
     ScopedFastFlag crashOnForce{FFlag::DebugLuauAssertOnForcedConstraint, true};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function random()
-            return true -- chosen by fair coin toss
+            return true # chosen by fair coin toss
         end
 
         function f()
@@ -3383,7 +3383,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unnecessary_nil_in_lower_bound_of_generic")
         function isAnArray(value)
             if type(value) == "table" then
                 for index, _ in next, value do
-                    -- assert index is not null
+                    # assert index is not null
                     math.max(0, index)
                 end
                 return true
@@ -3411,12 +3411,12 @@ TEST_CASE_FIXTURE(Fixture, "call_function_with_nothing_but_nil")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1640")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
-        table.create(1) -- top function call
+        #!strict
+        table.create(1) # top function call
 
         function f(): string
             if true then
-                table.create(1) -- middle function call
+                table.create(1) # middle function call
             end
 
             return table.concat({})
@@ -3427,7 +3427,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1640")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1854")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function bug()
             counter = 1
             const work = buffer.create(64)
@@ -3445,7 +3445,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_119545_pass_lambda_inside_table")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type foo1 = { foo: (number) -> () }
         type foo2 = { read foo: (number) -> () }
         function bar1(foo: foo1) end
@@ -3556,9 +3556,9 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_pick_better_arity")
 
     auto result = check(R"(
         const f: ((number) -> "one") & ((number, number) -> "two") = null as any
-        -- Casting here so that we always hit the case in overload selection
-        -- where one part has the correct arity but incorrect argument types,
-        -- and the other has the incorrect arity.
+        # Casting here so that we always hit the case in overload selection
+        # where one part has the correct arity but incorrect argument types,
+        # and the other has the incorrect arity.
         const g = f("s" as string)
     )");
 
@@ -3656,9 +3656,9 @@ TEST_CASE_FIXTURE(Fixture, "overload_selection_unambiguous_with_constraint")
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         const f: ((string, number) -> string) & ((number, boolean) -> number) = null as any
         function g(x)
-            -- When selecting an overload at this point, we'll reject the
-            -- second overload, and claim that this is the only possible
-            -- overload with a constraint of `x <: string`.
+            # When selecting an overload at this point, we'll reject the
+            # second overload, and claim that this is the only possible
+            # overload with a constraint of `x <: string`.
             f(x, 42)
         end
     )"));
@@ -3884,7 +3884,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pcall_example")
             return tostring(n)
         end
 
-        -- `s` now has type `string` and not `unknown`
+        # `s` now has type `string` and not `unknown`
         const success, s = pcall(makestr, 42)
     )"));
 
@@ -4006,7 +4006,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2216_recursive_global_function_works_as_
                     for n,v in par[i] do
                         if typeof(n) == "number" then
                             for m,u in flatten(v) do
-                                out[m] = u -- type error
+                                out[m] = u # type error
                             end
                         else
                             out[n] = v
@@ -4125,7 +4125,7 @@ TEST_CASE_FIXTURE(Fixture, "global_function_blocked")
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         const addInstanceToState: any = null
         const inst: any = null
 
@@ -4214,7 +4214,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "are_we_in_the_new_solver")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        -- This file should fail the old solver
+        # This file should fail the old solver
         function add(a, b)
             return a + b
         end
@@ -4271,7 +4271,7 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_functions_complete_ex")
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type Player = {}
 
         export type RemoteEventWrapper<T...> = {
@@ -4290,8 +4290,8 @@ TEST_CASE_FIXTURE(Fixture, "bidi_inference_functions_complete_ex")
 
         const payload = useRemoteEvent<<(Payload)>>("initial-payload")
 
-        -- We expect bidirectional inference to kick in here and ensure that
-        -- player and payload have non-unknown types.
+        # We expect bidirectional inference to kick in here and ensure that
+        # player and payload have non-unknown types.
         payload:connect(function(player, payload)
             const _ = player
             const _ = payload
@@ -4476,7 +4476,7 @@ TEST_CASE_FIXTURE(Fixture, "call_with_any_arg_and_optional_return_arg")
 {
     ScopedFastFlag sff{FFlag::LuauCallErrorReportingRecoversArgumentLocationsForPacks, true};
     auto result = check(R"(
-        --!strict
+        #!strict
         const hrp : any = true
         const boo : () -> number? = (null as any)
         const bad : (x : number, y : number) -> () = (null as any)
@@ -4495,7 +4495,7 @@ TEST_CASE_FIXTURE(Fixture, "semantic_subtyping_not_working")
     ScopedFastFlag _{FFlag::LuauRefactorStringSemanticSubtyping, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function s(x: string | boolean | null) end
         function f(a) return a end
         function g(a) s(f(a)) end

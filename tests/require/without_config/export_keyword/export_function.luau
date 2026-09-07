@@ -1,4 +1,4 @@
--- basic export of a function
+# basic export of a function
 export function add(a: number, b: number): number
     return a + b
 end
@@ -8,5 +8,5 @@ export function greet(name: string): string
 end
 
 export function noop()
-    -- do nothing
+    # do nothing
 end

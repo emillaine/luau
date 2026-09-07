@@ -30,14 +30,14 @@ TEST_SUITE_BEGIN("TypeInferModules");
 TEST_CASE_FIXTURE(BuiltinsFixture, "dcr_require_basic")
 {
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         return {
             a = 1,
         }
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const b = A.a
@@ -80,7 +80,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require")
         fileResolver.source["game/B"] = R"(
             const Hooty = require(game.A)
 
-            const h  = null-- free!
+            const h  = null# free!
             const i = Hooty.hooty(h)
         )";
     }
@@ -189,14 +189,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "require_a_variadic_function")
 TEST_CASE_FIXTURE(BuiltinsFixture, "cross_module_table_freeze")
 {
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         return {
             a = 1,
         }
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         return table.freeze(require(game.A))
     )";
 
@@ -278,12 +278,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "general_require_call_expression")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     fileResolver.source["game/A"] = R"(
---!strict
+#!strict
 return { def = 4 }
     )";
 
     fileResolver.source["game/B"] = R"(
---!strict
+#!strict
 const tbl = { abc = require(game.A) }
 export a : string = ""
 a = tbl.abc.def
@@ -334,7 +334,7 @@ return m
 TEST_CASE_FIXTURE(BuiltinsFixture, "custom_require_global")
 {
     CheckResult result = check(R"(
---!nonstrict
+#!nonstrict
 require = function(a) end
 
 const crash = require(game.A)
@@ -432,10 +432,10 @@ const arrayops = require(game.A)
 const tbl = {}
 tbl.a = 2
 function tbl:foo(b: number, c: number)
-    -- introduce BoundType to imported type
+    # introduce BoundType to imported type
     arrayops.foo(self._regions)
 end
--- this alias decreases function type level and causes a demotion of its type
+# this alias decreases function type level and causes a demotion of its type
 type Table = typeof(tbl)
 )");
 
@@ -457,11 +457,11 @@ const arrayops = require(game.A)
 const tbl = {}
 tbl.a = 2
 function tbl:foo(b: number, c: number)
-    -- introduce boundTo TableType to imported type
+    # introduce boundTo TableType to imported type
     self.x.a = 2
     arrayops.foo(self.x)
 end
--- this alias decreases function type level and causes a demotion of its type
+# this alias decreases function type level and causes a demotion of its type
 type Table = typeof(tbl)
 )");
 
@@ -620,7 +620,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ensure_scope_is_nullptr_after_shallow_copy")
     getFrontend().options.retainFullTypeGraphs = false;
 
     fileResolver.source["game/A"] = R"(
--- Roughly taken from ReactTypes.lua
+# Roughly taken from ReactTypes.lua
 type CoreBinding<T> = {}
 type BindingMap = {}
 export type Binding<T> = CoreBinding<T> & BindingMap
@@ -639,7 +639,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ensure_free_variables_are_generialized_acros
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     fileResolver.source["game/A"] = R"(
--- Roughly taken from react-shallow-renderer
+# Roughly taken from react-shallow-renderer
 function createUpdater(renderer)
     const updater = {
         _renderer = renderer,
@@ -697,11 +697,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "untitled_segfault_number_13")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     fileResolver.source["game/A"] = R"(
-        -- minimized from roblox-requests/http/src/response.lua
+        # minimized from roblox-requests/http/src/response.lua
         const Response = {}
         Response.__index = Response
         function Response.new(content_type)
-            -- creates response object from original request and roblox http response
+            # creates response object from original request and roblox http response
             const self = setmetatable({}, Response)
             self.content_type = content_type
             return self
@@ -713,7 +713,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "untitled_segfault_number_13")
             end
         end
 
-        ---------------
+        ##-----------
 
         return Response
     )";
@@ -747,7 +747,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "spooky_blocked_type_laundered_by_bound_type"
         end
 
         function Cache.is_cached(url, req_id)
-            -- check local server cache first
+            # check local server cache first
 
             const setting_key = Cache.should_cache(url)
             const settings = Cache.settings[setting_key]
@@ -817,7 +817,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "leaky_generics")
 TEST_CASE_FIXTURE(BuiltinsFixture, "cycles_dont_make_everything_any")
 {
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         const module = {}
 
         function module.foo()
@@ -833,7 +833,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cycles_dont_make_everything_any")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const module = {}
 
         function module.foo()
@@ -1043,7 +1043,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_basic")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export version = "1.0.0"
         export const name = "test module"
         export count = 41
@@ -1052,7 +1052,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_basic")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const version = A.version
@@ -1082,7 +1082,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_initializer_type_packs")
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
 
         function makeValues(): ({ value: number }, string)
             return {value = 42}, "unused"
@@ -1120,7 +1120,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_initializer_type_packs_multi
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
 
         function makeValues(): ({ value: number }, string)
             return {value = 42}, "unused"
@@ -1150,7 +1150,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_mutual_recursive_functions")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export a, b
 
         function a()
@@ -1163,7 +1163,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_mutual_recursive_functions")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const a = A.a
@@ -1186,14 +1186,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_unassigned_local_stays_nil")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export a
         export b = function() return 1 end
         b = null
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const a = A.a
@@ -1217,7 +1217,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "returned_module_unassigned_local_stays_nil")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         const a = null
         b = function() return 1 end
         b = null
@@ -1225,7 +1225,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "returned_module_unassigned_local_stays_nil")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const a = A.a
@@ -1248,7 +1248,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_function")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export function add(a: number, b: number): number
             return a + b
         end
@@ -1258,12 +1258,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_function")
         end
 
         export function noop()
-            -- do nothing
+            # do nothing
         end
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const add = A.add
@@ -1288,7 +1288,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_multret")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         function huh()
             return 42, "huh", false
         end
@@ -1297,7 +1297,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_multret")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const a = A.a
@@ -1322,7 +1322,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_partial_multret")
     ScopedFastFlag _[3]{{FFlag::LuauExportValueSyntax, true}, {FFlag::DebugLuauForceOldSolver, false}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         function huh()
             return "huh", false
         end
@@ -1331,7 +1331,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_partial_multret")
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const a = A.a
@@ -1434,14 +1434,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_uses_binding_type
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export x: number = 5
         export y: string = "hello"
         export z: {name: string} = {name = "test"}
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const x = A.x
@@ -1476,13 +1476,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_preferred_over_in
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         type Callback = (number) -> string
         export handler: Callback = function(n) return tostring(n) end
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
 
         const h = A.handler
@@ -1508,12 +1508,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_binding_is_readonly")
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export Value = 42
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
         A.Value = 13
     )";
@@ -1536,7 +1536,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_mismatch_errors")
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         export x: number = "RUH ROH"
     )";
 

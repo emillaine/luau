@@ -27,7 +27,7 @@ TEST_SUITE_BEGIN("NonstrictModeTests");
 TEST_CASE_FIXTURE(Fixture, "infer_nullary_function")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function foo(x, y) end
     )");
 
@@ -44,7 +44,7 @@ TEST_CASE_FIXTURE(Fixture, "infer_nullary_function")
 TEST_CASE_FIXTURE(Fixture, "infer_the_maximum_number_of_values_the_function_could_return")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function getMinCardCountForWidth(width)
             if width < 513 then
                 return 3
@@ -77,7 +77,7 @@ TEST_CASE_FIXTURE(Fixture, "return_annotation_is_still_checked")
 TEST_CASE_FIXTURE(Fixture, "function_parameters_are_any")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function f(arg)
             arg = 9
             arg:concat(4)
@@ -90,7 +90,7 @@ TEST_CASE_FIXTURE(Fixture, "function_parameters_are_any")
 TEST_CASE_FIXTURE(Fixture, "inconsistent_return_types_are_ok")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function f()
             if 1 then
                 return 4
@@ -107,7 +107,7 @@ TEST_CASE_FIXTURE(Fixture, "inconsistent_return_types_are_ok")
 TEST_CASE_FIXTURE(Fixture, "locals_are_any_by_default")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const m = 55
     )");
 
@@ -122,7 +122,7 @@ TEST_CASE_FIXTURE(Fixture, "locals_are_any_by_default")
 TEST_CASE_FIXTURE(Fixture, "parameters_having_type_any_are_optional")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function f(a, b)
             return a
         end
@@ -137,7 +137,7 @@ TEST_CASE_FIXTURE(Fixture, "local_tables_are_not_any")
 {
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const T = {}
         function T:method() end
         function T.staticmethod() end
@@ -155,7 +155,7 @@ TEST_CASE_FIXTURE(Fixture, "offer_a_hint_if_you_use_a_dot_instead_of_a_colon")
 {
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const T = {}
         function T:method(x: number) end
         T.method(5)
@@ -169,7 +169,7 @@ TEST_CASE_FIXTURE(Fixture, "offer_a_hint_if_you_use_a_dot_instead_of_a_colon")
 TEST_CASE_FIXTURE(Fixture, "table_props_are_any")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const T = {}
         T.foo = 55
     )");
@@ -185,7 +185,7 @@ TEST_CASE_FIXTURE(Fixture, "table_props_are_any")
 TEST_CASE_FIXTURE(Fixture, "inline_table_props_are_also_any")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const T = {
             one = 1,
             two = 'two',
@@ -204,7 +204,7 @@ TEST_CASE_FIXTURE(Fixture, "inline_table_props_are_also_any")
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_iterator_variables_are_any")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function requires_a_table(arg: {}) end
         function requires_a_number(arg: number) end
 
@@ -223,7 +223,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_iterator_variables_are_any")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_dot_insert_and_recursive_calls")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function populateListFromIds(list, normalizedData)
             const newList = {}
 
@@ -245,7 +245,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_dot_insert_and_recursive_calls")
 TEST_CASE_FIXTURE(Fixture, "delay_function_does_not_require_its_argument_to_return_anything")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function delay(ms: number?, cb: () -> ()): () end
 
@@ -258,7 +258,7 @@ TEST_CASE_FIXTURE(Fixture, "delay_function_does_not_require_its_argument_to_retu
 TEST_CASE_FIXTURE(Fixture, "inconsistent_module_return_types_are_ok")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         const FFlag: any = null as any
 
@@ -283,7 +283,7 @@ TEST_CASE_FIXTURE(Fixture, "inconsistent_module_return_types_are_ok")
 TEST_CASE_FIXTURE(Fixture, "returning_insufficient_return_values")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function foo(): (boolean, string?)
             if true then
@@ -300,7 +300,7 @@ TEST_CASE_FIXTURE(Fixture, "returning_insufficient_return_values")
 TEST_CASE_FIXTURE(Fixture, "returning_too_many_values")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function foo(): boolean
             if true then
@@ -325,7 +325,7 @@ TEST_CASE_FIXTURE(Fixture, "standalone_constraint_solving_incomplete_is_hidden_n
     };
 
     CheckResult results = check(R"(
-        --!nonstrict
+        #!nonstrict
         function _f(_x: _luau_force_constraint_solving_incomplete) end
     )");
 
@@ -340,7 +340,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "non_standalone_constraint_solving_incomplete
     };
 
     CheckResult results = check(R"(
-        --!nonstrict
+        #!nonstrict
         function _f(_x: _luau_force_constraint_solving_incomplete) end
         math.abs("pls")
     )");
