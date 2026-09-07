@@ -1262,6 +1262,11 @@ TEST_CASE("Assert")
     runConformance("assert.luau");
 }
 
+TEST_CASE("ImportWildcard")
+{
+    runConformance("import_wildcard.luau");
+}
+
 TEST_CASE("Basic")
 {
     runConformance("basic.luau");

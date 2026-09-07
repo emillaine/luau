@@ -302,6 +302,7 @@ message Stat
         StatRequireIntoLocalHelper require_into_local = 17;
         StatTypeFunction type_function = 18;
         StatClass class = 19;
+        StatImport import = 20;
     }
 }
 
@@ -464,6 +465,11 @@ message StatClass
     optional bool is_exported = 6 [ default = false ];
     optional int32 extends = 7;
     required bool is_open = 8;
+}
+
+message StatImport
+{
+    required Expr path = 1;
 }
 
 message StatRequireIntoLocalHelper

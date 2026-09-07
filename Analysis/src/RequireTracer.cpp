@@ -23,6 +23,12 @@ struct RequireTracer : AstVisitor
         return false;
     }
 
+    bool visit(AstStatImport* stat) override
+    {
+        importPaths.push_back(stat);
+        return true;
+    }
+
     bool visit(AstExprCall* expr) override
     {
         AstExprGlobal* global = expr->func->as<AstExprGlobal>();
@@ -97,11 +103,14 @@ struct RequireTracer : AstVisitor
     {
         ModuleInfo moduleContext{currentModuleName};
 
-        // seed worklist with require arguments
-        work.reserve(requireCalls.size());
+        // seed worklist with require arguments and import paths
+        work.reserve(requireCalls.size() + importPaths.size());
 
         for (AstExprCall* require : requireCalls)
             work.push_back(require->args.data[0]);
+
+        for (AstStatImport* import : importPaths)
+            work.push_back(import->path);
 
         // push all dependent expressions to the work stack; note that the vector is modified during traversal
         for (size_t i = 0; i < work.size(); ++i)
@@ -144,7 +153,15 @@ struct RequireTracer : AstVisitor
         }
 
         // resolve all requires according to their argument
-        result.requireList.reserve(requireCalls.size());
+        // Imports first so mixed import/require lists preserve source-like order for
+        // modules that only `import` then `require` (both are dependency edges).
+        result.requireList.reserve(requireCalls.size() + importPaths.size());
+
+        for (AstStatImport* import : importPaths)
+        {
+            if (const ModuleInfo* info = result.exprs.find(import->path))
+                result.requireList.push_back({info->name, import->location});
+        }
 
         for (AstExprCall* require : requireCalls)
         {
@@ -171,6 +188,7 @@ struct RequireTracer : AstVisitor
     DenseHashMap<AstLocal*, AstExpr*> locals;
     std::vector<AstNode*> work;
     std::vector<AstExprCall*> requireCalls;
+    std::vector<AstStatImport*> importPaths;
 };
 
 RequireTraceResult traceRequires(FileResolver* fileResolver, AstStatBlock* root, const ModuleName& currentModuleName, const TypeCheckLimits& limits)

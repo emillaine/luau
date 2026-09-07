@@ -194,6 +194,9 @@ private:
     // return [explist]
     AstStat* parseReturn();
 
+    // import expr
+    AstStat* parseImport();
+
     // type Name `=' Type
     AstStat* parseTypeAlias(const Location& start, bool exported, Position typeKeywordPosition);
 

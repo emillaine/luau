@@ -12,6 +12,7 @@
 #include "Luau/Frontend.h"
 #include "Luau/TimeTrace.h"
 #include "Luau/ToString.h"
+#include "Luau/Type.h"
 #include "Luau/Subtyping.h"
 #include "Luau/TypeInfer.h"
 #include "Luau/TypePack.h"
@@ -33,8 +34,8 @@ LUAU_FASTFLAGVARIABLE(LuauCheckTypeForDeprecated)
 LUAU_FLAGVERSION(LuauCheckTypeForDeprecated, 2)
 LUAU_FASTFLAGVARIABLE(LuauUseExplicitTypeArgsInGenerics)
 
-static constexpr std::array<std::string_view, 12> kStatementStartingKeywords =
-    {"while", "if", "repeat", "function", "do", "for", "return", "break", "continue", "type", "export", "const"};
+static constexpr std::array<std::string_view, 13> kStatementStartingKeywords =
+    {"while", "if", "repeat", "function", "do", "for", "return", "break", "continue", "type", "export", "const", "import"};
 
 static constexpr std::array<std::string_view, 6> kHotComments = {"nolint", "nocheck", "nonstrict", "strict", "optimize", "native"};
 
@@ -1155,6 +1156,24 @@ AutocompleteEntryMap autocompleteTypeNames(
                     result[name] = AutocompleteEntry{AutocompleteEntryKind::Module, binding->typeId};
             }
         }
+
+        for (const Scope::WildcardImport& wi : scope->wildcardImports)
+        {
+            for (const auto& [name, ty] : wi.exportedTypes)
+            {
+                if (!result.count(name))
+                    result[name] = AutocompleteEntry{
+                        AutocompleteEntryKind::Type,
+                        ty.type,
+                        false,
+                        false,
+                        TypeCorrectKind::None,
+                        std::nullopt,
+                        std::nullopt,
+                        ty.type->documentationSymbol
+                    };
+            }
+        }
     }
 
     AstNode* parent = nullptr;
@@ -1530,6 +1549,31 @@ static AutocompleteEntryMap autocompleteStatement(
                     {},
                     getParenRecommendation(binding.typeId, ancestry, TypeCorrectKind::None)
                 };
+            }
+        }
+
+        for (const Scope::WildcardImport& wi : scope->wildcardImports)
+        {
+            if (const TableType* tt = getTableType(wi.returnType))
+            {
+                for (const auto& [name, prop] : tt->props)
+                {
+                    if (!prop.readTy || result.count(name))
+                        continue;
+
+                    result[name] = {
+                        AutocompleteEntryKind::Binding,
+                        *prop.readTy,
+                        false,
+                        false,
+                        TypeCorrectKind::None,
+                        std::nullopt,
+                        std::nullopt,
+                        std::nullopt,
+                        {},
+                        getParenRecommendation(*prop.readTy, ancestry, TypeCorrectKind::None)
+                    };
+                }
             }
         }
 

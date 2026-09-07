@@ -423,6 +423,8 @@ static void traverseproto(global_State* g, Proto* f)
 static void traverseclosure(global_State* g, Closure* cl)
 {
     markobject(g, cl->env);
+    if (cl->wildcardimports)
+        markobject(g, cl->wildcardimports);
     if (cl->isC)
     {
         if (TString* str = cl->c.debugname)

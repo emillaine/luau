@@ -467,6 +467,7 @@ typedef struct Closure
 
     GCObject* gclist;
     struct LuaTable* env;
+    struct LuaTable* wildcardimports;
 
     union
     {

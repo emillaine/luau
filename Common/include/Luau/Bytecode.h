@@ -471,6 +471,11 @@ enum LuauOpcode
     // AUX: constant table index of unreified class object
     LOP_NEWCLASS,
 
+    // SETWILDCARDIMPORT: store a required module table on the running closure for wildcard `import`
+    // A: register holding the required module
+    // B: 0-based import index
+    LOP_SETWILDCARDIMPORT,
+
     // Enum entry for number of opcodes, not a valid opcode by itself!
     LOP__COUNT
 };

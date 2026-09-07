@@ -1993,6 +1993,10 @@ void BytecodeBuilder::validateInstructions() const
         }
         break;
 
+        case LOP_SETWILDCARDIMPORT:
+            VREG(LUAU_INSN_A(insn));
+            break;
+
         default:
             LUAU_ASSERT(!"Unsupported opcode");
         }
@@ -3006,6 +3010,10 @@ void BytecodeBuilder::dumpInstruction(const uint32_t* code, std::string& result,
         dumpConstant(result, *code, false);
         result.append("]\n");
         code++;
+        break;
+
+    case LOP_SETWILDCARDIMPORT:
+        formatAppend(result, "SETWILDCARDIMPORT R%d %d\n", LUAU_INSN_A(insn), LUAU_INSN_B(insn));
         break;
 
     default:

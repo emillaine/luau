@@ -456,6 +456,8 @@ AstStat* Parser::parseStat()
         return parseFunctionStat(AstArray<AstAttr*>({nullptr, 0}));
     case Lexeme::ReservedReturn:
         return parseReturn();
+    case Lexeme::ReservedImport:
+        return parseImport();
     case Lexeme::ReservedBreak:
         return parseBreak();
     case Lexeme::Attribute:
@@ -1515,6 +1517,21 @@ AstStat* Parser::parseReturn()
     }
 
     return node;
+}
+
+AstStat* Parser::parseImport()
+{
+    Location start = lexer.current().location;
+
+    nextLexeme(); // consume `import`
+
+    AstExpr* path = parseExpr();
+    Location loc(start, path->location);
+
+    if (functionStack.size() != 1 || recursionCounter != 1)
+        report(start, "import must be at module top level");
+
+    return allocator.alloc<AstStatImport>(loc, path);
 }
 
 // type Name [`<' varlist `>'] `=' Type

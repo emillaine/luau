@@ -105,6 +105,9 @@ void luaV_getimport(lua_State* L, LuaTable* env, TValue* k, StkId res, uint32_t 
     sethvalue(L, &g, env);
     luaV_gettable(L, &g, &k[id0], res);
 
+    if (ttisnil(res) && L->ci && ttisfunction(L->ci->func) && !clvalue(L->ci->func)->isC)
+        luaV_getwildcard(L, clvalue(L->ci->func), tsvalue(&k[id0]), res);
+
     // table lookup for id1
     if (count < 2)
         return;

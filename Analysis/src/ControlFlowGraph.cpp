@@ -244,6 +244,8 @@ void CFGBuilder::lower(AstStat* statement)
         lower(statWhile);
     else if (auto expr = statement->as<AstStatExpr>())
         lower(expr);
+    else if (auto imp = statement->as<AstStatImport>())
+        lowerExpr(imp->path);
     else
     {
         LUAU_ASSERT(!"Unhandled statement");

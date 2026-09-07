@@ -1031,6 +1031,16 @@ struct ErrorConverter
         else
             return "Access to 'self' before all of its fields have been initialized";
     }
+
+    std::string operator()(const ClashWithLocal& e) const
+    {
+        return "Imported name '" + e.name + "' clashes with an existing name";
+    }
+
+    std::string operator()(const AmbiguousImport& e) const
+    {
+        return "Ambiguous name '" + e.name + "' is exported by multiple imports; disambiguate with `M = require(\"…\"); M." + e.name + "`";
+    }
 };
 
 struct InvalidNameChecker
@@ -1488,6 +1498,16 @@ bool UninitializedFieldAccess::operator==(const UninitializedFieldAccess& rhs) c
     return fieldName == rhs.fieldName;
 }
 
+bool ClashWithLocal::operator==(const ClashWithLocal& rhs) const
+{
+    return name == rhs.name && importLoc == rhs.importLoc && existingLoc == rhs.existingLoc;
+}
+
+bool AmbiguousImport::operator==(const AmbiguousImport& rhs) const
+{
+    return name == rhs.name && importLocs == rhs.importLocs;
+}
+
 
 std::string toString(const TypeError& error)
 {
@@ -1749,6 +1769,12 @@ void copyError(T& e, TypeArena& destArena, CloneState& cloneState)
         e.arguments = clone(e.arguments);
     }
     else if constexpr (std::is_same_v<T, UninitializedFieldAccess>)
+    {
+    }
+    else if constexpr (std::is_same_v<T, ClashWithLocal>)
+    {
+    }
+    else if constexpr (std::is_same_v<T, AmbiguousImport>)
     {
     }
     else

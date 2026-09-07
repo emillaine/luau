@@ -181,6 +181,7 @@ TEST_CASE("elseif_is_not_reserved")
     CHECK_EQ(elseif.type, Lexeme::Name);
     CHECK_EQ(elseif.name, std::string("elseif"));
     CHECK_FALSE(Lexer::isReserved("elseif"));
+    CHECK(Lexer::isReserved("import"));
 
     CHECK_EQ(lexer.next().type, Lexeme::ReservedElse);
     CHECK_EQ(lexer.next().type, Lexeme::ReservedIf);

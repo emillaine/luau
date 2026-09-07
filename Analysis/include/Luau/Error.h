@@ -10,6 +10,7 @@
 #include "Luau/Variant.h"
 
 #include <set>
+#include <vector>
 
 namespace Luau
 {
@@ -619,6 +620,23 @@ struct UninitializedFieldAccess
     bool operator==(const UninitializedFieldAccess& rhs) const;
 };
 
+struct ClashWithLocal
+{
+    Name name;
+    Location importLoc;
+    Location existingLoc;
+
+    bool operator==(const ClashWithLocal& rhs) const;
+};
+
+struct AmbiguousImport
+{
+    Name name;
+    std::vector<Location> importLocs;
+
+    bool operator==(const AmbiguousImport& rhs) const;
+};
+
 using TypeErrorData = Variant<
     TypeMismatch,
     UnknownSymbol,
@@ -684,7 +702,9 @@ using TypeErrorData = Variant<
     InstantiateGenericsOnNonFunction,
     TypeInstantiationCountMismatch,
     AmbiguousFunctionCall,
-    UninitializedFieldAccess>;
+    UninitializedFieldAccess,
+    ClashWithLocal,
+    AmbiguousImport>;
 
 struct TypeErrorSummary
 {

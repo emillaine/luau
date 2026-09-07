@@ -207,6 +207,72 @@ void luaV_gettable(lua_State* L, const TValue* t, TValue* key, StkId val)
     luaG_runerror(L, "'__index' chain too long; possible loop");
 }
 
+static LuaTable* luaV_wildcardtable(lua_State* L, Closure* cl)
+{
+    if (cl && !cl->isC && cl->wildcardimports)
+        return cl->wildcardimports;
+
+    if (!L->ci)
+        return NULL;
+
+    for (CallInfo* ci = L->ci; ci >= L->base_ci; ci--)
+    {
+        if (!ttisfunction(ci->func))
+            continue;
+
+        Closure* c = clvalue(ci->func);
+        if (!c->isC && c->wildcardimports)
+            return c->wildcardimports;
+    }
+
+    return NULL;
+}
+
+int luaV_getwildcard(lua_State* L, Closure* cl, TString* name, TValue* res)
+{
+    LuaTable* list = luaV_wildcardtable(L, cl);
+    if (!list)
+        return 0;
+
+    int n = luaH_getn(list);
+    for (int i = 1; i <= n; ++i)
+    {
+        const TValue* mod = luaH_getnum(list, i);
+        if (!ttistable(mod))
+            continue;
+
+        const TValue* v = luaH_getstr(hvalue(mod), name);
+        if (!ttisnil(v))
+        {
+            setobj(L, res, v);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int luaV_haswildcard(lua_State* L, Closure* cl, TString* name)
+{
+    LuaTable* list = luaV_wildcardtable(L, cl);
+    if (!list)
+        return 0;
+
+    int n = luaH_getn(list);
+    for (int i = 1; i <= n; ++i)
+    {
+        const TValue* mod = luaH_getnum(list, i);
+        if (!ttistable(mod))
+            continue;
+
+        const TValue* v = luaH_getstr(hvalue(mod), name);
+        if (!ttisnil(v))
+            return 1;
+    }
+
+    return 0;
+}
+
 void luaV_settable(lua_State* L, const TValue* t, TValue* key, StkId val)
 {
     int loop;

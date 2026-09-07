@@ -666,6 +666,8 @@ void TypeChecker2::visit(AstStat* stat)
         return visit(s);
     else if (auto s = stat->as<AstStatLocalFunction>())
         return visit(s);
+    else if (auto s = stat->as<AstStatImport>())
+        return visit(s);
     else if (auto s = stat->as<AstStatTypeAlias>())
         return visit(s);
     else if (auto f = stat->as<AstStatTypeFunction>())
@@ -1309,6 +1311,11 @@ void TypeChecker2::visit(AstStatLocalFunction* stat)
     visit(stat->func);
 }
 
+void TypeChecker2::visit(AstStatImport* stat)
+{
+    visit(stat->path, ValueContext::RValue);
+}
+
 void TypeChecker2::visit(const AstTypeList* typeList)
 {
     for (AstType* ty : typeList->types)
@@ -1709,18 +1716,24 @@ void TypeChecker2::visit(AstExprLocal* expr)
 void TypeChecker2::visit(AstExprGlobal* expr)
 {
     NotNull<Scope> scope = stack.back();
-    if (!scope->lookup(expr->name))
-    {
-        reportError(UnknownSymbol{expr->name.value, UnknownSymbol::Binding}, expr->location);
-    }
-    else
+    if (scope->lookup(expr->name))
     {
         if (scope->shouldWarnGlobal(expr->name.value) && !warnedGlobals.contains(expr->name.value))
         {
             reportError(UnknownSymbol{expr->name.value, UnknownSymbol::Binding}, expr->location);
             warnedGlobals.insert(expr->name.value);
         }
+        return;
     }
+
+    Scope::WildcardNameLookup imported = scope->lookupWildcardValue(expr->name.value);
+    if (imported.kind == Scope::WildcardNameLookup::Unique)
+        return;
+
+    if (imported.kind == Scope::WildcardNameLookup::Ambiguous)
+        reportError(AmbiguousImport{expr->name.value, imported.importLocs}, expr->location);
+    else
+        reportError(UnknownSymbol{expr->name.value, UnknownSymbol::Binding}, expr->location);
 }
 
 void TypeChecker2::visit(AstExprVarargs* expr)
@@ -3029,6 +3042,15 @@ void TypeChecker2::visit(AstTypeReference* ty)
     LUAU_ASSERT(scope);
 
     std::optional<TypeFun> alias = (ty->prefix) ? scope->lookupImportedType(ty->prefix->value, ty->name.value) : scope->lookupType(ty->name.value);
+
+    if (!alias && !ty->prefix)
+    {
+        Scope::WildcardNameLookup imported = scope->lookupWildcardType(ty->name.value);
+        if (imported.kind == Scope::WildcardNameLookup::Unique)
+            alias = imported.type;
+        else if (imported.kind == Scope::WildcardNameLookup::Ambiguous)
+            return reportError(AmbiguousImport{ty->name.value, imported.importLocs}, ty->location);
+    }
 
     if (alias.has_value())
     {

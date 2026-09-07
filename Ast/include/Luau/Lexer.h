@@ -75,6 +75,7 @@ struct Lexeme
         ReservedFor,
         ReservedFunction,
         ReservedIf,
+        ReservedImport,
         ReservedIn,
         ReservedNot,
         ReservedNull,

@@ -368,6 +368,8 @@ ControlFlow TypeChecker::check(const ScopePtr& scope, const AstStat& program)
         ice("Should not be calling two-argument check() on a function statement", program.location);
     else if (program.is<AstStatLocalFunction>())
         ice("Should not be calling two-argument check() on a function statement", program.location);
+    else if (program.is<AstStatImport>())
+        return ControlFlow::None;
     else if (auto typealias = program.as<AstStatTypeAlias>())
         return check(scope, *typealias);
     else if (auto typefunction = program.as<AstStatTypeFunction>())

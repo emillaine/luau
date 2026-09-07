@@ -245,6 +245,8 @@ const char* getLuauOpcodeName(LuauOpcode cmd)
         return "FASTPCALL";
     case LOP_NEWCLASS:
         return "NEWCLASS";
+    case LOP_SETWILDCARDIMPORT:
+        return "SETWILDCARDIMPORT";
     default:
         LUAU_ASSERT(!"Unsupported opcode");
         return "unknown";

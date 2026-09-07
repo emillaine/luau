@@ -170,6 +170,7 @@ private:
     ControlFlow visit(AstStatCompoundAssign* c);
     ControlFlow visit(AstStatFunction* f);
     ControlFlow visit(AstStatLocalFunction* l);
+    ControlFlow visit(AstStatImport* i);
     ControlFlow visit(AstStatTypeAlias* t);
     ControlFlow visit(AstStatTypeFunction* f);
     ControlFlow visit(AstStatDeclareGlobal* d);
