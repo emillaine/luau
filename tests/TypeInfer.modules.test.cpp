@@ -1561,7 +1561,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_types_and_values")
     fileResolver.source["game/B"] = R"(
         #!strict
         import game.A
-        x: Foo = make()
+        const x: Foo = make()
     )";
 
     CheckResult aResult = getFrontend().check("game/A");
@@ -1574,7 +1574,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_types_and_values")
     REQUIRE(b != nullptr);
     std::optional<TypeId> xType = requireType(b, "x");
     REQUIRE(xType);
-    CHECK(toString(*xType) == "{ x: number }");
+    CHECK(toString(*xType) == "Foo");
 }
 
 TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_clash_with_local")
@@ -1654,6 +1654,29 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_disambiguate_with_require")
 
     CheckResult result = getFrontend().check("game/C");
     LUAU_REQUIRE_NO_ERRORS(result);
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_assign_is_clash")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        function make(): number
+            return 1
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        make = 0
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(get<ClashWithLocal>(result.errors[0]));
 }
 
 TEST_SUITE_END();

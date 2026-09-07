@@ -8,12 +8,14 @@ _G.require = function(path)
             end,
             foo = 42,
         }
-    else if path == "b" then
-        return {
-            bar = 7,
-        }
     else
-        error("unknown module " .. tostring(path))
+        if path == "b" then
+            return {
+                bar = 7,
+            }
+        else
+            error("unknown module " .. tostring(path))
+        end
     end
 end
 
@@ -36,11 +38,5 @@ function nested()
     return make() + bar
 end
 assert(nested() == 8)
-
-ok, err = pcall(function()
-    make = 0
-end)
-assert(not ok)
-assert(string.find(err, "imported name") != nil)
 
 return "OK"
