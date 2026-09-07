@@ -429,25 +429,11 @@ TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireRelativeToRequiringFile")
     assertOutputContainsAll({"true", "result from dependency", "required into module"});
 }
 
-TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireLua")
-{
-    std::string path = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/lua_dependency";
-    runProtectedRequire(path);
-    assertOutputContainsAll({"true", "result from lua_dependency"});
-}
-
 TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireInitLuau")
 {
     std::string path = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/luau";
     runProtectedRequire(path);
     assertOutputContainsAll({"true", "result from init.luau"});
-}
-
-TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireInitLua")
-{
-    std::string path = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/lua";
-    runProtectedRequire(path);
-    assertOutputContainsAll({"true", "result from init.lua"});
 }
 
 TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireSubmoduleUsingSelfIndirectly")
@@ -476,16 +462,6 @@ TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireNestedInits")
     std::string path = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/nested_inits_requirer";
     runProtectedRequire(path);
     assertOutputContainsAll({"true", "result from nested_inits/init", "required into module"});
-}
-
-TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireWithFileAmbiguity")
-{
-    std::string ambiguousPath = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/ambiguous_file_requirer";
-
-    runProtectedRequire(ambiguousPath);
-    assertOutputContainsAll(
-        {"false", "error requiring module \"./ambiguous/file/dependency\": could not resolve child component \"dependency\" (ambiguous)"}
-    );
 }
 
 TEST_CASE_FIXTURE(ReplWithPathFixture, "RequireWithAmbiguityInAliasDiscovery")
@@ -538,25 +514,6 @@ TEST_CASE_FIXTURE(ReplWithPathFixture, "CheckCacheAfterRequireLuau")
     REQUIRE_FALSE_MESSAGE(lua_isnil(L, -1), "Cache did not contain module result");
 }
 
-TEST_CASE_FIXTURE(ReplWithPathFixture, "CheckCacheAfterRequireLua")
-{
-    std::string relativePath = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/lua_dependency";
-    std::string absolutePath = getLuauDirectory(PathType::Absolute) + "/tests/require/without_config/lua_dependency";
-
-    luaL_findtable(L, LUA_REGISTRYINDEX, "_MODULES", 1);
-    lua_getfield(L, -1, (absolutePath + ".luau").c_str());
-    REQUIRE_MESSAGE(lua_isnil(L, -1), "Cache already contained module result");
-
-    runProtectedRequire(relativePath);
-
-    assertOutputContainsAll({"true", "result from lua_dependency"});
-
-    // Check cache for the absolute path as a cache key
-    luaL_findtable(L, LUA_REGISTRYINDEX, "_MODULES", 1);
-    lua_getfield(L, -1, (absolutePath + ".lua").c_str());
-    REQUIRE_FALSE_MESSAGE(lua_isnil(L, -1), "Cache did not contain module result");
-}
-
 TEST_CASE_FIXTURE(ReplWithPathFixture, "CheckCacheAfterRequireInitLuau")
 {
     std::string relativePath = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/luau";
@@ -573,25 +530,6 @@ TEST_CASE_FIXTURE(ReplWithPathFixture, "CheckCacheAfterRequireInitLuau")
     // Check cache for the absolute path as a cache key
     luaL_findtable(L, LUA_REGISTRYINDEX, "_MODULES", 1);
     lua_getfield(L, -1, (absolutePath + "/init.luau").c_str());
-    REQUIRE_FALSE_MESSAGE(lua_isnil(L, -1), "Cache did not contain module result");
-}
-
-TEST_CASE_FIXTURE(ReplWithPathFixture, "CheckCacheAfterRequireInitLua")
-{
-    std::string relativePath = getLuauDirectory(PathType::Relative) + "/tests/require/without_config/lua";
-    std::string absolutePath = getLuauDirectory(PathType::Absolute) + "/tests/require/without_config/lua";
-
-    luaL_findtable(L, LUA_REGISTRYINDEX, "_MODULES", 1);
-    lua_getfield(L, -1, (absolutePath + "/init.lua").c_str());
-    REQUIRE_MESSAGE(lua_isnil(L, -1), "Cache already contained module result");
-
-    runProtectedRequire(relativePath);
-
-    assertOutputContainsAll({"true", "result from init.lua"});
-
-    // Check cache for the absolute path as a cache key
-    luaL_findtable(L, LUA_REGISTRYINDEX, "_MODULES", 1);
-    lua_getfield(L, -1, (absolutePath + "/init.lua").c_str());
     REQUIRE_FALSE_MESSAGE(lua_isnil(L, -1), "Cache did not contain module result");
 }
 

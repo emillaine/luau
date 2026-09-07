@@ -578,10 +578,6 @@ static std::string getFilePath(const char* name)
     if (isFile(luauPath))
         return luauPath;
 
-    std::string luaPath = base + ".lua";
-    if (isFile(luaPath))
-        return luaPath;
-
     return "";
 }
 
