@@ -565,9 +565,20 @@ TEST_CASE_FIXTURE(Fixture, "typeof_in_method_call_type_args_no_crash")
         t:f<<typeof(t.f), unknown>>()
     )");
 
-    LUAU_REQUIRE_ERROR_COUNT(1, result);
-    // `globl` is an unknown global.
-    CHECK(get<UnknownSymbol>(result.errors[0]));
+    if (FFlag::LuauStrictVisitInstantiatedType)
+    {
+        // With strict visiting, both `globl` occurrences are reported:
+        // `const _ = globl` and `typeof(globl)` in the explicit type instantiation.
+        LUAU_REQUIRE_ERROR_COUNT(2, result);
+        CHECK(get<UnknownSymbol>(result.errors[0]));
+        CHECK(get<UnknownSymbol>(result.errors[1]));
+    }
+    else
+    {
+        LUAU_REQUIRE_ERROR_COUNT(1, result);
+        // `globl` is an unknown global.
+        CHECK(get<UnknownSymbol>(result.errors[0]));
+    }
 }
 
 TEST_CASE_FIXTURE(Fixture, "typeof_local_in_type_pack_no_crash")

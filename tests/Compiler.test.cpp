@@ -8361,6 +8361,7 @@ RETURN R1 1
 TEST_CASE("InlineNonConstInitializers")
 {
     ScopedFastFlag emitCallFb{FFlag::LuauEmitCallFeedback, true};
+    ScopedFastFlag moveElision{FFlag::LuauCompileMoveElision, true};
 
     CHECK_EQ(
         "\n" + compileFunction(
@@ -8543,20 +8544,17 @@ MOVE R2 R6
 MOVE R3 R7
 NEWCLOSURE R4 P0
 CAPTURE REF R3
-MOVE R5 R0
-MOVE R6 R1
-MOVE R7 R2
 DUPCLOSURE R8 K0 []
 JUMPIFNOT R3 L0
 DUPCLOSURE R8 K1 []
 L0: MOVE R9 R8
-MOVE R10 R5
-MOVE R11 R6
+MOVE R10 R0
+MOVE R11 R1
 CALL R9 2 1
 JUMPIFNOT R9 L1
 MOVE R9 R8
-MOVE R10 R6
-MOVE R11 R7
+MOVE R10 R1
+MOVE R11 R2
 CALL R9 2 1
 L1: CLOSEUPVALS R3
 RETURN R0 0
