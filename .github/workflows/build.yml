@@ -42,8 +42,8 @@ jobs:
       run: |
         ./luau-tests
         ./luau-tests --fflags=true
-        ./luau-tests --fflags=DebugLuauForceOldSolver
-        ./luau-tests --fflags=DebugLuauForceOldSolver,true
+        # Old solver (DebugLuauForceOldSolver) is dead and intentionally not updated for
+        # fork syntax changes (implicit locals, etc.) -- see AGENTS.md. Do not re-add.
     - name: run extra conformance tests
       run: |
         ./luau-tests -ts=Conformance -O2
@@ -79,8 +79,7 @@ jobs:
         Debug/Luau.Conformance.exe
         Debug/Luau.UnitTest.exe --fflags=true
         Debug/Luau.Conformance.exe --fflags=true
-        Debug/Luau.UnitTest.exe --fflags=DebugLuauForceOldSolver
-        Debug/Luau.UnitTest.exe --fflags=DebugLuauForceOldSolver,true
+        # Old solver (DebugLuauForceOldSolver) is dead -- see AGENTS.md. Do not re-add.
     - name: run extra conformance tests
       shell: bash # necessary for fail-fast
       run: |

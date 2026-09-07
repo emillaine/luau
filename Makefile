@@ -219,8 +219,7 @@ coverage: $(TESTS_TARGET) $(COMPILE_CLI_TARGET)
 	mv default.profraw tests.profraw
 	$(TESTS_TARGET) --fflags=true
 	mv default.profraw tests-flags.profraw
-	$(TESTS_TARGET) --fflags=true,DebugLuauForceOldSolver=true
-	mv default.profraw tests-dcr.profraw
+	# Old solver (DebugLuauForceOldSolver) is dead -- see AGENTS.md. Do not re-add.
 	$(TESTS_TARGET) -ts=Conformance --codegen
 	mv default.profraw codegen.profraw
 	$(TESTS_TARGET) -ts=Conformance --codegen --fflags=true
