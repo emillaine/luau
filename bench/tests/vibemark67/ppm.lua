@@ -5,7 +5,7 @@ ppm = require("./ppm-dir/ppm")
 
 function test()
 
--- PPM benchmark: compress and decompress a procedurally generated corpus
+# PPM benchmark: compress and decompress a procedurally generated corpus
 
 function generateCorpus(size: number, seed: number): {number}
     data = table.create(size, 0)
@@ -24,9 +24,9 @@ function generateCorpus(size: number, seed: number): {number}
     pos = 1
     while pos <= size do
         seed = bit32.band(seed * 1103515245 + 12345, 0x7FFFFFFF)
-        phraseIdx = (seed % #phrases) + 1
+        phraseIdx = (seed % phrases.count) + 1
         phrase = phrases[phraseIdx]
-        for i = 1, #phrase do
+        for i = 1, phrase.count do
             if pos > size then break end
             data[pos] = string.byte(phrase, i)
             pos += 1
@@ -55,15 +55,15 @@ verified = true
 
 for iter = 1, ITERATIONS do
     compressed = ppm.compress(corpus)
-    totalCompressed += #compressed
+    totalCompressed += compressed.count
 
-    decompressed = ppm.decompress(compressed, #corpus)
-    totalDecompressed += #decompressed
+    decompressed = ppm.decompress(compressed, corpus.count)
+    totalDecompressed += decompressed.count
 
-    if #decompressed != #corpus then
+    if decompressed.count != corpus.count then
         verified = false
     else
-        for i = 1, #corpus do
+        for i = 1, corpus.count do
             if decompressed[i] != corpus[i] then
                 verified = false
                 break

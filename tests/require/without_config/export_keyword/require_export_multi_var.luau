@@ -1,4 +1,4 @@
--- verify multi-variable export works
+# verify multi-variable export works
 m = require("./export_multi_var")
 
 assert(m.a == 10, "a should be exported")

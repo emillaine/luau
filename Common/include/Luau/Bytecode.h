@@ -768,7 +768,7 @@ enum LuauCaptureType
 // Proto flag bitmask, stored in Proto::flags
 enum LuauProtoFlag
 {
-    // used to tag main proto for modules with --!native
+    // used to tag main proto for modules with #!native
     LPF_NATIVE_MODULE = 1 << 0,
     // used to tag individual protos as not profitable to compile natively
     LPF_NATIVE_COLD = 1 << 1,

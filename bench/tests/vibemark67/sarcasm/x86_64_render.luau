@@ -1,9 +1,9 @@
---!nonstrict
--- x86_64 rendering + frame policy for the shared emit loop (emit.luau). Renders IR nodes
--- (dest-first operand model) back to assembly text in the requested syntax ("att"/"intel"),
--- substituting register allocations, and synthesizes the Fil-C prologue/epilogue/frame.
--- Interface used by emit.emitFip: makeColorNum / usedCalleeSaved / computeLayout / header /
--- prologue / epilogue / rootStore / renderInsn / isSelfMove.
+#!nonstrict
+# x86_64 rendering + frame policy for the shared emit loop (emit.luau). Renders IR nodes
+# (dest-first operand model) back to assembly text in the requested syntax ("att"/"intel"),
+# substituting register allocations, and synthesizes the Fil-C prologue/epilogue/frame.
+# Interface used by emit.emitFip: makeColorNum / usedCalleeSaved / computeLayout / header /
+# prologue / epilogue / rootStore / renderInsn / isSelfMove.
 
 x86 = require("./x86_64_isa")
 x86parse = require("./x86_64_parse")
@@ -12,7 +12,7 @@ x86_64_render = {}
 
 SUFFIX = { [8] = "b", [16] = "w", [32] = "l", [64] = "q" }
 
--- mnemonics that take an AT&T size suffix when synthesized (bare)
+# mnemonics that take an AT&T size suffix when synthesized (bare)
 SUFFIXABLE = {
 	mov=true, add=true, sub=true, ["and"]=true, ["or"]=true, xor=true, cmp=true, test=true,
 	shl=true, shr=true, sal=true, sar=true, imul=true, inc=true, dec=true, neg=true, ["not"]=true,
@@ -21,7 +21,7 @@ SUFFIXABLE = {
 function regName(num, width) return x86parse.regName(num, width) end
 x86_64_render.regName = regName
 
--- physical number for an operand (fixed, tempRef, or lifted opTemp).
+# physical number for an operand (fixed, tempRef, or lifted opTemp).
 function physOf(node, op, colorNum)
 	if not op or op.kind != "reg" then return null end
 	if op.fixedNum != null then return op.fixedNum end
@@ -79,7 +79,7 @@ function renderOperand(node, op, colorNum, syntax)
 				table.insert(parts, (op.dispVal < 0 and tostring(op.dispVal)) or ("+" .. tostring(op.dispVal)))
 			end
 			body = parts[1] or ""
-			for k = 2, #parts do
+			for k = 2, parts.count do
 				p = parts[k]
 				if string.sub(p, 1, 1) == "+" or string.sub(p, 1, 1) == "-" then body = body .. " " .. string.sub(p,1,1) .. " " .. string.sub(p,2)
 				else body = body .. " + " .. p end
@@ -91,7 +91,7 @@ function renderOperand(node, op, colorNum, syntax)
 end
 x86_64_render.renderOperand = renderOperand
 
--- operation size (bytes) for a synthesized instruction (widest reg, or mem.size).
+# operation size (bytes) for a synthesized instruction (widest reg, or mem.size).
 function opSize(node, colorNum)
 	w = null
 	for _, op in (node.operands or {}) do
@@ -108,20 +108,20 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 	ops = node.stmt and node.stmt.operands or node.operands or {}
 	low = string.lower(mnem)
 
-	-- control-only forms
+	# control-only forms
 	if node.indirect and (low == "call" or low == "jmp") then
 		tgt = renderOperand(node, ops[1], colorNum, syntax)
 		return "\t" .. low .. "\t" .. (syntax == "att" and ("*" .. tgt) or tgt)
 	end
 
-	-- AT&T size suffix. movzx/movsx need an explicit source+dest size pair (movzbl, ...)
-	-- since bare `movzx` with a memory source is ambiguous in AT&T; derive it from the
-	-- source size (AT&T suffix letter or BYTE/WORD PTR) and the destination register width.
+	# AT&T size suffix. movzx/movsx need an explicit source+dest size pair (movzbl, ...)
+	# since bare `movzx` with a memory source is ambiguous in AT&T; derive it from the
+	# source size (AT&T suffix letter or BYTE/WORD PTR) and the destination register width.
 	outMnem = mnem
 	base = x86.baseMnemonic(mnem)
 	if syntax == "att" then
 		if (base == "movzx" or base == "movsx") and string.match(low, "^mov[zs][bwlq][bwlq]$") then
-			outMnem = low  -- already a full AT&T form (movzbl, movslq, ...): render verbatim
+			outMnem = low  # already a full AT&T form (movzbl, movslq, ...): render verbatim
 		else if base == "movzx" or base == "movsx" then
 			letter = string.match(low, "^mov[zs]([bw])")
 			srcBytes = letter and ({ b = 1, w = 2 })[letter] or null
@@ -139,15 +139,15 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 				outMnem = low .. (SUFFIX[opSize(node, colorNum)] or "q")
 			end
 		else if SUFFIXABLE[low] then
-			-- Lifted node with a bare mnemonic (Intel input) and no register operand to imply
-			-- the operand width (e.g. `cmp $0, 8(%rdx)`): AT&T needs an explicit size suffix.
+			# Lifted node with a bare mnemonic (Intel input) and no register operand to imply
+			# the operand width (e.g. `cmp $0, 8(%rdx)`): AT&T needs an explicit size suffix.
 			hasReg = false
 			for _, op in ops do if op.kind == "reg" and op.rc != "rip" then hasReg = true; break end end
 			if not hasReg then outMnem = low .. (SUFFIX[opSize(node, colorNum)] or "q") end
 		end
 	end
 
-	-- determine a memory size for intel PTR prefixes (imm+mem ambiguity)
+	# determine a memory size for intel PTR prefixes (imm+mem ambiguity)
 	memSize = null
 	do
 		w = 0
@@ -167,11 +167,11 @@ function x86_64_render.renderInsn(node, colorNum, syntax)
 		end
 		table.insert(rendered, s)
 	end
-	if #rendered == 0 then return "\t" .. outMnem end
-	-- Operands are stored destination-first (Intel order). AT&T lists them source-first.
-	if syntax == "att" and #rendered >= 2 then
+	if rendered.count == 0 then return "\t" .. outMnem end
+	# Operands are stored destination-first (Intel order). AT&T lists them source-first.
+	if syntax == "att" and rendered.count >= 2 then
 		rev = {}
-		for k = #rendered, 1, -1 do table.insert(rev, rendered[k]) end
+		for k = rendered.count, 1, -1 do table.insert(rev, rendered[k]) end
 		rendered = rev
 	end
 	return "\t" .. outMnem .. "\t" .. table.concat(rendered, ", ")
@@ -182,10 +182,10 @@ function x86_64_render.isSelfMove(node, colorNum)
 	if not mnem then return false end
 	low = string.lower(mnem)
 	if low != "mov" and low != "movq" then return false end
-	-- a 32-bit `movl %eax, %eax` is NOT a no-op — it zero-extends into %rax. Only a full
-	-- 64-bit reg-reg move to the same register is a true no-op we may drop.
+	# a 32-bit `movl %eax, %eax` is NOT a no-op — it zero-extends into %rax. Only a full
+	# 64-bit reg-reg move to the same register is a true no-op we may drop.
 	ops = node.stmt and node.stmt.operands or node.operands
-	if not ops or #ops != 2 then return false end
+	if not ops or ops.count != 2 then return false end
 	if ops[1].kind != "reg" or ops[2].kind != "reg" then return false end
 	if (ops[1].width or 64) != 64 or (ops[2].width or 64) != 64 then return false end
 	a = physOf(node, ops[1], colorNum)
@@ -193,12 +193,12 @@ function x86_64_render.isSelfMove(node, colorNum)
 	return a != null and a == b
 end
 
--- Frame layout -----------------------------------------------------------
+# Frame layout #---------------------------------------------------------
 function computeLayout(calleeSaved, numRoots, spillBytes)
 	spillBytes = spillBytes or 0
-	p = #calleeSaved
-	base = 16 + 8 * numRoots + spillBytes  -- prev+origin+roots(+spills)
-	-- Maintain 16-byte alignment at call sites: (8 retaddr + 8*p pushes + N) % 16 == 0.
+	p = calleeSaved.count
+	base = 16 + 8 * numRoots + spillBytes  # prev+origin+roots(+spills)
+	# Maintain 16-byte alignment at call sites: (8 retaddr + 8*p pushes + N) % 16 == 0.
 	target = ((p % 2) == 0) and 8 or 0
 	N = base
 	while (N % 16) != target do N += 1 end
@@ -206,7 +206,7 @@ function computeLayout(calleeSaved, numRoots, spillBytes)
 end
 x86_64_render.computeLayout = computeLayout
 
--- x86 color name -> physical number (via classifyReg).
+# x86 color name -> physical number (via classifyReg).
 function x86_64_render.makeColorNum(color)
 	return function(t)
 		c = color[t]
@@ -216,7 +216,7 @@ function x86_64_render.makeColorNum(color)
 	end
 end
 
--- Used callee-saved GPRs in canonical push order.
+# Used callee-saved GPRs in canonical push order.
 function x86_64_render.usedCalleeSaved(color)
 	usedCallee = {}
 	for _, c in color do usedCallee[c] = true end
@@ -225,7 +225,7 @@ function x86_64_render.usedCalleeSaved(color)
 	return calleeSaved
 end
 
--- prologue/epilogue/rootStore emit in the requested syntax.
+# prologue/epilogue/rootStore emit in the requested syntax.
 function att_(rc) return rc.syntax == "att" end
 
 function x86_64_render.header(rc)
@@ -240,13 +240,13 @@ end
 function x86_64_render.prologue(rc)
 	out, tr, layout = rc.out, rc.tr, rc.layout
 	att = att_(rc)
-	SC = x86.SCRATCH  -- r11
+	SC = x86.SCRATCH  # r11
 	mq = att and "movq" or "mov"
 	function ln(s) table.insert(out, s) end
 	function I(v) return att and ("$" .. v) or tostring(v) end
 	for _, r in rc.calleeSaved do ln("\t" .. (att and "pushq" or "push") .. "\t" .. (att and ("%" .. r) or r)) end
 	ln("\t" .. (att and "subq" or "sub") .. "\t" .. (att and (I(layout.total) .. ", %rsp") or ("rsp, " .. layout.total)))
-	-- stack-overflow check: fail when rsp <= limit (limit at [myth=rdi]).
+	# stack-overflow check: fail when rsp <= limit (limit at [myth=rdi]).
 	if att then
 		ln("\tcmpq\t%rsp, (%rdi)")
 		ln("\tjae\tfilc_stack_overflow_failure@PLT")
@@ -254,7 +254,7 @@ function x86_64_render.prologue(rc)
 		ln("\tcmp\trsp, QWORD PTR [rdi]")
 		ln("\tjbe\tfilc_stack_overflow_failure@PLT")
 	end
-	-- push filc_frame at (rsp): prev, origin; myth->top_frame = rsp.
+	# push filc_frame at (rsp): prev, origin; myth->top_frame = rsp.
 	ln("\t" .. mq .. "\t" .. (att and ("16(%rdi), %" .. SC) or (SC .. ", QWORD PTR [rdi + 16]")))
 	ln("\t" .. mq .. "\t" .. (att and ("%" .. SC .. ", (%rsp)") or ("QWORD PTR [rsp], " .. SC)))
 	ln("\t" .. mq .. "\t" .. (att and ("%rsp, 16(%rdi)") or ("QWORD PTR [rdi + 16], rsp")))
@@ -270,11 +270,11 @@ function x86_64_render.epilogue(rc)
 	mythName = regName(rc.mythNum, 64)
 	function ln(s) table.insert(out, s) end
 	function I(v) return att and ("$" .. v) or tostring(v) end
-	-- pop frame: myth->top_frame = frame.prev  (scratch = r11, preserves rax/rdx/rcx)
+	# pop frame: myth->top_frame = frame.prev  (scratch = r11, preserves rax/rdx/rcx)
 	ln("\t" .. mq .. "\t" .. (att and ("(%rsp), %" .. SC) or (SC .. ", QWORD PTR [rsp]")))
 	ln("\t" .. mq .. "\t" .. (att and ("%" .. SC .. ", 16(%" .. mythName .. ")") or ("QWORD PTR [" .. mythName .. " + 16], " .. SC)))
 	ln("\t" .. (att and "addq" or "add") .. "\t" .. (att and (I(layout.total) .. ", %rsp") or ("rsp, " .. layout.total)))
-	for i = #rc.calleeSaved, 1, -1 do ln("\t" .. (att and "popq" or "pop") .. "\t" .. (att and ("%" .. rc.calleeSaved[i]) or rc.calleeSaved[i])) end
+	for i = rc.calleeSaved.count, 1, -1 do ln("\t" .. (att and "popq" or "pop") .. "\t" .. (att and ("%" .. rc.calleeSaved[i]) or rc.calleeSaved[i])) end
 end
 
 function x86_64_render.rootStore(rc, node)

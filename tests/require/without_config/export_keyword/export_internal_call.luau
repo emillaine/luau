@@ -1,4 +1,4 @@
--- calling exported functions internally
+# calling exported functions internally
 export function double(n: number): number
     return n * 2
 end

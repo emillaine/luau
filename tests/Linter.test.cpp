@@ -40,7 +40,7 @@ end
 
 TEST_CASE_FIXTURE(Fixture, "UnknownGlobal")
 {
-    LintResult result = lint("--!nocheck\nreturn foo");
+    LintResult result = lint("#!nocheck\nreturn foo");
 
     REQUIRE(1 == result.warnings.size());
     CHECK_EQ(result.warnings[0].text, "Unknown global 'foo'; consider assigning to it first");
@@ -290,15 +290,15 @@ TEST_CASE_FIXTURE(Fixture, "GlobalAsLocalMulti")
 {
     LintResult result = lint(R"(
 createFunction = function(configValue)
-    -- Create an internal convenience function
+    # Create an internal convenience function
     function internalLogic()
-        print(configValue) -- prints passed-in value
+        print(configValue) # prints passed-in value
     end
-    -- Here, we thought we were creating another internal convenience function
-    -- that closed over the passed-in configValue, but this is actually being
-    -- declared at module scope!
+    # Here, we thought we were creating another internal convenience function
+    # that closed over the passed-in configValue, but this is actually being
+    # declared at module scope!
     function moreInternalLogic()
-        print(configValue) -- null!!!
+        print(configValue) # null!!!
     end
     return function()
         internalLogic()
@@ -308,8 +308,8 @@ createFunction = function(configValue)
 end
 fnA = createFunction(true)
 fnB = createFunction(false)
-fnA() -- prints "true", "null"
-fnB() -- prints "false", "null"
+fnA() # prints "true", "null"
+fnB() # prints "false", "null"
 )");
 
     // Bare `function` declares function-locals (not globals), so no GlobalAsLocal warning.
@@ -700,7 +700,7 @@ TEST_CASE_FIXTURE(Fixture, "ForRangeZero")
 for i=0,t.count do
 end
 
-for i=(0),t.count do -- to silence
+for i=(0),t.count do # to silence
 end
 
 for i=t.count,0 do
@@ -747,7 +747,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "ImplicitReturn")
 {
     LintResult result = lint(R"(
---!nonstrict
+#!nonstrict
 function f1(a)
     if not a then
         return 5
@@ -824,7 +824,7 @@ return f1,f2,f3,f4,f5,f6,f7
 TEST_CASE_FIXTURE(Fixture, "ImplicitReturnInfiniteLoop")
 {
     LintResult result = lint(R"(
---!nonstrict
+#!nonstrict
 function f1(a)
     while true do
         if math.random() > 0.5 then
@@ -881,7 +881,7 @@ return f1,f2,f3,f4
 
 TEST_CASE_FIXTURE(Fixture, "TypeAnnotationsShouldNotProduceWarnings")
 {
-    LintResult result = lint(R"(--!strict
+    LintResult result = lint(R"(#!strict
 type InputData = {
     id: number,
     inputType: EnumItem,
@@ -918,7 +918,7 @@ return 1
 TEST_CASE_FIXTURE(Fixture, "IgnoreLintAll")
 {
     LintResult result = lint(R"(
---!nolint
+#!nolint
 return foo
 )");
 
@@ -928,7 +928,7 @@ return foo
 TEST_CASE_FIXTURE(Fixture, "IgnoreLintSpecific")
 {
     LintResult result = lint(R"(
---!nolint UnknownGlobal
+#!nolint UnknownGlobal
 const x = 1
 return foo
 )");
@@ -940,15 +940,15 @@ return foo
 TEST_CASE_FIXTURE(Fixture, "FormatStringFormat")
 {
     LintResult result = lint(R"(
--- incorrect format strings
+# incorrect format strings
 string.format("%")
 string.format("%??d")
 string.format("%Y")
 
--- incorrect format strings, self call
+# incorrect format strings, self call
 _ = ("%"):format()
 
--- correct format strings, just to uh make sure
+# correct format strings, just to uh make sure
 string.format("hello %+10d %.02f %%", 4, 5)
 )");
 
@@ -962,33 +962,33 @@ string.format("hello %+10d %.02f %%", 4, 5)
 TEST_CASE_FIXTURE(Fixture, "FormatStringPack")
 {
     LintResult result = lint(R"(
--- incorrect pack specifiers
+# incorrect pack specifiers
 string.pack("?")
 string.packsize("?")
 string.unpack("?")
 
--- missing size
+# missing size
 string.packsize("bc")
 
--- incorrect X alignment
+# incorrect X alignment
 string.packsize("X")
 string.packsize("X i")
 
--- correct X alignment
+# correct X alignment
 string.packsize("Xi")
 
--- packsize can't be used with variable sized formats
+# packsize can't be used with variable sized formats
 string.packsize("s")
 
--- out of range size specifiers
+# out of range size specifiers
 string.packsize("i0")
 string.packsize("i17")
 
--- a very very very out of range size specifier
+# a very very very out of range size specifier
 string.packsize("i99999999999999999999")
 string.packsize("c99999999999999999999")
 
--- correct format specifiers
+# correct format specifiers
 string.packsize("=!1bbbI3c42")
 )");
 
@@ -1011,13 +1011,13 @@ TEST_CASE_FIXTURE(Fixture, "FormatStringMatch")
     LintResult result = lint(R"(
 s = ...
 
--- incorrect character class specifiers
+# incorrect character class specifiers
 string.match(s, "%q")
 string.gmatch(s, "%q")
 string.find(s, "%q")
 string.gsub(s, "%q", "")
 
--- various errors
+# various errors
 string.match(s, "%")
 string.match(s, "[%1]")
 string.match(s, "%0")
@@ -1029,10 +1029,10 @@ string.match(s, '(%d')
 string.match(s, '[%d')
 string.match(s, '%,')
 
--- self call - not detected because we don't know the type!
+# self call - not detected because we don't know the type!
 _ = s:match("%q")
 
--- correct patterns
+# correct patterns
 string.match(s, "[A-Z]+(%d)%1")
 )");
 
@@ -1058,13 +1058,13 @@ TEST_CASE_FIXTURE(Fixture, "FormatStringMatchNested")
     LintResult result = lint(R"~(
 const s = ...
 
--- correct reference to nested pattern
+# correct reference to nested pattern
 string.match(s, "((a)%2)")
 
--- incorrect reference to nested pattern (not closed yet)
+# incorrect reference to nested pattern (not closed yet)
 string.match(s, "((a)%1)")
 
--- incorrect reference to nested pattern (index out of range)
+# incorrect reference to nested pattern (index out of range)
 string.match(s, "((a)%3)")
 )~");
 
@@ -1080,28 +1080,28 @@ TEST_CASE_FIXTURE(Fixture, "FormatStringMatchSets")
     LintResult result = lint(R"~(
 const s = ...
 
--- fake empty sets (but actually sets that aren't closed)
+# fake empty sets (but actually sets that aren't closed)
 string.match(s, "[]")
 string.match(s, "[^]")
 
--- character ranges in sets
+# character ranges in sets
 string.match(s, "[%a-b]")
 string.match(s, "[a-%b]")
 
--- invalid escapes
+# invalid escapes
 string.match(s, "[%q]")
 string.match(s, "[%;]")
 
--- capture refs in sets
+# capture refs in sets
 string.match(s, "[%1]")
 
--- valid escapes and - at the end
+# valid escapes and - at the end
 string.match(s, "[%]x-]")
 
--- % escapes itself
+# % escapes itself
 string.match(s, "[%%]")
 
--- this abomination is a valid pattern due to rules wrt handling empty sets
+# this abomination is a valid pattern due to rules wrt handling empty sets
 string.match(s, "[]|'[]")
 string.match(s, "[^]|'[]")
 )~");
@@ -1121,17 +1121,17 @@ TEST_CASE_FIXTURE(Fixture, "FormatStringFindArgs")
     LintResult result = lint(R"(
 s = ...
 
--- incorrect character class specifier
+# incorrect character class specifier
 string.find(s, "%q")
 
--- raw string find
+# raw string find
 string.find(s, "%q", 1, true)
 string.find(s, "%q", 1, math.random() < 0.5)
 
--- incorrect character class specifier
+# incorrect character class specifier
 string.find(s, "%q", 1, false)
 
--- missing arguments
+# missing arguments
 string.find()
 string.find("foo");
 ("foo"):find()
@@ -1149,13 +1149,13 @@ TEST_CASE_FIXTURE(Fixture, "FormatStringReplace")
     LintResult result = lint(R"(
 s = ...
 
--- incorrect replacements
+# incorrect replacements
 string.gsub(s, '(%d+)', "%")
 string.gsub(s, '(%d+)', "%x")
 string.gsub(s, '(%d+)', "%2")
 string.gsub(s, '', "%1")
 
--- correct replacements
+# correct replacements
 string.gsub(s, '[A-Z]+(%d)', "%0%1")
 string.gsub(s, 'foo', "%0")
 )");
@@ -1170,13 +1170,13 @@ string.gsub(s, 'foo', "%0")
 TEST_CASE_FIXTURE(Fixture, "FormatStringDate")
 {
     LintResult result = lint(R"(
--- incorrect formats
+# incorrect formats
 os.date("%")
 os.date("%L")
 os.date("%?")
 os.date("\0")
 
--- correct formats
+# correct formats
 os.date("it's %c now")
 os.date("!*t")
 )");
@@ -1196,7 +1196,7 @@ const s: string, nons = ...
 string.match(s, "[]")
 s:match("[]")
 
--- no warning here since we don't know that it's a string
+# no warning here since we don't know that it's a string
 nons:match("[]")
 )~");
 
@@ -1209,7 +1209,7 @@ nons:match("[]")
 
 TEST_CASE_FIXTURE(Fixture, "TableLiteral")
 {
-    LintResult result = lint(R"(-- line 1
+    LintResult result = lint(R"(# line 1
 const _1 = {
     first = 1,
     second = 2,
@@ -1267,10 +1267,10 @@ TEST_CASE_FIXTURE(Fixture, "read_write_table_props")
 {
     DOES_NOT_PASS_OLD_SOLVER_GUARD();
 
-    LintResult result = lint(R"(-- line 1
+    LintResult result = lint(R"(# line 1
         type A = {x: number}
         type B = {read x: number, write x: number}
-        type C = {x: number, read x: number} -- line 4
+        type C = {x: number, read x: number} # line 4
         type D = {x: number, write x: number}
         type E = {read x: number, x: boolean}
         type F = {read x: number, read x: number}
@@ -1315,7 +1315,7 @@ TEST_CASE_FIXTURE(Fixture, "ImportOnlyUsedInReturnType")
 TEST_CASE_FIXTURE(Fixture, "DisableUnknownGlobalWithTypeChecking")
 {
     LintResult result = lint(R"(
-        --!strict
+        #!strict
         unknownGlobal()
     )");
 
@@ -1353,7 +1353,7 @@ TEST_CASE_FIXTURE(Fixture, "use_all_parent_scopes_for_globals")
 
     fileResolver.source["A"] = R"(
         const _foo: Foo = 123
-        -- os.clock comes from the global scope, the parent of this module's environment
+        # os.clock comes from the global scope, the parent of this module's environment
         const _bar: typeof(os.clock) = os.clock
     )";
 
@@ -1365,7 +1365,7 @@ TEST_CASE_FIXTURE(Fixture, "use_all_parent_scopes_for_globals")
 TEST_CASE_FIXTURE(Fixture, "DeadLocalsUsed")
 {
     LintResult result = lint(R"(
---!nolint LocalShadow
+#!nolint LocalShadow
 do
     x = null
     for x in pairs({}) do
@@ -1540,7 +1540,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "DeprecatedApiTyped")
     {
         ttv->props["foreach"].deprecated = true;
         ttv->props["getn"].deprecated = true;
-        ttv->props["getn"].deprecatedSuggestion = "#";
+        ttv->props["getn"].deprecatedSuggestion = ".count";
     }
 
     freeze(getFrontend().globals.globalTypes);
@@ -1550,10 +1550,10 @@ return function (i: Instance)
     i:Wait(1.0)
     print(i.Name)
     print(Color3.toHSV())
-    print(Color3.doesntexist, i.doesntexist) -- type error, but this verifies we correctly handle non-existent members
+    print(Color3.doesntexist, i.doesntexist) # type error, but this verifies we correctly handle non-existent members
     print(table.getn({}))
     table.foreach({}, function() end)
-    print(table.nogetn()) -- verify that we correctly handle non-existent members
+    print(table.nogetn()) # verify that we correctly handle non-existent members
     return i.DataCost
 end
 )");
@@ -1561,7 +1561,7 @@ end
     REQUIRE(5 == result.warnings.size());
     CHECK_EQ(result.warnings[0].text, "Member 'Instance.Wait' is deprecated");
     CHECK_EQ(result.warnings[1].text, "Member 'toHSV' is deprecated, use 'Color3:ToHSV' instead");
-    CHECK_EQ(result.warnings[2].text, "Member 'table.getn' is deprecated, use '#' instead");
+    CHECK_EQ(result.warnings[2].text, "Member 'table.getn' is deprecated, use '.count' instead");
     CHECK_EQ(result.warnings[3].text, "Member 'table.foreach' is deprecated");
     CHECK_EQ(result.warnings[4].text, "Member 'Instance.DataCost' is deprecated");
 }
@@ -1572,20 +1572,20 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "DeprecatedApiUntyped")
     {
         ttv->props["foreach"].deprecated = true;
         ttv->props["getn"].deprecated = true;
-        ttv->props["getn"].deprecatedSuggestion = "#";
+        ttv->props["getn"].deprecatedSuggestion = ".count";
     }
 
     LintResult result = lint(R"(
--- TODO
+# TODO
 return function ()
     print(table.getn({}))
     table.foreach({}, function() end)
-    print(table.nogetn()) -- verify that we correctly handle non-existent members
+    print(table.nogetn()) # verify that we correctly handle non-existent members
 end
 )");
 
     REQUIRE(2 == result.warnings.size());
-    CHECK_EQ(result.warnings[0].text, "Member 'table.getn' is deprecated, use '#' instead");
+    CHECK_EQ(result.warnings[0].text, "Member 'table.getn' is deprecated, use '.count' instead");
     CHECK_EQ(result.warnings[1].text, "Member 'table.foreach' is deprecated");
 }
 
@@ -1804,7 +1804,7 @@ fibonacci(5)
     // @deprecated works for mutually recursive functions
     {
         LintResult result = lint(R"(
---!nolint LocalShadow
+#!nolint LocalShadow
 @deprecated
 function odd(x)
     if x == 0 then
@@ -2146,10 +2146,10 @@ t = {}
 tt = {}
 
 table.insert(t, t.count, 42)
-table.insert(t, (t.count), 42) -- silenced
+table.insert(t, (t.count), 42) # silenced
 
 table.insert(t, t.count + 1, 42)
-table.insert(t, tt.count + 1, 42) -- different table, ok
+table.insert(t, tt.count + 1, 42) # different table, ok
 
 table.insert(t, 0, 42)
 
@@ -2201,24 +2201,24 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "TableOperationsIndexer")
         return;
 
     LintResult result = lint(R"(
-t1 = {} -- ok: empty
-t2 = {1, 2} -- ok: array
-t3 = { a = 1, b = 2 } -- not ok: dictionary
-const t4: {[number]: number} = {} -- ok: array
-const t5: {[string]: number} = {} -- not ok: dictionary
-const t6: typeof(setmetatable({1, 2}, {})) = {} -- ok: table with metatable
-const t7: string = "hello" -- ok: string
-const t8: {number} | {n: number} = {} -- ok: union
+t1 = {} # ok: empty
+t2 = {1, 2} # ok: array
+t3 = { a = 1, b = 2 } # not ok: dictionary
+const t4: {[number]: number} = {} # ok: array
+const t5: {[string]: number} = {} # not ok: dictionary
+const t6: typeof(setmetatable({1, 2}, {})) = {} # ok: table with metatable
+const t7: string = "hello" # ok: string
+const t8: {number} | {n: number} = {} # ok: union
 
--- not ok
+# not ok
 print(t3.count)
 print(t5.count)
 ipairs(t5)
 
--- disabled
--- ipairs(t3) adds indexer to t3, silencing error on t3.count
+# disabled
+# ipairs(t3) adds indexer to t3, silencing error on t3.count
 
--- ok
+# ok
 print(t1.count)
 print(t2.count)
 print(t4.count)
@@ -2233,9 +2233,9 @@ ipairs(t6)
 ipairs(t7)
 ipairs(t8)
 
--- ok, subtle: text is a string here implicitly, but the type annotation isn't available
--- type checker assigns a type of generic table with the 'sub' member; we don't emit warnings on generic tables
--- to avoid generating a false positive here
+# ok, subtle: text is a string here implicitly, but the type annotation isn't available
+# type checker assigns a type of generic table with the 'sub' member; we don't emit warnings on generic tables
+# to avoid generating a false positive here
 function _impliedstring(element, text)
         for i = 1, text.count do
                 element:sendText(text:sub(i, i))
@@ -2257,13 +2257,13 @@ TEST_CASE_FIXTURE(Fixture, "DuplicateConditions")
     LintResult result = lint(R"(
 if true then
 else if false then
-else if true then -- duplicate
+else if true then # duplicate
 end
 
 if true then
 else if false then
 else
-    if true then -- duplicate
+    if true then # duplicate
     end
 end
 
@@ -2274,7 +2274,7 @@ _ = (true and true) and true
 _ = (true and true) or true
 _ = (true and false) and (42 and false)
 
-_ = true and true or false -- no warning since this is is a common pattern used as a ternary replacement
+_ = true and true or false # no warning since this is is a common pattern used as a ternary replacement
 
 _ = if true then 1 else if true then 2 else 3
 )");
@@ -2314,8 +2314,8 @@ TEST_CASE_FIXTURE(Fixture, "DuplicateLocal")
 function foo(a1, a2, a3, a1)
 end
 
-_, _, _ = ... -- ok!
-a1, a2, a1 = ... -- not ok
+_, _, _ = ... # ok!
+a1, a2, a1 = ... # not ok
 
 moo = {}
 function moo:bar(self)
@@ -2332,10 +2332,10 @@ TEST_CASE_FIXTURE(Fixture, "MisleadingAndOr")
 {
     LintResult result = lint(R"(
 _ = math.random() < 0.5 and true or 42
-_ = math.random() < 0.5 and false or 42 -- misleading
-_ = math.random() < 0.5 and null or 42 -- misleading
+_ = math.random() < 0.5 and false or 42 # misleading
+_ = math.random() < 0.5 and null or 42 # misleading
 _ = math.random() < 0.5 and 0 or 42
-_ = (math.random() < 0.5 and false) or 42 -- currently ignored
+_ = (math.random() < 0.5 and false) or 42 # currently ignored
 )");
 
     REQUIRE(2 == result.warnings.size());
@@ -2354,17 +2354,17 @@ _ = (math.random() < 0.5 and false) or 42 -- currently ignored
 TEST_CASE_FIXTURE(Fixture, "WrongComment")
 {
     LintResult result = lint(R"(
---!strict
---!struct
---!nolintGlobal
---!nolint Global
---!nolint KnownGlobal
---!nolint UnknownGlobal
---! no more lint
---!strict here
---!native on
+#!strict
+#!struct
+#!nolintGlobal
+#!nolint Global
+#!nolint KnownGlobal
+#!nolint UnknownGlobal
+#! no more lint
+#!strict here
+#!native on
 do end
---!nolint
+#!nolint
 )");
 
     REQUIRE(7 == result.warnings.size());
@@ -2380,11 +2380,11 @@ do end
 TEST_CASE_FIXTURE(Fixture, "WrongCommentMuteSelf")
 {
     LintResult result = lint(R"(
---!nolint
---!struct
+#!nolint
+#!struct
 )");
 
-    REQUIRE(0 == result.warnings.size()); // --!nolint disables WrongComment lint :)
+    REQUIRE(0 == result.warnings.size()); // #!nolint disables WrongComment lint :)
 }
 
 TEST_CASE_FIXTURE(Fixture, "DuplicateConditionsIfStatAndExpr")
@@ -2403,10 +2403,10 @@ end
 TEST_CASE_FIXTURE(Fixture, "WrongCommentOptimize")
 {
     LintResult result = lint(R"(
---!optimize
---!optimize me
---!optimize 100500
---!optimize 2
+#!optimize
+#!optimize me
+#!optimize 100500
+#!optimize 2
 )");
 
     REQUIRE(3 == result.warnings.size());
@@ -2414,7 +2414,7 @@ TEST_CASE_FIXTURE(Fixture, "WrongCommentOptimize")
     CHECK_EQ(result.warnings[1].text, "optimize directive uses unknown optimization level 'me', 0..2 expected");
     CHECK_EQ(result.warnings[2].text, "optimize directive uses unknown optimization level '100500', 0..2 expected");
 
-    result = lint("--!optimize   ");
+    result = lint("#!optimize   ");
     REQUIRE(1 == result.warnings.size());
     CHECK_EQ(result.warnings[0].text, "optimize directive requires an optimization level");
 }
@@ -2422,7 +2422,7 @@ TEST_CASE_FIXTURE(Fixture, "WrongCommentOptimize")
 TEST_CASE_FIXTURE(Fixture, "TestStringInterpolation")
 {
     LintResult result = lint(R"(
-        --!nocheck
+        #!nocheck
         _ = `unknown {foo}`
     )");
 
@@ -2448,19 +2448,19 @@ _ = 10000000000000000000000000000000000000000000000000000000000000000
 _ = 10000000000000001
 _ = -10000000000000001
 
--- 10^16 = 2^16 * 5^16, 5^16 only requires 38 bits
+# 10^16 = 2^16 * 5^16, 5^16 only requires 38 bits
 _ = 10000000000000000
 _ = -10000000000000000
 
--- smallest possible number that is parsed imprecisely
+# smallest possible number that is parsed imprecisely
 _ = 9007199254740993
 _ = -9007199254740993
 
--- note that numbers before and after parse precisely (number after is even => 1 more mantissa bit)
+# note that numbers before and after parse precisely (number after is even => 1 more mantissa bit)
 _ = 9007199254740992
 _ = 9007199254740994
 
--- large powers of two should work as well (this is 2^63)
+# large powers of two should work as well (this is 2^63)
 _ = -9223372036854775808
 )");
 
@@ -2482,14 +2482,14 @@ TEST_CASE_FIXTURE(Fixture, "IntegerParsingHexImprecise")
     LintResult result = lint(R"(
 _ = 0x1234567812345678
 
--- smallest possible number that is parsed imprecisely
+# smallest possible number that is parsed imprecisely
 _ = 0x20000000000001
 
--- note that numbers before and after parse precisely (number after is even => 1 more mantissa bit)
+# note that numbers before and after parse precisely (number after is even => 1 more mantissa bit)
 _ = 0x20000000000000
 _ = 0x20000000000002
 
--- large powers of two should work as well (this is 2^63)
+# large powers of two should work as well (this is 2^63)
 _ = 0x80000000000000
 )");
 
@@ -2511,9 +2511,9 @@ _ = not a <= b
 _ = a <= b == 0
 _ = a <= b <= 0
 
-_ = not a == not b -- weird but ok
+_ = not a == not b # weird but ok
 
--- silence tests for all of the above
+# silence tests for all of the above
 _ = not (a == b)
 _ = (not a) == b
 _ = not (a != b)
@@ -2535,7 +2535,7 @@ _ = a <= (b == 0)
 TEST_CASE_FIXTURE(Fixture, "RedundantNativeAttribute")
 {
     LintResult result = lint(R"(
---!native
+#!native
 
 @native
 function f(a)

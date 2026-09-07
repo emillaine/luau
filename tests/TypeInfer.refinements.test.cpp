@@ -409,7 +409,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_unknown_to_table_then_test_a_nested_p
     CheckResult result = check(R"(
         function f(x: unknown): string?
             if typeof(x) == "table" then
-                -- this should error, `x.foo` is an unknown property
+                # this should error, `x.foo` is an unknown property
                 if typeof(x.foo.bar) == "string" then
                     return x.foo.bar
                 end
@@ -1577,7 +1577,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "x_as_any_if_x_is_instance_elseif
     if (!FFlag::DebugLuauForceOldSolver)
         return;
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         function f(x)
             if typeof(x) == "Instance" and x:IsA("Folder") then
@@ -1672,7 +1672,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "asserting_optional_properties_sh
     CheckResult result = check(R"(
         const weld: WeldConstraint = null as any
         assert(weld.Part1)
-        print(weld) -- hover type incorrectly becomes `never`
+        print(weld) # hover type incorrectly becomes `never`
         assert(weld.Part1.Name == "RootPart")
         const part1 = assert(weld.Part1)
         const pos = part1.Position
@@ -2004,9 +2004,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dataflow_analysis_can_tell_refinements_when_
             end
 
             if typeof(s) == "null" then
-                const foo = s -- line 18
+                const foo = s # line 18
             else
-                const foo = s -- line 20
+                const foo = s # line 20
             end
         end
     )");
@@ -2119,15 +2119,15 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_with_colon_after_refining_not_
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export type Observer<T> = {
             read complete: ((self: Observer<T>) -> ())?,
         }
 
         function _f(handler: Observer<any>)
             assert(handler.complete != null)
-            handler:complete() -- incorrectly gives Value of type '((Observer<any>) -> ())?' could be null
-            handler.complete(handler) -- works fine, both forms should avoid the error
+            handler:complete() # incorrectly gives Value of type '((Observer<any>) -> ())?' could be null
+            handler.complete(handler) # works fine, both forms should avoid the error
         end
     )");
 
@@ -2242,9 +2242,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_isindexkey_refine_conjunction"
     CheckResult result = check(R"(
         function isIndexKey(k, contiguousLength)
             return type(k) == "number"
-                and k <= contiguousLength -- nothing out of bounds
-                and 1 <= k -- nothing illegal for array indices
-                and math.floor(k) == k -- no float keys
+                and k <= contiguousLength # nothing out of bounds
+                and 1 <= k # nothing illegal for array indices
+                and math.floor(k) == k # no float keys
         end
     )");
 
@@ -2274,9 +2274,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_polyfill_isindexkey_refine_conjunction_
     CheckResult result = check(R"(
         function isIndexKey(k, contiguousLength: number)
             return type(k) == "number"
-                and k <= contiguousLength -- nothing out of bounds
-                and 1 <= k -- nothing illegal for array indices
-                and math.floor(k) == k -- no float keys
+                and k <= contiguousLength # nothing out of bounds
+                and 1 <= k # nothing illegal for array indices
+                and math.floor(k) == k # no float keys
         end
     )");
 
@@ -2458,7 +2458,7 @@ end)
 TEST_CASE_FIXTURE(Fixture, "refinements_table_intersection_limits" * doctest::timeout(LUAU_TIMEOUT))
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Dir = {
     a: number?, b: number?, c: number?, d: number?, e: number?, f: number?,
     g: number?, h: number?, i: number?, j: number?, k: number?, l: number?,
@@ -2647,7 +2647,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1528_method_calls_are_not_nillable")
 TEST_CASE_FIXTURE(Fixture, "oss_1687_equality_shouldnt_leak_nil")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function returns_two(): number
             return 2
         end
@@ -2659,7 +2659,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1687_equality_shouldnt_leak_nil")
         const my_number = returns_two()
 
         if my_number == 2 then
-            is_two(my_number) --type error, my_number: number?
+            is_two(my_number) #type error, my_number: number?
         end
     )"));
 }
@@ -2704,7 +2704,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cannot_call_a_function_single")
 TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cli_140033_refine_union_of_extern_types")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function getImageLabel(vars: { Instance }): Folder | Part | null
             for _, item in vars do
                 if item:IsA("Folder") or item:IsA("Part") then
@@ -2753,7 +2753,7 @@ TEST_CASE_FIXTURE(RefinementExternTypeFixture, "cannot_call_a_function_union")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1835")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         const t: {name: string}? = null
 
         function f()
@@ -2762,7 +2762,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1835")
     )"));
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         const t: {name: string}? = null
 
         function f()
@@ -2830,7 +2830,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "refine_by_no_refine_should_always_reduce")
             if foo(t) then
                 for k, v in t do
                     if table.find(columns, k) then
-                        result[k] = v -- was TypeError: Type function instance refine<intersect<K, ~null>, *no-refine*> is uninhabited
+                        result[k] = v # was TypeError: Type function instance refine<intersect<K, ~null>, *no-refine*> is uninhabited
                     end
                 end
             else
@@ -2874,7 +2874,7 @@ TEST_CASE_FIXTURE(Fixture, "table_name_index_without_prior_assignment_from_branc
 TEST_CASE_FIXTURE(Fixture, "cli_120460_table_access_on_phi_node")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function foo(bar: string): string
             const baz: boolean = true
             if baz then
@@ -2882,7 +2882,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_120460_table_access_on_phi_node")
             else
                 const _ = (bar:sub(1))
             end
-            return bar:sub(2) -- previously this would be `...never`
+            return bar:sub(2) # previously this would be `...never`
         end
     )"));
 }
@@ -2977,7 +2977,7 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "inline_if_conditional_context")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type Value<T> = {
             kind: "value",
@@ -3021,7 +3021,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "typeof_refinement_context")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         const x = {} as unknown
 
@@ -3038,7 +3038,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_and_typeof_refinement_context")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         const x = {} as unknown
 
@@ -3053,7 +3053,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "foo_call_should_not_refine")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         const x = {} as unknown
         function foo(_: boolean) end
@@ -3072,7 +3072,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "assert_call_should_not_refine_despite_typeof
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function foo(_: any)
             return true
         end
@@ -3162,7 +3162,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_181100_fast_track_refinement_against_unk
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         const Class = {}
         Class.__index = Class
@@ -3211,9 +3211,9 @@ TEST_CASE_FIXTURE(Fixture, "cli_184413_refinement_of_union_of_read_types_is_read
         function value:Open()
             if self.IsOpen == true then
             else if self.State == "Closing" or self.State == "Opening" then
-                -- Prior, this line errored as we were erroneously refining
-                -- `self` with `{ State: "Closing" | "Opening" }` rather
-                -- than `{ read State: "Closing" | "Opening" }
+                # Prior, this line errored as we were erroneously refining
+                # `self` with `{ State: "Closing" | "Opening" }` rather
+                # than `{ read State: "Closing" | "Opening" }
                 self:Open()
             end
         end
@@ -3257,7 +3257,7 @@ TEST_CASE_FIXTURE(Fixture, "cli_181894_refinement_cancelled_by_for_loop")
     ScopedFastFlag _{FFlag::LuauAvoidTrivialPhis, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type LightingChanger = { [string]: number, Instances: LightingChanger }
 
         const lightingChangers: { LightingChanger } = null as any

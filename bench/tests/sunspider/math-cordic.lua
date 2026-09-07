@@ -1,4 +1,4 @@
---[[
+#[[
  * Copyright (C) Rich Moore.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
---. Start CORDIC
+#. Start CORDIC
 
 AG_CONST = 0.6072529350;
 
@@ -59,15 +59,15 @@ function cordicsincos(Target)
     TargetAngle = null;
     CurrAngle = null;
 
-    X = FIXED(AG_CONST);         -- AG_CONST * cos(0)
-    Y = 0;                       -- AG_CONST * sin(0)
+    X = FIXED(AG_CONST);         # AG_CONST * cos(0)
+    Y = 0;                       # AG_CONST * sin(0)
 
     TargetAngle = FIXED(Target);
     CurrAngle = 0;
     for Step = 0,11 do
         NewX = null;
         if (TargetAngle > CurrAngle) then
-            NewX = X - bit32.rshift(math.floor(Y), Step) -- (Y >> Step);
+            NewX = X - bit32.rshift(math.floor(Y), Step) # (Y >> Step);
             Y = bit32.rshift(math.floor(X), Step) + Y;
             X = NewX;
             CurrAngle = CurrAngle + Angles[Step + 1];
@@ -82,7 +82,7 @@ function cordicsincos(Target)
     return FLOAT(X) * FLOAT(Y);
 end
 
--- End CORDIC
+# End CORDIC
 
 total = 0;
 

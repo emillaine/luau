@@ -1,22 +1,22 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print "testing coroutines"
 
 f = null
 
 main = coroutine.running()
 assert(main == null)
--- assert(not coroutine.resume(main))
-assert(coroutine.isyieldable()) -- note: we run this in context of a yieldable thread like all other Lua code
---assert(not pcall(coroutine.yield))
+# assert(not coroutine.resume(main))
+assert(coroutine.isyieldable()) # note: we run this in context of a yieldable thread like all other Lua code
+#assert(not pcall(coroutine.yield))
 
 
--- trivial errors
+# trivial errors
 assert(not pcall(coroutine.resume, 0))
 assert(not pcall(coroutine.status, 0))
 
 
--- tests for multiple yield/resume arguments
+# tests for multiple yield/resume arguments
 
 function eqtab (t1, t2)
   assert(t1.count == t2.count)
@@ -26,12 +26,12 @@ function eqtab (t1, t2)
   end
 end
 
-_G.x = null   -- declare x
+_G.x = null   # declare x
 function foo (a, ...)
   x = coroutine.running()
   assert(x == f)
-  -- next call should not corrupt coroutine (but must fail,
-  -- as it attempts to resume the running coroutine)
+  # next call should not corrupt coroutine (but must fail,
+  # as it attempts to resume the running coroutine)
   assert(coroutine.resume(f) == false)
   assert(coroutine.status(f) == "running")
   arg = {...}
@@ -62,7 +62,7 @@ s, a = coroutine.resume(f, "xuxu")
 assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
 
 
--- yields in tail calls
+# yields in tail calls
 function foo (i) return coroutine.yield(i) end
 f = coroutine.wrap(function ()
   for i=1,10 do
@@ -73,7 +73,7 @@ end)
 for i=1,10 do _G.x = i; assert(f(i) == i) end
 _G.x = 'xuxu'; assert(f('xuxu') == 'a')
 
--- recursive
+# recursive
 function pf (n, i)
   coroutine.yield(n)
   pf(n*i, i+1)
@@ -86,7 +86,7 @@ for i=1,10 do
   s = s*i
 end
 
--- sieve
+# sieve
 function gen (n)
   return coroutine.wrap(function ()
     for i=2,n do coroutine.yield(i) end
@@ -117,7 +117,7 @@ assert(a.count == 22 and a[a.count] == 79)
 x, a = null
 
 
--- yielding across C boundaries
+# yielding across C boundaries
 
 co = coroutine.wrap(function()
        assert(not pcall(table.sort,{1,2,3}, coroutine.yield))
@@ -129,7 +129,7 @@ co = coroutine.wrap(function()
 assert(co() == 20)
 assert(co() == 30)
 
--- unyieldable C call
+# unyieldable C call
 do
   function f (c)
           assert(not coroutine.isyieldable())
@@ -146,7 +146,7 @@ end
 
 
 
--- errors in coroutines
+# errors in coroutines
 function foo ()
   coroutine.yield(3)
   error(foo)
@@ -167,7 +167,7 @@ a,b = coroutine.resume(x)
 assert(not a and string.find(b, "dead") and coroutine.status(x) == "dead")
 
 
--- co-routines x for loop
+# co-routines x for loop
 function all (a, n, k)
   if k == 0 then coroutine.yield(a)
   else
@@ -185,7 +185,7 @@ end
 assert(a == 5^4)
 
 
--- access to locals of collected coroutines
+# access to locals of collected coroutines
 C = {}; setmetatable(C, {__mode = "kv"})
 x = coroutine.wrap (function ()
             a = 10
@@ -206,7 +206,7 @@ assert(C[1] == undef)
 assert(f() == 43 and f() == 53)
 
 
--- old bug: attempt to resume itself
+# old bug: attempt to resume itself
 
 function co_func (current_co)
   assert(coroutine.running() == current_co)
@@ -228,7 +228,7 @@ assert(coroutine.resume(co, co) == false)
 assert(coroutine.resume(co, co) == false)
 
 
--- attempt to resume 'normal' coroutine
+# attempt to resume 'normal' coroutine
 co1, co2 = null, null
 co1 = coroutine.create(function () return co2() end)
 co2 = coroutine.wrap(function ()
@@ -242,13 +242,13 @@ assert(a and b == 3)
 assert(coroutine.status(co1) == 'dead')
 
 if not limitedstack then
-  -- infinite recursion of coroutines
+  # infinite recursion of coroutines
   a = function(a) coroutine.wrap(a)(a) end
   assert(not pcall(a, a))
   a = null
 end
 
--- access to locals of erroneous coroutines
+# access to locals of erroneous coroutines
 x = coroutine.create (function ()
             a = 10
             _G.f = function () a=a+1; return a end
@@ -256,12 +256,12 @@ x = coroutine.create (function ()
           end)
 
 assert(not coroutine.resume(x))
--- overwrite previous position of local `a'
+# overwrite previous position of local `a'
 assert(not coroutine.resume(x, 1, 1, 1, 1, 1, 1, 1))
 assert(_G.f() == 11)
 assert(_G.f() == 12)
 
--- leaving a pending coroutine open
+# leaving a pending coroutine open
 _X = coroutine.wrap(function ()
       a = 10
       x = function () a = a+1 end
@@ -272,9 +272,9 @@ _X()
 
 
 if not limitedstack then
-  -- bug (stack overflow)
+  # bug (stack overflow)
   j = 2^9
-  lim = 1000000    -- (C stack limit; assume 32-bit machine)
+  lim = 1000000    # (C stack limit; assume 32-bit machine)
   t = {lim - 10, lim - 5, lim - 1, lim, lim + 1}
   for i = 1, t.count do
     j = t[i]
@@ -292,7 +292,7 @@ end
 
 assert(coroutine.running() == main)
 
--- bug in nCcalls
+# bug in nCcalls
 co = coroutine.wrap(function ()
   a = {pcall(pcall,pcall,pcall,pcall,pcall,pcall,pcall,error,"hi")}
   return pcall(assert, table.unpack(a))
@@ -301,7 +301,7 @@ end)
 a = {co()}
 assert(a[10] == "hi")
 
--- test coroutine with C functions
+# test coroutine with C functions
 co = coroutine.create(coroutine.yield)
 assert(coroutine.status(co) == "suspended")
 coroutine.resume(co)
@@ -309,7 +309,7 @@ assert(coroutine.status(co) == "suspended")
 coroutine.resume(co)
 assert(coroutine.status(co) == "dead")
 
--- test correct handling of coroutine.yield returns for 0-30 values
+# test correct handling of coroutine.yield returns for 0-30 values
 for i=0,30 do
   T = table.create(i, 42)
   co = coroutine.create(function() coroutine.yield(table.unpack(T)) end)
@@ -319,26 +319,26 @@ for i=0,30 do
   assert(T2.count == 1 or T2[T2.count] == 42)
 end
 
--- test coroutine.close
+# test coroutine.close
 do
-  -- ok to close a dead coroutine
+  # ok to close a dead coroutine
   co = coroutine.create(type)
   assert(coroutine.resume(co, "testing 'coroutine.close'"))
   assert(coroutine.status(co) == "dead")
   st, msg = coroutine.close(co)
   assert(st and msg == null)
-  -- also ok to close it again
+  # also ok to close it again
   st, msg = coroutine.close(co)
   assert(st and msg == null)
 
 
-  -- cannot close the running coroutine
+  # cannot close the running coroutine
   coroutine.wrap(function()
     st, msg = pcall(coroutine.close, coroutine.running())
     assert(not st and string.find(msg, "running"))
   end)()
 
-  -- cannot close a "normal" coroutine
+  # cannot close a "normal" coroutine
   coroutine.wrap(function()
     co = coroutine.running()
     coroutine.wrap(function ()
@@ -347,18 +347,18 @@ do
     end)()
   end)()
 
-  -- closing a coroutine after an error
+  # closing a coroutine after an error
   co = coroutine.create(error)
   obj = {42}
   st, msg = coroutine.resume(co, obj)
   assert(not st and msg == obj)
   st, msg = coroutine.close(co)
   assert(not st and msg == obj)
-  -- after closing, no more errors
+  # after closing, no more errors
   st, msg = coroutine.close(co)
   assert(st and msg == null)
 
-  -- closing a coroutine that has outstanding upvalues
+  # closing a coroutine that has outstanding upvalues
   f = null
   co = coroutine.create(function()
     a = 42
@@ -372,7 +372,7 @@ do
   assert(st and msg == null)
   assert(f() == 42)
 
-  -- closing a coroutine with a large stack
+  # closing a coroutine with a large stack
   co = coroutine.create(function()
     function f(depth) return if depth > 0 then f(depth - 1) + depth else 0 end
     coroutine.yield(f(100))
@@ -382,7 +382,7 @@ do
   assert(st and msg == null)
 end
 
--- xpcall is non-yieldable
+# xpcall is non-yieldable
 do
   co = coroutine.wrap(xpcall)
 
@@ -392,11 +392,11 @@ do
   assert(err == "cannot resume dead coroutine")
 end
 
--- xpcall continuation is non-yieldable
+# xpcall continuation is non-yieldable
 do
   function test()
       coroutine.yield()
-      xpcall(test, null) -- argument error
+      xpcall(test, null) # argument error
   end
 
   co = coroutine.wrap(xpcall)

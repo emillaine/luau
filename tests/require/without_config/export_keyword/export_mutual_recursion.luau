@@ -1,4 +1,4 @@
--- mutually recursive functions with exported forward declarations
+# mutually recursive functions with exported forward declarations
 export a, b
 
 function a()

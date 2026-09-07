@@ -26,7 +26,7 @@ enum class CodeGenCompilationResult
 {
     Success = 0,          // Successfully generated code for at least one function
     NothingToCompile = 1, // There were no new functions to compile
-    NotNativeModule = 2,  // Module does not have `--!native` comment
+    NotNativeModule = 2,  // Module does not have `#!native` comment
 
     CodeGenNotInitialized = 3,                // Native codegen system is not initialized
     CodeGenOverflowInstructionLimit = 4,      // Instruction limit overflow

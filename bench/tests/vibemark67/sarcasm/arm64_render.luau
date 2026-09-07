@@ -1,9 +1,9 @@
---!nonstrict
--- ARM64 rendering + frame policy for the shared emit loop (emit.luau). Renders IR
--- instruction nodes (lifted or synthesized) back to AArch64 assembly text substituting
--- register allocations, and synthesizes the Fil-C prologue/epilogue/frame. Interface used
--- by emit.emitFip: makeColorNum / usedCalleeSaved / computeLayout / header / prologue /
--- epilogue / rootStore / renderInsn / isSelfMove.
+#!nonstrict
+# ARM64 rendering + frame policy for the shared emit loop (emit.luau). Renders IR
+# instruction nodes (lifted or synthesized) back to AArch64 assembly text substituting
+# register allocations, and synthesizes the Fil-C prologue/epilogue/frame. Interface used
+# by emit.emitFip: makeColorNum / usedCalleeSaved / computeLayout / header / prologue /
+# epilogue / rootStore / renderInsn / isSelfMove.
 
 isa = require("./arm64_isa")
 
@@ -16,15 +16,15 @@ function regName(num: number, width: number): string
 end
 arm64_render.regName = regName
 
--- Render a shift/extend suffix.
+# Render a shift/extend suffix.
 function renderShift(sh): string
 	if not sh then return "" end
 	if sh.amountText then return " " .. sh.op .. " " .. sh.amountText end
 	return " " .. sh.op
 end
 
--- Render one operand. `numOf(op)` returns the physical reg number to use for a reg
--- operand (or null to use its original name).
+# Render one operand. `numOf(op)` returns the physical reg number to use for a reg
+# operand (or null to use its original name).
 function renderOperand(op, numOf): string
 	if op.kind == "reg" then
 		num = numOf and numOf(op)
@@ -58,9 +58,9 @@ function renderOperand(op, numOf): string
 end
 arm64_render.renderOperand = renderOperand
 
--- Render a full instruction node. colorOf: tempId -> regNum (or null). Handles both lifted
--- nodes (node.stmt + node.opTemp) and synthesized nodes (node.mnemonic + node.operands with
--- op.tempRef / op.fixedNum). The `syntax` arg is ignored (ARM has a single output syntax).
+# Render a full instruction node. colorOf: tempId -> regNum (or null). Handles both lifted
+# nodes (node.stmt + node.opTemp) and synthesized nodes (node.mnemonic + node.operands with
+# op.tempRef / op.fixedNum). The `syntax` arg is ignored (ARM has a single output syntax).
 function arm64_render.renderInsn(node, colorOf, syntax): string
 	st = node.stmt or { mnemonic = node.mnemonic, operands = node.operands }
 	function numOf(op)
@@ -92,19 +92,19 @@ function arm64_render.renderInsn(node, colorOf, syntax): string
 			op.shift = saved
 			table.insert(ops, shiftText(saved))
 		else if op.kind == "imm" and op.shift then
-			-- a shifted immediate is a separate comma operand, e.g. `movk x6, #0xbc5, lsl 16`;
-			-- dropping the shift would silently corrupt the built constant.
+			# a shifted immediate is a separate comma operand, e.g. `movk x6, #0xbc5, lsl 16`;
+			# dropping the shift would silently corrupt the built constant.
 			table.insert(ops, "#" .. op.text)
 			table.insert(ops, shiftText(op.shift))
 		else
 			table.insert(ops, renderOperand(op, numOf))
 		end
 	end
-	if #ops == 0 then return "\t" .. st.mnemonic end
+	if ops.count == 0 then return "\t" .. st.mnemonic end
 	return "\t" .. st.mnemonic .. "\t" .. table.concat(ops, ", ")
 end
 
--- Physical register number for a rendered operand; null if not a plain register.
+# Physical register number for a rendered operand; null if not a plain register.
 function physOf(node, op, colorOf)
 	if not op or op.kind != "reg" then return null end
 	if op.fixedNum != null then return op.fixedNum end
@@ -113,14 +113,14 @@ function physOf(node, op, colorOf)
 	return null
 end
 
--- True if `node` renders to `mov Xd, Xd` (same physical register) — a no-op left behind by
--- coalescing. `mov w0, w0` (32-bit) is NOT a no-op (it zero-extends into x0), so only a
--- 64-bit self-move is droppable.
+# True if `node` renders to `mov Xd, Xd` (same physical register) — a no-op left behind by
+# coalescing. `mov w0, w0` (32-bit) is NOT a no-op (it zero-extends into x0), so only a
+# 64-bit self-move is droppable.
 function arm64_render.isSelfMove(node, colorOf)
 	mnem = node.stmt and node.stmt.mnemonic or node.mnemonic
 	if not mnem or string.lower(mnem) != "mov" then return false end
 	ops = node.stmt and node.stmt.operands or node.operands
-	if not ops or #ops != 2 then return false end
+	if not ops or ops.count != 2 then return false end
 	if ops[1].kind != "reg" or ops[2].kind != "reg" or ops[2].shift then return false end
 	if (ops[1].width or 64) != 64 or (ops[2].width or 64) != 64 then return false end
 	a = physOf(node, ops[1], colorOf)
@@ -128,10 +128,10 @@ function arm64_render.isSelfMove(node, colorOf)
 	return a != null and a == b
 end
 
--- Frame layout -----------------------------------------------------------
+# Frame layout #---------------------------------------------------------
 function align16(x) return math.floor((x + 15) / 16) * 16 end
 
--- ARM color name -> physical number (sp -> -2, xzr -> -1, xN/wN -> N).
+# ARM color name -> physical number (sp -> -2, xzr -> -1, xN/wN -> N).
 function arm64_render.makeColorNum(color)
 	return function(t)
 		c = color[t]
@@ -141,7 +141,7 @@ function arm64_render.makeColorNum(color)
 	end
 end
 
--- Used callee-saved GPRs (x19..x28) in canonical order.
+# Used callee-saved GPRs (x19..x28) in canonical order.
 function arm64_render.usedCalleeSaved(color)
 	usedCallee = {}
 	for _, r in isa.ALLOCATABLE do
@@ -158,10 +158,10 @@ end
 
 function arm64_render.computeLayout(calleeSaved, numRoots, spillBytes)
 	spillBytes = spillBytes or 0
-	frameData = align16(16 + 8 * numRoots + spillBytes)  -- prev+origin+roots(+spills)
-	saveList = { "x29", "x30" }                          -- fp/lr first (top), then callee-saved
+	frameData = align16(16 + 8 * numRoots + spillBytes)  # prev+origin+roots(+spills)
+	saveList = { "x29", "x30" }                          # fp/lr first (top), then callee-saved
 	for _, r in calleeSaved do table.insert(saveList, r) end
-	numSlots = math.ceil(#saveList / 2)
+	numSlots = math.ceil(saveList.count / 2)
 	saveBytes = numSlots * 16
 	total = align16(frameData + saveBytes)
 	pairs = {}
@@ -176,8 +176,8 @@ function arm64_render.computeLayout(calleeSaved, numRoots, spillBytes)
 	}
 end
 
--- `op dst, src, #imm` (add/sub), splitting when imm exceeds the 12-bit range so large
--- frames still assemble (imm up to ~16 MB via a shifted second op).
+# `op dst, src, #imm` (add/sub), splitting when imm exceeds the 12-bit range so large
+# frames still assemble (imm up to ~16 MB via a shifted second op).
 function emitAddSub(out, op, dst, src, imm)
 	if imm <= 4095 then
 		table.insert(out, "\t" .. op .. "\t" .. dst .. ", " .. src .. ", #" .. imm)
@@ -189,10 +189,10 @@ function emitAddSub(out, op, dst, src, imm)
 	end
 end
 
--- Save/restore the callee-saved pairs. stp/ldp only allow a ±512 (÷8) offset, so once the
--- callee-saved region sits above that we compute its base once into x8 (reserved scratch)
--- and address the pairs off x8 with small offsets.
-function emitSaves(out, layout, mem)  -- mem = "st"/"ld"
+# Save/restore the callee-saved pairs. stp/ldp only allow a ±512 (÷8) offset, so once the
+# callee-saved region sits above that we compute its base once into x8 (reserved scratch)
+# and address the pairs off x8 with small offsets.
+function emitSaves(out, layout, mem)  # mem = "st"/"ld"
 	savesNeedBase = layout.fpOff > 504
 	base = savesNeedBase and "x8" or "sp"
 	if savesNeedBase then emitAddSub(out, "add", "x8", "sp", layout.frameData) end
@@ -221,13 +221,13 @@ function arm64_render.prologue(rc)
 	emitAddSub(out, "sub", "sp", "sp", layout.total)
 	emitSaves(out, layout, "st")
 	emitAddSub(out, "add", "x29", "sp", layout.fpOff)
-	-- stack overflow check (x0 = myth at entry)
+	# stack overflow check (x0 = myth at entry)
 	table.insert(out, "\tldr\tx9, [x0]")
 	table.insert(out, "\tcmp\tsp, x9")
 	table.insert(out, "\tb.hs\t.Lsovok_" .. tr.name)
 	table.insert(out, "\tb\tfilc_stack_overflow_failure")
 	table.insert(out, ".Lsovok_" .. tr.name .. ":")
-	-- push filc_frame at sp+0
+	# push filc_frame at sp+0
 	table.insert(out, "\tldr\tx9, [x0, #16]")
 	table.insert(out, "\tmov\tx8, sp")
 	table.insert(out, "\tadrp\tx10, " .. tr.originSym)
@@ -238,10 +238,10 @@ end
 
 function arm64_render.epilogue(rc)
 	out, layout, mythNum = rc.out, rc.layout, rc.mythNum
-	-- pop frame: myth->top_frame = frame.prev  (myth in vMyth's color)
+	# pop frame: myth->top_frame = frame.prev  (myth in vMyth's color)
 	table.insert(out, "\tldr\tx8, [sp, #0]")
 	table.insert(out, "\tstr\tx8, [x" .. mythNum .. ", #16]")
-	emitSaves(out, layout, "ld")   -- restore callee-saved (reverse not required for correctness)
+	emitSaves(out, layout, "ld")   # restore callee-saved (reverse not required for correctness)
 	emitAddSub(out, "add", "sp", "sp", layout.total)
 end
 

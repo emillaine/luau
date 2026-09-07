@@ -1,28 +1,28 @@
---!strict
--- Poly1305 one-time message authenticator (RFC 8439).
---
--- Poly1305 evaluates a polynomial in the accumulator modulo the prime
--- p = 2^130 - 5, then adds a 128-bit value `s`. The hard part in Luau is the
--- 130-bit arithmetic, since doubles are only exact to 2^53.
---
--- Representation: numbers are held as ten limbs of 13 bits (little-endian),
--- so a full number is exactly 130 bits (13 * 10). Two properties make this
--- convenient:
---   * 2^130 = (2^13)^10, so the top of the number lines up on a limb boundary
---     and the reduction 2^130 ≡ 5 (mod p) is a clean per-limb fold.
---   * Every partial product limb_i * limb_j is < 2^26, and each output column
---     sums at most ten of them (< 2^30), staying far below 2^53.
+#!strict
+# Poly1305 one-time message authenticator (RFC 8439).
+#
+# Poly1305 evaluates a polynomial in the accumulator modulo the prime
+# p = 2^130 - 5, then adds a 128-bit value `s`. The hard part in Luau is the
+# 130-bit arithmetic, since doubles are only exact to 2^53.
+#
+# Representation: numbers are held as ten limbs of 13 bits (little-endian),
+# so a full number is exactly 130 bits (13 * 10). Two properties make this
+# convenient:
+#   * 2^130 = (2^13)^10, so the top of the number lines up on a limb boundary
+#     and the reduction 2^130 ≡ 5 (mod p) is a clean per-limb fold.
+#   * Every partial product limb_i * limb_j is < 2^26, and each output column
+#     sums at most ten of them (< 2^30), staying far below 2^53.
 
 poly1305 = {}
 
 LIMBS = 10
 LIMB_BITS = 13
-LIMB_BASE = 8192 -- 2^13
-LIMB_MASK = 8191 -- 2^13 - 1
+LIMB_BASE = 8192 # 2^13
+LIMB_MASK = 8191 # 2^13 - 1
 
--- Convert the first `n` bytes of `buf` (a little-endian integer) into ten
--- base-2^13 limbs. Bits beyond 130 are dropped, but callers never supply that
--- many. A bit accumulator shifts whole bytes in and emits 13-bit limbs.
+# Convert the first `n` bytes of `buf` (a little-endian integer) into ten
+# base-2^13 limbs. Bits beyond 130 are dropped, but callers never supply that
+# many. A bit accumulator shifts whole bytes in and emits 13-bit limbs.
 function bytesToLimbs(buf: buffer, n: number): { number }
 	limbs = table.create(LIMBS)
 	for i = 1, LIMBS do
@@ -48,7 +48,7 @@ function bytesToLimbs(buf: buffer, n: number): { number }
 	return limbs
 end
 
--- Convert ten base-2^13 limbs into `n` little-endian bytes written to `out`.
+# Convert ten base-2^13 limbs into `n` little-endian bytes written to `out`.
 function limbsToBytes(limbs: { number }, out: buffer, n: number)
 	acc = 0
 	accBits = 0
@@ -70,8 +70,8 @@ function limbsToBytes(limbs: { number }, out: buffer, n: number)
 	end
 end
 
--- Propagate carries through ten limbs, folding any overflow past bit 130 back
--- in as `carry * 5` (since 2^130 ≡ 5 mod p). Operates in place.
+# Propagate carries through ten limbs, folding any overflow past bit 130 back
+# in as `carry * 5` (since 2^130 ≡ 5 mod p). Operates in place.
 function carryReduce(limbs: { number })
 	c = 0
 	for i = 1, LIMBS do
@@ -79,7 +79,7 @@ function carryReduce(limbs: { number })
 		limbs[i] = v % LIMB_BASE
 		c = math.floor(v / LIMB_BASE)
 	end
-	-- Fold the >=2^130 part back in. Each pass shrinks the carry quickly.
+	# Fold the >=2^130 part back in. Each pass shrinks the carry quickly.
 	while c > 0 do
 		c = c * 5
 		for i = 1, LIMBS do
@@ -93,10 +93,10 @@ function carryReduce(limbs: { number })
 	end
 end
 
--- Multiply two reduced numbers modulo p = 2^130 - 5. Schoolbook 10x10 with the
--- high limbs folded via 2^130 ≡ 5, then a carry pass.
+# Multiply two reduced numbers modulo p = 2^130 - 5. Schoolbook 10x10 with the
+# high limbs folded via 2^130 ≡ 5, then a carry pass.
 function mulmod(a: { number }, b: { number }): { number }
-	-- Product limbs d[1..19] (indices 1..19 correspond to limb positions 0..18).
+	# Product limbs d[1..19] (indices 1..19 correspond to limb positions 0..18).
 	d = table.create(2 * LIMBS - 1)
 	for k = 1, 2 * LIMBS - 1 do
 		d[k] = 0
@@ -111,7 +111,7 @@ function mulmod(a: { number }, b: { number }): { number }
 		end
 	end
 
-	-- Fold limbs at positions >= 10 (bit >= 130) into low limbs times 5.
+	# Fold limbs at positions >= 10 (bit >= 130) into low limbs times 5.
 	for k = 2 * LIMBS - 1, LIMBS + 1, -1 do
 		d[k - LIMBS] += 5 * d[k]
 	end
@@ -124,32 +124,32 @@ function mulmod(a: { number }, b: { number }): { number }
 	return out
 end
 
--- Add `b` into `a` limb-wise (no reduction; caller reduces via mulmod).
+# Add `b` into `a` limb-wise (no reduction; caller reduces via mulmod).
 function addInto(a: { number }, b: { number })
 	for i = 1, LIMBS do
 		a[i] += b[i]
 	end
 end
 
--- Read and clamp the 16-byte `r` half of the key per RFC 8439.
+# Read and clamp the 16-byte `r` half of the key per RFC 8439.
 function clampedR(key: buffer): { number }
 	r = buffer.create(16)
 	buffer.copy(r, 0, key, 0, 16)
-	-- Clear the top 4 bits of bytes 3, 7, 11, 15.
+	# Clear the top 4 bits of bytes 3, 7, 11, 15.
 	buffer.writeu8(r, 3, bit32.band(buffer.readu8(r, 3), 15))
 	buffer.writeu8(r, 7, bit32.band(buffer.readu8(r, 7), 15))
 	buffer.writeu8(r, 11, bit32.band(buffer.readu8(r, 11), 15))
 	buffer.writeu8(r, 15, bit32.band(buffer.readu8(r, 15), 15))
-	-- Clear the bottom 2 bits of bytes 4, 8, 12.
+	# Clear the bottom 2 bits of bytes 4, 8, 12.
 	buffer.writeu8(r, 4, bit32.band(buffer.readu8(r, 4), 252))
 	buffer.writeu8(r, 8, bit32.band(buffer.readu8(r, 8), 252))
 	buffer.writeu8(r, 12, bit32.band(buffer.readu8(r, 12), 252))
 	return bytesToLimbs(r, 16)
 end
 
--- Conditionally subtract p so the accumulator lands in [0, p). Computes
--- h + 5; if that carries past bit 130 then h >= p, so the wrapped value
--- (h + 5 - 2^130) is the reduced result.
+# Conditionally subtract p so the accumulator lands in [0, p). Computes
+# h + 5; if that carries past bit 130 then h >= p, so the wrapped value
+# (h + 5 - 2^130) is the reduced result.
 function freeze(h: { number })
 	g = table.create(LIMBS)
 	c = 5
@@ -168,7 +168,7 @@ end
 poly1305.TAG_SIZE = 16
 poly1305.KEY_SIZE = 32
 
--- Compute the 16-byte Poly1305 tag over `msg` using the 32-byte one-time key.
+# Compute the 16-byte Poly1305 tag over `msg` using the 32-byte one-time key.
 function poly1305.mac(key: buffer, msg: buffer): buffer
 	assert(buffer.len(key) == 32, "Poly1305 key must be 32 bytes")
 
@@ -182,8 +182,8 @@ function poly1305.mac(key: buffer, msg: buffer): buffer
 	off = 0
 	while off < n do
 		len = if n - off < 16 then n - off else 16
-		-- Build the block padded with the high "1" bit: for a full block that
-		-- is 2^128; for a short final block it is 2^(8*len).
+		# Build the block padded with the high "1" bit: for a full block that
+		# is 2^128; for a short final block it is 2^(8*len).
 		blk = buffer.create(len + 1)
 		buffer.copy(blk, 0, msg, off, len)
 		buffer.writeu8(blk, len, 1)
@@ -196,7 +196,7 @@ function poly1305.mac(key: buffer, msg: buffer): buffer
 
 	freeze(h)
 
-	-- tag = (h + s) mod 2^128, where s is the second half of the key.
+	# tag = (h + s) mod 2^128, where s is the second half of the key.
 	out = buffer.create(16)
 	limbsToBytes(h, out, 16)
 	carry = 0
@@ -208,7 +208,7 @@ function poly1305.mac(key: buffer, msg: buffer): buffer
 	return out
 end
 
--- Constant-time-ish tag comparison (length is public). Returns true on match.
+# Constant-time-ish tag comparison (length is public). Returns true on match.
 function poly1305.verify(tagA: buffer, tagB: buffer): boolean
 	if buffer.len(tagA) != 16 or buffer.len(tagB) != 16 then
 		return false

@@ -1,15 +1,15 @@
--- Inline parsing for Markdown (emphasis, code spans, links, images)
+# Inline parsing for Markdown (emphasis, code spans, links, images)
 
 ast = require("./ast")
 
 function parseInlines(text: string, refDefs: {[string]: {dest: string, title: string}}?): {ast.Node}
     nodes = {}
     pos = 1
-    len = #text
+    len = text.count
     currentText = ""
 
     function flushText()
-        if #currentText > 0 then
+        if currentText.count > 0 then
             table.insert(nodes, ast.createText(currentText))
             currentText = ""
         end
@@ -57,7 +57,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                     flushText()
                     code = string.sub(text, pos, closePos - 1)
                     code = string.gsub(code, "\n", " ")
-                    if #code > 1 and string.sub(code, 1, 1) == " " and string.sub(code, -1) == " " then
+                    if code.count > 1 and string.sub(code, 1, 1) == " " and string.sub(code, -1) == " " then
                         code = string.sub(code, 2, -2)
                     end
                     table.insert(nodes, ast.createCode(code))
@@ -251,7 +251,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                     decoded = entities[entity] or ("&" .. entity .. ";")
                 end
                 currentText ..= decoded
-                pos += #entity + 2
+                pos += entity.count + 2
             else
                 currentText ..= ch
                 pos += 1
@@ -263,7 +263,7 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                 link = ast.createLink(autolink, "")
                 ast.addChild(link, ast.createText(autolink))
                 table.insert(nodes, link)
-                pos += #autolink + 2
+                pos += autolink.count + 2
             else
                 emailLink = string.match(text, "^<([%w%.%-]+@[%w%.%-]+)>", pos)
                 if emailLink then
@@ -271,14 +271,14 @@ function parseInlines(text: string, refDefs: {[string]: {dest: string, title: st
                     link = ast.createLink("mailto:" .. emailLink, "")
                     ast.addChild(link, ast.createText(emailLink))
                     table.insert(nodes, link)
-                    pos += #emailLink + 2
+                    pos += emailLink.count + 2
                 else
                     currentText ..= ch
                     pos += 1
                 end
             end
         else if ch == "\n" then
-            if #currentText >= 2 and string.sub(currentText, -2) == "  " then
+            if currentText.count >= 2 and string.sub(currentText, -2) == "  " then
                 currentText = string.sub(currentText, 1, -3)
                 flushText()
                 table.insert(nodes, ast.createHardBreak())

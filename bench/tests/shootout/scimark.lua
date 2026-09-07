@@ -1,37 +1,37 @@
-------------------------------------------------------------------------------
--- Lua SciMark (2010-12-20).
---
--- A literal translation of SciMark 2.0a, written in Java and C.
--- Credits go to the original authors Roldan Pozo and Bruce Miller.
--- See: http://math.nist.gov/scimark2/
-------------------------------------------------------------------------------
--- Copyright (C) 2006-2010 Mike Pall. All rights reserved.
---
--- Permission is hereby granted, free of charge, to any person obtaining
--- a copy of this software and associated documentation files (the
--- "Software"), to deal in the Software without restriction, including
--- without limitation the rights to use, copy, modify, merge, publish,
--- distribute, sublicense, and/or sell copies of the Software, and to
--- permit persons to whom the Software is furnished to do so, subject to
--- the following conditions:
---
--- The above copyright notice and this permission notice shall be
--- included in all copies or substantial portions of the Software.
---
--- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
--- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
--- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
--- IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
--- CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
--- TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
--- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---
--- [ MIT license: http://www.opensource.org/licenses/mit-license.php ]
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# Lua SciMark (2010-12-20).
+#
+# A literal translation of SciMark 2.0a, written in Java and C.
+# Credits go to the original authors Roldan Pozo and Bruce Miller.
+# See: http://math.nist.gov/scimark2/
+#----------------------------------------------------------------------------
+# Copyright (C) 2006-2010 Mike Pall. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# [ MIT license: http://www.opensource.org/licenses/mit-license.php ]
+#----------------------------------------------------------------------------
 
-------------------------------------------------------------------------------
--- Modification to be compatible with Lua 5.3
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# Modification to be compatible with Lua 5.3
+#----------------------------------------------------------------------------
 
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
@@ -42,13 +42,13 @@ if table and table.unpack then
     unpack = table.unpack
 end
 
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 
 SCIMARK_VERSION = "2010-12-10"
 SCIMARK_COPYRIGHT = "Copyright (C) 2006-2010 Mike Pall"
 
 MIN_TIME = 0.2
-RANDOM_SEED = 101009 -- Must be odd.
+RANDOM_SEED = 101009 # Must be odd.
 SIZE_SELECT = "small"
 
 benchmarks = {
@@ -73,9 +73,9 @@ abs, log, sin, floor = math.abs, math.log, math.sin, math.floor
 pi, clock = math.pi, os.clock
 format = string.format
 
-------------------------------------------------------------------------------
--- Select array type: Lua tables or native (FFI) arrays
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# Select array type: Lua tables or native (FFI) arrays
+#----------------------------------------------------------------------------
 
 darray, iarray = null, null
 
@@ -92,15 +92,15 @@ function array_init()
   iarray = darray
 end
 
-------------------------------------------------------------------------------
--- This is a Lagged Fibonacci Pseudo-random Number Generator with
--- j, k, M = 5, 17, 31. Pretty weak, but same as C/Java SciMark.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# This is a Lagged Fibonacci Pseudo-random Number Generator with
+# j, k, M = 5, 17, 31. Pretty weak, but same as C/Java SciMark.
+#----------------------------------------------------------------------------
 
 rand, rand_init = null, null
 
 if jit and jit.status and jit.status() then
-  -- LJ2 has bit operations and zero-based arrays (internally).
+  # LJ2 has bit operations and zero-based arrays (internally).
   bit = require("bit")
   band, sar = bit.band, bit.arshift
   function rand_init(seed)
@@ -120,7 +120,7 @@ if jit and jit.status and jit.status() then
     end
   end
 else
-  -- Better for standard Lua with one-based arrays and without bit operations.
+  # Better for standard Lua with one-based arrays and without bit operations.
   function rand_init(seed)
     Rm, Rj = {}, 1
     for i=1,17 do Rm[i] = 0 end
@@ -157,9 +157,9 @@ function random_matrix(m, n)
   return a
 end
 
-------------------------------------------------------------------------------
--- FFT: Fast Fourier Transform.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# FFT: Fast Fourier Transform.
+#----------------------------------------------------------------------------
 
 function fft_bitreverse(v, n)
   j = 0
@@ -222,9 +222,9 @@ function benchmarks.FFT(n)
   end
 end
 
-------------------------------------------------------------------------------
--- SOR: Jacobi Successive Over-Relaxation.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# SOR: Jacobi Successive Over-Relaxation.
+#----------------------------------------------------------------------------
 
 function sor_run(mat, m, n, cycles, omega)
   om4, om1 = omega*0.25, 1.0-omega
@@ -248,9 +248,9 @@ function benchmarks.SOR(n)
   end
 end
 
-------------------------------------------------------------------------------
--- MC: Monte Carlo Integration.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# MC: Monte Carlo Integration.
+#----------------------------------------------------------------------------
 
 function mc_integrate(cycles)
   under_curve = 0
@@ -267,13 +267,13 @@ function benchmarks.MC()
   return function(cycles)
     res = mc_integrate(cycles)
     assert(math.sqrt(cycles)*math.abs(res-math.pi) < 5.0, "bad MC result")
-    return cycles * 4 -- Way off, but same as SciMark in C/Java.
+    return cycles * 4 # Way off, but same as SciMark in C/Java.
   end
 end
 
-------------------------------------------------------------------------------
--- Sparse Matrix Multiplication.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# Sparse Matrix Multiplication.
+#----------------------------------------------------------------------------
 
 function sparse_mult(n, cycles, vy, val, row, col, vx)
   for p=1,cycles do
@@ -305,9 +305,9 @@ function benchmarks.SPARSE(n, nz)
   end
 end
 
-------------------------------------------------------------------------------
--- LU: Dense Matrix Factorization.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# LU: Dense Matrix Factorization.
+#----------------------------------------------------------------------------
 
 function lu_factor(a, pivot, m, n)
   min_m_n = m < n and m or n
@@ -366,9 +366,9 @@ function benchmarks.LU(n)
   end
 end
 
-------------------------------------------------------------------------------
--- Main program.
-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# Main program.
+#----------------------------------------------------------------------------
 
 function printf(...)
   print(format(...))
@@ -384,7 +384,7 @@ function measure(min_time, name, ...)
   array_init()
   rand_init(RANDOM_SEED)
   run = benchmarks[name](...)
-  --[[local cycles = 1
+  #[[local cycles = 1
   repeat
     local tm = clock()
     local flops = run(cycles, ...)
@@ -436,7 +436,7 @@ sum = 0
 for _,name in ipairs(benchmarks) do
   sum = sum + measure(MIN_TIME, name, unpack(params[name]))
 end
---printf("\nSciMark %8.2f  [%s problem sizes]\n", sum / #benchmarks, SIZE_SELECT)
+#printf("\nSciMark %8.2f  [%s problem sizes]\n", sum / #benchmarks, SIZE_SELECT)
 
 end
 

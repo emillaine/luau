@@ -1,13 +1,13 @@
---!nonstrict
--- The GIMSO transform (architecture-independent): rewrite a lifted yolo function into a
--- memory-safe Fil-C fast-entrypoint body (IR nodes), plus metadata for glue/prologue/
--- epilogue emission. The walk and every invisicap sequence (access checks, pointer loads/
--- stores with the FUGC store barrier, calls, pollchecks, allocations) live here ONCE; the
--- actual instructions are produced through a per-arch codegen `cg` (arm64_codegen /
--- x86_64_codegen), so the safety-critical logic is single-source across ISAs.
---
--- transformFunction(name, sigDesc, body, backend) where backend = { cg = <codegen module>,
--- frame = <frame module> }.
+#!nonstrict
+# The GIMSO transform (architecture-independent): rewrite a lifted yolo function into a
+# memory-safe Fil-C fast-entrypoint body (IR nodes), plus metadata for glue/prologue/
+# epilogue emission. The walk and every invisicap sequence (access checks, pointer loads/
+# stores with the FUGC store barrier, calls, pollchecks, allocations) live here ONCE; the
+# actual instructions are produced through a per-arch codegen `cg` (arm64_codegen /
+# x86_64_codegen), so the safety-critical logic is single-source across ISAs.
+#
+# transformFunction(name, sigDesc, body, backend) where backend = { cg = <codegen module>,
+# frame = <frame module> }.
 
 lift = require("./lift")
 ptrflow = require("./ptrflow")
@@ -17,7 +17,7 @@ framePass = require("./frame")
 
 transform = {}
 
--- `;! alloca ...` annotation parser (architecture-independent).
+# `;! alloca ...` annotation parser (architecture-independent).
 function parseAlloca(ann)
 	if not ann then return null end
 	n = string.match(ann, "^alloca%s+size%s*%(%s*(.-)%s*%)$")
@@ -36,7 +36,7 @@ function parseAlloca(ann)
 	return null
 end
 
--- The register operand of a store that is not the memory operand (the stored value).
+# The register operand of a store that is not the memory operand (the stored value).
 function storeValueOperand(stmt, mem)
 	for _, op in stmt.operands do
 		if op.kind == "reg" and op != mem then return op end
@@ -45,16 +45,16 @@ function storeValueOperand(stmt, mem)
 end
 
 function transform.transformFunction(name, sigDesc, body, backend)
-	cgm = backend.cg          -- codegen module (static config + make)
-	framePolicy = backend.frame  -- per-arch frame policy (analyzeFrame + rewrite)
+	cgm = backend.cg          # codegen module (static config + make)
+	framePolicy = backend.frame  # per-arch frame policy (analyzeFrame + rewrite)
 	cc = cgm.cc
 
 	returnRegs = sigDesc.isVoid and {} or {0}
 	funcLine = (body[1] and body[1].line) or 0
 	curLine = funcLine
 
-	-- Fixed-size stack allocations establish sp-relative "regions" [base, base+size); gcc -O0
-	-- re-derives the buffer address per use, so we redirect such sp math into the allocation.
+	# Fixed-size stack allocations establish sp-relative "regions" [base, base+size); gcc -O0
+	# re-derives the buffer address per use, so we redirect such sp math into the allocation.
 	allocaRegions = {}
 	for _, st in body do
 		if st.kind == "insn" then
@@ -74,7 +74,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 
 	body = framePass.preprocess(body, allocaRegions, framePolicy)
 
-	-- per-call signature info
+	# per-call signature info
 	callSigCache = {}
 	function callSigOf(stmt)
 		ann = stmt.annotation
@@ -100,7 +100,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		return nextTemp
 	end
 
-	-- Precolored physical-register temps: ONE node per machine register (as IRC requires).
+	# Precolored physical-register temps: ONE node per machine register (as IRC requires).
 	pregTemps = {}
 	function pColored(num)
 		if not pregTemps[num] then
@@ -109,7 +109,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		return pregTemps[num]
 	end
 
-	-- Seeds for pointer flow: pointer args occupy their yolo argument registers.
+	# Seeds for pointer flow: pointer args occupy their yolo argument registers.
 	argPtrTemps = {}
 	argInfo = {}
 	for k, ty in sigDesc.argTypes do
@@ -119,7 +119,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		if ty == 7 and et then table.insert(argPtrTemps, et) end
 	end
 
-	-- classify nodes: load-ptr / store-ptr / call / alloca.
+	# classify nodes: load-ptr / store-ptr / call / alloca.
 	loadPtrDefs, storePtrNodes, callNodes, allocaNodes, allocaResultDefs = {}, {}, {}, {}, {}
 	sizeNames = {}
 	for _, node in lf.nodes do
@@ -144,11 +144,11 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		{ argPtrTemps = argPtrTemps, loadPtrDefs = loadPtrDefs, allocaResultDefs = allocaResultDefs },
 		allocTemp, { baseMnemonic = cgm.baseMnemonic })
 
-	-- Link each fixed-size alloca-result node to its region; give the region a stable pointer
-	-- temp for redirecting sp-relative math and a shared lower (the result's seeded lower).
-	-- Iterate in body order (allocaNodes is keyed by node identity, whose `pairs` order is
-	-- hash-dependent; region pointer temps are allocated here, so a stable order keeps temp
-	-- ids — and therefore register allocation — reproducible).
+	# Link each fixed-size alloca-result node to its region; give the region a stable pointer
+	# temp for redirecting sp-relative math and a shared lower (the result's seeded lower).
+	# Iterate in body order (allocaNodes is keyed by node identity, whose `pairs` order is
+	# hash-dependent; region pointer temps are allocated here, so a stable order keeps temp
+	# ids — and therefore register allocation — reproducible).
 	for _, node in lf.nodes do
 		al = allocaNodes[node]
 		if al and al.kind == "resultSize" then
@@ -166,10 +166,10 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		end
 	end
 
-	-- loop headers (targets of back edges) get a pollcheck
+	# loop headers (targets of back edges) get a pollcheck
 	loopHeaderLabels = {}
 	for _, node in lf.nodes do
-		if node.kind == "insn" and node.c.targets and #node.c.targets > 0 then
+		if node.kind == "insn" and node.c.targets and node.c.targets.count > 0 then
 			for _, t in node.c.targets do
 				ti = lf.labelToFlow[t]
 				if ti and ti <= node.fi then loopHeaderLabels[t] = true end
@@ -187,19 +187,19 @@ function transform.transformFunction(name, sigDesc, body, backend)
 
 	cg = cgm.make({ emit = emit, allocTemp = allocTemp, pColored = pColored, pf = pf, temps = temps })
 
-	-- GC root slots
+	# GC root slots
 	rootTemps, loToSlot = {}, {}
 	function rootSlotFor(loT)
 		if loToSlot[loT] == null then
 			table.insert(rootTemps, loT)
-			loToSlot[loT] = #rootTemps - 1
+			loToSlot[loT] = rootTemps.count - 1
 			if temps[loT] then temps[loT].spillCost = 1e9 end
 		end
 		return loToSlot[loT]
 	end
 	function emitRootStore(loT) emit({ kind = "rootstore", temp = loT, index = rootSlotFor(loT), useTemps = { loT } }) end
 
-	-- entry CC unpacking: myth <- myth reg; params from CC iv/lo regs into their yolo webs.
+	# entry CC unpacking: myth <- myth reg; params from CC iv/lo regs into their yolo webs.
 	cg.move(vMyth, pColored(cc.myth), true)
 	for k, ty in sigDesc.argTypes do
 		info = argInfo[k]
@@ -213,7 +213,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		end
 	end
 
-	-- access-fail stubs (bookkeeping here; the stub body is arch-specific via cg.failStub).
+	# access-fail stubs (bookkeeping here; the stub body is arch-specific via cg.failStub).
 	accessOrigins, failStubs, failCounter = {}, {}, 0
 	function failLabelFor(ivTemp, loTemp, size, align, isWrite)
 		failCounter += 1
@@ -224,28 +224,28 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		return lbl
 	end
 
-	-- access check for a precomputed effective address (capLo==null => null cap, always traps).
+	# access check for a precomputed effective address (capLo==null => null cap, always traps).
 	function emitAccessCheck(effTemp, capLo, size, align, isWrite)
 		if capLo == null then
 			cg.jump(failLabelFor(effTemp, null, size, align, isWrite))
 			return
 		end
 		lbl = failLabelFor(effTemp, capLo, size, align, isWrite)
-		cg.branchZero(capLo, lbl)                 -- null capability
-		cg.cmpBranch(effTemp, capLo, "ult", lbl)  -- eff < lower
+		cg.branchZero(capLo, lbl)                 # null capability
+		cg.cmpBranch(effTemp, capLo, "ult", lbl)  # eff < lower
 		upper = allocTemp({ role = "scratch" })
-		cg.load(upper, capLo, -16, 8)             -- upper = [lower-16]
+		cg.load(upper, capLo, -16, 8)             # upper = [lower-16]
 		if size > 1 then
 			hi = allocTemp({ role = "scratch" })
-			cg.addImm(hi, effTemp, size)          -- hi = eff + size
-			cg.cmpBranch(hi, upper, "ugt", lbl)   -- eff+size > upper
+			cg.addImm(hi, effTemp, size)          # hi = eff + size
+			cg.cmpBranch(hi, upper, "ugt", lbl)   # eff+size > upper
 		else
-			cg.cmpBranch(effTemp, upper, "uge", lbl)  -- eff >= upper
+			cg.cmpBranch(effTemp, upper, "uge", lbl)  # eff >= upper
 		end
 		if align > 1 then cg.testMaskBranch(effTemp, align - 1, "ne", lbl) end
 	end
 
-	-- invisicap pointer load: load (dstIv, dstLo) from the address of `mem`.
+	# invisicap pointer load: load (dstIv, dstLo) from the address of `mem`.
 	ptrldCounter = 0
 	function emitPtrLoad(node, mem, dstIv, dstLo)
 		ptrldCounter += 1
@@ -254,23 +254,23 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		emitAccessCheck(effTemp, baseLo, 8, 8)
 		if baseLo == null then cg.moveZero(dstLo); cg.moveZero(dstIv); return end
 		offInObj = allocTemp({ role = "offobj" })
-		cg.subReg(offInObj, effTemp, baseLo)                       -- offInObj = eff - lower
+		cg.subReg(offInObj, effTemp, baseLo)                       # offInObj = eff - lower
 		aux = allocTemp({ role = "aux" })
-		cg.load(aux, baseLo, -8, 8); cg.maskLow48(aux)             -- aux = [lower-8] & 0xffffffffffff
+		cg.load(aux, baseLo, -8, 8); cg.maskLow48(aux)             # aux = [lower-8] & 0xffffffffffff
 		nullL, haveL, direct = ".Lnulllo_" .. tag, ".Lhavelo_" .. tag, ".Ldirlo_" .. tag
 		cg.branchZero(aux, nullL)
 		auxE = allocTemp({ role = "auxentry" })
-		cg.loadIndexed(auxE, aux, offInObj, 1, 8)                  -- auxE = [aux + offInObj]
-		cg.testMaskBranch(auxE, 1, "eq", direct)                   -- bit0 clear -> direct
+		cg.loadIndexed(auxE, aux, offInObj, 1, 8)                  # auxE = [aux + offInObj]
+		cg.testMaskBranch(auxE, 1, "eq", direct)                   # bit0 clear -> direct
 		boxp = allocTemp({ role = "box" })
-		cg.move(boxp, auxE); cg.andImmInPlace(boxp, -2); cg.load(dstLo, boxp, 8, 8)  -- box: lower=[(auxE&~1)+8]
+		cg.move(boxp, auxE); cg.andImmInPlace(boxp, -2); cg.load(dstLo, boxp, 8, 8)  # box: lower=[(auxE&~1)+8]
 		cg.jump(haveL)
 		cg.label(direct); cg.move(dstLo, auxE, true); cg.jump(haveL)
 		cg.label(nullL); cg.moveZero(dstLo)
-		cg.label(haveL); cg.load(dstIv, effTemp, 0, 8)             -- dstIv = [eff]
+		cg.label(haveL); cg.load(dstIv, effTemp, 0, 8)             # dstIv = [eff]
 	end
 
-	-- invisicap pointer store (aux allocation + readonly reject + FUGC store barrier).
+	# invisicap pointer store (aux allocation + readonly reject + FUGC store barrier).
 	ptrstCounter = 0
 	function emitPtrStore(node, mem, valIv, valLo)
 		ptrstCounter += 1
@@ -280,15 +280,15 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		if valLo == null then valLo = allocTemp({ role = "nulllo" }); cg.moveZero(valLo) end
 		lbl = failLabelFor(effTemp, baseLo, 8, 8, true)
 		cg.branchZero(baseLo, lbl)
-		cg.testMaskBranch(effTemp, 7, "ne", lbl)                   -- alignment
-		cg.cmpBranch(effTemp, baseLo, "ult", lbl)                  -- lower bound
+		cg.testMaskBranch(effTemp, 7, "ne", lbl)                   # alignment
+		cg.cmpBranch(effTemp, baseLo, "ult", lbl)                  # lower bound
 		auxword = allocTemp({ role = "auxword" })
 		cg.load(auxword, baseLo, -8, 8)
-		cg.testMaskBranch(auxword, "0x6000000000000", "ne", lbl)   -- read-only/special reject
+		cg.testMaskBranch(auxword, "0x6000000000000", "ne", lbl)   # read-only/special reject
 		upper = allocTemp({ role = "scratch" })
 		cg.load(upper, baseLo, -16, 8)
 		hi = allocTemp({ role = "scratch" })
-		cg.addImm(hi, effTemp, 8); cg.cmpBranch(hi, upper, "ugt", lbl)  -- upper bound
+		cg.addImm(hi, effTemp, 8); cg.cmpBranch(hi, upper, "ugt", lbl)  # upper bound
 		offInObj = allocTemp({ role = "offobj" })
 		cg.subReg(offInObj, effTemp, baseLo)
 		aux = allocTemp({ role = "aux" })
@@ -302,7 +302,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		cg.storeIndexed(valLo, aux, offInObj, 1)
 		cg.store(valIv, effTemp, 0)
 		cg.jump(doneLbl)
-		-- need-aux: filc_object_ensure_aux_ptr_outline(myth, lower-16) -> aux
+		# need-aux: filc_object_ensure_aux_ptr_outline(myth, lower-16) -> aux
 		cg.label(needAux)
 		header = allocTemp({ role = "scratch" })
 		cg.subImm(header, baseLo, 16)
@@ -311,7 +311,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		cg.call("filc_object_ensure_aux_ptr_outline", { pColored(cc.rtArg(1)), pColored(cc.rtArg(2)) }, cg.callerSavedClobbers())
 		cg.move(aux, pColored(cc.rtRet))
 		cg.jump(barrier)
-		-- do-barrier: filc_store_barrier_for_lower_slow(myth, lower)
+		# do-barrier: filc_store_barrier_for_lower_slow(myth, lower)
 		cg.label(doBarrier)
 		cg.move(pColored(cc.rtArg(1)), vMyth)
 		cg.move(pColored(cc.rtArg(2)), valLo)
@@ -320,7 +320,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		cg.label(doneLbl)
 	end
 
-	-- pollcheck: myth flags at [myth+8], bits 0xe.
+	# pollcheck: myth flags at [myth+8], bits 0xe.
 	pollCounter = 0
 	function emitPollcheck()
 		pollCounter += 1
@@ -338,7 +338,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 	function ensureExcLabel() if not excLabel then excLabel = ".Lexc_" .. name end return excLabel end
 	calledExterns = {}
 
-	-- move the web's capability (its lower, or null) into a physical register.
+	# move the web's capability (its lower, or null) into a physical register.
 	function emitCapMove(destReg, web)
 		pDest = pColored(destReg)
 		loT = web and pf.lowerTemp[web]
@@ -368,8 +368,8 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		end
 	end
 
-	-- Stack allocations. `;! alloca size (x)` captures the byte size; `;! alloca result (x)` /
-	-- `;! alloca result size=N` becomes filc_allocate(myth, size); payload = allocation+16.
+	# Stack allocations. `;! alloca size (x)` captures the byte size; `;! alloca result (x)` /
+	# `;! alloca result size=N` becomes filc_allocate(myth, size); payload = allocation+16.
 	allocaSizes = {}
 	function emitAlloca(node, al)
 		if al.kind == "size" then
@@ -394,7 +394,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		cg.call("filc_allocate", { pColored(cc.rtArg(1)), pColored(cc.rtArg(2)) }, cg.callerSavedClobbers())
 		resultIv = node.defTemps and node.defTemps[1]
 		if not resultIv then error("sarcasm: `alloca result` instruction has no destination register: " .. node.stmt.raw) end
-		ret = pColored(cc.rtRet)  -- allocation base; payload = base + 16
+		ret = pColored(cc.rtRet)  # allocation base; payload = base + 16
 		if al.region then
 			r = al.region
 			cg.effAddr(resultIv, ret, 16)
@@ -409,14 +409,14 @@ function transform.transformFunction(name, sigDesc, body, backend)
 		end
 	end
 
-	-- Redirect an sp-relative address computation that lands inside a fixed alloca region to
-	-- the allocation pointer (gcc -O0). Arch-specific; returns true if it replaced the node.
+	# Redirect an sp-relative address computation that lands inside a fixed alloca region to
+	# the allocation pointer (gcc -O0). Arch-specific; returns true if it replaced the node.
 	function emitRegionRedirect(node)
-		if #allocaRegions == 0 or not cg.regionRedirect then return false end
+		if allocaRegions.count == 0 or not cg.regionRedirect then return false end
 		return cg.regionRedirect(node, regionOf)
 	end
 
-	-- Walk the lifted body.
+	# Walk the lifted body.
 	for _, node in lf.nodes do
 		if node.kind == "label" then
 			if node.name != name and not string.match(node.name, "^%.LF[BE]") then
@@ -424,7 +424,7 @@ function transform.transformFunction(name, sigDesc, body, backend)
 				if loopHeaderLabels[node.name] then emitPollcheck() end
 			end
 		else if node.kind == "other" then
-			-- drop directives
+			# drop directives
 		else if node.kind == "insn" then
 			c = node.c
 			curLine = (node.stmt and node.stmt.line) or curLine
@@ -443,11 +443,11 @@ function transform.transformFunction(name, sigDesc, body, backend)
 			else if c.control == "call" and callNodes[node] then
 				emitCall(node)
 			else if emitRegionRedirect(node) then
-				-- sp-relative address computation redirected into an alloca region
+				# sp-relative address computation redirected into an alloca region
 			else
 				mem = cgm.memOperand(node.stmt)
 				if cg.lowerSpecial(node, mem) then
-					-- arch-specific passthrough lowering (e.g. x86 cltq -> movslq, lea passthrough)
+					# arch-specific passthrough lowering (e.g. x86 cltq -> movslq, lea passthrough)
 				else if loadPtrDefs[node] then
 					dstIv = node.defTemps[1]
 					dstLo = pf.lowerTemp[dstIv]
@@ -481,15 +481,15 @@ function transform.transformFunction(name, sigDesc, body, backend)
 	end
 	for _, s in failStubs do emit(s) end
 
-	-- Sorted by callee name: calledExterns is keyed by callee, and this list drives the
-	-- order of emitted extern/glue directives, so it must not depend on hash order.
+	# Sorted by callee name: calledExterns is keyed by callee, and this list drives the
+	# order of emitted extern/glue directives, so it must not depend on hash order.
 	externsList = {}
 	for _, e in calledExterns do table.insert(externsList, e) end
 	table.sort(externsList, function(a, b) return a.name < b.name end)
 
 	return {
 		name = name, sigDesc = sigDesc, fipNodes = out, temps = temps, vMyth = vMyth,
-		originSym = originSym, numRoots = #rootTemps, funcLine = funcLine, nextTemp = nextTemp,
+		originSym = originSym, numRoots = rootTemps.count, funcLine = funcLine, nextTemp = nextTemp,
 		rootTemps = rootTemps, accessOrigins = accessOrigins, calledExterns = externsList,
 		lf = lf, pf = pf,
 	}

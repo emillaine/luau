@@ -1,4 +1,4 @@
---!native
+#!native
 Color = {}
 Color.__index = Color
 
@@ -91,7 +91,7 @@ function Color:toARGB32()
     return bit32.bor(bit32.lshift(a, 24), bit32.lshift(r, 16), bit32.lshift(g, 8), b)
 end
 
--- CSS color string parsing
+# CSS color string parsing
 
 NAMED_COLORS = {
     aliceblue = 0xF0F8FF,
@@ -270,7 +270,7 @@ function isWs(c)
 end
 
 function skipWs(str, pos)
-    while pos <= #str and isWs(string.byte(str, pos)) do
+    while pos <= str.count and isWs(string.byte(str, pos)) do
         pos = pos + 1
     end
     return pos
@@ -279,7 +279,7 @@ end
 function parseNumber(str, pos)
     startPos = pos
     sign = 1
-    len = #str
+    len = str.count
 
     if pos <= len then
         c = string.byte(str, pos)
@@ -370,7 +370,7 @@ end
 
 function skipWsAndComma(str, pos)
     pos = skipWs(str, pos)
-    if pos <= #str and string.byte(str, pos) == 44 then
+    if pos <= str.count and string.byte(str, pos) == 44 then
         pos = pos + 1
         pos = skipWs(str, pos)
     end
@@ -383,7 +383,7 @@ function parseRgbComponent(str, pos)
         return null
     end
     pos = newPos
-    if pos <= #str and string.byte(str, pos) == 37 then
+    if pos <= str.count and string.byte(str, pos) == 37 then
         value = value * 255 / 100
         pos = pos + 1
     end
@@ -396,7 +396,7 @@ function parseAlphaComponent(str, pos)
         return null
     end
     pos = newPos
-    if pos <= #str and string.byte(str, pos) == 37 then
+    if pos <= str.count and string.byte(str, pos) == 37 then
         value = value / 100
         pos = pos + 1
     end
@@ -404,11 +404,11 @@ function parseAlphaComponent(str, pos)
 end
 
 function Color.parse(str)
-    if type(str) != "string" or #str == 0 then
+    if type(str) != "string" or str.count == 0 then
         return null
     end
     pos = skipWs(str, 1)
-    len = #str
+    len = str.count
 
     if pos <= len and string.byte(str, pos) == 35 then
         pos = pos + 1

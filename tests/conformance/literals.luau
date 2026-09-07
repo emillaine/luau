@@ -1,21 +1,21 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print('testing scanner')
 
 function dostring (x) return assert(loadstring(x))() end
 
--- Luau doesn't support unescaped NUL literals inside Lua source code
--- dostring("x = 'a\0a'")
--- assert(x == 'a\0a' and string.len(x) == 3)
+# Luau doesn't support unescaped NUL literals inside Lua source code
+# dostring("x = 'a\0a'")
+# assert(x == 'a\0a' and string.len(x) == 3)
 
--- escape sequences
+# escape sequences
 assert('\n\"\'\\' == [[
 
 "'\]])
 
 assert(string.find("\a\b\f\n\r\t\v", "^%c%c%c%c%c%c%c$"))
 
--- assume ASCII just for tests:
+# assume ASCII just for tests:
 assert("\09912" == 'c12')
 assert("\99ab" == 'cab')
 assert("\099" == '\99')
@@ -24,7 +24,7 @@ assert('\0\0\0alo' == '\0' .. '\0\0' .. 'alo')
 
 assert(010 .. 020 .. -030 == "1020-30")
 
--- long variable names
+# long variable names
 
 var = string.rep('a', 15000)
 prog = string.format("_G.%s = 5", var)
@@ -33,7 +33,7 @@ assert(dostring("return _G." .. var) == 5)
 var = null
 print('+')
 
--- escapes --
+# escapes --
 assert("\n\t" == [[
 
 	]])
@@ -41,7 +41,7 @@ assert([[
 
  $debug]] == "\n $debug")
 assert([[ [ ]] != [[ ] ]])
--- long strings --
+# long strings --
 b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
 assert(string.len(b) == 960)
 prog = [=[
@@ -56,7 +56,7 @@ print('+')
 a1 = [==[_G.temp = [[um valor qualquer]]; ]==]
 assert(loadstring(a1))()
 assert(_G.temp == 'um valor qualquer')
--- long strings --
+# long strings --
 b = "001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789001234567890123456789012345678901234567891234567890123456789012345678901234567890012345678901234567890123456789012345678912345678901234567890123456789012345678900123456789012345678901234567890123456789123456789012345678901234567890123456789"
 assert(string.len(b) == 960)
 print('+')
@@ -100,9 +100,9 @@ a = null
 b = null
 
 
--- testing line ends
+# testing line ends
 prog = [[
-a = 1        -- a comment
+a = 1        # a comment
 b = 2
 
 
@@ -117,12 +117,12 @@ return debug.getinfo(1).currentline
 
 for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
   const prog, nn = string.gsub(prog, "\n", n)
-  -- assert(dostring(prog) == nn)
-  -- assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
+  # assert(dostring(prog) == nn)
+  # assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
 end
 
 
--- testing comments and strings with long brackets
+# testing comments and strings with long brackets
 a = [==[]=]==]
 assert(a == "]=")
 
@@ -136,14 +136,14 @@ a = [=[]]]]]]]]]=]
 assert(a == "]]]]]]]]")
 
 
---[===[
+#[===[
 x y z [==[ blu foo
 ]==
 ]
 ]=]==]
 error error]=]===]
 
--- generate all strings of four of these chars
+# generate all strings of four of these chars
 x = {"=", "[", "]", "\n"}
 len = 4
 function gen (c, n)
@@ -160,8 +160,8 @@ for s in coroutine.wrap(function () gen("", len) end) do
 end
 
 
---[[
--- testing decimal point locale
+#[[
+# testing decimal point locale
 if os.setlocale("pt_BR") or os.setlocale("ptb") then
   assert(tonumber("3,4") == 3.4 and tonumber"3.4" == null)
   assert(assert(loadstring("return 3.4"))() == 3.4)
@@ -175,6 +175,6 @@ else
   (Message or print)(
    '\a\n >>> pt_BR locale not available: skipping decimal point tests <<<\n\a')
 end
-]]--
+]]#
 
 return('OK')

@@ -1511,8 +1511,9 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "empty_varargs_sequence_in_for_loop")
     REQUIRE_EQ(
         "\n" + inlineAndPrint(R"(
         function inlinee(a, ...)
+            acc = 0
             for _ in ... do
-                pcall += _
+                acc += _
             end
         end
 
@@ -1524,14 +1525,13 @@ TEST_CASE_FIXTURE(BytecodeInlinerFixture, "empty_varargs_sequence_in_for_loop")
 GETUPVAL R0 0
 CMPPROTO R0 #0 L2
 LOADNIL R1
-LOADNIL R3
+LOADK R3 K0 [0]
 LOADNIL R4
 LOADNIL R5
-FORGPREP R3 L1
-L0: GETGLOBAL R8 K0 ['pcall']
-ADD R8 R8 R6
-SETGLOBAL R8 K0 ['pcall']
-L1: FORGLOOP R3 L0 1
+LOADNIL R6
+FORGPREP R4 L1
+L0: ADD R3 R3 R7
+L1: FORGLOOP R4 L0 1
 RETURN R0 0
 L2: CALLFB R0 0 0 [-1]
 RETURN R0 0

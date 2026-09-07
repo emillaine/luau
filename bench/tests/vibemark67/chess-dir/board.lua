@@ -1,4 +1,4 @@
--- Chess board representation and utilities
+# Chess board representation and utilities
 
 Board = {}
 Board.__index = Board
@@ -6,8 +6,8 @@ Board.__index = Board
 export type Board = typeof(setmetatable({} as {
     squares: {number},
     whiteToMove: boolean,
-    castling: number, -- bitmask: WK=1, WQ=2, BK=4, BQ=8
-    epSquare: number, -- 0 if none
+    castling: number, # bitmask: WK=1, WQ=2, BK=4, BQ=8
+    epSquare: number, # 0 if none
     halfmoveClock: number,
     fullmoveNumber: number,
     zobrist: number,

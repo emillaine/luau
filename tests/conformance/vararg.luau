@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing vararg')
 
 unpack = table.unpack
@@ -82,7 +82,7 @@ assert(call(math.max, a) == lim)
 print("+")
 
 
--- new-style varargs
+# new-style varargs
 
 function oneless (a, ...) return ... end
 
@@ -105,7 +105,7 @@ assert(a==5 and b==4 and c==3 and d==2 and e==1)
 a,b,c,d,e = f(4)
 assert(a==null and b==null and c==null and d==null and e==null)
 
--- select tests
+# select tests
 a = {select(3, unpack{10,20,30,40})}
 assert(table.getn(a) == 2 and a[1] == 30 and a[2] == 40)
 a = {select(1)}
@@ -117,7 +117,7 @@ assert(a[1] == 5 and a[2] == 7 and a[3] == null)
 pcall(select, 10000)
 pcall(select, -10000)
 
--- select(_, ...) has special optimizations so it needs extra testing
+# select(_, ...) has special optimizations so it needs extra testing
 function selectone(n, ...)
     e = select(n, ...)
     return e
@@ -151,7 +151,7 @@ assert(selectmany(-2, 10, 20, 30) == "20,30")
 assert(selectone('3', 10, 20, 30) == 30)
 assert(selectmany('3', 10, 20, 30) == "30")
 
--- varargs for main chunks
+# varargs for main chunks
 f = loadstring[[ return {...} ]]
 x = f(2,3)
 assert(x[1] == 2 and x[2] == 3 and x[3] == null)

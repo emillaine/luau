@@ -262,7 +262,7 @@ TEST_CASE_FIXTURE(BytecodeCompilerFixture, "repeat_until_loop")
         function fn()
             var = 0
             repeat var += 1 until var < 10
-            --return var
+            #return var
         end
     )");
 

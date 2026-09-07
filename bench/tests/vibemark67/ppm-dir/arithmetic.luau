@@ -1,4 +1,4 @@
--- Arithmetic coder for PPM compression
+# Arithmetic coder for PPM compression
 
 PRECISION = 30
 TOP_VALUE = bit32.lshift(1, PRECISION) - 1
@@ -121,7 +121,7 @@ function Decoder.new(data: {number}): Decoder
 end
 
 function Decoder.readBit(self: Decoder): number
-    if self.bytePos > #self.input then return 0 end
+    if self.bytePos > self.input.count then return 0 end
     bit = bit32.band(bit32.rshift(self.input[self.bytePos], self.bitPos), 1)
     self.bitPos += 1
     if self.bitPos == 8 then
@@ -144,7 +144,7 @@ function Decoder.decode(self: Decoder, cumLow: number, cumHigh: number, total: n
 
     while true do
         if self.high < HALF then
-            -- nothing
+            # nothing
         else if self.low >= HALF then
             self.value -= HALF
             self.low -= HALF

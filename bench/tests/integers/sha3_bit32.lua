@@ -21,7 +21,7 @@ function test()
 		0x80008081, 0x00008080, 0x80000001, 0x80008008,
 	}
 
-	-- 64-bit left rotate by n (0 < n < 64)
+	# 64-bit left rotate by n (0 < n < 64)
 	function lrotate64(h, l, n)
 		if n < 32 then
 			return bit32.bor(bit32.lshift(h, n), bit32.rshift(l, 32 - n)),
@@ -36,7 +36,7 @@ function test()
 	end
 
 	function sha3_256(msg)
-		msgLen = #msg
+		msgLen = msg.count
 		rateBytes = 136
 
 		pad = rateBytes - (msgLen % rateBytes)
@@ -51,7 +51,7 @@ function test()
 			buffer.writeu8(buf, paddedLen - 1, 0x80)
 		end
 
-		-- 25-lane state as (hi, lo) pairs
+		# 25-lane state as (hi, lo) pairs
 		S00h, S00l, S10h, S10l, S20h, S20l, S30h, S30l, S40h, S40l = 0,0,0,0,0,0,0,0,0,0
 		S01h, S01l, S11h, S11l, S21h, S21l, S31h, S31l, S41h, S41l = 0,0,0,0,0,0,0,0,0,0
 		S02h, S02l, S12h, S12l, S22h, S22l, S32h, S32l, S42h, S42l = 0,0,0,0,0,0,0,0,0,0
@@ -59,7 +59,7 @@ function test()
 		S04h, S04l, S14h, S14l, S24h, S24l, S34h, S34l, S44h, S44l = 0,0,0,0,0,0,0,0,0,0
 
 		for blockOffset = 0, paddedLen - 1, rateBytes do
-			-- absorb 17 lanes (136 bytes) — LE 64-bit read = (readu32 hi at +4, readu32 lo at +0)
+			# absorb 17 lanes (136 bytes) — LE 64-bit read = (readu32 hi at +4, readu32 lo at +0)
 			S00l = bit32.bxor(S00l, buffer.readu32(buf, blockOffset)); S00h = bit32.bxor(S00h, buffer.readu32(buf, blockOffset + 4))
 			S10l = bit32.bxor(S10l, buffer.readu32(buf, blockOffset + 8)); S10h = bit32.bxor(S10h, buffer.readu32(buf, blockOffset + 12))
 			S20l = bit32.bxor(S20l, buffer.readu32(buf, blockOffset + 16)); S20h = bit32.bxor(S20h, buffer.readu32(buf, blockOffset + 20))
@@ -79,14 +79,14 @@ function test()
 			S13l = bit32.bxor(S13l, buffer.readu32(buf, blockOffset + 128)); S13h = bit32.bxor(S13h, buffer.readu32(buf, blockOffset + 132))
 
 			for round = 1, 24 do
-				-- THETA
+				# THETA
 				C0h = bit32.bxor(S00h, S01h, S02h, S03h, S04h); C0l = bit32.bxor(S00l, S01l, S02l, S03l, S04l)
 				C1h = bit32.bxor(S10h, S11h, S12h, S13h, S14h); C1l = bit32.bxor(S10l, S11l, S12l, S13l, S14l)
 				C2h = bit32.bxor(S20h, S21h, S22h, S23h, S24h); C2l = bit32.bxor(S20l, S21l, S22l, S23l, S24l)
 				C3h = bit32.bxor(S30h, S31h, S32h, S33h, S34h); C3l = bit32.bxor(S30l, S31l, S32l, S33l, S34l)
 				C4h = bit32.bxor(S40h, S41h, S42h, S43h, S44h); C4l = bit32.bxor(S40l, S41l, S42l, S43l, S44l)
 
-				-- D[i] = C[i-1] XOR lrotate(C[i+1], 1) — rotation by 1 (< 32)
+				# D[i] = C[i-1] XOR lrotate(C[i+1], 1) — rotation by 1 (< 32)
 				D0h = bit32.bxor(C4h, bit32.bor(bit32.lshift(C1h, 1), bit32.rshift(C1l, 31)))
 				D0l = bit32.bxor(C4l, bit32.bor(bit32.lshift(C1l, 1), bit32.rshift(C1h, 31)))
 				D1h = bit32.bxor(C0h, bit32.bor(bit32.lshift(C2h, 1), bit32.rshift(C2l, 31)))
@@ -98,8 +98,8 @@ function test()
 				D4h = bit32.bxor(C3h, bit32.bor(bit32.lshift(C0h, 1), bit32.rshift(C0l, 31)))
 				D4l = bit32.bxor(C3l, bit32.bor(bit32.lshift(C0l, 1), bit32.rshift(C0h, 31)))
 
-				-- RHO + PI
-				B00h, B00l = bit32.bxor(S00h, D0h), bit32.bxor(S00l, D0l) -- rot 0
+				# RHO + PI
+				B00h, B00l = bit32.bxor(S00h, D0h), bit32.bxor(S00l, D0l) # rot 0
 				B10h, B10l = lrotate64(bit32.bxor(S11h, D1h), bit32.bxor(S11l, D1l), 44)
 				B20h, B20l = lrotate64(bit32.bxor(S22h, D2h), bit32.bxor(S22l, D2l), 43)
 				B30h, B30l = lrotate64(bit32.bxor(S33h, D3h), bit32.bxor(S33l, D3l), 21)
@@ -129,7 +129,7 @@ function test()
 				B34h, B34l = lrotate64(bit32.bxor(S03h, D0h), bit32.bxor(S03l, D0l), 41)
 				B44h, B44l = lrotate64(bit32.bxor(S14h, D1h), bit32.bxor(S14l, D1l), 2)
 
-				-- CHI
+				# CHI
 				S00h = bit32.bxor(B00h, bit32.band(bit32.bnot(B10h), B20h)); S00l = bit32.bxor(B00l, bit32.band(bit32.bnot(B10l), B20l))
 				S10h = bit32.bxor(B10h, bit32.band(bit32.bnot(B20h), B30h)); S10l = bit32.bxor(B10l, bit32.band(bit32.bnot(B20l), B30l))
 				S20h = bit32.bxor(B20h, bit32.band(bit32.bnot(B30h), B40h)); S20l = bit32.bxor(B20l, bit32.band(bit32.bnot(B30l), B40l))
@@ -160,13 +160,13 @@ function test()
 				S34h = bit32.bxor(B34h, bit32.band(bit32.bnot(B44h), B04h)); S34l = bit32.bxor(B34l, bit32.band(bit32.bnot(B44l), B04l))
 				S44h = bit32.bxor(B44h, bit32.band(bit32.bnot(B04h), B14h)); S44l = bit32.bxor(B44l, bit32.band(bit32.bnot(B04l), B14l))
 
-				-- IOTA
+				# IOTA
 				S00h = bit32.bxor(S00h, RC_HI[round])
 				S00l = bit32.bxor(S00l, RC_LO[round])
 			end
 		end
 
-		-- squeeze 32 bytes: bswap each lane for big-endian hex
+		# squeeze 32 bytes: bswap each lane for big-endian hex
 		return string.format(
 			"%08x%08x%08x%08x%08x%08x%08x%08x",
 			bit32.byteswap(S00l), bit32.byteswap(S00h), bit32.byteswap(S10l), bit32.byteswap(S10h),

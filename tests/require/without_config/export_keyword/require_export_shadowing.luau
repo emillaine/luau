@@ -1,5 +1,5 @@
--- verify exported bindings follow shadowing rules (bare `x = ...` reuses the
--- in-scope binding, so same-scope assigns update the export)
+# verify exported bindings follow shadowing rules (bare `x = ...` reuses the
+# in-scope binding, so same-scope assigns update the export)
 m = require("./export_shadowing")
 
 assert(m.foo() == "exported", "exported function should shadow the non-exported local")

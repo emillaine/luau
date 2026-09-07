@@ -23,18 +23,18 @@ TEST_CASE("broken_string_works")
 
 TEST_CASE("broken_comment")
 {
-    const std::string testInput = "--[[  ";
+    const std::string testInput = "#[[  ";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
     Lexer lexer(testInput.c_str(), testInput.size(), table);
     Lexeme lexeme = lexer.next();
     CHECK_EQ(lexeme.type, Lexeme::Type::BrokenComment);
-    CHECK_EQ(lexeme.location, Luau::Location(Luau::Position(0, 0), Luau::Position(0, 6)));
+    CHECK_EQ(lexeme.location, Luau::Location(Luau::Position(0, 0), Luau::Position(0, 5)));
 }
 
 TEST_CASE("broken_comment_kept")
 {
-    const std::string testInput = "--[[  ";
+    const std::string testInput = "#[[  ";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
     Lexer lexer(testInput.c_str(), testInput.size(), table);
@@ -44,12 +44,33 @@ TEST_CASE("broken_comment_kept")
 
 TEST_CASE("comment_skipped")
 {
-    const std::string testInput = "--  ";
+    const std::string testInput = "#  ";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
     Lexer lexer(testInput.c_str(), testInput.size(), table);
     lexer.setSkipComments(true);
     CHECK_EQ(lexer.next().type, Lexeme::Type::Eof);
+}
+
+TEST_CASE("dash_dash_lexes_as_deprecated_comment")
+{
+    const std::string testInput = "-- leftover";
+    Luau::Allocator alloc;
+    AstNameTable table(alloc);
+    Lexer lexer(testInput.c_str(), testInput.size(), table);
+    CHECK_EQ(lexer.next().type, Lexeme::Type::DashComment);
+    CHECK_EQ(lexer.next().type, Lexeme::Type::Eof);
+}
+
+TEST_CASE("hash_is_not_a_token")
+{
+    const std::string testInput = "foo # bar";
+    Luau::Allocator alloc;
+    AstNameTable table(alloc);
+    Lexer lexer(testInput.c_str(), testInput.size(), table);
+    lexer.setSkipComments(true);
+    CHECK_EQ(lexer.next().type, Lexeme::Name);
+    CHECK_EQ(lexer.next().type, Lexeme::Eof);
 }
 
 TEST_CASE("as_is_reserved")
@@ -65,7 +86,7 @@ TEST_CASE("as_is_reserved")
 
 TEST_CASE("multilineCommentWithLexemeInAndAfter")
 {
-    const std::string testInput = "--[[ function \n"
+    const std::string testInput = "#[[ function \n"
                                   "]] end";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
@@ -93,7 +114,7 @@ TEST_CASE("testBrokenEscapeTolerant")
 
 TEST_CASE("testBigDelimiters")
 {
-    const std::string testInput = "--[===[\n"
+    const std::string testInput = "#[===[\n"
                                   "\n"
                                   "\n"
                                   "\n"
@@ -109,7 +130,7 @@ TEST_CASE("testBigDelimiters")
 
 TEST_CASE("lookahead")
 {
-    const std::string testInput = "foo --[[ comment ]] bar : null end";
+    const std::string testInput = "foo #[[ comment ]] bar : null end";
 
     Luau::Allocator alloc;
     AstNameTable table(alloc);
@@ -420,7 +441,7 @@ TEST_CASE("lexer_determines_string_block_depth_2_multiline_3")
 
 TEST_CASE("lexer_determines_comment_block_depth_0")
 {
-    const std::string testInput = "--[[ test ]]";
+    const std::string testInput = "#[[ test ]]";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
     Lexer lexer(testInput.c_str(), testInput.size(), table);
@@ -432,7 +453,7 @@ TEST_CASE("lexer_determines_comment_block_depth_0")
 
 TEST_CASE("lexer_determines_string_block_depth_1")
 {
-    const std::string testInput = "--[=[ μέλλον ]=]";
+    const std::string testInput = "#[=[ μέλλον ]=]";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
     Lexer lexer(testInput.c_str(), testInput.size(), table);
@@ -444,7 +465,7 @@ TEST_CASE("lexer_determines_string_block_depth_1")
 
 TEST_CASE("lexer_determines_string_block_depth_2")
 {
-    const std::string testInput = "--[==[ test ]==]";
+    const std::string testInput = "#[==[ test ]==]";
     Luau::Allocator alloc;
     AstNameTable table(alloc);
     Lexer lexer(testInput.c_str(), testInput.size(), table);

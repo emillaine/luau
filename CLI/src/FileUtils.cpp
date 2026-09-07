@@ -201,9 +201,19 @@ std::optional<std::string> readFile(const std::string& name)
     if (read != size_t(length))
         return std::nullopt;
 
-    // Skip first line if it's a shebang
+    // Skip a Unix shebang (`#!/usr/bin/env luau`). Do not treat `#!strict` and other
+    // comment directives as shebangs — `#` is the comment prefix, so those stay in source.
     if (length > 2 && result[0] == '#' && result[1] == '!')
-        result.erase(0, result.find('\n'));
+    {
+        size_t i = 2;
+        while (i < size_t(length) && (result[i] == ' ' || result[i] == '\t'))
+            ++i;
+        if (i < size_t(length) && result[i] == '/')
+        {
+            size_t newline = result.find('\n');
+            result.erase(0, newline == std::string::npos ? result.size() : newline);
+        }
+    }
 
     return result;
 }

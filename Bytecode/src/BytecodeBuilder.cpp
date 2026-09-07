@@ -3293,7 +3293,7 @@ std::string BytecodeBuilder::dumpSourceRemarks() const
 
         while (nextRemark < remarks.size() && remarks[nextRemark].first == int(i + 1))
         {
-            formatAppend(result, "%.*s-- remark: %s\n", int(indent), line.c_str(), remarks[nextRemark].second.c_str());
+            formatAppend(result, "%.*s# remark: %s\n", int(indent), line.c_str(), remarks[nextRemark].second.c_str());
             nextRemark++;
 
             // skip duplicate remarks (due to inlining/unrolling)

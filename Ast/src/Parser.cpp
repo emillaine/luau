@@ -3792,23 +3792,10 @@ AstExpr* Parser::parseExpr(unsigned int limit)
 
     AstExpr* expr;
 
-    // The '#' length operator was removed; use '.count' instead.
-    if (lexer.current().type == '#')
-    {
-        Location hashLoc = lexer.current().location;
-        report(hashLoc, "Unexpected '#'; the length operator has been removed, use '.count' instead");
-        nextLexeme();
+    std::optional<AstExprUnary::Op> uop = parseUnaryOp(lexer.current());
 
-        // Recover by parsing the operand and returning it, so only one error is reported.
-        AstExpr* subexpr = parseExpr(unaryPriority);
-        expr = subexpr;
-    }
-    else
-    {
-        std::optional<AstExprUnary::Op> uop = parseUnaryOp(lexer.current());
-
-        if (!uop)
-            uop = checkUnaryConfusables();
+    if (!uop)
+        uop = checkUnaryConfusables();
 
     if (uop)
     {
@@ -3824,7 +3811,6 @@ AstExpr* Parser::parseExpr(unsigned int limit)
     else
     {
         expr = parseAssertionExpr();
-    }
     }
 
     // expand while operators have priorities higher than `limit'
@@ -5627,12 +5613,24 @@ void Parser::nextLexeme()
 {
     Lexeme::Type type = lexer.next(/* skipComments= */ false, true).type;
 
-    while (type == Lexeme::BrokenComment || type == Lexeme::Comment || type == Lexeme::BlockComment)
+    while (type == Lexeme::BrokenComment || type == Lexeme::Comment || type == Lexeme::BlockComment || type == Lexeme::DashComment ||
+           type == Lexeme::DashBlockComment)
     {
         const Lexeme& lexeme = lexer.current();
 
+        const bool dashComment = lexeme.type == Lexeme::DashComment || lexeme.type == Lexeme::DashBlockComment;
+        if (dashComment)
+            report(lexeme.location, "Unexpected '--'; comments use '#' instead");
+
         if (options.captureComments)
-            commentLocations.push_back(Comment{lexeme.type, lexeme.location});
+        {
+            Lexeme::Type recordedType = lexeme.type;
+            if (recordedType == Lexeme::DashComment)
+                recordedType = Lexeme::Comment;
+            else if (recordedType == Lexeme::DashBlockComment)
+                recordedType = Lexeme::BlockComment;
+            commentLocations.push_back(Comment{recordedType, lexeme.location});
+        }
 
         // Subtlety: Broken comments are weird because we record them as comments AND pass them to the parser as a lexeme.
         // The parser will turn this into a proper syntax error.
@@ -5640,7 +5638,7 @@ void Parser::nextLexeme()
             return;
 
         // Comments starting with ! are called "hot comments" and contain directives for type checking / linting / compiling
-        if (lexeme.type == Lexeme::Comment && lexeme.getLength() && lexeme.data[0] == '!')
+        if ((lexeme.type == Lexeme::Comment || lexeme.type == Lexeme::DashComment) && lexeme.getLength() && lexeme.data[0] == '!')
         {
             const char* text = lexeme.data;
 

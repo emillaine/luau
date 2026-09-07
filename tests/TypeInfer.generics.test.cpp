@@ -111,7 +111,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "inferred_local_vars_can_be_polytypes")
 {
     CheckResult result = check(R"(
         function id(x) return x end
-        print("This is bogus") -- TODO: CLI-39916
+        print("This is bogus") # TODO: CLI-39916
         const f = id
         const x: string = f("hi")
         const y: number = f(37)
@@ -123,7 +123,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "local_vars_can_be_instantiated_polytypes")
 {
     CheckResult result = check(R"(
         function id(x) return x end
-        print("This is bogus") -- TODO: CLI-39916
+        print("This is bogus") # TODO: CLI-39916
         const f: (number)->number = id
         const g: (string)->string = id
     )");
@@ -230,14 +230,14 @@ TEST_CASE_FIXTURE(Fixture, "check_mutual_generic_functions_errors")
     CheckResult result = check(R"(
         export id2
         function id1(x)
-            const y: string = id2(37) -- odd
-            const z: number = id2("hi") -- even
+            const y: string = id2(37) # odd
+            const z: number = id2("hi") # even
             return x
         end
 
         function id2(x)
-            const y: string = id1(37) -- odd
-            const z: number = id1("hi") -- even
+            const y: string = id1(37) # odd
+            const z: number = id1("hi") # even
             return x
         end
     )");
@@ -440,18 +440,18 @@ TEST_CASE_FIXTURE(Fixture, "dont_leak_generic_types")
 {
     CheckResult result = check(R"(
         function f(y)
-            -- this will only typecheck if we infer z: any
-            -- so f: (any)->(any)
+            # this will only typecheck if we infer z: any
+            # so f: (any)->(any)
             z = y
             function id(x)
-                z = x -- this assignment is what forces z: any
+                z = x # this assignment is what forces z: any
                 return x
             end
             const x: string = id("hi")
             const y: number = id(37)
             return z
         end
-        -- so this assignment should fail
+        # so this assignment should fail
         const b: boolean = f(true)
     )");
 
@@ -512,11 +512,11 @@ TEST_CASE_FIXTURE(Fixture, "dont_unify_bound_types")
             return x
           end
         end
-        -- This assignment shouldn't typecheck
-        -- If it does, it means we instantiated
-        -- f as () -> <b>(X, b) -> X, then unified X to be b
+        # This assignment shouldn't typecheck
+        # If it does, it means we instantiated
+        # f as () -> <b>(X, b) -> X, then unified X to be b
         const g: G = f()
-        -- Oh dear, if that works then the type system is unsound
+        # Oh dear, if that works then the type system is unsound
         const a : string = g("not a number", "hi")
         const b : number = g(5, 37)
     )");
@@ -529,35 +529,35 @@ TEST_CASE_FIXTURE(Fixture, "mutable_state_polymorphism")
     // See, e.g. Tofte (1990)
     // https://www.sciencedirect.com/science/article/pii/089054019090018D.
     CheckResult result = check(R"(
-        --!strict
-        -- Our old friend the polymorphic identity function
+        #!strict
+        # Our old friend the polymorphic identity function
         function id(x) return x end
         const a: string = id("hi")
         const b: number = id(37)
 
-        -- This allows <a>(a)->a to be expressed without generic function syntax
+        # This allows <a>(a)->a to be expressed without generic function syntax
         type Id = typeof(id)
 
-        -- This function should have type
-        -- <a>() -> (a) -> a
-        -- not type
-        -- () -> <a>(a) -> a
+        # This function should have type
+        # <a>() -> (a) -> a
+        # not type
+        # () -> <a>(a) -> a
         function ohDear(): Id
           const y = null
           function oh(x)
-            -- Returns the same x every time it's called
+            # Returns the same x every time it's called
             if not(y) then y = x end
             return y
           end
           return oh
         end
 
-        -- oh dear, f claims to polymorphic which it shouldn't be
+        # oh dear, f claims to polymorphic which it shouldn't be
         const f: Id = ohDear()
 
-        -- the first call sets y
+        # the first call sets y
         const a: string = f("not a number")
-        -- so b has value "not a number" at run time
+        # so b has value "not a number" at run time
         const b: number = f(37)
     )");
     LUAU_REQUIRE_ERRORS(result);
@@ -566,18 +566,18 @@ TEST_CASE_FIXTURE(Fixture, "mutable_state_polymorphism")
 TEST_CASE_FIXTURE(Fixture, "rank_N_types_via_typeof")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function id(x) return x end
         const x: string = id("hi")
         const y: number = id(37)
-        -- This allows <a>(a)->a to be expressed without generic function syntax
+        # This allows <a>(a)->a to be expressed without generic function syntax
         type Id = typeof(id)
-        -- The rank 1 restriction causes this not to typecheck, since it's
-        -- declared as returning a polytype.
+        # The rank 1 restriction causes this not to typecheck, since it's
+        # declared as returning a polytype.
         function returnsId(): Id
           return id
         end
-        -- So this won't typecheck
+        # So this won't typecheck
         const f: Id = returnsId()
         const a: string = f("hi")
         const b: number = f(37)
@@ -868,10 +868,10 @@ const d: D = c
 TEST_CASE_FIXTURE(BuiltinsFixture, "generic_functions_dont_cache_type_parameters")
 {
     CheckResult result = check(R"(
--- See https://github.com/luau-lang/luau/issues/332
--- This function has a type parameter with the same name as clones,
--- so if we cache type parameter names for functions these get confused.
--- function id<Z>(x : Z) : Z
+# See https://github.com/luau-lang/luau/issues/332
+# This function has a type parameter with the same name as clones,
+# so if we cache type parameter names for functions these get confused.
+# function id<Z>(x : Z) : Z
 function id<X>(x : X) : X
   return x
 end
@@ -891,8 +891,8 @@ end
 TEST_CASE_FIXTURE(Fixture, "generic_functions_should_be_memory_safe")
 {
     CheckResult result = check(R"(
---!strict
--- At one point this produced a UAF
+#!strict
+# At one point this produced a UAF
 type T<a> = { a: U<a>, b: a }
 type U<a> = { c: T<a>?, d : a }
 const x: T<number> = { a = { c = null, d = 5 }, b = 37 }
@@ -932,7 +932,7 @@ Expected this to be exactly 'string', but got 'number')";
 TEST_CASE_FIXTURE(Fixture, "generic_type_pack_unification1")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Dispatcher = {
 	useMemo: <T...>(create: () -> T...) -> T...
 }
@@ -950,7 +950,7 @@ const TheDispatcher: Dispatcher = {
 TEST_CASE_FIXTURE(Fixture, "generic_type_pack_unification2")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Dispatcher = {
 	useMemo: <T...>(create: () -> T...) -> T...
 }
@@ -968,7 +968,7 @@ const TheDispatcher: Dispatcher = {
 TEST_CASE_FIXTURE(Fixture, "generic_type_pack_unification3")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Dispatcher = {
 	useMemo: <S,T...>(arg: S, create: (S) -> T...) -> T...
 }
@@ -1106,18 +1106,18 @@ function foo<B...>(f: (B...) -> number, ...: B...)
     return f(...)
 end
 
--- want A... to contain a generic type pack too
+# want A... to contain a generic type pack too
 
 function wrapper<A...>(f: (A...) -> number, ...: A...)
 end
 
--- A... = ((B...) -> number, B...))
--- B... = (number)
--- A... = ((number) -> number, number)
-wrapper(foo, test2, 3) -- ok
-wrapper(foo, test2, 3, 3) -- not ok (too many args)
-wrapper(foo, test2) -- not ok (not enough args)
-wrapper(foo, test2, "3") -- not ok (type mismatch, string instead of number)
+# A... = ((B...) -> number, B...))
+# B... = (number)
+# A... = ((number) -> number, number)
+wrapper(foo, test2, 3) # ok
+wrapper(foo, test2, 3, 3) # not ok (too many args)
+wrapper(foo, test2) # not ok (not enough args)
+wrapper(foo, test2, "3") # not ok (type mismatch, string instead of number)
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(3, result);
@@ -1288,8 +1288,8 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_generic_function_in_assignments")
         end
 
         function bar(c: ((number)->number, number)->number)
-            c = foo -- no error
-            const d: ((number)->number, string)->number = foo -- error from arg 2 (string) not being convertible to number from the call a(b)
+            c = foo # no error
+            const d: ((number)->number, string)->number = foo # error from arg 2 (string) not being convertible to number from the call a(b)
         end
     )");
 
@@ -1316,7 +1316,7 @@ TEST_CASE_FIXTURE(Fixture, "instantiate_generic_function_in_assignments2")
         end
 
         function bar()
-            const _: (string, string)->number = foo -- string cannot be converted to (string)->number
+            const _: (string, string)->number = foo # string cannot be converted to (string)->number
         end
     )");
 
@@ -1508,12 +1508,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions")
                 return sum(2, 3, function<X>(g: X, h: X): add<X, X> return g + h end)
             end
 
-            const b = sumrec(sum) -- ok
+            const b = sumrec(sum) # ok
             const c = sumrec(
                 function(d, e, f)
                     return f(d, e)
                 end
-            ) -- type binders are not inferred
+            ) # type binders are not inferred
         )");
 
         // FIXME: When we solve for `T` for `sum` on line 4, we effectively
@@ -1532,8 +1532,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_infer_generic_functions")
                 return sum(2, 3, function(a, b) return a + b end)
             end
 
-            const b = sumrec(sum) -- ok
-            const c = sumrec(function(x, y, f) return f(x, y) end) -- type binders are not inferred
+            const b = sumrec(sum) # ok
+            const c = sumrec(function(x, y, f) return f(x, y) end) # type binders are not inferred
         )");
     }
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -1572,7 +1572,7 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics1")
 {
     // https://github.com/luau-lang/luau/issues/484
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type MyObject = {
             getReturnValue: <V>(cb: () -> V) -> V
         }
@@ -1600,7 +1600,7 @@ TEST_CASE_FIXTURE(Fixture, "apply_type_function_nested_generics2")
 {
     // https://github.com/luau-lang/luau/issues/484
     CheckResult result = check(R"(
---!strict
+#!strict
 type MyObject = {
 	getReturnValue: <V>(cb: () -> V) -> V
 }
@@ -1675,7 +1675,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_always_instantiate_generic_intersection_types
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Array<T> = { [number]: T }
 
         type Array_Statics = {
@@ -1690,7 +1690,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_always_instantiate_generic_intersection_types
 TEST_CASE_FIXTURE(BuiltinsFixture, "hof_subtype_instantiation_regression")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 
 function defaultSort<T>(a: T, b: T)
     return true
@@ -1714,7 +1714,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "higher_rank_polymorphism_should_not_accept_i
     };
 
     CheckResult result = check(R"(
---!strict
+#!strict
 
 function instantiate(f: <a>(a) -> a): (number) -> number
     return f
@@ -2014,7 +2014,7 @@ TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error")
 TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error_1")
 {
     CheckResult res = check(R"(
-        --!strict
+        #!strict
 
         function insert<T>(arr: {T}, value: T)
             return arr
@@ -2032,7 +2032,7 @@ TEST_CASE_FIXTURE(Fixture, "ensure_that_invalid_generic_instantiations_error_1")
 TEST_CASE_FIXTURE(BuiltinsFixture, "xpcall_should_work_with_generics")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 const v: (number) -> (number) = null as any
 
 const x = 3
@@ -2048,8 +2048,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "gh1985_array_of_union_for_generic")
     CheckResult res = check(R"(
         function clear<T>(arr: { T }) table.clear(arr) end
         const a: { true | false } = null as any
-        -- This obviously shouldn't error, '{ true | false }' should fit '{ T }'
-        -- TypeError: The generic type parameter Twas found to have invalid bounds. Its lower bounds were [true, false], and its upper bounds were [true].
+        # This obviously shouldn't error, '{ true | false }' should fit '{ T }'
+        # TypeError: The generic type parameter Twas found to have invalid bounds. Its lower bounds were [true, false], and its upper bounds were [true].
         clear(a)
     )");
 
@@ -2084,7 +2084,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_isfrozen_and_clear_work_on_any_table")
 TEST_CASE_FIXTURE(Fixture, "cli_179086_dont_ignore_explicit_variadics")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type Example<T...> = { Method: (T...) -> () }
 

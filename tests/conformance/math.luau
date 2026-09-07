@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print("testing numbers and math lib")
 
 do
@@ -47,18 +47,18 @@ assert(f(tonumber('  ', 9)) == null)
 assert(f(tonumber('99', 8)) == null)
 assert(tonumber('  1010  ', 2) == 10)
 assert(tonumber('10', 36) == 36)
---assert(tonumber('\n  -10  \n', 36) == -36)
---assert(tonumber('-fFfa', 16) == -(10+(16*(15+(16*(15+(16*15)))))))
+#assert(tonumber('\n  -10  \n', 36) == -36)
+#assert(tonumber('-fFfa', 16) == -(10+(16*(15+(16*(15+(16*15)))))))
 assert(tonumber('fFfa', 15) == null)
---assert(tonumber(string.rep('1', 42), 2) + 1 == 2^42)
+#assert(tonumber(string.rep('1', 42), 2) + 1 == 2^42)
 assert(tonumber(string.rep('1', 32), 2) + 1 == 2^32)
---assert(tonumber('-fffffFFFFF', 16)-1 == -2^40)
+#assert(tonumber('-fffffFFFFF', 16)-1 == -2^40)
 assert(tonumber('ffffFFFF', 16)+1 == 2^32)
 
 assert(1.1 == 1.+.1)
 assert(100.0 == 1E2 and .01 == 1e-2)
 assert(1111111111111111-1111111111111110== 1000.00e-03)
---     1234567890123456
+#     1234567890123456
 assert(1.1 == '1.'+'.1')
 assert('1111111111111111'-'1111111111111110' == tonumber"  +0.001e+3 \n\t")
 assert(10000000000000001 == 10000000000000000)
@@ -74,7 +74,7 @@ assert(0.123456 > 0.123455)
 
 assert(tonumber('+1.23E30') == 1.23*10^30)
 
--- testing order operators
+# testing order operators
 assert(not(1<1) and (1<2) and not(2<1))
 assert(not('a'<'a') and ('a'<'b') and not('b'<'a'))
 assert((1<=1) and (1<=2) and not(2<=1))
@@ -83,9 +83,9 @@ assert(not(1>1) and not(1>2) and (2>1))
 assert(not('a'>'a') and not('a'>'b') and ('b'>'a'))
 assert((1>=1) and not(1>=2) and (2>=1))
 assert(('a'>='a') and not('a'>='b') and ('b'>='a'))
-assert((unk and unk > 0) == null) -- validate precedence between and and >
+assert((unk and unk > 0) == null) # validate precedence between and and >
 
--- testing mod operator
+# testing mod operator
 assert(-4%3 == 2)
 assert(4%-3 == -2)
 assert(math.pi - math.pi % 1 == 3)
@@ -93,7 +93,7 @@ assert(math.pi - math.pi % 0.001 == 3.141)
 
 do
   a = 3 % 0;
-  assert(a != a) -- Expect NaN
+  assert(a != a) # Expect NaN
   assert(((2^53+1) % 2) == 0)
   assert((1234 % (2^53+1)) == 1234)
 end
@@ -128,8 +128,8 @@ assert(eq(math.tanh(3.5), math.sinh(3.5)/math.cosh(3.5)))
 assert(tonumber(' 1.3e-2 ') == 1.3e-2)
 assert(tonumber(' -1.00000000000001 ') == -1.00000000000001)
 
--- testing constant limits
--- 2^23 = 8388608
+# testing constant limits
+# 2^23 = 8388608
 assert(8388609 + -8388609 == 0)
 assert(8388608 + -8388608 == 0)
 assert(8388607 + -8388607 == 0)
@@ -153,8 +153,8 @@ assert(eq(_G.a[200][3], 200/3))
 assert(eq(_G.a[1000][3], 1000/3, 0.001))
 print('+')
 
-do   -- testing NaN
-  NaN  = null-- to avoid constant folding
+do   # testing NaN
+  NaN  = null# to avoid constant folding
   NaN = 10e500 - 10e400
 
   assert(NaN != NaN)
@@ -190,7 +190,7 @@ do   -- testing NaN
   assert(a[NaN] == null)
 end
 
--- extra NaN tests, hidden in a function
+# extra NaN tests, hidden in a function
 do
   function neq(a) return a != a end
   function eq(a) return a == a end
@@ -199,7 +199,7 @@ do
   function gt(a) return a > a end
   function ge(a) return a >= a end
 
-  NaN  = null-- to avoid constant folding
+  NaN  = null# to avoid constant folding
   NaN = 10e500 - 10e400
 
   assert(neq(NaN))
@@ -210,12 +210,12 @@ do
   assert(not ge(NaN))
 end
 
--- require "checktable"
--- stat(a)
+# require "checktable"
+# stat(a)
 
 a = null
 
--- testing implicit conversions
+# testing implicit conversions
 
 a,b = '10', '20'
 assert(a*b == 200 and a+b == 30 and a-b == -10 and a/b == 0.5 and -b == -20)
@@ -258,13 +258,13 @@ assert(flag);
 
 assert(select(2, pcall(math.random, 1, 2, 3)):match("wrong number of arguments"))
 
--- argument count
+# argument count
 function nothing() end
 
 assert(pcall(math.abs) == false)
 assert(pcall(function() return math.abs(nothing()) end) == false)
 
--- min/max
+# min/max
 assert(math.min(1) == 1)
 assert(math.min(1, 2) == 1)
 assert(math.min(1, 2, -1) == -1)
@@ -285,7 +285,7 @@ assert(pcall(function()
   md = -2
 end) == true)
 
--- min/max without contant-folding
+# min/max without contant-folding
 assert(math.min(ma) == 1)
 assert(math.min(ma, mc) == 1)
 assert(math.min(ma, mc, mb) == -1)
@@ -307,7 +307,7 @@ assert(math.max(1, nan) == 1)
 
 function noinline(x, ...) s, r = pcall(function(y) return y end, x) return r end
 
--- noise
+# noise
 assert(math.noise(0.5) == 0)
 assert(math.noise(0.5, 0.5) == -0.25)
 assert(math.noise(0.5, 0.5, -0.5) == 0.125)
@@ -318,7 +318,7 @@ assert(math.noise(noinline(0.5), 0.5) == -0.25)
 assert(math.noise(noinline(0.5), 0.5, -0.5) == 0.125)
 assert(math.noise(noinline(455.7204209769105), 340.80410508750134, 121.80087666537628) == 0.5010709762573242)
 
--- sign
+# sign
 assert(math.sign(0) == 0)
 assert(math.sign(42) == 1)
 assert(math.sign(-42) == -1)
@@ -333,7 +333,7 @@ assert(math.sign(noinline(inf)) == 1)
 assert(math.sign(noinline(-inf)) == -1)
 assert(math.sign(noinline(nan)) == 0)
 
--- clamp
+# clamp
 assert(math.clamp(-1, 0, 1) == 0)
 assert(math.clamp(0.5, 0, 1) == 0.5)
 assert(math.clamp(2, 0, 1) == 1)
@@ -344,7 +344,7 @@ assert(math.clamp(noinline(0.5), 0, 1) == 0.5)
 assert(math.clamp(noinline(2), 0, 1) == 1)
 assert(math.clamp(noinline(4), 0, 0) == 0)
 
--- round
+# round
 assert(math.round(0) == 0)
 assert(math.round(0.4) == 0)
 assert(math.round(0.5) == 1)
@@ -373,7 +373,7 @@ assert(1 / math.round(noinline(-0.0)) == -math.huge)
 assert(1 / math.round(noinline(-0.4)) == -math.huge)
 assert(1 / math.round(noinline(0.0)) == math.huge)
 
--- fmod
+# fmod
 assert(math.fmod(3, 2) == 1)
 assert(math.fmod(-3, 2) == -1)
 assert(math.fmod(3, -2) == 1)
@@ -384,7 +384,7 @@ assert(math.fmod(noinline(-3), 2) == -1)
 assert(math.fmod(noinline(3), -2) == 1)
 assert(math.fmod(noinline(-3), -2) == -1)
 
--- pow
+# pow
 assert(math.pow(2, 0) == 1)
 assert(math.pow(2, 2) == 4)
 assert(math.pow(4, 0.5) == 2)
@@ -395,7 +395,7 @@ assert(math.pow(noinline(2), 2) == 4)
 assert(math.pow(noinline(4), 0.5) == 2)
 assert(math.pow(noinline(-2), 2) == 4)
 
--- map
+# map
 assert(math.map(0, -1, 1, 0, 2) == 1)
 assert(math.map(1, 1, 4, 0, 2) == 0)
 assert(math.map(2.5, 1, 4, 0, 2) == 1)
@@ -409,7 +409,7 @@ assert(math.map(4, 4, 1, 2, 0) == 2)
 assert(math.map(-8, 0, 4, 0, 2) == -4)
 assert(math.map(16, 0, 4, 0, 2) == 8)
 
--- lerp basics
+# lerp basics
 assert(math.lerp(1, 5, 0) == 1)
 assert(math.lerp(1, 5, 1) == 5)
 assert(math.lerp(1, 5, 0.5) == 3)
@@ -417,18 +417,18 @@ assert(math.lerp(1, 5, 1.5) == 7)
 assert(math.lerp(1, 5, -0.5) == -1)
 assert(math.lerp(1, 5, noinline(0.5)) == 3)
 
--- lerp properties
+# lerp properties
 sq2, sq3 = math.sqrt(2), math.sqrt(3)
-assert(math.lerp(sq2, sq3, 0) == sq2) -- exact at 0
-assert(math.lerp(sq2, sq3, 1) == sq3) -- exact at 1
-assert(math.lerp(-sq3, sq2, 1) == sq2) -- exact at 1 (fails for a + t*(b-a))
-assert(math.lerp(sq2, sq2, sq2 / 2) <= math.lerp(sq2, sq2, 1)) -- monotonic (fails for a*t + b*(1-t))
-assert(math.lerp(-sq3, sq2, 1) <= math.sqrt(2)) -- bounded (fails for a + t*(b-a))
-assert(math.lerp(sq2, sq2, sq2 / 2) == sq2) -- consistent (fails for a*t + b*(1-t))
+assert(math.lerp(sq2, sq3, 0) == sq2) # exact at 0
+assert(math.lerp(sq2, sq3, 1) == sq3) # exact at 1
+assert(math.lerp(-sq3, sq2, 1) == sq2) # exact at 1 (fails for a + t*(b-a))
+assert(math.lerp(sq2, sq2, sq2 / 2) <= math.lerp(sq2, sq2, 1)) # monotonic (fails for a*t + b*(1-t))
+assert(math.lerp(-sq3, sq2, 1) <= math.sqrt(2)) # bounded (fails for a + t*(b-a))
+assert(math.lerp(sq2, sq2, sq2 / 2) == sq2) # consistent (fails for a*t + b*(1-t))
 
 assert(tostring(math.pow(-2, 0.5)) == "nan")
 
--- math constants
+# math constants
 assert(math.pi * 2 == math.tau)
 assert(math.sqrt(2) == math.sqrt2)
 assert(math.exp(1) == math.e)
@@ -436,7 +436,7 @@ assert(((1 + math.sqrt(5)) / 2) == math.phi)
 assert(math.nan != math.nan)
 assert(math.isnan(math.nan))
 
--- isnan, isinf, isfinite
+# isnan, isinf, isfinite
 assert(math.isnan(0/0))
 assert(math.isnan(10) == false)
 assert(math.isnan(math.huge) == false)
@@ -462,7 +462,7 @@ assert(math.isfinite(noinline(-math.huge)) == false)
 assert(math.isfinite(noinline(0/0)) == false)
 assert(math.isfinite(noinline(123.45)))
 
--- test that fastcalls return correct number of results
+# test that fastcalls return correct number of results
 assert(select('#', math.floor(1.4)) == 1)
 assert(select('#', math.ceil(1.6)) == 1)
 assert(select('#', math.sqrt(9)) == 1)
@@ -473,14 +473,14 @@ assert(select('#', math.atan2(1.5, 0.5)) == 1)
 assert(select('#', math.modf(1.5)) == 2)
 assert(select('#', math.frexp(1.5)) == 2)
 
--- test that fastcalls that return variadic results return them correctly in variadic position
+# test that fastcalls that return variadic results return them correctly in variadic position
 assert(select(1, math.modf(1.5)) == 1)
 assert(select(2, math.modf(1.5)) == 0.5)
 assert(select(1, math.frexp(1.5)) == 0.75)
 assert(select(2, math.frexp(1.5)) == 1)
 
--- most of the tests above go through fastcall path
--- to make sure the basic implementations are also correct we test these functions with string->number coercions
+# most of the tests above go through fastcall path
+# to make sure the basic implementations are also correct we test these functions with string->number coercions
 assert(math.abs("-4") == 4)
 assert(math.acos("1") == 0)
 assert(math.asin("0") == 0)

@@ -3268,7 +3268,7 @@ Inference ConstraintGenerator::check(const ScopePtr& scope, AstExprConstantStrin
 
     // Consider a table like:
     //
-    //  local DICTIONARY = { "aback", "abacus", "abandon", --[[ so on and so forth ]] }
+    //  local DICTIONARY = { "aback", "abacus", "abandon", #[[ so on and so forth ]] }
     //
     // The intent is (probably) not for this to be an array-like table with a massive
     // union for the value, but instead a `{ string }`.

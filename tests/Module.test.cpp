@@ -20,15 +20,15 @@ TEST_SUITE_BEGIN("ModuleTests");
 TEST_CASE_FIXTURE(Fixture, "is_within_comment")
 {
     check(R"(
-        --!strict
+        #!strict
         local foo = {}
         function foo:bar() end
 
-        --[[
+        #[[
             foo:
         ]] foo:bar()
 
-        --[[]]--[[]] -- Two distinct comments that have zero characters of space between them.
+        #[[]]#[[]] # Two distinct comments that have zero characters of space between them.
     )");
 
     SourceModule* sm = getMainSourceModule();
@@ -48,15 +48,15 @@ TEST_CASE_FIXTURE(Fixture, "is_within_comment")
 TEST_CASE_FIXTURE(Fixture, "is_within_comment_parse_result")
 {
     std::string src = R"(
-        --!strict
+        #!strict
         local foo = {}
         function foo:bar() end
 
-        --[[
+        #[[
             foo:
         ]] foo:bar()
 
-        --[[]]--[[]] -- Two distinct comments that have zero characters of space between them.
+        #[[]]#[[]] # Two distinct comments that have zero characters of space between them.
     )";
 
     Luau::Allocator alloc;
@@ -310,7 +310,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "clone_self_property")
     if (!FFlag::DebugLuauForceOldSolver)
         return;
     fileResolver.source["Module/A"] = R"(
-        --!nonstrict
+        #!nonstrict
         local a = {}
         function a:foo(x: number)
             return -x;
@@ -322,7 +322,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "clone_self_property")
     LUAU_REQUIRE_NO_ERRORS(result);
 
     fileResolver.source["Module/B"] = R"(
-        --!nonstrict
+        #!nonstrict
         local a = require(script.Parent.A)
         return a.foo(5)
     )";
@@ -537,7 +537,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "clone_a_bound_typepack_to_a_persistent_typep
 TEST_CASE_FIXTURE(Fixture, "old_solver_correctly_populates_child_scopes")
 {
     check(R"(
---!strict
+#!strict
 if true then
 end
 

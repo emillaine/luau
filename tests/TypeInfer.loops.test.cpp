@@ -362,11 +362,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_error_on_factory_not_returning_t
             return prime_iter, {}, 2
         end
 
-        for p in primes1() do print(p) end -- mismatch in argument count
+        for p in primes1() do print(p) end # mismatch in argument count
 
-        for p in primes2() do print(p) end -- mismatch in argument types, prime_iter takes {}, number, we are given {}, string
+        for p in primes2() do print(p) end # mismatch in argument types, prime_iter takes {}, number, we are given {}, string
 
-        for p in primes3() do print(p) end -- no error
+        for p in primes3() do print(p) end # no error
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(2, result);
@@ -417,7 +417,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_with_incompatible_args_to_iterator")
         const my_state = {}
         const first_index = "first"
 
-        -- Type errors here.  my_state and first_index cannot be passed to my_iter
+        # Type errors here.  my_state and first_index cannot be passed to my_iter
         for a, b in my_iter, my_state, first_index do
         end
     )");
@@ -566,7 +566,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "rbxl_place_file_crash_for_wrong_constraints"
 {
     CheckResult result = check(R"(
 const VehicleParameters = {
-    -- These are default values in the case the package structure is broken
+    # These are default values in the case the package structure is broken
 	StrutSpringStiffnessFront = 28000,
 }
 
@@ -608,7 +608,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "correctly_scope_locals_while")
             const a = 1
         end
 
-        print(a) -- oops!
+        print(a) # oops!
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -651,7 +651,7 @@ TEST_CASE_FIXTURE(Fixture, "for_in_loop_where_iteratee_is_free")
 {
     // This code doesn't pass typechecking.  We just care that it doesn't crash.
     (void)check(R"(
-        --!nonstrict
+        #!nonstrict
         function _:_(...)
         end
 
@@ -675,7 +675,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
                 while true do
                     if a then return 10 end
                 end
-                -- unreachable
+                # unreachable
             end
             unreachablecodepath(4)
         )");
@@ -691,7 +691,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
                     return 10
                 end
 
-                print("x") -- correct error
+                print("x") # correct error
             end
             reachablecodepath(4)
         )");
@@ -707,7 +707,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
                     if a then return 10 end
                 until false
 
-                -- unreachable
+                # unreachable
             end
             unreachablecodepath(4)
         )");
@@ -724,7 +724,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
                     if b then return 10 end
                 until false
 
-                print("x") -- correct error
+                print("x") # correct error
             end
             reachablecodepath(4)
         )");
@@ -740,7 +740,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unreachable_code_after_infinite_loop")
                     return 10
                 until a != null
 
-                -- unreachable
+                # unreachable
             end
             unreachablecodepath(4)
         )");
@@ -770,7 +770,7 @@ TEST_CASE_FIXTURE(Fixture, "fuzz_fail_missing_instantitation_follow")
 {
     // Just check that this doesn't assert
     check(R"(
-        --!nonstrict
+        #!nonstrict
         function _(l0:number)
         return _
         end
@@ -1172,7 +1172,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties")
 TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties_nonstrict")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         function f()
             const t = { p = 5, q = "hello" }
             for k, v in t do
@@ -1191,7 +1191,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_over_properties_nonstrict")
 TEST_CASE_FIXTURE(BuiltinsFixture, "pairs_should_not_retroactively_add_an_indexer")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const prices = {
             hat = 1,
             bat = 2,
@@ -1227,7 +1227,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "lti_fuzzer_uninitialized_loop_crash")
 TEST_CASE_FIXTURE(BuiltinsFixture, "iterate_array_of_singletons")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Direction = "Left" | "Right" | "Up" | "Down"
         const Instructions: { Direction } = { "Left", "Down" }
 
@@ -1490,8 +1490,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_unconditionally_fires_error")
         repeat
             x = 42
         until true
-        -- `x` should unconditionally be `number` here as the assignment
-        -- above will _always_ run.
+        # `x` should unconditionally be `number` here as the assignment
+        # above will _always_ run.
         const y = x
     )"));
 
@@ -1512,8 +1512,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "repeat_is_linearish")
                 error("spooky scary error")
             until true
         end
-        -- The repeat in the above branch unconditionally fires the error, so
-        -- this should _always_ be `null`
+        # The repeat in the above branch unconditionally fires the error, so
+        # this should _always_ be `null`
         const y = x
     )"));
 
@@ -1527,8 +1527,8 @@ TEST_CASE_FIXTURE(Fixture, "ensure_local_in_loop_does_not_escape")
         repeat
             const x = ""
         until true
-        -- The local inside the loop should have no effect on the local
-        -- outside the loop.
+        # The local inside the loop should have no effect on the local
+        # outside the loop.
         const y = x
     )"));
 
@@ -1538,7 +1538,7 @@ TEST_CASE_FIXTURE(Fixture, "ensure_local_in_loop_does_not_escape")
 TEST_CASE_FIXTURE(Fixture, "oss_1851_union_of_many_strings")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
---!strict
+#!strict
 type union = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
 const example: { [union]: number } = {}
@@ -1551,7 +1551,7 @@ end
 TEST_CASE_FIXTURE(BuiltinsFixture, "any_type_in_for_loop_should_propagate")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function my_iter(): any
             return {}
         end
@@ -1570,7 +1570,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "any_type_in_for_loop_should_propagate")
 TEST_CASE_FIXTURE(BuiltinsFixture, "explicit_types_in_for_loop_should_propagate")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function my_iter(): {[number]: string}
             return {}
         end
@@ -1589,7 +1589,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "explicit_types_in_for_loop_should_propagate"
 TEST_CASE_FIXTURE(BuiltinsFixture, "incorrect_type_annotation_types_in_loop_should_propagate_with_errors")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function my_iter(): any
             return {}
         end
@@ -1610,7 +1610,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "incorrect_type_annotation_types_in_loop_shou
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_annotations_apply_to_function_expressions")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function my_iter(): any
             return {}
         end
@@ -1633,7 +1633,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_annotations_apply_to_function_ex
 TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_annotations_apply_inside_lambdas")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function my_iter(): any
             return {}
         end

@@ -1,4 +1,4 @@
--- verify nested table behavior when required
+# verify nested table behavior when required
 m = require("./export_nested_table")
 
 assert(m.triangle.name == "triangle", "table contents should be accessible")

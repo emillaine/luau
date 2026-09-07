@@ -1,33 +1,33 @@
---!nonstrict
--- Iterated Register Coalescing (Appel & George) over a generic instruction list.
---
--- The allocator consumes a "machine function" describing instructions in terms of
--- abstract temporaries (temps). It computes liveness over a CFG built from labels and
--- branch instructions, builds the interference graph, and colors temps into the
--- physical GPR set, coalescing moves and spilling when necessary.
---
--- Instruction contract (each entry of func.insns):
---   { defs = {tempId...}, uses = {tempId...},
---     move = { dst = tempId, src = tempId } | null,   -- reg-reg copy (coalesce candidate)
---     isLabelDef = "name" | null,                      -- this insn is a label definition
---     targets = { "name"... } | null,                  -- explicit branch targets
---     fallsThrough = bool }                            -- control can fall to next insn
---
--- func.temps: tempId -> { precolor = physRegName | null, spillSlot = n | null, spillCost = num }
--- The caller assigns temp ids (integers). Precolored temps model fixed physical regs.
---
--- Returns: { color = { tempId -> physRegName }, spilled = { tempId... } }
--- The driver re-runs after inserting spill code (handled by the caller) if spilled is
--- non-empty; here we implement the classic actual-spill rewrite inline via a callback.
+#!nonstrict
+# Iterated Register Coalescing (Appel & George) over a generic instruction list.
+#
+# The allocator consumes a "machine function" describing instructions in terms of
+# abstract temporaries (temps). It computes liveness over a CFG built from labels and
+# branch instructions, builds the interference graph, and colors temps into the
+# physical GPR set, coalescing moves and spilling when necessary.
+#
+# Instruction contract (each entry of func.insns):
+#   { defs = {tempId...}, uses = {tempId...},
+#     move = { dst = tempId, src = tempId } | null,   # reg-reg copy (coalesce candidate)
+#     isLabelDef = "name" | null,                      # this insn is a label definition
+#     targets = { "name"... } | null,                  # explicit branch targets
+#     fallsThrough = bool }                            # control can fall to next insn
+#
+# func.temps: tempId -> { precolor = physRegName | null, spillSlot = n | null, spillCost = num }
+# The caller assigns temp ids (integers). Precolored temps model fixed physical regs.
+#
+# Returns: { color = { tempId -> physRegName }, spilled = { tempId... } }
+# The driver re-runs after inserting spill code (handled by the caller) if spilled is
+# non-empty; here we implement the classic actual-spill rewrite inline via a callback.
 
 regalloc = {}
 
--- This allocator is architecture-agnostic: the allocatable GPR set (the K colors) is
--- supplied by the caller via `opts.allocatable` (arm64_isa.ALLOCATABLE / x86_64_isa.ALLOCATABLE).
--- Register-set knowledge (allocatable / caller- / callee-saved, reg numbers) lives in the
--- per-arch isa modules, not here.
+# This allocator is architecture-agnostic: the allocatable GPR set (the K colors) is
+# supplied by the caller via `opts.allocatable` (arm64_isa.ALLOCATABLE / x86_64_isa.ALLOCATABLE).
+# Register-set knowledge (allocatable / caller- / callee-saved, reg numbers) lives in the
+# per-arch isa modules, not here.
 
--- Helpers ------------------------------------------------------------------
+# Helpers #----------------------------------------------------------------
 
 function newSet(): { [any]: boolean }
 	return {}
@@ -35,30 +35,30 @@ end
 function setAdd(s, x) s[x] = true end
 function setHas(s, x) return s[x] == true end
 
--- Deterministic iteration order for sets keyed by temp ids / move indices (integers).
--- `pairs`/generalized-`for` order over these follows the VM's hash function, which would
--- otherwise make the coloring (and thus the emitted register assignment) depend on hash
--- order. Iterating in sorted key order makes allocation reproducible.
+# Deterministic iteration order for sets keyed by temp ids / move indices (integers).
+# `pairs`/generalized-`for` order over these follows the VM's hash function, which would
+# otherwise make the coloring (and thus the emitted register assignment) depend on hash
+# order. Iterating in sorted key order makes allocation reproducible.
 function sortedList(set)
 	out = {}
-	for k in set do out[#out + 1] = k end
+	for k in set do out[out.count + 1] = k end
 	table.sort(out)
 	return out
 end
 
--- Build basic blocks from the instruction list.
--- Returns blocks = { { first=i, last=j, succ={blockIdx...}, insns={i..j} } }, and
--- labelToBlock mapping.
+# Build basic blocks from the instruction list.
+# Returns blocks = { { first=i, last=j, succ={blockIdx...}, insns={i..j} } }, and
+# labelToBlock mapping.
 function buildCFG(insns)
-	n = #insns
-	-- leaders: first insn, any label def, any insn after a branch.
-	labelAt = {}          -- label name -> insn index
+	n = insns.count
+	# leaders: first insn, any label def, any insn after a branch.
+	labelAt = {}          # label name -> insn index
 	for i, ins in insns do
 		if ins.isLabelDef then
 			labelAt[ins.isLabelDef] = i
 		end
 	end
-	-- Determine block starts.
+	# Determine block starts.
 	isLeader = {}
 	isLeader[1] = true
 	for i, ins in insns do
@@ -67,7 +67,7 @@ function buildCFG(insns)
 			if i + 1 <= n then isLeader[i + 1] = true end
 		end
 	end
-	-- Create blocks.
+	# Create blocks.
 	blocks = {}
 	blockOfInsn = {}
 	cur = null
@@ -78,13 +78,13 @@ function buildCFG(insns)
 		end
 		cur.last = i
 		table.insert(cur.insns, i)
-		blockOfInsn[i] = #blocks
+		blockOfInsn[i] = blocks.count
 	end
-	-- Successors.
+	# Successors.
 	labelToBlock = {}
 	for bi, b in blocks do
 		firstIns = insns[b.first]
-		-- a block may start with multiple stacked labels; map all leading labels
+		# a block may start with multiple stacked labels; map all leading labels
 	end
 	for name, idx in labelAt do
 		labelToBlock[name] = blockOfInsn[idx]
@@ -101,7 +101,7 @@ function buildCFG(insns)
 			addFall = lastIns.fallsThrough != false
 		end
 		if lastIns.fallsThrough == false then addFall = false end
-		if addFall and bi + 1 <= #blocks then
+		if addFall and bi + 1 <= blocks.count then
 			table.insert(b.succ, bi + 1)
 		end
 	end
@@ -109,9 +109,9 @@ function buildCFG(insns)
 end
 regalloc.buildCFG = buildCFG
 
--- Liveness: compute live-out set (of temps) for each instruction.
+# Liveness: compute live-out set (of temps) for each instruction.
 function computeLiveness(insns, blocks)
-	-- block-level def/use
+	# block-level def/use
 	for _, b in blocks do
 		use = newSet()
 		def = newSet()
@@ -129,23 +129,23 @@ function computeLiveness(insns, blocks)
 		b.liveIn = newSet()
 		b.liveOut = newSet()
 	end
-	-- iterate to fixpoint (backward)
+	# iterate to fixpoint (backward)
 	changed = true
 	while changed do
 		changed = false
-		for bi = #blocks, 1, -1 do
+		for bi = blocks.count, 1, -1 do
 			b = blocks[bi]
 			newOut = newSet()
 			for _, s in b.succ do
 				for t in blocks[s].liveIn do newOut[t] = true end
 			end
-			-- liveIn = use ∪ (out − def)
+			# liveIn = use ∪ (out − def)
 			newIn = newSet()
 			for t in b.useSet do newIn[t] = true end
 			for t in newOut do
 				if not b.defSet[t] then newIn[t] = true end
 			end
-			-- detect change
+			# detect change
 			function differ(a, c)
 				for t in a do if not c[t] then return true end end
 				for t in c do if not a[t] then return true end end
@@ -158,19 +158,19 @@ function computeLiveness(insns, blocks)
 			end
 		end
 	end
-	-- per-instruction live-out (backward within block)
+	# per-instruction live-out (backward within block)
 	liveOutOf = {}
 	for _, b in blocks do
 		live = newSet()
 		for t in b.liveOut do live[t] = true end
-		for idx = #b.insns, 1, -1 do
+		for idx = b.insns.count, 1, -1 do
 			i = b.insns[idx]
 			ins = insns[i]
-			-- live-out of instruction i = current live
+			# live-out of instruction i = current live
 			lo = newSet()
 			for t in live do lo[t] = true end
 			liveOutOf[i] = lo
-			-- transfer: live = use ∪ (live − def)
+			# transfer: live = use ∪ (live − def)
 			for _, d in (ins.defs or {}) do live[d] = null end
 			for _, u in (ins.uses or {}) do live[u] = true end
 		end
@@ -179,31 +179,31 @@ function computeLiveness(insns, blocks)
 end
 regalloc.computeLiveness = computeLiveness
 
--- Per-instruction live-out sets for a generic insn list (defs/uses may be any variable ids,
--- e.g. spill-slot ids). Builds the CFG and runs the backward liveness fixpoint. Returns
--- liveOutOf[i] = set of variables live after instruction i.
+# Per-instruction live-out sets for a generic insn list (defs/uses may be any variable ids,
+# e.g. spill-slot ids). Builds the CFG and runs the backward liveness fixpoint. Returns
+# liveOutOf[i] = set of variables live after instruction i.
 function regalloc.liveOut(insns)
 	return computeLiveness(insns, buildCFG(insns))
 end
 
--- The core IRC coloring. Returns color map and spill list.
--- `temps` maps tempId -> descriptor. physical precolored temps have .precolor.
+# The core IRC coloring. Returns color map and spill list.
+# `temps` maps tempId -> descriptor. physical precolored temps have .precolor.
 function regalloc.color(insns, temps, opts)
 	opts = opts or {}
-	-- Per-target register set (caller-supplied); K is the color count.
+	# Per-target register set (caller-supplied); K is the color count.
 	ALLOCATABLE = opts.allocatable or error("regalloc.color: opts.allocatable is required")
-	K = #ALLOCATABLE
+	K = ALLOCATABLE.count
 	blocks = buildCFG(insns)
 	liveOutOf = computeLiveness(insns, blocks)
 
-	-- Interference graph.
-	adj = {}            -- tempId -> set of tempId
-	adjList = {}        -- tempId -> array
+	# Interference graph.
+	adj = {}            # tempId -> set of tempId
+	adjList = {}        # tempId -> array
 	degree = {}
-	moveList = {}       -- tempId -> set of move-insn indices
-	worklistMoves = {}  -- set of move-insn indices
-	alias = {}          -- coalesced alias
-	nodes = {}          -- all temp ids seen
+	moveList = {}       # tempId -> set of move-insn indices
+	worklistMoves = {}  # set of move-insn indices
+	alias = {}          # coalesced alias
+	nodes = {}          # all temp ids seen
 
 	function ensureNode(t)
 		if not nodes[t] then
@@ -237,12 +237,12 @@ function regalloc.color(insns, temps, opts)
 		end
 	end
 
-	-- Build moves + interference from liveness.
+	# Build moves + interference from liveness.
 	for i, ins in insns do
 		live = newSet()
 		for t in (liveOutOf[i] or {}) do live[t] = true end
 		if ins.move then
-			-- uses of a move don't interfere with its def
+			# uses of a move don't interfere with its def
 			for _, u in (ins.uses or {}) do live[u] = null end
 			setAdd(moveList[ins.move.dst], i)
 			setAdd(moveList[ins.move.src], i)
@@ -254,7 +254,7 @@ function regalloc.color(insns, temps, opts)
 		end
 	end
 
-	-- Coloring worklists.
+	# Coloring worklists.
 	precoloredSet = newSet()
 	initial = {}
 	for _, t in sortedList(nodes) do
@@ -296,7 +296,7 @@ function regalloc.color(insns, temps, opts)
 		return next(nodeMoves(t)) != null
 	end
 
-	-- adjacent = adjacent nodes not on select stack / coalesced
+	# adjacent = adjacent nodes not on select stack / coalesced
 	function adjacent(t)
 		out = {}
 		for _, v in adjList[t] do
@@ -305,7 +305,7 @@ function regalloc.color(insns, temps, opts)
 		return out
 	end
 
-	-- build initial worklists
+	# build initial worklists
 	for _, t in initial do
 		if degree[t] >= K then
 			table.insert(spillWorklist, t)
@@ -365,12 +365,12 @@ function regalloc.color(insns, temps, opts)
 	end
 
 	function ok(t, r)
-		-- George criterion helper
+		# George criterion helper
 		return degree[t] < K or precolored(t) or adj[t][r]
 	end
 
 	function conservative(u, v)
-		-- Briggs: count high-degree neighbors of the combined node
+		# Briggs: count high-degree neighbors of the combined node
 		seen = newSet()
 		cnt = 0
 		for w in adjacent(u) do
@@ -456,7 +456,7 @@ function regalloc.color(insns, temps, opts)
 	end
 
 	function selectSpill()
-		-- pick highest-degree (cheap heuristic) to spill optimistically
+		# pick highest-degree (cheap heuristic) to spill optimistically
 		best, bestIdx, bestScore = null, null, null
 		for idx, t in spillWorklist do
 			cost = (temps[t] and temps[t].spillCost) or 1
@@ -470,21 +470,21 @@ function regalloc.color(insns, temps, opts)
 		freezeMoves(best)
 	end
 
-	-- main loop
+	# main loop
 	while true do
-		if #simplifyWorklist > 0 then simplify()
+		if simplifyWorklist.count > 0 then simplify()
 		else if next(worklistMoves) then coalesce()
-		else if #freezeWorklist > 0 then freeze()
-		else if #spillWorklist > 0 then selectSpill()
+		else if freezeWorklist.count > 0 then freeze()
+		else if spillWorklist.count > 0 then selectSpill()
 		else break end
 	end
 
-	-- assign colors
+	# assign colors
 	color = {}
 	for t in precoloredSet do color[t] = temps[t].precolor end
 
 	actualSpills = {}
-	while #selectStack > 0 do
+	while selectStack.count > 0 do
 		t = table.remove(selectStack)
 		onStack[t] = null
 		okColors = {}

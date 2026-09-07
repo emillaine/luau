@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print("testing assignments, logical operators, and constructors")
 
 unpack = table.unpack

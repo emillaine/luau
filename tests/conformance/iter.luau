@@ -1,8 +1,8 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing iteration')
 
--- basic for loop tests
+# basic for loop tests
 do
   a = null
   for a,b in pairs{} do error("not here") end
@@ -13,10 +13,10 @@ do
   a = 0; for i=0, 1, 0.1 do a=a+1 end; assert(a==11)
 end
 
--- precision tests for for loops
+# precision tests for for loops
 do
   a = null
-  --a = 0; for i=1, 0, -0.01 do a=a+1 end; assert(a==101)
+  #a = 0; for i=1, 0, -0.01 do a=a+1 end; assert(a==101)
   a = 0; for i=0, 0.999999999, 0.1 do a=a+1 end; assert(a==10)
   a = 0; for i=1, 1, 1 do a=a+1 end; assert(a==1)
   a = 0; for i=1e10, 1e10, -1 do a=a+1 end; assert(a==1)
@@ -26,14 +26,14 @@ do
 end
 
 
--- for loops do string->number coercion
+# for loops do string->number coercion
 function testLoopWithCoercions()
   a = 0; for i="10","1","-2" do a=a+1 end; assert(a==5)
 end
 
 testLoopWithCoercions()
 
--- generic for with function iterators
+# generic for with function iterators
 do
   function f (n, p)
     t = {}; for i=1,p do t[i] = i*10 end
@@ -53,7 +53,7 @@ do
   assert(x == 5)
 end
 
--- generic for with __call (tables)
+# generic for with __call (tables)
 do
   f = {}
   setmetatable(f, { __call = function(_, _, n) if n > 0 then return n - 1 end end })
@@ -65,7 +65,7 @@ do
   assert(x == 10)
 end
 
--- generic for with __call (userdata)
+# generic for with __call (userdata)
 do
   f = newproxy(true)
   getmetatable(f).__call = function(_, _, n) if n > 0 then return n - 1 end end
@@ -77,7 +77,7 @@ do
   assert(x == 10)
 end
 
--- generic for with pairs
+# generic for with pairs
 do
   x = 0
   for k, v in pairs({a = 1, b = 2, c = 3}) do
@@ -86,7 +86,7 @@ do
   assert(x == 6)
 end
 
--- generic for with pairs with holes
+# generic for with pairs with holes
 do
   x = 0
   for k, v in pairs({1, 2, 3, null, 5}) do
@@ -95,7 +95,7 @@ do
   assert(x == 11)
 end
 
--- generic for with ipairs
+# generic for with ipairs
 do
   x = 0
   for k, v in ipairs({1, 2, 3, null, 5}) do
@@ -104,7 +104,7 @@ do
   assert(x == 6)
 end
 
--- generic for with __iter (tables)
+# generic for with __iter (tables)
 do
   f = {}
   setmetatable(f, { __iter = function(x)
@@ -119,7 +119,7 @@ do
   assert(x == 10)
 end
 
--- generic for with __iter (userdata)
+# generic for with __iter (userdata)
 do
   f = newproxy(true)
   getmetatable(f).__iter = function(x)
@@ -134,7 +134,7 @@ do
   assert(x == 10)
 end
 
--- generic for with tables (dictionary)
+# generic for with tables (dictionary)
 do
   x = 0
   for k, v in {a = 1, b = 2, c = 3} do
@@ -144,7 +144,7 @@ do
   assert(x == 6)
 end
 
--- generic for with tables (arrays)
+# generic for with tables (arrays)
 do
   x = ''
   for k, v in {1, 2, 3, null, 5} do
@@ -153,7 +153,7 @@ do
   assert(x == "1235")
 end
 
--- generic for with tables (mixed)
+# generic for with tables (mixed)
 do
   x = 0
   for k, v in {1, 2, 3, null, 5, a = 1, b = 2, c = 3} do
@@ -162,13 +162,13 @@ do
   assert(x == 17)
 end
 
--- generic for over a non-iterable object
+# generic for over a non-iterable object
 do
   ok, err = pcall(function() for x in 42 do end end)
   assert(not ok and err:match("attempt to iterate"))
 end
 
--- generic for over an iterable object that doesn't return a function
+# generic for over an iterable object that doesn't return a function
 do
   obj = {}
   setmetatable(obj, { __iter = function() end })
@@ -177,7 +177,7 @@ do
   assert(not ok and err:match("attempt to call a null value"))
 end
 
--- it's okay to iterate through a table with a single variable
+# it's okay to iterate through a table with a single variable
 do
   x = 0
   for k in {1, 2, 3, 4, 5} do
@@ -186,7 +186,7 @@ do
   assert(x == 15)
 end
 
--- all extra variables should be set to null during builtin traversal
+# all extra variables should be set to null during builtin traversal
 do
   x = 0
   for k,v,a,b,c,d,e in {1, 2, 3, 4, 5} do
@@ -196,7 +196,7 @@ do
   assert(x == 15)
 end
 
--- yielding generalized iteration: basic iterator that yields
+# yielding generalized iteration: basic iterator that yields
 do
   function yielding_iter(state, index)
     if index >= state then
@@ -216,14 +216,14 @@ do
 
   for i = 1, 4 do
     ok, val = coroutine.resume(co)
-    assert(ok and val == null) -- yield produces no values
+    assert(ok and val == null) # yield produces no values
   end
 
   ok, val = coroutine.resume(co)
   assert(ok and val == 10)
 end
 
--- yielding generalized iteration: multiple return values
+# yielding generalized iteration: multiple return values
 do
   function yielding_pairs(t)
     keys = {}
@@ -257,7 +257,7 @@ do
   assert(ok and a == 1 and b == 2 and c == 3)
 end
 
--- yielding generalized iteration: iterator yields multiple times per call
+# yielding generalized iteration: iterator yields multiple times per call
 do
   function multi_yield_iter(max, index)
     if index >= max then return null end
@@ -274,7 +274,7 @@ do
     return sum
   end)
 
-  -- 3 successful iterations yield twice each; the 4th call returns null without yielding
+  # 3 successful iterations yield twice each; the 4th call returns null without yielding
   yields = {}
   while coroutine.status(co) != "dead" do
     ok, val = coroutine.resume(co)
@@ -282,13 +282,13 @@ do
     table.insert(yields, val)
   end
 
-  -- 6 yields + 1 final return = 7 resumes
+  # 6 yields + 1 final return = 7 resumes
   assert(yields.count == 7)
   assert(yields[1] == "first" and yields[2] == "second")
-  assert(yields[7] == 6) -- final return value is the sum
+  assert(yields[7] == 6) # final return value is the sum
 end
 
--- yielding generalized iteration: empty iteration (iterator returns null immediately)
+# yielding generalized iteration: empty iteration (iterator returns null immediately)
 do
   function empty_iter()
     coroutine.yield("before")
@@ -310,7 +310,7 @@ do
   assert(ok and val == 0)
 end
 
--- yielding generalized iteration: __iter metamethod with yielding iterator
+# yielding generalized iteration: __iter metamethod with yielding iterator
 do
   obj = setmetatable({}, {
     __iter = function(self)
@@ -341,7 +341,7 @@ do
   assert(ok and val == "10,20,30")
 end
 
--- yielding generalized iteration: iterator function (not C)
+# yielding generalized iteration: iterator function (not C)
 do
   co = coroutine.create(function()
     sum = 0
@@ -370,7 +370,7 @@ do
   assert(ok and val == 15)
 end
 
--- yielding generalized iteration: break exits loop correctly after yield
+# yielding generalized iteration: break exits loop correctly after yield
 do
   co = coroutine.create(function()
     last = 0
@@ -396,7 +396,7 @@ do
   assert(ok and val == 3)
 end
 
--- yielding generalized iteration: nested yielding for-in loops
+# yielding generalized iteration: nested yielding for-in loops
 do
   co = coroutine.create(function()
     function yiter(n, i)
@@ -421,11 +421,11 @@ do
     count += 1
   end
   
-  -- outer: 3 successful calls yield once each = 3, inner: 2 per outer = 6, final return = 1
+  # outer: 3 successful calls yield once each = 3, inner: 2 per outer = 6, final return = 1
   assert(count == 10)
 end
 
--- yielding generalized iteration: C function iterator that yields via lua_yield
+# yielding generalized iteration: C function iterator that yields via lua_yield
 do
   co = coroutine.create(function()
     sum = 0
@@ -437,14 +437,14 @@ do
 
   for i = 1, 4 do
     ok, val = coroutine.resume(co)
-    assert(ok and val == i) -- yield passes index+1
+    assert(ok and val == i) # yield passes index+1
   end
 
   ok, val = coroutine.resume(co)
   assert(ok and val == 10)
 end
 
--- yielding generalized iteration: single function iterator that yields without the use of __iter
+# yielding generalized iteration: single function iterator that yields without the use of __iter
 do
   co = coroutine.create(function()
     results = {}
@@ -471,7 +471,7 @@ do
   assert(ok and val == "1,2,3")
 end
 
--- yielding generalized iteration: error from yielding iterator propagates correctly
+# yielding generalized iteration: error from yielding iterator propagates correctly
 do
   function err_iter(max, i)
     if i >= max then return null end
@@ -486,10 +486,10 @@ do
     for v in err_iter, 3, 0 do end
   end)
 
-  -- first iteration: yields, then returns 1
+  # first iteration: yields, then returns 1
   ok = coroutine.resume(co)
   assert(ok)
-  -- second iteration: yields, then errors
+  # second iteration: yields, then errors
   ok = coroutine.resume(co)
   assert(ok)
   ok, msg = coroutine.resume(co)
@@ -498,7 +498,7 @@ do
   assert(coroutine.status(co) == "dead")
 end
 
--- yielding generalized iteration: pcall catches error from yielding iterator
+# yielding generalized iteration: pcall catches error from yielding iterator
 do
   function err_iter(max, i)
     if i >= max then return null end
@@ -521,7 +521,7 @@ do
   assert(ok and val == "survived")
 end
 
--- yielding generalized iteration: __call metamethod iterator that yields
+# yielding generalized iteration: __call metamethod iterator that yields
 do
   callable = setmetatable({}, {
     __call = function(self, state, index)
@@ -546,13 +546,13 @@ do
     table.insert(yields, val)
   end
 
-  -- 3 yields (index 0, 1, 2) + final return
+  # 3 yields (index 0, 1, 2) + final return
   assert(yields.count == 4)
   assert(yields[1] == 0 and yields[2] == 1 and yields[3] == 2)
-  assert(yields[4] == 600) -- 100 + 200 + 300
+  assert(yields[4] == 600) # 100 + 200 + 300
 end
 
--- yielding generalized iteration: check that C call limit is respected
+# yielding generalized iteration: check that C call limit is respected
 if not limitedstack then
   function recursive_iter(_, i)
     if i >= 1 then return null end
@@ -576,7 +576,7 @@ if not limitedstack then
   assert(ok and val == "caught")
 end
 
--- call stack relocation test
+# call stack relocation test
 do
   function iter() coroutine.yield() return null end
   function recurse() for _ in iter do end recurse() end

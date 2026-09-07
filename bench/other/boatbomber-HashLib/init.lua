@@ -1,7 +1,7 @@
---[=[------------------------------------------------------------------------------------------------------------------------
--- HashLib by Egor Skriptunoff, boatbomber, and howmanysmall
+#[=[#----------------------------------------------------------------------------------------------------------------------
+# HashLib by Egor Skriptunoff, boatbomber, and howmanysmall
 
---------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------
 
 Module was originally written by Egor Skriptunoff and distributed under an MIT license.
 It can be found here: https://github.com/Egor-Skriptunoff/pure_lua_SHA/blob/master/sha2.lua
@@ -16,7 +16,7 @@ It's gotten stupid fast, thanks to her!
 After quite a bit of work and benchmarking, this is what we were left with.
 Enjoy!
 
---------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------
 
 DESCRIPTION:
 	This module contains functions to calculate SHA digest:
@@ -58,36 +58,36 @@ API:
 		HashLib.base64_to_bin
 		HashLib.bin_to_base64
 
---]=]
----------------------------------------------------------------------------
+#]=]
+#-------------------------------------------------------------------------
 
 Base64 = require(script.Base64)
 
---------------------------------------------------------------------------------
--- LOCALIZATION FOR VM OPTIMIZATIONS
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# LOCALIZATION FOR VM OPTIMIZATIONS
+#------------------------------------------------------------------------------
 
 ipairs = ipairs
 
---------------------------------------------------------------------------------
--- 32-BIT BITWISE FUNCTIONS
---------------------------------------------------------------------------------
--- Only low 32 bits of function arguments matter, high bits are ignored
--- The result of all functions (except HEX) is an integer inside "correct range":
--- for "bit" library:    (-TWO_POW_31)..(TWO_POW_31-1)
--- for "bit32" library:        0..(TWO_POW_32-1)
-bit32_band = bit32.band -- 2 arguments
-bit32_bor = bit32.bor -- 2 arguments
-bit32_bxor = bit32.bxor -- 2..5 arguments
-bit32_lshift = bit32.lshift -- second argument is integer 0..31
-bit32_rshift = bit32.rshift -- second argument is integer 0..31
-bit32_lrotate = bit32.lrotate -- second argument is integer 0..31
-bit32_rrotate = bit32.rrotate -- second argument is integer 0..31
+#------------------------------------------------------------------------------
+# 32-BIT BITWISE FUNCTIONS
+#------------------------------------------------------------------------------
+# Only low 32 bits of function arguments matter, high bits are ignored
+# The result of all functions (except HEX) is an integer inside "correct range":
+# for "bit" library:    (-TWO_POW_31)..(TWO_POW_31-1)
+# for "bit32" library:        0..(TWO_POW_32-1)
+bit32_band = bit32.band # 2 arguments
+bit32_bor = bit32.bor # 2 arguments
+bit32_bxor = bit32.bxor # 2..5 arguments
+bit32_lshift = bit32.lshift # second argument is integer 0..31
+bit32_rshift = bit32.rshift # second argument is integer 0..31
+bit32_lrotate = bit32.lrotate # second argument is integer 0..31
+bit32_rrotate = bit32.rrotate # second argument is integer 0..31
 
---------------------------------------------------------------------------------
--- CREATING OPTIMIZED INNER LOOP
---------------------------------------------------------------------------------
--- Arrays of SHA2 "magic numbers" (in "INT64" and "FFI" branches "*_lo" arrays contain 64-bit values)
+#------------------------------------------------------------------------------
+# CREATING OPTIMIZED INNER LOOP
+#------------------------------------------------------------------------------
+# Arrays of SHA2 "magic numbers" (in "INT64" and "FFI" branches "*_lo" arrays contain 64-bit values)
 sha2_K_lo, sha2_K_hi, sha2_H_lo, sha2_H_hi, sha3_RC_lo, sha3_RC_hi = {}, {}, {}, {}, {}, {}
 sha2_H_ext256 = {
 	[224] = {},
@@ -133,8 +133,8 @@ md5_next_shift = {
 	23,
 	21,
 }
-HEX64, XOR64A5, lanes_index_base = null, null, null -- defined only for branches that internally use 64-bit integers: "INT64" and "FFI"
-common_W = {} -- temporary table shared between all calculations (to avoid creating new temporary table every time)
+HEX64, XOR64A5, lanes_index_base = null, null, null # defined only for branches that internally use 64-bit integers: "INT64" and "FFI"
+common_W = {} # temporary table shared between all calculations (to avoid creating new temporary table every time)
 K_lo_modulo, hi_factor, hi_factor_keccak = 4294967296, 0, 0
 
 TWO_POW_NEG_56 = 2 ^ -56
@@ -175,9 +175,9 @@ TWO_POW_40 = 2 ^ 40
 
 TWO56_POW_7 = 256 ^ 7
 
--- Implementation for Lua 5.1/5.2 (with or without bitwise library available)
+# Implementation for Lua 5.1/5.2 (with or without bitwise library available)
 function sha256_feed_64(H, str, offs, size)
-	-- offs >= 0, size >= 0, size is multiple of 64
+	# offs >= 0, size >= 0, size is multiple of 64
 	W, K = common_W, sha2_K_hi
 	h1, h2, h3, h4, h5, h6, h7, h8 = H[1], H[2], H[3], H[4], H[5], H[6], H[7], H[8]
 	for pos = offs, offs + size - 1, 64 do
@@ -224,8 +224,8 @@ function sha256_feed_64(H, str, offs, size)
 end
 
 function sha512_feed_128(H_lo, H_hi, str, offs, size)
-	-- offs >= 0, size >= 0, size is multiple of 128
-	-- W1_hi, W1_lo, W2_hi, W2_lo, ...   Wk_hi = W[2*k-1], Wk_lo = W[2*k]
+	# offs >= 0, size >= 0, size is multiple of 128
+	# W1_hi, W1_lo, W2_hi, W2_lo, ...   Wk_hi = W[2*k-1], Wk_lo = W[2*k]
 	W, K_lo, K_hi = common_W, sha2_K_lo, sha2_K_hi
 	h1_lo, h2_lo, h3_lo, h4_lo, h5_lo, h6_lo, h7_lo, h8_lo =
 		H_lo[1], H_lo[2], H_lo[3], H_lo[4], H_lo[5], H_lo[6], H_lo[7], H_lo[8]
@@ -348,7 +348,7 @@ function sha512_feed_128(H_lo, H_hi, str, offs, size)
 end
 
 function md5_feed_64(H, str, offs, size)
-	-- offs >= 0, size >= 0, size is multiple of 64
+	# offs >= 0, size >= 0, size is multiple of 64
 	W, K, md5_next_shift = common_W, md5_K, md5_next_shift
 	h1, h2, h3, h4 = H[1], H[2], H[3], H[4]
 	for pos = offs, offs + size - 1, 64 do
@@ -410,7 +410,7 @@ function md5_feed_64(H, str, offs, size)
 end
 
 function sha1_feed_64(H, str, offs, size)
-	-- offs >= 0, size >= 0, size is multiple of 64
+	# offs >= 0, size >= 0, size is multiple of 64
 	W = common_W
 	h1, h2, h3, h4, h5 = H[1], H[2], H[3], H[4], H[5]
 	for pos = offs, offs + size - 1, 64 do
@@ -426,7 +426,7 @@ function sha1_feed_64(H, str, offs, size)
 
 		a, b, c, d, e = h1, h2, h3, h4, h5
 		for j = 1, 20 do
-			z = bit32_lrotate(a, 5) + bit32_band(b, c) + bit32_band(-1 - b, d) + 0x5A827999 + W[j] + e -- constant = math.floor(TWO_POW_30 * sqrt(2))
+			z = bit32_lrotate(a, 5) + bit32_band(b, c) + bit32_band(-1 - b, d) + 0x5A827999 + W[j] + e # constant = math.floor(TWO_POW_30 * sqrt(2))
 			e = d
 			d = c
 			c = bit32_rrotate(b, 2)
@@ -435,7 +435,7 @@ function sha1_feed_64(H, str, offs, size)
 		end
 
 		for j = 21, 40 do
-			z = bit32_lrotate(a, 5) + bit32_bxor(b, c, d) + 0x6ED9EBA1 + W[j] + e -- TWO_POW_30 * sqrt(3)
+			z = bit32_lrotate(a, 5) + bit32_bxor(b, c, d) + 0x6ED9EBA1 + W[j] + e # TWO_POW_30 * sqrt(3)
 			e = d
 			d = c
 			c = bit32_rrotate(b, 2)
@@ -444,7 +444,7 @@ function sha1_feed_64(H, str, offs, size)
 		end
 
 		for j = 41, 60 do
-			z = bit32_lrotate(a, 5) + bit32_band(d, c) + bit32_band(b, bit32_bxor(d, c)) + 0x8F1BBCDC + W[j] + e -- TWO_POW_30 * sqrt(5)
+			z = bit32_lrotate(a, 5) + bit32_band(d, c) + bit32_band(b, bit32_bxor(d, c)) + 0x8F1BBCDC + W[j] + e # TWO_POW_30 * sqrt(5)
 			e = d
 			d = c
 			c = bit32_rrotate(b, 2)
@@ -453,7 +453,7 @@ function sha1_feed_64(H, str, offs, size)
 		end
 
 		for j = 61, 80 do
-			z = bit32_lrotate(a, 5) + bit32_bxor(b, c, d) + 0xCA62C1D6 + W[j] + e -- TWO_POW_30 * sqrt(10)
+			z = bit32_lrotate(a, 5) + bit32_bxor(b, c, d) + 0xCA62C1D6 + W[j] + e # TWO_POW_30 * sqrt(10)
 			e = d
 			d = c
 			c = bit32_rrotate(b, 2)
@@ -472,8 +472,8 @@ function sha1_feed_64(H, str, offs, size)
 end
 
 function keccak_feed(lanes_lo, lanes_hi, str, offs, size, block_size_in_bytes)
-	-- This is an example of a Lua function having 79 local variables :-)
-	-- offs >= 0, size >= 0, size is multiple of block_size_in_bytes, block_size_in_bytes is positive multiple of 8
+	# This is an example of a Lua function having 79 local variables :-)
+	# offs >= 0, size >= 0, size is multiple of block_size_in_bytes, block_size_in_bytes is positive multiple of 8
 	RC_lo, RC_hi = sha3_RC_lo, sha3_RC_hi
 	qwords_qty = block_size_in_bytes / 8
 	for pos = offs, offs + size - 1, block_size_in_bytes do
@@ -733,7 +733,7 @@ function keccak_feed(lanes_lo, lanes_hi, str, offs, size, block_size_in_bytes)
 				bit32_bxor(L21_hi, bit32_band(-1 - L22_hi, L23_hi)),
 				bit32_bxor(L22_hi, bit32_band(-1 - L23_hi, L24_hi))
 			L01_lo = bit32_bxor(L01_lo, RC_lo[round_idx])
-			L01_hi = L01_hi + RC_hi[round_idx] -- RC_hi[] is either 0 or 0x80000000, so we could use fast addition instead of slow XOR
+			L01_hi = L01_hi + RC_hi[round_idx] # RC_hi[] is either 0 or 0x80000000, so we could use fast addition instead of slow XOR
 		end
 
 		lanes_lo[1] = L01_lo
@@ -789,23 +789,23 @@ function keccak_feed(lanes_lo, lanes_hi, str, offs, size, block_size_in_bytes)
 	end
 end
 
---------------------------------------------------------------------------------
--- MAGIC NUMBERS CALCULATOR
---------------------------------------------------------------------------------
--- Q:
---    Is 53-bit "double" math enough to calculate square roots and cube roots of primes with 64 correct bits after decimal point?
--- A:
---    Yes, 53-bit "double" arithmetic is enough.
---    We could obtain first 40 bits by direct calculation of p^(1/3) and next 40 bits by one step of Newton's method.
+#------------------------------------------------------------------------------
+# MAGIC NUMBERS CALCULATOR
+#------------------------------------------------------------------------------
+# Q:
+#    Is 53-bit "double" math enough to calculate square roots and cube roots of primes with 64 correct bits after decimal point?
+# A:
+#    Yes, 53-bit "double" arithmetic is enough.
+#    We could obtain first 40 bits by direct calculation of p^(1/3) and next 40 bits by one step of Newton's method.
 do
 	function mul(src1, src2, factor, result_length)
-		-- src1, src2 - long integers (arrays of digits in base TWO_POW_24)
-		-- factor - small integer
-		-- returns long integer result (src1 * src2 * factor) and its floating point approximation
+		# src1, src2 - long integers (arrays of digits in base TWO_POW_24)
+		# factor - small integer
+		# returns long integer result (src1 * src2 * factor) and its floating point approximation
 		result, carry, value, weight = table.create(result_length), 0, 0, 1
 		for j = 1, result_length do
-			for k = math.max(1, j + 1 - #src2), math.min(j, #src1) do
-				carry = carry + factor * src1[k] * src2[j + 1 - k] -- "int32" is not enough for multiplication result, that's why "factor" must be of type "double"
+			for k = math.max(1, j + 1 - src2.count), math.min(j, src1.count) do
+				carry = carry + factor * src1[k] * src2[j + 1 - k] # "int32" is not enough for multiplication result, that's why "factor" must be of type "double"
 			end
 
 			digit = carry % TWO_POW_24
@@ -825,7 +825,7 @@ do
 		repeat
 			d = d + step[d % 6]
 			if d * d > p then
-				-- next prime number is found
+				# next prime number is found
 				root = p ^ (1 / 3)
 				R = root * TWO_POW_40
 				R = mul(table.create(1, math.floor(R)), one, 1, 2)
@@ -856,7 +856,7 @@ do
 	until idx > 79
 end
 
--- Calculating IVs for SHA512/224 and SHA512/256
+# Calculating IVs for SHA512/224 and SHA512/256
 for width = 224, 256, 32 do
 	H_lo, H_hi = {}, null
 	if XOR64A5 then
@@ -876,16 +876,16 @@ for width = 224, 256, 32 do
 	sha2_H_ext512_hi[width] = H_hi
 end
 
--- Constants for MD5
+# Constants for MD5
 do
 	for idx = 1, 64 do
-		-- we can't use formula math.floor(abs(sin(idx))*TWO_POW_32) because its result may be beyond integer range on Lua built with 32-bit integers
+		# we can't use formula math.floor(abs(sin(idx))*TWO_POW_32) because its result may be beyond integer range on Lua built with 32-bit integers
 		hi, lo = math.modf(math.abs(math.sin(idx)) * TWO_POW_16)
 		md5_K[idx] = hi * 65536 + math.floor(lo * TWO_POW_16)
 	end
 end
 
--- Constants for SHA3
+# Constants for SHA3
 do
 	sh_reg = 29
 	function next_bit()
@@ -906,12 +906,12 @@ do
 	end
 end
 
---------------------------------------------------------------------------------
--- MAIN FUNCTIONS
---------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# MAIN FUNCTIONS
+#------------------------------------------------------------------------------
 function sha256ext(width, message)
-	-- Create an instance (private objects for current calculation)
-	Array256 = sha2_H_ext256[width] -- # == 8
+	# Create an instance (private objects for current calculation)
+	Array256 = sha2_H_ext256[width] # # == 8
 	length, tail = 0, ""
 	H = table.create(8)
 	H[1], H[2], H[3], H[4], H[5], H[6], H[7], H[8] =
@@ -919,11 +919,11 @@ function sha256ext(width, message)
 
 	function partial(message_part)
 		if message_part then
-			partLength = #message_part
+			partLength = message_part.count
 			if tail then
 				length = length + partLength
 				offs = 0
-				tailLength = #tail
+				tailLength = tail.count
 				if tail != "" and tailLength + partLength >= 64 then
 					offs = 64 - tailLength
 					sha256_feed_64(H, tail .. string.sub(message_part, 1, offs), 0, 64)
@@ -940,23 +940,23 @@ function sha256ext(width, message)
 			end
 		else
 			if tail then
-				final_blocks = table.create(10) --{tail, "\128", string.rep("\0", (-9 - length) % 64 + 1)}
+				final_blocks = table.create(10) #{tail, "\128", string.rep("\0", (-9 - length) % 64 + 1)}
 				final_blocks[1] = tail
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-9 - length) % 64 + 1)
 
 				tail = null
-				-- Assuming user data length is shorter than (TWO_POW_53)-9 bytes
-				-- Anyway, it looks very unrealistic that someone would spend more than a year of calculations to process TWO_POW_53 bytes of data by using this Lua script :-)
-				-- TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
-				length = length * (8 / TWO56_POW_7) -- convert "byte-counter" to "bit-counter" and move decimal point to the left
+				# Assuming user data length is shorter than (TWO_POW_53)-9 bytes
+				# Anyway, it looks very unrealistic that someone would spend more than a year of calculations to process TWO_POW_53 bytes of data by using this Lua script :-)
+				# TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
+				length = length * (8 / TWO56_POW_7) # convert "byte-counter" to "bit-counter" and move decimal point to the left
 				for j = 4, 10 do
 					length = length % 1 * 256
 					final_blocks[j] = string.char(math.floor(length))
 				end
 
 				final_blocks = table.concat(final_blocks)
-				sha256_feed_64(H, final_blocks, 0, #final_blocks)
+				sha256_feed_64(H, final_blocks, 0, final_blocks.count)
 				max_reg = width / 32
 				for j = 1, max_reg do
 					H[j] = string.format("%08x", H[j] % 4294967296)
@@ -970,17 +970,17 @@ function sha256ext(width, message)
 	end
 
 	if message then
-		-- Actually perform calculations and return the SHA256 digest of a message
+		# Actually perform calculations and return the SHA256 digest of a message
 		return partial(message)()
 	else
-		-- Return function for chunk-by-chunk loading
-		-- User should feed every chunk of input data as single argument to this function and finally get SHA256 digest by invoking this function without an argument
+		# Return function for chunk-by-chunk loading
+		# User should feed every chunk of input data as single argument to this function and finally get SHA256 digest by invoking this function without an argument
 		return partial
 	end
 end
 
 function sha512ext(width, message)
-	-- Create an instance (private objects for current calculation)
+	# Create an instance (private objects for current calculation)
 	length, tail, H_lo, H_hi =
 		0,
 		"",
@@ -989,12 +989,12 @@ function sha512ext(width, message)
 
 	function partial(message_part)
 		if message_part then
-			partLength = #message_part
+			partLength = message_part.count
 			if tail then
 				length = length + partLength
 				offs = 0
-				if tail != "" and #tail + partLength >= 128 then
-					offs = 128 - #tail
+				if tail != "" and tail.count + partLength >= 128 then
+					offs = 128 - tail.count
 					sha512_feed_128(H_lo, H_hi, tail .. string.sub(message_part, 1, offs), 0, 128)
 					tail = ""
 				end
@@ -1009,22 +1009,22 @@ function sha512ext(width, message)
 			end
 		else
 			if tail then
-				final_blocks = table.create(3) --{tail, "\128", string.rep("\0", (-17-length) % 128 + 9)}
+				final_blocks = table.create(3) #{tail, "\128", string.rep("\0", (-17-length) % 128 + 9)}
 				final_blocks[1] = tail
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-17 - length) % 128 + 9)
 
 				tail = null
-				-- Assuming user data length is shorter than (TWO_POW_53)-17 bytes
-				-- TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
-				length = length * (8 / TWO56_POW_7) -- convert "byte-counter" to "bit-counter" and move floating point to the left
+				# Assuming user data length is shorter than (TWO_POW_53)-17 bytes
+				# TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
+				length = length * (8 / TWO56_POW_7) # convert "byte-counter" to "bit-counter" and move floating point to the left
 				for j = 4, 10 do
 					length = length % 1 * 256
 					final_blocks[j] = string.char(math.floor(length))
 				end
 
 				final_blocks = table.concat(final_blocks)
-				sha512_feed_128(H_lo, H_hi, final_blocks, 0, #final_blocks)
+				sha512_feed_128(H_lo, H_hi, final_blocks, 0, final_blocks.count)
 				max_reg = math.ceil(width / 64)
 
 				if HEX64 then
@@ -1048,28 +1048,28 @@ function sha512ext(width, message)
 	end
 
 	if message then
-		-- Actually perform calculations and return the SHA512 digest of a message
+		# Actually perform calculations and return the SHA512 digest of a message
 		return partial(message)()
 	else
-		-- Return function for chunk-by-chunk loading
-		-- User should feed every chunk of input data as single argument to this function and finally get SHA512 digest by invoking this function without an argument
+		# Return function for chunk-by-chunk loading
+		# User should feed every chunk of input data as single argument to this function and finally get SHA512 digest by invoking this function without an argument
 		return partial
 	end
 end
 
 function md5(message)
-	-- Create an instance (private objects for current calculation)
+	# Create an instance (private objects for current calculation)
 	H, length, tail = table.create(4), 0, ""
 	H[1], H[2], H[3], H[4] = md5_sha1_H[1], md5_sha1_H[2], md5_sha1_H[3], md5_sha1_H[4]
 
 	function partial(message_part)
 		if message_part then
-			partLength = #message_part
+			partLength = message_part.count
 			if tail then
 				length = length + partLength
 				offs = 0
-				if tail != "" and #tail + partLength >= 64 then
-					offs = 64 - #tail
+				if tail != "" and tail.count + partLength >= 64 then
+					offs = 64 - tail.count
 					md5_feed_64(H, tail .. string.sub(message_part, 1, offs), 0, 64)
 					tail = ""
 				end
@@ -1084,12 +1084,12 @@ function md5(message)
 			end
 		else
 			if tail then
-				final_blocks = table.create(3) --{tail, "\128", string.rep("\0", (-9 - length) % 64)}
+				final_blocks = table.create(3) #{tail, "\128", string.rep("\0", (-9 - length) % 64)}
 				final_blocks[1] = tail
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-9 - length) % 64)
 				tail = null
-				length = length * 8 -- convert "byte-counter" to "bit-counter"
+				length = length * 8 # convert "byte-counter" to "bit-counter"
 				for j = 4, 11 do
 					low_byte = length % 256
 					final_blocks[j] = string.char(low_byte)
@@ -1097,7 +1097,7 @@ function md5(message)
 				end
 
 				final_blocks = table.concat(final_blocks)
-				md5_feed_64(H, final_blocks, 0, #final_blocks)
+				md5_feed_64(H, final_blocks, 0, final_blocks.count)
 				for j = 1, 4 do
 					H[j] = string.format("%08x", H[j] % 4294967296)
 				end
@@ -1110,27 +1110,27 @@ function md5(message)
 	end
 
 	if message then
-		-- Actually perform calculations and return the MD5 digest of a message
+		# Actually perform calculations and return the MD5 digest of a message
 		return partial(message)()
 	else
-		-- Return function for chunk-by-chunk loading
-		-- User should feed every chunk of input data as single argument to this function and finally get MD5 digest by invoking this function without an argument
+		# Return function for chunk-by-chunk loading
+		# User should feed every chunk of input data as single argument to this function and finally get MD5 digest by invoking this function without an argument
 		return partial
 	end
 end
 
 function sha1(message)
-	-- Create an instance (private objects for current calculation)
+	# Create an instance (private objects for current calculation)
 	H, length, tail = table.pack(table.unpack(md5_sha1_H)), 0, ""
 
 	function partial(message_part)
 		if message_part then
-			partLength = #message_part
+			partLength = message_part.count
 			if tail then
 				length = length + partLength
 				offs = 0
-				if tail != "" and #tail + partLength >= 64 then
-					offs = 64 - #tail
+				if tail != "" and tail.count + partLength >= 64 then
+					offs = 64 - tail.count
 					sha1_feed_64(H, tail .. string.sub(message_part, 1, offs), 0, 64)
 					tail = ""
 				end
@@ -1145,22 +1145,22 @@ function sha1(message)
 			end
 		else
 			if tail then
-				final_blocks = table.create(10) --{tail, "\128", string.rep("\0", (-9 - length) % 64 + 1)}
+				final_blocks = table.create(10) #{tail, "\128", string.rep("\0", (-9 - length) % 64 + 1)}
 				final_blocks[1] = tail
 				final_blocks[2] = "\128"
 				final_blocks[3] = string.rep("\0", (-9 - length) % 64 + 1)
 				tail = null
 
-				-- Assuming user data length is shorter than (TWO_POW_53)-9 bytes
-				-- TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
-				length = length * (8 / TWO56_POW_7) -- convert "byte-counter" to "bit-counter" and move decimal point to the left
+				# Assuming user data length is shorter than (TWO_POW_53)-9 bytes
+				# TWO_POW_53 bytes = TWO_POW_56 bits, so "bit-counter" fits in 7 bytes
+				length = length * (8 / TWO56_POW_7) # convert "byte-counter" to "bit-counter" and move decimal point to the left
 				for j = 4, 10 do
 					length = length % 1 * 256
 					final_blocks[j] = string.char(math.floor(length))
 				end
 
 				final_blocks = table.concat(final_blocks)
-				sha1_feed_64(H, final_blocks, 0, #final_blocks)
+				sha1_feed_64(H, final_blocks, 0, final_blocks.count)
 				for j = 1, 5 do
 					H[j] = string.format("%08x", H[j] % 4294967296)
 				end
@@ -1173,48 +1173,48 @@ function sha1(message)
 	end
 
 	if message then
-		-- Actually perform calculations and return the SHA-1 digest of a message
+		# Actually perform calculations and return the SHA-1 digest of a message
 		return partial(message)()
 	else
-		-- Return function for chunk-by-chunk loading
-		-- User should feed every chunk of input data as single argument to this function and finally get SHA-1 digest by invoking this function without an argument
+		# Return function for chunk-by-chunk loading
+		# User should feed every chunk of input data as single argument to this function and finally get SHA-1 digest by invoking this function without an argument
 		return partial
 	end
 end
 
 function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
-	-- "block_size_in_bytes" is multiple of 8
+	# "block_size_in_bytes" is multiple of 8
 	if type(digest_size_in_bytes) != "number" then
-		-- arguments in SHAKE are swapped:
-		--    NIST FIPS 202 defines SHAKE(message,num_bits)
-		--    this module   defines SHAKE(num_bytes,message)
-		-- it's easy to forget about this swap, hence the check
+		# arguments in SHAKE are swapped:
+		#    NIST FIPS 202 defines SHAKE(message,num_bits)
+		#    this module   defines SHAKE(num_bytes,message)
+		# it's easy to forget about this swap, hence the check
 		error("Argument 'digest_size_in_bytes' must be a number", 2)
 	end
 
-	-- Create an instance (private objects for current calculation)
+	# Create an instance (private objects for current calculation)
 	tail, lanes_lo, lanes_hi = "", table.create(25, 0), hi_factor_keccak == 0 and table.create(25, 0)
 	result = null
 
-	--~     pad the input N using the pad function, yielding a padded bit string P with a length divisible by r (such that n = len(P)/r is integer),
-	--~     break P into n consecutive r-bit pieces P0, ..., Pn-1 (last is zero-padded)
-	--~     initialize the state S to a string of b 0 bits.
-	--~     absorb the input into the state: For each block Pi,
-	--~         extend Pi at the end by a string of c 0 bits, yielding one of length b,
-	--~         XOR that with S and
-	--~         apply the block permutation f to the result, yielding a new state S
-	--~     initialize Z to be the empty string
-	--~     while the length of Z is less than d:
-	--~         append the first r bits of S to Z
-	--~         if Z is still less than d bits long, apply f to S, yielding a new state S.
-	--~     truncate Z to d bits
+	#~     pad the input N using the pad function, yielding a padded bit string P with a length divisible by r (such that n = len(P)/r is integer),
+	#~     break P into n consecutive r-bit pieces P0, ..., Pn-1 (last is zero-padded)
+	#~     initialize the state S to a string of b 0 bits.
+	#~     absorb the input into the state: For each block Pi,
+	#~         extend Pi at the end by a string of c 0 bits, yielding one of length b,
+	#~         XOR that with S and
+	#~         apply the block permutation f to the result, yielding a new state S
+	#~     initialize Z to be the empty string
+	#~     while the length of Z is less than d:
+	#~         append the first r bits of S to Z
+	#~         if Z is still less than d bits long, apply f to S, yielding a new state S.
+	#~     truncate Z to d bits
 	function partial(message_part)
 		if message_part then
-			partLength = #message_part
+			partLength = message_part.count
 			if tail then
 				offs = 0
-				if tail != "" and #tail + partLength >= block_size_in_bytes then
-					offs = block_size_in_bytes - #tail
+				if tail != "" and tail.count + partLength >= block_size_in_bytes then
+					offs = block_size_in_bytes - tail.count
 					keccak_feed(
 						lanes_lo,
 						lanes_hi,
@@ -1236,14 +1236,14 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 			end
 		else
 			if tail then
-				-- append the following bits to the message: for usual SHA3: 011(0*)1, for SHAKE: 11111(0*)1
+				# append the following bits to the message: for usual SHA3: 011(0*)1, for SHAKE: 11111(0*)1
 				gap_start = is_SHAKE and 31 or 6
 				tail = tail
 					.. (
-						#tail + 1 == block_size_in_bytes and string.char(gap_start + 128)
-						or string.char(gap_start) .. string.rep("\0", (-2 - #tail) % block_size_in_bytes) .. "\128"
+						tail.count + 1 == block_size_in_bytes and string.char(gap_start + 128)
+						or string.char(gap_start) .. string.rep("\0", (-2 - tail.count) % block_size_in_bytes) .. "\128"
 					)
-				keccak_feed(lanes_lo, lanes_hi, tail, 0, #tail, block_size_in_bytes)
+				keccak_feed(lanes_lo, lanes_hi, tail, 0, tail.count, block_size_in_bytes)
 				tail = null
 
 				lanes_used = 0
@@ -1251,9 +1251,9 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 				qwords = {}
 
 				function get_next_qwords_of_digest(qwords_qty)
-					-- returns not more than 'qwords_qty' qwords ('qwords_qty' might be non-integer)
-					-- doesn't go across keccak-buffer boundary
-					-- block_size_in_bytes is a multiple of 8, so, keccak-buffer contains integer number of qwords
+					# returns not more than 'qwords_qty' qwords ('qwords_qty' might be non-integer)
+					# doesn't go across keccak-buffer boundary
+					# block_size_in_bytes is a multiple of 8, so, keccak-buffer contains integer number of qwords
 					if lanes_used >= total_lanes then
 						keccak_feed(lanes_lo, lanes_hi, "\0\0\0\0\0\0\0\0", 0, 8, 8)
 						lanes_used = 0
@@ -1280,11 +1280,11 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 						qwords_qty * 8
 				end
 
-				parts = {} -- digest parts
+				parts = {} # digest parts
 				last_part, last_part_size = "", 0
 
 				function get_next_part_of_digest(bytes_needed)
-					-- returns 'bytes_needed' bytes, for arbitrary integer 'bytes_needed'
+					# returns 'bytes_needed' bytes, for arbitrary integer 'bytes_needed'
 					bytes_needed = bytes_needed or 1
 					if bytes_needed <= last_part_size then
 						last_part_size = last_part_size - bytes_needed
@@ -1301,7 +1301,7 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 						bytes_needed = bytes_needed - last_part_size
 					end
 
-					-- repeats until the length is enough
+					# repeats until the length is enough
 					while bytes_needed >= 8 do
 						next_part, next_part_size = get_next_qwords_of_digest(bytes_needed / 8)
 						parts_qty = parts_qty + 1
@@ -1332,11 +1332,11 @@ function keccak(block_size_in_bytes, digest_size_in_bytes, is_SHAKE, message)
 	end
 
 	if message then
-		-- Actually perform calculations and return the SHA3 digest of a message
+		# Actually perform calculations and return the SHA3 digest of a message
 		return partial(message)()
 	else
-		-- Return function for chunk-by-chunk loading
-		-- User should feed every chunk of input data as single argument to this function and finally get SHA3 digest by invoking this function without an argument
+		# Return function for chunk-by-chunk loading
+		# User should feed every chunk of input data as single argument to this function and finally get SHA3 digest by invoking this function without an argument
 		return partial
 	end
 end
@@ -1372,11 +1372,11 @@ for j, pair in ipairs({ "AZ", "az", "09" }) do
 end
 
 function bin2base64(binary_string)
-	stringLength = #binary_string
+	stringLength = binary_string.count
 	result = table.create(math.ceil(stringLength / 3))
 	length = 0
 
-	for pos = 1, #binary_string, 3 do
+	for pos = 1, binary_string.count, 3 do
 		c1, c2, c3, c4 = string.byte(string.sub(binary_string, pos, pos + 2) .. "\0", 1, -1)
 		length = length + 1
 		result[length] = base64_symbols[math.floor(c1 / 4)]
@@ -1404,43 +1404,43 @@ function base642bin(base64_string)
 			c1 = result[-1] * 4 + math.floor(result[-2] / 16)
 			c2 = (result[-2] % 16) * 16 + math.floor(result[-3] / 4)
 			c3 = (result[-3] % 4) * 64 + code
-			result[#result + 1] = string.sub(string.char(c1, c2, c3), 1, chars_qty)
+			result[result.count + 1] = string.sub(string.char(c1, c2, c3), 1, chars_qty)
 		end
 	end
 
 	return table.concat(result)
 end
 
-block_size_for_HMAC = null -- this table will be initialized at the end of the module
---local function pad_and_xor(str, result_length, byte_for_xor)
---	return string.gsub(str, ".", function(c)
---		return string.char(bit32_bxor(string.byte(c), byte_for_xor))
---	end) .. string.rep(string.char(byte_for_xor), result_length - #str)
---end
+block_size_for_HMAC = null # this table will be initialized at the end of the module
+#local function pad_and_xor(str, result_length, byte_for_xor)
+#	return string.gsub(str, ".", function(c)
+#		return string.char(bit32_bxor(string.byte(c), byte_for_xor))
+#	end) .. string.rep(string.char(byte_for_xor), result_length - #str)
+#end
 
--- For the sake of speed of converting hexes to strings, there's a map of the conversions here
+# For the sake of speed of converting hexes to strings, there's a map of the conversions here
 BinaryStringMap = {}
 for Index = 0, 255 do
 	BinaryStringMap[string.format("%02x", Index)] = string.char(Index)
 end
 
--- Update 02.14.20 - added AsBinary for easy GameAnalytics replacement.
+# Update 02.14.20 - added AsBinary for easy GameAnalytics replacement.
 function hmac(hash_func, key, message, AsBinary)
-	-- Create an instance (private objects for current calculation)
+	# Create an instance (private objects for current calculation)
 	block_size = block_size_for_HMAC[hash_func]
 	if not block_size then
 		error("Unknown hash function", 2)
 	end
 
-	KeyLength = #key
+	KeyLength = key.count
 	if KeyLength > block_size then
 		key = string.gsub(hash_func(key), "%x%x", HexToBinFunction)
-		KeyLength = #key
+		KeyLength = key.count
 	end
 
 	append = hash_func()(string.gsub(key, ".", function(c)
 		return string.char(bit32_bxor(string.byte(c), 0x36))
-	end) .. string.rep("6", block_size - KeyLength)) -- 6 = string.char(0x36)
+	end) .. string.rep("6", block_size - KeyLength)) # 6 = string.char(0x36)
 
 	result = null
 
@@ -1451,7 +1451,7 @@ function hmac(hash_func, key, message, AsBinary)
 					string.gsub(key, ".", function(c)
 						return string.char(bit32_bxor(string.byte(c), 0x5c))
 					end)
-						.. string.rep("\\", block_size - KeyLength) -- \ = string.char(0x5c)
+						.. string.rep("\\", block_size - KeyLength) # \ = string.char(0x5c)
 						.. (string.gsub(append(), "%x%x", HexToBinFunction))
 				)
 
@@ -1465,12 +1465,12 @@ function hmac(hash_func, key, message, AsBinary)
 	end
 
 	if message then
-		-- Actually perform calculations and return the HMAC of a message
+		# Actually perform calculations and return the HMAC of a message
 		FinalMessage = partial(message)()
 		return AsBinary and (string.gsub(FinalMessage, "%x%x", BinaryStringMap)) or FinalMessage
 	else
-		-- Return function for chunk-by-chunk loading of a message
-		-- User should feed every chunk of the message as single argument to this function and finally get HMAC by invoking this function without an argument
+		# Return function for chunk-by-chunk loading of a message
+		# User should feed every chunk of the message as single argument to this function and finally get HMAC by invoking this function without an argument
 		return partial
 	end
 end
@@ -1478,7 +1478,7 @@ end
 sha = {
 	md5 = md5,
 	sha1 = sha1,
-	-- SHA2 hash functions:
+	# SHA2 hash functions:
 	sha224 = function(message)
 		return sha256ext(224, message)
 	end,
@@ -1503,7 +1503,7 @@ sha = {
 		return sha512ext(512, message)
 	end,
 
-	-- SHA3 hash functions:
+	# SHA3 hash functions:
 	sha3_224 = function(message)
 		return keccak((1600 - 2 * 224) / 8, 224 / 8, false, message)
 	end,
@@ -1528,11 +1528,11 @@ sha = {
 		return keccak((1600 - 2 * 256) / 8, digest_size_in_bytes, true, message)
 	end,
 
-	-- misc utilities:
-	hmac = hmac, -- HMAC(hash_func, key, message) is applicable to any hash function from this module except SHAKE*
-	hex_to_bin = hex2bin, -- converts hexadecimal representation to binary string
-	base64_to_bin = base642bin, -- converts base64 representation to binary string
-	bin_to_base64 = bin2base64, -- converts binary string to base64 representation
+	# misc utilities:
+	hmac = hmac, # HMAC(hash_func, key, message) is applicable to any hash function from this module except SHAKE*
+	hex_to_bin = hex2bin, # converts hexadecimal representation to binary string
+	base64_to_bin = base642bin, # converts base64 representation to binary string
+	bin_to_base64 = bin2base64, # converts binary string to base64 representation
 	base64_encode = Base64.Encode,
 	base64_decode = Base64.Decode,
 }

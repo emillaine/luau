@@ -3,14 +3,14 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-	-- 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
+	# 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
 	function add64(ah, al, bh, bl)
 		lo = al + bl
 		hi = ah + bh + lo // 0x100000000
 		return bit32.bor(hi, 0), bit32.bor(lo, 0)
 	end
 
-	-- IV constants (hi, lo)
+	# IV constants (hi, lo)
 	IV1h, IV1l = 0x6a09e667, 0xf3bcc908
 	IV2h, IV2l = 0xbb67ae85, 0x84caa73b
 	IV3h, IV3l = 0x3c6ef372, 0xfe94f82b
@@ -62,23 +62,23 @@ function test()
 		for r = 1, 12 do
 			s = SIGMA[r]
 
-			-- Rotation helpers inlined for the 4 specific amounts:
-			-- rrotate by 32 = swap hi/lo
-			-- rrotate by 24 = bit32.rshift(h,24)|bit32.lshift(l,8), bit32.rshift(l,24)|bit32.lshift(h,8)
-			-- rrotate by 16 = bit32.rshift(h,16)|bit32.lshift(l,16), bit32.rshift(l,16)|bit32.lshift(h,16)
-			-- rrotate by 63 = lrotate by 1 = bit32.lshift(h,1)|bit32.rshift(l,31), bit32.lshift(l,1)|bit32.rshift(h,31)
+			# Rotation helpers inlined for the 4 specific amounts:
+			# rrotate by 32 = swap hi/lo
+			# rrotate by 24 = bit32.rshift(h,24)|bit32.lshift(l,8), bit32.rshift(l,24)|bit32.lshift(h,8)
+			# rrotate by 16 = bit32.rshift(h,16)|bit32.lshift(l,16), bit32.rshift(l,16)|bit32.lshift(h,16)
+			# rrotate by 63 = lrotate by 1 = bit32.lshift(h,1)|bit32.rshift(l,31), bit32.lshift(l,1)|bit32.rshift(h,31)
 
-			-- G(V0,V4,V8,V12) with m[s[1]], m[s[2]]
+			# G(V0,V4,V8,V12) with m[s[1]], m[s[2]]
 			V0h, V0l = add64(V0h, V0l, V4h, V4l); V0h, V0l = add64(V0h, V0l, Mh[s[1]], Ml[s[1]])
-			V12h, V12l = bit32.bxor(V12l, V0l), bit32.bxor(V12h, V0h) -- rrotate 32
+			V12h, V12l = bit32.bxor(V12l, V0l), bit32.bxor(V12h, V0h) # rrotate 32
 			V8h, V8l = add64(V8h, V8l, V12h, V12l)
-			xh, xl = bit32.bxor(V4h, V8h), bit32.bxor(V4l, V8l); V4h = bit32.bor(bit32.rshift(xh, 24), bit32.lshift(xl, 8)); V4l = bit32.bor(bit32.rshift(xl, 24), bit32.lshift(xh, 8)) -- rrotate 24
+			xh, xl = bit32.bxor(V4h, V8h), bit32.bxor(V4l, V8l); V4h = bit32.bor(bit32.rshift(xh, 24), bit32.lshift(xl, 8)); V4l = bit32.bor(bit32.rshift(xl, 24), bit32.lshift(xh, 8)) # rrotate 24
 			V0h, V0l = add64(V0h, V0l, V4h, V4l); V0h, V0l = add64(V0h, V0l, Mh[s[2]], Ml[s[2]])
-			xh, xl = bit32.bxor(V12h, V0h), bit32.bxor(V12l, V0l); V12h = bit32.bor(bit32.rshift(xh, 16), bit32.lshift(xl, 16)); V12l = bit32.bor(bit32.rshift(xl, 16), bit32.lshift(xh, 16)) -- rrotate 16
+			xh, xl = bit32.bxor(V12h, V0h), bit32.bxor(V12l, V0l); V12h = bit32.bor(bit32.rshift(xh, 16), bit32.lshift(xl, 16)); V12l = bit32.bor(bit32.rshift(xl, 16), bit32.lshift(xh, 16)) # rrotate 16
 			V8h, V8l = add64(V8h, V8l, V12h, V12l)
-			xh, xl = bit32.bxor(V4h, V8h), bit32.bxor(V4l, V8l); V4h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V4l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31)) -- rrotate 63 = lrotate 1
+			xh, xl = bit32.bxor(V4h, V8h), bit32.bxor(V4l, V8l); V4h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V4l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31)) # rrotate 63 = lrotate 1
 
-			-- G(V1,V5,V9,V13) with m[s[3]], m[s[4]]
+			# G(V1,V5,V9,V13) with m[s[3]], m[s[4]]
 			V1h, V1l = add64(V1h, V1l, V5h, V5l); V1h, V1l = add64(V1h, V1l, Mh[s[3]], Ml[s[3]])
 			V13h, V13l = bit32.bxor(V13l, V1l), bit32.bxor(V13h, V1h)
 			V9h, V9l = add64(V9h, V9l, V13h, V13l)
@@ -88,7 +88,7 @@ function test()
 			V9h, V9l = add64(V9h, V9l, V13h, V13l)
 			xh, xl = bit32.bxor(V5h, V9h), bit32.bxor(V5l, V9l); V5h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V5l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31))
 
-			-- G(V2,V6,V10,V14) with m[s[5]], m[s[6]]
+			# G(V2,V6,V10,V14) with m[s[5]], m[s[6]]
 			V2h, V2l = add64(V2h, V2l, V6h, V6l); V2h, V2l = add64(V2h, V2l, Mh[s[5]], Ml[s[5]])
 			V14h, V14l = bit32.bxor(V14l, V2l), bit32.bxor(V14h, V2h)
 			V10h, V10l = add64(V10h, V10l, V14h, V14l)
@@ -98,7 +98,7 @@ function test()
 			V10h, V10l = add64(V10h, V10l, V14h, V14l)
 			xh, xl = bit32.bxor(V6h, V10h), bit32.bxor(V6l, V10l); V6h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V6l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31))
 
-			-- G(V3,V7,V11,V15) with m[s[7]], m[s[8]]
+			# G(V3,V7,V11,V15) with m[s[7]], m[s[8]]
 			V3h, V3l = add64(V3h, V3l, V7h, V7l); V3h, V3l = add64(V3h, V3l, Mh[s[7]], Ml[s[7]])
 			V15h, V15l = bit32.bxor(V15l, V3l), bit32.bxor(V15h, V3h)
 			V11h, V11l = add64(V11h, V11l, V15h, V15l)
@@ -108,7 +108,7 @@ function test()
 			V11h, V11l = add64(V11h, V11l, V15h, V15l)
 			xh, xl = bit32.bxor(V7h, V11h), bit32.bxor(V7l, V11l); V7h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V7l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31))
 
-			-- diagonal step: G(V0,V5,V10,V15) with m[s[9]], m[s[10]]
+			# diagonal step: G(V0,V5,V10,V15) with m[s[9]], m[s[10]]
 			V0h, V0l = add64(V0h, V0l, V5h, V5l); V0h, V0l = add64(V0h, V0l, Mh[s[9]], Ml[s[9]])
 			V15h, V15l = bit32.bxor(V15l, V0l), bit32.bxor(V15h, V0h)
 			V10h, V10l = add64(V10h, V10l, V15h, V15l)
@@ -118,7 +118,7 @@ function test()
 			V10h, V10l = add64(V10h, V10l, V15h, V15l)
 			xh, xl = bit32.bxor(V5h, V10h), bit32.bxor(V5l, V10l); V5h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V5l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31))
 
-			-- G(V1,V6,V11,V12) with m[s[11]], m[s[12]]
+			# G(V1,V6,V11,V12) with m[s[11]], m[s[12]]
 			V1h, V1l = add64(V1h, V1l, V6h, V6l); V1h, V1l = add64(V1h, V1l, Mh[s[11]], Ml[s[11]])
 			V12h, V12l = bit32.bxor(V12l, V1l), bit32.bxor(V12h, V1h)
 			V11h, V11l = add64(V11h, V11l, V12h, V12l)
@@ -128,7 +128,7 @@ function test()
 			V11h, V11l = add64(V11h, V11l, V12h, V12l)
 			xh, xl = bit32.bxor(V6h, V11h), bit32.bxor(V6l, V11l); V6h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V6l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31))
 
-			-- G(V2,V7,V8,V13) with m[s[13]], m[s[14]]
+			# G(V2,V7,V8,V13) with m[s[13]], m[s[14]]
 			V2h, V2l = add64(V2h, V2l, V7h, V7l); V2h, V2l = add64(V2h, V2l, Mh[s[13]], Ml[s[13]])
 			V13h, V13l = bit32.bxor(V13l, V2l), bit32.bxor(V13h, V2h)
 			V8h, V8l = add64(V8h, V8l, V13h, V13l)
@@ -138,7 +138,7 @@ function test()
 			V8h, V8l = add64(V8h, V8l, V13h, V13l)
 			xh, xl = bit32.bxor(V7h, V8h), bit32.bxor(V7l, V8l); V7h = bit32.bor(bit32.lshift(xh, 1), bit32.rshift(xl, 31)); V7l = bit32.bor(bit32.lshift(xl, 1), bit32.rshift(xh, 31))
 
-			-- G(V3,V4,V9,V14) with m[s[15]], m[s[16]]
+			# G(V3,V4,V9,V14) with m[s[15]], m[s[16]]
 			V3h, V3l = add64(V3h, V3l, V4h, V4l); V3h, V3l = add64(V3h, V3l, Mh[s[15]], Ml[s[15]])
 			V14h, V14l = bit32.bxor(V14l, V3l), bit32.bxor(V14h, V3h)
 			V9h, V9l = add64(V9h, V9l, V14h, V14l)
@@ -162,7 +162,7 @@ function test()
 	function blake2b(buf)
 		len = buffer.len(buf)
 
-		-- h[1] = IV1 XOR 0x01010040 (digest=64, key=0, fanout=1, depth=1)
+		# h[1] = IV1 XOR 0x01010040 (digest=64, key=0, fanout=1, depth=1)
 		hh = { IV1h, IV2h, IV3h, IV4h, IV5h, IV6h, IV7h, IV8h }
 		hl = { bit32.bxor(IV1l, 0x01010040), IV2l, IV3l, IV4l, IV5l, IV6l, IV7l, IV8l }
 

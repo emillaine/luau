@@ -8,7 +8,7 @@ optimizer = require("./neural-dir/optimizer")
 
 function test()
 
--- Neural network benchmark: train a multi-layer network on procedurally generated data
+# Neural network benchmark: train a multi-layer network on procedurally generated data
 
 Tensor = tensorMod.Tensor
 
@@ -59,7 +59,7 @@ for epoch = 1, NUM_EPOCHS do
         input, targets = null, null
         input, targets, seed = generateBatch(BATCH_SIZE, INPUT_SIZE, OUTPUT_SIZE)
 
-        -- Forward pass
+        # Forward pass
         z1 = layers.denseForward(dense1, input)
         a1 = activations.applyActivation(z1, "relu")
 
@@ -69,11 +69,11 @@ for epoch = 1, NUM_EPOCHS do
         z3 = layers.denseForward(dense3, a2)
         output = activations.softmax(z3)
 
-        -- Loss (cross-entropy approximated by MSE for simplicity)
+        # Loss (cross-entropy approximated by MSE for simplicity)
         loss = Tensor.meanSquaredError(output, targets)
         epochLoss += loss
 
-        -- Backward pass
+        # Backward pass
         gradOutput = Tensor.sub(output, targets):mulScalar(2.0 / (BATCH_SIZE * OUTPUT_SIZE))
 
         gradZ3 = gradOutput
@@ -83,7 +83,7 @@ for epoch = 1, NUM_EPOCHS do
         gradZ1 = Tensor.hadamard(gradA1, activations.applyActivationDeriv(z1, "relu"))
         layers.denseBackward(dense1, gradZ1)
 
-        -- Adam updates
+        # Adam updates
         optimizer.adamUpdate(adam1, dense1.weights, dense1.dWeights, dense1.mW, dense1.vW)
         optimizer.adamUpdate(adam1, dense1.bias, dense1.dBias, dense1.mB, dense1.vB)
         optimizer.adamUpdate(adam2, dense2.weights, dense2.dWeights, dense2.mW, dense2.vW)

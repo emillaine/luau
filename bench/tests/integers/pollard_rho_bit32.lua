@@ -3,14 +3,14 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-	-- 64-bit wrapping add
+	# 64-bit wrapping add
 	function add64(ah, al, bh, bl)
 		lo = al + bl
 		hi = ah + bh + lo // 0x100000000
 		return bit32.bor(hi, 0), bit32.bor(lo, 0)
 	end
 
-	-- 64-bit subtract (a - b), assumes a >= b
+	# 64-bit subtract (a - b), assumes a >= b
 	function sub64(ah, al, bh, bl)
 		lo = al - bl
 		borrow = 0
@@ -18,8 +18,8 @@ function test()
 		return bit32.bor(ah - bh - borrow, 0), bit32.bor(lo, 0)
 	end
 
-	-- 64-bit remainder via binary long division (shift-and-subtract).
-	-- 64 iterations regardless of operand magnitude.
+	# 64-bit remainder via binary long division (shift-and-subtract).
+	# 64 iterations regardless of operand magnitude.
 	function rem64(ah, al, bh, bl)
 		if ah < bh or (ah == bh and al < bl) then return ah, al end
 
@@ -43,7 +43,7 @@ function test()
 		return rh, rl
 	end
 
-	-- Multiply two 32-bit numbers, return full 64-bit result as (hi, lo).
+	# Multiply two 32-bit numbers, return full 64-bit result as (hi, lo).
 	function mul32_full(a, b)
 		a0 = bit32.band(a, 0xFFFF)
 		a1 = bit32.rshift(a, 16)
@@ -64,8 +64,8 @@ function test()
 		return r2 + r3 * 0x10000, r0 + r1 * 0x10000
 	end
 
-	-- Modular multiplication via double-and-add (binary method, mod m).
-	-- All values stay in [0, m-1]; a+a < 2m so a single compare-subtract suffices.
+	# Modular multiplication via double-and-add (binary method, mod m).
+	# All values stay in [0, m-1]; a+a < 2m so a single compare-subtract suffices.
 	function mulmod64(ah, al, bh, bl, mh, ml)
 		rh, rl = 0, 0
 		if ah > mh or (ah == mh and al >= ml) then
@@ -114,14 +114,14 @@ function test()
 			dh, dl = 0, 1
 
 			while dh == 0 and dl == 1 do
-				-- x = (x*x + c) mod n
+				# x = (x*x + c) mod n
 				xh, xl = mulmod64(xh, xl, xh, xl, nh, nl)
 				xh, xl = add64(xh, xl, ch, cl)
 				if xh > nh or (xh == nh and xl >= nl) then
 					xh, xl = sub64(xh, xl, nh, nl)
 				end
 
-				-- y = (y*y + c) mod n, twice
+				# y = (y*y + c) mod n, twice
 				yh, yl = mulmod64(yh, yl, yh, yl, nh, nl)
 				yh, yl = add64(yh, yl, ch, cl)
 				if yh > nh or (yh == nh and yl >= nl) then
@@ -145,14 +145,14 @@ function test()
 		end
 	end
 
-	-- Same 8 semiprimes as int64 version, computed from ~10^5 primes.
+	# Same 8 semiprimes as int64 version, computed from ~10^5 primes.
 	primes = {
 		100003, 100019, 100043, 100049, 100057, 100069, 100103, 100109,
 		100129, 100151, 100153, 100169, 100183, 100189, 100193, 100207,
 	}
 	semiprimes_h = {}
 	semiprimes_l = {}
-	for i = 1, #primes, 2 do
+	for i = 1, primes.count, 2 do
 		j = (i + 1) // 2
 		semiprimes_h[j], semiprimes_l[j] = mul32_full(primes[i], primes[i + 1])
 	end
@@ -160,13 +160,13 @@ function test()
 	ts0 = os.clock()
 
 	for iter = 1, 1 do
-		for i = 1, #semiprimes_h do
+		for i = 1, semiprimes_h.count do
 			nh, nl = semiprimes_h[i], semiprimes_l[i]
 			fh, fl = pollard_rho(nh, nl)
-			assert(fh != 0 or fl != 1) -- f > 1
-			assert(fh != nh or fl != nl) -- f < n
+			assert(fh != 0 or fl != 1) # f > 1
+			assert(fh != nh or fl != nl) # f < n
 			rh, rl = rem64(nh, nl, fh, fl)
-			assert(rh == 0 and rl == 0) -- f divides n
+			assert(rh == 0 and rl == 0) # f divides n
 		end
 	end
 

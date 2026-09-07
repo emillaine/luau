@@ -1,21 +1,21 @@
---!nonstrict
--- Fil-C signature encoding and parsing of ;! function-signature annotations.
---
--- Annotation grammar (as seen in the *-sarcasm.s inputs):
---   RET(ARG0, ARG1, ...)        e.g. "unsigned(ptr)", "int(ptr, size_t)", "void(ptr,ptr)"
--- Types are C-ish tokens; we only need to know each type's Fil-C type class.
+#!nonstrict
+# Fil-C signature encoding and parsing of ;! function-signature annotations.
+#
+# Annotation grammar (as seen in the *-sarcasm.s inputs):
+#   RET(ARG0, ARG1, ...)        e.g. "unsigned(ptr)", "int(ptr, size_t)", "void(ptr,ptr)"
+# Types are C-ish tokens; we only need to know each type's Fil-C type class.
 
 sig = {}
 
--- Fil-C type-class indices (see ABI-NOTES.md).
+# Fil-C type-class indices (see ABI-NOTES.md).
 TYPE_INT = 0
 TYPE_FLOAT = 1
 TYPE_DOUBLE = 2
 TYPE_LONGDOUBLE = 3
--- 4..6 vectors, 7 pointer
+# 4..6 vectors, 7 pointer
 TYPE_PTR = 7
 
--- Map a C type token (already trimmed, may contain spaces) to a type class.
+# Map a C type token (already trimmed, may contain spaces) to a type class.
 function classifyType(tok: string): number?
 	tok = (string.gsub(tok, "%s+", " "))
 	tok = (string.gsub(tok, "^%s*(.-)%s*$", "%1"))
@@ -35,12 +35,12 @@ function classifyType(tok: string): number?
 	if low == "long double" then
 		return TYPE_LONGDOUBLE
 	end
-	-- everything else integer-class: int, unsigned, long, size_t, char, bool, enums, etc.
+	# everything else integer-class: int, unsigned, long, size_t, char, bool, enums, etc.
 	return TYPE_INT
 end
 sig.classifyType = classifyType
 
--- enc(t1..tn) = sum_{i} 11^(i-1) * (1 + t_i); 0 if empty.
+# enc(t1..tn) = sum_{i} 11^(i-1) * (1 + t_i); 0 if empty.
 function encodeList(types: { number }): number
 	acc = 0
 	mult = 1
@@ -51,12 +51,12 @@ function encodeList(types: { number }): number
 	return acc
 end
 
--- Split "a, b, c" respecting nested parens.
+# Split "a, b, c" respecting nested parens.
 function splitArgs(s: string): { string }
 	out = {}
 	depth = 0
 	cur = {}
-	for i = 1, #s do
+	for i = 1, s.count do
 		c = string.sub(s, i, i)
 		if c == "(" then depth += 1; table.insert(cur, c)
 		else if c == ")" then depth -= 1; table.insert(cur, c)
@@ -71,9 +71,9 @@ function splitArgs(s: string): { string }
 	return out
 end
 
--- Parse "RET(ARGS)" into a descriptor:
---   { retTypes = {..}, argTypes = {..}, signature = <number>, argWords = <number>,
---     retWords = <number>, isVoid = <bool> }
+# Parse "RET(ARGS)" into a descriptor:
+#   { retTypes = {..}, argTypes = {..}, signature = <number>, argWords = <number>,
+#     retWords = <number>, isVoid = <bool> }
 function sig.parseSignature(ann: string)
 	retStr, argStr = string.match(ann, "^%s*(.-)%s*%((.*)%)%s*$")
 	if not retStr then
@@ -87,7 +87,7 @@ function sig.parseSignature(ann: string)
 	argTypes = {}
 	for _, a in splitArgs(argStr) do
 		c = classifyType(a)
-		-- void as a lone arg means no args
+		# void as a lone arg means no args
 		if c != null then
 			table.insert(argTypes, c)
 		end
@@ -99,9 +99,9 @@ function sig.parseSignature(ann: string)
 		retTypes = retTypes,
 		argTypes = argTypes,
 		signature = signature,
-		argWords = #argTypes,      -- each scalar/pointer arg occupies one 8-byte word
-		retWords = #retTypes,
-		isVoid = #retTypes == 0,
+		argWords = argTypes.count,      # each scalar/pointer arg occupies one 8-byte word
+		retWords = retTypes.count,
+		isVoid = retTypes.count == 0,
 		retIsPtr = retTypes[1] == TYPE_PTR,
 	}
 end

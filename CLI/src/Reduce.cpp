@@ -108,7 +108,7 @@ struct Reducer
         }
 
         for (const HotComment& comment : parseResult.hotcomments)
-            fprintf(f, "--!%s\n", comment.content.c_str());
+            fprintf(f, "#!%s\n", comment.content.c_str());
 
         auto written = fwrite(source.data(), 1, source.size(), f);
         if (written != source.size())

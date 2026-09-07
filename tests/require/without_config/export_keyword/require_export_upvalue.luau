@@ -1,4 +1,4 @@
--- verify exported functions used as upvalues work correctly
+# verify exported functions used as upvalues work correctly
 m = require("./export_upvalue")
 
 assert(m.outer() == 42, "outer should return 42")

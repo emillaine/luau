@@ -1,8 +1,8 @@
---!nonstrict
--- ARM64 codegen: the per-arch instruction emitter used by the shared GIMSO transform
--- (transform.luau). Same interface as x86_64_codegen — static config (calling convention,
--- operand analysis) plus make(ctx) returning neutral "micro-ops" the shared transform
--- composes into access checks, invisicap loads/stores, calls, pollchecks and allocations.
+#!nonstrict
+# ARM64 codegen: the per-arch instruction emitter used by the shared GIMSO transform
+# (transform.luau). Same interface as x86_64_codegen — static config (calling convention,
+# operand analysis) plus make(ctx) returning neutral "micro-ops" the shared transform
+# composes into access checks, invisicap loads/stores, calls, pollchecks and allocations.
 
 build = require("./build")
 isa = require("./arm64_isa")
@@ -14,8 +14,8 @@ M.baseMnemonic = function(m) return string.lower(m) end
 M.precolorName = function(num) return "x" .. num end
 M.ALLOCATABLE = isa.ALLOCATABLE
 
--- Calling convention. Fast entrypoint: x0=myth, (x2,x3)=arg0, (x4,x5)=arg1; ret w0=flags,
--- x1=iv, x2=lo. Runtime calls (AAPCS): x0,x1,x2,...; result x0. yolo params arrive in x{k-1}.
+# Calling convention. Fast entrypoint: x0=myth, (x2,x3)=arg0, (x4,x5)=arg1; ret w0=flags,
+# x1=iv, x2=lo. Runtime calls (AAPCS): x0,x1,x2,...; result x0. yolo params arrive in x{k-1}.
 M.cc = {
 	myth = 0, retFlag = 0, retIv = 1, retLo = 2,
 	argIv = function(k) return 2 + 2 * (k - 1) end,
@@ -25,7 +25,7 @@ M.cc = {
 	rtRet = 0,
 }
 
--- Static operand analysis -------------------------------------------------
+# Static operand analysis #-----------------------------------------------
 function M.memOperand(stmt)
 	for _, op in stmt.operands do if op.kind == "mem" then return op end end
 	return null
@@ -55,7 +55,7 @@ function M.accessSizeAlign(stmt)
 	return 8, 8
 end
 
--- Fixed-size alloca base: `mov rd, sp` -> 0, `add rd, sp, #imm` -> imm, else null.
+# Fixed-size alloca base: `mov rd, sp` -> 0, `add rd, sp, #imm` -> imm, else null.
 function M.allocaRegionBase(stmt)
 	m = string.lower(stmt.mnemonic)
 	ops = stmt.operands
@@ -66,14 +66,14 @@ function M.allocaRegionBase(stmt)
 	return null
 end
 
--- `alloca size` size operand: `sub sp, sp, X` -> X is operands[3].
+# `alloca size` size operand: `sub sp, sp, X` -> X is operands[3].
 function M.allocaSizeOperand(stmt) return stmt.operands[3] end
--- store value operand: `str Xs, [mem]` -> Xs is operands[1] (source-first).
+# store value operand: `str Xs, [mem]` -> Xs is operands[1] (source-first).
 function M.isStoreInsn(stmt) return string.sub(string.lower(stmt.mnemonic), 1, 2) == "st" end
 
 function M.isMemInsn(mnem) return isa.isMemInsn(mnem) end
 
--- ARM condition suffixes for the neutral cmp/test conditions.
+# ARM condition suffixes for the neutral cmp/test conditions.
 BCOND = { ult = "b.lo", uge = "b.hs", ugt = "b.hi", ule = "b.ls", eq = "b.eq", ne = "b.ne" }
 
 function M.make(ctx)
@@ -91,8 +91,8 @@ function M.make(ctx)
 	function cg.moveImm(dst, v) emit(build.insn("mov", { rt(dst), build.imm(v) }, { defs = {dst} })) end
 	function cg.moveZero(dst) emit(build.insn("mov", { rt(dst), build.xzr() }, { defs = {dst} })) end
 	function cg.movBig(dst, hex)
-		-- movz/movk chain. Rarely needed: ARM expresses the masks the transform uses as
-		-- bitmask immediates directly (see testMaskBranch/maskLow48), so this is a fallback.
+		# movz/movk chain. Rarely needed: ARM expresses the masks the transform uses as
+		# bitmask immediates directly (see testMaskBranch/maskLow48), so this is a fallback.
 		v = tonumber(hex) or 0
 		emit(build.insn("mov", { rt(dst), build.imm(v % 65536) }, { defs = {dst} }))
 		for s = 16, 48, 16 do
@@ -104,7 +104,7 @@ function M.make(ctx)
 		end
 	end
 
-	-- loads/stores: ldur/stur for negative (unscaled) offsets, ldr/str otherwise; ldrb for byte.
+	# loads/stores: ldur/stur for negative (unscaled) offsets, ldr/str otherwise; ldrb for byte.
 	function cg.load(dst, base, off, size)
 		m = (size == 1) and "ldrb" or ((off < 0) and "ldur" or "ldr")
 		w = (size == 8) and 64 or 32
@@ -126,7 +126,7 @@ function M.make(ctx)
 		if scale and scale > 1 then build.withShift(idxOp, "lsl", math.floor(math.log(scale) / math.log(2))) end
 		emit(build.insn("str", { rt(src), build.mem(rt(base), idxOp) }, { uses = {src, base, idx} }))
 	end
-	-- dst = base + off + idx*scale  (add/sub; base/idx are temps, may be null)
+	# dst = base + off + idx*scale  (add/sub; base/idx are temps, may be null)
 	function cg.effAddr(dst, base, off, idx, scale)
 		if idx then
 			idxOp = rt(idx)
@@ -236,9 +236,9 @@ function M.make(ctx)
 			{ control = "call", uses = { pColored(a1), pColored(a2), pColored(a3) } }))
 	end
 
-	-- Redirect an sp-relative address computation landing inside a fixed alloca region to the
-	-- allocation pointer (gcc -O0 re-derives the buffer address per use). Returns true if it
-	-- replaced the node; a direct stack-relative *access* into a region is rejected.
+	# Redirect an sp-relative address computation landing inside a fixed alloca region to the
+	# allocation pointer (gcc -O0 re-derives the buffer address per use). Returns true if it
+	# replaced the node; a direct stack-relative *access* into a region is rejected.
 	function cg.regionRedirect(node, regionOf)
 		m = string.lower(node.stmt.mnemonic)
 		ops = node.stmt.operands
@@ -272,9 +272,9 @@ function M.make(ctx)
 		return false
 	end
 
-	-- passthrough special-casing: ARM has none (no cltq / lea-with-mem); return false.
+	# passthrough special-casing: ARM has none (no cltq / lea-with-mem); return false.
 	function cg.lowerSpecial(node, mem) return false end
-	-- a memory operand may only appear on a load/store we model; anything else is unmodeled.
+	# a memory operand may only appear on a load/store we model; anything else is unmodeled.
 	function cg.checkMemInsn(node, mem)
 		if not M.isMemInsn(node.stmt.mnemonic) then
 			error("sarcasm: memory operand on non-load/store instruction '"

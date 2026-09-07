@@ -1,17 +1,17 @@
---!nonstrict
--- Constructors for synthesized IR: operands that reference temps or fixed physical
--- registers, and instruction nodes carrying explicit def/use temp lists. These nodes
--- render through emit.renderInsn (which understands op.tempRef / op.fixedNum) and feed
--- regalloc (via node.defTemps / node.useTemps / node.move / node.control).
+#!nonstrict
+# Constructors for synthesized IR: operands that reference temps or fixed physical
+# registers, and instruction nodes carrying explicit def/use temp lists. These nodes
+# render through emit.renderInsn (which understands op.tempRef / op.fixedNum) and feed
+# regalloc (via node.defTemps / node.useTemps / node.move / node.control).
 
 build = {}
 
--- Operand: a temp register of the given width (64 unless noted).
+# Operand: a temp register of the given width (64 unless noted).
 function build.rt(tempId, width)
 	return { kind = "reg", tempRef = tempId, width = width or 64, rc = "gpr" }
 end
 
--- Operand: a fixed physical register by number (e.g. sp = -2, xzr = -1).
+# Operand: a fixed physical register by number (e.g. sp = -2, xzr = -1).
 function build.rp(num, width)
 	return { kind = "reg", fixedNum = num, width = width or 64, rc = "gpr" }
 end
@@ -23,7 +23,7 @@ function build.wzr() return { kind = "reg", fixedNum = -1, width = 32, rc = "zr"
 function build.imm(n) return { kind = "imm", text = tostring(n) } end
 function build.sym(name, reloc) return { kind = "sym", text = name, reloc = reloc } end
 
--- Memory operand builder. base is an operand; offset is a number (immediate) or null.
+# Memory operand builder. base is an operand; offset is a number (immediate) or null.
 function build.mem(base, offset, opts)
 	opts = opts or {}
 	m = { kind = "mem", base = base, writeback = opts.writeback }
@@ -42,21 +42,21 @@ function build.mem(base, offset, opts)
 	return m
 end
 
--- x86 memory operand: base + index*scale + disp.  `opts` = { index=<op>, scale=1/2/4/8,
--- dispVal=<num>, dispSym=<str>, dispReloc=<"plt"/"gotpcrel"/"rip">, rip=<bool> }.
+# x86 memory operand: base + index*scale + disp.  `opts` = { index=<op>, scale=1/2/4/8,
+# dispVal=<num>, dispSym=<str>, dispReloc=<"plt"/"gotpcrel"/"rip">, rip=<bool> }.
 function build.memx(base, opts)
 	opts = opts or {}
 	return { kind = "mem", x86 = true, base = base, index = opts.index, scale = opts.scale or 1,
 		dispVal = opts.dispVal, dispSym = opts.dispSym, dispReloc = opts.dispReloc }
 end
 
--- Attach a shift/extend to an operand (returns the operand).
+# Attach a shift/extend to an operand (returns the operand).
 function build.withShift(op, shOp, amount)
 	op.shift = { op = shOp, amount = amount, amountText = amount != null and tostring(amount) or null }
 	return op
 end
 
--- Instruction node. `attrs` may include defs, uses, move, control, targets, fallsThrough.
+# Instruction node. `attrs` may include defs, uses, move, control, targets, fallsThrough.
 function build.insn(mnemonic, operands, attrs)
 	attrs = attrs or {}
 	return {
@@ -73,7 +73,7 @@ function build.insn(mnemonic, operands, attrs)
 	}
 end
 
--- A raw text line (directive/label emitted verbatim; no temps).
+# A raw text line (directive/label emitted verbatim; no temps).
 function build.raw(text)
 	return { kind = "raw", text = text }
 end

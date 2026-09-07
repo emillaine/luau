@@ -21,7 +21,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_names_show_instead_of_tables")
     getFrontend().options.retainFullTypeGraphs = false;
 
     CheckResult result = check(R"(
---!strict
+#!strict
 Account = {}
 Account.__index = Account
 function Account.deposit(self: Account, x: number)
@@ -41,7 +41,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "binary_op_type_function_errors")
     getFrontend().options.retainFullTypeGraphs = false;
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         x = 1 + "foo"
     )");
 
@@ -61,7 +61,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unary_op_type_function_errors")
     getFrontend().options.retainFullTypeGraphs = false;
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         x = -"foo"
     )");
 

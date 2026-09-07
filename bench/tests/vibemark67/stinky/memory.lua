@@ -1,8 +1,8 @@
---!strict
+#!strict
 
--- Sparse page-table memory model.
--- Memory is organized as 4KB pages, allocated on demand.
--- Supports reading/writing 1/2/4/8-byte values at arbitrary addresses.
+# Sparse page-table memory model.
+# Memory is organized as 4KB pages, allocated on demand.
+# Supports reading/writing 1/2/4/8-byte values at arbitrary addresses.
 
 Int = require("./integer")
 
@@ -44,9 +44,9 @@ function Memory.getPage(self: Memory, pageNum: number): buffer?
     return self.pages[pageNum]
 end
 
--- Load a chunk of data (as a string) into memory starting at `addr`.
+# Load a chunk of data (as a string) into memory starting at `addr`.
 function Memory.loadString(self: Memory, addr: integer, data: string)
-    len = #data
+    len = data.count
     pos = 0
     while pos < len do
         pageNum = Memory.pageOf(Int.add(addr, Int.from(pos)))
@@ -59,7 +59,7 @@ function Memory.loadString(self: Memory, addr: integer, data: string)
     end
 end
 
--- Zero-fill memory from addr for `size` bytes (for BSS segments).
+# Zero-fill memory from addr for `size` bytes (for BSS segments).
 function Memory.zeroFill(self: Memory, addr: integer, size: number)
     pos = 0
     while pos < size do
@@ -85,7 +85,7 @@ function Memory.readU16(self: Memory, addr: integer): number
         page = self:ensurePage(Memory.pageOf(addr))
         return buffer.readu16(page, offset)
     end
-    -- Crosses page boundary
+    # Crosses page boundary
     b0 = self:readU8(addr)
     b1 = self:readU8(Int.add(addr, Int.ONE))
     return b0 + b1 * 256
@@ -97,7 +97,7 @@ function Memory.readU32(self: Memory, addr: integer): number
         page = self:ensurePage(Memory.pageOf(addr))
         return buffer.readu32(page, offset)
     end
-    -- Crosses page boundary
+    # Crosses page boundary
     b0 = self:readU16(addr)
     b1 = self:readU16(Int.add(addr, Int.from(2)))
     return b0 + b1 * 65536
@@ -109,7 +109,7 @@ function Memory.readU64(self: Memory, addr: integer): integer
         page = self:ensurePage(Memory.pageOf(addr))
         return buffer.readinteger(page, offset, 8)
     end
-    -- Crosses page boundary
+    # Crosses page boundary
     lo = Int.from(self:readU32(addr))
     hi = Int.from(self:readU32(Int.add(addr, Int.from(4))))
     return Int.bor(lo, Int.shl(hi, 32))
@@ -157,7 +157,7 @@ function Memory.writeU64(self: Memory, addr: integer, val: integer)
     self:writeU32(Int.add(addr, Int.from(4)), hi)
 end
 
--- Read `n` bytes as a string starting at addr.
+# Read `n` bytes as a string starting at addr.
 function Memory.readString(self: Memory, addr: integer, n: number): string
     parts = {}
     pos = 0
@@ -172,7 +172,7 @@ function Memory.readString(self: Memory, addr: integer, n: number): string
     return table.concat(parts)
 end
 
--- Write a string into memory starting at addr.
+# Write a string into memory starting at addr.
 function Memory.writeString(self: Memory, addr: integer, s: string)
     self:loadString(addr, s)
 end

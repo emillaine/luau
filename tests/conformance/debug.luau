@@ -1,7 +1,7 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print "testing debug library"
 
--- traceback
+# traceback
 function foo(...)
 	return debug.traceback(...)
 end
@@ -25,10 +25,10 @@ assert(debug.traceback(co, "hello"):find("bar") > 0)
 assert(debug.traceback(co, "hello", 2):find("hello") > 0)
 assert(debug.traceback(co, "hello", 2):find("bar") == null)
 
--- traceback for the top frame
+# traceback for the top frame
 function halp(key, value)
 	t = {}
-	t[key] = value -- line 30
+	t[key] = value # line 30
 	return t
 end
 
@@ -39,7 +39,7 @@ assert(debug.traceback(co2) == "debug.luau:31 function halp\n")
 assert(debug.info(co2, 0, "l") == 31)
 assert(debug.info(co2, 0, "f") == halp)
 
--- info errors
+# info errors
 function qux(...)
 	ok, err = pcall(debug.info, ...)
 	assert(not ok)
@@ -54,14 +54,14 @@ assert(qux(1, "nn"):find("duplicate option"))
 assert(qux(co):find("function or level expected"))
 assert(qux(co, 1):find("string expected"))
 
--- info single-arg returns
+# info single-arg returns
 function baz(...)
 	return debug.info(...)
 end
 
 assert(baz(0, "n") == "info")
 assert(baz(1, "n") == "baz")
-assert(baz(2, "n") == "") -- main/anonymous
+assert(baz(2, "n") == "") # main/anonymous
 assert(baz(3, "n") == null)
 assert(baz(0, "s") == "[C]")
 assert(baz(1, "s") == "debug.luau")
@@ -74,12 +74,12 @@ assert(baz(1, "a") == 0)
 assert(baz(co, 1, "n") == "bar")
 assert(baz(co, 2, "n") == null)
 assert(baz(math.sqrt, "n") == "sqrt")
-assert(baz(math.sqrt, "f") == math.sqrt) -- yes this is pointless
+assert(baz(math.sqrt, "f") == math.sqrt) # yes this is pointless
 
 t = { foo = function() return 1 end }
 assert(baz(t.foo, "n") == "foo")
 
--- info multi-arg returns
+# info multi-arg returns
 function quux(...)
 	return {debug.info(...)}
 end
@@ -90,19 +90,19 @@ assert(quux(1, "nlsf")[2] > 64)
 assert(quux(1, "nlsf")[3] == "debug.luau")
 assert(quux(1, "nlsf")[4] == quux)
 
--- info arity
+# info arity
 function quuz(f)
 	a, v = debug.info(f, "a")
 	return tostring(a) .. " " .. tostring(v)
 end
 
-assert(quuz(math.cos) == "0 true") -- C functions are treated as fully variadic
+assert(quuz(math.cos) == "0 true") # C functions are treated as fully variadic
 assert(quuz(function() end) == "0 false")
 assert(quuz(function(...) end) == "0 true")
 assert(quuz(function(a, b) end) == "2 false")
 assert(quuz(function(a, b, ...) end) == "2 true")
 
--- info linedefined & line
+# info linedefined & line
 function testlinedefined()
 	line = debug.info(1, "l")
 	linedefined = debug.info(testlinedefined, "l")
@@ -111,7 +111,7 @@ end
 
 testlinedefined()
 
--- don't leave garbage on the other thread
+# don't leave garbage on the other thread
 wrapped1 = coroutine.create(function()
 	thread = coroutine.create(function(target)
 		for i = 1, 100 do pcall(debug.info, target, 0, "llf") end

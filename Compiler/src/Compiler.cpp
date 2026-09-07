@@ -5584,7 +5584,7 @@ struct Compiler
 
 static void setCompileOptionsForNativeCompilation(CompileOptions& options)
 {
-    options.optimizationLevel = 2; // note: this might be removed in the future in favor of --!optimize
+    options.optimizationLevel = 2; // note: this might be removed in the future in favor of #!optimize
     options.typeInfoLevel = 1;
 }
 

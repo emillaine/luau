@@ -1,4 +1,4 @@
--- Mesh generation from heightmap (vertices and normals)
+# Mesh generation from heightmap (vertices and normals)
 
 export type Mesh = {
     vertices: {number},
@@ -25,7 +25,7 @@ function generateMesh(heightmap: {number}, size: number, scale: number): Mesh
             z0 = y * scale
             z1 = (y + 1) * scale
 
-            -- Triangle 1: (x0,h00,z0), (x1,h10,z0), (x0,h01,z1)
+            # Triangle 1: (x0,h00,z0), (x1,h10,z0), (x0,h01,z1)
             vertices[vIdx] = x0; vertices[vIdx+1] = h00 * scale; vertices[vIdx+2] = z0
             vertices[vIdx+3] = x1; vertices[vIdx+4] = h10 * scale; vertices[vIdx+5] = z0
             vertices[vIdx+6] = x0; vertices[vIdx+7] = h01 * scale; vertices[vIdx+8] = z1
@@ -43,7 +43,7 @@ function generateMesh(heightmap: {number}, size: number, scale: number): Mesh
             vIdx += 9
             nIdx += 9
 
-            -- Triangle 2: (x1,h10,z0), (x1,h11,z1), (x0,h01,z1)
+            # Triangle 2: (x1,h10,z0), (x1,h11,z1), (x0,h01,z1)
             vertices[vIdx] = x1; vertices[vIdx+1] = h10 * scale; vertices[vIdx+2] = z0
             vertices[vIdx+3] = x1; vertices[vIdx+4] = h11 * scale; vertices[vIdx+5] = z1
             vertices[vIdx+6] = x0; vertices[vIdx+7] = h01 * scale; vertices[vIdx+8] = z1

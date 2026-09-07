@@ -214,7 +214,7 @@ TEST_CASE_FIXTURE(Fixture, "assign_to_local_which_is_never")
 TEST_CASE_FIXTURE(Fixture, "assign_to_global_which_is_never")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         t = 5 as never
         t = ""
     )");
@@ -347,7 +347,7 @@ TEST_CASE_FIXTURE(Fixture, "math_operators_and_never")
 {
     CheckResult result = check(R"(
         function mul(x: null, y)
-            return x != null and x * y -- infers boolean | never, which is normalized into boolean
+            return x != null and x * y # infers boolean | never, which is normalized into boolean
         end
     )");
 
@@ -371,7 +371,7 @@ TEST_CASE_FIXTURE(Fixture, "compare_never")
 {
     CheckResult result = check(R"(
         function cmp(x: null, y: number)
-            return x != null and x > y and x < y -- infers boolean | never, which is normalized into boolean
+            return x != null and x > y and x < y # infers boolean | never, which is normalized into boolean
         end
     )");
 

@@ -1,4 +1,4 @@
---[[
+#[[
 	PCRE2-based RegEx implemention for Luau
 	Version 1.0.0a2
 	BSD 2-Clause Licence
@@ -26,24 +26,24 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
---[[ Settings ]]--
--- You can change them here
+#[[ Settings ]]#
+# You can change them here
 options = {
-	-- The maximum cache size for regex so the patterns are cached so it doesn't recompile the pattern
-	-- The only accepted value are number values >= 0, strings that can be automatically coered to numbers that are >= 0, false and null
-	-- Do note that empty regex patterns (comment-only patterns included) are never cached regardless
-	-- The default is 256
+	# The maximum cache size for regex so the patterns are cached so it doesn't recompile the pattern
+	# The only accepted value are number values >= 0, strings that can be automatically coered to numbers that are >= 0, false and null
+	# Do note that empty regex patterns (comment-only patterns included) are never cached regardless
+	# The default is 256
 	cacheSize = 256,
 
-	-- A boolean that determines whether this use unicode data
-	-- If this value evalulates to false, you can remove _unicodechar_category, _scripts and _xuc safely and it'll now error if:
-	-- - You try to compile a RegEx with unicode flag
-	-- - You try to use the \p pattern
-	-- The default is true
+	# A boolean that determines whether this use unicode data
+	# If this value evalulates to false, you can remove _unicodechar_category, _scripts and _xuc safely and it'll now error if:
+	# - You try to compile a RegEx with unicode flag
+	# - You try to use the \p pattern
+	# The default is true
 	unicodeData = false,
 };
 
---
+#
 u_categories = options.unicodeData and require(script:WaitForChild("_unicodechar_category"));
 chr_scripts = options.unicodeData and require(script:WaitForChild("_scripts"));
 xuc_chr = options.unicodeData and require(script:WaitForChild("_xuc"));
@@ -51,14 +51,14 @@ proxy = setmetatable({ }, { __mode = 'k' });
 re, re_m, match_m = { }, { }, { };
 lockmsg = null;
 
---[[ Functions ]]--
+#[[ Functions ]]#
 function to_str_arr(self, init)
 	if init then
 		self = string.sub(self, utf8.offset(self, init));
 	end;
 	len = utf8.len(self);
 	if len <= 1999 then
-		return { n = len, s = self, utf8.codepoint(self, 1, #self) };
+		return { n = len, s = self, utf8.codepoint(self, 1, self.count) };
 	end;
 	clen = math.ceil(len / 1999);
 	ret = table.create(len);
@@ -73,7 +73,7 @@ function to_str_arr(self, init)
 end;
 
 function from_str_arr(self)
-	len = self.n or #self;
+	len = self.n or self.count;
 	if len <= 7997 then
 		return utf8.char(table.unpack(self));
 	end;
@@ -90,7 +90,7 @@ function utf8_sub(self, i, j)
 	return string.sub(self, utf8.offset(self, i), j and j - 1);
 end;
 
---
+#
 flag_map = {
 	a = 'anchored', i = 'caseless', m = 'multiline', s = 'dotall', u = 'unicode', U = 'ungreedy', x ='extended',
 };
@@ -100,28 +100,28 @@ posix_class_names = {
 };
 
 escape_chars = {
-	-- grouped
-	-- digit, spaces and words
+	# grouped
+	# digit, spaces and words
 	[0x44] = { "class", "digit", true }, [0x53] = { "class", "space", true }, [0x57] = { "class", "word", true },
 	[0x64] = { "class", "digit", false }, [0x73] = { "class", "space", false }, [0x77] = { "class", "word", false },
-	-- horizontal/vertical whitespace and newline
+	# horizontal/vertical whitespace and newline
 	[0x48] = { "class", "blank", true }, [0x56] = { "class", "vertical_tab", true },
 	[0x68] = { "class", "blank", false }, [0x76] = { "class", "vertical_tab", false },
 	[0x4E] = { 0x4E }, [0x52] = { 0x52 },
 
-	-- not grouped
+	# not grouped
 	[0x42] = 0x08,
 	[0x6E] = 0x0A, [0x72] = 0x0D, [0x74] = 0x09,
 };
 
 b_escape_chars = {
-	-- word boundary and not word boundary
+	# word boundary and not word boundary
 	[0x62] = { 0x62, { "class", "word", false } }, [0x42] = { 0x42, { "class", "word", false } },
 
-	-- keep match out
+	# keep match out
 	[0x4B] = { 0x4B },
 
-	-- start & end of string
+	# start & end of string
 	[0x47] = { 0x47 }, [0x4A] = { 0x4A }, [0x5A] = { 0x5A }, [0x7A] = { 0x7A },
 };
 
@@ -200,7 +200,7 @@ function check_re(re_type, name, func)
 				if not arg2 then
 					error(string.format("invalid argument #3 to %q (number expected, got %s)", name, init_type), 2);
 				else if arg2 < 0 then
-					arg2 = #arg1 + math.floor(arg2 + 0.5) + 1;
+					arg2 = arg1.count + math.floor(arg2 + 0.5) + 1;
 				else
 					arg2 = math.max(math.floor(arg2 + 0.5), 1);
 				end;
@@ -216,7 +216,7 @@ function check_re(re_type, name, func)
 	end;
 end;
 
---[[ Matches ]]--
+#[[ Matches ]]#
 function match_tostr(self)
 	spans = proxy[self].spans;
 	s_start, s_end = spans[0][1], spans[0][2];
@@ -294,7 +294,7 @@ match_m.grouparr = check_re('Match', 'groupdict', function(self)
 	return ret;
 end);
 
---
+#
 line_verbs = {
 	CR = 0, LF = 1, CRLF = 2, ANYRLF = 3, ANY = 4, NUL = 5,
 };
@@ -302,22 +302,22 @@ function is_newline(str_arr, i, verb_flags)
 	line_verb_n = verb_flags.newline;
 	chr = str_arr[i];
 	if line_verb_n == 0 then
-		-- carriage return
+		# carriage return
 		return chr == 0x0D;
 	else if line_verb_n == 2 then
-		-- carriage return followed by line feed
+		# carriage return followed by line feed
 		return chr == 0x0A and str_arr[i - 1] == 0x20;
 	else if line_verb_n == 3 then
-		-- any of the above
+		# any of the above
 		return chr == 0x0A or chr == 0x0D;
 	else if line_verb_n == 4 then
-		-- any of Unicode newlines
+		# any of Unicode newlines
 		return chr == 0x0A or chr == 0x0B or chr == 0x0C or chr == 0x0D or chr == 0x85 or chr == 0x2028 or chr == 0x2029;
 	else if line_verb_n == 5 then
-		-- null
+		# null
 		return chr == 0;
 	end;
-	-- linefeed
+	# linefeed
 	return chr == 0x0A;
 end;
 
@@ -344,16 +344,16 @@ function tkn_char_match(tkn_part, str_arr, i, flags, verb_flags)
 		char_class = tkn_part[2];
 		negate = tkn_part[3];
 		match = false;
-		-- if and elseifs :(
-		-- Might make these into tables in the future
+		# if and elseifs :(
+		# Might make these into tables in the future
 		if char_class == "xdigit" then
 			match = chr >= 0x30 and chr <= 0x39 or chr >= 0x41 and chr <= 0x46 or chr >= 0x61 and chr <= 0x66;
 		else if char_class == "ascii" then
 			match = chr <= 0x7F;
-		-- cannot be accessed through POSIX classes
+		# cannot be accessed through POSIX classes
 		else if char_class == "vertical_tab" then
 			match = chr >= 0x0A and chr <= 0x0D or chr == 0x2028 or chr == 0x2029;
-		--
+		#
 		else if flags.unicode then
 			current_category = u_categories[chr] or 'Cn';
 			first_category = current_category:sub(1, 1);
@@ -414,7 +414,7 @@ function tkn_char_match(tkn_part, str_arr, i, flags, verb_flags)
 	else if tkn_part[1] == "category" then
 		chr_category = u_categories[chr] or 'Cn';
 		category_v = tkn_part[3];
-		category_len = #category_v;
+		category_len = category_v.count;
 		if category_len == 3 then
 			match = false;
 			if category_v == "Xan" or category_v == "Xwd" then
@@ -438,10 +438,10 @@ function tkn_char_match(tkn_part, str_arr, i, flags, verb_flags)
 		return not is_newline(str_arr, i, verb_flags);
 	else if tkn_part[1] == 0x52 then
 		if verb_flags.newline_seq == 0 then
-			-- CR, LF or CRLF
+			# CR, LF or CRLF
 			return chr == 0x0A or chr == 0x0D;
 		end;
-		-- any unicode newline
+		# any unicode newline
 		return chr == 0x0A or chr == 0x0B or chr == 0x0C or chr == 0x0D or chr == 0x85 or chr == 0x2028 or chr == 0x2029;
 	end;
 	return false;
@@ -548,7 +548,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 				for i, v in ipairs(states) do
 					if v[1] == "group" and v[2] == ctkn[3] then
 						if v.jmp then
-							-- recursive match
+							# recursive match
 							tkn_i = v.jmp;
 						end;
 						v[4] = str_i;
@@ -748,8 +748,8 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 							break;
 						end;
 					end;
-					-- keep match out state and recursive state, can be safely removed
-					-- prevents infinite loop
+					# keep match out state and recursive state, can be safely removed
+					# prevents infinite loop
 					table.remove(states, 1);
 				end;
 			end;
@@ -772,7 +772,7 @@ function re_rawfind(token, str_arr, init, flags, verb_flags, as_bool)
 	return span;
 end;
 
---[[ Methods ]]--
+#[[ Methods ]]#
 re_m.test = check_re('RegEx', 'test', function(self, str, init)
 	return re_rawfind(self.token, to_str_arr(str, init), 1, self.flags, self.verb_flags, true);
 end);
@@ -806,19 +806,19 @@ function insert_tokenized_sub(repl_r, str, span, tkn)
 					if v[3] then
 						insert_tokenized_sub(repl_r, str, span, v[3]);
 					else
-						table.move(str, span[v[2]][1], span[v[2]][2] - 1, #repl_r + 1, repl_r);
+						table.move(str, span[v[2]][1], span[v[2]][2] - 1, repl_r.count + 1, repl_r);
 					end;
 				else if v[4] then
 					insert_tokenized_sub(repl_r, str, span, v[4]);
 				end;
 			else
-				table.move(v, 1, #v, #repl_r + 1, repl_r);
+				table.move(v, 1, v.count, repl_r.count + 1, repl_r);
 			end;
 		else if span[v] then
-			table.move(str, span[v][1], span[v][2] - 1, #repl_r + 1, repl_r);
+			table.move(str, span[v][1], span[v][2] - 1, repl_r.count + 1, repl_r);
 		end;
 	end;
-	repl_r.n = #repl_r;
+	repl_r.n = repl_r.count;
 	return repl_r;
 end;
 
@@ -876,14 +876,14 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 					if current_conditional_c[2] then
 						error("malformed substitution pattern", 3);
 					end;
-					current_conditional_c[2] = table.move(repl_r, current_conditional_c[3], #repl_r, 1, table.create(#repl_r + 1 - current_conditional_c[3]));
-					for i3 = #repl_r, current_conditional_c[3], -1 do
+					current_conditional_c[2] = table.move(repl_r, current_conditional_c[3], repl_r.count, 1, table.create(repl_r.count + 1 - current_conditional_c[3]));
+					for i3 = repl_r.count, current_conditional_c[3], -1 do
 						repl_r[i3] = null;
 					end;
 				else if repl[i2] == 0x7D then
 					current_conditional_c = table.remove(conditional_c, 1);
-					second_c = table.move(repl_r, current_conditional_c[3], #repl_r, 1, table.create(#repl_r + 1 - current_conditional_c[3]));
-					for i3 = #repl_r, current_conditional_c[3], -1 do
+					second_c = table.move(repl_r, current_conditional_c[3], repl_r.count, 1, table.create(repl_r.count + 1 - current_conditional_c[3]));
+					for i3 = repl_r.count, current_conditional_c[3], -1 do
 						repl_r[i3] = null;
 					end;
 					table.insert(repl_r, { "condition", current_conditional_c[1], current_conditional_c[2] != true and (current_conditional_c[2] or second_c), current_conditional_c[2] and second_c });
@@ -894,14 +894,14 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 						if repl[i2 - 1] == 0x5C then
 							error("replacement string must not end with a trailing backslash", 3);
 						end;
-						prev_repl_f = repl_r[#repl_r];
+						prev_repl_f = repl_r[repl_r.count];
 						if type(prev_repl_f) == "table" then
 							table.insert(prev_repl_f, repl[i2 - 1]);
 						else
 							table.insert(repl_r, { repl[i2 - 1] });
 						end;
 					else if subst_c == 0x5C and repl[i2 - 1] == 0x24 then
-						prev_repl_f = repl_r[#repl_r];
+						prev_repl_f = repl_r[repl_r.count];
 						if type(prev_repl_f) == "table" then
 							table.insert(prev_repl_f, 0x24);
 						else
@@ -948,7 +948,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 							end;
 							if repl[i2] == 0x3A then
 								i2 += 1;
-								table.insert(conditional_c, { group_k, repl[i2] == 0x2D, #repl_r + 1 });
+								table.insert(conditional_c, { group_k, repl[i2] == 0x2D, repl_r.count + 1 });
 							else
 								table.insert(repl_r, group_k);
 							end;
@@ -959,7 +959,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 						c_escape_char = null;
 						if repl[i2 - 1] == 0x24 then
 							if subst_c != 0x24 then
-								prev_repl_f = repl_r[#repl_r];
+								prev_repl_f = repl_r[repl_r.count];
 								if type(prev_repl_f) == "table" then
 									table.insert(prev_repl_f, 0x24);
 								else
@@ -972,7 +972,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 								c_escape_char = null;
 							end;
 						end;
-						prev_repl_f = repl_r[#repl_r];
+						prev_repl_f = repl_r[repl_r.count];
 						if type(prev_repl_f) == "table" then
 							table.insert(prev_repl_f, c_escape_char or repl[i2]);
 						else
@@ -987,7 +987,7 @@ re_m.sub = check_re('RegEx', 'sub', function(self, repl, str, n, repl_flag_str, 
 				error("malformed substitution pattern", 3);
 			end;
 			if not repl_r[2] and type(repl_r[1]) == "table" and repl_r[1][1] != "condition" then
-				repl, repl.n = repl_r[1], #repl_r[1];
+				repl, repl.n = repl_r[1], repl_r[1].count;
 			else
 				repl, repl_type = repl_r, "subst_string";
 			end;
@@ -1089,7 +1089,7 @@ re_m.split = check_re('RegEx', 'split', function(self, str, n)
 	return ret;
 end);
 
---
+#
 function re_index(self, index)
 	return re_m[index] or proxy[self].flags[index];
 end;
@@ -1097,16 +1097,16 @@ end;
 function re_tostr(self)
 	return proxy[self].pattern_repr .. proxy[self].flag_repr;
 end;
---
+#
 
 other_valid_group_char = {
-	-- non-capturing group
+	# non-capturing group
 	[0x3A] = true,
-	-- lookarounds
+	# lookarounds
 	[0x21] = true, [0x3D] = true,
-	-- atomic
+	# atomic
 	[0x3E] = true,
-	-- branch reset
+	# branch reset
 	[0x7C] = true,
 };
 
@@ -1122,7 +1122,7 @@ function tokenize_ptn(codes, flags)
 	while i <= len do
 		c = codes[i];
 		if c == 0x28 then
-			-- Match
+			# Match
 			ret = null;
 			if codes[i + 1] == 0x2A then
 				i += 2;
@@ -1135,7 +1135,7 @@ function tokenize_ptn(codes, flags)
 					i += 1;
 				end;
 				if codes[i] != 0x29 and codes[i - 1] != 0x3A then
-					-- fallback as normal and ( can't be repeated
+					# fallback as normal and ( can't be repeated
 					return "quantifier doesn't follow a repeatable pattern";
 				end;
 				selected_verb = utf8_sub(codes.s, start_i, i);
@@ -1162,10 +1162,10 @@ function tokenize_ptn(codes, flags)
 					end;
 				end;
 			else if codes[i + 1] == 0x3F then
-				-- ? syntax
+				# ? syntax
 				i += 2;
 				if codes[i] == 0x23 then
-					-- comments
+					# comments
 					i = table.find(codes, 0x29, i);
 					if not i then
 						return "unterminated parenthetical";
@@ -1177,10 +1177,10 @@ function tokenize_ptn(codes, flags)
 				end;
 				ret = { 0x28, null, null, codes[i], null };
 				if codes[i] == 0x30 and codes[i + 1] == 0x29 then
-					-- recursive match entire pattern
+					# recursive match entire pattern
 					ret[1], ret[2], ret[3], ret[5] = "recurmatch", 0, 0, null;
 				else if codes[i] > 0x30 and codes[i] <= 0x39 then
-					-- recursive match
+					# recursive match
 					org_i = i;
 					i += 1;
 					while codes[i] >= 0x30 and codes[i] <= 0x30 do
@@ -1191,18 +1191,18 @@ function tokenize_ptn(codes, flags)
 					end;
 					ret[1], ret[2], ret[4] = "recurmatch", tonumber(utf8_sub(codes.s, org_i, i)), null;
 				else if codes[i] == 0x3C and codes[i + 1] == 0x21 or codes[i + 1] == 0x3D then
-					-- lookbehinds
+					# lookbehinds
 					i += 1;
 					ret[4], ret[5] = codes[i], 1;
 				else if codes[i] == 0x7C then
-					-- branch reset
+					# branch reset
 					ret[5] = group_n;
 				else if codes[i] == 0x50 or codes[i] == 0x3C or codes[i] == 0x27 then
 					if codes[i] == 0x50 then
 						i += 1;
 					end;
 					if codes[i] == 0x3D then
-						-- backref
+						# backref
 						start_i = i + 1;
 						while codes[i] and
 							(codes[i] >= 0x30 and codes[i] <= 0x39
@@ -1218,7 +1218,7 @@ function tokenize_ptn(codes, flags)
 						end;
 						ret = { "backref", utf8_sub(codes.s, start_i, i) };
 					else if codes[i] == 0x3C or codes[i - 1] != 0x50 and codes[i] == 0x27 then
-						-- named capture
+						# named capture
 						delimiter = codes[i] == 0x27 and 0x27 or 0x3E;
 						start_i = i + 1;
 						i += 1;
@@ -1268,8 +1268,8 @@ function tokenize_ptn(codes, flags)
 				table.insert(outln, ret);
 			end;
 		else if c == 0x29 then
-			-- Close parenthesis
-			i1 = #outln + 1;
+			# Close parenthesis
+			i1 = outln.count + 1;
 			lookbehind_c = -1;
 			current_lookbehind_c = 0;
 			max_c, group_c = 0, 0;
@@ -1315,7 +1315,7 @@ function tokenize_ptn(codes, flags)
 				return "unmatched ) in regular expression";
 			end;
 			v = outln[i1];
-			outln_len_p_1 = #outln + 1;
+			outln_len_p_1 = outln.count + 1;
 			ret = { 0x29, v[2], i1, v[4], v[5], count = lookbehind_c };
 			if (v[4] == 0x21 or v[4] == 0x3D) and v[5] and not lookbehind_c then
 				return "lookbehind assertion is not fixed width";
@@ -1325,7 +1325,7 @@ function tokenize_ptn(codes, flags)
 		else if c == 0x2E then
 			table.insert(outln, dot);
 		else if c == 0x5B then
-			-- Character set
+			# Character set
 			negate, char_class = false, null;
 			i += 1;
 			start_i = i;
@@ -1333,7 +1333,7 @@ function tokenize_ptn(codes, flags)
 				negate = true;
 				i += 1;
 			else if codes[i] == 0x2E or codes[i] == 0x3A or codes[i] == 0x3D then
-				-- POSIX character classes
+				# POSIX character classes
 				char_class = codes[i];
 			end;
 			ret = null;
@@ -1354,7 +1354,7 @@ function tokenize_ptn(codes, flags)
 						ret_c = codes[i];
 						if ret_c == 0x5B then
 							if codes[i + 1] == 0x2E or codes[i + 1] == 0x3A or codes[i + 1] == 0x3D then
-								-- Check for POSIX character class, name does not matter
+								# Check for POSIX character class, name does not matter
 								i1 = i + 2;
 								repeat
 									i1 = table.find(codes, 0x5D, i1);
@@ -1424,10 +1424,10 @@ function tokenize_ptn(codes, flags)
 						else if codes[i1 - 1] == 0x2E or codes[i1 - 1] == 0x3D then
 							return "POSIX collating elements aren't supported";
 						else if codes[i1 - 1] == 0x3A then
-							-- I have no plans to support escape codes (\) in character class names
+							# I have no plans to support escape codes (\) in character class names
 							negate = codes[i + 3] == 0x5E;
 							class_name = utf8_sub(codes.s, i + (negate and 3 or 2), i1 - 1);
-							--  If not valid then throw an error
+							#  If not valid then throw an error
 							if not posix_class_names[class_name] then
 								return "unknown POSIX class name";
 							end;
@@ -1487,13 +1487,13 @@ function tokenize_ptn(codes, flags)
 						end;
 						table.insert(ret, 1, radix1 and (radix2 and 64 * radix0 + 8 * radix1 + radix2 or 8 * radix0 + radix1) or radix0);
 					else if codes[i] == 0x45 then
-						-- intentionally left blank, \E that's not preceded \Q is ignored
+						# intentionally left blank, \E that's not preceded \Q is ignored
 					else if codes[i] == 0x51 then
 						start_i = i + 1;
 						repeat
 							i = table.find(codes, 0x5C, i + 1);
 						until not i or codes[i + 1] == 0x45;
-						table.move(codes, start_i, i and i - 1 or #codes, #outln + 1, outln);
+						table.move(codes, start_i, i and i - 1 or codes.count, outln.count + 1, outln);
 						if not i then
 							break;
 						end;
@@ -1593,7 +1593,7 @@ function tokenize_ptn(codes, flags)
 				table.insert(outln, { "charset", negate, ret });
 			end;
 		else if c == 0x5C then
-			-- Escape char
+			# Escape char
 			i += 1;
 			escape_c = codes[i];
 			if not escape_c then
@@ -1627,13 +1627,13 @@ function tokenize_ptn(codes, flags)
 					table.insert(outln, { "backref", escape_d });
 				end;
 			else if escape_c == 0x45 then
-				-- intentionally left blank, \E that's not preceded \Q is ignored
+				# intentionally left blank, \E that's not preceded \Q is ignored
 			else if escape_c == 0x51 then
 				start_i = i + 1;
 				repeat
 					i = table.find(codes, 0x5C, i + 1);
 				until not i or codes[i + 1] == 0x45;
-				table.move(codes, start_i, i and i - 1 or #codes, #outln + 1, outln);
+				table.move(codes, start_i, i and i - 1 or codes.count, outln.count + 1, outln);
 				if not i then
 					break;
 				end;
@@ -1774,7 +1774,7 @@ function tokenize_ptn(codes, flags)
 				table.insert(outln, esc_char or escape_c);
 			end;
 		else if c == 0x2A or c == 0x2B or c == 0x3F or c == 0x7B then
-			-- Quantifier
+			# Quantifier
 			start_q, end_q = null, null;
 			if c == 0x7B then
 				org_i = i + 1;
@@ -1797,7 +1797,7 @@ function tokenize_ptn(codes, flags)
 						end;
 					end;
 				else
-					table.move(codes, org_i - 1, i, #outln + 1, outln);
+					table.move(codes, org_i - 1, i, outln.count + 1, outln);
 				end;
 			else
 				start_q, end_q = c == 0x2B and 1 or 0, c == 0x3F and 1 or math.huge;
@@ -1808,7 +1808,7 @@ function tokenize_ptn(codes, flags)
 					i += 1;
 					quantifier_type = codes[i] == 0x2B and "possessive" or flags.ungreedy and "greedy" or "lazy";
 				end;
-				outln_len = #outln;
+				outln_len = outln.count;
 				last_outln_value = outln[outln_len];
 				if not last_outln_value or type(last_outln_value) == "table" and (last_outln_value[1] == "quantifier" or last_outln_value[1] == 0x28 or b_escape_chars[last_outln_value[1]])
 					or last_outln_value == alternation or type(last_outln_value) == "string" then
@@ -1824,9 +1824,9 @@ function tokenize_ptn(codes, flags)
 				end;
 			end;
 		else if c == 0x7C then
-			-- Alternation
+			# Alternation
 			table.insert(outln, alternation);
-			i1 = #outln;
+			i1 = outln.count;
 			repeat
 				i1 -= 1;
 				v1, is_table = outln[i1], type(outln[i1]) == "table";
@@ -1938,7 +1938,7 @@ function new_re(str_arr, flags, flag_repr, pattern_repr)
 end;
 
 function escape_fslash(pre)
-	return (#pre % 2 == 0 and '\\' or '') .. pre .. '.';
+	return (pre.count % 2 == 0 and '\\' or '') .. pre .. '.';
 end;
 
 function sort_flag_chr(a, b)
@@ -2061,7 +2061,7 @@ function re.type(...)
 	return proxy[...] and proxy[...].name;
 end;
 
--- TODO: table.foreach is currently used as top-level loops needlessly increase native code size for this module
+# TODO: table.foreach is currently used as top-level loops needlessly increase native code size for this module
 table.foreach(re_m, function(k, f) re[k] = f end)
 
 re_m = { __index = re_m };

@@ -4,11 +4,11 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- Basic from ARES-6 by fpizlo benchmark, converted from the JS ARES-6 Basic benchmark using declawd.
--- Target runtimes: Luau (lute), Lua 5.5, and LuaJIT.
--- This single file contains the lexer, parser, AST evaluator, and self-checking tests.
+# Basic from ARES-6 by fpizlo benchmark, converted from the JS ARES-6 Basic benchmark using declawd.
+# Target runtimes: Luau (lute), Lua 5.5, and LuaJIT.
+# This single file contains the lexer, parser, AST evaluator, and self-checking tests.
 
--- ===== Bit operations (cross-VM) =====
+# ===== Bit operations (cross-VM) =====
 band, bor, bxor, lshift, rshift = null, null, null, null, null
 _bit32 = rawget(_G, "bit32")
 _bit = rawget(_G, "bit")
@@ -22,8 +22,8 @@ else if bit32 != null and type(bit32) == "table" then
     band, bor, bxor, lshift, rshift =
         bit32.band, bit32.bor, bit32.bxor, bit32.lshift, bit32.rshift
 else
-    -- Lua 5.3+ native bitwise operators, loaded dynamically so this file still
-    -- parses in older Luas.
+    # Lua 5.3+ native bitwise operators, loaded dynamically so this file still
+    # parses in older Luas.
     band = assert(load("a,b = ... return (a & b) & 0xffffffff"))
     bor = assert(load("a,b = ... return (a | b) & 0xffffffff"))
     bxor = assert(load("a,b = ... return (a ~ b) & 0xffffffff"))
@@ -31,7 +31,7 @@ else
     rshift = assert(load("a,b = ... return ((a & 0xffffffff) >> b) & 0xffffffff"))
 end
 
--- ===== Utility =====
+# ===== Utility =====
 floor = math.floor
 mabs = math.abs
 msqrt = math.sqrt
@@ -49,8 +49,8 @@ function msign(x)
     if x > 0 then return 1 else if x < 0 then return -1 else return 0 end
 end
 
--- Emulate JS ""+number: integer-valued numbers render without a decimal point,
--- to match the expected outputs that were produced by JS.
+# Emulate JS ""+number: integer-valued numbers render without a decimal point,
+# to match the expected outputs that were produced by JS.
 function formatNumber(n)
     if type(n) != "number" then return tostring(n) end
     if n != n then return "NaN" end
@@ -64,7 +64,7 @@ end
 
 function strlower(s) return string.lower(s) end
 
--- ===== CaselessMap =====
+# ===== CaselessMap =====
 CaselessMap = {}
 CaselessMap.__index = CaselessMap
 
@@ -88,7 +88,7 @@ function CaselessMap:get(key)
     return self._map[strlower(key)]
 end
 
--- ===== Number/Array/Function values =====
+# ===== Number/Array/Function values =====
 NumberValue = {}
 NumberValue.__index = NumberValue
 
@@ -97,14 +97,14 @@ function NumberValue.new(value)
 end
 
 function NumberValue:apply(state, parameters)
-    if #parameters != 0 then
+    if parameters.count != 0 then
         state:abort("Should not pass arguments to simple numeric variables")
     end
     return self.value
 end
 
 function NumberValue:leftApply(state, parameters)
-    if #parameters != 0 then
+    if parameters.count != 0 then
         state:abort("Should not pass arguments to simple numeric variables")
     end
     return self
@@ -121,7 +121,7 @@ function NumberArray.new(dim)
     function allocate(index)
         result = {}
         size = dim[index]
-        if index + 1 <= #dim then
+        if index + 1 <= dim.count then
             for i = 1, size do result[i] = allocate(index + 1) end
         else
             for i = 1, size do result[i] = NumberValue.new() end
@@ -136,18 +136,18 @@ function NumberArray:apply(state, parameters)
 end
 
 function NumberArray:leftApply(state, parameters)
-    if #self._dim != #parameters then
-        state:abort("Expected " .. #self._dim .. " arguments but " .. #parameters .. " were passed.")
+    if self._dim.count != parameters.count then
+        state:abort("Expected " .. self._dim.count .. " arguments but " .. parameters.count .. " were passed.")
     end
     result = self._array
     base = state.program.base
-    for i = 1, #parameters do
+    for i = 1, parameters.count do
         idx = floor(parameters[i])
         size = self._dim[i]
         if not (idx >= base) or not (idx < size) then
             state:abort("Index out of bounds: " .. idx)
         end
-        result = result[idx + 1]  -- Lua is 1-indexed; stored 0..dim-1 as 1..dim
+        result = result[idx + 1]  # Lua is 1-indexed; stored 0..dim-1 as 1..dim
     end
     return result
 end
@@ -160,8 +160,8 @@ function NativeFunction.new(nargs, callback)
 end
 
 function NativeFunction:apply(state, parameters)
-    if self._nargs != #parameters then
-        state:abort("Expected " .. self._nargs .. " arguments but " .. #parameters .. " were passed")
+    if self._nargs != parameters.count then
+        state:abort("Expected " .. self._nargs .. " arguments but " .. parameters.count .. " were passed")
     end
     if self._nargs == 0 then return self._callback() end
     if self._nargs == 1 then return self._callback(parameters[1]) end
@@ -172,7 +172,7 @@ function NativeFunction:leftApply(state, _)
     state:abort("Cannot use a native function as an lvalue")
 end
 
--- ===== RNG (Robert Jenkins 32-bit, matching Octane/Apple ARES-6) =====
+# ===== RNG (Robert Jenkins 32-bit, matching Octane/Apple ARES-6) =====
 function createRNG(seed)
     seed = seed % 0x100000000
     return function()
@@ -190,7 +190,7 @@ function createRNGWithFixedSeed()
     return createRNG(49734321)
 end
 
--- ===== State =====
+# ===== State =====
 State = {}
 State.__index = State
 
@@ -198,7 +198,7 @@ function State.new(program)
     self = setmetatable({}, State)
     self.values = CaselessMap.new()
     self.stringValues = CaselessMap.new()
-    self.sideState = {}  -- keyed by AST node table
+    self.sideState = {}  # keyed by AST node table
     self.statement = null
     self.nextLineNumber = 0
     self.subStack = {}
@@ -256,19 +256,19 @@ function State:validate(predicate, text)
     if not predicate then self:abort(text) end
 end
 
--- ===== AST evaluators =====
+# ===== AST evaluators =====
 Basic = {}
 
 function Basic.NumberApply(self, state)
     params = {}
     for i, v in ipairs(self.parameters) do params[i] = v:evaluate(state) end
-    return state:getValue(self.name, #params):apply(state, params)
+    return state:getValue(self.name, params.count):apply(state, params)
 end
 
 function Basic.Variable(self, state)
     params = {}
     for i, v in ipairs(self.parameters) do params[i] = v:evaluate(state) end
-    return state:getValue(self.name, #params):leftApply(state, params)
+    return state:getValue(self.name, params.count):leftApply(state, params)
 end
 
 function Basic.Const(self, _)
@@ -329,9 +329,9 @@ function Basic.GreaterEqual(self, state)
     return self.left:evaluate(state) >= self.right:evaluate(state)
 end
 
--- Statement processors. Unlike the JS version these are plain functions rather
--- than generators; Print writes directly to state.output and Input reads from
--- state.inputs (neither is needed for the self-check but is retained).
+# Statement processors. Unlike the JS version these are plain functions rather
+# than generators; Print writes directly to state.output and Input reads from
+# state.inputs (neither is needed for the self-check but is retained).
 
 function Basic.GoTo(self, state)
     state.nextLineNumber = self.target
@@ -353,7 +353,7 @@ function Basic.If(self, state)
 end
 
 function Basic.Return(self, state)
-    state:validate(#state.subStack > 0, "Not in a subroutine")
+    state:validate(state.subStack.count > 0, "Not in a subroutine")
     state.nextLineNumber = table.remove(state.subStack)
 end
 
@@ -363,7 +363,7 @@ end
 
 function Basic.On(self, state)
     index = self.expression:evaluate(state)
-    if not (index >= 1) or not (index <= #self.targets) then
+    if not (index >= 1) or not (index <= self.targets.count) then
         state:abort("Index out of bounds: " .. index)
     end
     state.nextLineNumber = self.targets[floor(index) + 1]
@@ -398,11 +398,11 @@ function Basic.Print(self, state)
     for _, item in ipairs(self.items) do
         kind = item.kind
         if kind == "comma" then
-            while #s % 14 != 0 do s = s .. " " end
+            while s.count % 14 != 0 do s = s .. " " end
         else if kind == "tab" then
             v = item.value:evaluate(state)
             v = mmax(floor(v + 0.5), 1)
-            while #s % v != 0 do s = s .. " " end
+            while s.count % v != 0 do s = s .. " " end
         else if kind == "string" then
             s = s .. item.value:evaluate(state)
         else if kind == "number" then
@@ -415,8 +415,8 @@ function Basic.Print(self, state)
 end
 
 function Basic.Input(self, state)
-    results = state:consumeInput(#self.items)
-    state:validate(results != null and #results == #self.items,
+    results = state:consumeInput(self.items.count)
+    state:validate(results != null and results.count == self.items.count,
         "Input did not get the right number of items")
     for i, item in ipairs(self.items) do
         item:evaluate(state):assign(results[i])
@@ -425,7 +425,7 @@ end
 
 function Basic.Read(self, state)
     for _, item in ipairs(self.items) do
-        state:validate(state.dataIndex < #state.program.data,
+        state:validate(state.dataIndex < state.program.data.count,
             "Attempting to read past the end of data")
         state.dataIndex = state.dataIndex + 1
         item:assign(state.program.data[state.dataIndex])
@@ -440,7 +440,7 @@ function Basic.Dim(self, state)
     for _, item in ipairs(self.items) do
         state:validate(not state.values:has(item.name),
             "Variable " .. item.name .. " already exists")
-        state:validate(#item.bounds > 0, "Dim statement is for arrays")
+        state:validate(item.bounds.count > 0, "Dim statement is for arrays")
         dim = {}
         for i, b in ipairs(item.bounds) do dim[i] = b + 1 end
         state.values:set(item.name, NumberArray.new(dim))
@@ -451,7 +451,7 @@ function Basic.End(_, state)
     state.nextLineNumber = null
 end
 
--- Mark statements that terminate a block (for parseStatements)
+# Mark statements that terminate a block (for parseStatements)
 blockEndProcs = {}
 blockEndProcs[Basic.Next] = true
 blockEndProcs[Basic.End] = true
@@ -475,8 +475,8 @@ function Basic.Program(self, state)
     end
 end
 
--- ===== Lexer =====
--- Pattern helpers: Lua patterns are simpler than JS regex. We match explicitly.
+# ===== Lexer =====
+# Pattern helpers: Lua patterns are simpler than JS regex. We match explicitly.
 
 KEYWORDS = {
     base=true, data=true, def=true, dim=true, ["end"]=true, ["for"]=true,
@@ -499,7 +499,7 @@ function lex(source)
         sourceLineNumber = sourceLineNumber + 1
         line = rawLine
         pos = 1
-        len = #line
+        len = line.count
 
         function skipWs()
             while pos <= len do
@@ -514,14 +514,14 @@ function lex(source)
 
         skipWs()
         if pos > len then
-            -- blank line: emit nothing (the JS lexer yields a newline, but the
-            -- parser expects a userLineNumber to start a statement; our source
-            -- always has statements, and we emit newLine at end-of-line below
-            -- only if we saw a line number).
-            -- Actually the JS lexer will throw on a blank line due to the line
-            -- number check. We accept blank lines quietly.
+            # blank line: emit nothing (the JS lexer yields a newline, but the
+            # parser expects a userLineNumber to start a statement; our source
+            # always has statements, and we emit newLine at end-of-line below
+            # only if we saw a line number).
+            # Actually the JS lexer will throw on a blank line due to the line
+            # number check. We accept blank lines quietly.
         else
-            -- Consume the leading line number
+            # Consume the leading line number
             numStart = pos
             while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
             if numStart == pos then
@@ -529,7 +529,7 @@ function lex(source)
             end
             numStr = line:sub(numStart, pos - 1)
             userLineNumber = tonumber(numStr)
-            tokens[#tokens + 1] = {
+            tokens[tokens.count + 1] = {
                 kind = "userLineNumber", string = numStr,
                 sourceLineNumber = sourceLineNumber, userLineNumber = userLineNumber
             }
@@ -539,7 +539,7 @@ function lex(source)
             while pos <= len do
                 c = line:sub(pos, pos)
 
-                -- Remark: "rem " followed by anything
+                # Remark: "rem " followed by anything
                 if (c == "r" or c == "R") and pos + 3 <= len then
                     c2 = line:sub(pos + 1, pos + 1)
                     c3 = line:sub(pos + 2, pos + 2)
@@ -547,7 +547,7 @@ function lex(source)
                     if (c2 == "e" or c2 == "E") and (c3 == "m" or c3 == "M")
                             and (c4 == " " or c4 == "\t") then
                         rest = line:sub(pos)
-                        tokens[#tokens + 1] = {
+                        tokens[tokens.count + 1] = {
                             kind = "remark", string = rest,
                             sourceLineNumber = sourceLineNumber,
                             userLineNumber = userLineNumber
@@ -558,7 +558,7 @@ function lex(source)
                 end
 
                 if isAlpha(c) then
-                    -- identifier or keyword
+                    # identifier or keyword
                     start = pos
                     pos = pos + 1
                     while pos <= len and isAlnum(line:sub(pos, pos)) do
@@ -571,13 +571,13 @@ function lex(source)
                     else
                         kind = "identifier"
                     end
-                    tokens[#tokens + 1] = {
+                    tokens[tokens.count + 1] = {
                         kind = kind, string = word,
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
                     }
                 else if isDigit(c) or (c == "." and pos + 1 <= len and isDigit(line:sub(pos + 1, pos + 1))) then
-                    -- number: int, int.frac?, .frac, optional e[+-]?digits
+                    # number: int, int.frac?, .frac, optional e[+-]?digits
                     start = pos
                     while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
                     if pos <= len and line:sub(pos, pos) == "." then
@@ -592,7 +592,7 @@ function lex(source)
                         while pos <= len and isDigit(line:sub(pos, pos)) do pos = pos + 1 end
                     end
                     str = line:sub(start, pos - 1)
-                    tokens[#tokens + 1] = {
+                    tokens[tokens.count + 1] = {
                         kind = "number", string = str, value = tonumber(str),
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
@@ -615,19 +615,19 @@ function lex(source)
                     str = line:sub(start, pos - 1)
                     value = ""
                     i = 2
-                    while i <= #str - 1 do
+                    while i <= str.count - 1 do
                         ch = str:sub(i, i)
-                        if ch == '"' then i = i + 1 end  -- skip the escape quote
+                        if ch == '"' then i = i + 1 end  # skip the escape quote
                         value = value .. ch
                         i = i + 1
                     end
-                    tokens[#tokens + 1] = {
+                    tokens[tokens.count + 1] = {
                         kind = "string", string = str, value = value,
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
                     }
                 else
-                    -- Operator
+                    # Operator
                     two = pos + 1 <= len and line:sub(pos, pos + 1) or null
                     opStr = null
                     if two == "<>" or two == "<=" or two == ">=" then
@@ -641,7 +641,7 @@ function lex(source)
                     else
                         error("At line " .. sourceLineNumber .. ": Cannot lex token: " .. line:sub(pos))
                     end
-                    tokens[#tokens + 1] = {
+                    tokens[tokens.count + 1] = {
                         kind = "operator", string = opStr,
                         sourceLineNumber = sourceLineNumber,
                         userLineNumber = userLineNumber
@@ -651,7 +651,7 @@ function lex(source)
                 skipWs()
             end
 
-            tokens[#tokens + 1] = {
+            tokens[tokens.count + 1] = {
                 kind = "newLine", string = "\n",
                 sourceLineNumber = sourceLineNumber,
                 userLineNumber = userLineNumber
@@ -661,17 +661,17 @@ function lex(source)
     return tokens
 end
 
--- ===== Parser =====
+# ===== Parser =====
 function parse(tokens)
     program = null
     idx = 1
     pushBack = {}
 
     function nextToken()
-        if #pushBack > 0 then
+        if pushBack.count > 0 then
             return table.remove(pushBack)
         end
-        if idx > #tokens then
+        if idx > tokens.count then
             return { kind = "endOfFile", string = "<end of file>" }
         end
         t = tokens[idx]
@@ -679,7 +679,7 @@ function parse(tokens)
         return t
     end
 
-    function pushToken(t) pushBack[#pushBack + 1] = t end
+    function pushToken(t) pushBack[pushBack.count + 1] = t end
 
     function peekToken()
         t = nextToken()
@@ -713,7 +713,7 @@ function parse(tokens)
         if peekToken().string == "(" then
             repeat
                 nextToken()
-                result.parameters[#result.parameters + 1] = parseNumericExpression()
+                result.parameters[result.parameters.count + 1] = parseNumericExpression()
             until peekToken().string != ","
             consumeToken(")")
         end
@@ -728,7 +728,7 @@ function parse(tokens)
                 if peekToken().string == "(" then
                     repeat
                         nextToken()
-                        r.parameters[#r.parameters + 1] = parseNumericExpression()
+                        r.parameters[r.parameters.count + 1] = parseNumericExpression()
                     until peekToken().string != ","
                     consumeToken(")")
                 end
@@ -868,13 +868,13 @@ function parse(tokens)
         if command.kind == "keyword" then
             cmd = strlower(command.string)
             if cmd == "def" then
-                statement.process = null  -- not exercised by benchmark; keep minimal
+                statement.process = null  # not exercised by benchmark; keep minimal
                 statement.name = consumeKind("identifier")
                 statement.parameters = {}
                 if peekToken().string == "(" then
                     repeat
                         nextToken()
-                        statement.parameters[#statement.parameters + 1] = consumeKind("identifier")
+                        statement.parameters[statement.parameters.count + 1] = consumeKind("identifier")
                     until peekToken().string != ","
                 end
                 statement.expression = parseNumericExpression()
@@ -919,7 +919,7 @@ function parse(tokens)
                 end
                 statement.targets = {}
                 while true do
-                    statement.targets[#statement.targets + 1] = parseNonNegativeInteger()
+                    statement.targets[statement.targets.count + 1] = parseNonNegativeInteger()
                     if peekToken().string != "," then break end
                     nextToken()
                 end
@@ -958,22 +958,22 @@ function parse(tokens)
                     s = peekToken().string
                     if s == "," then
                         nextToken()
-                        statement.items[#statement.items + 1] = { kind = "comma" }
+                        statement.items[statement.items.count + 1] = { kind = "comma" }
                     else if s == ";" then
                         nextToken()
                     else if s == "tab" then
                         nextToken()
                         consumeToken("(")
-                        statement.items[#statement.items + 1] =
+                        statement.items[statement.items.count + 1] =
                             { kind = "tab", value = parseNumericExpression() }
                     else if s == "\n" then
                         break
                     else
                         if isStringExpression() then
-                            statement.items[#statement.items + 1] =
+                            statement.items[statement.items.count + 1] =
                                 { kind = "string", value = parseStringExpression() }
                         else
-                            statement.items[#statement.items + 1] =
+                            statement.items[statement.items.count + 1] =
                                 { kind = "number", value = parseNumericExpression() }
                         end
                     end
@@ -982,7 +982,7 @@ function parse(tokens)
                 statement.process = Basic.Input
                 statement.items = {}
                 while true do
-                    statement.items[#statement.items + 1] = parseVariable()
+                    statement.items[statement.items.count + 1] = parseVariable()
                     if peekToken().string != "," then break end
                     nextToken()
                 end
@@ -990,7 +990,7 @@ function parse(tokens)
                 statement.process = Basic.Read
                 statement.items = {}
                 while true do
-                    statement.items[#statement.items + 1] = parseVariable()
+                    statement.items[statement.items.count + 1] = parseVariable()
                     if peekToken().string != "," then break end
                     nextToken()
                 end
@@ -998,19 +998,19 @@ function parse(tokens)
                 statement.process = Basic.Restore
             else if cmd == "data" then
                 while true do
-                    -- parseConstant, simplified: +n, -n, string, number
+                    # parseConstant, simplified: +n, -n, string, number
                     s = peekToken().string
                     if s == "+" then
                         nextToken()
-                        program.data[#program.data + 1] = consumeKind("number").value
+                        program.data[program.data.count + 1] = consumeKind("number").value
                     else if s == "-" then
                         nextToken()
-                        program.data[#program.data + 1] = -consumeKind("number").value
+                        program.data[program.data.count + 1] = -consumeKind("number").value
                     else
                         if isStringExpression() then
-                            program.data[#program.data + 1] = consumeKind("string").value
+                            program.data[program.data.count + 1] = consumeKind("string").value
                         else
-                            program.data[#program.data + 1] = consumeKind("number").value
+                            program.data[program.data.count + 1] = consumeKind("number").value
                         end
                     end
                     if peekToken().string != "," then break end
@@ -1023,13 +1023,13 @@ function parse(tokens)
                     name = consumeKind("identifier").string
                     consumeToken("(")
                     bounds = {}
-                    bounds[#bounds + 1] = parseNonNegativeInteger()
+                    bounds[bounds.count + 1] = parseNonNegativeInteger()
                     if peekToken().string == "," then
                         nextToken()
-                        bounds[#bounds + 1] = parseNonNegativeInteger()
+                        bounds[bounds.count + 1] = parseNonNegativeInteger()
                     end
                     consumeToken(")")
-                    statement.items[#statement.items + 1] = { name = name, bounds = bounds }
+                    statement.items[statement.items.count + 1] = { name = name, bounds = bounds }
                     if peekToken().string != "," then break end
                     consumeToken(",")
                 end
@@ -1041,8 +1041,8 @@ function parse(tokens)
                 end
                 program.base = base
             else if cmd == "randomize" then
-                -- Basic.Randomize would reseed from a random source. Our tests
-                -- don't use it; left as a no-op processor.
+                # Basic.Randomize would reseed from a random source. Our tests
+                # don't use it; left as a no-op processor.
                 statement.process = function(_, state)
                     state.rng = createRNGWithFixedSeed()
                 end
@@ -1052,7 +1052,7 @@ function parse(tokens)
                 error("At " .. tostring(command.sourceLineNumber) .. ": unexpected command but got: " .. command.string)
             end
         else if command.kind == "remark" then
-            -- Ignore
+            # Ignore
         else
             error("At " .. tostring(command.sourceLineNumber) .. ": expected command but got: " .. command.string .. " (of kind " .. command.kind .. ")")
         end
@@ -1078,7 +1078,7 @@ function parse(tokens)
     return { program = parseProgram }
 end
 
--- ===== Driver =====
+# ===== Driver =====
 function prepare(source)
     tokens = lex(source)
     program = parse(tokens).program()
@@ -1112,7 +1112,7 @@ function simulate(source, inputs)
     return state.output
 end
 
--- ===== Tests (self-check, matching benchmark.js) =====
+# ===== Tests (self-check, matching benchmark.js) =====
 function expect(program, expected, ...)
     inputs = { ... }
     result = simulate(program, inputs)
@@ -1128,8 +1128,8 @@ EXPECTED_COUNT = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n"
 
 EXPECTED_RND100 = "98\n"
 
--- Long expected outputs are stored in long-bracket strings below the function
--- to keep things readable. Forward-declared here so runIteration can see them.
+# Long expected outputs are stored in long-bracket strings below the function
+# to keep things readable. Forward-declared here so runIteration can see them.
 EXPECTED_RND2000 = [[
 1974
 697
@@ -2520,7 +2520,7 @@ function runIteration()
            EXPECTED_PRIMES)
 end
 
--- Run
+# Run
 numIterations = 30
 for i = 1, numIterations do
     runIteration()

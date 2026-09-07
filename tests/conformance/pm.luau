@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
 print('testing pattern matching')
 
 function f(s, p)
@@ -15,21 +15,21 @@ function f1(s, p)
   return string.sub(s, t[1], t[t.count] - 1)
 end
 
-a,b = string.find('', '')    -- empty patterns are tricky
+a,b = string.find('', '')    # empty patterns are tricky
 assert(a == 1 and b == 0);
 a,b = string.find('alo', '')
 assert(a == 1 and b == 0)
-a,b = string.find('a\0o a\0o a\0o', 'a', 1)   -- first position
+a,b = string.find('a\0o a\0o a\0o', 'a', 1)   # first position
 assert(a == 1 and b == 1)
-a,b = string.find('a\0o a\0o a\0o', 'a\0o', 2)   -- starts in the middle
+a,b = string.find('a\0o a\0o a\0o', 'a\0o', 2)   # starts in the middle
 assert(a == 5 and b == 7)
-a,b = string.find('a\0o a\0o a\0o', 'a\0o', 9)   -- starts in the middle
+a,b = string.find('a\0o a\0o a\0o', 'a\0o', 9)   # starts in the middle
 assert(a == 9 and b == 11)
-a,b = string.find('a\0a\0a\0a\0\0ab', '\0ab', 2);  -- finds at the end
+a,b = string.find('a\0a\0a\0a\0\0ab', '\0ab', 2);  # finds at the end
 assert(a == 9 and b == 11);
-a,b = string.find('a\0a\0a\0a\0\0ab', 'b')    -- last position
+a,b = string.find('a\0a\0a\0a\0\0ab', 'b')    # last position
 assert(a == 11 and b == 11)
-assert(string.find('a\0a\0a\0a\0\0ab', 'b\0') == null)   -- check ending
+assert(string.find('a\0a\0a\0a\0\0ab', 'b\0') == null)   # check ending
 assert(string.find('', '\0') == null)
 assert(string.find('alo123alo', '12') == 4)
 assert(string.find('alo123alo', '^12') == null)
@@ -122,8 +122,8 @@ assert(a == '0123456789' and b == '' and c == 11 and d == null)
 print('+')
 
 assert(string.gsub('ülo ülo', 'ü', 'x') == 'xlo xlo')
-assert(string.gsub('alo úlo  ', ' +$', '') == 'alo úlo')  -- trim
-assert(string.gsub('  alo alo  ', '^%s*(.-)%s*$', '%1') == 'alo alo')  -- double trim
+assert(string.gsub('alo úlo  ', ' +$', '') == 'alo úlo')  # trim
+assert(string.gsub('  alo alo  ', '^%s*(.-)%s*$', '%1') == 'alo alo')  # double trim
 assert(string.gsub('alo  alo  \n 123\n ', '%s+', ' ') == 'alo alo 123 ')
 t = "abç d"
 a, b = string.gsub(t, '(.)', '%1@')
@@ -199,13 +199,13 @@ assert(not pcall(string.gsub, "alo", "(.)", "%2"))
 assert(not pcall(string.gsub, "alo", "(%1)", "a"))
 assert(not pcall(string.gsub, "alo", "(%0)", "a"))
 
--- big strings
+# big strings
 a = string.rep('a', 300000)
 assert(string.find(a, '^a*.?$'))
 assert(not string.find(a, '^a*.?b$'))
 assert(string.find(a, '^a-.?$'))
 
--- deep nest of gsubs
+# deep nest of gsubs
 function rev (s)
   return string.gsub(s, "(.)(.+)", function (c,s1) return rev(s1)..c end)
 end
@@ -214,7 +214,7 @@ x = string.rep('012345', 10)
 assert(rev(rev(x)) == x)
 
 
--- gsub with tables
+# gsub with tables
 assert(string.gsub("alo alo", ".", {}) == "alo alo")
 assert(string.gsub("alo alo", "(.)", {a="AA", l=""}) == "AAo AAo")
 assert(string.gsub("alo alo", "(.).", {a="AA", l="K"}) == "AAo AAo")
@@ -226,8 +226,8 @@ t = {}; setmetatable(t, {__index = function (t,s) return string.upper(s) end})
 assert(string.gsub("a alo b hi", "%w%w+", t) == "a ALO b HI")
 
 
--- tests for gmatch
--- assert(string.gfind == string.gmatch)
+# tests for gmatch
+# assert(string.gfind == string.gmatch)
 a = 0
 for i in string.gmatch('abcde', '()') do assert(i == a+1); a=i end
 assert(a==6)
@@ -253,7 +253,7 @@ for k,v in pairs(t) do assert(k+1 == v+0); a=a+1 end
 assert(a == 3)
 
 
--- tests for `%f' (`frontiers')
+# tests for `%f' (`frontiers')
 
 assert(string.gsub("aaa aa a aaa a", "%f[%w]a", "x") == "xaa xa x xaa x")
 assert(string.gsub("[[]] [][] [[[[", "%f[[].", "x") == "x[]] x]x] x[[[")
@@ -282,7 +282,7 @@ end
 assert(a.count == 0)
 
 
--- malformed patterns
+# malformed patterns
 function malform (p, m)
   m = m or "malformed"
   r, msg = pcall(string.find, "a", p)
@@ -301,7 +301,7 @@ malform("%ba")
 malform("%")
 malform("%f", "missing")
 
--- \0 in patterns
+# \0 in patterns
 assert(string.match("ab\0\1\2c", "[\0-\2]+") == "\0\1\2")
 assert(string.match("ab\0\1\2c", "[\0-\0]+") == "\0")
 assert(string.find("b$a", "$\0?") == 2)
@@ -310,7 +310,7 @@ assert(string.match("abc\0efg\0\1e\1g", "%b\0\1") == "\0efg\0\1e\1")
 assert(string.match("abc\0\0\0", "%\0+") == "\0\0\0")
 assert(string.match("abc\0\0\0", "%\0%\0?") == "\0\0")
 
--- magic char after \0
+# magic char after \0
 assert(string.find("abc\0\0","\0.") == 4)
 assert(string.find("abcx\0\0abc\0abc","x\0\0abc\0a.") == 4)
 

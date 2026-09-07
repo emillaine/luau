@@ -1,4 +1,4 @@
--- Move generation for chess
+# Move generation for chess
 
 boardMod = require("./board")
 Board = boardMod.Board
@@ -21,7 +21,7 @@ export type Move = {
     to: number,
     promotion: number,
     capture: number,
-    flags: number, -- 1=castle, 2=ep, 4=double push
+    flags: number, # 1=castle, 2=ep, 4=double push
 }
 
 FLAG_CASTLE = 1

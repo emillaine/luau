@@ -304,14 +304,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_can_be_shadowed")
         return;
 
     CheckResult result = check(R"(
-        type add<T> = string -- shadow add
+        type add<T> = string # shadow add
 
-        -- this should be ok
+        # this should be ok
         function hi(f: add<unknown>)
             return string.format("hi %s", f)
         end
 
-        -- this should still work totally fine (and use the real type function)
+        # this should still work totally fine (and use the real type function)
         function plus(a, b)
             return a + b
         end
@@ -674,7 +674,7 @@ TEST_CASE_FIXTURE(ExternTypeFixture, "vector2_multiply_is_overloaded")
 
         const v2 = v * 1.5
         const v3 = v * v
-        const v4 = v * "Hello" -- line 5
+        const v4 = v * "Hello" # line 5
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -706,8 +706,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "keyof_rfc_example")
             animals[animal].speak()
         end
 
-        speakByType("dog") -- ok
-        speakByType("cactus") -- errors
+        speakByType("dog") # ok
+        speakByType("cactus") # errors
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -1017,7 +1017,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "index_wait_for_pending_no_crash")
             MaxExp = 100
         }
         type Keys = index<typeof(PlayerData), keyof<typeof(PlayerData)>>
-        -- This function makes it think that there's going to be a pending expansion
+        # This function makes it think that there's going to be a pending expansion
         function UpdateData(key: Keys, value)
             PlayerData[key] = value
         end
@@ -1669,7 +1669,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "error_suppression_should_work_on_type_functi
             Taupe = 4,
         }
 
-        -- namespace mixup here, Colours isn't a type, it's a normal identifier
+        # namespace mixup here, Colours isn't a type, it's a normal identifier
         export type Colour = keyof<Colours>
     )");
 
@@ -1687,7 +1687,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "fully_dispatch_type_function_that_is_paramet
     // function.  The call constraint must be able to dispatch.
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f()
             const a = null
@@ -2026,7 +2026,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2114_type_instantiation_on_type_function
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type function id(t: type): type
             return t
@@ -2049,7 +2049,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_2144_type_instantiation_on_type_function
     };
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type ST = {
             Member1: number,

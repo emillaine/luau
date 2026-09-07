@@ -9,7 +9,7 @@ bench.runCode(function()
 		str = string.reverse(str)
 		str = string.lower(str)
 	end
-	assert(#str)
+	assert(str.count)
 end, "string: reverse/upper/lower (large)")
 
 bench.runCode(function()
@@ -20,7 +20,7 @@ bench.runCode(function()
 		str = string.reverse(str)
 		str = string.lower(str)
 	end
-	assert(#str)
+	assert(str.count)
 end, "string: reverse/upper/lower (unique)")
 
 bench.runCode(function()
@@ -28,7 +28,7 @@ bench.runCode(function()
 	for i=1,1000000 do
 		str = string.rep("_", 19)
 	end
-	assert(#str)
+	assert(str.count)
 end, "string: rep (small)")
 
 bench.runCode(function()
@@ -36,5 +36,5 @@ bench.runCode(function()
 	for i=1,100 do
 		str = string.rep("abcd", 100000)
 	end
-	assert(#str)
+	assert(str.count)
 end, "string: rep (large)")

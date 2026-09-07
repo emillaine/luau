@@ -20,7 +20,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_correct")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(): T
             return null as any
         end
@@ -37,7 +37,7 @@ TEST_CASE_FIXTURE(Fixture, "as_expression_incorrect")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(): T
             return null as any
         end
@@ -66,7 +66,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_correct")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(a: T, b: T)
             return null as any
         end
@@ -83,7 +83,7 @@ TEST_CASE_FIXTURE(Fixture, "as_stmt_incorrect")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(a: T, b: T)
             return null as any
         end
@@ -111,7 +111,7 @@ TEST_CASE_FIXTURE(Fixture, "multiple_calls")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(): T
             return null as any
         end
@@ -129,7 +129,7 @@ TEST_CASE_FIXTURE(Fixture, "anonymous_type_inferred")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T, U>(): { a: T, b: U }
             return null as any
         end
@@ -152,7 +152,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs")
     ScopedFastFlag oldSolver{FFlag::DebugLuauForceOldSolver, true};
 
     CheckResult result = check(R"(
-    --!strict
+    #!strict
     function f<T..., U...>(...: T...): U... end
 
     const a: number, b: string = f<<(boolean, {}), (number, string)>>(true, {})
@@ -168,7 +168,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_method")
     ScopedFastFlag oldSolver{FFlag::DebugLuauForceOldSolver, true};
 
     CheckResult result = check(R"(
-    --!strict
+    #!strict
     const t: {
         f: <T..., U...>(self: any, T...) -> U...,
     } = null as any
@@ -186,7 +186,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_incorrect")
     ScopedFastFlag oldSolver{FFlag::DebugLuauForceOldSolver, true};
 
     CheckResult result = check(R"(
-    --!strict
+    #!strict
     function f<T..., U...>(...: T...): U... end
 
     const a: number, b: string = f<<(boolean, {}), (number, string)>>(true, "uh oh")
@@ -202,7 +202,7 @@ TEST_CASE_FIXTURE(Fixture, "type_packs_incorrect_method")
     ScopedFastFlag oldSolver{FFlag::DebugLuauForceOldSolver, true};
 
     CheckResult result = check(R"(
-    --!strict
+    #!strict
     const t: {
         f: <T..., U...>(self: any, T...) -> U...,
     } = null as any
@@ -218,7 +218,7 @@ TEST_CASE_FIXTURE(Fixture, "dot_index_call")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {
             f = function<T>(): T
                 return null as any
@@ -239,7 +239,7 @@ TEST_CASE_FIXTURE(Fixture, "method_index_call")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {
             f = function<T>(self: any): T
                 return null as any
@@ -261,7 +261,7 @@ TEST_CASE_FIXTURE(Fixture, "stored_as_variable")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>(): T
             return null as any
         end
@@ -283,7 +283,7 @@ TEST_CASE_FIXTURE(Fixture, "not_a_function")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const oops = 3
         const stub = oops<<number>>
         )");
@@ -300,7 +300,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_call")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = setmetatable({}, {
             __call = function<T>(self): T
                 return null as any
@@ -322,7 +322,7 @@ TEST_CASE_FIXTURE(Fixture, "method_call_incomplete")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {
             f = function<T, U>(self: any): T | U
                 return null as any
@@ -344,7 +344,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_provided")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T>() end
 
         f<<number, string>>()
@@ -375,7 +375,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_provided_type_packs")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f<T...>(): (T...) end
 
         f<<(string, number), (true, false)>>()
@@ -406,7 +406,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_provided_method")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {
             f = function<T>(self: any) end,
         }
@@ -440,7 +440,7 @@ TEST_CASE_FIXTURE(Fixture, "too_many_type_packs_provided_method")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {
             f = function<T...>(self: any): (T...) end,
         }
@@ -474,7 +474,7 @@ TEST_CASE_FIXTURE(Fixture, "function_intersections")
     SUBCASE_BOTH_SOLVERS()
     {
         CheckResult result = check(R"(
-        --!strict
+        #!strict
         const f: (<T>(T) -> T) & (<T>(T?) -> T) = null as any
         f<<number>>()
         )");

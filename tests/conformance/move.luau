@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 function checkerror (msg, f, ...)
   s, err = pcall(f, ...)
   assert(not s and string.find(err, msg))
@@ -10,7 +10,7 @@ print("testing move")
 maxI = 2147483647
 minI = -2147483648
 
--- testing move
+# testing move
 do
 
   checkerror("table expected", table.move, 1, 2, 3, 4)
@@ -21,33 +21,33 @@ do
     for k, v in pairs(b) do assert(a[k] == v) end 
   end
 
-  a = table.move({10,20,30}, 1, 3, 2)  -- move forward
+  a = table.move({10,20,30}, 1, 3, 2)  # move forward
   eqT(a, {10,10,20,30})
 
-  -- move forward with overlap of 1
+  # move forward with overlap of 1
   a = table.move({10, 20, 30}, 1, 3, 3)
   eqT(a, {10, 20, 10, 20, 30})
 
-  -- moving to the same table (not being explicit about it)
+  # moving to the same table (not being explicit about it)
   a = {10, 20, 30, 40}
   table.move(a, 1, 4, 2, a)
   eqT(a, {10, 10, 20, 30, 40})
 
-  a = table.move({10,20,30}, 2, 3, 1)   -- move backward
+  a = table.move({10,20,30}, 2, 3, 1)   # move backward
   eqT(a, {20,30,30})
 
-  a = {}   -- move to new table
+  a = {}   # move to new table
   assert(table.move({10,20,30}, 1, 3, 1, a) == a)
   eqT(a, {10,20,30})
 
   a = {}
-  assert(table.move({10,20,30}, 1, 0, 3, a) == a)  -- empty move (no move)
+  assert(table.move({10,20,30}, 1, 0, 3, a) == a)  # empty move (no move)
   eqT(a, {})
 
-  a = table.move({10,20,30}, 1, 10, 1)   -- move to the same place
+  a = table.move({10,20,30}, 1, 10, 1)   # move to the same place
   eqT(a, {10,20,30})
 
-  -- moving on the fringes
+  # moving on the fringes
   a = table.move({[maxI - 2] = 1, [maxI - 1] = 2, [maxI] = 3},
                  maxI - 2, maxI, -10, {})
   eqT(a, {[-10] = 1, [-9] = 2, [-8] = 3})
@@ -65,7 +65,7 @@ do
   a = table.move({[minI] = 100}, minI, minI, maxI)
   eqT(a, {[minI] = 100, [maxI] = 100})
 
-  -- moving small amount of elements (array/hash) using a wide range
+  # moving small amount of elements (array/hash) using a wide range
   a = {}
   table.move({1, 2, 3, 4, 5}, -100000000, 100000000, -100000000, a)
   eqT(a, {1, 2, 3, 4, 5})
@@ -74,22 +74,22 @@ do
   table.move({1, 2}, -100000000, 100000000, 0, a)
   eqT(a, {[100000001] = 1, [100000002] = 2})
 
-  -- hash part copy
+  # hash part copy
   a = {}
   table.move({[-1000000] = 1, [-100] = 2, [100] = 3, [100000] = 4}, -100000000, 100000000, 0, a)
   eqT(a, {[99000000] = 1, [99999900] = 2, [100000100] = 3, [100100000] = 4})
 
-  -- precise hash part bounds
+  # precise hash part bounds
   a = {}
   table.move({[-100000000 - 1] = -1, [-100000000] = 1, [-100] = 2, [100] = 3, [100000000] = 4, [100000000 + 1] = -1}, -100000000, 100000000, 0, a)
   eqT(a, {[0] = 1, [99999900] = 2, [100000100] = 3, [200000000] = 4})
 
-  -- no integer undeflow in corner hash part case
+  # no integer undeflow in corner hash part case
   a = {}
   table.move({[minI] = 100, [-100] = 2}, minI, minI + 100000000, minI, a)
   eqT(a, {[minI] = 100})
 
-  -- hash part skips array slice
+  # hash part skips array slice
   a = {}
   table.move({[-1] = 1, [0] = 2, [1] = 3, [2] = 4}, -1, 3, 1, a)
   eqT(a, {[1] = 1, [2] = 2, [3] = 3, [4] = 4})
@@ -98,7 +98,7 @@ do
   table.move({[-1] = 1, [0] = 2, [1] = 3, [2] = 4, [10] = 5, [100] = 6, [1000] = 7}, -1, 3, 1, a)
   eqT(a, {[1] = 1, [2] = 2, [3] = 3, [4] = 4})
 
-  -- moving ranges containing null values into tables with values
+  # moving ranges containing null values into tables with values
   a = {1, 2, 3, 4, 5}
   table.move({10}, 1, 3, 2, a)
   eqT(a, {1, 10, null, null, 5})
@@ -111,7 +111,7 @@ do
   table.move({10}, -1000, 1000, -1000, a)
   eqT(a, {10})
 
-  -- sparse moves only consider numeric integer keys
+  # sparse moves only consider numeric integer keys
   a = {}
   table.move({["0"] = "string key"}, -100, 100, -100, a)
   eqT(a, {})
@@ -120,22 +120,22 @@ do
   table.move({}, -100, 100, -100, a)
   eqT(a, {["0"] = "keep"})
 
-  -- sparse moves within the same table preserve the source before clearing overlapping destinations
+  # sparse moves within the same table preserve the source before clearing overlapping destinations
   a = {[-100] = "left", [20] = "hole", [100] = "right", [500] = "outside"}
   table.move(a, -100, 100, -99, a)
   eqT(a, {[-100] = "left", [-99] = "left", [21] = "hole", [101] = "right", [500] = "outside"})
 
-  -- destination array growth must not hide a sparse move
+  # destination array growth must not hide a sparse move
   a = {1, 2, 3}
   table.move({[1] = "first", [10000000] = "last"}, 1, 10000000, 2, a)
   eqT(a, {1, "first", [10000001] = "last"})
 
-  -- a huge sparse move starting at destination index 1 must not allocate the full range
+  # a huge sparse move starting at destination index 1 must not allocate the full range
   a = {}
   table.move({[1] = "first", [10000000] = "last"}, 1, 10000000, 1, a)
   eqT(a, {[1] = "first", [10000000] = "last"})
 
-  -- sparse moving on the fringes
+  # sparse moving on the fringes
   a = table.move({[maxI - 100] = 1, [maxI - 50] = 2, [maxI] = 3},
                  maxI - 100, maxI, -100, {})
   eqT(a, {[-100] = 1, [-50] = 2, [0] = 3})

@@ -1,4 +1,4 @@
--- PPM compressor and decompressor
+# PPM compressor and decompressor
 
 arithmetic = require("./arithmetic")
 context = require("./context")
@@ -10,7 +10,7 @@ function compress(data: {number}): {number}
 
     for _, symbol in data do
         encoded = false
-        for order = math.min(context.MAX_ORDER, #history), 0, -1 do
+        for order = math.min(context.MAX_ORDER, history.count), 0, -1 do
             node = context.getContext(model, history, order)
             if node and node.total > 0 then
                 cumLow, cumHigh, total, escaped =
@@ -37,13 +37,13 @@ function compress(data: {number}): {number}
 
         context.updateModel(model, history, symbol + 1)
         table.insert(history, symbol + 1)
-        if #history > context.MAX_ORDER then
+        if history.count > context.MAX_ORDER then
             table.remove(history, 1)
         end
     end
 
     eofSymbol = 256
-    for order = math.min(context.MAX_ORDER, #history), 0, -1 do
+    for order = math.min(context.MAX_ORDER, history.count), 0, -1 do
         node = context.getContext(model, history, order)
         if node and node.total > 0 then
             cumLow, cumHigh, total, escaped =
@@ -70,7 +70,7 @@ function decompress(compressed: {number}, originalSize: number): {number}
     while outPos <= originalSize do
         symbol = -1
 
-        for order = math.min(context.MAX_ORDER, #history), 0, -1 do
+        for order = math.min(context.MAX_ORDER, history.count), 0, -1 do
             node = context.getContext(model, history, order)
             if node and node.total > 0 then
                 total = context.getTotalWithEscape(node)
@@ -105,7 +105,7 @@ function decompress(compressed: {number}, originalSize: number): {number}
 
         context.updateModel(model, history, symbol + 1)
         table.insert(history, symbol + 1)
-        if #history > context.MAX_ORDER then
+        if history.count > context.MAX_ORDER then
             table.remove(history, 1)
         end
     end

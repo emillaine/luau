@@ -3,15 +3,15 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-    --The Computer Language Benchmarks Game
-    -- https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
-    --contributed by Mike Pall
+    #The Computer Language Benchmarks Game
+    # https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
+    #contributed by Mike Pall
 
     PI = 3.141592653589793
     SOLAR_MASS = 4 * PI * PI
     DAYS_PER_YEAR = 365.24
     bodies = {
-        { --Sun
+        { #Sun
         x = 0,
         y = 0,
         z = 0,
@@ -20,7 +20,7 @@ function test()
         vz = 0,
         mass = SOLAR_MASS
         },
-        { --Jupiter
+        { #Jupiter
         x = 4.84143144246472090e+00,
         y = -1.16032004402742839e+00,
         z = -1.03622044471123109e-01,
@@ -29,7 +29,7 @@ function test()
         vz = -6.90460016972063023e-05 * DAYS_PER_YEAR,
         mass = 9.54791938424326609e-04 * SOLAR_MASS
         },
-        { --Saturn
+        { #Saturn
         x = 8.34336671824457987e+00,
         y = 4.12479856412430479e+00,
         z = -4.03523417114321381e-01,
@@ -38,7 +38,7 @@ function test()
         vz = 2.30417297573763929e-05 * DAYS_PER_YEAR,
         mass = 2.85885980666130812e-04 * SOLAR_MASS
         },
-        { --Uranus
+        { #Uranus
         x = 1.28943695621391310e+01,
         y = -1.51111514016986312e+01,
         z = -2.23307578892655734e-01,
@@ -47,7 +47,7 @@ function test()
         vz = -2.96589568540237556e-05 * DAYS_PER_YEAR,
         mass = 4.36624404335156298e-05 * SOLAR_MASS
         },
-        { --Neptune
+        { #Neptune
         x = 1.53796971148509165e+01,
         y = -2.59193146099879641e+01,
         z = 1.79258772950371181e-01,
@@ -119,7 +119,7 @@ function test()
     end
 
     N = 20000
-    nbody = #bodies
+    nbody = bodies.count
 
     ts0 = os.clock()
     offsetMomentum(bodies, nbody)

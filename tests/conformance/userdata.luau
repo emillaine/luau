@@ -1,19 +1,19 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print('testing userdata')
 
--- int64 is a userdata type defined in C++
+# int64 is a userdata type defined in C++
 
--- equality
+# equality
 assert(int64(1) == int64(1))
 assert(int64(1) != int64(2))
 
--- relational
+# relational
 assert(not (int64(1) < int64(1)))
 assert(int64(1) < int64(2))
 assert(int64(1) <= int64(1))
 assert(int64(1) <= int64(2))
 
--- arithmetics
+# arithmetics
 assert(-int64(2) == int64(-2))
 
 assert(int64(1) + int64(2) == int64(3))
@@ -30,16 +30,16 @@ assert(int64(4) / 2 == int64(2))
 assert(int64(4) % 3 == int64(1))
 assert(int64(2) ^ 3 == int64(8))
 
--- / and // round in different directions in our test implementation
+# / and // round in different directions in our test implementation
 assert(int64(5) / int64(2) == int64(2))
 assert(int64(5) // int64(2) == int64(2))
 assert(int64(-5) / int64(2) == int64(-2))
 assert(int64(-5) // int64(2) == int64(-3))
 
--- tostring
+# tostring
 assert(tostring(int64(2)) == "2")
 
--- index/newindex; note, mutable userdatas aren't very idiomatic but we need to test this
+# index/newindex; note, mutable userdatas aren't very idiomatic but we need to test this
 do
   v = int64(42)
   assert(v.value == 42)

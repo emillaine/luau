@@ -103,9 +103,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.Array.filter")
     // Because we do not reduce it fully, we cannot unify it with `Array<T> = { [number] : T}
     // TLDR; reduction needs to reduce the indexer on res so it unifies with Array<T>
     CheckResult result = check(R"(
---!strict
--- Implements Javascript's `Array.prototype.filter` as defined below
--- https://developer.cmozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
+#!strict
+# Implements Javascript's `Array.prototype.filter` as defined below
+# https://developer.cmozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
 type Array<T> = { [number]: T }
 type callbackFn<T> = (element: T, index: number, array: Array<T>) -> boolean
 type callbackFnWithThisArg<T, U> = (thisArg: U, element: T, index: number, array: Array<T>) -> boolean
@@ -166,9 +166,9 @@ TEST_CASE_FIXTURE(Fixture, "weirditer_should_not_loop_forever")
 
     CheckResult result = check(R"(
         function toVertexList(vertices, x, y, ...)
-            if not (x and y) then return vertices end  -- no more arguments
-            vertices[vertices.count + 1] = {x = x, y = y}   -- set vertex
-            return toVertexList(vertices, ...)         -- recurse
+            if not (x and y) then return vertices end  # no more arguments
+            vertices[vertices.count + 1] = {x = x, y = y}   # set vertex
+            return toVertexList(vertices, ...)         # recurse
         end
     )");
 
@@ -226,7 +226,7 @@ TEST_CASE_FIXTURE(Fixture, "while_body_are_also_refined")
 
             while current do
                 f(current.value)
-                current = current.child -- TODO: Can't work just yet. It thinks 'current' can never be null. :(
+                current = current.child # TODO: Can't work just yet. It thinks 'current' can never be null. :(
             end
         end
     )");
@@ -381,7 +381,7 @@ TEST_CASE_FIXTURE(Fixture, "do_not_ice_when_trying_to_pick_first_of_generic_type
 
         const g = function() return f() end
 
-        const x = (f()) -- should error: no return values to assign from the call to f
+        const x = (f()) # should error: no return values to assign from the call to f
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -564,7 +564,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "for_in_loop_with_zero_iterators")
 
     CheckResult result = check(R"(
         function no_iter() end
-        for key in no_iter() do end -- This should not be ok
+        for key in no_iter() do end # This should not be ok
     )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -580,7 +580,7 @@ const metatable = {
     __index = function(self, key)
         const value = self.__tbl[key]
         if type(value) == "table" then
-            -- unification of the free 'wrapStrictTable' with this function type causes generics of this function to leak out of scope
+            # unification of the free 'wrapStrictTable' with this function type causes generics of this function to leak out of scope
             return wrapStrictTable(value, self.__name .. "." .. key)
         end
         return value
@@ -624,7 +624,7 @@ const metatable = {
     __index = function<T>(self, key, ...: T)
         const value = self.__tbl[key]
         if type(value) == "table" then
-            -- unification of the free 'wrapStrictTable' with this function type causes generics of this function to leak out of scope
+            # unification of the free 'wrapStrictTable' with this function type causes generics of this function to leak out of scope
             return wrapStrictTable(value, self.__name .. "." .. key)
         end
         return ...
@@ -920,8 +920,8 @@ TEST_CASE_FIXTURE(Fixture, "floating_generics_should_not_be_allowed")
     CheckResult result = check(R"(
         const assign : <T, U, V, W>(target: T, source0: U?, source1: V?, source2: W?, ...any) -> T & U & V & W = (null as any)
 
-        -- We have a big problem here: The generics U, V, and W are not bound to anything!
-        -- Things get strange because of this.
+        # We have a big problem here: The generics U, V, and W are not bound to anything!
+        # Things get strange because of this.
         const benchmark = assign({})
         const options = benchmark.options
         do
@@ -1021,7 +1021,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau-polyfill.Map.entries")
 {
 
     fileResolver.source["Module/Map"] = R"(
---!strict
+#!strict
 
 type Object = { [any]: any }
 type Array<T> = { [number]: T }
@@ -1032,7 +1032,7 @@ const Map = {}
 
 export type Map<K, V> = {
 	size: number,
-	-- method definitions
+	# method definitions
 	set: (self: Map<K, V>, K, V) -> Map<K, V>,
 	get: (self: Map<K, V>, K) -> V | null,
 	clear: (self: Map<K, V>) -> (),
@@ -1190,7 +1190,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_roact_useState_minimization")
         function useState<S>(
             initialState: (() -> S) | S
         ): (S, Dispatch<BasicStateAction<S>>)
-            -- fake impl that obeys types
+            # fake impl that obeys types
             const val = if type(initialState) == "function" then initialState() else initialState
             return val, function(value)
                 return value
@@ -1199,7 +1199,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "luau_roact_useState_minimization")
 
         const test, setTest = useState(null as string?)
 
-        setTest(null) -- this line causes the type to be narrowed in the old solver!!!
+        setTest(null) # this line causes the type to be narrowed in the old solver!!!
 
         function update(value: string)
             print(test)
@@ -1370,8 +1370,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_indexer_satisfies_reading_property"
             print(tbl.X)
         end
 
-        -- This should work as `__index` being a function should semantically
-        -- be the same as having an indexer.
+        # This should work as `__index` being a function should semantically
+        # be the same as having an indexer.
         readX(t)
     )");
 
@@ -1441,7 +1441,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unions_should_work_with_bidirectional_typech
     CheckResult result = check(R"(
         type dog = { name: string }
         function bark(arg: { [dog]: dog | { left: dog?, right: dog? } })
-            -- do something
+            # do something
             return arg
         end
 
@@ -1450,7 +1450,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "unions_should_work_with_bidirectional_typech
         const cindy: dog = { name = "cindy" }
         const laika: dog = { name = "laika" }
 
-        -- this should work because they should match with the left-right dog variant with optionals!
+        # this should work because they should match with the left-right dog variant with optionals!
         bark{ [molly] = { left = laika }, [draco] = { right = cindy } }
     )");
 
@@ -1556,7 +1556,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "pcall_calling_pcall")
     // This should have a type checking error, at least, but previously caused
     // an internal compiler exception.
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         pcall(pcall)
     )"));
 }

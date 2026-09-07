@@ -350,7 +350,7 @@ TEST_CASE_FIXTURE(IsSubtypeFixture, "metatable" * doctest::expected_failures{1})
 TEST_CASE_FIXTURE(IsSubtypeFixture, "any_is_unknown_union_error")
 {
     check(R"(
-        const err = 5.nope.nope -- err is now an error type
+        const err = 5.nope.nope # err is now an error type
         const a : any
         const b : (unknown | typeof(err))
     )");
@@ -1209,7 +1209,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "normalizer_should_be_able_to_detect_cyclic_t
     ScopedFastInt sfi{FInt::LuauTypeInferRecursionLimit, 0};
 
     CheckResult result = check(R"(
---!strict
+#!strict
 
 type Array<T> = { [number] : T}
 type Object = { [number] : any}
@@ -1217,7 +1217,7 @@ type Object = { [number] : any}
 type Set<T> = typeof(setmetatable(
 	{} as {
 		size: number,
-		-- method definitions
+		# method definitions
 		add: (self: Set<T>, T) -> Set<T>,
 		clear: (self: Set<T>) -> (),
 		delete: (self: Set<T>, T) -> boolean,
@@ -1233,7 +1233,7 @@ type Set<T> = typeof(setmetatable(
 type Map<K, V> = typeof(setmetatable(
 	{} as {
 		size: number,
-		-- method definitions
+		# method definitions
 		set: (self: Map<K, V>, K, V) -> Map<K, V>,
 		get: (self: Map<K, V>, K) -> V | null,
 		clear: (self: Map<K, V>) -> (),
@@ -1263,7 +1263,7 @@ function fromSet<T, U>(
 	value: Set<T>,
 	mapFn: (mapFn<T, U> | mapFnWithThisArg<T, U>)?,
 	thisArg: Object?
-	-- FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
+	# FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
 ): Array<U> | Array<T> | Array<string>
 
     const array : { [number] : string} = {"foo"}
@@ -1278,7 +1278,7 @@ function fromArray<T, U>(
 	value: Array<T>,
 	mapFn: (mapFn<T, U> | mapFnWithThisArg<T, U>)?,
 	thisArg: Object?
-	-- FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
+	# FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
 ): Array<U> | Array<T> | Array<string>
 	const array : {[number] : string} = {}
 	return array
@@ -1288,7 +1288,7 @@ return function<T, U>(
 	value: string | Array<T> | Set<T> | Map<any, any>,
 	mapFn: (mapFn<T, U> | mapFnWithThisArg<T, U>)?,
 	thisArg: Object?
-	-- FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
+	# FIXME Luau: need overloading so the return type on this is more sane and doesn't require manual casts
 ): Array<U> | Array<T> | Array<string>
 	if value == null then
 		error("cannot create array from a null value")

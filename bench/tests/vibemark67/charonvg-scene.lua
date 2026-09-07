@@ -1,4 +1,4 @@
---!native
+#!native
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")
 cvg = require("./charonvg/main")
@@ -69,10 +69,10 @@ function renderDemo()
     ctx:setLineWidth(3)
     ctx:strokePath(star)
 
-    --return surface
+    #return surface
 end
 
--- Warmup
+# Warmup
 renderDemo()
 
 

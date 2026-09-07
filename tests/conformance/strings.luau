@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing strings and string library')
 
 assert('alo' < 'alo1')
@@ -146,7 +146,7 @@ assert(pcall(string.format, "%##################d", 1) == false)
 assert(pcall(string.format, "%.123d", 1) == false)
 assert(pcall(string.format, "%?", 1) == false)
 
--- longest number that can be formated
+# longest number that can be formated
 assert(string.len(string.format('%99.99f', -1e308)) >= 100)
 
 function return_one_thing()
@@ -187,7 +187,7 @@ assert(pcall(function()
 	string.format("%#*", "bad form")
 end) == false)
 
-assert(loadstring("return 1\n--comentário sem EOL no final")() == 1)
+assert(loadstring("return 1\n#comentário sem EOL no final")() == 1)
 
 
 assert(table.concat{} == "")
@@ -208,7 +208,7 @@ assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
 
--- string.split
+# string.split
 do
   function eq(a, b)
     if a.count != b.count then
@@ -228,14 +228,14 @@ do
   assert(eq(string.split("abc", "c"), {'ab', ''}))
 end
 
--- validate that variadic string fast calls get correct number of arguments
+# validate that variadic string fast calls get correct number of arguments
 function chr1(c)
   return string.char(tonumber(c));
 end
 
 assert(chr1("0") == "\0")
 
---[[
+#[[
 locales = { "ptb", "ISO-8859-1", "pt_BR" }
 function trylocale (w)
   for _, l in ipairs(locales) do
@@ -262,7 +262,7 @@ end
 os.setlocale("C")
 assert(os.setlocale() == 'C')
 assert(os.setlocale(null, "numeric") == 'C')
-]]--
+]]#
 
 return('OK')
 

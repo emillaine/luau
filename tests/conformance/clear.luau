@@ -1,4 +1,4 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 function checkerror(msg, f, ...)
 	s, err = pcall(f, ...)
 	assert(not s and string.find(err, msg))
@@ -55,7 +55,7 @@ do
 		end
 	end
 
-	do -- Check expanding the array part after clear
+	do # Check expanding the array part after clear
 		tb = generateClearedTable(10, 0)
 		for i = 1, 40 do
 			tb[i] = i
@@ -63,7 +63,7 @@ do
 		assert(tb.count == 40, "wrong array part size after expand")
 	end
 
-	do -- Check expanding the hash part after clear
+	do # Check expanding the hash part after clear
 		tb = generateClearedTable(0, 10)
 		for i = 1, 40 do
 			tb[tostring(i)] = i

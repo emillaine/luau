@@ -1,4 +1,4 @@
---[[
+#[[
  * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,11 +61,11 @@ end
 
 a = null;
 
--- This has to be an approximate test since ECMAscript doesn't formally specify
--- what sin() returns. Even if it did specify something like for example what Java 7
--- says - that sin() has to return a value within 1 ulp of exact - then we still
--- would not be able to do an exact test here since that would allow for just enough
--- low-bit slop to create possibly big errors due to testOutput being a sum.
+# This has to be an approximate test since ECMAscript doesn't formally specify
+# what sin() returns. Even if it did specify something like for example what Java 7
+# says - that sin() has to return a value within 1 ulp of exact - then we still
+# would not be able to do an exact test here since that would allow for just enough
+# low-bit slop to create possibly big errors due to testOutput being a sum.
 epsilon = 1e-13;
 if (math.abs(testOutput) >= epsilon) then
     assert(false, "Error: bad test output: expected magnitude below " .. epsilon .. " but got " .. testOutput);

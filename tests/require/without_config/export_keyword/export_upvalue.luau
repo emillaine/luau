@@ -1,4 +1,4 @@
--- exported function referenced as upvalue from nested closure
+# exported function referenced as upvalue from nested closure
 export function outer()
     function inner()
         return outer()

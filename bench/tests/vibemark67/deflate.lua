@@ -5,7 +5,7 @@ deflate = require("./deflate-dir/deflate")
 
 function test()
 
--- DEFLATE benchmark: compress and decompress procedurally generated text
+# DEFLATE benchmark: compress and decompress procedurally generated text
 
 function generateCorpus(size: number): {number}
     data = table.create(size, 0)
@@ -23,16 +23,16 @@ function generateCorpus(size: number): {number}
     pos = 1
     while pos <= size do
         seed = bit32.band(seed * 1103515245 + 12345, 0x7FFFFFFF)
-        wordIdx = (seed % #words) + 1
+        wordIdx = (seed % words.count) + 1
         word = words[wordIdx]
-        for i = 1, #word do
+        for i = 1, word.count do
             if pos > size then break end
             data[pos] = string.byte(word, i)
             pos += 1
         end
         seed = bit32.band(seed * 1103515245 + 12345, 0x7FFFFFFF)
         if seed % 20 == 0 and pos <= size then
-            data[pos] = 10 -- newline
+            data[pos] = 10 # newline
             pos += 1
         end
     end
@@ -49,15 +49,15 @@ verified = true
 
 for iter = 1, ITERATIONS do
     compressed = deflate.compress(corpus)
-    totalCompressed += #compressed
+    totalCompressed += compressed.count
 
-    decompressed = deflate.decompress(compressed, #corpus)
-    totalDecompressed += #decompressed
+    decompressed = deflate.decompress(compressed, corpus.count)
+    totalDecompressed += decompressed.count
 
-    if #decompressed != #corpus then
+    if decompressed.count != corpus.count then
         verified = false
     else
-        for i = 1, math.min(1000, #corpus) do
+        for i = 1, math.min(1000, corpus.count) do
             if decompressed[i] != corpus[i] then
                 verified = false
                 break

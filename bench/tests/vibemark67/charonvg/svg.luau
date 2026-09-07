@@ -1,4 +1,4 @@
---!native
+#!native
 Path = require("./path")
 Matrix = require("./matrix")
 Color = require("./color")
@@ -10,11 +10,11 @@ Svg = {}
 
 PI = math.pi
 
--- ── Minimal XML Parser ──────────────────────────────────────────────────────
+# ── Minimal XML Parser ──────────────────────────────────────────────────────
 
 function parseXml(str)
     pos = 1
-    len = #str
+    len = str.count
 
     function skipWs()
         while pos <= len do
@@ -87,14 +87,14 @@ function parseXml(str)
                 pos = pos + 1
                 skipWs()
                 val = readAttrValue()
-                -- Normalize xlink:href to href
+                # Normalize xlink:href to href
                 if name == "xlink:href" then
                     name = "href"
                 end
                 attrs[name] = val or ""
             end
         end
-        -- Parse inline style into individual attributes
+        # Parse inline style into individual attributes
         if attrs.style then
             for prop, val in string.gmatch(attrs.style, "([%w%-]+)%s*:%s*([^;]+)") do
                 if not attrs[prop] then
@@ -142,7 +142,7 @@ function parseXml(str)
             return null
         end
 
-        -- Text content (skip)
+        # Text content (skip)
         if string.byte(str, pos) != 60 then
             while pos <= len and string.byte(str, pos) != 60 do
                 pos = pos + 1
@@ -150,13 +150,13 @@ function parseXml(str)
             return null
         end
 
-        pos = pos + 1 -- skip '<'
+        pos = pos + 1 # skip '<'
         if pos > len then
             return null
         end
 
         c = string.byte(str, pos)
-        -- Comment
+        # Comment
         if c == 33 then
             if string.sub(str, pos, pos + 1) == "!-" then
                 pos = pos + 2
@@ -172,19 +172,19 @@ function parseXml(str)
                 pos = endPos and endPos + 3 or len + 1
                 return null
             end
-            -- Skip other declarations
+            # Skip other declarations
             while pos <= len and string.byte(str, pos) != 62 do
                 pos = pos + 1
             end
             pos = pos + 1
             return null
         end
-        -- Processing instruction
+        # Processing instruction
         if c == 63 then
             skipPI()
             return null
         end
-        -- Closing tag
+        # Closing tag
         if c == 47 then
             pos = pos + 1
             while pos <= len and string.byte(str, pos) != 62 do
@@ -221,7 +221,7 @@ function parseXml(str)
                 end
                 if child then
                     child.parent = node
-                    node.children[#node.children + 1] = child
+                    node.children[node.children.count + 1] = child
                 end
             end
         end
@@ -229,12 +229,12 @@ function parseXml(str)
         return node
     end
 
-    -- Skip BOM
+    # Skip BOM
     if string.sub(str, 1, 3) == "\239\187\191" then
         pos = 4
     end
 
-    -- Find root element
+    # Find root element
     root = null
     while pos <= len do
         el = parseElement()
@@ -246,7 +246,7 @@ function parseXml(str)
     return root
 end
 
--- ── SVG Document ────────────────────────────────────────────────────────────
+# ── SVG Document ────────────────────────────────────────────────────────────
 
 Document = {}
 Document.__index = Document
@@ -260,7 +260,7 @@ function buildIdMap(node, map)
     end
 end
 
--- ── Value Parsers ───────────────────────────────────────────────────────────
+# ── Value Parsers ───────────────────────────────────────────────────────────
 
 DPI = 96
 
@@ -322,7 +322,7 @@ function parsePoints(s)
     end
     points = {}
     for x, y in s:gmatch("([%d%.%-%+eE]+)[%s,]+([%d%.%-%+eE]+)") do
-        points[#points + 1] = { tonumber(x), tonumber(y) }
+        points[points.count + 1] = { tonumber(x), tonumber(y) }
     end
     return points
 end
@@ -382,7 +382,7 @@ function findAttr(element, name, vars)
     return null
 end
 
--- ── Paint Resolution ────────────────────────────────────────────────────────
+# ── Paint Resolution ────────────────────────────────────────────────────────
 
 function resolveGradientStops(element, idMap, depth)
     if depth > 32 then
@@ -398,10 +398,10 @@ function resolveGradientStops(element, idMap, depth)
             stopColor = child.attrs["stop-color"] or findAttr(child, "stop-color") or "#000000"
             stopOpacity = parseNumber(child.attrs["stop-opacity"] or findAttr(child, "stop-opacity")) or 1
             c = Color.parse(stopColor) or Color.BLACK
-            stops[#stops + 1] = { offset = offset, color = Color.rgba(c.r, c.g, c.b, c.a * stopOpacity) }
+            stops[stops.count + 1] = { offset = offset, color = Color.rgba(c.r, c.g, c.b, c.a * stopOpacity) }
         end
     end
-    if #stops == 0 and element.attrs.href then
+    if stops.count == 0 and element.attrs.href then
         ref = idMap[element.attrs.href:gsub("^#", "")]
         if ref then
             return resolveGradientStops(ref, idMap, depth + 1)
@@ -454,7 +454,7 @@ function resolveLinearGradient(element, idMap, extents, viewW, viewH)
     y2 = parseGradientCoord(resolveGradientAttr(element, "y2", idMap, 0), 0, viewH, isBBox)
 
     stops = resolveGradientStops(element, idMap, 0)
-    if #stops == 0 then
+    if stops.count == 0 then
         return null
     end
 
@@ -491,7 +491,7 @@ function resolveRadialGradient(element, idMap, extents, viewW, viewH)
     fy = fyStr and parseGradientCoord(fyStr, cy, viewH, isBBox) or cy
 
     stops = resolveGradientStops(element, idMap, 0)
-    if #stops == 0 then
+    if stops.count == 0 then
         return null
     end
 
@@ -517,7 +517,7 @@ function resolvePaint(value, element, idMap, extents, viewW, viewH, vars)
     if not value or value == "none" then
         return null
     end
-    -- Resolve currentColor
+    # Resolve currentColor
     if value == "currentColor" then
         value = findAttr(element, "color", vars) or "black"
     end
@@ -531,7 +531,7 @@ function resolvePaint(value, element, idMap, extents, viewW, viewH, vars)
                 return resolveRadialGradient(ref, idMap, extents, viewW, viewH)
             end
         end
-        -- Try fallback color after url()
+        # Try fallback color after url()
         fallback = value:match("url%([^%)]+%)%s+(.+)")
         if fallback then
             return null, Color.parse(fallback)
@@ -542,7 +542,7 @@ function resolvePaint(value, element, idMap, extents, viewW, viewH, vars)
     return null, c
 end
 
--- ── ViewBox Transform ───────────────────────────────────────────────────────
+# ── ViewBox Transform ───────────────────────────────────────────────────────
 
 function applyViewBox(canvas, viewBox, vpWidth, vpHeight, par)
     if not viewBox then
@@ -592,7 +592,7 @@ function applyViewBox(canvas, viewBox, vpWidth, vpHeight, par)
     canvas:scale(scale, scale)
 end
 
--- ── Renderer ────────────────────────────────────────────────────────────────
+# ── Renderer ────────────────────────────────────────────────────────────────
 
 function renderElement(element, ctx, idMap, viewW, viewH, depth)
     if depth > 256 then
@@ -608,7 +608,7 @@ function renderElement(element, ctx, idMap, viewW, viewH, depth)
 
     ctx.canvas:save()
 
-    -- Apply transform
+    # Apply transform
     transformStr = element.attrs.transform
     if transformStr then
         m = Matrix.parse(transformStr)
@@ -617,7 +617,7 @@ function renderElement(element, ctx, idMap, viewW, viewH, depth)
         end
     end
 
-    -- Apply opacity
+    # Apply opacity
     opacityStr = element.attrs.opacity
     if opacityStr then
         o = tonumber(opacityStr)
@@ -643,7 +643,7 @@ function renderElement(element, ctx, idMap, viewW, viewH, depth)
             renderElement(child, ctx, idMap, viewW, viewH, depth + 1)
         end
     else if tag == "defs" then
-        -- Don't render, only accessible via url(#id) or <use>
+        # Don't render, only accessible via url(#id) or <use>
     else if tag == "use" then
         href = element.attrs.href
         if href then
@@ -742,10 +742,10 @@ function renderElement(element, ctx, idMap, viewW, viewH, depth)
             return
         end
         points = parsePoints(element.attrs.points)
-        if points and #points >= 2 then
+        if points and points.count >= 2 then
             p = Path.create()
             p:moveTo(points[1][1], points[1][2])
-            for i = 2, #points do
+            for i = 2, points.count do
                 p:lineTo(points[i][1], points[i][2])
             end
             if tag == "polygon" then
@@ -758,19 +758,19 @@ function renderElement(element, ctx, idMap, viewW, viewH, depth)
     ctx.canvas:restore()
 end
 
--- Forward declaration resolved here
+# Forward declaration resolved here
 function drawShape(ctx, element, path, idMap, viewW, viewH)
     canvas = ctx.canvas
     vars = ctx.vars
 
-    -- Compute rough bounding box for objectBoundingBox gradients
+    # Compute rough bounding box for objectBoundingBox gradients
     extents = path:extents(false)
 
-    -- Fill
+    # Fill
     fillStr = findAttr(element, "fill", vars)
     if fillStr == null then
         fillStr = "black"
-    end -- SVG default fill is black
+    end # SVG default fill is black
     if fillStr != "none" then
         paint, color = resolvePaint(fillStr, element, idMap, extents, viewW, viewH, vars)
         fillOpacity = parseNumber(findAttr(element, "fill-opacity", vars)) or 1
@@ -792,7 +792,7 @@ function drawShape(ctx, element, path, idMap, viewW, viewH)
         canvas:restore()
     end
 
-    -- Stroke
+    # Stroke
     strokeStr = findAttr(element, "stroke", vars)
     if strokeStr and strokeStr != "none" then
         paint, color = resolvePaint(strokeStr, element, idMap, extents, viewW, viewH, vars)
@@ -815,9 +815,9 @@ function drawShape(ctx, element, path, idMap, viewW, viewH)
         if dashStr and dashStr != "none" then
             dashes = {}
             for num in dashStr:gmatch("[%d%.]+") do
-                dashes[#dashes + 1] = tonumber(num) or 0
+                dashes[dashes.count + 1] = tonumber(num) or 0
             end
-            if #dashes > 0 then
+            if dashes.count > 0 then
                 dashOffset = parseNumber(findAttr(element, "stroke-dashoffset", vars)) or 0
                 canvas:setDash(dashOffset, dashes)
             end
@@ -835,7 +835,7 @@ function drawShape(ctx, element, path, idMap, viewW, viewH)
     end
 end
 
--- ── Public API ──────────────────────────────────────────────────────────────
+# ── Public API ──────────────────────────────────────────────────────────────
 
 function Svg.parse(svgString)
     root = parseXml(svgString)
@@ -850,7 +850,7 @@ function Svg.parse(svgString)
     doc._root = root
     doc._idMap = idMap
 
-    -- Parse intrinsic dimensions
+    # Parse intrinsic dimensions
     vb = parseViewBox(root.attrs.viewBox)
     w = parseLength(root.attrs.width, vb and vb.w or 300)
     h = parseLength(root.attrs.height, vb and vb.h or 150)
@@ -896,7 +896,7 @@ function Document:renderToSurface(width, height, vars)
     surface = Surface.create(width, height)
     canvas = Canvas.create(surface)
 
-    -- Scale from intrinsic to requested size
+    # Scale from intrinsic to requested size
     if width != self._width or height != self._height then
         canvas:scale(width / self._width, height / self._height)
     end

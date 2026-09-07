@@ -1,4 +1,4 @@
--- verify internal calls work when module is required
+# verify internal calls work when module is required
 m = require("./export_internal_call")
 
 assert(m.double(5) == 10, "double should work")

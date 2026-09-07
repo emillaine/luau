@@ -9,11 +9,11 @@ function test()
 
     for i = 1,iters do
         is = tostring(i)
-        input = string.rep(is, 1000 / #is)
+        input = string.rep(is, 1000 / is.count)
 
         t[is] = input
 
-        -- remove old entries
+        # remove old entries
         if i > max then
             t[tostring(i - max)] = null
         end

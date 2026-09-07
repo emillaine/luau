@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print "testing UTF-8 library"
 
 function checkerror (msg, f, ...)
@@ -15,39 +15,39 @@ end
 
 justone = "^" .. utf8.charpattern .. "$"
 
--- 't' is the list of codepoints of 's'
+# 't' is the list of codepoints of 's'
 function checksyntax (s, t)
-  -- creates a string "return '\u{t[1]}...\u{t[n]}'"
+  # creates a string "return '\u{t[1]}...\u{t[n]}'"
   ts = {"return '"}
   for i = 1, t.count do ts[i + 1] = string.format("\\u{%x}", t[i]) end
   ts[t.count + 2] = "'"
   ts = table.concat(ts)
-  -- its execution should result in 's'
+  # its execution should result in 's'
   assert(assert(loadstring(ts))() == s)
 end
 
 assert(not utf8.offset("alo", 5))
 assert(not utf8.offset("alo", -4))
 
--- 'check' makes several tests over the validity of string 's'.
--- 't' is the list of codepoints of 's'.
+# 'check' makes several tests over the validity of string 's'.
+# 't' is the list of codepoints of 's'.
 function check (s, t)
   l = utf8.len(s, 1, -1)
   assert(t.count == l and len(s) == l)
-  assert(utf8.char(table.unpack(t)) == s)   -- 't' and 's' are equivalent
+  assert(utf8.char(table.unpack(t)) == s)   # 't' and 's' are equivalent
 
   assert(utf8.offset(s, 0) == 1)
 
   checksyntax(s, t)
 
-  -- creates new table with all codepoints of 's'
+  # creates new table with all codepoints of 's'
   t1 = {utf8.codepoint(s, 1, -1)}
   assert(t.count == t1.count)
-  for i = 1, t.count do assert(t[i] == t1[i]) end   -- 't' is equal to 't1'
+  for i = 1, t.count do assert(t[i] == t1[i]) end   # 't' is equal to 't1'
 
-  for i = 1, l do   -- for all codepoints
-    pi = utf8.offset(s, i)        -- position of i-th char
-    pi1 = utf8.offset(s, 2, pi)   -- position of next char
+  for i = 1, l do   # for all codepoints
+    pi = utf8.offset(s, i)        # position of i-th char
+    pi1 = utf8.offset(s, 2, pi)   # position of next char
     assert(string.find(string.sub(s, pi, pi1 - 1), justone))
     assert(utf8.offset(s, -1, pi1) == pi)
     assert(utf8.offset(s, i - l - 1) == pi)
@@ -87,7 +87,7 @@ function check (s, t)
 end
 
 
-do    -- error indication in utf8.len
+do    # error indication in utf8.len
   const function check (s, p)
     a, b = utf8.len(s)
     assert(not a and b == p)
@@ -95,7 +95,7 @@ do    -- error indication in utf8.len
   check("abc\xE3def", 4)
   check("\xF4\x9F\xBF", 1)
   check("\xF4\x9F\xBF\xBF", 1)
-  -- spurious continuation bytes
+  # spurious continuation bytes
   check("汉字\x80", ("汉字").count + 1)
   check("\x80hello", 1)
   check("hel\x80lo", 4)
@@ -104,7 +104,7 @@ do    -- error indication in utf8.len
   check("hel\xBFlo", 4)
 end
 
--- errors in utf8.codes
+# errors in utf8.codes
 do
   function errorcodes (s)
     checkerror("invalid UTF%-8 code",
@@ -113,12 +113,12 @@ do
       end)
   end
   errorcodes("ab\xff")
-  errorcodes("\244\144\128\128") -- "\u{110000}" in Lua 5.4
+  errorcodes("\244\144\128\128") # "\u{110000}" in Lua 5.4
   errorcodes("in\x80valid")
   errorcodes("\xbfinvalid")
   errorcodes("αλφ\xBFα")
 
-  -- calling interation function with invalid arguments
+  # calling interation function with invalid arguments
   f = utf8.codes("")
   assert(f("", 2) == null)
   assert(f("", -1) == null)
@@ -126,7 +126,7 @@ do
 
 end
 
--- error in initial position for offset
+# error in initial position for offset
 checkerror("position out of range", utf8.offset, "abc", 1, 5)
 checkerror("position out of range", utf8.offset, "abc", 1, -4)
 checkerror("position out of range", utf8.offset, "", 1, 2)
@@ -135,7 +135,7 @@ checkerror("continuation byte", utf8.offset, "𦧺", 1, 2)
 checkerror("continuation byte", utf8.offset, "𦧺", 1, 2)
 checkerror("continuation byte", utf8.offset, "\x80", 1)
 
--- error in indices for len
+# error in indices for len
 checkerror("out of string", utf8.len, "abc", 0, 2)
 checkerror("out of string", utf8.len, "abc", 1, 4)
 
@@ -157,19 +157,19 @@ do
   assert(t.count == 0)
   checkerror("out of range", utf8.codepoint, s, -(s.count + 1), 1)
   checkerror("out of range", utf8.codepoint, s, 1, s.count + 1)
-  -- surrogates
+  # surrogates
   assert(utf8.codepoint("\u{D7FF}") == 0xD800 - 1)
   assert(utf8.codepoint("\u{E000}") == 0xDFFF + 1)
-  assert(pcall(utf8.codepoint, "\u{D800}") == false) -- allowed in Luau 5.4 when called with lax=true
-  assert(pcall(utf8.codepoint, "\u{DFFF}") == false) -- allowed in Luau 5.4 when called with lax=true
-  assert(pcall(utf8.codepoint, "\253\191\191\191\191\191") == false) -- 0x7FFFFFFF in Lua 5.4 when called with lax=true
+  assert(pcall(utf8.codepoint, "\u{D800}") == false) # allowed in Luau 5.4 when called with lax=true
+  assert(pcall(utf8.codepoint, "\u{DFFF}") == false) # allowed in Luau 5.4 when called with lax=true
+  assert(pcall(utf8.codepoint, "\253\191\191\191\191\191") == false) # 0x7FFFFFFF in Lua 5.4 when called with lax=true
 end
 
 assert(utf8.char() == "")
 assert(utf8.char(0, 97, 98, 99, 1) == "\0abc\1")
 
 assert(utf8.codepoint(utf8.char(0x10FFFF)) == 0x10FFFF)
-assert(pcall(utf8.char, 0x7FFFFFFF) == false) -- valid in Lua 5.4
+assert(pcall(utf8.char, 0x7FFFFFFF) == false) # valid in Lua 5.4
 
 checkerror("value out of range", utf8.char, 0x7FFFFFFF + 1)
 checkerror("value out of range", utf8.char, -1)
@@ -179,31 +179,31 @@ function invalid (s)
   assert(not utf8.len(s))
 end
 
--- UTF-8 representation for 0x11ffff (value out of valid range)
+# UTF-8 representation for 0x11ffff (value out of valid range)
 invalid("\xF4\x9F\xBF\xBF")
 
--- surrogates
+# surrogates
 invalid("\u{D800}")
 invalid("\u{DFFF}")
 
--- overlong sequences
-invalid("\xC0\x80")          -- zero
-invalid("\xC1\xBF")          -- 0x7F (should be coded in 1 byte)
-invalid("\xE0\x9F\xBF")      -- 0x7FF (should be coded in 2 bytes)
-invalid("\xF0\x8F\xBF\xBF")  -- 0xFFFF (should be coded in 3 bytes)
+# overlong sequences
+invalid("\xC0\x80")          # zero
+invalid("\xC1\xBF")          # 0x7F (should be coded in 1 byte)
+invalid("\xE0\x9F\xBF")      # 0x7FF (should be coded in 2 bytes)
+invalid("\xF0\x8F\xBF\xBF")  # 0xFFFF (should be coded in 3 bytes)
 
 
--- invalid bytes
-invalid("\x80")  -- continuation byte
-invalid("\xBF")  -- continuation byte
-invalid("\xFE")  -- invalid byte
-invalid("\xFF")  -- invalid byte
+# invalid bytes
+invalid("\x80")  # continuation byte
+invalid("\xBF")  # continuation byte
+invalid("\xFE")  # invalid byte
+invalid("\xFF")  # invalid byte
 
 
--- empty string
+# empty string
 check("", {})
 
--- minimum and maximum values for each sequence size
+# minimum and maximum values for each sequence size
 s = "\0 \x7F\z
      \xC2\x80 \xDF\xBF\z
      \xE0\xA0\x80 \xEF\xBF\xBF\z
@@ -215,7 +215,7 @@ x = "日本語a-4\0éó"
 check(x, {26085, 26412, 35486, 97, 45, 52, 0, 233, 243})
 
 
--- Supplementary Characters
+# Supplementary Characters
 check("𣲷𠜎𠱓𡁻𠵼ab𠺢",
       {0x23CB7, 0x2070E, 0x20C53, 0x2107B, 0x20D7C, 0x61, 0x62, 0x20EA2,})
 

@@ -3048,7 +3048,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "CheckReadonlyEliminationOnSsaValues")
         "\n" + getCodegenAssembly(
                    R"(
 function foo(t: { y: { a: number, b: number, c: number } })
-    t.y.a = t.y.b -- this kills 'readonly' state tracking through VM RegisterLink
+    t.y.a = t.y.b # this kills 'readonly' state tracking through VM RegisterLink
     t.y.c = 3
 end
 )",
@@ -4649,7 +4649,7 @@ function foo(a: number, b: number)
     const z = bit32.replace(bit32.rshift(a, 22), bit32.rshift(b, 22), 10, 10)
 
     const v = vector.create(x, y, z)
-    return v, v.x + v.y -- tests UINT_TO_FLOAT propagation as well
+    return v, v.x + v.y # tests UINT_TO_FLOAT propagation as well
 end
 )"),
         R"(
@@ -5688,9 +5688,9 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumericConversionReplacementCheck")
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
 function foo(buf: buffer, a: number)
-    math.ldexp(a, a) -- generate NUM_TO_INT early
+    math.ldexp(a, a) # generate NUM_TO_INT early
 
-    -- range checks cannot make NUM_TO_INT exit to VM at a later location
+    # range checks cannot make NUM_TO_INT exit to VM at a later location
     return buffer.readi32(buf, a) + buffer.readi32(buf, a + 4)
 end
 )"),
@@ -5812,7 +5812,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferRelatedIndicesPositiveMultBaseInt")
     CHECK_EQ(
         "\n" + getCodegenAssembly(R"(
 function foo(buf: buffer, a: number)
-    -- trying to be helpful
+    # trying to be helpful
     const t1 = bit32.bor(a, 0)
     const t2 = bit32.bor(t1 + 8, 0)
     const t3 = bit32.bor(t1 + 16, 0)
@@ -6249,7 +6249,7 @@ function foo(a, b)
     b = b or 0
     return a + b
 end
--- when a function like 'foo' is inlined, those 'default values' collapse
+# when a function like 'foo' is inlined, those 'default values' collapse
 function bar()
     return foo(3, 4)
 end
@@ -8428,7 +8428,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "NumberFastcallWrongConst")
     CHECK(
         getCodegenAssembly(R"(
 function f(...)
-    -- 2-arg math
+    # 2-arg math
     math.pow(..., 5i)
     math.fmod(..., 5i)
     math.atan2(..., 5i)
@@ -8436,26 +8436,26 @@ function f(...)
     math.min(..., 5i)
     math.max(..., 5i)
 
-    -- bit32 multiarg
+    # bit32 multiarg
     bit32.band(..., 5i)
     bit32.bor(..., 5i)
     bit32.bxor(..., 5i)
     bit32.btest(..., 5i)
 
-    -- bit32 shift/rotate
+    # bit32 shift/rotate
     bit32.lshift(..., 5i)
     bit32.rshift(..., 5i)
     bit32.arshift(..., 5i)
     bit32.lrotate(..., 5i)
     bit32.rrotate(..., 5i)
 
-    -- bit32 extract (2-arg)
+    # bit32 extract (2-arg)
     bit32.extract(..., 5i)
 
-    -- vector constructor (2-arg)
+    # vector constructor (2-arg)
     vector.create(..., 5i)
 
-    -- buffer reads (offset is checked as double)
+    # buffer reads (offset is checked as double)
     buffer.readi8(..., 5i)
     buffer.readu8(..., 5i)
     buffer.readi16(..., 5i)
@@ -8513,7 +8513,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "BufferWriteChecksExtraArgs")
         "\n" + getCodegenAssembly(
                    R"(
 function foo(b: buffer, offset: number, val)
-    return buffer.writeu32(b, offset, val, 0) -- unused extra argument
+    return buffer.writeu32(b, offset, val, 0) # unused extra argument
 end
 )",
                    true,
@@ -8616,7 +8616,7 @@ TEST_CASE_FIXTURE(LoweringFixture, "IntegerCompareConstLhs")
         "\n" + getCodegenAssembly(
                    R"(
 function foo(b: buffer, x: integer)
-    -- bytecode compiler is unlikely to constant-fold this
+    # bytecode compiler is unlikely to constant-fold this
     buffer.writeinteger(b, 0, 2i)
     const lhs = buffer.readinteger(b, 0)
 

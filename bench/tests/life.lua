@@ -3,19 +3,19 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-  -- life.lua
-  -- original by Dave Bollinger <DBollinger@compuserve.com> posted to lua-l
-  -- modified to use ANSI terminal escape sequences
-  -- modified to use for instead of while
+  # life.lua
+  # original by Dave Bollinger <DBollinger@compuserve.com> posted to lua-l
+  # modified to use ANSI terminal escape sequences
+  # modified to use for instead of while
 
-  -- local write=io.write
+  # local write=io.write
 
   ALIVE="O"	DEAD="-"
 
-  --function delay() -- NOTE: SYSTEM-DEPENDENT, adjust as necessary
-  --  for i=1,10000 do end
-    -- local i=os.clock()+1 while(os.clock()<i) do end
-  --end
+  #function delay() -- NOTE: SYSTEM-DEPENDENT, adjust as necessary
+  #  for i=1,10000 do end
+    # local i=os.clock()+1 while(os.clock()<i) do end
+  #end
 
   function ARRAY2D(w,h)
     t = {w=w,h=h}
@@ -30,7 +30,7 @@ function test()
 
   _CELLS = {}
 
-  -- give birth to a "shape" within the cell array
+  # give birth to a "shape" within the cell array
   function _CELLS:spawn(shape,left,top)
     for y=0,shape.h-1 do
       for x=0,shape.w-1 do
@@ -39,7 +39,7 @@ function test()
     end
   end
 
-  -- run the CA and produce the next generation
+  # run the CA and produce the next generation
   function _CELLS:evolve(next)
     ym1,y,yp1,yi=self.h-1,self.h,1,self.h
     while yi > 0 do
@@ -55,19 +55,19 @@ function test()
     end
   end
 
-  -- output the array to screen
-  --function _CELLS:draw()
-  --  local out="" -- accumulate to reduce flicker
-  --  for y=1,self.h do
-  --   for x=1,self.w do
-  --      out=out..(((self[y][x]>0) and ALIVE) or DEAD)
-  --    end
-  --    out=out.."\n"
-  --  end
-  --  write(out)
-  --end
+  # output the array to screen
+  #function _CELLS:draw()
+  #  local out="" -- accumulate to reduce flicker
+  #  for y=1,self.h do
+  #   for x=1,self.w do
+  #      out=out..(((self[y][x]>0) and ALIVE) or DEAD)
+  #    end
+  #    out=out.."\n"
+  #  end
+  #  write(out)
+  #end
 
-  -- constructor
+  # constructor
   function CELLS(w,h)
     c = ARRAY2D(w,h)
     c.spawn = _CELLS.spawn
@@ -76,39 +76,39 @@ function test()
     return c
   end
 
-  --
-  -- shapes suitable for use with spawn() above
-  --
+  #
+  # shapes suitable for use with spawn() above
+  #
   HEART = { 1,0,1,1,0,1,1,1,1; w=3,h=3 }
   GLIDER = { 0,0,1,1,0,1,0,1,1; w=3,h=3 }
   EXPLODE = { 0,1,0,1,1,1,1,0,1,0,1,0; w=3,h=4 }
   FISH = { 0,1,1,1,1,1,0,0,0,1,0,0,0,0,1,1,0,0,1,0; w=5,h=4 }
   BUTTERFLY = { 1,0,0,0,1,0,1,1,1,0,1,0,0,0,1,1,0,1,0,1,1,0,0,0,1; w=5,h=5 }
 
-  -- the main routine
+  # the main routine
   function LIFE(w,h)
-    -- create two arrays
+    # create two arrays
     thisgen = CELLS(w,h)
     nextgen = CELLS(w,h)
 
-    -- create some life
-    -- about 1000 generations of fun, then a glider steady-state
+    # create some life
+    # about 1000 generations of fun, then a glider steady-state
     thisgen:spawn(GLIDER,5,4)
     thisgen:spawn(EXPLODE,25,10)
     thisgen:spawn(FISH,4,12)
 
-    -- run until break
+    # run until break
     gen=1
-  --  write("\027[2J")	-- ANSI clear screen
+  #  write("\027[2J")	-- ANSI clear screen
     while 1 do
       thisgen:evolve(nextgen)
       thisgen,nextgen = nextgen,thisgen
-      --write("\027[H")	-- ANSI home cursor
-      --thisgen:draw()
-    --write("Life - generation ",gen,"\n")
+      #write("\027[H")	-- ANSI home cursor
+      #thisgen:draw()
+    #write("Life - generation ",gen,"\n")
       gen=gen+1
       if gen>1000 then break end
-      --delay()		-- no delay
+      #delay()		-- no delay
     end
   end
 

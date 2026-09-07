@@ -36,7 +36,7 @@ function test()
 		decoder = decoder or DEFAULT_DECODER
 		cache = usecaching and {}
 		t, k = {}, 1
-		n = #b64
+		n = b64.count
 		padding = b64:sub(-2) == '==' and 2 or b64:sub(-1) == '=' and 1 or 0
 		for i = 1, padding > 0 and n-4 or n, 4 do
 			a, b, c, d = byte( b64, i, i+3 )

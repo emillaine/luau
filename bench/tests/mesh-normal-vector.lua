@@ -1,4 +1,4 @@
---!strict
+#!strict
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../bench_support")
 
@@ -57,7 +57,7 @@ function test()
     function calculate_normals()
         norm_sum = 0
         
-        for i = 1,#mesh.indices,3 do
+        for i = 1,mesh.indices.count,3 do
             a = mesh.vertices[mesh.indices[i]]
             b = mesh.vertices[mesh.indices[i + 1]]
             c = mesh.vertices[mesh.indices[i + 2]]
@@ -83,7 +83,7 @@ function test()
         
         pos = 1
 
-        for i = 1,#mesh.indices,3 do
+        for i = 1,mesh.indices.count,3 do
             p0 = mesh.vertices[mesh.indices[i]]
             p1 = mesh.vertices[mesh.indices[i + 1]]
             p2 = mesh.vertices[mesh.indices[i + 2]]
@@ -109,7 +109,7 @@ function test()
     function compute_tangent_space()
         checksum = 0
         
-        for i = 1,#mesh.indices,3 do
+        for i = 1,mesh.indices.count,3 do
             a = mesh.vertices[mesh.indices[i]]
             b = mesh.vertices[mesh.indices[i + 1]]
             c = mesh.vertices[mesh.indices[i + 2]]
@@ -137,7 +137,7 @@ function test()
         for _,v in ipairs(mesh.vertices) do
             t = v.t
             
-            -- Gram-Schmidt orthogonalize
+            # Gram-Schmidt orthogonalize
             v.t = vector.normalize(t - v.n * vector.dot(v.n, t))
             
             ht = vector.dot(vector.cross(v.n, t), v.b)

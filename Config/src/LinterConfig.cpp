@@ -42,15 +42,15 @@ uint64_t LintWarning::parseMask(const std::vector<HotComment>& hotcomments)
 
         size_t name = hc.content.find_first_not_of(" \t", 6);
 
-        // --!nolint disables everything
+        // #!nolint disables everything
         if (name == std::string::npos)
             return ~0ull;
 
-        // --!nolint needs to be followed by a whitespace character
+        // #!nolint needs to be followed by a whitespace character
         if (name == 6)
             continue;
 
-        // --!nolint name disables the specific lint
+        // #!nolint name disables the specific lint
         LintWarning::Code code = LintWarning::parseName(hc.content.c_str() + name);
 
         if (code != LintWarning::Code_Unknown)

@@ -1,10 +1,10 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print('testing vector library')
 
 function noinline(x, ...) s, r = pcall(function(y) return y end, x) return r end
 function noinlinevector(a, b, c) return noinline(vector.create(a, b, c)) end
 
--- detect vector size
+# detect vector size
 vector_size = if pcall(function() return vector.create(0, 0, 0).w end) then 4 else 3
 
 function ecall(fn, ...)
@@ -13,21 +13,21 @@ function ecall(fn, ...)
     return err:sub((err:find(": ") or -1) + 2, err.count)
 end
 
--- in a different thread to not deoptimize native execution
+# in a different thread to not deoptimize native execution
 pcall(function()
-    -- make sure we cover both builtin and C impl
+    # make sure we cover both builtin and C impl
     assert(vector.create(1, 2) == vector.create("1", "2"))
     assert(vector.create(1, 2, 4) == vector.create("1", "2", "4"))
     assert(not is_native_if_supported())
 end)
 
--- 'create'
+# 'create'
 v12 = vector.create(1, 2)
 v123 = vector.create(1, 2, 3)
 assert(v12.x == 1 and v12.y == 2 and v12.z == 0)
 assert(v123.x == 1 and v123.y == 2 and v123.z == 3)
 
--- testing 'dot' with error handling and different call kinds to mostly check details in the codegen
+# testing 'dot' with error handling and different call kinds to mostly check details in the codegen
 assert(vector.dot(vector.create(1, 2, 4), vector.create(5, 6, 7)) == 45)
 assert(ecall(function() vector.dot(vector.create(1, 2, 4)) end) == "missing argument #2 to 'dot' (vector expected)")
 assert(ecall(function() vector.dot(vector.create(1, 2, 4), 2) end) == "invalid argument #2 to 'dot' (vector expected, got number)")
@@ -49,24 +49,24 @@ assert(ecall(function() doDot2(v124, "a") end) == "invalid argument #2 to 'dot' 
 assert(select("#", doDot1(v124, vector.create(5, 6, 7))) == 1)
 assert(select("#", doDot2(v124, vector.create(5, 6, 7))) == 1)
 
--- 'cross' tests and next ones will only test basic results
+# 'cross' tests and next ones will only test basic results
 assert(vector.cross(vector.create(1, 0, 0), vector.create(0, 1, 0)) == vector.create(0, 0, 1))
 assert(vector.cross(vector.create(0, 1, 0), vector.create(1, 0, 0)) == vector.create(0, 0, -1))
 assert(vector.cross(noinlinevector(1, 0, 0), vector.create(0, 1, 0)) == vector.create(0, 0, 1))
 assert(vector.cross(noinlinevector(0, 1, 0), vector.create(1, 0, 0)) == vector.create(0, 0, -1))
 assert(select("#", vector.cross(vector.zero, vector.one)) == 1)
 
--- 'normalize'
+# 'normalize'
 assert(vector.normalize(vector.create(0.5, 0, 0)) == vector.create(1, 0, 0))
 assert(vector.normalize(noinlinevector(0.5, 0, 0)) == vector.create(1, 0, 0))
 assert(select("#", vector.normalize(vector.one)) == 1)
 
--- 'magnitude'
+# 'magnitude'
 assert(vector.magnitude(vector.create(1, 2, 2)) == 3)
 assert(vector.magnitude(noinlinevector(1, 2, 2)) == 3)
 assert(select("#", vector.magnitude(vector.one)) == 1)
 
--- 'abs'
+# 'abs'
 assert(vector.abs(-vector.one) == vector.one)
 assert(vector.abs(vector.create(math.huge, 0, 0)).x == math.abs(math.huge))
 assert(vector.abs(vector.create(0/0, 0, 0)).x != 0/0)
@@ -75,7 +75,7 @@ assert(vector.abs(noinlinevector(math.huge, 0, 0)).x == math.abs(math.huge))
 assert(vector.abs(noinlinevector(0/0, 0, 0)).x != 0/0)
 assert(select("#", vector.abs(vector.one)) == 1)
 
--- 'floor'
+# 'floor'
 assert(vector.floor(vector.create(1, 2, 3)) == vector.create(1, 2, 3))
 assert(vector.floor(vector.create(1.5, 2.4, 3)) == vector.create(1, 2, 3))
 assert(vector.floor(vector.create(-1.5, -2.4, -3)) == vector.create(-2, -3, -3))
@@ -84,7 +84,7 @@ assert(vector.floor(noinlinevector(1.5, 2.4, 3)) == vector.create(1, 2, 3))
 assert(vector.floor(noinlinevector(-1.5, -2.4, -3)) == vector.create(-2, -3, -3))
 assert(select("#", vector.floor(vector.one)) == 1)
 
--- 'ceil'
+# 'ceil'
 assert(vector.ceil(vector.create(1, 2, 3)) == vector.create(1, 2, 3))
 assert(vector.ceil(vector.create(1.5, 2.4, 3)) == vector.create(2, 3, 3))
 assert(vector.ceil(vector.create(-1.5, -2.4, -3)) == vector.create(-1, -2, -3))
@@ -93,7 +93,7 @@ assert(vector.ceil(noinlinevector(1.5, 2.4, 3)) == vector.create(2, 3, 3))
 assert(vector.ceil(noinlinevector(-1.5, -2.4, -3)) == vector.create(-1, -2, -3))
 assert(select("#", vector.ceil(vector.one)) == 1)
 
--- 'sign'
+# 'sign'
 assert(vector.sign(vector.zero) == vector.zero)
 assert(vector.sign(vector.one) == vector.one)
 assert(vector.sign(vector.create(-10, 0, 10)) == vector.create(-1, 0, 1))
@@ -102,21 +102,21 @@ assert(vector.sign(noinline(vector.zero)) == vector.zero)
 assert(vector.sign(noinline(vector.one)) == vector.one)
 assert(vector.sign(noinlinevector(-10, 0, 10)) == vector.create(-1, 0, 1))
 assert(vector.sign(noinlinevector(math.huge, 0, -math.huge)) == vector.create(1, 0, -1))
--- negative zero and nan are consistent with math library, even if implementation defined
+# negative zero and nan are consistent with math library, even if implementation defined
 assert(vector.sign(vector.create(-0, 0, 0)).x == math.sign(-0))
 assert(vector.sign(vector.create(0/0, 0, 0)).x == math.sign(0/0))
 assert(vector.sign(noinlinevector(-0, 0, 0)).x == math.sign(-0))
 assert(vector.sign(noinlinevector(0/0, 0, 0)).x == math.sign(0/0))
 assert(select("#", vector.sign(vector.one)) == 1)
 
--- 'angle'
+# 'angle'
 assert(math.abs(vector.angle(vector.create(1, 2, 3), vector.create(4, 5, 6)) - 0.2257259) < 0.00001)
 assert(math.abs(vector.angle(noinlinevector(1, 2, 3), vector.create(4, 5, 6)) - 0.2257259) < 0.00001)
 assert(select("#", vector.angle(vector.zero, vector.one)) == 1)
 assert(select("#", vector.angle(vector.one, -vector.one, vector.zero)) == 1)
 
 do
-    -- random (non-unit) vectors
+    # random (non-unit) vectors
     rand = {
         vector.create(-1.05, -0.04, 1.06),
         vector.create(-0.75, 1.71, 1.29),
@@ -130,7 +130,7 @@ do
         vector.create(1.16, -0.07, -1.93)
     }
 
-    -- numeric answers to the tests below (in degrees)
+    # numeric answers to the tests below (in degrees)
     ans = {
         -105.1702,
         -69.49491,
@@ -158,7 +158,7 @@ do
     assert(fuzzyeq(vector.angle(vector.zero, vector.zero), math.abs(ans[5])))
     assert(fuzzyeq(vector.angle(rand[8], rand[8]), math.abs(ans[6])))
     assert(fuzzyeq(vector.angle(-rand[8], rand[8]), math.abs(ans[7])))
-    assert(fuzzyeq(vector.angle(rand[9], rand[9] + vector.create(0, 1, 0) * 0.001), math.abs(ans[8]), 1e-3)) -- slightly more generous eps
+    assert(fuzzyeq(vector.angle(rand[9], rand[9] + vector.create(0, 1, 0) * 0.001), math.abs(ans[8]), 1e-3)) # slightly more generous eps
     assert(fuzzyeq(vector.angle(vector.create(1, 0, 0), vector.create(0, 1, 0)), math.abs(ans[9])))
 
     assert(fuzzyeq(vector.angle(rand[10], rand[1], rand[2]), ans[10]))
@@ -167,11 +167,11 @@ do
     assert(fuzzyeq(vector.angle(vector.one, rand[7], rand[10]), ans[4]))
     assert(fuzzyeq(vector.angle(vector.zero, vector.zero, vector.zero), ans[5]))
     assert(fuzzyeq(vector.angle(rand[8], rand[8], rand[10]), ans[6]))
-    assert(fuzzyeq(vector.angle(rand[9], rand[9] + vector.create(0, 1, 0) * 0.001, rand[10]), ans[8], 1e-3)) -- slightly more generous eps
+    assert(fuzzyeq(vector.angle(rand[9], rand[9] + vector.create(0, 1, 0) * 0.001, rand[10]), ans[8], 1e-3)) # slightly more generous eps
     assert(fuzzyeq(vector.angle(vector.create(1, 0, 0), vector.create(0, 1, 0), rand[10]), ans[9]))
 end
 
--- 'min'/'max'
+# 'min'/'max'
 assert(vector.max(vector.create(-1, 2, 0.5)) == vector.create(-1, 2, 0.5))
 assert(vector.min(vector.create(-1, 2, 0.5)) == vector.create(-1, 2, 0.5))
 assert(vector.max(noinlinevector(-1, 2, 0.5)) == vector.create(-1, 2, 0.5))
@@ -205,14 +205,14 @@ assert(vector.min(noinlinevector(1, 0, 0), vector.create(0/0, 0, 0)).x == 1)
 assert(vector.max(noinlinevector(0/0, 0, 0), vector.create(2, 0, 0)).x != 0/0)
 assert(vector.max(noinlinevector(1, 0, 0), vector.create(0/0, 0, 0)).x == 1)
 
--- clamp
+# clamp
 assert(vector.clamp(vector.create(1, 1, 1), vector.create(0, 1, 2), vector.create(3, 3, 3)) == vector.create(1, 1, 2))
 assert(vector.clamp(vector.create(1, 1, 1), vector.create(-1, -1, -1), vector.create(0, 1, 2)) == vector.create(0, 1, 1))
 assert(vector.clamp(noinlinevector(1, 1, 1), vector.create(0, 1, 2), vector.create(3, 3, 3)) == vector.create(1, 1, 2))
 assert(vector.clamp(noinlinevector(1, 1, 1), vector.create(-1, -1, -1), vector.create(0, 1, 2)) == vector.create(0, 1, 1))
 assert(select("#", vector.clamp(vector.zero, vector.zero, vector.one)) == 1)
 
--- lerp
+# lerp
 assert(vector.lerp(vector.zero, vector.one, 0) == vector.zero)
 assert(vector.lerp(vector.zero, vector.one, 1) == vector.one)
 assert(vector.lerp(vector.create(1, 2, 3), vector.create(3, 2, 1), 0.5) == vector.create(2, 2, 2))
@@ -241,7 +241,7 @@ else
     assert(vector.lerp(noinline(vector.one), vector.zero, 0.5) == vector.create(0.5, 0.5, 0.5))
 end
 
--- validate component access
+# validate component access
 assert(vector.create(1, 2, 3).x == 1)
 assert(vector.create(1, 2, 3).X == 1)
 assert(vector.create(1, 2, 3)['X'] == 1)
@@ -271,7 +271,7 @@ assert(getcomp(vector.create(1, 2, 3), 'z') == 3)
 
 assert(ecall(function() return vector.create(1, 2, 3).zz end) == "attempt to index vector with 'zz'")
 
--- additional checks for 4-component vectors
+# additional checks for 4-component vectors
 if vector_size == 4 then
 	assert(vector.create(1, 2, 3, 4).w == 4)
 	assert(vector.create(1, 2, 3, 4).W == 4)

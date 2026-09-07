@@ -214,7 +214,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "export_value_modules_have_typed_require_surf
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}, {FFlag::LuauExportValueTypecheck, true}};
 
     fileResolver.source["game/ModuleA"] = R"(
-        --!strict
+        #!strict
         export version = "1.0.0"
         export const answer = 42
 
@@ -224,7 +224,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "export_value_modules_have_typed_require_surf
     )";
 
     fileResolver.source["game/ModuleB"] = R"(
-        --!strict
+        #!strict
         const M = require(game.ModuleA)
 
         const version: string = M.version
@@ -268,12 +268,12 @@ TEST_CASE_FIXTURE(FrontendFixture, "any_annotation_breaks_cycle")
 TEST_CASE_FIXTURE(FrontendFixture, "nocheck_modules_are_typed")
 {
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!nocheck
+        #!nocheck
         export type Foo = number
         return {hello = "hi"}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!nonstrict
+        #!nonstrict
         export type Foo = number
         return {hello = "hi"}
     )";
@@ -310,7 +310,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "cycle_detection_between_check_and_nocheck")
         return {hello = B.hello}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         return {hello = A.hello}
@@ -323,19 +323,19 @@ TEST_CASE_FIXTURE(FrontendFixture, "cycle_detection_between_check_and_nocheck")
 TEST_CASE_FIXTURE(FrontendFixture, "nocheck_cycle_used_by_checked")
 {
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const B = require(Modules.B)
         return {hello = B.hello}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         return {hello = A.hello}
     )";
     fileResolver.source["game/Gui/Modules/C"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         const B = require(Modules.B)
@@ -357,13 +357,13 @@ TEST_CASE_FIXTURE(FrontendFixture, "nocheck_cycle_used_by_checked")
 TEST_CASE_FIXTURE(FrontendFixture, "cycle_detection_disabled_in_nocheck")
 {
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const B = require(Modules.B)
         return {hello = B.hello}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         return {hello = A.hello}
@@ -555,8 +555,8 @@ TEST_CASE_FIXTURE(FrontendFixture, "dont_reparse_clean_file_when_linting")
     lintModule("Modules/A");
 
     fileResolver.source["Modules/A"] = R"(
-        -- We have fixed the lint error, but we did not tell the Frontend that the file is changed!
-        -- Therefore, we expect Frontend to reuse the results from previous lint.
+        # We have fixed the lint error, but we did not tell the Frontend that the file is changed!
+        # Therefore, we expect Frontend to reuse the results from previous lint.
     )";
 
     LintResult lintResult = lintModule("Modules/A");
@@ -673,7 +673,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "produce_errors_for_unchanged_file_with_error
     getFrontend().check("Modules/A");
 
     fileResolver.source["Modules/A"] =
-        "const p = 4 -- We have fixed the problem, but we didn't tell the getFrontend(). so it will not recheck this file!";
+        "const p = 4 # We have fixed the problem, but we didn't tell the getFrontend(). so it will not recheck this file!";
     CheckResult secondResult = getFrontend().check("Modules/A");
 
     CHECK_EQ(1, secondResult.errors.size());
@@ -928,7 +928,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "it_should_be_safe_to_stringify_errors_when_f
 {
     Frontend fe{!FFlag::DebugLuauForceOldSolver ? SolverMode::New : SolverMode::Old, &fileResolver, &configResolver, {false}};
     fileResolver.source["Module/A"] = R"(
-        --!strict
+        #!strict
         const a: {Count: number} = {count='five'}
     )";
 
@@ -959,7 +959,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "trace_requires_in_nonstrict_mode")
         return;
 
     fileResolver.source["Module/A"] = R"(
-        --!nonstrict
+        #!nonstrict
         const module = {}
 
         function module.f(arg: number)
@@ -970,12 +970,12 @@ TEST_CASE_FIXTURE(FrontendFixture, "trace_requires_in_nonstrict_mode")
     )";
 
     fileResolver.source["Module/B"] = R"(
-        --!nonstrict
+        #!nonstrict
         const A = require(script.Parent.A)
 
-        print(A.g(5))       -- Key 'g' not found
-        print(A.f('five'))  -- Type mismatch number and string
-        print(A.f(5))       -- OK
+        print(A.g(5))       # Key 'g' not found
+        print(A.f('five'))  # Type mismatch number and string
+        print(A.f(5))       # OK
     )";
 
     CheckResult result = getFrontend().check("Module/B");
@@ -1003,17 +1003,17 @@ TEST_CASE_FIXTURE(FrontendFixture, "environments")
     freeze(getFrontend().globals.globalTypes);
 
     fileResolver.source["A"] = R"(
-        --!nonstrict
+        #!nonstrict
         const foo: Foo = 1
     )";
 
     fileResolver.source["B"] = R"(
-        --!nonstrict
+        #!nonstrict
         const foo: Foo = 1
     )";
 
     fileResolver.source["C"] = R"(
-        --!strict
+        #!strict
         const foo: Foo = 1
     )";
 
@@ -1054,13 +1054,13 @@ TEST_CASE_FIXTURE(FrontendFixture, "ast_node_at_position")
 TEST_CASE_FIXTURE(FrontendFixture, "stats_are_not_reset_between_checks")
 {
     fileResolver.source["Module/A"] = R"(
-        --!strict
+        #!strict
         const B = require(script.Parent.B)
         const foo = B.foo + 1
     )";
 
     fileResolver.source["Module/B"] = R"(
-        --!strict
+        #!strict
         return {foo = 1}
     )";
 
@@ -1083,13 +1083,13 @@ TEST_CASE_FIXTURE(FrontendFixture, "stats_are_not_reset_between_checks")
 TEST_CASE_FIXTURE(FrontendFixture, "clearStats")
 {
     fileResolver.source["Module/A"] = R"(
-        --!strict
+        #!strict
         const B = require(script.Parent.B)
         const foo = B.foo + 1
     )";
 
     fileResolver.source["Module/B"] = R"(
-        --!strict
+        #!strict
         return {foo = 1}
     )";
 
@@ -1134,25 +1134,25 @@ TEST_CASE_FIXTURE(FrontendFixture, "imported_table_modification_2")
     getFrontend().options.retainFullTypeGraphs = false;
 
     fileResolver.source["Module/A"] = R"(
---!nonstrict
+#!nonstrict
 const a = {}
 a.x = 1
 return a;
     )";
 
     fileResolver.source["Module/B"] = R"(
---!nonstrict
+#!nonstrict
 const a = require(script.Parent.A)
 const b = {}
-function a:b() end -- this should error, since A doesn't define a:b()
+function a:b() end # this should error, since A doesn't define a:b()
 return b
     )";
 
     fileResolver.source["Module/C"] = R"(
---!nonstrict
+#!nonstrict
 const a = require(script.Parent.A)
 const b = require(script.Parent.B)
-a:b() -- this should error, since A doesn't define a:b()
+a:b() # this should error, since A doesn't define a:b()
     )";
 
     CheckResult resultA = getFrontend().check("Module/A");
@@ -1218,7 +1218,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "reexport_cyclic_type")
     )";
 
     fileResolver.source["Module/B"] = R"(
-        --!strict
+        #!strict
         const A = require(script.Parent.A)
 
         export type G<T> = A.G<T>
@@ -1241,14 +1241,14 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "reexport_type_alias")
 
         export type TestFileEvent<T = KeyOfTestEvents> = (
             eventName: T,
-            args: any --[[ ROBLOX TODO: Unhandled node for type: TSIndexedAccessType ]] --[[ TestEvents[T] ]]
+            args: any #[[ ROBLOX TODO: Unhandled node for type: TSIndexedAccessType ]] #[[ TestEvents[T] ]]
         ) -> MyAny
 
         return {}
     )";
 
     fileResolver.source["Module/B"] = R"(
-        --!strict
+        #!strict
         const A = require(script.Parent.A)
 
         export type TestFileEvent = A.TestFileEvent
@@ -1449,17 +1449,17 @@ TEST_CASE_FIXTURE(FrontendFixture, "attribute_ices_to_the_correct_module")
 TEST_CASE_FIXTURE(FrontendFixture, "checked_modules_have_the_correct_mode")
 {
     fileResolver.source["game/A"] = R"(
-        --!nocheck
+        #!nocheck
         const a: number = "five"
     )";
 
     fileResolver.source["game/B"] = R"(
-        --!nonstrict
+        #!nonstrict
         const a = math.abs("five")
     )";
 
     fileResolver.source["game/C"] = R"(
-        --!strict
+        #!strict
         const a = 10
     )";
 
@@ -1488,7 +1488,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "separate_caches_for_autocomplete")
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     fileResolver.source["game/A"] = R"(
-        --!nonstrict
+        #!nonstrict
         const exports = {}
         function exports.hello() end
         return exports
@@ -1518,7 +1518,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "no_separate_caches_with_the_new_solver")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     fileResolver.source["game/A"] = R"(
-        --!nonstrict
+        #!nonstrict
         const exports = {}
         function exports.hello() end
         return exports
@@ -1892,11 +1892,11 @@ TEST_CASE_FIXTURE(FrontendFixture, "test_invalid_dependency_tracking_per_module_
 TEST_CASE_FIXTURE(FrontendFixture, "queue_check_simple")
 {
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!strict
+        #!strict
         return {hello=5, world=true}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         return {b_value = A.hello}
@@ -1913,13 +1913,13 @@ TEST_CASE_FIXTURE(FrontendFixture, "queue_check_simple")
 TEST_CASE_FIXTURE(FrontendFixture, "queue_check_cycle_instant")
 {
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const B = require(Modules.B)
         return {a_value = B.hello}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         return {b_value = A.hello}
@@ -1955,18 +1955,18 @@ TEST_CASE_FIXTURE(FrontendFixture, "queue_check_cycle_instant")
 TEST_CASE_FIXTURE(FrontendFixture, "queue_check_cycle_delayed")
 {
     fileResolver.source["game/Gui/Modules/C"] = R"(
-        --!strict
+        #!strict
         return {c_value = 5}
     )";
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const C = require(Modules.C)
         const B = require(Modules.B)
         return {a_value = B.hello + C.c_value}
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const C = require(Modules.C)
         const A = require(Modules.A)
@@ -2006,7 +2006,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "queue_check_propagates_ice")
 
     ModuleName mm = fromString("MainModule");
     fileResolver.source[mm] = R"(
-        --!strict
+        #!strict
         const a: _luau_ice = 55
     )";
     getFrontend().markDirty(mm);
@@ -2057,7 +2057,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "generic_P_widening_with_cross_module_recursi
 
     // Module A: exports a recursive type and a component that uses it.
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!strict
+        #!strict
         type Element = { key: (number | string)?, props: any?, ref: any, type: any }
         type NodeArray = { (NodeArray | boolean | number | string | Element | { [string]: (NodeArray | boolean | number | string | Element)?, UNIQUE_TAG: any? })? }
         export type Node = string | number | boolean | Element | NodeArray | { [string]: (NodeArray | boolean | number | string | Element)?, UNIQUE_TAG: any? }
@@ -2071,7 +2071,7 @@ TEST_CASE_FIXTURE(FrontendFixture, "generic_P_widening_with_cross_module_recursi
 
     // Module B: imports and calls createElement.
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const View = require(Modules.A)
         function createElement<P>(component: (P) -> any, props: P?): any
@@ -2438,12 +2438,12 @@ TEST_CASE_FIXTURE(FrontendFixture, "scc_export_cycle_with_nocheck_no_errors")
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         const b = require(game.B)
         export a_val = b.b_val
     )";
     fileResolver.source["game/B"] = R"(
-        --!nocheck
+        #!nocheck
         const a = require(game.A)
         export b_val = 42
     )";
@@ -2471,12 +2471,12 @@ TEST_CASE_FIXTURE(FrontendFixture, "scc_export_cycle_strict_sees_nocheck_exports
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         const b = require(game.B)
         export greeting = b.msg
     )";
     fileResolver.source["game/B"] = R"(
-        --!nocheck
+        #!nocheck
         const a = require(game.A)
         export msg = "hello"
     )";
@@ -3152,13 +3152,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "export_cycle_between_check_and_nocheck")
     };
 
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const B = require(Modules.B)
         export hello = B.hello
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         export hello = A.hello
@@ -3181,19 +3181,19 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "nocheck_export_cycle_produces_error_type")
     };
 
     fileResolver.source["game/Gui/Modules/A"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const B = require(Modules.B)
         export hello = B.hello
     )";
     fileResolver.source["game/Gui/Modules/B"] = R"(
-        --!nocheck
+        #!nocheck
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         export hello = A.hello
     )";
     fileResolver.source["game/Gui/Modules/C"] = R"(
-        --!strict
+        #!strict
         const Modules = game:GetService('Gui').Modules
         const A = require(Modules.A)
         const B = require(Modules.B)
@@ -3222,14 +3222,14 @@ TEST_CASE_FIXTURE(FrontendFixture, "scc_cyclic_peer_sees_exported_value_types")
     };
 
     fileResolver.source["game/C"] = R"(
-        --!strict
+        #!strict
         const d = require(game.D)
         export type shape = { a: string }
         export name: string = "c"
         export value: shape = { a = name }
     )";
     fileResolver.source["game/D"] = R"(
-        --!strict
+        #!strict
         const c = require(game.C)
         export cRef = c
     )";
@@ -3271,13 +3271,13 @@ TEST_CASE_FIXTURE(FrontendFixture, "scc_cyclic_peer_exports_from_later_module_no
     };
 
     fileResolver.source["game/A"] = R"(
-        --!strict
+        #!strict
         const B = require(game.B)
         export fromA: string | number = 1
         export fromB = B.fromB
     )";
     fileResolver.source["game/B"] = R"(
-        --!strict
+        #!strict
         const A = require(game.A)
         export fromB = 2
         export fromA = A.fromA
@@ -3321,13 +3321,13 @@ TEST_CASE_FIXTURE(FrontendFixture, "scc_cyclic_peer_sees_exported_type_bindings"
     };
 
     fileResolver.source["game/C"] = R"(
-        --!strict
+        #!strict
         const d = require(game.D)
         export type shape = { a: string }
         export name: string = "c"
     )";
     fileResolver.source["game/D"] = R"(
-        --!strict
+        #!strict
         const c = require(game.C)
         const x: c.shape = { a = "hello" }
         export val = x

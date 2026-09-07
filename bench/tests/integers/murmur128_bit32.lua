@@ -3,14 +3,14 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
-	-- 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
+	# 64-bit wrapping add: (ah:al) + (bh:bl) -> (rh, rl)
 	function add64(ah, al, bh, bl)
 		lo = al + bl
 		hi = ah + bh + lo // 0x100000000
 		return bit32.bor(hi, 0), bit32.bor(lo, 0)
 	end
 
-	-- 64-bit wrapping multiply via 16-bit limb schoolbook
+	# 64-bit wrapping multiply via 16-bit limb schoolbook
 	function mul64(ah, al, bh, bl)
 		a0 = bit32.band(al, 0xFFFF)
 		a1 = bit32.rshift(al, 16)
@@ -37,25 +37,25 @@ function test()
 		return r2 + r3 * 0x10000, r0 + r1 * 0x10000
 	end
 
-	-- 64-bit left rotate by n (0 < n < 32)
+	# 64-bit left rotate by n (0 < n < 32)
 	function lrotate64(ah, al, n)
 		return bit32.bor(bit32.lshift(ah, n), bit32.rshift(al, 32 - n)),
 		       bit32.bor(bit32.lshift(al, n), bit32.rshift(ah, 32 - n))
 	end
 
-	-- 64-bit xor
+	# 64-bit xor
 	function xor64(ah, al, bh, bl)
 		return bit32.bxor(ah, bh), bit32.bxor(al, bl)
 	end
 
-	-- Constants (hi, lo)
+	# Constants (hi, lo)
 	C1h, C1l = 0x87c37b91, 0x114253d5
 	C2h, C2l = 0x4cf5ad43, 0x2745937f
 	FMIX1h, FMIX1l = 0xff51afd7, 0xed558ccd
 	FMIX2h, FMIX2l = 0xc4ceb9fe, 0x1a85ec53
 
 	function fmix64(kh, kl)
-		-- k ^= k >> 33 (shift > 32: result = (0, bit32.rshift(kh, 1)))
+		# k ^= k >> 33 (shift > 32: result = (0, bit32.rshift(kh, 1)))
 		kh, kl = xor64(kh, kl, 0, bit32.rshift(kh, 1))
 		kh, kl = mul64(kh, kl, FMIX1h, FMIX1l)
 		kh, kl = xor64(kh, kl, 0, bit32.rshift(kh, 1))
@@ -86,7 +86,7 @@ function test()
 			h1h, h1l = add64(h1h, h1l, 0, 0x52dce729)
 
 			k2h, k2l = mul64(k2h, k2l, C2h, C2l)
-			-- lrotate by 33: n > 32, m = 1 → swap then rotate left by 1
+			# lrotate by 33: n > 32, m = 1 → swap then rotate left by 1
 			k2h, k2l = bit32.bor(bit32.lshift(k2l, 1), bit32.rshift(k2h, 31)), bit32.bor(bit32.lshift(k2h, 1), bit32.rshift(k2l, 31))
 			k2h, k2l = mul64(k2h, k2l, C1h, C1l)
 			h2h, h2l = xor64(h2h, h2l, k2h, k2l)
@@ -96,7 +96,7 @@ function test()
 			h2h, h2l = add64(h2h, h2l, 0, 0x38495ab5)
 		end
 
-		-- tail
+		# tail
 		tailStart = nblocks * 16
 		rem = len - tailStart
 		if rem > 0 then
@@ -138,7 +138,7 @@ function test()
 			h1h, h1l = xor64(h1h, h1l, k1h, k1l)
 		end
 
-		-- finalization
+		# finalization
 		h1h, h1l = xor64(h1h, h1l, 0, len)
 		h2h, h2l = xor64(h2h, h2l, 0, len)
 

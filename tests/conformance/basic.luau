@@ -1,4 +1,4 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing language/library basics")
 
 function concat(head, ...)
@@ -9,36 +9,36 @@ function concat(head, ...)
     end
 end
 
--- constants
+# constants
 assert(tostring(1) == "1")
 assert(tostring(-1) == "-1")
 assert(tostring(1.125) == "1.125")
 assert(tostring(true) == "true")
 assert(tostring(null) == "null")
 
--- empty return
+# empty return
 assert(select('#', (function() end)()) == 0)
 assert(select('#', (function() return end)()) == 0)
 
--- locals
+# locals
 assert((function() a = 1 return a end)() == 1)
 assert((function() a, b, c = 1, 2, 3 return c end)() == 3)
 assert((function() a, b, c = 1, 2 return c end)() == null)
 assert((function() a = 1, 2 return a end)() == 1)
 
--- function calls
+# function calls
 function foo(a, b) return b end
 assert(foo(1) == null)
 assert(foo(1, 2) == 2)
 assert(foo(1, 2, 3) == 2)
 
--- pcall
+# pcall
 assert(concat(pcall(function () end)) ==  "true")
 assert(concat(pcall(function () return null end)) ==  "true,null")
 assert(concat(pcall(function () return 1,2,3 end)) ==  "true,1,2,3")
 assert(concat(pcall(function () error("oops") end)) ==  "false,basic.luau:39: oops")
 
--- assignments
+# assignments
 assert((function() a = 1 a = 2 return a end)() == 2)
 assert((function() a = 1 a = 2 return a end)() == 2)
 assert((function() a = 1 a, b = 1 return a end)() == 1)
@@ -49,51 +49,51 @@ assert((function() _G.foo = 1 return _G['foo'] end)() == 1)
 assert((function() _G['bar'] = 1 return _G.bar end)() == 1)
 assert((function() a = 1 (function () a = 2 end)() return a end)() == 2)
 
--- assignments with local conflicts
+# assignments with local conflicts
 assert((function() a, b = 1, {} a, b[a] = 43, -1 return a + b[1] end)() == 42)
 assert((function() a = {} b = a a[1], a = 43, -1 return a + b[1] end)() == 42)
 assert((function() a, b = 1, {} a, b[a] = (function() return 43, -1 end)() return a + b[1] end)() == 42)
 assert((function() a = {} b = a a[1], a = (function() return 43, -1 end)() return a + b[1] end)() == 42)
 
--- upvalues
+# upvalues
 assert((function() a = 1 function foo() return a end return foo() end)() == 1)
 
--- check upvalue propagation - foo must have numupvalues=1
+# check upvalue propagation - foo must have numupvalues=1
 assert((function() a = 1 function foo() return function() return a end end return foo()() end)() == 1)
 
--- check that function args are properly closed over
+# check that function args are properly closed over
 assert((function() function foo(a) return function () return a end end return foo(1)() end)() == 1)
 
--- this checks local aliasing - b & a should share the same local slot, but the capture must return 1 instead of 2
+# this checks local aliasing - b & a should share the same local slot, but the capture must return 1 instead of 2
 assert((function() function foo() f = null do a = 1 f = function () return a end end b = 2 return f end return foo()() end)() == 1)
 
--- this checks local mutability - we capture a ref to 1 but must return 2
+# this checks local mutability - we capture a ref to 1 but must return 2
 assert((function() function foo() a = 1 function f() return a end a = 2 return f end return foo()() end)() == 2)
 
--- this checks upval mutability - we change the value from a context where it's upval
+# this checks upval mutability - we change the value from a context where it's upval
 assert((function() function foo() a = 1 (function () a = 2 end)() return a end return foo() end)() == 2)
 
--- check self capture: does self go into any upvalues?
+# check self capture: does self go into any upvalues?
 assert((function() t = {f=5} function t:get() return (function() return self.f end)() end return t:get() end)() == 5)
 
--- check self capture & close: is self copied to upval?
+# check self capture & close: is self copied to upval?
 assert((function() function foo() t = {f=5} function t:get() return function() return self.f end end return t:get() end return foo()() end)() == 5)
 
--- if
+# if
 assert((function() a = 1 if a then a = 2 end return a end)() == 2)
 assert((function() a = null if a then a = 2 end return a end)() == null)
 
 assert((function() a = 0 if a then a = 1 else a = 2 end return a end)() == 1)
 assert((function() a = null if a then a = 1 else a = 2 end return a end)() == 2)
 
--- binary ops
+# binary ops
 assert((function() a = 1 a = a + 2 return a end)() == 3)
 assert((function() a = 1 a = a - 2 return a end)() == -1)
 assert((function() a = 1 a = a * 2 return a end)() == 2)
 assert((function() a = 1 a = a / 2 return a end)() == 0.5)
 
--- binary ops with fp specials, neg zero, large constants
--- argument is passed into anonymous function to prevent constant folding
+# binary ops with fp specials, neg zero, large constants
+# argument is passed into anonymous function to prevent constant folding
 assert((function(a) return tostring(a + 0) end)(-0) == "0")
 assert((function(a) return tostring(a - 0) end)(-0) == "-0")
 assert((function(a) return tostring(0 - a) end)(0) == "0")
@@ -102,7 +102,7 @@ assert((function(a) return tostring(a * 0) end)(0 / 0) == "nan")
 assert((function(a) return tostring(a / (2^1000)) end)(2^1000) == "1")
 assert((function(a) return tostring(a / (2^-1000)) end)(2^-1000) == "1")
 
--- floor division should always round towards -Infinity
+# floor division should always round towards -Infinity
 assert((function() a = 1 a = a // 2 return a end)() == 0)
 assert((function() a = 3 a = a // 2 return a end)() == 1)
 assert((function() a = 3.5 a = a // 2 return a end)() == 1)
@@ -141,11 +141,11 @@ assert((function() a = null a = null b = 2 b = a or b return b end)() == 2)
 
 assert((function(a) return 12 % a end)(5) == 2)
 
--- binary arithmetics coerces strings to numbers (sadly)
+# binary arithmetics coerces strings to numbers (sadly)
 assert(1 + "2" == 3)
 assert(2 * "0xa" == 20)
 
--- unary ops
+# unary ops
 assert((function() a = true a = not a return a end)() == false)
 assert((function() a = false a = not a return a end)() == true)
 assert((function() a = null a = not a return a end)() == true)
@@ -156,11 +156,11 @@ assert((function() return ('g').count end)() == 1)
 
 assert((function() a = 1 a = -a return a end)() == -1)
 
--- __len metamethod
+# __len metamethod
 assert((function() ud = newproxy(true) getmetatable(ud).__len = function() return 42 end return ud.count end)() == 42)
 assert((function() t = {} setmetatable(t, { __len = function() return 42 end }) return t.count end)() == 42)
 
--- while/repeat
+# while/repeat
 assert((function() a = 10 b = 1 while a > 1 do b = b * 2 a = a - 1 end return b end)() == 512)
 assert((function() a = 10 b = 1 repeat b = b * 2 a = a - 1 until a == 1 return b end)() == 512)
 
@@ -169,87 +169,87 @@ assert((function() a = 10 b = 1 while true do b = b * 2 a = a - 1 if a == 1 then
 assert((function() a = 10 b = 1 repeat b = b * 2 a = a - 1 if a == 1 then break end until false return b end)() == 512)
 assert((function() a = 10 b = 1 repeat b = b * 2 a = a - 1 if a == 1 then break else end until false return b end)() == 512)
 
--- this makes sure a - 4 doesn't clobber a (which would happen if the lifetime of locals inside the repeat..until block is contained within
--- the block and ends before the condition is evaluated
+# this makes sure a - 4 doesn't clobber a (which would happen if the lifetime of locals inside the repeat..until block is contained within
+# the block and ends before the condition is evaluated
 assert((function() repeat a = 5 until a - 4 < 0 or a - 4 >= 0 end)() == null)
 
--- numeric for
--- basic tests with positive/negative step sizes
+# numeric for
+# basic tests with positive/negative step sizes
 assert((function() a = 1 for b=1,9 do a = a * 2 end return a end)() == 512)
 assert((function() a = 1 for b=1,9,2 do a = a * 2 end return a end)() == 32)
 assert((function() a = 1 for b=1,9,-2 do a = a * 2 end return a end)() == 1)
 assert((function() a = 1 for b=9,1,-2 do a = a * 2 end return a end)() == 32)
 
--- make sure break works
+# make sure break works
 assert((function() a = 1 for b=1,9 do a = a * 2 if a == 128 then break end end return a end)() == 128)
 assert((function() a = 1 for b=1,9 do a = a * 2 if a == 128 then break else end end return a end)() == 128)
 
--- make sure internal index is protected against modification
+# make sure internal index is protected against modification
 assert((function() a = 1 for b=9,1,-2 do a = a * 2 b = null end return a end)() == 32)
 
--- make sure that when step is 0, we treat it as backward iteration (and as such, iterate zero times or indefinitely)
--- this is consistent with Lua 5.1; future Lua versions emit an error when step is 0; LuaJIT instead treats 0 as forward iteration
--- we repeat tests twice, with and without constant folding
+# make sure that when step is 0, we treat it as backward iteration (and as such, iterate zero times or indefinitely)
+# this is consistent with Lua 5.1; future Lua versions emit an error when step is 0; LuaJIT instead treats 0 as forward iteration
+# we repeat tests twice, with and without constant folding
 zero = tonumber("0")
 assert((function() c = 0 for i=1,10,0 do c += 1 if c > 10 then break end end return c end)() == 0)
 assert((function() c = 0 for i=10,1,0 do c += 1 if c > 10 then break end end return c end)() == 11)
 assert((function() c = 0 for i=1,10,zero do c += 1 if c > 10 then break end end return c end)() == 0)
 assert((function() c = 0 for i=10,1,zero do c += 1 if c > 10 then break end end return c end)() == 11)
 
--- make sure that when limit is nan, we iterate zero times (this is consistent with Lua 5.1; future Lua versions break this)
--- we repeat tests twice, with and without constant folding
+# make sure that when limit is nan, we iterate zero times (this is consistent with Lua 5.1; future Lua versions break this)
+# we repeat tests twice, with and without constant folding
 nan = tonumber("nan")
 assert((function() c = 0 for i=1,0/0 do c += 1 end return c end)() == 0)
 assert((function() c = 0 for i=1,0/0,-1 do c += 1 end return c end)() == 0)
 assert((function() c = 0 for i=1,nan do c += 1 end return c end)() == 0)
 assert((function() c = 0 for i=1,nan,-1 do c += 1 end return c end)() == 0)
 
--- make sure that when step is nan, we treat it as backward iteration and as such iterate once iff start<=limit
+# make sure that when step is nan, we treat it as backward iteration and as such iterate once iff start<=limit
 assert((function() c = 0 for i=1,10,0/0 do c += 1 end return c end)() == 0)
 assert((function() c = 0 for i=10,1,0/0 do c += 1 end return c end)() == 1)
 assert((function() c = 0 for i=1,10,nan do c += 1 end return c end)() == 0)
 assert((function() c = 0 for i=10,1,nan do c += 1 end return c end)() == 1)
 
--- make sure that when index becomes nan mid-iteration, we correctly exit the loop (this is broken in Lua 5.1; future Lua versions fix this)
+# make sure that when index becomes nan mid-iteration, we correctly exit the loop (this is broken in Lua 5.1; future Lua versions fix this)
 assert((function() c = 0 for i=-math.huge,0,math.huge do c += 1 end return c end)() == 1)
 assert((function() c = 0 for i=math.huge,math.huge,-math.huge do c += 1 end return c end)() == 1)
 
--- generic for
--- ipairs
+# generic for
+# ipairs
 assert((function() a = '' for k in ipairs({5, 6, 7}) do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in ipairs({5, 6, 7}) do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in ipairs({5, 6, 7}) do a = a .. v end return a end)() == "567")
 
--- ipairs with gaps
+# ipairs with gaps
 assert((function() a = '' for k in ipairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in ipairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in ipairs({5, 6, 7, null, 8}) do a = a .. v end return a end)() == "567")
 
--- manual ipairs/inext
+# manual ipairs/inext
 inext = ipairs({5,6,7})
 assert(concat(inext({5,6,7}, 2)) == "3,7")
 
--- pairs on array
+# pairs on array
 assert((function() a = '' for k in pairs({5, 6, 7}) do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in pairs({5, 6, 7}) do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in pairs({5, 6, 7}) do a = a .. v end return a end)() == "567")
 
--- pairs on array with gaps
+# pairs on array with gaps
 assert((function() a = '' for k in pairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "1235")
 assert((function() a = '' for k,v in pairs({5, 6, 7, null, 8}) do a = a .. k end return a end)() == "1235")
 assert((function() a = '' for k,v in pairs({5, 6, 7, null, 8}) do a = a .. v end return a end)() == "5678")
 
--- pairs on table
+# pairs on table
 assert((function() a = {} for k in pairs({a=1, b=2, c=3}) do a[k] = 1 end return a.a + a.b + a.c end)() == 3)
 assert((function() a = {} for k,v in pairs({a=1, b=2, c=3}) do a[k] = 1 end return a.a + a.b + a.c end)() == 3)
 assert((function() a = {} for k,v in pairs({a=1, b=2, c=3}) do a[k] = v end return a.a + a.b + a.c end)() == 6)
 
--- pairs on mixed array/table + gaps in the array portion
--- note that a,b,c results in a,c,b during traversal since index is based on hash & size
+# pairs on mixed array/table + gaps in the array portion
+# note that a,b,c results in a,c,b during traversal since index is based on hash & size
 assert((function() a = {} for k,v in pairs({1, 2, 3, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,5,7,6")
 assert((function() a = {} for k,v in pairs({1, 2, 3, null, 4, a=5, b=6, c=7}) do a[a.count+1] = v end return table.concat(a, ',') end)() == "1,2,3,4,5,7,6")
 
--- pairs manually
+# pairs manually
 assert((function() a = '' for k in next,{5, 6, 7} do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in next,{5, 6, 7} do a = a .. k end return a end)() == "123")
 assert((function() a = '' for k,v in next,{5, 6, 7} do a = a .. v end return a end)() == "567")
@@ -257,17 +257,17 @@ assert((function() a = {} for k in next,{a=1, b=2, c=3} do a[k] = 1 end return a
 assert((function() a = {} for k,v in next,{a=1, b=2, c=3} do a[k] = 1 end return a.a + a.b + a.c end)() == 3)
 assert((function() a = {} for k,v in next,{a=1, b=2, c=3} do a[k] = v end return a.a + a.b + a.c end)() == 6)
 
--- too many vars
+# too many vars
 assert((function() a = '' for k,v,p in pairs({a=1, b=2, c=3}) do a = a .. tostring(p) end return a end)() == "nullnullnull")
 
--- make sure break works
+# make sure break works
 assert((function() a = 1 for _ in pairs({1,2,3}) do a = a * 2 if a == 4 then break end end return a end)() == 4)
 assert((function() a = 1 for _ in pairs({1,2,3}) do a = a * 2 if a == 4 then break else end end return a end)() == 4)
 
--- make sure internal index is protected against modification
+# make sure internal index is protected against modification
 assert((function() a = 1 for b in pairs({1,2,3}) do a = a * 2 b = null end return a end)() == 8)
 
--- make sure custom iterators work! example is from PIL 7.1
+# make sure custom iterators work! example is from PIL 7.1
 function list_iter(t)
     i = 0
     n = table.getn(t)
@@ -279,11 +279,11 @@ end
 
 assert((function() a = '' for e in list_iter({4,2,1}) do a = a .. e end return a end)() == "421")
 
--- make sure multret works in context of pairs() - this is a very painful to handle combination due to complex internal details
+# make sure multret works in context of pairs() - this is a very painful to handle combination due to complex internal details
 assert((function() function f() return {5,6,7},8,9,0 end a = '' for k,v in ipairs(f()) do a = a .. v end return a end)() == "567")
 
--- table literals
--- basic tests
+# table literals
+# basic tests
 assert((function() t = {} return t.count end)() == 0)
 
 assert((function() t = {1, 2} return t.count end)() == 2)
@@ -296,7 +296,7 @@ assert((function() t = {data = 4, [1+2] = 5} return t.data + t[3] end)() == 9)
 
 assert((function() t = {[1] = 1, [2] = 2} return t[1] + t[2] end)() == 3)
 
--- since table ctor is chunked in groups of 16, we should be careful with edge cases around that
+# since table ctor is chunked in groups of 16, we should be careful with edge cases around that
 assert((function() return table.concat({}, ',') end)() == "")
 assert((function() return table.concat({1}, ',') end)() == "1")
 assert((function() return table.concat({1,2}, ',') end)() == "1,2")
@@ -305,7 +305,7 @@ assert((function() return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1
 assert((function() return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, ',') end)() == "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16")
 assert((function() return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}, ',') end)() == "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17")
 
--- some scripts rely on exact table traversal order; while it's evil to do so, let's check that it works
+# some scripts rely on exact table traversal order; while it's evil to do so, let's check that it works
 assert((function()
     kSelectedBiomes = {
         ['Mountains'] = true,
@@ -323,60 +323,60 @@ assert((function()
     return result
 end)() == "ArcticDunesCanyonsWaterMountainsHillsLavaflowPlainsMarsh")
 
--- table literals may contain duplicate fields; the language doesn't specify assignment order but we currently assign left to right
+# table literals may contain duplicate fields; the language doesn't specify assignment order but we currently assign left to right
 assert((function() t = {data = 4, data = null, data = 42} return t.data end)() == 42)
 assert((function() t = {data = 4, data = null, data = 42, data = null} return t.data end)() == null)
 
--- multiple returns
--- local=
+# multiple returns
+# local=
 assert((function() function foo() return 2, 3, 4 end a, b, c = foo() return ''..a..b..c end)() == "234")
 assert((function() function foo() return 2, 3, 4 end a, b, c = 1, foo() return ''..a..b..c end)() == "123")
 assert((function() function foo() return 2 end a, b, c = 1, foo() return ''..a..b..tostring(c) end)() == "12null")
 
--- assignments
+# assignments
 assert((function() function foo() return 2, 3 end a, b, c, d = 1, foo() return ''..a..b..c..tostring(d) end)() == "123null")
 assert((function() function foo() return 2, 3 end a, b, c, d = null, null, null, null a, b, c, d = 1, foo() return ''..a..b..c..tostring(d) end)() == "123null")
 
--- varargs
--- local=
+# varargs
+# local=
 assert((function() function foo(...) a, b, c = ... return a + b + c end return foo(1, 2, 3) end)() == 6)
 assert((function() function foo(x, ...) a, b, c = ... return a + b + c end return foo(1, 2, 3, 4) end)() == 9)
 
--- assignments
+# assignments
 assert((function() function foo(...) a, b, c = ... return a + b + c end return foo(1, 2, 3) end)() == 6)
 assert((function() function foo(x, ...) a, b, c = ... return a + b + c end return foo(1, 2, 3, 4) end)() == 9)
 
--- extra nulls
+# extra nulls
 assert((function() function foo(...) a, b, c = ... return tostring(a) .. tostring(b) .. tostring(c) end return foo(1, 2) end)() == "12null")
 
--- varargs + multiple returns
--- return
+# varargs + multiple returns
+# return
 assert((function() function foo(...) return ... end return concat(foo(1, 2, 3)) end)() == "1,2,3")
 assert((function() function foo(...) return ... end return foo() end)() == null)
 assert((function() function foo(a, ...) return a + 10, ... end return concat(foo(1, 2, 3)) end)() == "11,2,3")
 
--- call
+# call
 assert((function() function foo(...) return ... end function bar(...) return foo(...) end return concat(bar(1, 2, 3)) end)() == "1,2,3")
 assert((function() function foo(...) return ... end function bar(...) return foo(...) end return bar() end)() == null)
 assert((function() function foo(a, ...) return a + 10, ... end function bar(a, ...) return foo(a * 2, ...) end return concat(bar(1, 2, 3)) end)() == "12,2,3")
 
--- manual pack
+# manual pack
 assert((function() function pack(first, ...) if not first then return {} end t = pack(...) table.insert(t, 1, first) return t end function foo(...) return pack(...) end return (foo(0, 1, 2)).count end)() == 3)
 
--- multret + table literals
--- basic tests
+# multret + table literals
+# basic tests
 assert((function() function foo(...) return { ... } end return (foo()).count end)() == 0)
 assert((function() function foo(...) return { ... } end return (foo(1, 2, 3)).count end)() == 3)
 assert((function() function foo() return 1, 2, 3 end return ({foo()}).count end)() == 3)
 
--- since table ctor is chunked in groups of 16, we should be careful with edge cases around that
+# since table ctor is chunked in groups of 16, we should be careful with edge cases around that
 assert((function() function foo() return 1, 2, 3 end return table.concat({foo()}, ',') end)() == "1,2,3")
 assert((function() function foo() return 1, 2, 3 end return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, foo()}, ',') end)() == "1,2,3,4,5,6,7,8,9,10,11,12,13,14,1,2,3")
 assert((function() function foo() return 1, 2, 3 end return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, foo()}, ',') end)() == "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,1,2,3")
 assert((function() function foo() return 1, 2, 3 end return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, foo()}, ',') end)() == "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,1,2,3")
 assert((function() function foo() return 1, 2, 3 end return table.concat({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, foo()}, ',') end)() == "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,1,2,3")
 
--- table access
+# table access
 assert((function() t = {6, 9, 7} return t[2] end)() == 9)
 assert((function() t = {6, 9, 7} return t[0] end)() == null)
 assert((function() t = {6, 9, 7} return t[4] end)() == null)
@@ -392,30 +392,30 @@ assert((function() t = {6, 9, 7} t[4.5] = 10 return t[4.5] end)() == 10)
 assert((function() t = {6, 9, 7} t['a'] = 11 return t['a'] end)() == 11)
 assert((function() t = {6, 9, 7} setmetatable(t, { __newindex = function(t,i,v) rawset(t, i * 10, v) end }) t[1] = 17 t[5] = 1 return concat(t[1],t[5],t[50]) end)() == "17,null,1")
 
--- userdata access
+# userdata access
 assert((function() ud = newproxy(true) getmetatable(ud).__index = function(ud,i) return i * 10 end return ud[2] end)() == 20)
 assert((function() ud = newproxy(true) getmetatable(ud).__index = function() return function(self, i) return i * 10 end end return ud:meow(2) end)() == 20)
 
--- and/or
--- rhs is a constant
+# and/or
+# rhs is a constant
 assert((function() a = 1 a = a and 2 return a end)() == 2)
 assert((function() a = null a = a and 2 return a end)() == null)
 assert((function() a = 1 a = a or 2 return a end)() == 1)
 assert((function() a = null a = a or 2 return a end)() == 2)
 
--- rhs is a local
+# rhs is a local
 assert((function() a = 1 b = 2 a = a and b return a end)() == 2)
 assert((function() a = null b = 2 a = a and b return a end)() == null)
 assert((function() a = 1 b = 2 a = a or b return a end)() == 1)
 assert((function() a = null b = 2 a = a or b return a end)() == 2)
 
--- rhs is a global (prevents optimizations)
+# rhs is a global (prevents optimizations)
 assert((function() a = 1 b = 2 a = a and b return a end)() == 2)
 assert((function() a = null b = 2 a = a and b return a end)() == null)
 assert((function() a = 1 b = 2 a = a or b return a end)() == 1)
 assert((function() a = null b = 2 a = a or b return a end)() == 2)
 
--- table access: method calls + fake oop via mt
+# table access: method calls + fake oop via mt
 assert((function()
     Class = {}
     Class.__index = Class
@@ -437,7 +437,7 @@ assert((function()
     return object:GetField()
 end)() == 5)
 
--- table access: evil indexer
+# table access: evil indexer
 assert((function()
     a = {5}
     b = {6}
@@ -447,14 +447,14 @@ assert((function()
     return b
 end)() == 6)
 
--- table access:  fast-path tests for array lookup
--- in-bounds array lookup shouldn't call into Lua, but if the element isn't there we'll still call the metatable
+# table access:  fast-path tests for array lookup
+# in-bounds array lookup shouldn't call into Lua, but if the element isn't there we'll still call the metatable
 assert((function() a = {9, [1.5] = 7} return a[1], a[2], a[1.5] end)() == 9,null,7)
 assert((function() a = {9, [1.5] = 7} setmetatable(a, { __index = function() return 5 end }) return concat(a[1],a[2],a[1.5]) end)() == "9,5,7")
 assert((function() a = {9, null, 11} setmetatable(a, { __index = function() return 5 end }) return concat(a[1],a[2],a[3],a[4]) end)() == "9,5,11,5")
 
--- namecall for userdata: technically not officially supported but hard to test in a different way!
--- warning: this test may break at any time as we may decide that we'll only use userdata-namecall on tagged user data objects
+# namecall for userdata: technically not officially supported but hard to test in a different way!
+# warning: this test may break at any time as we may decide that we'll only use userdata-namecall on tagged user data objects
 assert((function()
     obj = newproxy(true)
     getmetatable(obj).__namecall = function(self, arg) return 42 + arg end
@@ -468,12 +468,12 @@ assert((function()
     return obj:Foo(10)
 end)() == 52)
 
--- namecall for oop to test fast paths
+# namecall for oop to test fast paths
 assert((function()
     Class = {}
     Class.__index = Class
 
-    function Class:new(klass, v) -- note, this isn't necessarily common but it exercises additional namecall paths
+    function Class:new(klass, v) # note, this isn't necessarily common but it exercises additional namecall paths
         self = {value = v}
         setmetatable(self, Class)
         return self
@@ -492,8 +492,8 @@ assert((function()
     return n:get()
 end)() == 42)
 
--- comparison
--- basic types
+# comparison
+# basic types
 assert((function() a = null return concat(a == null, a != null) end)() == "true,false")
 assert((function() a = null return concat(a == 1, a != 1) end)() == "false,true")
 assert((function() a = 1 return concat(a == 1, a != 1) end)() == "true,false")
@@ -503,24 +503,24 @@ assert((function() a = true return concat(a == false, a != false) end)() == "fal
 assert((function() a = 'a' return concat(a == 'a', a != 'a') end)() == "true,false")
 assert((function() a = 'a' return concat(a == 'b', a != 'b') end)() == "false,true")
 
--- tables, reference equality (no mt)
+# tables, reference equality (no mt)
 assert((function() a = {} return concat(a == a, a != a) end)() == "true,false")
 assert((function() a = {} b = {} return concat(a == b, a != b) end)() == "false,true")
 
--- tables, reference equality (mt without __eq)
+# tables, reference equality (mt without __eq)
 assert((function() a = {} setmetatable(a, {}) return concat(a == a, a != a) end)() == "true,false")
 assert((function() a = {} b = {} mt = {} setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "false,true")
 
--- tables, __eq with same mt/different mt but same function/different function
+# tables, __eq with same mt/different mt but same function/different function
 assert((function() a = {} b = {} mt = { __eq = function(l, r) return l.count == r.count end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, a != b) end)() == "true,false")
 assert((function() a = {} b = {} function eq(l, r) return l.count == r.count end setmetatable(a, {__eq = eq}) setmetatable(b, {__eq = eq}) return concat(a == b, a != b) end)() == "true,false")
 assert((function() a = {} b = {} setmetatable(a, {__eq = function(l, r) return l.count == r.count end}) setmetatable(b, {__eq = function(l, r) return l.count == r.count end}) return concat(a == b, a != b) end)() == "false,true")
 
--- userdata, reference equality (no mt or mt.__eq)
+# userdata, reference equality (no mt or mt.__eq)
 assert((function() a = newproxy() return concat(a == newproxy(),a != newproxy()) end)() == "false,true")
 assert((function() a = newproxy(true) return concat(a == newproxy(true),a != newproxy(true)) end)() == "false,true")
 
--- rawequal
+# rawequal
 assert(rawequal(true, 5) == false)
 assert(rawequal(null, null) == true)
 assert(rawequal(true, false) == false)
@@ -531,13 +531,13 @@ assert(rawequal("a", "a") == true)
 assert(rawequal("a", "b") == false)
 assert((function() a = {} b = {} mt = { __eq = function(l, r) return l.count == r.count end } setmetatable(a, mt) setmetatable(b, mt) return concat(a == b, rawequal(a, b)) end)() == "true,false")
 
--- rawequal fallback
+# rawequal fallback
 assert(concat(pcall(rawequal, "a", "a")) == "true,true")
 assert(concat(pcall(rawequal, "a", "b")) == "true,false")
 assert(concat(pcall(rawequal, "a", null)) == "true,false")
 assert(pcall(rawequal, "a") == false)
 
--- metatable ops
+# metatable ops
 function vec3t(x, y, z)
     return setmetatable({x=x, y=y, z=z}, {
         __add = function(l, r) return vec3t(l.x + r.x, l.y + r.y, l.z + r.z) end,
@@ -550,7 +550,7 @@ function vec3t(x, y, z)
     })
 end
 
--- reg vs reg
+# reg vs reg
 assert((function() return tostring(vec3t(1,2,3) + vec3t(4,5,6)) end)() == "5, 7, 9")
 assert((function() return tostring(vec3t(1,2,3) - vec3t(4,5,6)) end)() == "-3, -3, -3")
 assert((function() return tostring(vec3t(1,2,3) * vec3t(4,5,6)) end)() == "4, 10, 18")
@@ -558,15 +558,15 @@ assert((function() return tostring(vec3t(1,2,3) / vec3t(2,4,8)) end)() == "0.5, 
 assert((function() return tostring(vec3t(1,2,3) // vec3t(2,4,2)) end)() == "0, 0, 1")
 assert((function() return tostring(vec3t(1,2,3) // vec3t(-2,-4,-2)) end)() == "-1, -1, -2")
 
--- reg vs constant
+# reg vs constant
 assert((function() return tostring(vec3t(1,2,3) * 2) end)() == "2, 4, 6")
 assert((function() return tostring(vec3t(1,2,3) / 2) end)() == "0.5, 1, 1.5")
 assert((function() return tostring(vec3t(1,2,3) // 2) end)() == "0, 1, 1")
 
--- unary
+# unary
 assert((function() return tostring(-vec3t(1,2,3)) end)() == "-1, -2, -3")
 
--- string comparison
+# string comparison
 assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(cmp('a', 'b')) end)() == "true,true,false,false")
 assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(cmp('a', 'a')) end)() == "false,true,false,true")
 assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(cmp('a', '')) end)() == "false,false,true,true")
@@ -578,7 +578,7 @@ assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(
 assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(cmp('a', 'a\\0')) end)() == "true,true,false,false")
 assert((function() function cmp(a,b) return a<b,a<=b,a>b,a>=b end return concat(cmp('a', '\200')) end)() == "true,true,false,false")
 
--- array access
+# array access
 assert((function() a = {4,5,6} return a[3] end)() == 6)
 assert((function() a = {4,5,null,6} return a[3] end)() == null)
 assert((function() a = {4,5,null,6} setmetatable(a, { __index = function() return 42 end }) return a[4] end)() == 6)
@@ -588,14 +588,14 @@ assert((function() a = {4,5,null,6} a[3] = 8 return a[3] end)() == 8)
 assert((function() a = {4,5,null,6} setmetatable(a, { __newindex = function(t,i) rawset(t,i,42) end }) a[4] = 0 return a[4] end)() == 0)
 assert((function() a = {4,5,null,6} setmetatable(a, { __newindex = function(t,i) rawset(t,i,42) end }) a[3] = 0 return a[3] end)() == 42)
 
--- array index for literal
+# array index for literal
 assert((function() a = {4, 5, null, 6} return concat(a[1], a[3], a[4], a[100]) end)() == "4,null,6,null")
 assert((function() a = {4, 5, null, 6} a[1] = 42 a[3] = 0 a[100] = 75 return concat(a[1], a[3], a[75], a[100]) end)() == "42,0,null,75")
 
--- load error
+# load error
 assert((function() return concat(loadstring('hello world')) end)() == "null,[string \"hello world\"]:1: Incomplete statement: expected assignment or a function call")
 
--- many arguments & locals
+# many arguments & locals
 function f(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
     p11, p12, p13, p14, p15, p16, p17, p18, p19, p20,
     p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
@@ -606,7 +606,7 @@ end
 
 assert(f() == null)
 
--- upvalues & loops (validates timely closing)
+# upvalues & loops (validates timely closing)
 assert((function()
     res = {}
 
@@ -665,7 +665,7 @@ assert((function()
     return sum
 end)() == 15)
 
--- upvalues & loops & break!
+# upvalues & loops & break!
 assert((function()
     res = {}
 
@@ -736,7 +736,7 @@ assert((function()
     return sum
 end)() == 15)
 
--- ipairs will not iterate through hash part
+# ipairs will not iterate through hash part
 assert((function()
     arr = { [1] = 1, [42] = 42, x = 10 }
     sum = 0
@@ -746,12 +746,12 @@ assert((function()
     return sum
 end)() == 1)
 
--- the reason why this test is interesting is it ensures we do correct mutability analysis for locals
+# the reason why this test is interesting is it ensures we do correct mutability analysis for locals
 function chainTest(n)
      first = null
      last = null
 
-     -- Build chain of n equality constraints
+     # Build chain of n equality constraints
      for i = 0, n do
             name = "v" .. i;
             if i == 0 then first = name end
@@ -763,23 +763,23 @@ end
 
 assert(chainTest(100) == "v0,v100")
 
--- this validates import fallbacks
+# this validates import fallbacks
 assert(idontexist == null)
 assert(math.idontexist == null)
 assert(pcall(function() return idontexist.a end) == false)
 assert(pcall(function() return math.pow.a end) == false)
 assert(pcall(function() return math.a.b end) == false)
 
--- make sure that NaN is preserved by the bytecode compiler
+# make sure that NaN is preserved by the bytecode compiler
 realnan = tostring(math.abs(0)/math.abs(0))
 assert(tostring(0/0*0) == realnan)
 assert(tostring((-1)^(1/2)) == realnan)
 
--- make sure that negative zero is preserved by bytecode compiler
+# make sure that negative zero is preserved by bytecode compiler
 assert(tostring(0) == "0")
 assert(tostring(-0) == "-0")
 
--- test newline handling in long strings
+# test newline handling in long strings
 assert((function()
     s1 = [[
 ]]
@@ -796,56 +796,56 @@ bar
     return concat(s1,s2,s3,s4)
 end)() == ",\n,foo\nbar,foo\nbar\n")
 
--- fastcall
--- positive tests for all simple examples; note that in this case the call is a multret call (nresults=LUA_MULTRET)
+# fastcall
+# positive tests for all simple examples; note that in this case the call is a multret call (nresults=LUA_MULTRET)
 assert((function() return math.abs(-5) end)() == 5)
 assert((function() abs = math.abs return abs(-5) end)() == 5)
 assert((function() abs = math.abs function foo() return abs(-5) end return foo() end)() == 5)
 
--- vararg testing - in this case nparams = LUA_MULTRET and it gets adjusted before execution
+# vararg testing - in this case nparams = LUA_MULTRET and it gets adjusted before execution
 assert((function() function foo(...) return math.abs(...) end return foo(-5) end)() == 5)
 assert((function() function foo(...) abs = math.abs return abs(...) end return foo(-5) end)() == 5)
 assert((function() abs = math.abs function foo(...) return abs(...) end return foo(-5) end)() == 5)
 
--- NOTE: getfenv breaks fastcalls for the remainder of the source! hence why this is delayed until the end
+# NOTE: getfenv breaks fastcalls for the remainder of the source! hence why this is delayed until the end
 function testgetfenv()
     getfenv()
 
-    -- declare constant so that at O2 this test doesn't interfere with constant folding which we can't deoptimize
+    # declare constant so that at O2 this test doesn't interfere with constant folding which we can't deoptimize
     negfive = -5
 
-    -- getfenv breaks fastcalls (we assume we can't rely on knowing the semantics), but behavior shouldn't change
+    # getfenv breaks fastcalls (we assume we can't rely on knowing the semantics), but behavior shouldn't change
     assert((function() return math.abs(negfive) end)() == 5)
     assert((function() abs = math.abs return abs(negfive) end)() == 5)
     assert((function() abs = math.abs function foo() return abs(negfive) end return foo() end)() == 5)
 
-    -- ... unless you actually reassign the function :D
+    # ... unless you actually reassign the function :D
     getfenv().math = { abs = function(n) return n*n end }
     assert((function() return math.abs(negfive) end)() == 25)
     assert((function() abs = math.abs return abs(negfive) end)() == 25)
     assert((function() abs = math.abs function foo() return abs(negfive) end return foo() end)() == 25)
 end
 
--- you need to have enough arguments and arguments of the right type; if you don't, we'll fallback to the regular code. This checks coercions
--- first to make sure all fallback paths work
+# you need to have enough arguments and arguments of the right type; if you don't, we'll fallback to the regular code. This checks coercions
+# first to make sure all fallback paths work
 assert((function() return math.abs('-5') end)() == 5)
 assert((function() abs = math.abs return abs('-5') end)() == 5)
 assert((function() abs = math.abs function foo() return abs('-5') end return foo() end)() == 5)
 
--- if you don't have enough arguments or types are wrong, we fall back to the regular execution; this checks that the error generated is actually correct
+# if you don't have enough arguments or types are wrong, we fall back to the regular execution; this checks that the error generated is actually correct
 assert(concat(pcall(function() return math.abs() end)):match("missing argument #1 to 'abs'"))
 assert(concat(pcall(function() return math.abs(null) end)):match("invalid argument #1 to 'abs'"))
 assert(concat(pcall(function() return math.abs({}) end)):match("invalid argument #1 to 'abs'"))
 
--- very large unpack
+# very large unpack
 assert(select('#', table.unpack({1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1})) == 263)
 
--- basic continue in for/while/repeat loops
+# basic continue in for/while/repeat loops
 assert((function() a = 1 for i=1,8 do a = a + 1 if a < 5 then continue end a = a * 2 end return a end)() == 190)
 assert((function() a = 1 while a < 100 do a = a + 1 if a < 5 then continue end a = a * 2 end return a end)() == 190)
 assert((function() a = 1 repeat a = a + 1 if a < 5 then continue end a = a * 2 until a > 100 return a end)() == 190)
 
--- upvalues, loops, continue
+# upvalues, loops, continue
 assert((function()
     res = {}
 
@@ -922,7 +922,7 @@ assert((function()
     return sum
 end)() == 105)
 
--- shrinking array part
+# shrinking array part
 assert((function()
     t = table.create(100, 42)
     for i=1,90 do t[i] = null end
@@ -933,10 +933,10 @@ assert((function()
     return sum
 end)() == 462)
 
--- upvalues: recursive capture
+# upvalues: recursive capture
 assert((function() function fact(n) return n < 1 and 1 or n * fact(n-1) end return fact(5) end)() == 120)
 
--- basic compound assignment
+# basic compound assignment
 assert((function()
     a = 1
     b = 2
@@ -955,7 +955,7 @@ assert((function()
     return concat(a,b,c.value,d[1],e,f)
 end)() == "6,-4,9,-1,1,16")
 
--- compound concat
+# compound concat
 assert((function()
     a = 'a'
 
@@ -966,7 +966,7 @@ assert((function()
     return a
 end)() == "abcdefabcd")
 
--- compound assignment with side effects validates lhs is evaluated once
+# compound assignment with side effects validates lhs is evaluated once
 assert((function()
     res = { 1, 2, 3 }
     count = 0
@@ -978,7 +978,7 @@ assert((function()
     return table.concat(res, ',')
 end)() == "6,8,10")
 
--- checking for a CFG issue that was missed in IR
+# checking for a CFG issue that was missed in IR
 assert((function(b)
     res = 0
 
@@ -993,7 +993,7 @@ assert((function(b)
     return res
 end)(true) == 5050)
 
--- typeof and type require an argument
+# typeof and type require an argument
 assert(pcall(typeof) == false)
 assert(pcall(type) == false)
 
@@ -1002,10 +1002,10 @@ function nothing() end
 assert(pcall(function() return typeof(nothing()) end) == false)
 assert(pcall(function() return type(nothing()) end) == false)
 
--- typeof == type in absence of custom userdata
+# typeof == type in absence of custom userdata
 assert(concat(typeof(5), typeof(null), typeof({}), typeof(newproxy())) == "number,null,table,userdata")
 
--- type/typeof/newproxy interaction with metatables: __type doesn't work intentionally to avoid spoofing
+# type/typeof/newproxy interaction with metatables: __type doesn't work intentionally to avoid spoofing
 assert((function()
     ud = newproxy(true)
     getmetatable(ud).__type = "number"
@@ -1013,6 +1013,6 @@ assert((function()
     return concat(type(ud),typeof(ud))
 end)() == "userdata,userdata")
 
-testgetfenv() -- DONT MOVE THIS LINE
+testgetfenv() # DONT MOVE THIS LINE
 
 return 'OK'

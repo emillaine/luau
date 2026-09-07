@@ -1,15 +1,15 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print "testing builtin types"
 
 ignore =
 {
-	-- these are permanently ignored, as they are only exposed in tests
+	# these are permanently ignored, as they are only exposed in tests
 	"_G.limitedstack",
 	"_G.RTTI",
 	"_G.collectgarbage",
 
-	-- what follows is a set of mismatches that hopefully eventually will go down to 0
-	"_G.require", -- need to move to Roblox type defs
+	# what follows is a set of mismatches that hopefully eventually will go down to 0
+	"_G.require", # need to move to Roblox type defs
 }
 
 function verify(real, rtti, path)

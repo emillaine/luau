@@ -4,8 +4,8 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- Richards' benchmark
--- Derived from C version
+# Richards' benchmark
+# Derived from C version
 
 COUNT = 10000*50
 QPKTCOUNT = 1163156
@@ -24,7 +24,7 @@ tracing = null
 tasktab = {}
 ascii_0 = 48
 
-tab = {  -- tab[i][j] = xor(i-1, j-1)
+tab = {  # tab[i][j] = xor(i-1, j-1)
   {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, },
   {1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, },
   {2, 3, 0, 1, 6, 7, 4, 5, 10, 11, 8, 9, 14, 15, 12, 13, },

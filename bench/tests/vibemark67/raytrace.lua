@@ -3,10 +3,10 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
--- 3D Ray Tracer Benchmark
--- A recursive ray tracer with BVH acceleration, Phong shading, reflections,
--- refraction, shadow rays, and multiple scene configurations.
--- Style: vectors as plain {x,y,z} tables, global functions, math-heavy.
+# 3D Ray Tracer Benchmark
+# A recursive ray tracer with BVH acceleration, Phong shading, reflections,
+# refraction, shadow rays, and multiple scene configurations.
+# Style: vectors as plain {x,y,z} tables, global functions, math-heavy.
 
 math_sqrt = math.sqrt
 math_abs = math.abs
@@ -19,9 +19,9 @@ math_sin = math.sin
 math_cos = math.cos
 math_tan = math.tan
 
--- ============================================================================
--- Vector3 operations (plain tables, no metatables)
--- ============================================================================
+# ============================================================================
+# Vector3 operations (plain tables, no metatables)
+# ============================================================================
 
 function vec3(x, y, z)
     return {x = x, y = y, z = z}
@@ -122,9 +122,9 @@ function vec3_clamp(v, lo, hi)
     }
 end
 
--- ============================================================================
--- Color operations
--- ============================================================================
+# ============================================================================
+# Color operations
+# ============================================================================
 
 function color_new(r, g, b)
     return {r = r, g = g, b = b}
@@ -150,9 +150,9 @@ function color_clamp(c)
     }
 end
 
--- ============================================================================
--- Ray
--- ============================================================================
+# ============================================================================
+# Ray
+# ============================================================================
 
 function ray_new(origin, direction)
     return {origin = origin, direction = direction}
@@ -166,9 +166,9 @@ function ray_point_at(ray, t)
     }
 end
 
--- ============================================================================
--- Materials
--- ============================================================================
+# ============================================================================
+# Materials
+# ============================================================================
 
 function material_new(color, specular, reflectivity, transparency, ior, shininess)
     return {
@@ -193,9 +193,9 @@ function material_glass(r, g, b, ior)
     return material_new(color_new(r, g, b), 0.9, 0.1, 0.9, ior or 1.5, 128)
 end
 
--- ============================================================================
--- AABB (Axis-Aligned Bounding Box)
--- ============================================================================
+# ============================================================================
+# AABB (Axis-Aligned Bounding Box)
+# ============================================================================
 
 function aabb_new(min_pt, max_pt)
     return {min = min_pt, max = max_pt}
@@ -239,7 +239,7 @@ function aabb_longest_axis(box)
     return 3
 end
 
--- Slab method ray-AABB intersection
+# Slab method ray-AABB intersection
 function aabb_intersect(box, ray_origin, ray_dir_inv, tmin_limit, tmax_limit)
     tx1 = (box.min.x - ray_origin.x) * ray_dir_inv.x
     tx2 = (box.max.x - ray_origin.x) * ray_dir_inv.x
@@ -261,9 +261,9 @@ function aabb_intersect(box, ray_origin, ray_dir_inv, tmin_limit, tmax_limit)
     return true
 end
 
--- ============================================================================
--- Sphere intersection
--- ============================================================================
+# ============================================================================
+# Sphere intersection
+# ============================================================================
 
 function sphere_new(center, radius, mat)
     r = radius
@@ -318,9 +318,9 @@ function sphere_intersect(sphere, ray, t_min, t_max)
     }
 end
 
--- ============================================================================
--- Plane intersection
--- ============================================================================
+# ============================================================================
+# Plane intersection
+# ============================================================================
 
 function plane_new(point, normal, mat)
     return {
@@ -328,7 +328,7 @@ function plane_new(point, normal, mat)
         point = point,
         normal = vec3_normalize(normal),
         material = mat,
-        bounds = null -- planes have infinite extent, not in BVH
+        bounds = null # planes have infinite extent, not in BVH
     }
 end
 
@@ -342,7 +342,7 @@ function plane_intersect(pl, ray, t_min, t_max)
 
     point = ray_point_at(ray, t)
     normal = pl.normal
-    -- Make sure normal faces the ray
+    # Make sure normal faces the ray
     if denom > 0 then
         normal = vec3_negate(normal)
     end
@@ -355,9 +355,9 @@ function plane_intersect(pl, ray, t_min, t_max)
     }
 end
 
--- ============================================================================
--- Triangle intersection (Moller-Trumbore algorithm)
--- ============================================================================
+# ============================================================================
+# Triangle intersection (Moller-Trumbore algorithm)
+# ============================================================================
 
 function triangle_new(v0, v1, v2, mat)
     edge1 = vec3_sub(v1, v0)
@@ -366,7 +366,7 @@ function triangle_new(v0, v1, v2, mat)
 
     min_pt = vec3_min(vec3_min(v0, v1), v2)
     max_pt = vec3_max(vec3_max(v0, v1), v2)
-    -- Slightly expand thin bounding boxes
+    # Slightly expand thin bounding boxes
     eps = 0.0001
     if max_pt.x - min_pt.x < eps then max_pt.x = max_pt.x + eps; min_pt.x = min_pt.x - eps end
     if max_pt.y - min_pt.y < eps then max_pt.y = max_pt.y + eps; min_pt.y = min_pt.y - eps end
@@ -404,7 +404,7 @@ function triangle_intersect(tri, ray, t_min, t_max)
 
     point = ray_point_at(ray, t)
     normal = tri.normal
-    -- Make sure normal faces the ray
+    # Make sure normal faces the ray
     if vec3_dot(normal, ray.direction) > 0 then
         normal = vec3_negate(normal)
     end
@@ -417,16 +417,16 @@ function triangle_intersect(tri, ray, t_min, t_max)
     }
 end
 
--- ============================================================================
--- Box (Axis-aligned box made of 12 triangles)
--- ============================================================================
+# ============================================================================
+# Box (Axis-aligned box made of 12 triangles)
+# ============================================================================
 
 function box_new(min_pt, max_pt, mat)
     triangles = {}
     x0 = min_pt.x; y0 = min_pt.y; z0 = min_pt.z
     x1 = max_pt.x; y1 = max_pt.y; z1 = max_pt.z
 
-    -- Vertices
+    # Vertices
     v000 = vec3(x0, y0, z0)
     v100 = vec3(x1, y0, z0)
     v010 = vec3(x0, y1, z0)
@@ -436,34 +436,34 @@ function box_new(min_pt, max_pt, mat)
     v011 = vec3(x0, y1, z1)
     v111 = vec3(x1, y1, z1)
 
-    -- Front face (z = z1)
-    triangles[#triangles + 1] = triangle_new(v001, v101, v111, mat)
-    triangles[#triangles + 1] = triangle_new(v001, v111, v011, mat)
-    -- Back face (z = z0)
-    triangles[#triangles + 1] = triangle_new(v100, v000, v010, mat)
-    triangles[#triangles + 1] = triangle_new(v100, v010, v110, mat)
-    -- Top face (y = y1)
-    triangles[#triangles + 1] = triangle_new(v010, v011, v111, mat)
-    triangles[#triangles + 1] = triangle_new(v010, v111, v110, mat)
-    -- Bottom face (y = y0)
-    triangles[#triangles + 1] = triangle_new(v000, v100, v101, mat)
-    triangles[#triangles + 1] = triangle_new(v000, v101, v001, mat)
-    -- Right face (x = x1)
-    triangles[#triangles + 1] = triangle_new(v100, v110, v111, mat)
-    triangles[#triangles + 1] = triangle_new(v100, v111, v101, mat)
-    -- Left face (x = x0)
-    triangles[#triangles + 1] = triangle_new(v000, v001, v011, mat)
-    triangles[#triangles + 1] = triangle_new(v000, v011, v010, mat)
+    # Front face (z = z1)
+    triangles[triangles.count + 1] = triangle_new(v001, v101, v111, mat)
+    triangles[triangles.count + 1] = triangle_new(v001, v111, v011, mat)
+    # Back face (z = z0)
+    triangles[triangles.count + 1] = triangle_new(v100, v000, v010, mat)
+    triangles[triangles.count + 1] = triangle_new(v100, v010, v110, mat)
+    # Top face (y = y1)
+    triangles[triangles.count + 1] = triangle_new(v010, v011, v111, mat)
+    triangles[triangles.count + 1] = triangle_new(v010, v111, v110, mat)
+    # Bottom face (y = y0)
+    triangles[triangles.count + 1] = triangle_new(v000, v100, v101, mat)
+    triangles[triangles.count + 1] = triangle_new(v000, v101, v001, mat)
+    # Right face (x = x1)
+    triangles[triangles.count + 1] = triangle_new(v100, v110, v111, mat)
+    triangles[triangles.count + 1] = triangle_new(v100, v111, v101, mat)
+    # Left face (x = x0)
+    triangles[triangles.count + 1] = triangle_new(v000, v001, v011, mat)
+    triangles[triangles.count + 1] = triangle_new(v000, v011, v010, mat)
 
     return triangles
 end
 
--- ============================================================================
--- Stable merge sort (deterministic across runtimes unlike table.sort)
--- ============================================================================
+# ============================================================================
+# Stable merge sort (deterministic across runtimes unlike table.sort)
+# ============================================================================
 
 function stable_sort(arr, compare)
-    n = #arr
+    n = arr.count
     if n <= 1 then return end
     mid = math_floor(n / 2)
     left = {}
@@ -473,7 +473,7 @@ function stable_sort(arr, compare)
     stable_sort(left, compare)
     stable_sort(right, compare)
     i, j, k = 1, 1, 1
-    ln, rn = #left, #right
+    ln, rn = left.count, right.count
     while i <= ln and j <= rn do
         if not compare(right[j], left[i]) then
             arr[k] = left[i]
@@ -488,16 +488,16 @@ function stable_sort(arr, compare)
     while j <= rn do arr[k] = right[j]; j = j + 1; k = k + 1 end
 end
 
--- ============================================================================
--- BVH (Bounding Volume Hierarchy)
--- ============================================================================
+# ============================================================================
+# BVH (Bounding Volume Hierarchy)
+# ============================================================================
 
 function bvh_build(objects)
-    if #objects == 0 then
+    if objects.count == 0 then
         return null
     end
 
-    if #objects == 1 then
+    if objects.count == 1 then
         return {
             bounds = objects[1].bounds,
             object = objects[1],
@@ -506,7 +506,7 @@ function bvh_build(objects)
         }
     end
 
-    if #objects == 2 then
+    if objects.count == 2 then
         combined = aabb_union(objects[1].bounds, objects[2].bounds)
         return {
             bounds = combined,
@@ -516,16 +516,16 @@ function bvh_build(objects)
         }
     end
 
-    -- Compute combined bounding box
+    # Compute combined bounding box
     combined = objects[1].bounds
-    for i = 2, #objects do
+    for i = 2, objects.count do
         combined = aabb_union(combined, objects[i].bounds)
     end
 
-    -- Find longest axis
+    # Find longest axis
     axis = aabb_longest_axis(combined)
 
-    -- Sort on that axis (stable sort for determinism across runtimes)
+    # Sort on that axis (stable sort for determinism across runtimes)
     if axis == 1 then
         stable_sort(objects, function(a, b)
             return aabb_centroid(a.bounds).x < aabb_centroid(b.bounds).x
@@ -540,15 +540,15 @@ function bvh_build(objects)
         end)
     end
 
-    -- Split at median
-    mid = math_floor(#objects / 2)
+    # Split at median
+    mid = math_floor(objects.count / 2)
     left_objects = {}
     right_objects = {}
     for i = 1, mid do
-        left_objects[#left_objects + 1] = objects[i]
+        left_objects[left_objects.count + 1] = objects[i]
     end
-    for i = mid + 1, #objects do
-        right_objects[#right_objects + 1] = objects[i]
+    for i = mid + 1, objects.count do
+        right_objects[right_objects.count + 1] = objects[i]
     end
 
     left_node = bvh_build(left_objects)
@@ -562,7 +562,7 @@ function bvh_build(objects)
     }
 end
 
--- Stack-based BVH traversal
+# Stack-based BVH traversal
 function bvh_intersect(node, ray, t_min, t_max)
     if node == null then return null end
 
@@ -584,11 +584,11 @@ function bvh_intersect(node, ray, t_min, t_max)
         stack_top = stack_top - 1
 
         if current.bounds == null then
-            -- skip
+            # skip
         else if not aabb_intersect(current.bounds, ray.origin, dir_inv, t_min, closest_t) then
-            -- skip
+            # skip
         else if current.object != null then
-            -- Leaf node
+            # Leaf node
             hit = null
             obj = current.object
             if obj.type == "sphere" then
@@ -601,7 +601,7 @@ function bvh_intersect(node, ray, t_min, t_max)
                 closest_t = hit.t
             end
         else
-            -- Internal node
+            # Internal node
             if current.left then
                 stack_top = stack_top + 1
                 stack[stack_top] = current.left
@@ -616,15 +616,15 @@ function bvh_intersect(node, ray, t_min, t_max)
     return closest_hit
 end
 
--- ============================================================================
--- Scene representation
--- ============================================================================
+# ============================================================================
+# Scene representation
+# ============================================================================
 
 function scene_new()
     return {
-        bvh_objects = {},  -- objects that go in BVH (spheres, triangles)
-        planes = {},       -- planes (infinite, not in BVH)
-        lights = {},       -- point lights
+        bvh_objects = {},  # objects that go in BVH (spheres, triangles)
+        planes = {},       # planes (infinite, not in BVH)
+        lights = {},       # point lights
         ambient = color_new(0.05, 0.05, 0.05),
         background = color_new(0.0, 0.0, 0.0),
         bvh = null
@@ -632,15 +632,15 @@ function scene_new()
 end
 
 function scene_add_object(scene, obj)
-    scene.bvh_objects[#scene.bvh_objects + 1] = obj
+    scene.bvh_objects[scene.bvh_objects.count + 1] = obj
 end
 
 function scene_add_plane(scene, pl)
-    scene.planes[#scene.planes + 1] = pl
+    scene.planes[scene.planes.count + 1] = pl
 end
 
 function scene_add_light(scene, position, color_val, intensity)
-    scene.lights[#scene.lights + 1] = {
+    scene.lights[scene.lights.count + 1] = {
         position = position,
         color = color_val or color_new(1, 1, 1),
         intensity = intensity or 1.0
@@ -648,20 +648,20 @@ function scene_add_light(scene, position, color_val, intensity)
 end
 
 function scene_build_bvh(scene)
-    if #scene.bvh_objects > 0 then
+    if scene.bvh_objects.count > 0 then
         scene.bvh = bvh_build(scene.bvh_objects)
     end
 end
 
--- ============================================================================
--- Scene intersection (BVH + planes)
--- ============================================================================
+# ============================================================================
+# Scene intersection (BVH + planes)
+# ============================================================================
 
 function scene_intersect(scene, ray, t_min, t_max)
     closest_hit = null
     closest_t = t_max
 
-    -- Check BVH
+    # Check BVH
     if scene.bvh then
         hit = bvh_intersect(scene.bvh, ray, t_min, closest_t)
         if hit then
@@ -670,8 +670,8 @@ function scene_intersect(scene, ray, t_min, t_max)
         end
     end
 
-    -- Check planes
-    for i = 1, #scene.planes do
+    # Check planes
+    for i = 1, scene.planes.count do
         hit = plane_intersect(scene.planes[i], ray, t_min, closest_t)
         if hit then
             closest_hit = hit
@@ -682,9 +682,9 @@ function scene_intersect(scene, ray, t_min, t_max)
     return closest_hit
 end
 
--- ============================================================================
--- Shadow testing
--- ============================================================================
+# ============================================================================
+# Shadow testing
+# ============================================================================
 
 function scene_is_shadowed(scene, point, light_pos)
     to_light = vec3_sub(light_pos, point)
@@ -694,18 +694,18 @@ function scene_is_shadowed(scene, point, light_pos)
 
     hit = scene_intersect(scene, shadow_ray, 0.001, dist - 0.001)
     if hit then
-        -- If hit object is transparent, partial shadow
+        # If hit object is transparent, partial shadow
         if hit.material and hit.material.transparency > 0.5 then
-            return false  -- Let light through transparent objects
+            return false  # Let light through transparent objects
         end
         return true
     end
     return false
 end
 
--- ============================================================================
--- Phong shading
--- ============================================================================
+# ============================================================================
+# Phong shading
+# ============================================================================
 
 function shade_phong(scene, hit, ray, lights)
     mat = hit.material
@@ -713,23 +713,23 @@ function shade_phong(scene, hit, ray, lights)
     normal = hit.normal
     view_dir = vec3_normalize(vec3_negate(ray.direction))
 
-    -- Start with ambient
+    # Start with ambient
     result = color_mul_color(mat.color, scene.ambient)
 
-    for i = 1, #lights do
+    for i = 1, lights.count do
         light = lights[i]
         light_dir = vec3_sub(light.position, point)
         light_dist = vec3_length(light_dir)
         light_dir = vec3_mul(light_dir, 1.0 / light_dist)
 
-        -- Shadow check
+        # Shadow check
         if not scene_is_shadowed(scene, vec3_add(point, vec3_mul(normal, 0.001)), light.position) then
-            -- Diffuse
+            # Diffuse
             n_dot_l = math_max(0, vec3_dot(normal, light_dir))
             attenuation = light.intensity / (1.0 + 0.01 * light_dist * light_dist)
             diffuse = color_mul(color_mul_color(mat.color, light.color), n_dot_l * attenuation)
 
-            -- Specular (Blinn-Phong)
+            # Specular (Blinn-Phong)
             half_vec = vec3_normalize(vec3_add(light_dir, view_dir))
             n_dot_h = math_max(0, vec3_dot(normal, half_vec))
             spec_strength = mat.specular * (n_dot_h ^ mat.shininess)
@@ -742,9 +742,9 @@ function shade_phong(scene, hit, ray, lights)
     return result
 end
 
--- ============================================================================
--- Fresnel (Schlick's approximation)
--- ============================================================================
+# ============================================================================
+# Fresnel (Schlick's approximation)
+# ============================================================================
 
 function fresnel_schlick(cos_theta, ior)
     r0 = ((1.0 - ior) / (1.0 + ior))
@@ -752,14 +752,14 @@ function fresnel_schlick(cos_theta, ior)
     return r0 + (1.0 - r0) * ((1.0 - cos_theta) ^ 5)
 end
 
--- ============================================================================
--- Refraction
--- ============================================================================
+# ============================================================================
+# Refraction
+# ============================================================================
 
 function refract_ray(incident, normal, ior_ratio)
     cos_i = -vec3_dot(incident, normal)
     sin2_t = ior_ratio * ior_ratio * (1.0 - cos_i * cos_i)
-    if sin2_t > 1.0 then return null end -- Total internal reflection
+    if sin2_t > 1.0 then return null end # Total internal reflection
     cos_t = math_sqrt(1.0 - sin2_t)
     return vec3_add(
         vec3_mul(incident, ior_ratio),
@@ -767,9 +767,9 @@ function refract_ray(incident, normal, ior_ratio)
     )
 end
 
--- ============================================================================
--- Recursive ray tracing
--- ============================================================================
+# ============================================================================
+# Recursive ray tracing
+# ============================================================================
 
 function trace_ray(scene, ray, depth, max_depth)
     if depth >= max_depth then
@@ -785,17 +785,17 @@ function trace_ray(scene, ray, depth, max_depth)
     point = hit.point
     normal = hit.normal
 
-    -- Base color from Phong shading
+    # Base color from Phong shading
     base_color = shade_phong(scene, hit, ray, scene.lights)
 
-    -- If no reflection or refraction, just return base color
+    # If no reflection or refraction, just return base color
     if mat.reflectivity <= 0.001 and mat.transparency <= 0.001 then
         return base_color
     end
 
     result_color = base_color
 
-    -- Reflection
+    # Reflection
     if mat.reflectivity > 0.001 then
         reflect_dir = vec3_reflect(ray.direction, normal)
         reflect_dir = vec3_normalize(reflect_dir)
@@ -803,14 +803,14 @@ function trace_ray(scene, ray, depth, max_depth)
         reflect_ray = ray_new(reflect_origin, reflect_dir)
         reflect_color = trace_ray(scene, reflect_ray, depth + 1, max_depth)
 
-        -- Blend reflection with base color
+        # Blend reflection with base color
         result_color = color_add(
             color_mul(result_color, 1.0 - mat.reflectivity),
             color_mul(reflect_color, mat.reflectivity)
         )
     end
 
-    -- Refraction (transparency)
+    # Refraction (transparency)
     if mat.transparency > 0.001 then
         cos_i = -vec3_dot(ray.direction, normal)
         entering = cos_i > 0
@@ -832,22 +832,22 @@ function trace_ray(scene, ray, depth, max_depth)
             refract_r = ray_new(refract_origin, refracted)
             refract_color = trace_ray(scene, refract_r, depth + 1, max_depth)
 
-            -- Use Fresnel to blend reflection and refraction
+            # Use Fresnel to blend reflection and refraction
             fr = fresnel_schlick(math_abs(cos_i), mat.ior)
             result_color = color_add(
                 color_mul(result_color, fr + (1.0 - mat.transparency)),
                 color_mul(refract_color, mat.transparency * (1.0 - fr))
             )
         end
-        -- If total internal reflection, reflection already handled
+        # If total internal reflection, reflection already handled
     end
 
     return result_color
 end
 
--- ============================================================================
--- Camera
--- ============================================================================
+# ============================================================================
+# Camera
+# ============================================================================
 
 function camera_new(eye, look_at, up, fov, aspect)
     forward = vec3_normalize(vec3_sub(look_at, eye))
@@ -868,7 +868,7 @@ function camera_new(eye, look_at, up, fov, aspect)
 end
 
 function camera_get_ray(cam, u, v)
-    -- u, v in [0, 1]
+    # u, v in [0, 1]
     x = (2.0 * u - 1.0) * cam.half_width
     y = (2.0 * v - 1.0) * cam.half_height
     dir = vec3_normalize({
@@ -879,9 +879,9 @@ function camera_get_ray(cam, u, v)
     return ray_new(cam.eye, dir)
 end
 
--- ============================================================================
--- Checkered pattern for planes
--- ============================================================================
+# ============================================================================
+# Checkered pattern for planes
+# ============================================================================
 
 function get_checkered_color(point, color1, color2, scale)
     scale = scale or 1.0
@@ -894,97 +894,97 @@ function get_checkered_color(point, color1, color2, scale)
     end
 end
 
--- ============================================================================
--- Scene: Cornell Box
--- ============================================================================
+# ============================================================================
+# Scene: Cornell Box
+# ============================================================================
 
 function create_cornell_box()
     scene = scene_new()
     scene.background = color_new(0.0, 0.0, 0.0)
     scene.ambient = color_new(0.1, 0.1, 0.1)
 
-    -- Room dimensions: -5 to 5 on x and z, 0 to 10 on y
+    # Room dimensions: -5 to 5 on x and z, 0 to 10 on y
     white_mat = material_diffuse(0.73, 0.73, 0.73)
     red_mat = material_diffuse(0.65, 0.05, 0.05)
     green_mat = material_diffuse(0.12, 0.45, 0.15)
 
-    -- Floor (y=0)
+    # Floor (y=0)
     floor_tris = box_new(vec3(-5, -0.1, -5), vec3(5, 0, 5), white_mat)
-    for i = 1, #floor_tris do scene_add_object(scene, floor_tris[i]) end
+    for i = 1, floor_tris.count do scene_add_object(scene, floor_tris[i]) end
 
-    -- Ceiling (y=10)
+    # Ceiling (y=10)
     ceiling_tris = box_new(vec3(-5, 10, -5), vec3(5, 10.1, 5), white_mat)
-    for i = 1, #ceiling_tris do scene_add_object(scene, ceiling_tris[i]) end
+    for i = 1, ceiling_tris.count do scene_add_object(scene, ceiling_tris[i]) end
 
-    -- Back wall (z=-5)
+    # Back wall (z=-5)
     back_tris = box_new(vec3(-5, 0, -5.1), vec3(5, 10, -5), white_mat)
-    for i = 1, #back_tris do scene_add_object(scene, back_tris[i]) end
+    for i = 1, back_tris.count do scene_add_object(scene, back_tris[i]) end
 
-    -- Left wall (x=-5) - RED
+    # Left wall (x=-5) - RED
     left_tris = box_new(vec3(-5.1, 0, -5), vec3(-5, 10, 5), red_mat)
-    for i = 1, #left_tris do scene_add_object(scene, left_tris[i]) end
+    for i = 1, left_tris.count do scene_add_object(scene, left_tris[i]) end
 
-    -- Right wall (x=5) - GREEN
+    # Right wall (x=5) - GREEN
     right_tris = box_new(vec3(5, 0, -5), vec3(5.1, 10, 5), green_mat)
-    for i = 1, #right_tris do scene_add_object(scene, right_tris[i]) end
+    for i = 1, right_tris.count do scene_add_object(scene, right_tris[i]) end
 
-    -- Tall box (white)
+    # Tall box (white)
     box1_mat = material_diffuse(0.73, 0.73, 0.73)
     box1_tris = box_new(vec3(-3.5, 0, -3.5), vec3(-1, 6, -1), box1_mat)
-    for i = 1, #box1_tris do scene_add_object(scene, box1_tris[i]) end
+    for i = 1, box1_tris.count do scene_add_object(scene, box1_tris[i]) end
 
-    -- Short box (white)
+    # Short box (white)
     box2_mat = material_diffuse(0.73, 0.73, 0.73)
     box2_tris = box_new(vec3(1, 0, -1), vec3(3.5, 3, 2), box2_mat)
-    for i = 1, #box2_tris do scene_add_object(scene, box2_tris[i]) end
+    for i = 1, box2_tris.count do scene_add_object(scene, box2_tris[i]) end
 
-    -- Ceiling light (area light approximated as point)
+    # Ceiling light (area light approximated as point)
     scene_add_light(scene, vec3(0, 9.5, 0), color_new(1, 0.95, 0.8), 80.0)
-    -- Slight fill from front
+    # Slight fill from front
     scene_add_light(scene, vec3(0, 5, 8), color_new(0.5, 0.5, 0.6), 20.0)
 
     scene_build_bvh(scene)
 
     cam = camera_new(
-        vec3(0, 5, 14),   -- eye
-        vec3(0, 5, 0),    -- look_at
-        vec3(0, 1, 0),    -- up
-        50,               -- fov
-        1.0               -- aspect
+        vec3(0, 5, 14),   # eye
+        vec3(0, 5, 0),    # look_at
+        vec3(0, 1, 0),    # up
+        50,               # fov
+        1.0               # aspect
     )
 
     return scene, cam
 end
 
--- ============================================================================
--- Scene: Sphere scene (reflective sphere on checkered plane)
--- ============================================================================
+# ============================================================================
+# Scene: Sphere scene (reflective sphere on checkered plane)
+# ============================================================================
 
 function create_sphere_scene()
     scene = scene_new()
     scene.background = color_new(0.4, 0.6, 0.9)
     scene.ambient = color_new(0.08, 0.08, 0.1)
 
-    -- Checkered floor plane
+    # Checkered floor plane
     floor_mat = material_diffuse(0.8, 0.8, 0.8)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Large reflective sphere in center
+    # Large reflective sphere in center
     mirror_mat = material_reflective(0.9, 0.9, 0.95, 0.85)
     scene_add_object(scene, sphere_new(vec3(0, 1.5, -2), 1.5, mirror_mat))
 
-    -- Colored spheres around it
+    # Colored spheres around it
     scene_add_object(scene, sphere_new(vec3(-3, 0.8, -1), 0.8, material_diffuse(0.8, 0.2, 0.2)))
     scene_add_object(scene, sphere_new(vec3(3, 0.8, -1), 0.8, material_diffuse(0.2, 0.2, 0.8)))
     scene_add_object(scene, sphere_new(vec3(-1.5, 0.5, 1.5), 0.5, material_diffuse(0.2, 0.8, 0.2)))
     scene_add_object(scene, sphere_new(vec3(1.5, 0.5, 1.5), 0.5, material_diffuse(0.8, 0.8, 0.2)))
     scene_add_object(scene, sphere_new(vec3(0, 0.4, 2.5), 0.4, material_diffuse(0.8, 0.4, 0.8)))
 
-    -- Small reflective spheres
+    # Small reflective spheres
     scene_add_object(scene, sphere_new(vec3(-2, 0.3, 2), 0.3, material_reflective(0.7, 0.7, 0.9, 0.6)))
     scene_add_object(scene, sphere_new(vec3(2, 0.3, 2.5), 0.3, material_reflective(0.9, 0.7, 0.7, 0.6)))
 
-    -- Lights
+    # Lights
     scene_add_light(scene, vec3(5, 10, 5), color_new(1, 1, 0.95), 60.0)
     scene_add_light(scene, vec3(-5, 8, 3), color_new(0.6, 0.7, 1.0), 30.0)
 
@@ -1001,43 +1001,43 @@ function create_sphere_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Scene: Glass scene (transparent + mirror spheres)
--- ============================================================================
+# ============================================================================
+# Scene: Glass scene (transparent + mirror spheres)
+# ============================================================================
 
 function create_glass_scene()
     scene = scene_new()
     scene.background = color_new(0.2, 0.3, 0.5)
     scene.ambient = color_new(0.06, 0.06, 0.08)
 
-    -- Floor
+    # Floor
     floor_mat = material_diffuse(0.6, 0.6, 0.6)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Glass sphere (center)
+    # Glass sphere (center)
     glass_mat = material_glass(0.95, 0.95, 1.0, 1.5)
     scene_add_object(scene, sphere_new(vec3(0, 1.5, -1), 1.5, glass_mat))
 
-    -- Mirror sphere (left)
+    # Mirror sphere (left)
     mirror_mat = material_reflective(0.95, 0.95, 0.95, 0.95)
     scene_add_object(scene, sphere_new(vec3(-3.5, 1, -2), 1.0, mirror_mat))
 
-    -- Red sphere (right)
+    # Red sphere (right)
     scene_add_object(scene, sphere_new(vec3(3, 0.8, -0.5), 0.8, material_diffuse(0.85, 0.15, 0.15)))
 
-    -- Small glass sphere
+    # Small glass sphere
     glass2 = material_glass(0.9, 1.0, 0.9, 1.3)
     scene_add_object(scene, sphere_new(vec3(1.5, 0.5, 1.5), 0.5, glass2))
 
-    -- Background sphere (big, far away, colored)
+    # Background sphere (big, far away, colored)
     scene_add_object(scene, sphere_new(vec3(0, 3, -12), 4.0, material_diffuse(0.3, 0.5, 0.8)))
 
-    -- Small colored spheres behind glass
+    # Small colored spheres behind glass
     scene_add_object(scene, sphere_new(vec3(-1, 0.4, -3.5), 0.4, material_diffuse(0.9, 0.9, 0.1)))
     scene_add_object(scene, sphere_new(vec3(1, 0.4, -3.5), 0.4, material_diffuse(0.1, 0.9, 0.1)))
     scene_add_object(scene, sphere_new(vec3(0, 0.4, -4.5), 0.4, material_diffuse(0.9, 0.1, 0.9)))
 
-    -- Lights
+    # Lights
     scene_add_light(scene, vec3(4, 10, 6), color_new(1, 1, 0.9), 70.0)
     scene_add_light(scene, vec3(-6, 8, 2), color_new(0.7, 0.8, 1.0), 40.0)
     scene_add_light(scene, vec3(0, 12, -4), color_new(1, 1, 1), 30.0)
@@ -1055,9 +1055,9 @@ function create_glass_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Renderer
--- ============================================================================
+# ============================================================================
+# Renderer
+# ============================================================================
 
 function render_scene(scene, cam, width, height, max_depth, use_checker)
     framebuffer = {}
@@ -1067,17 +1067,17 @@ function render_scene(scene, cam, width, height, max_depth, use_checker)
     for y = 0, height - 1 do
         for x = 0, width - 1 do
             u = (x + 0.5) * inv_width
-            v = 1.0 - (y + 0.5) * inv_height  -- flip y
+            v = 1.0 - (y + 0.5) * inv_height  # flip y
 
             ray = camera_get_ray(cam, u, v)
             color = trace_ray(scene, ray, 0, max_depth)
 
-            -- Apply checkered pattern to floor hits if needed
+            # Apply checkered pattern to floor hits if needed
             if use_checker then
                 hit = scene_intersect(scene, ray, 0.001, math_huge)
                 if hit and hit.material and hit.normal.y > 0.9 and hit.point.y < 0.01 then
                     checker = get_checkered_color(hit.point, color_new(0.9, 0.9, 0.9), color_new(0.2, 0.2, 0.2), 1.0)
-                    -- Re-shade with checker color
+                    # Re-shade with checker color
                     temp_mat = {
                         color = checker,
                         specular = hit.material.specular,
@@ -1093,7 +1093,7 @@ function render_scene(scene, cam, width, height, max_depth, use_checker)
                         material = temp_mat
                     }
                     color = shade_phong(scene, temp_hit, ray, scene.lights)
-                    -- Add reflection for checker floor
+                    # Add reflection for checker floor
                     if temp_mat.reflectivity > 0.001 then
                         reflect_dir = vec3_reflect(ray.direction, hit.normal)
                         reflect_dir = vec3_normalize(reflect_dir)
@@ -1116,25 +1116,25 @@ function render_scene(scene, cam, width, height, max_depth, use_checker)
     return framebuffer
 end
 
--- ============================================================================
--- Checksum computation
--- ============================================================================
+# ============================================================================
+# Checksum computation
+# ============================================================================
 
 function compute_checksum(framebuffer)
     checksum = 0
-    for i = 1, #framebuffer do
+    for i = 1, framebuffer.count do
         c = framebuffer[i]
         checksum = checksum + math_floor(c.r * 255) + math_floor(c.g * 255) + math_floor(c.b * 255)
     end
     return checksum
 end
 
--- ============================================================================
--- Additional geometry: Icosphere (more triangles for BVH testing)
--- ============================================================================
+# ============================================================================
+# Additional geometry: Icosphere (more triangles for BVH testing)
+# ============================================================================
 
 function create_icosphere(center, radius, subdivisions, mat)
-    -- Start with icosahedron vertices
+    # Start with icosahedron vertices
     phi = (1.0 + math_sqrt(5.0)) / 2.0
 
     raw_verts = {
@@ -1143,13 +1143,13 @@ function create_icosphere(center, radius, subdivisions, mat)
         vec3(phi, 0, -1), vec3(phi, 0, 1), vec3(-phi, 0, -1), vec3(-phi, 0, 1)
     }
 
-    -- Normalize vertices to unit sphere
+    # Normalize vertices to unit sphere
     verts = {}
-    for i = 1, #raw_verts do
+    for i = 1, raw_verts.count do
         verts[i] = vec3_normalize(raw_verts[i])
     end
 
-    -- Icosahedron faces (1-indexed)
+    # Icosahedron faces (1-indexed)
     faces = {
         {1, 12, 6}, {1, 6, 2}, {1, 2, 8}, {1, 8, 11}, {1, 11, 12},
         {2, 6, 10}, {6, 12, 5}, {12, 11, 3}, {11, 8, 7}, {8, 2, 9},
@@ -1157,7 +1157,7 @@ function create_icosphere(center, radius, subdivisions, mat)
         {5, 10, 6}, {3, 5, 12}, {7, 3, 11}, {9, 7, 8}, {10, 9, 2}
     }
 
-    -- Subdivide
+    # Subdivide
     for sub = 1, subdivisions do
         new_faces = {}
         midpoint_cache = {}
@@ -1176,74 +1176,74 @@ function create_icosphere(center, radius, subdivisions, mat)
                 y = (v1.y + v2.y) * 0.5,
                 z = (v1.z + v2.z) * 0.5
             })
-            verts[#verts + 1] = mid
-            midpoint_cache[key] = #verts
-            return #verts
+            verts[verts.count + 1] = mid
+            midpoint_cache[key] = verts.count
+            return verts.count
         end
 
-        for i = 1, #faces do
+        for i = 1, faces.count do
             f = faces[i]
             a = get_midpoint(f[1], f[2])
             b = get_midpoint(f[2], f[3])
             c = get_midpoint(f[3], f[1])
-            new_faces[#new_faces + 1] = {f[1], a, c}
-            new_faces[#new_faces + 1] = {f[2], b, a}
-            new_faces[#new_faces + 1] = {f[3], c, b}
-            new_faces[#new_faces + 1] = {a, b, c}
+            new_faces[new_faces.count + 1] = {f[1], a, c}
+            new_faces[new_faces.count + 1] = {f[2], b, a}
+            new_faces[new_faces.count + 1] = {f[3], c, b}
+            new_faces[new_faces.count + 1] = {a, b, c}
         end
         faces = new_faces
     end
 
-    -- Generate triangles
+    # Generate triangles
     triangles = {}
-    for i = 1, #faces do
+    for i = 1, faces.count do
         f = faces[i]
         v0 = verts[f[1]]
         v1 = verts[f[2]]
         v2 = verts[f[3]]
-        -- Scale and translate
+        # Scale and translate
         tv0 = vec3_add(center, vec3_mul(v0, radius))
         tv1 = vec3_add(center, vec3_mul(v1, radius))
         tv2 = vec3_add(center, vec3_mul(v2, radius))
-        triangles[#triangles + 1] = triangle_new(tv0, tv1, tv2, mat)
+        triangles[triangles.count + 1] = triangle_new(tv0, tv1, tv2, mat)
     end
 
     return triangles
 end
 
--- ============================================================================
--- Scene: Complex scene with icosphere (more BVH work)
--- ============================================================================
+# ============================================================================
+# Scene: Complex scene with icosphere (more BVH work)
+# ============================================================================
 
 function create_complex_scene()
     scene = scene_new()
     scene.background = color_new(0.1, 0.1, 0.2)
     scene.ambient = color_new(0.05, 0.05, 0.07)
 
-    -- Floor
+    # Floor
     floor_mat = material_diffuse(0.5, 0.5, 0.5)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Icosphere (many triangles)
+    # Icosphere (many triangles)
     ico_mat = material_reflective(0.7, 0.3, 0.3, 0.4)
     ico_tris = create_icosphere(vec3(0, 2, -3), 1.5, 2, ico_mat)
-    for i = 1, #ico_tris do scene_add_object(scene, ico_tris[i]) end
+    for i = 1, ico_tris.count do scene_add_object(scene, ico_tris[i]) end
 
-    -- Another icosphere (green)
+    # Another icosphere (green)
     ico2_mat = material_diffuse(0.2, 0.7, 0.3)
     ico2_tris = create_icosphere(vec3(-3, 1.2, -1), 1.0, 2, ico2_mat)
-    for i = 1, #ico2_tris do scene_add_object(scene, ico2_tris[i]) end
+    for i = 1, ico2_tris.count do scene_add_object(scene, ico2_tris[i]) end
 
-    -- Glass sphere
+    # Glass sphere
     glass_mat = material_glass(0.95, 0.95, 1.0, 1.5)
     scene_add_object(scene, sphere_new(vec3(3, 1.2, 0), 1.2, glass_mat))
 
-    -- Small spheres scattered
+    # Small spheres scattered
     scene_add_object(scene, sphere_new(vec3(-1.5, 0.4, 1.5), 0.4, material_diffuse(0.9, 0.9, 0.1)))
     scene_add_object(scene, sphere_new(vec3(1, 0.3, 2), 0.3, material_diffuse(0.1, 0.5, 0.9)))
     scene_add_object(scene, sphere_new(vec3(0, 0.5, 3), 0.5, material_reflective(0.8, 0.8, 0.9, 0.7)))
 
-    -- Lights
+    # Lights
     scene_add_light(scene, vec3(5, 12, 8), color_new(1, 1, 0.9), 80.0)
     scene_add_light(scene, vec3(-4, 8, 4), color_new(0.6, 0.7, 1.0), 40.0)
 
@@ -1260,9 +1260,9 @@ function create_complex_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Additional helper: Create pyramid from triangles
--- ============================================================================
+# ============================================================================
+# Additional helper: Create pyramid from triangles
+# ============================================================================
 
 function create_pyramid(base_center, size, height, mat)
     half = size * 0.5
@@ -1277,41 +1277,41 @@ function create_pyramid(base_center, size, height, mat)
     apex = vec3(bx, by + height, bz)
 
     triangles = {}
-    -- Base (2 triangles)
-    triangles[#triangles + 1] = triangle_new(v0, v2, v1, mat)
-    triangles[#triangles + 1] = triangle_new(v0, v3, v2, mat)
-    -- Sides
-    triangles[#triangles + 1] = triangle_new(v0, v1, apex, mat)
-    triangles[#triangles + 1] = triangle_new(v1, v2, apex, mat)
-    triangles[#triangles + 1] = triangle_new(v2, v3, apex, mat)
-    triangles[#triangles + 1] = triangle_new(v3, v0, apex, mat)
+    # Base (2 triangles)
+    triangles[triangles.count + 1] = triangle_new(v0, v2, v1, mat)
+    triangles[triangles.count + 1] = triangle_new(v0, v3, v2, mat)
+    # Sides
+    triangles[triangles.count + 1] = triangle_new(v0, v1, apex, mat)
+    triangles[triangles.count + 1] = triangle_new(v1, v2, apex, mat)
+    triangles[triangles.count + 1] = triangle_new(v2, v3, apex, mat)
+    triangles[triangles.count + 1] = triangle_new(v3, v0, apex, mat)
 
     return triangles
 end
 
--- ============================================================================
--- Scene: Architectural scene with pyramids and more objects
--- ============================================================================
+# ============================================================================
+# Scene: Architectural scene with pyramids and more objects
+# ============================================================================
 
 function create_architectural_scene()
     scene = scene_new()
     scene.background = color_new(0.5, 0.7, 1.0)
     scene.ambient = color_new(0.1, 0.1, 0.12)
 
-    -- Floor
+    # Floor
     floor_mat = material_diffuse(0.6, 0.55, 0.4)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Pyramids
+    # Pyramids
     pyramid_mat = material_diffuse(0.8, 0.7, 0.3)
     pyr1 = create_pyramid(vec3(-3, 0, -4), 3, 3, pyramid_mat)
-    for i = 1, #pyr1 do scene_add_object(scene, pyr1[i]) end
+    for i = 1, pyr1.count do scene_add_object(scene, pyr1[i]) end
 
     pyr2_mat = material_diffuse(0.6, 0.6, 0.7)
     pyr2 = create_pyramid(vec3(3, 0, -5), 2, 4, pyr2_mat)
-    for i = 1, #pyr2 do scene_add_object(scene, pyr2[i]) end
+    for i = 1, pyr2.count do scene_add_object(scene, pyr2[i]) end
 
-    -- Columns (thin tall boxes)
+    # Columns (thin tall boxes)
     col_mat = material_diffuse(0.75, 0.75, 0.7)
     for i = -2, 2 do
         col = box_new(
@@ -1319,19 +1319,19 @@ function create_architectural_scene()
             vec3(i * 2.5 + 0.2, 4, 1.4),
             col_mat
         )
-        for j = 1, #col do scene_add_object(scene, col[j]) end
+        for j = 1, col.count do scene_add_object(scene, col[j]) end
     end
 
-    -- Spheres on top of columns
+    # Spheres on top of columns
     for i = -2, 2 do
         sphere_mat = material_reflective(0.8, 0.6, 0.3, 0.5)
         scene_add_object(scene, sphere_new(vec3(i * 2.5, 4.3, 1.2), 0.3, sphere_mat))
     end
 
-    -- Large reflective sphere
+    # Large reflective sphere
     scene_add_object(scene, sphere_new(vec3(0, 1.5, -1), 1.5, material_reflective(0.85, 0.85, 0.9, 0.8)))
 
-    -- Lights (sun-like)
+    # Lights (sun-like)
     scene_add_light(scene, vec3(10, 15, 10), color_new(1, 0.95, 0.8), 120.0)
     scene_add_light(scene, vec3(-5, 8, 8), color_new(0.5, 0.6, 0.8), 40.0)
 
@@ -1348,14 +1348,14 @@ function create_architectural_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Additional geometry helpers for scene variety
--- ============================================================================
+# ============================================================================
+# Additional geometry helpers for scene variety
+# ============================================================================
 
 function create_disk_triangles(center, radius, normal_dir, segments, mat)
-    -- Create a flat disk from triangles
+    # Create a flat disk from triangles
     n = vec3_normalize(normal_dir)
-    -- Find two perpendicular vectors on the disk plane
+    # Find two perpendicular vectors on the disk plane
     up = vec3(0, 1, 0)
     if math_abs(vec3_dot(n, up)) > 0.99 then
         up = vec3(1, 0, 0)
@@ -1370,7 +1370,7 @@ function create_disk_triangles(center, radius, normal_dir, segments, mat)
         a2 = (i + 1) * angle_step
         p1 = vec3_add(center, vec3_add(vec3_mul(u_axis, radius * math_cos(a1)), vec3_mul(v_axis, radius * math_sin(a1))))
         p2 = vec3_add(center, vec3_add(vec3_mul(u_axis, radius * math_cos(a2)), vec3_mul(v_axis, radius * math_sin(a2))))
-        triangles[#triangles + 1] = triangle_new(center, p1, p2, mat)
+        triangles[triangles.count + 1] = triangle_new(center, p1, p2, mat)
     end
     return triangles
 end
@@ -1393,66 +1393,66 @@ function create_cylinder_triangles(base_center, radius, height, segments, mat)
         t1 = vec3(bx1, base_center.y + height, bz1)
         t2 = vec3(bx2, base_center.y + height, bz2)
 
-        -- Side quads (2 triangles each)
-        triangles[#triangles + 1] = triangle_new(b1, b2, t2, mat)
-        triangles[#triangles + 1] = triangle_new(b1, t2, t1, mat)
+        # Side quads (2 triangles each)
+        triangles[triangles.count + 1] = triangle_new(b1, b2, t2, mat)
+        triangles[triangles.count + 1] = triangle_new(b1, t2, t1, mat)
 
-        -- Top cap
-        triangles[#triangles + 1] = triangle_new(top_center, t1, t2, mat)
-        -- Bottom cap
-        triangles[#triangles + 1] = triangle_new(base_center, b2, b1, mat)
+        # Top cap
+        triangles[triangles.count + 1] = triangle_new(top_center, t1, t2, mat)
+        # Bottom cap
+        triangles[triangles.count + 1] = triangle_new(base_center, b2, b1, mat)
     end
 
     return triangles
 end
 
--- ============================================================================
--- Scene: Dense scene with cylinders and more geometry
--- ============================================================================
+# ============================================================================
+# Scene: Dense scene with cylinders and more geometry
+# ============================================================================
 
 function create_dense_scene()
     scene = scene_new()
     scene.background = color_new(0.15, 0.15, 0.25)
     scene.ambient = color_new(0.06, 0.06, 0.08)
 
-    -- Floor
+    # Floor
     floor_mat = material_diffuse(0.4, 0.4, 0.45)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Cylinders in a row
+    # Cylinders in a row
     cyl_mat1 = material_diffuse(0.7, 0.3, 0.2)
     cyl_mat2 = material_diffuse(0.2, 0.5, 0.7)
     cyl_mat3 = material_diffuse(0.5, 0.7, 0.2)
 
     cyl1 = create_cylinder_triangles(vec3(-4, 0, -3), 0.5, 3, 8, cyl_mat1)
-    for i = 1, #cyl1 do scene_add_object(scene, cyl1[i]) end
+    for i = 1, cyl1.count do scene_add_object(scene, cyl1[i]) end
 
     cyl2 = create_cylinder_triangles(vec3(0, 0, -4), 0.7, 2.5, 8, cyl_mat2)
-    for i = 1, #cyl2 do scene_add_object(scene, cyl2[i]) end
+    for i = 1, cyl2.count do scene_add_object(scene, cyl2[i]) end
 
     cyl3 = create_cylinder_triangles(vec3(4, 0, -3), 0.4, 4, 8, cyl_mat3)
-    for i = 1, #cyl3 do scene_add_object(scene, cyl3[i]) end
+    for i = 1, cyl3.count do scene_add_object(scene, cyl3[i]) end
 
-    -- Disks (floating)
+    # Disks (floating)
     disk_mat = material_reflective(0.8, 0.6, 0.2, 0.5)
     disk1 = create_disk_triangles(vec3(-2, 3, -2), 1.0, vec3(0, 1, 0.3), 12, disk_mat)
-    for i = 1, #disk1 do scene_add_object(scene, disk1[i]) end
+    for i = 1, disk1.count do scene_add_object(scene, disk1[i]) end
 
     disk2 = create_disk_triangles(vec3(2, 2.5, -1), 0.8, vec3(0.2, 1, 0), 12, disk_mat)
-    for i = 1, #disk2 do scene_add_object(scene, disk2[i]) end
+    for i = 1, disk2.count do scene_add_object(scene, disk2[i]) end
 
-    -- Glass sphere
+    # Glass sphere
     scene_add_object(scene, sphere_new(vec3(0, 1.5, 0), 1.5, material_glass(0.9, 0.95, 1.0, 1.5)))
 
-    -- Mirror sphere
+    # Mirror sphere
     scene_add_object(scene, sphere_new(vec3(-3, 1, 1), 1.0, material_reflective(0.9, 0.9, 0.95, 0.9)))
 
-    -- Colored spheres
+    # Colored spheres
     scene_add_object(scene, sphere_new(vec3(3, 0.6, 1), 0.6, material_diffuse(0.9, 0.2, 0.5)))
     scene_add_object(scene, sphere_new(vec3(1.5, 0.4, 2.5), 0.4, material_diffuse(0.2, 0.9, 0.4)))
     scene_add_object(scene, sphere_new(vec3(-1.5, 0.35, 2.5), 0.35, material_diffuse(0.4, 0.3, 0.9)))
 
-    -- Lights
+    # Lights
     scene_add_light(scene, vec3(5, 12, 8), color_new(1, 0.95, 0.85), 90.0)
     scene_add_light(scene, vec3(-6, 9, 5), color_new(0.6, 0.7, 1.0), 50.0)
     scene_add_light(scene, vec3(0, 6, -8), color_new(0.8, 0.8, 0.9), 30.0)
@@ -1470,9 +1470,9 @@ function create_dense_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Procedural textures and patterns
--- ============================================================================
+# ============================================================================
+# Procedural textures and patterns
+# ============================================================================
 
 function pattern_stripe(point, color1, color2, scale)
     scale = scale or 1.0
@@ -1490,7 +1490,7 @@ function pattern_gradient(point, color1, color2, axis, scale)
     if axis == "x" then t = point.x * scale
     else if axis == "y" then t = point.y * scale
     else t = point.z * scale end
-    t = t - math_floor(t)  -- fract
+    t = t - math_floor(t)  # fract
     return {
         r = color1.r + (color2.r - color1.r) * t,
         g = color1.g + (color2.g - color1.g) * t,
@@ -1510,7 +1510,7 @@ function pattern_ring(point, color1, color2, scale)
 end
 
 function noise_hash(x, y, z)
-    -- Simple integer hash for pseudo-noise
+    # Simple integer hash for pseudo-noise
     n = x * 374761393 + y * 668265263 + z * 1274126177
     n = n % 2147483648
     n = ((n * n) % 2147483648) * 1274126177
@@ -1526,7 +1526,7 @@ function noise_smooth(x, y, z)
     fy = y - iy
     fz = z - iz
 
-    -- Smooth interpolation
+    # Smooth interpolation
     fx = fx * fx * (3.0 - 2.0 * fx)
     fy = fy * fy * (3.0 - 2.0 * fy)
     fz = fz * fz * (3.0 - 2.0 * fz)
@@ -1591,9 +1591,9 @@ function pattern_wood(point, color1, color2, scale)
     }
 end
 
--- ============================================================================
--- Tone mapping (Reinhard operator)
--- ============================================================================
+# ============================================================================
+# Tone mapping (Reinhard operator)
+# ============================================================================
 
 function tonemap_reinhard(color)
     return {
@@ -1604,7 +1604,7 @@ function tonemap_reinhard(color)
 end
 
 function tonemap_aces(color)
-    -- Approximate ACES filmic curve
+    # Approximate ACES filmic curve
     a = 2.51
     b = 0.03
     c = 2.43
@@ -1632,13 +1632,13 @@ function gamma_correct(color, gamma)
     }
 end
 
--- ============================================================================
--- Post-processing: apply tone mapping and gamma to framebuffer
--- ============================================================================
+# ============================================================================
+# Post-processing: apply tone mapping and gamma to framebuffer
+# ============================================================================
 
 function post_process_framebuffer(framebuffer, use_aces)
     result = {}
-    for i = 1, #framebuffer do
+    for i = 1, framebuffer.count do
         c = framebuffer[i]
         if use_aces then
             c = tonemap_aces(c)
@@ -1652,50 +1652,50 @@ function post_process_framebuffer(framebuffer, use_aces)
     return result
 end
 
--- ============================================================================
--- Scene: Textured scene (uses procedural patterns)
--- ============================================================================
+# ============================================================================
+# Scene: Textured scene (uses procedural patterns)
+# ============================================================================
 
 function create_textured_scene()
     scene = scene_new()
     scene.background = color_new(0.3, 0.4, 0.6)
     scene.ambient = color_new(0.08, 0.08, 0.1)
 
-    -- Floor with marble-like material
+    # Floor with marble-like material
     floor_mat = material_diffuse(0.7, 0.7, 0.65)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Large sphere with wood-like coloring (computed at shade time via diffuse approx)
+    # Large sphere with wood-like coloring (computed at shade time via diffuse approx)
     wood_sphere_mat = material_diffuse(0.6, 0.4, 0.2)
     scene_add_object(scene, sphere_new(vec3(-2, 1.5, -2), 1.5, wood_sphere_mat))
 
-    -- Marble-colored sphere
+    # Marble-colored sphere
     marble_mat = material_new(color_new(0.85, 0.85, 0.8), 0.5, 0.2, 0.0, 1.5, 48)
     scene_add_object(scene, sphere_new(vec3(2, 1.2, -1), 1.2, marble_mat))
 
-    -- Striped sphere (approximate by material)
+    # Striped sphere (approximate by material)
     stripe_mat = material_diffuse(0.3, 0.5, 0.8)
     scene_add_object(scene, sphere_new(vec3(0, 0.8, 1.5), 0.8, stripe_mat))
 
-    -- Ring-patterned sphere
+    # Ring-patterned sphere
     ring_mat = material_new(color_new(0.7, 0.5, 0.3), 0.4, 0.1, 0.0, 1.5, 32)
     scene_add_object(scene, sphere_new(vec3(-3.5, 0.7, 1), 0.7, ring_mat))
 
-    -- Metallic sphere
+    # Metallic sphere
     metallic = material_reflective(0.85, 0.75, 0.5, 0.7)
     scene_add_object(scene, sphere_new(vec3(3.5, 0.9, 0.5), 0.9, metallic))
 
-    -- Small bright spheres
+    # Small bright spheres
     scene_add_object(scene, sphere_new(vec3(-1, 0.3, 3), 0.3, material_diffuse(0.95, 0.1, 0.1)))
     scene_add_object(scene, sphere_new(vec3(0.5, 0.3, 3.5), 0.3, material_diffuse(0.1, 0.95, 0.1)))
     scene_add_object(scene, sphere_new(vec3(2, 0.3, 3), 0.3, material_diffuse(0.1, 0.1, 0.95)))
 
-    -- Icosphere in background
+    # Icosphere in background
     ico_mat = material_diffuse(0.6, 0.6, 0.7)
     ico_tris = create_icosphere(vec3(0, 3, -6), 2.0, 2, ico_mat)
-    for i = 1, #ico_tris do scene_add_object(scene, ico_tris[i]) end
+    for i = 1, ico_tris.count do scene_add_object(scene, ico_tris[i]) end
 
-    -- Lights
+    # Lights
     scene_add_light(scene, vec3(6, 10, 6), color_new(1, 0.95, 0.85), 70.0)
     scene_add_light(scene, vec3(-4, 8, 4), color_new(0.6, 0.7, 1.0), 35.0)
     scene_add_light(scene, vec3(0, 12, -2), color_new(0.9, 0.9, 1.0), 25.0)
@@ -1713,24 +1713,24 @@ function create_textured_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Scene: Multi-light scene (stress test shadows)
--- ============================================================================
+# ============================================================================
+# Scene: Multi-light scene (stress test shadows)
+# ============================================================================
 
 function create_multilight_scene()
     scene = scene_new()
     scene.background = color_new(0.02, 0.02, 0.05)
     scene.ambient = color_new(0.02, 0.02, 0.03)
 
-    -- Floor
+    # Floor
     floor_mat = material_diffuse(0.5, 0.5, 0.5)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Central reflective sphere
+    # Central reflective sphere
     center_mat = material_reflective(0.9, 0.9, 0.95, 0.8)
     scene_add_object(scene, sphere_new(vec3(0, 2, 0), 2.0, center_mat))
 
-    -- Surrounding smaller spheres
+    # Surrounding smaller spheres
     num_ring = 8
     for i = 0, num_ring - 1 do
         angle = (i / num_ring) * 2.0 * math_pi
@@ -1748,7 +1748,7 @@ function create_multilight_scene()
         scene_add_object(scene, sphere_new(vec3(x, r, z), r, mat))
     end
 
-    -- Many colored lights
+    # Many colored lights
     scene_add_light(scene, vec3(5, 8, 5), color_new(1, 0.3, 0.3), 40.0)
     scene_add_light(scene, vec3(-5, 8, 5), color_new(0.3, 1, 0.3), 40.0)
     scene_add_light(scene, vec3(5, 8, -5), color_new(0.3, 0.3, 1), 40.0)
@@ -1769,17 +1769,17 @@ function create_multilight_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Scene: Depth-of-field approximation (multiple jittered rays per pixel)
--- ============================================================================
+# ============================================================================
+# Scene: Depth-of-field approximation (multiple jittered rays per pixel)
+# ============================================================================
 
 function render_scene_dof(scene, cam, width, height, max_depth, aperture, focus_dist)
     framebuffer = {}
     inv_width = 1.0 / width
     inv_height = 1.0 / height
-    samples = 4  -- 4 samples per pixel for DOF
+    samples = 4  # 4 samples per pixel for DOF
 
-    -- Simple deterministic jitter
+    # Simple deterministic jitter
     offsets = {
         {dx = -0.25, dy = -0.25},
         {dx = 0.25, dy = -0.25},
@@ -1797,11 +1797,11 @@ function render_scene_dof(scene, cam, width, height, max_depth, aperture, focus_
                 u = (x + 0.5 + offsets[s].dx * 0.5) * inv_width
                 v = 1.0 - (y + 0.5 + offsets[s].dy * 0.5) * inv_height
 
-                -- Generate ray with DOF offset
+                # Generate ray with DOF offset
                 base_ray = camera_get_ray(cam, u, v)
                 focus_point = ray_point_at(base_ray, focus_dist)
 
-                -- Offset origin on lens
+                # Offset origin on lens
                 lens_u = offsets[s].dx * aperture
                 lens_v = offsets[s].dy * aperture
                 offset_origin = vec3_add(base_ray.origin,
@@ -1828,20 +1828,20 @@ function render_scene_dof(scene, cam, width, height, max_depth, aperture, focus_
     return framebuffer
 end
 
--- ============================================================================
--- Scene: DOF scene (for depth-of-field rendering)
--- ============================================================================
+# ============================================================================
+# Scene: DOF scene (for depth-of-field rendering)
+# ============================================================================
 
 function create_dof_scene()
     scene = scene_new()
     scene.background = color_new(0.3, 0.4, 0.7)
     scene.ambient = color_new(0.08, 0.08, 0.1)
 
-    -- Floor
+    # Floor
     floor_mat = material_diffuse(0.5, 0.5, 0.45)
     scene_add_plane(scene, plane_new(vec3(0, 0, 0), vec3(0, 1, 0), floor_mat))
 
-    -- Row of spheres at different depths
+    # Row of spheres at different depths
     depths = {-8, -5, -2, 1, 4}
     colors_list = {
         {0.9, 0.2, 0.2},
@@ -1850,16 +1850,16 @@ function create_dof_scene()
         {0.9, 0.9, 0.2},
         {0.9, 0.2, 0.9}
     }
-    for i = 1, #depths do
+    for i = 1, depths.count do
         c = colors_list[i]
         mat = material_diffuse(c[1], c[2], c[3])
         scene_add_object(scene, sphere_new(vec3((i - 3) * 2.5, 1, depths[i]), 1.0, mat))
     end
 
-    -- Reflective sphere in focus
+    # Reflective sphere in focus
     scene_add_object(scene, sphere_new(vec3(0, 1.5, -2), 1.5, material_reflective(0.8, 0.8, 0.9, 0.6)))
 
-    -- Lights
+    # Lights
     scene_add_light(scene, vec3(5, 10, 5), color_new(1, 1, 0.9), 60.0)
     scene_add_light(scene, vec3(-3, 8, -3), color_new(0.7, 0.7, 1.0), 30.0)
 
@@ -1876,9 +1876,9 @@ function create_dof_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Supersampling anti-aliasing renderer (2x2)
--- ============================================================================
+# ============================================================================
+# Supersampling anti-aliasing renderer (2x2)
+# ============================================================================
 
 function render_scene_aa(scene, cam, width, height, max_depth, use_checker)
     framebuffer = {}
@@ -1904,7 +1904,7 @@ function render_scene_aa(scene, cam, width, height, max_depth, use_checker)
                 ray = camera_get_ray(cam, u, v)
                 color = trace_ray(scene, ray, 0, max_depth)
 
-                -- Apply checkered pattern
+                # Apply checkered pattern
                 if use_checker then
                     hit = scene_intersect(scene, ray, 0.001, math_huge)
                     if hit and hit.material and hit.normal.y > 0.9 and hit.point.y < 0.01 then
@@ -1944,9 +1944,9 @@ function render_scene_aa(scene, cam, width, height, max_depth, use_checker)
     return framebuffer
 end
 
--- ============================================================================
--- Matrix operations for object transforms
--- ============================================================================
+# ============================================================================
+# Matrix operations for object transforms
+# ============================================================================
 
 function mat4_identity()
     return {
@@ -2038,16 +2038,16 @@ function mat4_transform_direction(m, d)
     })
 end
 
--- ============================================================================
--- Create rotated box using matrix transform
--- ============================================================================
+# ============================================================================
+# Create rotated box using matrix transform
+# ============================================================================
 
 function create_rotated_box(center, half_extents, rotation_y, mat)
     hx = half_extents.x
     hy = half_extents.y
     hz = half_extents.z
 
-    -- 8 corners of the box before rotation
+    # 8 corners of the box before rotation
     corners = {
         vec3(-hx, -hy, -hz), vec3(hx, -hy, -hz),
         vec3(hx, hy, -hz), vec3(-hx, hy, -hz),
@@ -2055,7 +2055,7 @@ function create_rotated_box(center, half_extents, rotation_y, mat)
         vec3(hx, hy, hz), vec3(-hx, hy, hz)
     }
 
-    -- Apply rotation and translation
+    # Apply rotation and translation
     rot = mat4_rotate_y(rotation_y)
     trans = mat4_translate(center.x, center.y, center.z)
     xform = mat4_mul(trans, rot)
@@ -2065,84 +2065,84 @@ function create_rotated_box(center, half_extents, rotation_y, mat)
         transformed[i] = mat4_transform_point(xform, corners[i])
     end
 
-    -- Create 12 triangles (6 faces, 2 tris each)
+    # Create 12 triangles (6 faces, 2 tris each)
     triangles = {}
-    -- Face indices (1-indexed)
+    # Face indices (1-indexed)
     face_indices = {
-        {1, 2, 3, 4}, -- front (was -z, now depends on rotation)
-        {5, 8, 7, 6}, -- back
-        {4, 3, 7, 8}, -- top
-        {1, 5, 6, 2}, -- bottom
-        {2, 6, 7, 3}, -- right
-        {1, 4, 8, 5}  -- left
+        {1, 2, 3, 4}, # front (was -z, now depends on rotation)
+        {5, 8, 7, 6}, # back
+        {4, 3, 7, 8}, # top
+        {1, 5, 6, 2}, # bottom
+        {2, 6, 7, 3}, # right
+        {1, 4, 8, 5}  # left
     }
 
-    for i = 1, #face_indices do
+    for i = 1, face_indices.count do
         f = face_indices[i]
-        triangles[#triangles + 1] = triangle_new(transformed[f[1]], transformed[f[2]], transformed[f[3]], mat)
-        triangles[#triangles + 1] = triangle_new(transformed[f[1]], transformed[f[3]], transformed[f[4]], mat)
+        triangles[triangles.count + 1] = triangle_new(transformed[f[1]], transformed[f[2]], transformed[f[3]], mat)
+        triangles[triangles.count + 1] = triangle_new(transformed[f[1]], transformed[f[3]], transformed[f[4]], mat)
     end
 
     return triangles
 end
 
--- ============================================================================
--- Scene: Rotated boxes (Cornell box variant with rotated inner boxes)
--- ============================================================================
+# ============================================================================
+# Scene: Rotated boxes (Cornell box variant with rotated inner boxes)
+# ============================================================================
 
 function create_rotated_box_scene()
     scene = scene_new()
     scene.background = color_new(0.0, 0.0, 0.0)
     scene.ambient = color_new(0.08, 0.08, 0.08)
 
-    -- Room walls
+    # Room walls
     white_mat = material_diffuse(0.73, 0.73, 0.73)
     red_mat = material_diffuse(0.65, 0.05, 0.05)
     green_mat = material_diffuse(0.12, 0.45, 0.15)
     blue_mat = material_diffuse(0.1, 0.1, 0.6)
 
-    -- Floor
+    # Floor
     floor_tris = box_new(vec3(-5, -0.1, -5), vec3(5, 0, 5), white_mat)
-    for i = 1, #floor_tris do scene_add_object(scene, floor_tris[i]) end
+    for i = 1, floor_tris.count do scene_add_object(scene, floor_tris[i]) end
 
-    -- Ceiling
+    # Ceiling
     ceil_tris = box_new(vec3(-5, 10, -5), vec3(5, 10.1, 5), white_mat)
-    for i = 1, #ceil_tris do scene_add_object(scene, ceil_tris[i]) end
+    for i = 1, ceil_tris.count do scene_add_object(scene, ceil_tris[i]) end
 
-    -- Back wall
+    # Back wall
     back_tris = box_new(vec3(-5, 0, -5.1), vec3(5, 10, -5), blue_mat)
-    for i = 1, #back_tris do scene_add_object(scene, back_tris[i]) end
+    for i = 1, back_tris.count do scene_add_object(scene, back_tris[i]) end
 
-    -- Left wall (red)
+    # Left wall (red)
     left_tris = box_new(vec3(-5.1, 0, -5), vec3(-5, 10, 5), red_mat)
-    for i = 1, #left_tris do scene_add_object(scene, left_tris[i]) end
+    for i = 1, left_tris.count do scene_add_object(scene, left_tris[i]) end
 
-    -- Right wall (green)
+    # Right wall (green)
     right_tris = box_new(vec3(5, 0, -5), vec3(5.1, 10, 5), green_mat)
-    for i = 1, #right_tris do scene_add_object(scene, right_tris[i]) end
+    for i = 1, right_tris.count do scene_add_object(scene, right_tris[i]) end
 
-    -- Rotated tall box
+    # Rotated tall box
     box1_tris = create_rotated_box(
         vec3(-2, 3, -2),
         vec3(1.2, 3, 1.2),
-        0.3,  -- ~17 degrees rotation
+        0.3,  # ~17 degrees rotation
         white_mat
     )
-    for i = 1, #box1_tris do scene_add_object(scene, box1_tris[i]) end
+    for i = 1, box1_tris.count do scene_add_object(scene, box1_tris[i]) end
 
-    -- Rotated short box
+    # Rotated short box
     box2_tris = create_rotated_box(
         vec3(2, 1.5, 1),
         vec3(1.2, 1.5, 1.2),
-        -0.25,  -- ~-14 degrees rotation
+        -0.25,  # ~-14 degrees rotation
         white_mat
     )
-    for i = 1, #box2_tris do scene_add_object(scene, box2_tris[i]) end
+    for i = 1, box2_tris.count do scene_add_object(scene, box2_tris[i]) end
 
-    -- Reflective sphere on short box
+    # Reflective sphere on short box
     scene_add_object(scene, sphere_new(vec3(2, 3.5, 1), 0.7, material_reflective(0.9, 0.9, 0.95, 0.85)))
 
-    -- Light
+    # Light
     scene_add_light(scene, vec3(0, 9.5, 0), color_new(1, 0.95, 0.8), 90.0)
 
     scene_build_bvh(scene)
@@ -2158,15 +2158,15 @@ function create_rotated_box_scene()
     return scene, cam
 end
 
--- ============================================================================
--- Statistics: compute image statistics for validation
--- ============================================================================
+# ============================================================================
+# Statistics: compute image statistics for validation
+# ============================================================================
 
 function compute_image_stats(framebuffer)
     min_r, min_g, min_b = 1, 1, 1
     max_r, max_g, max_b = 0, 0, 0
     sum_r, sum_g, sum_b = 0, 0, 0
-    count = #framebuffer
+    count = framebuffer.count
 
     for i = 1, count do
         c = framebuffer[i]
@@ -2188,9 +2188,9 @@ function compute_image_stats(framebuffer)
     }
 end
 
--- ============================================================================
--- Variance computation for adaptive sampling hints
--- ============================================================================
+# ============================================================================
+# Variance computation for adaptive sampling hints
+# ============================================================================
 
 function compute_variance(framebuffer, width, height)
     total_variance = 0
@@ -2202,7 +2202,7 @@ function compute_variance(framebuffer, width, height)
             c = framebuffer[idx]
             lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
 
-            -- Compare with neighbors
+            # Compare with neighbors
             left = framebuffer[y * width + (x - 1) + 1]
             right = framebuffer[y * width + (x + 1) + 1]
             up_pixel = framebuffer[(y - 1) * width + x + 1]
@@ -2222,100 +2222,100 @@ function compute_variance(framebuffer, width, height)
     return total_variance / count
 end
 
--- ============================================================================
--- Rendering configuration
--- ============================================================================
+# ============================================================================
+# Rendering configuration
+# ============================================================================
 
 RENDER_WIDTH = 48
 RENDER_HEIGHT = 48
 MAX_DEPTH = 3
 USE_CHECKER_FLOOR = true
 
--- ============================================================================
--- Main benchmark
--- ============================================================================
+# ============================================================================
+# Main benchmark
+# ============================================================================
 
 function run_benchmark()
     total_checksum = 0
     iteration_count = 0
 
-    -- Scene 1: Cornell Box
+    # Scene 1: Cornell Box
     scene1, cam1 = create_cornell_box()
     fb1 = render_scene(scene1, cam1, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, false)
     cs1 = compute_checksum(fb1)
     total_checksum = total_checksum + cs1
     iteration_count = iteration_count + 1
 
-    -- Scene 2: Sphere scene with checkered floor
+    # Scene 2: Sphere scene with checkered floor
     scene2, cam2 = create_sphere_scene()
     fb2 = render_scene(scene2, cam2, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, USE_CHECKER_FLOOR)
     cs2 = compute_checksum(fb2)
     total_checksum = total_checksum + cs2
     iteration_count = iteration_count + 1
 
-    -- Scene 3: Glass scene
+    # Scene 3: Glass scene
     scene3, cam3 = create_glass_scene()
     fb3 = render_scene(scene3, cam3, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, false)
     cs3 = compute_checksum(fb3)
     total_checksum = total_checksum + cs3
     iteration_count = iteration_count + 1
 
-    -- Scene 4: Complex scene with icospheres
+    # Scene 4: Complex scene with icospheres
     scene4, cam4 = create_complex_scene()
     fb4 = render_scene(scene4, cam4, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, USE_CHECKER_FLOOR)
     cs4 = compute_checksum(fb4)
     total_checksum = total_checksum + cs4
     iteration_count = iteration_count + 1
 
-    -- Scene 5: Architectural scene
+    # Scene 5: Architectural scene
     scene5, cam5 = create_architectural_scene()
     fb5 = render_scene(scene5, cam5, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, USE_CHECKER_FLOOR)
     cs5 = compute_checksum(fb5)
     total_checksum = total_checksum + cs5
     iteration_count = iteration_count + 1
 
-    -- Scene 6: Dense scene
+    # Scene 6: Dense scene
     scene6, cam6 = create_dense_scene()
     fb6 = render_scene(scene6, cam6, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, false)
     cs6 = compute_checksum(fb6)
     total_checksum = total_checksum + cs6
     iteration_count = iteration_count + 1
 
-    -- Scene 7: Textured scene
+    # Scene 7: Textured scene
     scene7, cam7 = create_textured_scene()
     fb7 = render_scene(scene7, cam7, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, USE_CHECKER_FLOOR)
     cs7 = compute_checksum(fb7)
     total_checksum = total_checksum + cs7
     iteration_count = iteration_count + 1
 
-    -- Scene 8: Multi-light scene
+    # Scene 8: Multi-light scene
     scene8, cam8 = create_multilight_scene()
     fb8 = render_scene(scene8, cam8, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, false)
     cs8 = compute_checksum(fb8)
     total_checksum = total_checksum + cs8
     iteration_count = iteration_count + 1
 
-    -- Scene 9: DOF scene (with depth of field rendering)
+    # Scene 9: DOF scene (with depth of field rendering)
     scene9, cam9 = create_dof_scene()
     fb9 = render_scene_dof(scene9, cam9, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, 0.05, 10.0)
     cs9 = compute_checksum(fb9)
     total_checksum = total_checksum + cs9
     iteration_count = iteration_count + 1
 
-    -- Scene 10: Rotated box scene
+    # Scene 10: Rotated box scene
     scene10, cam10 = create_rotated_box_scene()
     fb10 = render_scene(scene10, cam10, RENDER_WIDTH, RENDER_HEIGHT, MAX_DEPTH, false)
     cs10 = compute_checksum(fb10)
     total_checksum = total_checksum + cs10
     iteration_count = iteration_count + 1
 
-    -- Post-process scene 3 with tone mapping for extra work
+    # Post-process scene 3 with tone mapping for extra work
     fb3_tonemapped = post_process_framebuffer(fb3, true)
     cs3t = compute_checksum(fb3_tonemapped)
     total_checksum = total_checksum + cs3t
     iteration_count = iteration_count + 1
 
-    -- Compute variance stats on scene 2 for extra computation
+    # Compute variance stats on scene 2 for extra computation
     var2 = compute_variance(fb2, RENDER_WIDTH, RENDER_HEIGHT)
     total_checksum = total_checksum + math_floor(var2 * 1000)
     iteration_count = iteration_count + 1
@@ -2323,11 +2323,11 @@ function run_benchmark()
     return total_checksum, iteration_count
 end
 
--- ============================================================================
--- Timing loop
--- ============================================================================
+# ============================================================================
+# Timing loop
+# ============================================================================
 
--- First, do a calibration run to get the reference checksum
+# First, do a calibration run to get the reference checksum
 checksum, iterations = run_benchmark()
 expected = 16019469
 if math.abs(checksum - expected) > expected * 1e-3 then

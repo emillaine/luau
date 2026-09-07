@@ -1,4 +1,4 @@
--- HTML rendering from Markdown AST
+# HTML rendering from Markdown AST
 
 ast = require("./ast")
 inline = require("./inline")
@@ -44,7 +44,7 @@ function renderInlineNodes(nodes: {ast.Node}): string
             table.insert(out, '<img src="')
             table.insert(out, escapeHtml(node.destination))
             table.insert(out, '" alt="')
-            if #node.children > 0 then
+            if node.children.count > 0 then
                 table.insert(out, escapeHtml(node.children[1].content))
             end
             table.insert(out, '"')

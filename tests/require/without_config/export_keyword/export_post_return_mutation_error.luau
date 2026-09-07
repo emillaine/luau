@@ -1,4 +1,4 @@
--- exported locals should become readonly once the module returns
+# exported locals should become readonly once the module returns
 export counter = 0
 
 export function increment()

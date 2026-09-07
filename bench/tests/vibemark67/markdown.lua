@@ -6,7 +6,7 @@ render = require("./markdown-dir/render")
 
 function test()
 
--- Markdown benchmark: parse and render a large embedded document repeatedly
+# Markdown benchmark: parse and render a large embedded document repeatedly
 
 document = [[
 # Introduction to Computing
@@ -178,7 +178,7 @@ Modern systems must handle concurrent operations. Approaches include:
 - CSP (Go channels)
 - Async/await (JavaScript, Python, Rust)
 
----
+#-
 
 ## Chapter 5: Best Practices
 
@@ -209,7 +209,7 @@ or contact us at <support@example.com>.
 
 ![Architecture Diagram](./images/architecture.png "System Architecture")
 
----
+#-
 
 *Last updated: 2024-01-15*
 **Version:** 3.2.1
@@ -223,23 +223,23 @@ totalHtmlLen = 0
 totalHtmlHash = 0
 
 function hashstr(str: string): number
-    -- 1. Load the string into a high-performance byte buffer
+    # 1. Load the string into a high-performance byte buffer
     buf = buffer.fromstring(str)
     len = buffer.len(buf)
     
-    -- FNV-1a 32-bit offset basis
+    # FNV-1a 32-bit offset basis
     hash = 2166136261 
     
-    -- 2. Traverse buffer indices sequentially (0-indexed)
+    # 2. Traverse buffer indices sequentially (0-indexed)
     for i = 0, len - 1 do
         byte = buffer.readu8(buf, i)
         
-        -- CORRECT LUAU WAY: Use bit32 library fastcalls instead of syntax operators
+        # CORRECT LUAU WAY: Use bit32 library fastcalls instead of syntax operators
         hash = bit32.bxor(hash, byte)
         hash = (hash * 16777619) % 4294967296
     end
     
-    -- Returns an unsigned 32-bit integer wrapper
+    # Returns an unsigned 32-bit integer wrapper
     return hash
 end
 
@@ -247,7 +247,7 @@ for i = 1, ITERATIONS do
     parser = block.createBlockParser(document)
     doc = block.parseBlocks(parser)
     html = render.render(doc, parser.refDefs)
-    totalHtmlLen += #html
+    totalHtmlLen += html.count
     totalHtmlHash += hashstr(html)
 
     function countNodes(node: any): number

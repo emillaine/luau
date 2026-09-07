@@ -1,10 +1,10 @@
 module = require("./export_class_both_exported")
 
--- Both Animal and Cat should be accessible
+# Both Animal and Cat should be accessible
 assert(module.Animal != null, "expected Animal to be exported")
 assert(module.Cat != null, "expected Cat to be exported")
 
--- Create instances of both
+# Create instances of both
 a = module.Animal.new({species = "Canis lupus"})
 assert(a.species == "Canis lupus", "expected a.species")
 assert(a:live() == "I am alive", "expected Animal.live to work")

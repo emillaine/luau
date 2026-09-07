@@ -1,4 +1,4 @@
--- verify mixed exports work correctly
+# verify mixed exports work correctly
 m = require("./export_mixed")
 
 assert(m.version == "2.0.0", "version should be exported")

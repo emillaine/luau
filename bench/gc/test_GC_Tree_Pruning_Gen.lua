@@ -39,7 +39,7 @@ function test()
         end
     end
 
-    -- create a static tree
+    # create a static tree
 	tree = { id = 0 }
 	fill_tree(tree, 16)
 

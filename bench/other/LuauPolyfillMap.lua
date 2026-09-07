@@ -1,6 +1,6 @@
--- This file is part of the Roblox luau-polyfill repository and is licensed under MIT License; see LICENSE.txt for details
--- #region Array
--- Array related
+# This file is part of the Roblox luau-polyfill repository and is licensed under MIT License; see LICENSE.txt for details
+# #region Array
+# Array related
 Array = {}
 Object = {}
 Map = {}
@@ -10,7 +10,7 @@ type callbackFn<K, V> = (element: V, key: K, map: Map<K, V>) -> ()
 type callbackFnWithThisArg<K, V> = (thisArg: Object, value: V, key: K, map: Map<K, V>) -> ()
 type Map<K, V> = {
 	size: number,
-	-- method definitions
+	# method definitions
 	set: (self: Map<K, V>, K, V) -> Map<K, V>,
 	get: (self: Map<K, V>, K) -> V | null,
 	clear: (self: Map<K, V>) -> (),
@@ -33,17 +33,17 @@ type Tuple<T, V> = Array<T | V>
 
 Set = {}
 
--- #region Array
+# #region Array
 function Array.isArray(value: any): boolean
 	if typeof(value) != "table" then
 		return false
 	end
 	if next(value) == null then
-		-- an empty table is an empty array
+		# an empty table is an empty array
 		return true
 	end
 
-	length = #value
+	length = value.count
 
 	if length == 0 then
 		return false
@@ -79,7 +79,7 @@ function Array.from<T, U>(
 
 	if valueType == "table" and Array.isArray(value) then
 		if mapFn then
-			for i = 1, #(value as Array<T>) do
+			for i = 1, (value as Array<T>).count do
 				if thisArg != null then
 					array[i] = (mapFn as mapFnWithThisArg<T, U>)(thisArg, (value as Array<T>)[i], i)
 				else
@@ -87,7 +87,7 @@ function Array.from<T, U>(
 				end
 			end
 		else
-			for i = 1, #(value as Array<T>) do
+			for i = 1, (value as Array<T>).count do
 				array[i] = (value as Array<any>)[i]
 			end
 		end
@@ -141,8 +141,8 @@ end
 type callbackFnArrayMap<T, U> = (element: T, index: number, array: Array<T>) -> U
 type callbackFnWithThisArgArrayMap<T, U, V> = (thisArg: V, element: T, index: number, array: Array<T>) -> U
 
--- Implements Javascript's `Array.prototype.map` as defined below
--- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
+# Implements Javascript's `Array.prototype.map` as defined below
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map
 function Array.map<T, U, V>(
 	t: Array<T>,
 	callback: callbackFnArrayMap<T, U> | callbackFnWithThisArgArrayMap<T, U, V>,
@@ -155,7 +155,7 @@ function Array.map<T, U, V>(
 		error("callback is not a function")
 	end
 
-	len = #t
+	len = t.count
 	A = {}
 	k = 1
 
@@ -181,8 +181,8 @@ end
 
 type Function = (any, any, number, any) -> any
 
--- Implements Javascript's `Array.prototype.reduce` as defined below
--- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+# Implements Javascript's `Array.prototype.reduce` as defined below
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
 function Array.reduce<T>(array: Array<T>, callback: Function, initialValue: any?): any
 	if typeof(array) != "table" then
 		error(string.format("Array.reduce called on %s", typeof(array)))
@@ -191,7 +191,7 @@ function Array.reduce<T>(array: Array<T>, callback: Function, initialValue: any?
 		error("callback is not a function")
 	end
 
-	length = #array
+	length = array.count
 
 	value = null
 	initial = 1
@@ -216,8 +216,8 @@ end
 type callbackFnArrayForEach<T> = (element: T, index: number, array: Array<T>) -> ()
 type callbackFnWithThisArgArrayForEach<T, U> = (thisArg: U, element: T, index: number, array: Array<T>) -> ()
 
--- Implements Javascript's `Array.prototype.forEach` as defined below
--- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+# Implements Javascript's `Array.prototype.forEach` as defined below
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
 function Array.forEach<T, U>(
 	t: Array<T>,
 	callback: callbackFnArrayForEach<T> | callbackFnWithThisArgArrayForEach<T, U>,
@@ -230,7 +230,7 @@ function Array.forEach<T, U>(
 		error("callback is not a function")
 	end
 
-	len = #t
+	len = t.count
 	k = 1
 
 	while k <= len do
@@ -242,16 +242,16 @@ function Array.forEach<T, U>(
 			(callback as callbackFnArrayForEach<T>)(kValue, k, t)
 		end
 
-		if #t < len then
-			-- don't iterate on removed items, don't iterate more than original length
-			len = #t
+		if t.count < len then
+			# don't iterate on removed items, don't iterate more than original length
+			len = t.count
 		end
 		k += 1
 	end
 end
--- #endregion
+# #endregion
 
--- #region Set
+# #region Set
 Set.__index = Set
 
 type callbackFnSet<T> = (value: T, key: T, set: Set<T>) -> ()
@@ -259,7 +259,7 @@ type callbackFnWithThisArgSet<T> = (thisArg: Object, value: T, key: T, set: Set<
 
 export type Set<T> = {
 	size: number,
-	-- method definitions
+	# method definitions
 	add: (self: Set<T>, T) -> Set<T>,
 	clear: (self: Set<T>) -> (),
 	delete: (self: Set<T>, T) -> boolean,
@@ -275,12 +275,12 @@ function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | null): Set
 	map = {}
 	if iterable != null then
 		arrayIterable = null
-		-- ROBLOX TODO: remove type casting from (iterable as any).ipairs in next release
+		# ROBLOX TODO: remove type casting from (iterable as any).ipairs in next release
 		if typeof(iterable) == "table" then
 			if Array.isArray(iterable) then
 				arrayIterable = Array.from(iterable as Array<any>)
 			else if typeof((iterable as Iterable).ipairs) == "function" then
-				-- handle in loop below
+				# handle in loop below
 			else if _G.__DEV__ then
 				error("cannot create array from an object-like table")
 			end
@@ -308,7 +308,7 @@ function Set.new<T>(iterable: Array<T> | Set<T> | Iterable | string | null): Set
 	end
 
 	return (setmetatable({
-		size = #array,
+		size = array.count,
 		_map = map,
 		_array = array,
 	}, Set) as any) as Set<T>
@@ -316,7 +316,7 @@ end
 
 function Set:add(value)
 	if not self._map[value] then
-		-- Luau FIXME: analyze should know self is Set<T> which includes size as a number
+		# Luau FIXME: analyze should know self is Set<T> which includes size as a number
 		self.size = self.size as number + 1
 		self._map[value] = true
 		table.insert(self._array, value)
@@ -334,7 +334,7 @@ function Set:delete(value): boolean
 	if not self._map[value] then
 		return false
 	end
-	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
+	# Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 	self.size = self.size as number - 1
 	self._map[value] = null
 	index = table.find(self._array, value)
@@ -344,8 +344,8 @@ function Set:delete(value): boolean
 	return true
 end
 
--- Implements Javascript's `Map.prototype.forEach` as defined below
--- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach
+# Implements Javascript's `Map.prototype.forEach` as defined below
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach
 function Set:forEach<T>(callback: callbackFnSet<T> | callbackFnWithThisArgSet<T>, thisArg: Object?): ()
 	if typeof(callback) != "function" then
 		error("callback is not a function")
@@ -368,9 +368,9 @@ function Set:ipairs()
 	return ipairs(self._array)
 end
 
--- #endregion Set
+# #endregion Set
 
--- #region Object
+# #region Object
 function Object.entries(value: string | Object | Array<any>): Array<any>
 	assert(value as any != null, "cannot get entries from a null value")
 	valueType = typeof(value)
@@ -378,7 +378,7 @@ function Object.entries(value: string | Object | Array<any>): Array<any>
 	entries = {}
 	if valueType == "table" then
 		for key, keyValue in pairs(value as Object) do
-			-- Luau FIXME: Luau should see entries as Array<any>, given object is [string]: any, but it sees it as Array<Array<string>> despite all the manual annotation
+			# Luau FIXME: Luau should see entries as Array<any>, given object is [string]: any, but it sees it as Array<Array<string>> despite all the manual annotation
 			table.insert(entries, { key as string, keyValue as any })
 		end
 	else if valueType == "string" then
@@ -390,12 +390,12 @@ function Object.entries(value: string | Object | Array<any>): Array<any>
 	return entries
 end
 
--- #endregion
+# #endregion
 
--- #region instanceOf
+# #region instanceOf
 
--- ROBLOX note: Typed tbl as any to work with strict type analyze
--- polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
+# ROBLOX note: Typed tbl as any to work with strict type analyze
+# polyfill for https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
 function instanceOf(tbl: any, class)
 	assert(typeof(class) == "table", "Received a non-table as the second argument for instanceof")
 
@@ -422,7 +422,7 @@ function instanceOf(tbl: any, class)
 			end
 		end
 
-		-- if we still have a valid table then check against seen
+		# if we still have a valid table then check against seen
 		if typeof(tbl) == "table" then
 			if seen[tbl] then
 				return false
@@ -433,7 +433,7 @@ function instanceOf(tbl: any, class)
 
 	return false
 end
--- #endregion
+# #endregion
 
 function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 	array = {}
@@ -442,7 +442,7 @@ function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 		arrayFromIterable = null
 		iterableType = typeof(iterable)
 		if iterableType == "table" then
-			if #iterable > 0 and typeof(iterable[1]) != "table" then
+			if iterable.count > 0 and typeof(iterable[1]) != "table" then
 				error("cannot create Map from {K, V} form, it must be { {K, V}... }")
 			end
 
@@ -459,30 +459,30 @@ function Map.new<K, V>(iterable: Array<Array<any>>?): Map<K, V>
 				end
 			end
 			val = entry[2]
-			-- only add to array if new
+			# only add to array if new
 			if map[key] == null then
 				table.insert(array, key)
 			end
-			-- always assign
+			# always assign
 			map[key] = val
 		end
 	end
 
 	return (setmetatable({
-		size = #array,
+		size = array.count,
 		_map = map,
 		_array = array,
 	}, Map) as any) as Map<K, V>
 end
 
 function Map:set<K, V>(key: K, value: V): Map<K, V>
-	-- preserve initial insertion order
+	# preserve initial insertion order
 	if self._map[key] == null then
-		-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
+		# Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 		self.size = self.size as number + 1
 		table.insert(self._array, key)
 	end
-	-- always update value
+	# always update value
 	self._map[key] = value
 	return self
 end
@@ -502,7 +502,7 @@ function Map:delete(key): boolean
 	if self._map[key] == null then
 		return false
 	end
-	-- Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
+	# Luau FIXME: analyze should know self is Map<K, V> which includes size as a number
 	self.size = self.size as number - 1
 	self._map[key] = null
 	index = table.find(self._array, key)
@@ -512,8 +512,8 @@ function Map:delete(key): boolean
 	return true
 end
 
--- Implements Javascript's `Map.prototype.forEach` as defined below
--- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
+# Implements Javascript's `Map.prototype.forEach` as defined below
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
 function Map:forEach<K, V>(callback: callbackFn<K, V> | callbackFnWithThisArg<K, V>, thisArg: Object?): ()
 	if typeof(callback) != "function" then
 		error("callback is not a function")
@@ -568,23 +568,23 @@ function Map.__newindex(table_, key, value)
 end
 
 function coerceToMap(mapLike: Map<any, any> | Table<any, any>): Map<any, any>
-	return instanceOf(mapLike, Map) and mapLike as Map<any, any> -- ROBLOX: order is preservered
-		or Map.new(Object.entries(mapLike)) -- ROBLOX: order is not preserved
+	return instanceOf(mapLike, Map) and mapLike as Map<any, any> # ROBLOX: order is preservered
+		or Map.new(Object.entries(mapLike)) # ROBLOX: order is not preserved
 end
 
--- local function coerceToTable(mapLike: Map<any, any> | Table<any, any>): Table<any, any>
--- 	if not instanceOf(mapLike, Map) then
--- 		return mapLike
--- 	end
+# local function coerceToTable(mapLike: Map<any, any> | Table<any, any>): Table<any, any>
+# 	if not instanceOf(mapLike, Map) then
+# 		return mapLike
+# 	end
 
--- 	-- create table from map
--- 	return Array.reduce(mapLike:entries(), function(tbl, entry)
--- 		tbl[entry[1]] = entry[2]
--- 		return tbl
--- 	end, {})
--- end
+# 	-- create table from map
+# 	return Array.reduce(mapLike:entries(), function(tbl, entry)
+# 		tbl[entry[1]] = entry[2]
+# 		return tbl
+# 	end, {})
+# end
 
--- #region Tests to verify it works as expected
+# #region Tests to verify it works as expected
 function it(description: string, fn: () -> ())
 	ok, result = pcall(fn)
 
@@ -596,8 +596,8 @@ end
 AN_ITEM = "bar"
 ANOTHER_ITEM = "baz"
 
--- #region [Describe] "Map"
--- #region [Child Describe] "constructors"
+# #region [Describe] "Map"
+# #region [Child Describe] "constructors"
 it("creates an empty array", function()
 	foo = Map.new()
 	assert(foo.size == 0)
@@ -621,10 +621,10 @@ it("creates a Map from an array with duplicate keys", function()
 	assert(foo.size == 1)
 	assert(foo:get(AN_ITEM) == "foo2")
 
-	assert(#foo:keys() == 1 and foo:keys()[1] == AN_ITEM)
-	assert(#foo:values() == 1 and foo:values()[1] == "foo2")
-	assert(#foo:entries() == 1)
-	assert(#foo:entries()[1] == 2)
+	assert(foo.count:keys() == 1 and foo:keys()[1] == AN_ITEM)
+	assert(foo.count:values() == 1 and foo:values()[1] == "foo2")
+	assert(foo.count:entries() == 1)
+	assert(foo.count:entries()[1] == 2)
 
 	assert(foo:entries()[1][1] == AN_ITEM)
 	assert(foo:entries()[1][2] == "foo2")
@@ -649,9 +649,9 @@ it("preserves the order of keys first assignment", function()
 	assert(foo:entries()[2][1] == ANOTHER_ITEM)
 	assert(foo:entries()[2][2] == "bar")
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "type"
+# #region [Child Describe] "type"
 it("instanceOf return true for an actual Map object", function()
 	foo = Map.new()
 	assert(instanceOf(foo, Map) == true)
@@ -661,9 +661,9 @@ it("instanceOf return false for an regular plain object", function()
 	foo = {}
 	assert(instanceOf(foo, Map) == false)
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "set"
+# #region [Child Describe] "set"
 it("returns the Map object", function()
 	foo = Map.new()
 	assert(foo:set(1, "baz") == foo)
@@ -683,7 +683,7 @@ it("does not increment the size the second time an element is added", function()
 end)
 
 it("sets values correctly to true/false", function()
-	-- Luau FIXME: Luau insists that arrays can't be mixed type
+	# Luau FIXME: Luau insists that arrays can't be mixed type
 	foo = Map.new({ { AN_ITEM, false as any } })
 	foo:set(AN_ITEM, false)
 	assert(foo.size == 1)
@@ -698,9 +698,9 @@ it("sets values correctly to true/false", function()
 	assert(foo:get(AN_ITEM) == false)
 end)
 
--- #endregion
+# #endregion
 
--- #region [Child Describe] "get"
+# #region [Child Describe] "get"
 it("returns value of item from provided key", function()
 	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
@@ -711,9 +711,9 @@ it("returns null if the item is not in the Map", function()
 	foo = Map.new()
 	assert(foo:get(AN_ITEM) == null)
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "clear"
+# #region [Child Describe] "clear"
 it("sets the size to zero", function()
 	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
@@ -727,9 +727,9 @@ it("removes the items from the Map", function()
 	foo:clear()
 	assert(foo:has(AN_ITEM) == false)
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "delete"
+# #region [Child Describe] "delete"
 it("removes the items from the Map", function()
 	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
@@ -763,7 +763,7 @@ it("does not decrement the size if the item was not in the Map", function()
 end)
 
 it("deletes value set to false", function()
-	-- Luau FIXME: Luau insists arrays can't be mixed type
+	# Luau FIXME: Luau insists arrays can't be mixed type
 	foo = Map.new({ { AN_ITEM, false as any } })
 
 	foo:delete(AN_ITEM)
@@ -771,9 +771,9 @@ it("deletes value set to false", function()
 	assert(foo.size == 0)
 	assert(foo:get(AN_ITEM) == null)
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "has"
+# #region [Child Describe] "has"
 it("returns true if the item is in the Map", function()
 	foo = Map.new()
 	foo:set(AN_ITEM, "foo")
@@ -786,14 +786,14 @@ it("returns false if the item is not in the Map", function()
 end)
 
 it("returns correctly with value set to false", function()
-	-- Luau FIXME: Luau insists arrays can't be mixed type
+	# Luau FIXME: Luau insists arrays can't be mixed type
 	foo = Map.new({ { AN_ITEM, false as any } })
 
 	assert(foo:has(AN_ITEM) == true)
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "keys / values / entries"
+# #region [Child Describe] "keys / values / entries"
 it("returns array of elements", function()
 	myMap = Map.new()
 	myMap:set(AN_ITEM, "foo")
@@ -810,9 +810,9 @@ it("returns array of elements", function()
 	assert(myMap:entries()[2][1] == ANOTHER_ITEM)
 	assert(myMap:entries()[2][2] == "val")
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "__index"
+# #region [Child Describe] "__index"
 it("can access fields directly without using get", function()
 	typeName = "size"
 
@@ -827,9 +827,9 @@ it("can access fields directly without using get", function()
 	assert(foo[ANOTHER_ITEM] == "val")
 	assert(foo:get(typeName) == "buzz")
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "__newindex"
+# #region [Child Describe] "__newindex"
 it("can set fields directly without using set", function()
 	foo = Map.new()
 
@@ -844,9 +844,9 @@ it("can set fields directly without using set", function()
 	assert(foo:get(ANOTHER_ITEM) == "val")
 	assert(foo:get("fizz") == "buzz")
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "ipairs"
+# #region [Child Describe] "ipairs"
 function makeArray(...)
 	array = {}
 	for _, item in ... do
@@ -885,34 +885,34 @@ it("iterates on elements if the added back to the Map", function()
 	assert(makeArray(foo:ipairs())[2][1] == AN_ITEM)
 	assert(makeArray(foo:ipairs())[2][2] == "food")
 end)
--- #endregion
+# #endregion
 
--- #region [Child Describe] "Integration Tests"
--- it("MDN Examples", function()
--- 	local myMap = Map.new() as Map<string | Object | Function, string>
+# #region [Child Describe] "Integration Tests"
+# it("MDN Examples", function()
+# 	local myMap = Map.new() as Map<string | Object | Function, string>
 
--- 	local keyString = "a string"
--- 	local keyObj = {}
--- 	local keyFunc = function() end
+# 	local keyString = "a string"
+# 	local keyObj = {}
+# 	local keyFunc = function() end
 
--- 	-- setting the values
--- 	myMap:set(keyString, "value associated with 'a string'")
--- 	myMap:set(keyObj, "value associated with keyObj")
--- 	myMap:set(keyFunc, "value associated with keyFunc")
+# 	-- setting the values
+# 	myMap:set(keyString, "value associated with 'a string'")
+# 	myMap:set(keyObj, "value associated with keyObj")
+# 	myMap:set(keyFunc, "value associated with keyFunc")
 
--- 	assert(myMap.size == 3)
+# 	assert(myMap.size == 3)
 
--- 	-- getting the values
--- 	assert(myMap:get(keyString) == "value associated with 'a string'")
--- 	assert(myMap:get(keyObj) == "value associated with keyObj")
--- 	assert(myMap:get(keyFunc) == "value associated with keyFunc")
+# 	-- getting the values
+# 	assert(myMap:get(keyString) == "value associated with 'a string'")
+# 	assert(myMap:get(keyObj) == "value associated with keyObj")
+# 	assert(myMap:get(keyFunc) == "value associated with keyFunc")
 
--- 	assert(myMap:get("a string") == "value associated with 'a string'")
+# 	assert(myMap:get("a string") == "value associated with 'a string'")
 
--- 	assert(myMap:get({}) == null) -- null, because keyObj !== {}
--- 	assert(myMap:get(function() -- null because keyFunc !== function () {}
--- 	end) == null)
--- end)
+# 	assert(myMap:get({}) == null) -- null, because keyObj !== {}
+# 	assert(myMap:get(function() -- null because keyFunc !== function () {}
+# 	end) == null)
+# end)
 
 it("handles non-traditional keys", function()
 	myMap = Map.new() as Map<boolean | number | string, string>
@@ -941,11 +941,11 @@ it("handles non-traditional keys", function()
 
 	assert(myMap.size == 0)
 end)
--- #endregion
+# #endregion
 
--- #endregion [Describe] "Map"
+# #endregion [Describe] "Map"
 
--- #region [Describe] "coerceToMap"
+# #region [Describe] "coerceToMap"
 it("returns the same object if instance of Map", function()
 	map = Map.new()
 	assert(coerceToMap(map) == map)
@@ -956,6 +956,6 @@ it("returns the same object if instance of Map", function()
 	map = Map.new({ { AN_ITEM, "foo" } })
 	assert(coerceToMap(map) == map)
 end)
--- #endregion [Describe] "coerceToMap"
+# #endregion [Describe] "coerceToMap"
 
--- #endregion Tests to verify it works as expected
+# #endregion Tests to verify it works as expected

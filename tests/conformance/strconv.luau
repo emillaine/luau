@@ -1,35 +1,35 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print("testing string-number conversion")
 
--- zero
+# zero
 assert(tostring(0) == "0")
 assert(tostring(0/-1) == "-0")
 
--- specials
+# specials
 assert(tostring(1/0) == "inf")
 assert(tostring(-1/0) == "-inf")
 assert(tostring(0/0) == "nan")
 
--- integers
+# integers
 assert(tostring(1) == "1")
 assert(tostring(42) == "42")
 assert(tostring(-4294967296) == "-4294967296")
 assert(tostring(9007199254740991) == "9007199254740991")
 
--- decimals
+# decimals
 assert(tostring(0.5) == "0.5")
 assert(tostring(0.1) == "0.1")
 assert(tostring(-0.17) == "-0.17")
 assert(tostring(math.pi) == "3.141592653589793")
 
--- scientific
+# scientific
 assert(tostring(1e+30) == "1e+30")
 assert(tostring(-1e+24) == "-1e+24")
 
--- fuzzing corpus
--- Note: If the assert below fires it may indicate floating point denormalized values
--- are not handled as expected.
+# fuzzing corpus
+# Note: If the assert below fires it may indicate floating point denormalized values
+# are not handled as expected.
 assert(tostring(5.4536123983019448e-311) == "5.453612398302e-311")
 assert(tostring(5.4834368411298348e-311) == "5.48343684113e-311")
 assert(tostring(4.4154895841930002e-305) == "4.415489584193e-305")

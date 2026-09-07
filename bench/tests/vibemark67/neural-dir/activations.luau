@@ -1,4 +1,4 @@
--- Activation functions and their derivatives
+# Activation functions and their derivatives
 
 tensorMod = require("./tensor")
 Tensor = tensorMod.Tensor

@@ -1,4 +1,4 @@
--- LZ77 match finding with hash-chained sliding window
+# LZ77 match finding with hash-chained sliding window
 
 WINDOW_SIZE = 32768
 MAX_MATCH = 258
@@ -18,7 +18,7 @@ export type LZ77Token = {
 }
 
 function hashFunc(data: {number}, pos: number): number
-    if pos + 2 > #data then return 0 end
+    if pos + 2 > data.count then return 0 end
     h = bit32.bxor(data[pos], bit32.lshift(data[pos + 1], 5), bit32.lshift(data[pos + 2], 10))
     return bit32.band(h, HASH_MASK)
 end
@@ -26,7 +26,7 @@ end
 function findMatch(data: {number}, pos: number, head: {number}, prev: {number}, maxChain: number): Match?
     bestLen = MIN_MATCH - 1
     bestDist = 0
-    dataLen = #data
+    dataLen = data.count
     maxLen = math.min(MAX_MATCH, dataLen - pos + 1)
 
     if maxLen < MIN_MATCH then return null end
@@ -65,7 +65,7 @@ function compress(data: {number}): {LZ77Token}
     head = table.create(HASH_SIZE, 0)
     prev = table.create(WINDOW_SIZE, 0)
     pos = 1
-    dataLen = #data
+    dataLen = data.count
 
     while pos <= dataLen do
         match = null

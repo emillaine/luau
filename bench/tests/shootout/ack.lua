@@ -1,4 +1,4 @@
---[[
+#[[
 MIT License
 
 Copyright (c) 2017 Gabriel de Quadros Ligneul
@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
--- http://www.bagley.org/~doug/shootout/
+# http://www.bagley.org/~doug/shootout/
 
 function prequire(name) success, result = pcall(require, name); return success and result end
 bench = script and require(script.Parent.bench_support) or prequire("bench_support") or require("../../bench_support")

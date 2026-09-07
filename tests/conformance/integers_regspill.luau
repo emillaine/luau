@@ -1,4 +1,4 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing native integer register spills")
 
 function test_many_locals(
@@ -6,7 +6,7 @@ function test_many_locals(
 ): integer
     assert(is_native())
 
-    -- create many live values from various operations
+    # create many live values from various operations
     a = integer.add(p0, p1)
     b = integer.sub(p0, p1)
     c = integer.bxor(p2, p3)
@@ -28,7 +28,7 @@ function test_many_locals(
     s = integer.bor(l, n)
     t = integer.add(m, o)
 
-    -- invalidates restore locations for old values.
+    # invalidates restore locations for old values.
     a = integer.add(a, t)
     b = integer.bxor(b, s)
     c = integer.band(c, r)
@@ -73,7 +73,7 @@ function test_division_pressure(
     k = integer.add(i, a)
     l = integer.bor(b, c)
 
-    -- each div clobbers RAX+RDX, requiring spills of other live INT64 values
+    # each div clobbers RAX+RDX, requiring spills of other live INT64 values
     d1 = integer.div(a, p1)
     d2 = integer.div(b, p2)
     d3 = integer.rem(c, p3)
@@ -89,7 +89,7 @@ function test_division_pressure(
     )
 end
 
--- shifts require RCX
+# shifts require RCX
 function test_shift_pressure(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
@@ -108,10 +108,10 @@ function test_shift_pressure(
     k = integer.add(i, a)
     l = integer.bor(b, c)
 
-    sh1 = integer.band(p0, 7i)  -- 0..7
-    sh2 = integer.band(p1, 15i) -- 0..15
-    sh3 = integer.band(p2, 31i) -- 0..31
-    sh4 = integer.band(p3, 63i) -- 0..63
+    sh1 = integer.band(p0, 7i)  # 0..7
+    sh2 = integer.band(p1, 15i) # 0..15
+    sh3 = integer.band(p2, 31i) # 0..31
+    sh4 = integer.band(p3, 63i) # 0..63
 
     s1 = integer.lshift(a, sh1)
     s2 = integer.rshift(b, sh2)
@@ -131,7 +131,7 @@ function test_shift_pressure(
     )
 end
 
--- regalloc may need to spill registers while in the loop
+# regalloc may need to spill registers while in the loop
 function test_loop_spill(
     p0: integer, p1: integer, p2: integer, p3: integer,
     iters: number
@@ -152,7 +152,7 @@ function test_loop_spill(
     l = integer.bor(b, c)
 
     for iter = 1, iters do
-        -- create register pressure within the loop
+        # create register pressure within the loop
         a = integer.add(a, integer.bxor(b, c))
         b = integer.sub(b, integer.band(d, e))
         c = integer.bxor(c, integer.bor(f, g))
@@ -216,7 +216,7 @@ function test_mixed_pressure(
     )
 end
 
--- 30 live locals must require register spilling
+# 30 live locals must require register spilling
 function test_extreme_pressure(
     p0: integer, p1: integer, p2: integer, p3: integer
 ): integer
@@ -276,7 +276,7 @@ function test_extreme_pressure(
     )
 end
 
--- values with significant upper 32 bits to detect truncation for incorrect spill widths
+# values with significant upper 32 bits to detect truncation for incorrect spill widths
 V0 = 0x1234567890ABCDEFi
 V1 = 0xFEDCBA0987654321i
 V2 = 0x0011223344556677i

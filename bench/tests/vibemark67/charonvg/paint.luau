@@ -1,4 +1,4 @@
---!native
+#!native
 Color = require("./color")
 Matrix = require("./matrix")
 
@@ -31,13 +31,13 @@ end
 
 function buildColorTable(stops)
     table = {}
-    if #stops == 0 then
+    if stops.count == 0 then
         for i = 1, COLOR_TABLE_SIZE do
             table[i] = 0
         end
         return table
     end
-    if #stops == 1 then
+    if stops.count == 1 then
         c = stops[1].color
         pixel = premultiply(c.r, c.g, c.b, c.a)
         for i = 1, COLOR_TABLE_SIZE do
@@ -55,7 +55,7 @@ function buildColorTable(stops)
     si = 1
     for i = 1, COLOR_TABLE_SIZE do
         pos = (i - 1) / (COLOR_TABLE_SIZE - 1)
-        while si < #stops - 1 and pos > stops[si + 1].offset do
+        while si < stops.count - 1 and pos > stops[si + 1].offset do
             si = si + 1
         end
         s0 = stops[si]
@@ -106,7 +106,7 @@ function gradientClamp(pos, spread)
     return pos
 end
 
--- Paint constructors
+# Paint constructors
 
 function Paint.rgb(r, g, b)
     return Paint.color(Color.rgba(r, g, b, 1))
@@ -155,7 +155,7 @@ function Paint.radialGradient(cx, cy, cr, fx, fy, fr, spread, stops, matrix)
     }, Paint)
 end
 
--- Gradient fetch functions
+# Gradient fetch functions
 
 function Paint:fetchLinear(x, y)
     px, py = x + 0.5, y + 0.5

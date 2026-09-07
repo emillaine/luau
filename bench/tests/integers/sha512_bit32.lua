@@ -30,11 +30,11 @@ function test()
 	}
 
 	function preprocess(msg)
-		msgLen = #msg
+		msgLen = msg.count
 		extra = 128 - ((msgLen + 17) % 128)
 
 		padded = msg .. '\128' .. string.rep('\0', extra + 8)
-		paddedLen = #padded + 8
+		paddedLen = padded.count + 8
 
 		buf = buffer.create(paddedLen)
 		buffer.writestring(buf, 0, padded)
@@ -70,8 +70,8 @@ function test()
 				p15h, p15l = WH[t - 15], WL[t - 15]
 				p2h, p2l = WH[t - 2], WL[t - 2]
 
-				-- s0 = rrotate(w[t-15], 1) XOR rrotate(w[t-15], 8) XOR bit32.rshift(w[t-15], 7)
-				-- Using + instead of bor because shifted halves never have overlapping bits
+				# s0 = rrotate(w[t-15], 1) XOR rrotate(w[t-15], 8) XOR bit32.rshift(w[t-15], 7)
+				# Using + instead of bor because shifted halves never have overlapping bits
 				s0l = bit32.bxor(
 					bit32.rshift(p15l, 1) + bit32.lshift(p15h, 31),
 					bit32.rshift(p15l, 8) + bit32.lshift(p15h, 24),
@@ -81,7 +81,7 @@ function test()
 					bit32.rshift(p15h, 8) + bit32.lshift(p15l, 24),
 					bit32.rshift(p15h, 7))
 
-				-- s1 = rrotate(w[t-2], 19) XOR rrotate(w[t-2], 61) XOR bit32.rshift(w[t-2], 6)
+				# s1 = rrotate(w[t-2], 19) XOR rrotate(w[t-2], 61) XOR bit32.rshift(w[t-2], 6)
 				s1l = bit32.bxor(
 					bit32.rshift(p2l, 19) + bit32.lshift(p2h, 13),
 					bit32.lshift(p2l, 3) + bit32.rshift(p2h, 29),
@@ -91,7 +91,7 @@ function test()
 					bit32.lshift(p2h, 3) + bit32.rshift(p2l, 29),
 					bit32.rshift(p2h, 6))
 
-				-- w[t] = w[t-16] + s0 + w[t-7] + s1  (64-bit wrapping add via carry)
+				# w[t] = w[t-16] + s0 + w[t-7] + s1  (64-bit wrapping add via carry)
 				tmplo = WL[t - 16] + s0l + WL[t - 7] + s1l
 				WL[t] = bit32.bor(tmplo, 0)
 				WH[t] = s0h + s1h + WH[t - 16] + WH[t - 7] + tmplo // 0x100000000
@@ -107,7 +107,7 @@ function test()
 			hh, hl = H8h, H8l
 
 			for t = 1, 80 do
-				-- Sigma1 = rrotate(e, 14) XOR rrotate(e, 18) XOR rrotate(e, 41)
+				# Sigma1 = rrotate(e, 14) XOR rrotate(e, 18) XOR rrotate(e, 41)
 				sig1l = bit32.bxor(
 					bit32.rshift(el, 14) + bit32.lshift(eh, 18),
 					bit32.rshift(el, 18) + bit32.lshift(eh, 14),
@@ -117,7 +117,7 @@ function test()
 					bit32.rshift(eh, 18) + bit32.lshift(el, 14),
 					bit32.lshift(eh, 23) + bit32.rshift(el, 9))
 
-				-- Sigma0 = rrotate(a, 28) XOR rrotate(a, 34) XOR rrotate(a, 39)
+				# Sigma0 = rrotate(a, 28) XOR rrotate(a, 34) XOR rrotate(a, 39)
 				sig0l = bit32.bxor(
 					bit32.rshift(al, 28) + bit32.lshift(ah, 4),
 					bit32.lshift(al, 30) + bit32.rshift(ah, 2),
@@ -127,22 +127,22 @@ function test()
 					bit32.lshift(ah, 30) + bit32.rshift(al, 2),
 					bit32.lshift(ah, 25) + bit32.rshift(al, 7))
 
-				-- Ch = (e AND f) XOR (NOT(e) AND g)
-				-- Using + because band results are complementary (no overlapping bits)
+				# Ch = (e AND f) XOR (NOT(e) AND g)
+				# Using + because band results are complementary (no overlapping bits)
 				chl = bit32.band(el, fl) + bit32.band(-1 - el, gl)
 				chh = bit32.band(eh, fh) + bit32.band(-1 - eh, gh)
 
-				-- Maj = (a AND b) XOR (a AND c) XOR (b AND c)
-				-- Rewritten as: (b AND c) + (a AND (b XOR c))
+				# Maj = (a AND b) XOR (a AND c) XOR (b AND c)
+				# Rewritten as: (b AND c) + (a AND (b XOR c))
 				majl = bit32.band(cl, bl) + bit32.band(al, bit32.bxor(cl, bl))
 				majh = bit32.band(ch, bh) + bit32.band(ah, bit32.bxor(ch, bh))
 
-				-- T1 = h + Sigma1 + Ch + K[t] + W[t]
+				# T1 = h + Sigma1 + Ch + K[t] + W[t]
 				t1l = hl + sig1l + chl + K_LO[t] + WL[t]
 				t1h = hh + sig1h + chh + K_HI[t] + WH[t] + t1l // 0x100000000
 				t1l = bit32.bor(t1l, 0)
 
-				-- Shift state and compute new e and a
+				# Shift state and compute new e and a
 				hh, hl = gh, gl
 				gh, gl = fh, fl
 				fh, fl = eh, el

@@ -179,7 +179,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "named_metatable_toStringNamedFunction")
 TEST_CASE_FIXTURE(BuiltinsFixture, "exhaustive_toString_of_cyclic_table")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const Vec3 = {}
         Vec3.__index = Vec3
         function Vec3.new()
@@ -831,8 +831,8 @@ TEST_CASE_FIXTURE(Fixture, "tostring_unsee_ttv_if_array")
 {
     CheckResult result = check(R"(
         const x: {string} = null as any
-        -- This code is constructed very specifically to use the same (by pointer
-        -- identity) type in the function twice.
+        # This code is constructed very specifically to use the same (by pointer
+        # identity) type in the function twice.
         const y: (typeof(x), typeof(x)) -> () = null as any
     )");
 
@@ -844,7 +844,7 @@ TEST_CASE_FIXTURE(Fixture, "tostring_unsee_ttv_if_array")
 TEST_CASE_FIXTURE(Fixture, "tostring_error_mismatch")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f1(t: {a : number, b: string, c: {d: string}}) : {a : number, b : string, c : { d : number}}
             return t
         end

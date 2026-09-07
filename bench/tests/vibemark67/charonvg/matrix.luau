@@ -1,4 +1,4 @@
---!native
+#!native
 Matrix = {}
 Matrix.__index = Matrix
 
@@ -100,7 +100,7 @@ function Matrix:sheared(shx, shy)
     return Matrix.shear(shx, shy):multiply(self)
 end
 
--- SVG transform string parsing
+# SVG transform string parsing
 
 function isWs(c)
     return c == 32 or c == 9 or c == 10 or c == 13
@@ -111,7 +111,7 @@ function isNum(c)
 end
 
 function skipWs(str, pos)
-    while pos <= #str and isWs(string.byte(str, pos)) do
+    while pos <= str.count and isWs(string.byte(str, pos)) do
         pos = pos + 1
     end
     return pos
@@ -120,7 +120,7 @@ end
 function skipWsOrComma(str, pos)
     hadComma = false
     pos = skipWs(str, pos)
-    if pos <= #str and string.byte(str, pos) == 44 then
+    if pos <= str.count and string.byte(str, pos) == 44 then
         hadComma = true
         pos = pos + 1
         pos = skipWs(str, pos)
@@ -129,7 +129,7 @@ function skipWsOrComma(str, pos)
 end
 
 function parseNumber(str, pos)
-    len = #str
+    len = str.count
     sign = 1
 
     if pos > len then
@@ -221,7 +221,7 @@ end
 
 function parseMatrixParams(str, pos, required, optional)
     pos = skipWs(str, pos)
-    if pos > #str or string.byte(str, pos) != 40 then
+    if pos > str.count or string.byte(str, pos) != 40 then
         return null
     end
     pos = pos + 1
@@ -240,7 +240,7 @@ function parseMatrixParams(str, pos, required, optional)
         pos, hadComma = skipWsOrComma(str, pos)
     end
 
-    count = #values
+    count = values.count
     if hadComma then
         return null
     end
@@ -249,7 +249,7 @@ function parseMatrixParams(str, pos, required, optional)
     end
 
     pos = skipWs(str, pos)
-    if pos > #str or string.byte(str, pos) != 41 then
+    if pos > str.count or string.byte(str, pos) != 41 then
         return null
     end
     pos = pos + 1
@@ -258,8 +258,8 @@ function parseMatrixParams(str, pos, required, optional)
 end
 
 function matchString(str, pos, target)
-    tlen = #target
-    if pos + tlen - 1 > #str then
+    tlen = target.count
+    if pos + tlen - 1 > str.count then
         return null
     end
     if string.sub(str, pos, pos + tlen - 1) == target then
@@ -269,12 +269,12 @@ function matchString(str, pos, target)
 end
 
 function Matrix.parse(str)
-    if type(str) != "string" or #str == 0 then
+    if type(str) != "string" or str.count == 0 then
         return null
     end
     result = Matrix.identity()
     pos = skipWs(str, 1)
-    len = #str
+    len = str.count
     hadComma = false
 
     while pos <= len do

@@ -38,7 +38,7 @@ function test()
 			h2 = integer.add(integer.mul(integer.add(integer.lrotate(h2, 31i), h1), M5), K2)
 		end
 
-		-- tail (0..15 bytes)
+		# tail (0..15 bytes)
 		tailStart = nblocks * 16
 		rem = len - tailStart
 		if rem > 0 then
@@ -76,7 +76,7 @@ function test()
 		h1 = integer.add(h1, h2)
 		h2 = integer.add(h2, h1)
 
-		-- byte-stream hex (little-endian per 64-bit lane)
+		# byte-stream hex (little-endian per 64-bit lane)
 		return string.format("%016x%016x", integer.bswap(h1), integer.bswap(h2))
 	end
 

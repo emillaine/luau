@@ -1,4 +1,4 @@
--- Huffman coding for DEFLATE
+# Huffman coding for DEFLATE
 
 bitstream = require("./bitstream")
 
@@ -107,7 +107,7 @@ end
 
 function decodeSymbol(reader: bitstream.BitReader, lookup: {number}, maxLen: number): number
     while reader.bitCount < maxLen do
-        if reader.pos > #reader.data then
+        if reader.pos > reader.data.count then
             reader.bitCount += 8
         else
             reader.bitBuf = bit32.bor(reader.bitBuf, bit32.lshift(reader.data[reader.pos], reader.bitCount))

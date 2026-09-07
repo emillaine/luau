@@ -8,9 +8,9 @@ PieceSymbols = "PpRrNnBbQqKk"
 UnicodePieces = {"♙", "♟", "♖", "♜", "♘", "♞", "♗", "♝", "♕", "♛", "♔", "♚"}
 StartingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
---
--- Lua 5.2 Compat
---
+#
+# Lua 5.2 Compat
+#
 
 if not table.create then
 	function table.create(n, v)
@@ -30,9 +30,9 @@ if not table.move then
 end
 
 
---
--- Utils
--- 
+#
+# Utils
+# 
 
 function square(s)
 	return RANKS:find(s:sub(2,2)) * 8 + FILES:find(s:sub(1,1)) - 9
@@ -78,9 +78,9 @@ end
 
 _utils = {squareName, moveName}
 
---
--- Bitboards
--- 
+#
+# Bitboards
+# 
 
 Bitboard = {}
 
@@ -134,7 +134,7 @@ FileH = Bitboard.from(0x80808080, 0x80808080)
 
 _Files = {FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH}
 
--- These masks are filled out below for all files
+# These masks are filled out below for all files
 RightMasks = {FileH}
 LeftMasks = {FileA}
 
@@ -309,9 +309,9 @@ for i=2,8 do
 	RightMasks[i] = RightMasks[i-1]:rshift(1):bor(FileH)
 	LeftMasks[i] = LeftMasks[i-1]:lshift(1):bor(FileA)
 end
---
--- Board
---
+#
+# Board
+#
 
 Board = {}
 
@@ -500,7 +500,7 @@ function Board:generate(idx)
 	if piece == 0 then return Bitboard.zero end
 
 	if type == 0 then
-		-- Pawn
+		# Pawn
 		d = -(piece*2 - 3)
 		movetwo = piece == 1 and Rank3 or Rank6
 
@@ -519,7 +519,7 @@ function Board:generate(idx)
 
 		return out
 	else if type == 5 then
-		-- King
+		# King
 		for x=-1,1,1 do
 			for y = -1,1,1 do
 				w = r:move(x,y)
@@ -533,7 +533,7 @@ function Board:generate(idx)
 			end
 		end
 	else if type == 2 then
-		-- Knight
+		# Knight
 		for _,j in ipairs(KNIGHT_MOVES) do
 			w = r:move(j[1],j[2])
 			
@@ -546,7 +546,7 @@ function Board:generate(idx)
 			end
 		end
 	else
-		-- Sliders (Rook, Bishop, Queen)
+		# Sliders (Rook, Bishop, Queen)
 		slides = null
 		if type == 1 then
 			slides = ROOK_SLIDES
@@ -578,14 +578,14 @@ function Board:generate(idx)
 	return out
 end
 
--- 0-5 - From Square
--- 6-11 - To Square
--- 12 - is Check
--- 13 - Is EnPassent
--- 14 - Is Castle
--- 15-19 - Promotion Piece
--- 20-24 - Moved Pice
--- 25-29 - Captured Piece
+# 0-5 - From Square
+# 6-11 - To Square
+# 12 - is Check
+# 13 - Is EnPassent
+# 14 - Is Castle
+# 15-19 - Promotion Piece
+# 20-24 - Moved Pice
+# 25-29 - Captured Piece
 
 
 function Board:toString(mark )  
@@ -599,7 +599,7 @@ function Board:toString(mark )
 			if i == 0 then
 				table.insert(out, '-')
 			else
-				-- out = out .. PieceSymbols:sub(i,i)
+				# out = out .. PieceSymbols:sub(i,i)
 				table.insert(out, UnicodePieces[i])
 			end
 			if mark != null and mark:index(n) != 0 then
@@ -676,7 +676,7 @@ function Board:moveList()
 				id = bit32.replace(id, self:index(m), 25, 4)
 			end
 
-			-- Check if pawn needs to be promoted
+			# Check if pawn needs to be promoted
 			if p == 1 and m >= 8*7 then
 				for i=3,9,2 do
 					emit(bit32.replace(id, i, 15, 4))
@@ -715,14 +715,14 @@ end
 function Board:perft(depth )  
 	if depth == 0 then return 1 end
 	if depth == 1 then 
-		return #self:moveList()
+		return self.count:moveList()
 	end
 	result = 0
 	for k,m in ipairs(self:moveList()) do
 		c = self:applyMove(m):perft(depth - 1)
 		if c == 0 then
-			-- Perft only counts leaf nodes at target depth
-			-- result = result + 1
+			# Perft only counts leaf nodes at target depth
+			# result = result + 1
 		else
 			result = result + c
 		end
@@ -769,12 +769,12 @@ function Board:applyMove(move )
 
 	if piece < 3 then
 		dist = math.abs(to - from)
-		-- Pawn moved two squares, set ep square
+		# Pawn moved two squares, set ep square
 		if dist == 16 then
 			out.ep = Bitboard.some((from + to) / 2)
 		end
 
-		-- Remove enpasent capture
+		# Remove enpasent capture
 		if not tom:bandempty(self.ep) then
 			if piece == 1 then
 				out[2] = out[2]:bandnot(self.ep:down())
@@ -810,9 +810,9 @@ end
 
 Board.__index = Board
 Board.__tostring = Board.toString
---
--- Main
---
+#
+# Main
+#
 
 failures = 0
 function test(fen, ply, target)
@@ -830,15 +830,15 @@ function test(fen, ply, target)
 		for k,v in pairs(b:moveList()) do
 			print(ucimove(v) .. ': ' .. (ply > 1 and b:applyMove(v):perft(ply-1) or '1'))
 		end
-		--error("Test Failure")
+		#error("Test Failure")
 	else
 		print("OK", found, fen)
 	end
 end
 
--- From https://www.chessprogramming.org/Perft_Results
--- If interpreter, computers, or algorithm gets too fast
--- feel free to go deeper
+# From https://www.chessprogramming.org/Perft_Results
+# If interpreter, computers, or algorithm gets too fast
+# feel free to go deeper
 
 testCases = {}
 function addTest(...) table.insert(testCases, {...}) end

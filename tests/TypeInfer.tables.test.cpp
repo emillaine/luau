@@ -371,7 +371,7 @@ TEST_CASE_FIXTURE(Fixture, "used_dot_instead_of_colon")
 TEST_CASE_FIXTURE(BuiltinsFixture, "used_colon_correctly")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const upVector = {}
         function upVector:Dot(lookVector)
             return 8
@@ -496,7 +496,7 @@ TEST_CASE_FIXTURE(Fixture, "table_param_width_subtyping_1")
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_param_width_subtyping_2")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function foo(o)
             string.lower(o.bar)
             string.lower(o.baz)
@@ -600,7 +600,7 @@ TEST_CASE_FIXTURE(Fixture, "okay_to_add_property_to_unsealed_tables_by_assignmen
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export t = { u = {} }
         t = { u = { p = 37 } }
         t = { u = { q = "hi" } }
@@ -616,7 +616,7 @@ TEST_CASE_FIXTURE(Fixture, "okay_to_add_property_to_unsealed_tables_by_assignmen
 TEST_CASE_FIXTURE(Fixture, "okay_to_add_property_to_unsealed_tables_by_function_call")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function get(x) return x.opts["MYOPT"] end
         function set(x,y) x.opts["MYOPT"] = y end
         const t = { opts = {} }
@@ -631,7 +631,7 @@ TEST_CASE_FIXTURE(Fixture, "okay_to_add_property_to_unsealed_tables_by_function_
 TEST_CASE_FIXTURE(Fixture, "width_subtyping")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(x : { q : number })
            x.q = 8
         end
@@ -646,13 +646,13 @@ TEST_CASE_FIXTURE(Fixture, "width_subtyping")
 TEST_CASE_FIXTURE(Fixture, "width_subtyping_needs_covariance")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(x : { p : { q : number }})
            x.p = { q = 8, r = 5 }
         end
         const t : { p : { q : number, r : string } } = { p = { q = 8, r = "hi" } }
-        f(t) -- Shouldn't typecheck
-        const x : string = t.p.r -- x is 5
+        f(t) # Shouldn't typecheck
+        const x : string = t.p.r # x is 5
     )");
 
     LUAU_REQUIRE_ERRORS(result);
@@ -1016,7 +1016,7 @@ TEST_CASE_FIXTURE(Fixture, "any_when_indexing_into_an_unsealed_table_with_no_ind
     DOES_NOT_PASS_NEW_SOLVER_GUARD();
 
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
 
         const constants = {
             key1 = "value1",
@@ -1432,7 +1432,7 @@ TEST_CASE_FIXTURE(Fixture, "pass_incompatible_union_to_a_generic_table_without_c
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, true};
 
     CheckResult result = check(R"(
-        -- must be in this specific order, and with (roughly) those exact properties!
+        # must be in this specific order, and with (roughly) those exact properties!
         type A = {x: number, [any]: any} | {}
 
         function f(t)
@@ -1797,7 +1797,7 @@ TEST_CASE_FIXTURE(Fixture, "casting_tables_with_props_into_table_with_indexer4")
         function foo(a: {[string]: number, a: string}, i: string)
             return a[i]
         end
-        const hi: number = foo({ a = "hi" }, "a") -- shouldn't typecheck since at runtime hi is "hi"
+        const hi: number = foo({ a = "hi" }, "a") # shouldn't typecheck since at runtime hi is "hi"
     )");
 
     // This typechecks but shouldn't
@@ -2056,7 +2056,7 @@ TEST_CASE_FIXTURE(Fixture, "ok_to_provide_a_subtype_during_construction")
 TEST_CASE_FIXTURE(Fixture, "reasonable_error_when_adding_a_nonexistent_property_to_an_array_like_table")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function mkA() return {"value"} end
         const A = mkA()
         A.B = "Hello"
@@ -2083,7 +2083,7 @@ TEST_CASE_FIXTURE(Fixture, "reasonable_error_when_adding_a_nonexistent_property_
 TEST_CASE_FIXTURE(Fixture, "shorter_array_types_actually_work")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const A: {string | number} = null as any
     )");
 
@@ -2095,7 +2095,7 @@ TEST_CASE_FIXTURE(Fixture, "only_ascribe_synthetic_names_at_module_scope")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const TopLevel = {}
         export foo = null
 
@@ -2119,7 +2119,7 @@ TEST_CASE_FIXTURE(Fixture, "hide_table_error_properties")
 {
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function f()
         function mkt() return { x = 1 } end
@@ -2342,12 +2342,12 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
     ScopedFastFlag sff{FFlag::LuauInstantiateInSubtyping, !FFlag::DebugLuauForceOldSolver};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {}
         function t.m(x) return x end
         const a : string = t.m("hi")
         const b : number = t.m(5)
-        const u : { m : (number)->number } = t -- This shouldn't typecheck
+        const u : { m : (number)->number } = t # This shouldn't typecheck
         u.m = function(x) return 1+x end
         const c : string = t.m("hi")
     )");
@@ -2365,7 +2365,7 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
 TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_should_cope_with_optional_properties_in_nonstrict")
 {
     CheckResult result = check(R"(
-        --!nonstrict
+        #!nonstrict
         const buttons = {}
         table.insert(buttons, { a = 1 })
         table.insert(buttons, { a = 2, b = true })
@@ -2384,7 +2384,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_insert_should_cope_with_optional_prope
     };
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const buttons = {}
         table.insert(buttons, { a = 1 })
         table.insert(buttons, { a = 2, b = true })
@@ -2634,7 +2634,7 @@ Expected this to be exactly 'string', but got 'number')";
 TEST_CASE_FIXTURE(Fixture, "explicitly_typed_table")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Super = { x : number }
 type Sub = { x : number, y: number }
 type HasSuper = { p : Super }
@@ -2649,7 +2649,7 @@ a.p = { x = 9 }
 TEST_CASE_FIXTURE(Fixture, "explicitly_typed_table_error")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 type Super = { x : number }
 type Sub = { x : number, y: number }
 type HasSuper = { p : Super }
@@ -2657,7 +2657,7 @@ type HasSub = { p : Sub }
 const tmp = { p = { x = 5, y = 7 }}
 const a: HasSuper = tmp
 a.p = { x = 9 }
--- needs to be an error because
+# needs to be an error because
 const y: number = tmp.p.y
     )");
 
@@ -2690,7 +2690,7 @@ Table type '{| x: number, y: number |}' not compatible with type 'Super' because
 TEST_CASE_FIXTURE(Fixture, "explicitly_typed_table_with_indexer")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Super = { x : number }
         type Sub = { x : number, y: number }
         type HasSuper = { [string] : Super }
@@ -2722,10 +2722,10 @@ b()
 TEST_CASE_FIXTURE(Fixture, "table_subtyping_shouldn't_add_optional_properties_to_sealed_tables")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function setNumber(t: { p: number? }, x:number) t.p = x end
         function getString(t: { p: string? }):string return t.p or "" end
-        -- This shouldn't type-check!
+        # This shouldn't type-check!
         function oh(x:number): string
           const t: {} = {}
           setNumber(t, x)
@@ -2740,7 +2740,7 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_shouldn't_add_optional_properties_to
 TEST_CASE_FIXTURE(Fixture, "top_table_type")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         type Table = { [any] : any }
         type HasTable = { p: Table? }
         type HasHasTable = { p: HasTable? }
@@ -2765,7 +2765,7 @@ const y = x.count
 TEST_CASE_FIXTURE(Fixture, "length_operator_intersection")
 {
     CheckResult result = check(R"(
-const x: {number} & {z:string} = null as any -- mixed tables are evil
+const x: {number} & {z:string} = null as any # mixed tables are evil
 const y = x.count
     )");
 
@@ -2817,10 +2817,10 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "give_up_after_one_metatable_index_look_up")
     CheckResult result = check(R"(
         const data = { x = 5 }
         const t1 = setmetatable({}, { __index = data })
-        const t2 = setmetatable({}, t1) -- note: must be t1, not a new table
+        const t2 = setmetatable({}, t1) # note: must be t1, not a new table
 
-        const x1 = t1.x -- ok
-        const x2 = t2.x -- nope
+        const x1 = t1.x # ok
+        const x2 = t2.x # nope
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -2887,8 +2887,8 @@ TEST_CASE_FIXTURE(Fixture, "pass_a_union_of_tables_to_a_function_that_requires_a
 TEST_CASE_FIXTURE(Fixture, "unifying_tables_shouldnt_uaf1")
 {
     CheckResult result = check(R"(
--- This example produced a UAF at one point, caused by pointers to table types becoming
--- invalidated by child unifiers. (Calling log.concat can cause pointers to become invalid.)
+# This example produced a UAF at one point, caused by pointers to table types becoming
+# invalidated by child unifiers. (Calling log.concat can cause pointers to become invalid.)
 type _Entry = {
     a: number,
 
@@ -2907,7 +2907,7 @@ end
 
 function Entry:dispose()
     self:middle()
-    forgetChildren(self) -- unify free with sealed AnyEntry
+    forgetChildren(self) # unify free with sealed AnyEntry
 end
     )");
 
@@ -2917,7 +2917,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "unifying_tables_shouldnt_uaf2")
 {
     CheckResult result = check(R"(
--- Another example that UAFd, this time found by fuzzing.
+# Another example that UAFd, this time found by fuzzing.
 const _ = null
 do
 _._ *= (_[{n0=_[{[{[_]=_,}]=_,}],}])[_]
@@ -3021,7 +3021,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_unifies_into_map")
                 const obj = Instance.new(instanceType)
                 for k, v in pairs(data) do
                     if type(k) == 'number' then
-                        --v.Parent = obj
+                        #v.Parent = obj
                     else
                         obj[k] = v
                     end
@@ -3124,7 +3124,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_quantify_table_that_belongs_to_outer_sc
         Counter.__index = Counter
 
         function Counter.new()
-            const self = setmetatable({count=0}, Counter)
+            const self = setmetatable({cnt=0}, Counter)
             return self
         end
 
@@ -3164,7 +3164,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_quantify_table_that_belongs_to_outer_sc
 TEST_CASE_FIXTURE(BuiltinsFixture, "instantiate_tables_at_scope_level")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const Option = {}
         Option.__index = Option
 
@@ -3181,7 +3181,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "instantiate_tables_at_scope_level")
 TEST_CASE_FIXTURE(Fixture, "inferring_crazy_table_should_also_be_quick")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(U)
             U(w:s(an):c()():c():U(s):c():c():U(s):c():U(s):cU()):c():U(s):c():U(s):c():c():U(s):c():U(s):cU()
         end
@@ -3215,7 +3215,7 @@ TEST_CASE_FIXTURE(Fixture, "setmetatable_cant_be_used_to_mutate_global_types")
         fix.getFrontend().globals.globalScope = getFrontend().globals.globalScope;
 
         fix.check(R"(
---!nonstrict
+#!nonstrict
 type MT = typeof(setmetatable)
 function wtf(arg: {MT}): typeof(table)
     arg = wtf(arg)
@@ -3237,7 +3237,7 @@ TEST_CASE_FIXTURE(Fixture, "evil_table_unification")
 {
     // this code re-infers the type of _ while processing fields of _, which can cause use-after-free
     check(R"(
---!nonstrict
+#!nonstrict
 _ = ...
 _:table(_,string)[_:gsub(_,...,n0)],_,_:gsub(_,string)[""],_:split(_,...,table)._,n0 = null
 do end
@@ -3264,7 +3264,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_crash_when_setmetatable_does_not_produc
 TEST_CASE_FIXTURE(BuiltinsFixture, "instantiate_table_cloning")
 {
     CheckResult result = check(R"(
---!nonstrict
+#!nonstrict
 const l0:any,l61:t0<t32> = _,math
 while _ do
 _()
@@ -3432,11 +3432,11 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table_simple_call")
     CheckResult result = check(R"(
         const a = setmetatable({ x = 2 }, {
             __call = function(self)
-                return (self.x as number) * 2 -- should work without annotation in the future
+                return (self.x as number) * 2 # should work without annotation in the future
             end
         })
         const b = a()
-        const c = a(2) -- too many arguments
+        const c = a(2) # too many arguments
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -3567,7 +3567,7 @@ end
 TEST_CASE_FIXTURE(Fixture, "inferred_properties_of_a_table_should_start_with_the_same_TypeLevel_of_that_table")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const T = {}
 
         function f(prop)
@@ -3592,7 +3592,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_leak_free_table_props")
             print(state.blah)
         end
 
-        function b(state) -- The bug was that we inferred state: {blah: any, gwar: any}
+        function b(state) # The bug was that we inferred state: {blah: any, gwar: any}
             print(state.gwar)
         end
 
@@ -3885,7 +3885,7 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
     };
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const t = {}
         function t.m<T>(x: T) return x end
         const a : string = t.m("hi")
@@ -3894,7 +3894,7 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
             x.m = function(x: number) return 1+x end
         end
 
-        f(t) -- This shouldn't typecheck
+        f(t) # This shouldn't typecheck
 
         const c : string = t.m("hi")
     )");
@@ -3925,7 +3925,7 @@ TEST_CASE_FIXTURE(Fixture, "invariant_table_properties_means_instantiating_table
 TEST_CASE_FIXTURE(BuiltinsFixture, "generic_table_instantiation_potential_regression")
 {
     CheckResult result = check(R"(
---!strict
+#!strict
 
 function f(x)
   x.p = 5
@@ -4248,7 +4248,7 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_shifted_tables")
           return x
         end
 
-        -- Remove name from cyclic table
+        # Remove name from cyclic table
         const foo = id({})
         foo.foo = id({})
         foo.foo.foo = id({})
@@ -4260,7 +4260,7 @@ TEST_CASE_FIXTURE(Fixture, "cyclic_shifted_tables")
         almostFoo.foo.foo = id({})
         almostFoo.foo.foo.foo = id({})
         almostFoo.foo.foo.foo.foo = almostFoo
-        -- Shift
+        # Shift
         almostFoo = almostFoo.foo.foo
     )");
 
@@ -4473,11 +4473,11 @@ TEST_CASE_FIXTURE(Fixture, "table_subtyping_error_suppression")
 {
     CheckResult result = check(R"(
         function one(tbl: {x: any}) end
-        function two(tbl: {x: string}) one(tbl) end -- ok, string <: any and any <: string
+        function two(tbl: {x: string}) one(tbl) end # ok, string <: any and any <: string
 
         function three(tbl: {x: any, y: string}) end
-        function four(tbl: {x: string, y: string}) three(tbl) end -- ok, string <: any, any <: string, string <: string
-        function five(tbl: {x: string, y: number}) three(tbl) end -- error, string <: any, any <: string, but number </: string
+        function four(tbl: {x: string, y: string}) three(tbl) end # ok, string <: any, any <: string, string <: string
+        function five(tbl: {x: string, y: number}) three(tbl) end # error, string <: any, any <: string, but number </: string
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
@@ -4964,9 +4964,9 @@ TEST_CASE_FIXTURE(Fixture, "parameter_was_set_an_indexer_and_bounded_by_another_
 
     CheckResult result = check(R"(
         function f(t1, t2)
-            t1[5] = 7 -- 't1 <: {number}
-            t2 = t1   -- 't1 <: 't2
-            t1[5] = 7 -- 't1 <: {number}
+            t1[5] = 7 # 't1 <: {number}
+            t2 = t1   # 't1 <: 't2
+            t1[5] = 7 # 't1 <: {number}
         end
     )");
 
@@ -5136,7 +5136,7 @@ TEST_CASE_FIXTURE(Fixture, "insert_a_and_f_of_a_into_table_res_in_a_loop")
 TEST_CASE_FIXTURE(BuiltinsFixture, "ipairs_adds_an_unbounded_indexer")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         const a = {}
         ipairs(a)
@@ -5153,7 +5153,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "ipairs_adds_an_unbounded_indexer")
 TEST_CASE_FIXTURE(BuiltinsFixture, "index_results_compare_to_nil")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         function foo(tbl: {number})
             if tbl[2] == null then
@@ -5230,7 +5230,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "metatable_table_assertion_crash")
             setmetatable(self, Metatable)
 
             Metatable.__newindex = function(_, Index: string, Value: any): ()
-                --Return if the new and old values are the same.
+                #Return if the new and old values are the same.
                 if self[Index] == Value then
                 end
             end
@@ -5242,7 +5242,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "table::insert_should_not_report_errors_when_
 {
     CheckResult result = check(R"(
 type cs = { GetTagged : (cs, string) -> any}
-const destroyQueue: {any} = {} -- pair of (time, coin)
+const destroyQueue: {any} = {} # pair of (time, coin)
 const tick : () -> any = null as any
 const CS : cs = null as any
 const DESTROY_DELAY = null
@@ -5462,7 +5462,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "read_only_property_reads")
 
     // none of the `t.id` accesses here should error
     auto result = check(R"(
-        --!strict
+        #!strict
         type readonlyTable = {read id: number}
         const t:readonlyTable = {id = 1}
 
@@ -5567,7 +5567,7 @@ TEST_CASE_FIXTURE(Fixture, "optional_property_with_call")
 TEST_CASE_FIXTURE(Fixture, "empty_union_container_overflow")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         const CellRenderer = {}
         function CellRenderer:init(props)
             self._separators = {
@@ -5794,7 +5794,7 @@ TEST_CASE_FIXTURE(Fixture, "bigger_nested_table_causes_big_type_error")
                 children = {
                     {
                         type = "file",
-                        path = "main.luau", -- I accidentally assign "path" instead of "name", causing a huge scary TypeError
+                        path = "main.luau", # I accidentally assign "path" instead of "name", causing a huge scary TypeError
                     }
                 }
             }
@@ -5833,7 +5833,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "function_call_in_indexer_with_compound_assig
 {
     // This has a bunch of errors, we really just need it to not crash / assert.
     std::ignore = check(R"(
-        --!strict
+        #!strict
         const _ = 7143424
         _[
             setfenv(
@@ -5882,7 +5882,7 @@ TEST_CASE_FIXTURE(Fixture, "type_mismatch_in_dict")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const dict: {[string]: boolean} = {
             code1 = true,
             code2 = 123,
@@ -5899,7 +5899,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const dict: { code1: boolean } = {
             code1 = 123,
         }
@@ -5916,7 +5916,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_regression")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const d1: { code1: boolean } = {
             code1 = true,
         }
@@ -5935,7 +5935,7 @@ TEST_CASE_FIXTURE(Fixture, "narrow_table_literal_check_assignment")
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         export d1: { code1: boolean } = {
             code1 = true,
         }
@@ -6014,7 +6014,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1859")
     ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
 
         type Cat = {
             name: string,
@@ -6031,7 +6031,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1859")
             self.age = 12
             self.actions = {}
             self.actions.meow = function() return "meow" end
-            -- We're missing `otherfield` here so we should complain.
+            # We're missing `otherfield` here so we should complain.
             return self
         end
     )");
@@ -6048,7 +6048,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1797_intersection_of_tables_arent_disjoi
     ScopedFastFlag sffs{FFlag::DebugLuauForceOldSolver, false};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         export type Foo = {
             foo: string,
@@ -6076,7 +6076,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1344")
 {
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type t = {
         	value: string?,
         }
@@ -6098,7 +6098,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_1344")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1651")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         const MyModule = {}
         MyModule._isEnabled = true as boolean
 
@@ -6165,12 +6165,12 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1450")
             print(keycodes)
         end
 
-        sendInput({"Alt"}) -- shouldn't error
+        sendInput({"Alt"}) # shouldn't error
         sendInput(
             {
                 "Alt",
                 "Space",
-                "Ctrl", -- should error
+                "Ctrl", # should error
             }
         )
     )");
@@ -6238,7 +6238,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1914_access_after_assignment_with_assert
     ScopedFastFlag sffs[] = {{FFlag::LuauExportValueSyntax, true}};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
 
         type WallHolder = {
             __type: "Model",
@@ -6298,8 +6298,8 @@ TEST_CASE_FIXTURE(Fixture, "free_types_with_sealed_table_upper_bounds_can_still_
         function foo(a)
             bar(a)
 
-            -- Here, a : A where A = never <: A <: {x: number}
-            -- The upper bound of A is a sealed table, but we nevertheless want to extend it.
+            # Here, a : A where A = never <: A <: {x: number}
+            # The upper bound of A is a sealed table, but we nevertheless want to extend it.
             a.nope()
         end
     )");
@@ -6333,7 +6333,7 @@ TEST_CASE_FIXTURE(Fixture, "mixed_tables_are_ok_for_any_key")
 TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1935")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type Drawing = {
             update: (() -> boolean)?,
         }
@@ -6358,7 +6358,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1935")
 TEST_CASE_FIXTURE(Fixture, "result_like_tagged_union")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
---!strict
+#!strict
 function retry(func: (...any) -> ...any): { type: "ok", value: any } | { type: "failed" }
     const success: boolean, result: any = func()
 
@@ -6511,7 +6511,7 @@ TEST_CASE_FIXTURE(Fixture, "oss_2017")
     ScopedFastFlag _{FFlag::DebugLuauAssertOnForcedConstraint, true};
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         const class = {}
         class.__index = class
 
@@ -6694,7 +6694,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "cli_174304_allow_getmetatable_error_and_tabl
 TEST_CASE_FIXTURE(BuiltinsFixture, "allow_indexing_into_error_or_not_nil")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         function f(i: number, ...)
             const value = select(i, ...)
             const valueType = typeof(value)
@@ -6711,7 +6711,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "allow_indexing_into_error_or_not_nil")
 TEST_CASE_FIXTURE(BuiltinsFixture, "show_not_a_table_error_when_indexing_into_non_table")
 {
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function f(t: number | boolean)
             t[0] = "huh"
         end
@@ -6728,7 +6728,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1684")
     };
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         const targetConfig = { ["Bag of coins"] = {}, }
 
         type TargetConfig = typeof(targetConfig)
@@ -6736,8 +6736,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "oss_1684")
 
         type QuestConfig = { target: Targets, }
 
-        -- All of the table members that aren't "Bag of coins" should
-        -- have errors.
+        # All of the table members that aren't "Bag of coins" should
+        # have errors.
         const questConfig: { [string]: QuestConfig  } = {
             ["Works as intended"] = { target = "Bag of coins" },
             ["Also works as intended "] = { target = "Not bag of coins" },
@@ -6781,7 +6781,7 @@ TEST_CASE_FIXTURE(Fixture, "table_access_indexer_via_name_expr")
 
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type List = "Val1" | "Val2" | "Val3"
         const Table: { [List]: boolean } = null as any
         const _ = Table.Val1
@@ -6795,7 +6795,7 @@ TEST_CASE_FIXTURE(Fixture, "table_access_indexer_fails_with_missing_key")
     ScopedFastFlag _{FFlag::DebugLuauForceOldSolver, false};
 
     auto result = check(R"(
-        --!strict
+        #!strict
         type List = "Val2" | "Val3"
         const Table: { [List]: boolean } = null as any
         const _ = Table.Val1
@@ -6830,13 +6830,13 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "do_not_allow_laundering")
     };
 
     CheckResult result = check(R"(
-        --!strict
+        #!strict
         function foo(t: {}): { x: null }
             return t
         end
 
         const t: { x: number } = { x = 42 }
-        const laundered = foo(t) -- via width subtyping
+        const laundered = foo(t) # via width subtyping
         laundered.x = null
         assert(type(t) == "number")
     )");
@@ -6982,7 +6982,7 @@ type B = {
 }
 
 const x : B = (null as any)
-const found = x.parsed.foo["any"] == null -- errors
+const found = x.parsed.foo["any"] == null # errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -7004,7 +7004,7 @@ type B = {
 }
 
 const x : B = (null as any)
-const found = x.parsed.foo["any"] != null -- errors
+const found = x.parsed.foo["any"] != null # errors
 )");
 
     LUAU_REQUIRE_NO_ERRORS(result);
@@ -7139,7 +7139,7 @@ TEST_CASE_FIXTURE(Fixture, "compound_assignment_writes_lhs")
 TEST_CASE_FIXTURE(Fixture, "error_supression_of_union_of_tables_should_work")
 {
     LUAU_REQUIRE_NO_ERRORS(check(R"(
-        --!strict
+        #!strict
         type Foo<T> = { kind: "foo", foo: T }
         type Bar<T> = { kind: "bar", bar: T }
         type FooBar<T> = Foo<T> | Bar<T>
@@ -7583,8 +7583,8 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "test_inferring_generalized_iteration_1")
 
     LUAU_REQUIRE_NO_ERRORS(check(R"(
         function setupRootMappingMove(rootMapping)
-            -- Prior, the new solver would eagerly generalize `rootMapping.RootToDescendantCountMap`
-            -- to unknown, which is clearly not correct.
+            # Prior, the new solver would eagerly generalize `rootMapping.RootToDescendantCountMap`
+            # to unknown, which is clearly not correct.
             for root, childCount in rootMapping.RootToDescendantCountMap do
                    string.len(root)
                    math.abs(childCount)

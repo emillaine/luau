@@ -25,7 +25,7 @@ declare function print<T...>(...: T...)
 declare function type<T>(value: T): string
 declare function typeof<T>(value: T): string
 
--- `assert` has a magic function attached that will give more detailed type information
+# `assert` has a magic function attached that will give more detailed type information
 declare function assert<T>(value: T, errorMessage: string?): T
 declare function error<T>(message: T, level: number?): never
 
@@ -43,21 +43,21 @@ declare function ipairs<V>(tab: {V}): (({V}, number) -> (number?, V), {V}, numbe
 
 declare function pcall<A..., R...>(f: (A...) -> R..., ...: A...): (boolean, R...)
 
--- FIXME: The actual type of `xpcall` is:
--- <E, A..., R1..., R2...>(f: (A...) -> R1..., err: (E) -> R2..., A...) -> (true, R1...) | (false, R2...)
--- Since we can't represent the return value, we use (boolean, R1...).
+# FIXME: The actual type of `xpcall` is:
+# <E, A..., R1..., R2...>(f: (A...) -> R1..., err: (E) -> R2..., A...) -> (true, R1...) | (false, R2...)
+# Since we can't represent the return value, we use (boolean, R1...).
 declare function xpcall<E, A..., R1..., R2...>(f: (A...) -> R1..., err: (E) -> R2..., ...: A...): (boolean, R1...)
 
--- `select` has a magic function attached to provide more detailed type information
+# `select` has a magic function attached to provide more detailed type information
 declare function select<A...>(i: string | number, ...: A...): ...any
 
--- FIXME: This type is not entirely correct - `loadstring` returns a function or
--- (nil, string).
+# FIXME: This type is not entirely correct - `loadstring` returns a function or
+# (nil, string).
 declare function loadstring<A...>(src: string, chunkname: string?): (((A...) -> any)?, string?)
 
 @checked declare function newproxy(mt: boolean?): any
 
--- Cannot use `typeof` here because it will produce a polytype when we expect a monotype.
+# Cannot use `typeof` here because it will produce a polytype when we expect a monotype.
 declare function unpack<V>(tab: {V}, i: number?, j: number?): ...V
 
 )BUILTIN_SRC";
@@ -241,7 +241,7 @@ declare utf8: {
 )BUILTIN_SRC";
 
 static constexpr const char* kBuiltinDefinitionBufferSrc = R"BUILTIN_SRC(
---- Buffer API
+#- Buffer API
 declare buffer: {
     create: @checked (size: number) -> buffer,
     fromstring: @checked (str: string) -> buffer,
@@ -276,7 +276,7 @@ declare buffer: {
 )BUILTIN_SRC";
 
 static constexpr const char* kBuiltinDefinitionBufferSrc_NOINTEGER = R"BUILTIN_SRC(
---- Buffer API
+#- Buffer API
 declare buffer: {
     create: @checked (size: number) -> buffer,
     fromstring: @checked (str: string) -> buffer,
@@ -310,7 +310,7 @@ declare buffer: {
 
 static const char* const kBuiltinDefinitionVectorSrc = R"BUILTIN_SRC(
 
--- While vector would have been better represented as a built-in primitive type, type solver extern type handling covers most of the properties
+# While vector would have been better represented as a built-in primitive type, type solver extern type handling covers most of the properties
 declare extern type vector with
     read x: number
     read y: number
@@ -435,16 +435,16 @@ export type type = {
     is: (self: type, arg: string) -> boolean,
     issubtypeof: (self: type, arg: type) -> boolean,
 
-    -- for singleton type
+    # for singleton type
     value: (self: type) -> (string | boolean | null),
 
-    -- for negation type
+    # for negation type
     inner: (self: type) -> type,
 
-    -- for union and intersection types
+    # for union and intersection types
     components: (self: type) -> {type},
 
-    -- for table type
+    # for table type
     setproperty: (self: type, key: type, value: type?) -> (),
     setreadproperty: (self: type, key: type, value: type?) -> (),
     setwriteproperty: (self: type, key: type, value: type?) -> (),
@@ -460,7 +460,7 @@ export type type = {
     setmetatable: (self: type, arg: type) -> (),
     metatable: (self: type) -> type?,
 
-    -- for function type
+    # for function type
     setparameters: (self: type, head: {type}?, tail: type?) -> (),
     parameters: (self: type) -> { head: {type}?, tail: type? },
     setreturns: (self: type, head: {type}?, tail: type? ) -> (),
@@ -468,12 +468,12 @@ export type type = {
     setgenerics: (self: type, {type}?) -> (),
     generics: (self: type) -> {type},
 
-    -- for class type
-    -- 'properties', 'metatable', 'indexer', 'readindexer' and 'writeindexer' are shared with table type
+    # for class type
+    # 'properties', 'metatable', 'indexer', 'readindexer' and 'writeindexer' are shared with table type
     readparent: (self: type) -> type?,
     writeparent: (self: type) -> type?,
 
-    -- for generic type
+    # for generic type
     name: (self: type) -> string?,
     ispack: (self: type) -> boolean,
 }
@@ -489,16 +489,16 @@ export type type = {
     is: (self: type, arg: string) -> boolean,
     issubtypeof: (self: type, arg: type) -> boolean,
 
-    -- for singleton type
+    # for singleton type
     value: (self: type) -> (string | boolean | null),
 
-    -- for negation type
+    # for negation type
     inner: (self: type) -> type,
 
-    -- for union and intersection types
+    # for union and intersection types
     components: (self: type) -> {type},
 
-    -- for table type
+    # for table type
     setproperty: (self: type, key: type, value: type?) -> (),
     setreadproperty: (self: type, key: type, value: type?) -> (),
     setwriteproperty: (self: type, key: type, value: type?) -> (),
@@ -514,7 +514,7 @@ export type type = {
     setmetatable: (self: type, arg: type) -> (),
     metatable: (self: type) -> type?,
 
-    -- for function type
+    # for function type
     setparameters: (self: type, head: {type}?, tail: type?) -> (),
     parameters: (self: type) -> { head: {type}?, tail: type? },
     setreturns: (self: type, head: {type}?, tail: type? ) -> (),
@@ -522,12 +522,12 @@ export type type = {
     setgenerics: (self: type, {type}?) -> (),
     generics: (self: type) -> {type},
 
-    -- for class type
-    -- 'properties', 'metatable', 'indexer', 'readindexer' and 'writeindexer' are shared with table type
+    # for class type
+    # 'properties', 'metatable', 'indexer', 'readindexer' and 'writeindexer' are shared with table type
     readparent: (self: type) -> type?,
     writeparent: (self: type) -> type?,
 
-    -- for generic type
+    # for generic type
     name: (self: type) -> string?,
     ispack: (self: type) -> boolean,
 }

@@ -1,8 +1,8 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
-print("testing asserts") -- someone has to
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+print("testing asserts") # someone has to
 
 if pcall(assert, false) or pcall(function() assert(false) end) then
-  error('catastrophic assertion failure') -- surely error() can't be broken
+  error('catastrophic assertion failure') # surely error() can't be broken
 end
 
 function ecall(fn, ...)
@@ -11,23 +11,23 @@ function ecall(fn, ...)
   return err:sub(err:find(": ") + 2, err.count)
 end
 
--- zero-ret calls work
+# zero-ret calls work
 assert(1)
 assert(true)
 
--- returns first arg
+# returns first arg
 assert(assert(1) == 1)
 assert(type(assert({})) == 'table')
 
--- fails correctly
+# fails correctly
 assert(ecall(function() assert() end) == "missing argument #1")
 assert(ecall(function() assert(null) end) == "assertion failed!")
 assert(ecall(function() assert(false) end) == "assertion failed!")
 
--- fails with a message
+# fails with a message
 assert(ecall(function() assert(null, "epic fail") end) == "epic fail")
 
--- returns all arguments for multi-arg calls
+# returns all arguments for multi-arg calls
 assert(select('#', assert(1, 2, 3)) == 3)
 assert(table.concat(table.pack(assert(1, 2, 3)), "") == "123")
 

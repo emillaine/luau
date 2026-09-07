@@ -1978,7 +1978,7 @@ bool ConstraintSolver::tryDispatch(const FunctionCheckConstraint& c, NotNull<con
         //  local Direction = { Left = 1, Right = 2 }
         //  type Direction = keyof<Direction>
         //
-        //  local function move(dirs: { Direction }) --[[...]] end
+        //  local function move(dirs: { Direction }) #[[...]] end
         //
         //  move({ "Left", "Right", "Left", "Right" })
         //
@@ -2012,7 +2012,7 @@ bool ConstraintSolver::tryDispatch(const FunctionCheckConstraint& c, NotNull<con
     //  local Direction = { Left = 1, Right = 2 }
     //  type Direction = keyof<Direction>
     //
-    //  local function move(dirs: { Direction }) --[[...]] end
+    //  local function move(dirs: { Direction }) #[[...]] end
     //
     //  move({ "Left", "Right", "Left", "Right" })
     //

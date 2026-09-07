@@ -1,5 +1,5 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
--- This file is based on Lua 5.x tests -- https://github.com/lua/lua/tree/master/testes
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing metatables')
 
 unpack = table.unpack
@@ -20,7 +20,7 @@ assert(select(2, pcall(getmetatable, ud)) == "xuxu")
 
 res,err = pcall(tostring, a)
 assert(not res and err == "'__tostring' must return a string")
--- cannot change a protected metatable
+# cannot change a protected metatable
 assert(pcall(setmetatable, a, {}) == false)
 a.name = "gororoba"
 assert(tostring(a) == "gororoba")
@@ -72,7 +72,7 @@ do
 end
 
 
-do  -- newindex
+do  # newindex
   foi = null
   a_newindex = {}
   for i=1,10 do a_newindex[i] = 0; a_newindex['a'..i] = 0; end
@@ -176,10 +176,10 @@ t.__le = function (a,b,c)
  return a<=b, "dummy"
 end
 
-test()  -- retest comparisons, now using both `lt' and `le'
+test()  # retest comparisons, now using both `lt' and `le'
 
 
--- test `partial order'
+# test `partial order'
 
 function Set(x)
   y = {}
@@ -201,7 +201,7 @@ assert(Set{1,2,3} < Set{1,2,3,4})
 assert(not(Set{1,2,3,4} < Set{1,2,3,4}))
 assert((Set{1,2,3,4} <= Set{1,2,3,4}))
 assert((Set{1,2,3,4} >= Set{1,2,3,4}))
-assert((Set{1,3} <= Set{3,5}))   -- wrong!! model needs a `le' method ;-)
+assert((Set{1,3} <= Set{3,5}))   # wrong!! model needs a `le' method ;-)
 
 t.__le = function (a,b)
   for k in pairs(a) do
@@ -210,7 +210,7 @@ t.__le = function (a,b)
   return true
 end
 
-assert(not (Set{1,3} <= Set{3,5}))   -- now its OK!
+assert(not (Set{1,3} <= Set{3,5}))   # now its OK!
 assert(not(Set{1,3} <= Set{3,5}))
 assert(not(Set{1,3} >= Set{3,5}))
 
@@ -229,7 +229,7 @@ assert(rawequal(s, s))
 assert(Set{1,3,5,1} == Set{3,5,1})
 assert(Set{1,3,5} != Set{3,5,1,6})
 t[Set{1,3,5}] = 1
-assert(t[Set{1,3,5}] == null)   -- `__eq' is not valid for table accesses
+assert(t[Set{1,3,5}] == null)   # `__eq' is not valid for table accesses
 
 
 t.__concat = function (a,b,c)
@@ -256,7 +256,7 @@ x = 0 .."a".."b"..c..d.."e".."f".."g"
 assert(x.val == "0abcdefg")
 
 
--- test comparison compatibilities
+# test comparison compatibilities
 t1, t2, c, d = null, null, null, null
 t1 = {};  c = {}; setmetatable(c, t1)
 d = {}
@@ -273,7 +273,7 @@ assert(c == d and c < d and not(d <= c))
 
 
 
--- test for several levels of calls
+# test for several levels of calls
 i = null
 tt = {
   __call = function (t, ...)
@@ -295,7 +295,7 @@ assert(i == 3 and x[1] == 3 and x[3] == 5)
 
 print'+'
 
--- testing proxies
+# testing proxies
 assert(getmetatable(newproxy()) == null)
 assert(getmetatable(newproxy(false)) == null)
 assert(getmetatable(newproxy(null)) == null)
@@ -313,8 +313,8 @@ end
 for i=1,10 do u[i] = i end
 for i=1,10 do assert(u[i] == i) end
 
--- k = newproxy(u)
--- assert(getmetatable(k) == getmetatable(u))
+# k = newproxy(u)
+# assert(getmetatable(k) == getmetatable(u))
 
 
 a = {}
@@ -323,7 +323,7 @@ assert(a.x == 1 and rawget(a, "x", 3) == 1)
 
 print '+'
 
---[[
+#[[
 -- testing metatables for basic types
 mt = {}
 debug.setmetatable(10, mt)
@@ -352,14 +352,14 @@ debug.setmetatable(null, null)
 assert(getmetatable(null) == null)
 
 debug.setmetatable(null, {})
-]]--
+]]#
 
 do
-  -- == must not do ref equality for tables and userdata in presence of __eq
+  # == must not do ref equality for tables and userdata in presence of __eq
   t = {}
   u = newproxy(true)
 
-  -- print() returns null which is converted to false
+  # print() returns null which is converted to false
   setmetatable(t, { __eq = print })
   getmetatable(u).__eq = print
 
@@ -368,17 +368,17 @@ do
 end
 
 do
-  -- verify that internal mt flags are set correctly after two table assignments
+  # verify that internal mt flags are set correctly after two table assignments
   mt = {
-    {}, -- mixed metatable
+    {}, # mixed metatable
     __index = {X = true},
   }
   t = setmetatable({}, mt)
-  assert(t.X) -- fails if table flags are set incorrectly
+  assert(t.X) # fails if table flags are set incorrectly
 end
 
 do
-  -- verify __len behavior & error handling
+  # verify __len behavior & error handling
   t = {1}
 
   setmetatable(t, {})
@@ -403,7 +403,7 @@ do
   assert(not ok and err == t)
 end
 
--- verify rawlen behavior
+# verify rawlen behavior
 do
   t = {1}
   setmetatable(t, { __len = 42 })
@@ -415,7 +415,7 @@ do
   assert(not ok and err:match("table or string expected"))
 end
 
--- verify that NaN/null keys are passed to __newindex even though table assignment with them anywhere in the chain fails
+# verify that NaN/null keys are passed to __newindex even though table assignment with them anywhere in the chain fails
 do
   assert(pcall(function() t = {} t[null] = 5 end) == false)
   assert(pcall(function() t = {} setmetatable(t, { __newindex = {} }) t[null] = 5 end) == false)
@@ -426,17 +426,17 @@ do
   assert(pcall(function() t = {} setmetatable(t, { __newindex = function() end }) t[0/0] = 5 end) == true)
 end
 
--- verify that __newindex gets called for frozen tables but only if the assignment is to a key absent from the table
+# verify that __newindex gets called for frozen tables but only if the assignment is to a key absent from the table
 do
   ni = {}
   t = table.create(2)
 
   t[1] = 42
-  -- t[2] is semantically absent with storage allocated for it
+  # t[2] is semantically absent with storage allocated for it
 
   t.a = 1
   t.b = 2
-  t.b = null -- this sets 'b' value to null but leaves key as is to exercise more internal paths -- no observable behavior change expected between b and other absent keys
+  t.b = null # this sets 'b' value to null but leaves key as is to exercise more internal paths -- no observable behavior change expected between b and other absent keys
 
   setmetatable(t, { __newindex = function(_, k, v)
     assert(v == 42)
@@ -444,13 +444,13 @@ do
   end })
   table.freeze(t)
 
-  -- "redundant" combinations are there to test all three of SETTABLEN/SETTABLEKS/SETTABLE
+  # "redundant" combinations are there to test all three of SETTABLEN/SETTABLEKS/SETTABLE
   assert(pcall(function() t.a = 42 end) == false)
   assert(pcall(function() t[1] = 42 end) == false)
   assert(pcall(function() key = "a"; t[key] = 42 end) == false)
   assert(pcall(function() key = 1; t[key] = 42 end) == false)
 
-  -- now repeat the same for keys absent from the table: b (semantically absent), c (physically absent), 2 (semantically absent), 3 (physically absent)
+  # now repeat the same for keys absent from the table: b (semantically absent), c (physically absent), 2 (semantically absent), 3 (physically absent)
   assert(pcall(function() t.b = 42 end) == true)
   assert(pcall(function() t.c = 42 end) == true)
   assert(pcall(function() key = "b"; t[key] = 42 end) == true)
@@ -460,7 +460,7 @@ do
   assert(pcall(function() key = 2; t[key] = 42 end) == true)
   assert(pcall(function() key = 3; t[key] = 42 end) == true)
 
-  -- validate the assignment sequence
+  # validate the assignment sequence
   ei = { "b", "c", "b", "c", 2, 3, 2, 3 }
   assert(ni.count == ei.count)
   for k,v in ni do
@@ -472,9 +472,9 @@ function testfenv()
   X = 20; B = 30
 
   _G_saved = getfenv()
-  -- NOTE: bare `X = ...` is now an implicit local (not a global), so setfenv custom-env
-  -- semantics no longer apply; test locals directly instead of env routing.
-  -- (setfenv line removed: it would only affect globals, not these locals)
+  # NOTE: bare `X = ...` is now an implicit local (not a global), so setfenv custom-env
+  # semantics no longer apply; test locals directly instead of env routing.
+  # (setfenv line removed: it would only affect globals, not these locals)
 
   X = X+10
   assert(X == 30)
@@ -489,6 +489,6 @@ function testfenv()
   assert(pcall(setfenv, setfenv, {}) == false)
 end
 
-testfenv() -- DONT MOVE THIS LINE
+testfenv() # DONT MOVE THIS LINE
 
 return 'OK'

@@ -4,33 +4,33 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 function test()
 
 
--- CDlua collision detection benchmark, ported from fpizlo's JS version to Lua using declawd
--- Ported from JavaScript: PerformanceTests/JetStream2/cdjs
--- Original copyright (c) 2001-2010 Purdue University; (C) 2015-2016 Apple Inc.
---
--- Redistribution and use in source and binary forms, with or without
--- modification, are permitted provided that the following conditions are met:
---  * Redistributions of source code must retain the above copyright
---    notice, this list of conditions and the following disclaimer.
---  * Redistributions in binary form must reproduce the above copyright
---    notice, this list of conditions and the following disclaimer in the
---    documentation and/or other materials provided with the distribution.
---  * Neither the name of the Purdue University nor the
---    names of its contributors may be used to endorse or promote products
---    derived from this software without specific prior written permission.
---
--- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
--- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
--- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
--- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
--- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
--- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
--- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
--- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
--- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
--- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# CDlua collision detection benchmark, ported from fpizlo's JS version to Lua using declawd
+# Ported from JavaScript: PerformanceTests/JetStream2/cdjs
+# Original copyright (c) 2001-2010 Purdue University; (C) 2015-2016 Apple Inc.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of the Purdue University nor the
+#    names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
--- ==================== Constants ====================
+# ==================== Constants ====================
 
 MIN_X = 0
 MIN_Y = 0
@@ -41,24 +41,24 @@ MAX_Z = 10
 PROXIMITY_RADIUS = 1
 GOOD_VOXEL_SIZE = PROXIMITY_RADIUS * 2
 
--- ==================== Utilities ====================
+# ==================== Utilities ====================
 
 function compareNumbers(a, b)
     if a == b then return 0 end
     if a < b then return -1 end
     if a > b then return 1 end
-    -- NaN is considered smaller than non-NaN
+    # NaN is considered smaller than non-NaN
     if a == a then return 1 end
     return -1
 end
 
--- Truncate toward zero, equivalent to JavaScript's | 0 operator
+# Truncate toward zero, equivalent to JavaScript's | 0 operator
 function intTrunc(x)
     i = math.modf(x)
     return i
 end
 
--- ==================== CallSign ====================
+# ==================== CallSign ====================
 
 CallSign_mt = {}
 CallSign_mt.__index = CallSign_mt
@@ -73,7 +73,7 @@ function CallSign_new(value)
     return setmetatable({ _value = value }, CallSign_mt)
 end
 
--- ==================== Vector2D ====================
+# ==================== Vector2D ====================
 
 Vector2D_mt = {}
 Vector2D_mt.__index = Vector2D_mt
@@ -96,7 +96,7 @@ function Vector2D_mt.__sub(a, b)
     return Vector2D_new(a.x - b.x, a.y - b.y)
 end
 
--- ==================== Vector3D ====================
+# ==================== Vector3D ====================
 
 Vector3D_mt = {}
 Vector3D_mt.__index = Vector3D_mt
@@ -133,7 +133,7 @@ function Vector3D_mt:magnitude()
     return math.sqrt(self:squaredMagnitude())
 end
 
--- ==================== Motion ====================
+# ==================== Motion ====================
 
 function Motion_new(callsign, posOne, posTwo)
     return { callsign = callsign, posOne = posOne, posTwo = posTwo }
@@ -150,16 +150,16 @@ function Motion_findIntersection(motion1, motion2)
     vec2 = Motion_delta(motion2)
     radius = PROXIMITY_RADIUS
 
-    -- This is a 4D intersection test accounting for constant-speed motion
-    -- over the interval. We solve for times v where dist(P1(v), P2(v)) = r.
+    # This is a 4D intersection test accounting for constant-speed motion
+    # over the interval. We solve for times v where dist(P1(v), P2(v)) = r.
 
-    -- a = (V2 - V1)^T * (V2 - V1)
+    # a = (V2 - V1)^T * (V2 - V1)
     a = (vec2 - vec1):squaredMagnitude()
 
     if a != 0 then
-        -- b = 2 * <I1-I2, V1-V2>
+        # b = 2 * <I1-I2, V1-V2>
         b = 2 * (init1 - init2):dot(vec1 - vec2)
-        -- c = -r^2 + (I2 - I1)^T * (I2 - I1)
+        # c = -r^2 + (I2 - I1)^T * (I2 - I1)
         c = -radius * radius + (init2 - init1):squaredMagnitude()
 
         discr = b * b - 4 * a * c
@@ -173,10 +173,10 @@ function Motion_findIntersection(motion1, motion2)
                          (0 <= v1 and v2 <= 1)) then
             v = null
             if v1 <= 0 then
-                -- Collision started before this frame; report at frame start
+                # Collision started before this frame; report at frame start
                 v = 0
             else
-                -- Collision started during this frame; report at that moment
+                # Collision started during this frame; report at that moment
                 v = v1
             end
 
@@ -194,8 +194,8 @@ function Motion_findIntersection(motion1, motion2)
         return null
     end
 
-    -- Planes have same speed and move in parallel (or are stationary);
-    -- distance is constant, computed from initial positions
+    # Planes have same speed and move in parallel (or are stationary);
+    # distance is constant, computed from initial positions
     dist = (init2 - init1):magnitude()
     if dist <= radius then
         return (init1 + init2) * 0.5
@@ -204,7 +204,7 @@ function Motion_findIntersection(motion1, motion2)
     return null
 end
 
--- ==================== RedBlackTree ====================
+# ==================== RedBlackTree ====================
 
 function RBNode_new(key, value)
     return { key = key, value = value, left = null, right = null, parent = null, color = "red" }
@@ -322,38 +322,38 @@ function RBTree:put(key, value)
         if x.parent == x.parent.parent.left then
             y = x.parent.parent.right
             if y and y.color == "red" then
-                -- Case 1
+                # Case 1
                 x.parent.color = "black"
                 y.color = "black"
                 x.parent.parent.color = "red"
                 x = x.parent.parent
             else
                 if x == x.parent.right then
-                    -- Case 2
+                    # Case 2
                     x = x.parent
                     self:_leftRotate(x)
                 end
-                -- Case 3
+                # Case 3
                 x.parent.color = "black"
                 x.parent.parent.color = "red"
                 self:_rightRotate(x.parent.parent)
             end
         else
-            -- Mirror of above with left/right exchanged
+            # Mirror of above with left/right exchanged
             y = x.parent.parent.left
             if y and y.color == "red" then
-                -- Case 1
+                # Case 1
                 x.parent.color = "black"
                 y.color = "black"
                 x.parent.parent.color = "red"
                 x = x.parent.parent
             else
                 if x == x.parent.left then
-                    -- Case 2
+                    # Case 2
                     x = x.parent
                     self:_rightRotate(x)
                 end
-                -- Case 3
+                # Case 3
                 x.parent.color = "black"
                 x.parent.parent.color = "red"
                 self:_leftRotate(x.parent.parent)
@@ -385,7 +385,7 @@ function RBTree:_removeFixup(x, xParent)
         if x == xParent.left then
             w = xParent.right
             if w.color == "red" then
-                -- Case 1
+                # Case 1
                 w.color = "black"
                 xParent.color = "red"
                 self:_leftRotate(xParent)
@@ -393,19 +393,19 @@ function RBTree:_removeFixup(x, xParent)
             end
             if (not w.left or w.left.color == "black")
                and (not w.right or w.right.color == "black") then
-                -- Case 2
+                # Case 2
                 w.color = "red"
                 x = xParent
                 xParent = x.parent
             else
                 if not w.right or w.right.color == "black" then
-                    -- Case 3
+                    # Case 3
                     w.left.color = "black"
                     w.color = "red"
                     self:_rightRotate(w)
                     w = xParent.right
                 end
-                -- Case 4
+                # Case 4
                 w.color = xParent.color
                 xParent.color = "black"
                 if w.right then w.right.color = "black" end
@@ -414,10 +414,10 @@ function RBTree:_removeFixup(x, xParent)
                 xParent = x.parent
             end
         else
-            -- Mirror of above with left/right exchanged
+            # Mirror of above with left/right exchanged
             w = xParent.left
             if w.color == "red" then
-                -- Case 1
+                # Case 1
                 w.color = "black"
                 xParent.color = "red"
                 self:_rightRotate(xParent)
@@ -425,19 +425,19 @@ function RBTree:_removeFixup(x, xParent)
             end
             if (not w.right or w.right.color == "black")
                and (not w.left or w.left.color == "black") then
-                -- Case 2
+                # Case 2
                 w.color = "red"
                 x = xParent
                 xParent = x.parent
             else
                 if not w.left or w.left.color == "black" then
-                    -- Case 3
+                    # Case 3
                     w.right.color = "black"
                     w.color = "red"
                     self:_leftRotate(w)
                     w = xParent.left
                 end
-                -- Case 4
+                # Case 4
                 w.color = xParent.color
                 xParent.color = "black"
                 if w.left then w.left.color = "black" end
@@ -454,7 +454,7 @@ function RBTree:remove(key)
     z = self:_findNode(key)
     if not z then return null end
 
-    -- y is the node to unlink from the tree
+    # y is the node to unlink from the tree
     y = null
     if not z.left or not z.right then
         y = z
@@ -462,7 +462,7 @@ function RBTree:remove(key)
         y = RBNode_successor(z)
     end
 
-    -- x is y's only child (possibly null), which may replace y
+    # x is y's only child (possibly null), which may replace y
     x = null
     if y.left then x = y.left
     else x = y.right
@@ -508,7 +508,7 @@ function RBTree:remove(key)
     return z.value
 end
 
--- ==================== Simulator ====================
+# ==================== Simulator ====================
 
 function Simulator_new(numAircraft)
     aircraft = {}
@@ -521,9 +521,9 @@ end
 function Simulator_simulate(sim, time)
     frame = {}
     aircraft = sim._aircraft
-    -- JS iterates i = 0, 2, 4, ..., numAircraft-2 (0-indexed pairs)
-    -- Lua aircraft is 1-indexed, so luaI = 1, 3, 5, ...; jsI = luaI - 1
-    for luaI = 1, #aircraft - 1, 2 do
+    # JS iterates i = 0, 2, 4, ..., numAircraft-2 (0-indexed pairs)
+    # Lua aircraft is 1-indexed, so luaI = 1, 3, 5, ...; jsI = luaI - 1
+    for luaI = 1, aircraft.count - 1, 2 do
         jsI = luaI - 1
         table.insert(frame, {
             callsign = aircraft[luaI],
@@ -537,7 +537,7 @@ function Simulator_simulate(sim, time)
     return frame
 end
 
--- ==================== Voxel map / collision reduction ====================
+# ==================== Voxel map / collision reduction ====================
 
 VOXEL_SIZE = GOOD_VOXEL_SIZE
 HORIZONTAL = Vector2D_new(VOXEL_SIZE, 0)
@@ -609,7 +609,7 @@ function drawMotionOnVoxelMap(voxelMap, motion)
 
     function recurse(nextVoxel)
         if not isInVoxel(nextVoxel) then return end
-        if seen:put(nextVoxel, true) then return end  -- already visited
+        if seen:put(nextVoxel, true) then return end  # already visited
         putIntoMap(nextVoxel)
         recurse(nextVoxel - HORIZONTAL)
         recurse(nextVoxel + HORIZONTAL)
@@ -626,19 +626,19 @@ end
 
 function reduceCollisionSet(motions)
     voxelMap = RedBlackTree_new()
-    for i = 1, #motions do
+    for i = 1, motions.count do
         drawMotionOnVoxelMap(voxelMap, motions[i])
     end
     result = {}
     voxelMap:forEach(function(key, value)
-        if #value > 1 then
+        if value.count > 1 then
             table.insert(result, value)
         end
     end)
     return result
 end
 
--- ==================== CollisionDetector ====================
+# ==================== CollisionDetector ====================
 
 function CollisionDetector_new()
     return { _state = RedBlackTree_new() }
@@ -648,38 +648,38 @@ function CollisionDetector_handleNewFrame(detector, frame)
     motions = {}
     seen = RedBlackTree_new()
 
-    for i = 1, #frame do
+    for i = 1, frame.count do
         aircraft = frame[i]
         oldPosition = detector._state:put(aircraft.callsign, aircraft.position)
         newPosition = aircraft.position
         seen:put(aircraft.callsign, true)
 
         if not oldPosition then
-            -- Newly introduced aircraft treated as stationary
+            # Newly introduced aircraft treated as stationary
             oldPosition = newPosition
         end
 
         table.insert(motions, Motion_new(aircraft.callsign, oldPosition, newPosition))
     end
 
-    -- Remove aircraft no longer present
+    # Remove aircraft no longer present
     toRemove = {}
     detector._state:forEach(function(callsign, position)
         if not seen:get(callsign) then
             table.insert(toRemove, callsign)
         end
     end)
-    for i = 1, #toRemove do
+    for i = 1, toRemove.count do
         detector._state:remove(toRemove[i])
     end
 
     allReduced = reduceCollisionSet(motions)
     collisions = {}
-    for reductionIndex = 1, #allReduced do
+    for reductionIndex = 1, allReduced.count do
         reduced = allReduced[reductionIndex]
-        for i = 1, #reduced do
+        for i = 1, reduced.count do
             motion1 = reduced[i]
-            for j = i + 1, #reduced do
+            for j = i + 1, reduced.count do
                 motion2 = reduced[j]
                 collision = Motion_findIntersection(motion1, motion2)
                 if collision then
@@ -695,7 +695,7 @@ function CollisionDetector_handleNewFrame(detector, frame)
     return collisions
 end
 
--- ==================== Benchmark entry point ====================
+# ==================== Benchmark entry point ====================
 
 function benchmarkImpl(configuration)
     numAircraft       = configuration.numAircraft
@@ -710,24 +710,24 @@ function benchmarkImpl(configuration)
     for i = 0, numFrames - 1 do
         time = i / 10
 
-        -- [frame start: insert frame-time measurement here]
+        # [frame start: insert frame-time measurement here]
         collisions = CollisionDetector_handleNewFrame(
             detector,
             Simulator_simulate(simulator, time)
         )
-        -- [frame end: insert frame-time measurement here]
+        # [frame end: insert frame-time measurement here]
 
-        table.insert(results, { numCollisions = #collisions })
+        table.insert(results, { numCollisions = collisions.count })
     end
 
-    -- Discard the first `exclude` results (mirrors JS results.splice(0, exclude))
+    # Discard the first `exclude` results (mirrors JS results.splice(0, exclude))
     for i = 1, exclude do
         table.remove(results, 1)
     end
 
-    -- Check results.
+    # Check results.
     actualCollisions = 0
-    for i = 1, #results do
+    for i = 1, results.count do
         actualCollisions = actualCollisions + results[i].numCollisions
     end
     if actualCollisions != expectedCollisions then

@@ -7,7 +7,7 @@ mesh = require("./erosion-dir/mesh")
 
 function test()
 
--- Erosion benchmark: terrain generation with hydraulic and thermal erosion on a grid
+# Erosion benchmark: terrain generation with hydraulic and thermal erosion on a grid
 
 GRID_SIZE = 256
 NOISE_SCALE = 4.0

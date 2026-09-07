@@ -1,6 +1,6 @@
 m = require("./export_counter_module")
 
--- we are starting with zeroes
+# we are starting with zeroes
 assert(m.counter == 0)
 assert(m.get() == 0)
 

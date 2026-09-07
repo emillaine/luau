@@ -60,7 +60,7 @@ TEST_CASE_FIXTURE(Fixture, "table_prop_access_diamond")
 
         function isRestricted(item: number) end
 
-        -- Clear all item tiles and create new ones for the items in the specified page
+        # Clear all item tiles and create new ones for the items in the specified page
         function displayPage(catalogPage: CatalogPage)
             for _, itemDetails in catalogPage do
                 if isRestricted(itemDetails.Id) then

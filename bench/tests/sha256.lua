@@ -93,11 +93,11 @@ function test()
 
 	function sha256(msg)
 		do
-			extra = 64 - ((#msg + 9) % 64)
-			len = toBytes(8 * #msg, 8)
+			extra = 64 - ((msg.count + 9) % 64)
+			len = toBytes(8 * msg.count, 8)
 			
 			msg = msg .. '\128' .. string.rep('\0', extra) .. len
-			assert(#msg % 64 == 0)
+			assert(msg.count % 64 == 0)
 		end
 		
 		hash = 
@@ -114,7 +114,7 @@ function test()
 
 		digest = {}
 		
-		for i = 1, #msg, 64 do 
+		for i = 1, msg.count, 64 do 
 			digestBlock(msg, i, hash, digest)
 		end
 		

@@ -1,28 +1,28 @@
---!strict
--- End-to-end stress benchmark for the hybrid post-quantum Noise stack.
---
--- This is a FIXED, DETERMINISTIC workload with no timing code. Run it under an
--- external timer, e.g.
---
---     time lute bench.luau
---
--- Besides being a performance benchmark (part of the vibemark67 suite), it
--- doubles as a correctness stress test of the Luau VM: the entire run is
--- deterministic (a seeded PRNG replaces the CSPRNG), every handshake and
--- transport message is checked for exact round-trip, and a checksum folded over
--- every output byte is compared against a known-good constant. Any deviation --
--- a miscompiled arithmetic op, a bad bit32 result, a GC bug corrupting a buffer
--- -- makes a check fail and the script error()s. On success it prints nothing
--- and exits 0.
---
--- Each of the CONNECTIONS iterations exercises the full key-exchange path
--- (X25519 static + ephemeral keys, ML-KEM-768 keygen/encaps/decaps, SHA3/SHAKE,
--- and the handshake AEAD) and then pushes bidirectional transport traffic
--- through ChaCha20-Poly1305. The transport volume per connection is sized so
--- the symmetric-cipher work takes roughly as long as the key-exchange work
--- (offline calibration: one handshake ~= 87 ms; ChaCha20-Poly1305 ~= 2 MB/s for
--- a full encrypt+decrypt cycle, so ~180 KiB balances a handshake). The default
--- 2-connection run is ~350 ms, split ~50/50 between KEX and symmetric cipher.
+#!strict
+# End-to-end stress benchmark for the hybrid post-quantum Noise stack.
+#
+# This is a FIXED, DETERMINISTIC workload with no timing code. Run it under an
+# external timer, e.g.
+#
+#     time lute bench.luau
+#
+# Besides being a performance benchmark (part of the vibemark67 suite), it
+# doubles as a correctness stress test of the Luau VM: the entire run is
+# deterministic (a seeded PRNG replaces the CSPRNG), every handshake and
+# transport message is checked for exact round-trip, and a checksum folded over
+# every output byte is compared against a known-good constant. Any deviation --
+# a miscompiled arithmetic op, a bad bit32 result, a GC bug corrupting a buffer
+# -- makes a check fail and the script error()s. On success it prints nothing
+# and exits 0.
+#
+# Each of the CONNECTIONS iterations exercises the full key-exchange path
+# (X25519 static + ephemeral keys, ML-KEM-768 keygen/encaps/decaps, SHA3/SHAKE,
+# and the handshake AEAD) and then pushes bidirectional transport traffic
+# through ChaCha20-Poly1305. The transport volume per connection is sized so
+# the symmetric-cipher work takes roughly as long as the key-exchange work
+# (offline calibration: one handshake ~= 87 ms; ChaCha20-Poly1305 ~= 2 MB/s for
+# a full encrypt+decrypt cycle, so ~180 KiB balances a handshake). The default
+# 2-connection run is ~350 ms, split ~50/50 between KEX and symmetric cipher.
 
 noise = require("./noise-dir/noise")
 random = require("./noise-dir/random")
@@ -34,26 +34,26 @@ bench = script and require(script.Parent.bench_support) or prequire("bench_suppo
 
 function test()
 
--- ---- workload parameters (tune these to scale the benchmark) -------------
-CONNECTIONS = 2 -- number of simulated open/close cycles (KEX stress)
-MSG_SIZE = 4096 -- bytes per transport message
-MSGS_PER_CONN = 44 -- 44 * 4096 ~= 180 KiB, balances one handshake
--- Expected Adler-32 checksum of the whole deterministic run. Captured from a
--- known-good run whose crypto is validated against external KATs (RFC 8439,
--- RFC 7748, FIPS 202/203). If the VM computes anything incorrectly this will
--- not match. Regenerate ONLY if you intentionally change the workload
--- parameters or the protocol, never to paper over a mismatch.
+# ---- workload parameters (tune these to scale the benchmark) -------------
+CONNECTIONS = 2 # number of simulated open/close cycles (KEX stress)
+MSG_SIZE = 4096 # bytes per transport message
+MSGS_PER_CONN = 44 # 44 * 4096 ~= 180 KiB, balances one handshake
+# Expected Adler-32 checksum of the whole deterministic run. Captured from a
+# known-good run whose crypto is validated against external KATs (RFC 8439,
+# RFC 7748, FIPS 202/203). If the VM computes anything incorrectly this will
+# not match. Regenerate ONLY if you intentionally change the workload
+# parameters or the protocol, never to paper over a mismatch.
 EXPECTED_CHECKSUM = 0xdd3c40d5
--- --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 
--- Deterministic PRNG so the whole benchmark is reproducible. Built from the
--- stack's own SHAKE256 (extra coverage): each request returns
--- SHAKE256(seed || counter). Replaces the real CSPRNG in both the Noise and
--- ML-KEM randomness hooks below.
+# Deterministic PRNG so the whole benchmark is reproducible. Built from the
+# stack's own SHAKE256 (extra coverage): each request returns
+# SHAKE256(seed || counter). Replaces the real CSPRNG in both the Noise and
+# ML-KEM randomness hooks below.
 prngCounter = 0
 function deterministicBytes(n: number): buffer
 	seed = buffer.create(40)
-	buffer.writestring(seed, 0, "vibemark67 deterministic seed!!!") -- 32 bytes
+	buffer.writestring(seed, 0, "vibemark67 deterministic seed!!!") # 32 bytes
 	buffer.writeu32(seed, 32, prngCounter % 0x100000000)
 	buffer.writeu32(seed, 36, math.floor(prngCounter / 0x100000000))
 	prngCounter += 1
@@ -63,8 +63,8 @@ end
 random.bytes = deterministicBytes
 mlkem.randomBytes = deterministicBytes
 
--- Adler-32 checksum: exact in doubles (both accumulators stay < 65521) and
--- sensitive to single-byte changes, so it catches VM miscomputations.
+# Adler-32 checksum: exact in doubles (both accumulators stay < 65521) and
+# sensitive to single-byte changes, so it catches VM miscomputations.
 csA = 1
 csB = 0
 function fold(buf: buffer)
@@ -81,7 +81,7 @@ function checksum(): number
 	return csB * 65536 + csA
 end
 
--- Byte-exact buffer equality.
+# Byte-exact buffer equality.
 function equal(a: buffer, b: buffer): boolean
 	if buffer.len(a) != buffer.len(b) then
 		return false
@@ -94,8 +94,8 @@ function equal(a: buffer, b: buffer): boolean
 	return true
 end
 
--- Build a message whose contents depend on a seed, so we move real
--- (non-constant) data and can validate round-trips.
+# Build a message whose contents depend on a seed, so we move real
+# (non-constant) data and can validate round-trips.
 function makeMessage(size: number, seed: number): buffer
 	b = buffer.create(size)
 	x = seed % 256
@@ -112,9 +112,9 @@ function check(cond: boolean, what: string)
 	end
 end
 
--- Run one full connection: fresh identities, three-message handshake, then a
--- bidirectional transport exchange. Everything is folded into the checksum and
--- round-trips are asserted.
+# Run one full connection: fresh identities, three-message handshake, then a
+# bidirectional transport exchange. Everything is folded into the checksum and
+# round-trips are asserted.
 function runConnection(connIndex: number)
 	aliceStatic = noise.generateStaticKeyPair()
 	bobStatic = noise.generateStaticKeyPair()
@@ -122,7 +122,7 @@ function runConnection(connIndex: number)
 	alice = noise.newInitiator(aliceStatic)
 	bob = noise.newResponder(bobStatic)
 
-	-- Handshake, carrying small payloads (exercises the handshake AEAD).
+	# Handshake, carrying small payloads (exercises the handshake AEAD).
 	p1 = makeMessage(24, connIndex + 1)
 	p2 = makeMessage(24, connIndex + 2)
 	p3 = makeMessage(24, connIndex + 3)
@@ -142,7 +142,7 @@ function runConnection(connIndex: number)
 	check(equal((bob as any).rs, aliceStatic.pub), "responder learned wrong initiator static")
 	check(equal((alice as any).rs, bobStatic.pub), "initiator learned wrong responder static")
 
-	-- Fold the on-the-wire handshake bytes and the channel-binding hash.
+	# Fold the on-the-wire handshake bytes and the channel-binding hash.
 	fold(m1)
 	fold(m2)
 	fold(m3)
@@ -153,8 +153,8 @@ function runConnection(connIndex: number)
 	bobSend = (bob as any).sendCS
 	bobRecv = (bob as any).recvCS
 
-	-- Bidirectional transport: alternate direction so both CipherStates and
-	-- nonce counters are exercised.
+	# Bidirectional transport: alternate direction so both CipherStates and
+	# nonce counters are exercised.
 	for i = 0, MSGS_PER_CONN - 1 do
 		plaintext = makeMessage(MSG_SIZE, connIndex * 131 + i)
 		ct = null

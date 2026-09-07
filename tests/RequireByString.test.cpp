@@ -257,12 +257,12 @@ private:
     // code can no longer create globals, and `_G` writes are sandbox-blocked).
     // Single recursive printer so self-recursion resolves to the chunk-local.
     std::string prettyPrintSource = R"(
--- Accumulate pretty printer output in `captured`
+# Accumulate pretty printer output in `captured`
 captured = ""
 
 function pptostring(x)
     if type(x) == "table" then
-        -- Just assume array-like tables for now.
+        # Just assume array-like tables for now.
         const strings = {}
         table.foreachi(x, function(k,v) table.insert(strings, pptostring(v)) end )
         return "{" .. table.concat(strings, ", ") .. "}"
@@ -273,8 +273,8 @@ function pptostring(x)
     end
 end
 
--- Note: Instead of calling print, the pretty printer just stores the output
--- in `captured` so we can check for the correct results.
+# Note: Instead of calling print, the pretty printer just stores the output
+# in `captured` so we can check for the correct results.
 function dopretty(...)
     const args = table.pack(...)
     const strings = {}

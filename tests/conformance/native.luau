@@ -1,25 +1,25 @@
--- This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
+# This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 print("testing native code generation")
 
 assert((function(x, y)
-  -- trigger a linear sequence
+  # trigger a linear sequence
   t1 = x + 2
   t2 = x - 7
 
   a = x * 10
   b = a + 1
-  a = y -- update 'a' version
-  t = {} -- call to allocate table forces a spill
+  a = y # update 'a' version
+  t = {} # call to allocate table forces a spill
   c = x * 10
   return c, b, t, t1, t2
 end)(5, 10) == 50)
 
 assert((function(x)
-  oops  = null-- split to prevent inlining
+  oops  = null# split to prevent inlining
   function oops()
   end
 
-  -- x is checked to be a number here; we can not execute a reentry from oops() because optimizer assumes this holds until return
+  # x is checked to be a number here; we can not execute a reentry from oops() because optimizer assumes this holds until return
   y = math.abs(x)
   oops()
   return y * x
@@ -313,7 +313,7 @@ function arraySizeInv2()
   t = {1, 2, null, null, null, null, null, null, null, true}
 
   u = {a = t}
-  table.insert(u.a, 3) -- aliased modifiction of 't' register through other value
+  table.insert(u.a, 3) # aliased modifiction of 't' register through other value
 
   return t[10]
 end
@@ -425,10 +425,10 @@ function valueTrackingIssue1()
   v1 = null
 
   function closure()
-    assert(type(b) == "buffer") -- b is the first upvalue
-    v1 = null -- v1 is the second upvalue
+    assert(type(b) == "buffer") # b is the first upvalue
+    v1 = null # v1 is the second upvalue
 
-    -- prevent inlining
+    # prevent inlining
     for i = 1, 100 do print(`{b} is {b}`) end
   end
 
@@ -468,11 +468,11 @@ function bufferbounds(zero)
   b8 = buffer.create(8)
   b10 = buffer.create(10)
 
-  -- only one valid position and size for a 1 byte buffer
+  # only one valid position and size for a 1 byte buffer
   buffer.writei8(b1, zero + 0, buffer.readi8(b1, zero + 0))
   buffer.writeu8(b1, zero + 0, buffer.readu8(b1, zero + 0))
 
-  -- 2 byte buffer
+  # 2 byte buffer
   buffer.writei8(b2, zero + 0, buffer.readi8(b2, zero + 0))
   buffer.writeu8(b2, zero + 0, buffer.readu8(b2, zero + 0))
   buffer.writei8(b2, zero + 1, buffer.readi8(b2, zero + 1))
@@ -480,7 +480,7 @@ function bufferbounds(zero)
   buffer.writei16(b2, zero + 0, buffer.readi16(b2, zero + 0))
   buffer.writeu16(b2, zero + 0, buffer.readu16(b2, zero + 0))
 
-  -- 4 byte buffer
+  # 4 byte buffer
   buffer.writei8(b4, zero + 0, buffer.readi8(b4, zero + 0))
   buffer.writeu8(b4, zero + 0, buffer.readu8(b4, zero + 0))
   buffer.writei8(b4, zero + 3, buffer.readi8(b4, zero + 3))
@@ -493,7 +493,7 @@ function bufferbounds(zero)
   buffer.writeu32(b4, zero + 0, buffer.readu32(b4, zero + 0))
   buffer.writef32(b4, zero + 0, buffer.readf32(b4, zero + 0))
 
-  -- 8 byte buffer
+  # 8 byte buffer
   buffer.writei8(b8, zero + 0, buffer.readi8(b8, zero + 0))
   buffer.writeu8(b8, zero + 0, buffer.readu8(b8, zero + 0))
   buffer.writei8(b8, zero + 7, buffer.readi8(b8, zero + 7))
@@ -510,7 +510,7 @@ function bufferbounds(zero)
   buffer.writef32(b8, zero + 4, buffer.readf32(b8, zero + 4))
   buffer.writef64(b8, zero + 0, buffer.readf64(b8, zero + 0))
 
-  -- 'any' size buffer
+  # 'any' size buffer
   buffer.writei8(b10, zero + 0, buffer.readi8(b10, zero + 0))
   buffer.writeu8(b10, zero + 0, buffer.readu8(b10, zero + 0))
   buffer.writei8(b10, zero + 9, buffer.readi8(b10, zero + 9))
@@ -542,24 +542,24 @@ end
 
 bufferboundsmerge1(buffer.create(12), 0)
 
--- stress tests for CHECK_BUFFER_LEN constant-offset path at exact buffer boundaries
--- all offsets are constant literals so they hit the constant-offset lowering (not the dynamic path)
+# stress tests for CHECK_BUFFER_LEN constant-offset path at exact buffer boundaries
+# all offsets are constant literals so they hit the constant-offset lowering (not the dynamic path)
 function bufferbounds_const_boundary()
-  -- 1-byte ops at exact boundary
+  # 1-byte ops at exact boundary
   b1 = buffer.create(1)
   buffer.writei8(b1, 0, 42)
   assert(buffer.readi8(b1, 0) == 42)
   buffer.writeu8(b1, 0, 200)
   assert(buffer.readu8(b1, 0) == 200)
 
-  -- 2-byte ops at exact boundary
+  # 2-byte ops at exact boundary
   b2 = buffer.create(2)
   buffer.writei16(b2, 0, 1000)
   assert(buffer.readi16(b2, 0) == 1000)
   buffer.writeu16(b2, 0, 60000)
   assert(buffer.readu16(b2, 0) == 60000)
 
-  -- 4-byte ops at exact boundary: offset 0 in 4-byte buffer
+  # 4-byte ops at exact boundary: offset 0 in 4-byte buffer
   b4 = buffer.create(4)
   buffer.writei32(b4, 0, 100000)
   assert(buffer.readi32(b4, 0) == 100000)
@@ -568,44 +568,44 @@ function bufferbounds_const_boundary()
   buffer.writef32(b4, 0, 3.14)
   assert(math.abs(buffer.readf32(b4, 0) - 3.14) < 0.001)
 
-  -- 4-byte ops at end of 8-byte buffer: offset 4 + size 4 == 8
+  # 4-byte ops at end of 8-byte buffer: offset 4 + size 4 == 8
   b8a = buffer.create(8)
   buffer.writei32(b8a, 4, -999)
   assert(buffer.readi32(b8a, 4) == -999)
   buffer.writef32(b8a, 4, 2.718)
   assert(math.abs(buffer.readf32(b8a, 4) - 2.718) < 0.001)
 
-  -- 8-byte ops at exact boundary: offset 0 in 8-byte buffer
+  # 8-byte ops at exact boundary: offset 0 in 8-byte buffer
   b8b = buffer.create(8)
   buffer.writef64(b8b, 0, 1.23456789012345)
   assert(buffer.readf64(b8b, 0) == 1.23456789012345)
 
-  -- 8-byte ops at end of 16-byte buffer: offset 8 + size 8 == 16
+  # 8-byte ops at end of 16-byte buffer: offset 8 + size 8 == 16
   b16 = buffer.create(16)
   buffer.writef64(b16, 0, 1.0)
   buffer.writef64(b16, 8, 2.0)
   assert(buffer.readf64(b16, 0) == 1.0)
   assert(buffer.readf64(b16, 8) == 2.0)
 
-  -- mixed sizes each at exact boundary of their own buffer
+  # mixed sizes each at exact boundary of their own buffer
   b1x = buffer.create(1)
-  buffer.writei8(b1x, 0, 77)        -- offset 0 + 1 == 1
+  buffer.writei8(b1x, 0, 77)        # offset 0 + 1 == 1
   assert(buffer.readi8(b1x, 0) == 77)
 
   b9 = buffer.create(9)
-  buffer.writei8(b9, 8, 55)         -- offset 8 + 1 == 9
+  buffer.writei8(b9, 8, 55)         # offset 8 + 1 == 9
   assert(buffer.readi8(b9, 8) == 55)
 
   b15 = buffer.create(15)
-  buffer.writef64(b15, 7, 9.99)     -- offset 7 + 8 == 15
+  buffer.writef64(b15, 7, 9.99)     # offset 7 + 8 == 15
   assert(buffer.readf64(b15, 7) == 9.99)
-  buffer.writei32(b15, 11, 567890)  -- offset 11 + 4 == 15
+  buffer.writei32(b15, 11, 567890)  # offset 11 + 4 == 15
   assert(buffer.readi32(b15, 11) == 567890)
-  buffer.writei16(b15, 13, 1234)    -- offset 13 + 2 == 15
+  buffer.writei16(b15, 13, 1234)    # offset 13 + 2 == 15
   assert(buffer.readi16(b15, 13) == 1234)
 
-  -- range merging stress: multiple constant-offset accesses filling buffer exactly
-  -- write at offsets 8, 0, 4 (out of order) in a 12-byte buffer to provoke negative minOffset
+  # range merging stress: multiple constant-offset accesses filling buffer exactly
+  # write at offsets 8, 0, 4 (out of order) in a 12-byte buffer to provoke negative minOffset
   b12 = buffer.create(12)
   buffer.writei32(b12, 8, 30)
   buffer.writei32(b12, 0, 10)
@@ -747,19 +747,19 @@ function forcedregisterspill1(x, y, z)
   d1, d2, d3, d4, d5, d6, d7, d8, d9, d10 = (y + 1), (y + 2), (y + 3), (y + 4), (y + 5), (y + 6), (y + 7), (y + 8), (y + 9), (y + 10)
   e1, e2, e3, e4, e5, e6, e7, e8, e9, e10 = (z * 1), (z * 2), (z * 3), (z * 4), (z * 5), (z * 6), (z * 7), (z * 8), (z * 9), (z * 10)
 
-  -- force store of all those values for a call and then bring all those registers back from VM slot spills
+  # force store of all those values for a call and then bring all those registers back from VM slot spills
   t = {
     c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9 + c10 + (x + 1) + (x + 2) + (x + 3) + (x + 4) + (x + 5) + (x + 6) + (x + 7) + (x + 8) + (x + 9) + (x + 10),
     d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10 + (y + 1) + (y + 2) + (y + 3) + (y + 4) + (y + 5) + (y + 6) + (y + 7) + (y + 8) + (y + 9) + (y + 10),
     e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8 + e9 + e10 + (z * 1) + (z * 2) + (z * 3) + (z * 4) + (z * 5) + (z * 6) + (z * 7) + (z * 8) + (z * 9) + (z * 10),
   }
 
-  -- bring them back once more time
+  # bring them back once more time
   s1 = c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9 + c10 + (x + 1) + (x + 2) + (x + 3) + (x + 4) + (x + 5) + (x + 6) + (x + 7) + (x + 8) + (x + 9) + (x + 10)
   s2 = d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 + d10 + (y + 1) + (y + 2) + (y + 3) + (y + 4) + (y + 5) + (y + 6) + (y + 7) + (y + 8) + (y + 9) + (y + 10)
   s3 = e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8 + e9 + e10 + (z * 1) + (z * 2) + (z * 3) + (z * 4) + (z * 5) + (z * 6) + (z * 7) + (z * 8) + (z * 9) + (z * 10)
 
-  -- have not fallen back
+  # have not fallen back
   assert(is_native())
   return s1, s2, s3, t
 end
