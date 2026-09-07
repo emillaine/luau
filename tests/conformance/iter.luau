@@ -2,6 +2,11 @@
 # This file is based on Lua 5.x tests # https://github.com/lua/lua/tree/master/testes
 print('testing iteration')
 
+# Check nativeness before any loops: with -O2, testLoopWithCoercions below is inlined
+# into this chunk, and its string-coercion numeric-for exits to the VM (see
+# translateInstForNPrep), leaving the chunk interpreted afterwards.
+assert(is_native_if_supported())
+
 # basic for loop tests
 do
   a = null
@@ -583,7 +588,5 @@ do
   co = coroutine.create(function() pcall(recurse) end)
   while coroutine.status(co) != "dead" do coroutine.resume(co) end
 end
-
-assert(is_native_if_supported())
 
 return"OK"
