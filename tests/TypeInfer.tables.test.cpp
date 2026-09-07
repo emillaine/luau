@@ -3124,7 +3124,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "dont_quantify_table_that_belongs_to_outer_sc
         Counter.__index = Counter
 
         function Counter.new()
-            const self = setmetatable({count=0}, Counter)
+            const self = setmetatable({cnt=0}, Counter)
             return self
         end
 

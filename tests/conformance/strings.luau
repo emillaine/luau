@@ -187,7 +187,7 @@ assert(pcall(function()
 	string.format("%#*", "bad form")
 end) == false)
 
-assert(loadstring("return 1\n--comentário sem EOL no final")() == 1)
+assert(loadstring("return 1\n#comentário sem EOL no final")() == 1)
 
 
 assert(table.concat{} == "")
