@@ -12,10 +12,15 @@
 
 ## What this repo is
 
-This is a **breaking-change fork of Luau** (`luau-lang/luau`), not upstream Luau.
+This is a **completely new language with no users yet**. Its implementation is
+just based on the Luau source code (`luau-lang/luau`) as a starting point —
+it is not upstream Luau and not Lua 5.1.
 
-- There are **no legacy users / scripts to support**. Backwards compatibility with
-  Lua 5.1, upstream Luau, or earlier commits of this fork is **not a goal**.
+- There is **no old code that must keep working**. No user scripts, no production
+  codebases, no legacy ecosystem to avoid breaking. Never reject or water down a
+  change out of fear of breaking existing code.
+- Backwards compatibility with Lua 5.1, upstream Luau, or earlier commits of this
+  fork is **not a goal**.
 - Prefer clean, simple language design over migration paths. When removing syntax,
   there is no need for deprecation periods or compat flags.
 - `README.md` and upstream docs (`luau.org`, compatibility notes) are **stale**;
