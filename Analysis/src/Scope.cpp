@@ -154,6 +154,7 @@ std::optional<TypeFun> Scope::lookupImportedType(const Name& moduleAlias, const 
 Scope::WildcardNameLookup Scope::lookupWildcardType(const Name& name) const
 {
     WildcardNameLookup result;
+    ModuleName firstTarget;
 
     for (const Scope* scope = this; scope; scope = scope->parent.get())
     {
@@ -163,11 +164,16 @@ Scope::WildcardNameLookup Scope::lookupWildcardType(const Name& name) const
             if (it == wi.exportedTypes.end())
                 continue;
 
+            // Importing the same module twice is idempotent, not ambiguous.
+            if (result.kind != WildcardNameLookup::None && wi.target == firstTarget)
+                continue;
+
             result.importLocs.push_back(wi.loc);
             if (result.kind == WildcardNameLookup::None)
             {
                 result.kind = WildcardNameLookup::Unique;
                 result.type = it->second;
+                firstTarget = wi.target;
             }
             else
             {
@@ -182,6 +188,7 @@ Scope::WildcardNameLookup Scope::lookupWildcardType(const Name& name) const
 Scope::WildcardNameLookup Scope::lookupWildcardValue(const Name& name) const
 {
     WildcardNameLookup result;
+    ModuleName firstTarget;
 
     for (const Scope* scope = this; scope; scope = scope->parent.get())
     {
@@ -198,11 +205,16 @@ Scope::WildcardNameLookup Scope::lookupWildcardValue(const Name& name) const
             if (it == tt->props.end() || !it->second.readTy)
                 continue;
 
+            // Importing the same module twice is idempotent, not ambiguous.
+            if (result.kind != WildcardNameLookup::None && wi.target == firstTarget)
+                continue;
+
             result.importLocs.push_back(wi.loc);
             if (result.kind == WildcardNameLookup::None)
             {
                 result.kind = WildcardNameLookup::Unique;
                 result.valueTy = *it->second.readTy;
+                firstTarget = wi.target;
             }
             else
             {

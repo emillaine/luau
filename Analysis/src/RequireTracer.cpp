@@ -4,6 +4,9 @@
 #include "Luau/Ast.h"
 #include "Luau/Module.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace Luau
 {
 
@@ -152,31 +155,54 @@ struct RequireTracer : AstVisitor
                 result.exprs[expr] = std::move(*info);
         }
 
-        // resolve all requires according to their argument
-        // Imports first so mixed import/require lists preserve source-like order for
-        // modules that only `import` then `require` (both are dependency edges).
+        // resolve all requires according to their argument, preserving source order
+        // so that dependency edges (and cycle detection) see imports and requires
+        // interleaved as written.
         result.requireList.reserve(requireCalls.size() + importPaths.size());
 
+        struct OrderedDep
+        {
+            Position pos;
+            AstStatImport* import = nullptr;
+            AstExprCall* require = nullptr;
+        };
+        std::vector<OrderedDep> ordered;
+        ordered.reserve(requireCalls.size() + importPaths.size());
         for (AstStatImport* import : importPaths)
-        {
-            if (const ModuleInfo* info = result.exprs.find(import->path))
-                result.requireList.push_back({info->name, import->location});
-        }
-
+            ordered.push_back({import->location.begin, import, nullptr});
         for (AstExprCall* require : requireCalls)
-        {
-            AstExpr* arg = require->args.data[0];
-
-            if (const ModuleInfo* info = result.exprs.find(arg))
+            ordered.push_back({require->location.begin, nullptr, require});
+        std::sort(
+            ordered.begin(),
+            ordered.end(),
+            [](const OrderedDep& a, const OrderedDep& b)
             {
-                result.requireList.push_back({info->name, require->location});
+                return a.pos < b.pos;
+            }
+        );
 
-                ModuleInfo infoCopy = *info; // copy *info out since next line invalidates info!
-                result.exprs[require] = std::move(infoCopy);
+        for (const OrderedDep& dep : ordered)
+        {
+            if (dep.import)
+            {
+                if (const ModuleInfo* info = result.exprs.find(dep.import->path))
+                    result.requireList.push_back({info->name, dep.import->location});
             }
             else
             {
-                result.exprs[require] = {}; // mark require as unresolved
+                AstExpr* arg = dep.require->args.data[0];
+
+                if (const ModuleInfo* info = result.exprs.find(arg))
+                {
+                    result.requireList.push_back({info->name, dep.require->location});
+
+                    ModuleInfo infoCopy = *info; // copy *info out since next line invalidates info!
+                    result.exprs[dep.require] = std::move(infoCopy);
+                }
+                else
+                {
+                    result.exprs[dep.require] = {}; // mark require as unresolved
+                }
             }
         }
     }

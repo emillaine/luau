@@ -1039,7 +1039,7 @@ struct ErrorConverter
 
     std::string operator()(const AmbiguousImport& e) const
     {
-        return "Ambiguous name '" + e.name + "' is exported by multiple imports; disambiguate with `M = require(\"…\"); M." + e.name + "`";
+        return "Ambiguous name '" + e.name + "' is exported by multiple imports; disambiguate with `M = require(\"...\"); M." + e.name + "`";
     }
 };
 

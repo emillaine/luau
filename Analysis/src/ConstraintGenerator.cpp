@@ -1418,6 +1418,16 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStat* stat)
 
 ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatLocal* statLocal)
 {
+    for (AstLocal* local : statLocal->vars)
+    {
+        if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(local->name.value);
+            imported.kind != Scope::WildcardNameLookup::None)
+        {
+            Location importLoc = imported.importLocs.empty() ? local->location : imported.importLocs.front();
+            reportError(local->location, ClashWithLocal{local->name.value, importLoc, local->location});
+        }
+    }
+
     std::vector<TypeId> annotatedTypes;
     annotatedTypes.reserve(statLocal->vars.size);
     bool hasAnnotation = false;
@@ -1768,6 +1778,13 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatLocalFuncti
     // Dotted path
     // Self?
 
+    if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(function->name->name.value);
+        imported.kind != Scope::WildcardNameLookup::None)
+    {
+        Location importLoc = imported.importLocs.empty() ? function->name->location : imported.importLocs.front();
+        reportError(function->name->location, ClashWithLocal{function->name->name.value, importLoc, function->name->location});
+    }
+
     TypeId functionType = nullptr;
     auto ty = scope->lookup(function->name);
     LUAU_ASSERT(!ty.has_value()); // The parser ensures that every local function has a distinct Symbol for its name.
@@ -1809,6 +1826,27 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatFunction* f
 {
     // Name could be AstStatLocal, AstStatGlobal, AstStatIndexName.
     // With or without self
+
+    // `function foo()` declared after `import` that provides `foo` would shadow the
+    // import at runtime; reject it like any other assignment to an imported name.
+    if (AstExprLocal* localName = function->name->as<AstExprLocal>())
+    {
+        if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(localName->local->name.value);
+            imported.kind != Scope::WildcardNameLookup::None)
+        {
+            Location importLoc = imported.importLocs.empty() ? localName->location : imported.importLocs.front();
+            reportError(localName->location, ClashWithLocal{localName->local->name.value, importLoc, localName->location});
+        }
+    }
+    else if (AstExprGlobal* globalName = function->name->as<AstExprGlobal>())
+    {
+        if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(globalName->name.value);
+            imported.kind != Scope::WildcardNameLookup::None)
+        {
+            Location importLoc = imported.importLocs.empty() ? globalName->location : imported.importLocs.front();
+            reportError(globalName->location, ClashWithLocal{globalName->name.value, importLoc, globalName->location});
+        }
+    }
 
     Checkpoint start = checkpoint(this);
     FunctionSignature sig = checkFunctionSignature(scope, nullptr, function->func, /* expectedType */ std::nullopt, function->name->location);
