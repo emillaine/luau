@@ -71,6 +71,8 @@ static void validatetable(global_State* g, LuaTable* h)
 static void validateclosure(global_State* g, Closure* cl)
 {
     validateobjref(g, obj2gco(cl), obj2gco(cl->env));
+    if (cl->wildcardimports)
+        validateobjref(g, obj2gco(cl), obj2gco(cl->wildcardimports));
 
     if (cl->isC)
     {

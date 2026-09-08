@@ -260,4 +260,46 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "follow_type_annotation_2")
     CHECK_EQ("game/Redirect/Nested", result.exprs[local->values.data[0]].name);
 }
 
+TEST_CASE_FIXTURE(RequireTracerFixture, "trace_import_string")
+{
+    AstStatBlock* block = parse(R"(
+        import game.A
+    )");
+    REQUIRE(block);
+    REQUIRE_EQ(1, block->body.size);
+    REQUIRE(block->body.data[0]->is<AstStatImport>());
+
+    RequireTraceResult result = traceRequires(&fileResolver, block, "ModuleName", {});
+    REQUIRE_EQ(1, result.requireList.size());
+    CHECK_EQ("game/A", result.requireList[0].first);
+}
+
+TEST_CASE_FIXTURE(RequireTracerFixture, "trace_import_and_require")
+{
+    AstStatBlock* block = parse(R"(
+        import game.A
+        require(game.B)
+    )");
+    REQUIRE(block);
+
+    RequireTraceResult result = traceRequires(&fileResolver, block, "ModuleName", {});
+    REQUIRE_EQ(2, result.requireList.size());
+    CHECK_EQ("game/A", result.requireList[0].first);
+    CHECK_EQ("game/B", result.requireList[1].first);
+}
+
+TEST_CASE_FIXTURE(RequireTracerFixture, "trace_require_and_import_preserves_source_order")
+{
+    AstStatBlock* block = parse(R"(
+        require(game.B)
+        import game.A
+    )");
+    REQUIRE(block);
+
+    RequireTraceResult result = traceRequires(&fileResolver, block, "ModuleName", {});
+    REQUIRE_EQ(2, result.requireList.size());
+    CHECK_EQ("game/B", result.requireList[0].first);
+    CHECK_EQ("game/A", result.requireList[1].first);
+}
+
 TEST_SUITE_END();

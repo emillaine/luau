@@ -984,6 +984,18 @@ public:
     Position constKeywordBegin;
 };
 
+class AstStatImport : public AstStat
+{
+public:
+    LUAU_RTTI(AstStatImport)
+
+    AstStatImport(const Location& location, AstExpr* path);
+
+    void visit(AstVisitor* visitor) override;
+
+    AstExpr* path;
+};
+
 class AstStatTypeAlias : public AstStat
 {
 public:
@@ -1627,6 +1639,10 @@ public:
         return visit(static_cast<AstStat*>(node));
     }
     virtual bool visit(class AstStatLocalFunction* node)
+    {
+        return visit(static_cast<AstStat*>(node));
+    }
+    virtual bool visit(class AstStatImport* node)
     {
         return visit(static_cast<AstStat*>(node));
     }

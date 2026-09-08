@@ -100,10 +100,19 @@ void luaV_getimport(lua_State* L, LuaTable* env, TValue* k, StkId res, uint32_t 
     // we take care to not use env again and to restore res before every consecutive use
     ptrdiff_t resp = savestack(L, res);
 
-    // global lookup for id0
-    TValue g;
-    sethvalue(L, &g, env);
-    luaV_gettable(L, &g, &k[id0], res);
+    // Wildcard imports take precedence over `_G` so that `import` is not shadowed
+    // by later writes to the environment (and so GETIMPORT of a bare imported name works).
+    if (L->ci && ttisfunction(L->ci->func) && !clvalue(L->ci->func)->isC &&
+        luaV_getwildcard(L, clvalue(L->ci->func), tsvalue(&k[id0]), res))
+    {
+        // found in a wildcard import table
+    }
+    else
+    {
+        TValue g;
+        sethvalue(L, &g, env);
+        luaV_gettable(L, &g, &k[id0], res);
+    }
 
     // table lookup for id1
     if (count < 2)

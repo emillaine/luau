@@ -910,6 +910,18 @@ struct AstJsonEncoder : public AstVisitor
         );
     }
 
+    void write(class AstStatImport* node)
+    {
+        writeNode(
+            node,
+            "AstStatImport",
+            [&]()
+            {
+                PROP(path);
+            }
+        );
+    }
+
     void write(class AstStatTypeAlias* node)
     {
         writeNode(
@@ -1439,6 +1451,12 @@ struct AstJsonEncoder : public AstVisitor
     }
 
     bool visit(class AstStatLocalFunction* node) override
+    {
+        write(node);
+        return false;
+    }
+
+    bool visit(class AstStatImport* node) override
     {
         write(node);
         return false;

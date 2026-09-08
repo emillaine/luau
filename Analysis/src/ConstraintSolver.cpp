@@ -1324,6 +1324,19 @@ bool ConstraintSolver::tryDispatch(const TypeAliasExpansionConstraint& c, NotNul
     std::optional<TypeFun> tf = (petv->prefix) ? constraint->scope->lookupImportedType(petv->prefix->value, petv->name.value)
                                                : constraint->scope->lookupType(petv->name.value);
 
+    if (!tf.has_value() && !petv->prefix)
+    {
+        Scope::WildcardNameLookup imported = constraint->scope->lookupWildcardType(petv->name.value);
+        if (imported.kind == Scope::WildcardNameLookup::Unique)
+            tf = imported.type;
+        else if (imported.kind == Scope::WildcardNameLookup::Ambiguous)
+        {
+            // Reported at check time by TypeChecker2 to avoid duplicate diagnostics.
+            bindResult(builtinTypes->errorType);
+            return true;
+        }
+    }
+
     if (!tf.has_value())
     {
         if (FFlag::LuauCyclicRequireTypeInference)

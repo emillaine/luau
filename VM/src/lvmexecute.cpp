@@ -134,7 +134,7 @@ LUAU_FASTFLAGVARIABLE(LuauFastpcallInterrupt)
         VM_DISPATCH_OP(LOP_JUMPXEQKB), VM_DISPATCH_OP(LOP_JUMPXEQKN), VM_DISPATCH_OP(LOP_JUMPXEQKS), VM_DISPATCH_OP(LOP_IDIV), \
         VM_DISPATCH_OP(LOP_IDIVK), VM_DISPATCH_OP(LOP_GETUDATAKS), VM_DISPATCH_OP(LOP_SETUDATAKS), VM_DISPATCH_OP(LOP_NAMECALLUDATA), \
         VM_DISPATCH_OP(LOP_NEWCLASSMEMBER), VM_DISPATCH_OP(LOP_CALLFB), VM_DISPATCH_OP(LOP_CMPPROTO), VM_DISPATCH_OP(LOP_FASTPCALL), \
-        VM_DISPATCH_OP(LOP_NEWCLASS),
+        VM_DISPATCH_OP(LOP_NEWCLASS), VM_DISPATCH_OP(LOP_SETWILDCARDIMPORT),
 
 #if defined(__GNUC__) || defined(__clang__)
 #define VM_USE_CGOTO 1
@@ -403,6 +403,11 @@ reentry:
                 TValue* kv = VM_KV(aux);
                 LUAU_ASSERT(ttisstring(kv));
 
+                if (cl->wildcardimports && luaV_getwildcard(L, cl, tsvalue(kv), ra))
+                {
+                    VM_NEXT();
+                }
+
                 // fast-path: value is in expected slot
                 LuaTable* h = cl->env;
                 int slot = LUAU_INSN_C(insn) & h->nodemask8;
@@ -433,6 +438,9 @@ reentry:
                 uint32_t aux = *pc++;
                 TValue* kv = VM_KV(aux);
                 LUAU_ASSERT(ttisstring(kv));
+
+                if (luaV_haswildcard(L, cl, tsvalue(kv)))
+                    VM_PROTECT(luaG_runerror(L, "attempt to assign to imported name '%s'", getstr(tsvalue(kv))));
 
                 // fast-path: value is in expected slot
                 LuaTable* h = cl->env;
@@ -497,8 +505,10 @@ reentry:
                 VM_CASE_STKID ra = VM_REG(LUAU_INSN_A(insn));
                 TValue* kv = VM_KV(LUAU_INSN_D(insn));
 
-                // fast-path: import resolution was successful and closure environment is "safe" for import
-                if (!ttisnil(kv) && cl->env->safeenv)
+                // fast-path: import resolution was successful and closure environment is "safe" for import.
+                // Modules with wildcard imports bypass the cache so that imported names win over _G,
+                // including builtins cached at load time; luaV_getimport checks wildcards first.
+                if (!ttisnil(kv) && cl->env->safeenv && !cl->wildcardimports)
                 {
                     setobj2s(L, ra, kv);
                     pc++; // skip over AUX
@@ -906,6 +916,9 @@ reentry:
 
                 // note: we save closure to stack early in case the code below wants to capture it by value
                 Closure* ncl = luaF_newLclosure(L, pv->nups, cl->env, pv);
+                ncl->wildcardimports = cl->wildcardimports;
+                if (ncl->wildcardimports)
+                    luaC_objbarrier(L, ncl, ncl->wildcardimports);
                 setclvalue(L, ra, ncl);
 
                 for (int ui = 0; ui < pv->nups; ++ui)
@@ -2948,6 +2961,9 @@ reentry:
                 // note: we save closure to stack early in case the code below wants to capture it by value
                 Closure* ncl =
                     (kcl->env == cl->env) ? kcl : luaF_newLclosure(L, kcl->nupvalues, cl->env, FFlag::LuauCIProto ? getproto(kcl) : kcl->l.p);
+                ncl->wildcardimports = cl->wildcardimports;
+                if (ncl->wildcardimports)
+                    luaC_objbarrier(L, ncl, ncl->wildcardimports);
                 setclvalue(L, ra, ncl);
 
                 // this loop does three things:
@@ -2971,6 +2987,9 @@ reentry:
                     if (ncl == kcl && kcl->preload == 0)
                     {
                         ncl = luaF_newLclosure(L, kcl->nupvalues, cl->env, FFlag::LuauCIProto ? getproto(kcl) : kcl->l.p);
+                        ncl->wildcardimports = cl->wildcardimports;
+                        if (ncl->wildcardimports)
+                            luaC_objbarrier(L, ncl, ncl->wildcardimports);
                         setclvalue(L, ra, ncl);
 
                         ui = -1; // restart the loop to fill all upvalues
@@ -3826,6 +3845,26 @@ reentry:
                     setclassvalue(L, ra, inherited);
                 }
 
+                VM_NEXT();
+            }
+
+            VM_CASE(LOP_SETWILDCARDIMPORT)
+            {
+                VM_CASE_INSTRUCTION insn = *pc++;
+                VM_CASE_STKID ra = VM_REG(LUAU_INSN_A(insn));
+                int index = LUAU_INSN_B(insn) + 1;
+
+                if (!cl->wildcardimports)
+                {
+                    VM_PROTECT_PC();
+                    cl->wildcardimports = luaH_new(L, index, 0);
+                    luaC_objbarrier(L, cl, cl->wildcardimports);
+                }
+
+                VM_PROTECT_PC();
+                TValue* slot = luaH_setnum(L, cl->wildcardimports, index);
+                setobj2t(L, slot, ra);
+                luaC_barriert(L, cl->wildcardimports, ra);
                 VM_NEXT();
             }
 

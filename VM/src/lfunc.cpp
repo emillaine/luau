@@ -74,6 +74,7 @@ Closure* luaF_newLclosure(lua_State* L, int nelems, LuaTable* e, Proto* p)
     c->nupvalues = cast_byte(nelems);
     c->stacksize = p->maxstacksize;
     c->preload = 0;
+    c->wildcardimports = NULL;
     c->l.p = p;
     for (int i = 0; i < nelems; ++i)
         setnilvalue(&c->l.uprefs[i]);
@@ -89,6 +90,7 @@ Closure* luaF_newCclosure(lua_State* L, int nelems, LuaTable* e)
     c->nupvalues = cast_byte(nelems);
     c->stacksize = LUA_MINSTACK;
     c->preload = 0;
+    c->wildcardimports = NULL;
     c->c.f = NULL;
     c->c.cont = NULL;
     c->c.debugname = NULL;

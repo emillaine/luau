@@ -1390,6 +1390,8 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStat* stat)
         return visit(scope, f);
     else if (auto f = stat->as<AstStatLocalFunction>())
         return visit(scope, f);
+    else if (auto i = stat->as<AstStatImport>())
+        return visit(scope, i);
     else if (auto a = stat->as<AstStatTypeAlias>())
         return visit(scope, a);
     else if (auto f = stat->as<AstStatTypeFunction>())
@@ -1416,6 +1418,16 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStat* stat)
 
 ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatLocal* statLocal)
 {
+    for (AstLocal* local : statLocal->vars)
+    {
+        if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(local->name.value);
+            imported.kind != Scope::WildcardNameLookup::None)
+        {
+            Location importLoc = imported.importLocs.empty() ? local->location : imported.importLocs.front();
+            reportError(local->location, ClashWithLocal{local->name.value, importLoc, local->location});
+        }
+    }
+
     std::vector<TypeId> annotatedTypes;
     annotatedTypes.reserve(statLocal->vars.size);
     bool hasAnnotation = false;
@@ -1766,6 +1778,13 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatLocalFuncti
     // Dotted path
     // Self?
 
+    if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(function->name->name.value);
+        imported.kind != Scope::WildcardNameLookup::None)
+    {
+        Location importLoc = imported.importLocs.empty() ? function->name->location : imported.importLocs.front();
+        reportError(function->name->location, ClashWithLocal{function->name->name.value, importLoc, function->name->location});
+    }
+
     TypeId functionType = nullptr;
     auto ty = scope->lookup(function->name);
     LUAU_ASSERT(!ty.has_value()); // The parser ensures that every local function has a distinct Symbol for its name.
@@ -1807,6 +1826,27 @@ ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatFunction* f
 {
     // Name could be AstStatLocal, AstStatGlobal, AstStatIndexName.
     // With or without self
+
+    // `function foo()` declared after `import` that provides `foo` would shadow the
+    // import at runtime; reject it like any other assignment to an imported name.
+    if (AstExprLocal* localName = function->name->as<AstExprLocal>())
+    {
+        if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(localName->local->name.value);
+            imported.kind != Scope::WildcardNameLookup::None)
+        {
+            Location importLoc = imported.importLocs.empty() ? localName->location : imported.importLocs.front();
+            reportError(localName->location, ClashWithLocal{localName->local->name.value, importLoc, localName->location});
+        }
+    }
+    else if (AstExprGlobal* globalName = function->name->as<AstExprGlobal>())
+    {
+        if (Scope::WildcardNameLookup imported = scope->lookupWildcardValue(globalName->name.value);
+            imported.kind != Scope::WildcardNameLookup::None)
+        {
+            Location importLoc = imported.importLocs.empty() ? globalName->location : imported.importLocs.front();
+            reportError(globalName->location, ClashWithLocal{globalName->name.value, importLoc, globalName->location});
+        }
+    }
 
     Checkpoint start = checkpoint(this);
     FunctionSignature sig = checkFunctionSignature(scope, nullptr, function->func, /* expectedType */ std::nullopt, function->name->location);
@@ -2209,6 +2249,82 @@ void ConstraintGenerator::resolveGenericDefaultParameters(const ScopePtr& defnSc
         }
         defnScope->privateTypePackBindings[astPack->name.value] = param.tp;
     }
+}
+
+ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatImport* import)
+{
+    check(scope, import->path);
+
+    auto moduleInfo = moduleResolver->resolveModuleInfo(module->name, *import->path);
+    if (!moduleInfo)
+    {
+        reportError(import->location, UnknownRequire{});
+        return ControlFlow::None;
+    }
+
+    ModulePtr required = moduleResolver->getModule(moduleInfo->name);
+    if (!required)
+    {
+        reportError(import->location, UnknownRequire{moduleResolver->getHumanReadableModuleName(moduleInfo->name)});
+        return ControlFlow::None;
+    }
+
+    if (required->type != SourceCode::Type::Module)
+    {
+        reportError(import->location, IllegalRequire{required->humanReadableName, "Module is not a ModuleScript.  It cannot be required."});
+        return ControlFlow::None;
+    }
+
+    std::optional<TypeId> moduleType = first(required->returnType);
+    if (!moduleType)
+    {
+        reportError(
+            import->location, IllegalRequire{required->humanReadableName, "Module does not return exactly 1 value.  It cannot be required."}
+        );
+        return ControlFlow::None;
+    }
+
+    Scope::WildcardImport wi;
+    wi.target = moduleInfo->name;
+    wi.loc = import->location;
+    wi.node = import;
+    wi.exportedTypes = required->exportedTypeBindings;
+    wi.returnType = *moduleType;
+
+    for (const auto& [location, path] : requireCycles)
+    {
+        if (path.empty() || path.front() != moduleInfo->name)
+            continue;
+
+        for (auto& [name, tf] : wi.exportedTypes)
+            tf = TypeFun{{}, {}, builtinTypes->anyType};
+        wi.returnType = builtinTypes->anyType;
+        break;
+    }
+
+    for (const auto& [name, tf] : wi.exportedTypes)
+    {
+        if (scope->lookupType(name))
+        {
+            Location existing;
+            auto it = scope->typeAliasNameLocations.find(name);
+            if (it != scope->typeAliasNameLocations.end())
+                existing = it->second;
+            reportError(import->location, ClashWithLocal{name, import->location, existing});
+        }
+    }
+
+    if (const TableType* tt = getTableType(wi.returnType))
+    {
+        for (const auto& [name, prop] : tt->props)
+        {
+            if (auto existing = scope->linearSearchForBindingPair(name, /* traverseScopeChain */ true))
+                reportError(import->location, ClashWithLocal{name, import->location, existing->second.location});
+        }
+    }
+
+    scope->wildcardImports.push_back(std::move(wi));
+    return ControlFlow::None;
 }
 
 ControlFlow ConstraintGenerator::visit(const ScopePtr& scope, AstStatTypeAlias* alias)
@@ -3373,8 +3489,17 @@ Inference ConstraintGenerator::check(const ScopePtr& scope, AstExprGlobal* globa
     {
         return Inference{*ty, refinementArena.proposition(key, builtinTypes->truthyType)};
     }
-    else
-        return Inference{builtinTypes->errorType};
+
+    Scope::WildcardNameLookup imported = scope->lookupWildcardValue(global->name.value);
+    if (imported.kind == Scope::WildcardNameLookup::Unique)
+    {
+        updateRValueRefinements(scope, def, imported.valueTy);
+        return Inference{imported.valueTy, refinementArena.proposition(key, builtinTypes->truthyType)};
+    }
+
+    // Ambiguous wildcard names are reported by TypeChecker2.
+
+    return Inference{builtinTypes->errorType};
 }
 
 Inference ConstraintGenerator::checkIndexName(
@@ -3883,6 +4008,19 @@ void ConstraintGenerator::visitLValue(const ScopePtr& scope, AstExpr* expr, Type
 
 void ConstraintGenerator::visitLValue(const ScopePtr& scope, AstExprLocal* local, TypeId rhsType)
 {
+    Scope::WildcardNameLookup imported = scope->lookupWildcardValue(local->local->name.value);
+    if (imported.kind != Scope::WildcardNameLookup::None)
+    {
+        for (const Location& importLoc : imported.importLocs)
+        {
+            if (!(local->local->location.begin < importLoc.begin))
+            {
+                reportError(local->location, ClashWithLocal{local->local->name.value, importLoc, local->location});
+                break;
+            }
+        }
+    }
+
     if (FFlag::DebugLuauCFG)
     {
         TypeId assignTy = resolveLHSType(scope, local->location, CFG::LValue{static_cast<AstExpr*>(local)});
@@ -3939,6 +4077,13 @@ void ConstraintGenerator::visitLValue(const ScopePtr& scope, AstExprLocal* local
 
 void ConstraintGenerator::visitLValue(const ScopePtr& scope, AstExprGlobal* global, TypeId rhsType)
 {
+    Scope::WildcardNameLookup imported = scope->lookupWildcardValue(global->name.value);
+    if (imported.kind != Scope::WildcardNameLookup::None)
+    {
+        Location importLoc = imported.importLocs.empty() ? global->location : imported.importLocs.front();
+        reportError(global->location, ClashWithLocal{global->name.value, importLoc, global->location});
+    }
+
     std::optional<TypeId> annotatedTy = scope->lookup(Symbol{global->name});
     if (annotatedTy)
     {
@@ -4582,6 +4727,18 @@ TypeId ConstraintGenerator::resolveReferenceType(
     else
     {
         alias = scope->lookupType(ref->name.value);
+        if (!alias)
+        {
+            Scope::WildcardNameLookup imported = scope->lookupWildcardType(ref->name.value);
+        if (imported.kind == Scope::WildcardNameLookup::Unique)
+            alias = imported.type;
+            else if (imported.kind == Scope::WildcardNameLookup::Ambiguous)
+            {
+                // Reported at check time by TypeChecker2 to avoid duplicate diagnostics.
+                module->astResolvedTypes[ty] = builtinTypes->errorType;
+                return builtinTypes->errorType;
+            }
+        }
     }
 
     if (alias.has_value())

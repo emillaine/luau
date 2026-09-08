@@ -427,6 +427,9 @@ const Instruction* executeGETGLOBAL(lua_State* L, const Instruction* pc, StkId b
     TValue* kv = VM_KV(aux);
     LUAU_ASSERT(ttisstring(kv));
 
+    if (cl->wildcardimports && luaV_getwildcard(L, cl, tsvalue(kv), ra))
+        return pc;
+
     // fast-path should already have been checked, so we skip checking for it here
     LuaTable* h = cl->env;
     int slot = LUAU_INSN_C(insn) & h->nodemask8;
@@ -449,6 +452,9 @@ const Instruction* executeSETGLOBAL(lua_State* L, const Instruction* pc, StkId b
     uint32_t aux = *pc++;
     TValue* kv = VM_KV(aux);
     LUAU_ASSERT(ttisstring(kv));
+
+    if (luaV_haswildcard(L, cl, tsvalue(kv)))
+        luaG_runerror(L, "attempt to assign to imported name '%s'", getstr(tsvalue(kv)));
 
     // fast-path should already have been checked, so we skip checking for it here
     LuaTable* h = cl->env;

@@ -861,6 +861,8 @@ struct ProtoToLuau
             print(stat.type_function());
         else if (stat.has_class_())
             print(stat.class_());
+        else if (stat.has_import())
+            print(stat.import());
         else
             source += "do end\n";
     }
@@ -878,6 +880,8 @@ struct ProtoToLuau
             }
             else if (stat.body(i).has_class_() && blockDepth != 0)
                 continue; // Class declarations are only allowed at the top level
+            else if (stat.body(i).has_import() && blockDepth != 0)
+                continue; // import is only allowed at module top level
             else
             {
                 print(stat.body(i));
@@ -1262,6 +1266,13 @@ struct ProtoToLuau
         source += " = ";
         print(stat.inst(), classes.size() - 1);
         source += '\n';
+    }
+
+    void print(const luau::StatImport& stat)
+    {
+        source += "import ";
+        print(stat.path());
+        source += "\n";
     }
 
     void print(const luau::Type& type)

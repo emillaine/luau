@@ -4244,6 +4244,33 @@ TEST_CASE_FIXTURE(Fixture, "optional_return_type_pack_with_cst_func_return")
     CHECK_EQ(cstNode->closeParenthesesPosition, Position::missing());
 }
 
+TEST_CASE_FIXTURE(Fixture, "parse_import")
+{
+    AstStatBlock* block = parse("import \"./mod\"");
+    REQUIRE(block);
+    REQUIRE_EQ(1, block->body.size);
+    AstStatImport* imp = block->body.data[0]->as<AstStatImport>();
+    REQUIRE(imp);
+    REQUIRE(imp->path->is<AstExprConstantString>());
+}
+
+TEST_CASE_FIXTURE(Fixture, "parse_import_top_level_only")
+{
+    ParseResult result = tryParse(R"(
+        function f()
+            import "./mod"
+        end
+    )");
+    REQUIRE(!result.errors.empty());
+    CHECK(result.errors[0].getMessage().find("import must be at module top level") != std::string::npos);
+}
+
+TEST_CASE_FIXTURE(Fixture, "import_is_reserved")
+{
+    ParseResult result = tryParse("import = 5");
+    REQUIRE(!result.errors.empty());
+}
+
 TEST_SUITE_END();
 
 TEST_SUITE_BEGIN("ParseErrorRecovery");
@@ -6488,5 +6515,4 @@ TEST_CASE_FIXTURE(Fixture, "parse_deeply_nested_if_local")
     CHECK(count == depth);
 }
 
-// TODO unit tests for various parse errors.
 TEST_SUITE_END();

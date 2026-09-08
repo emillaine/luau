@@ -151,6 +151,81 @@ std::optional<TypeFun> Scope::lookupImportedType(const Name& moduleAlias, const 
     return std::nullopt;
 }
 
+Scope::WildcardNameLookup Scope::lookupWildcardType(const Name& name) const
+{
+    WildcardNameLookup result;
+    ModuleName firstTarget;
+
+    for (const Scope* scope = this; scope; scope = scope->parent.get())
+    {
+        for (const WildcardImport& wi : scope->wildcardImports)
+        {
+            auto it = wi.exportedTypes.find(name);
+            if (it == wi.exportedTypes.end())
+                continue;
+
+            // Importing the same module twice is idempotent, not ambiguous.
+            if (result.kind != WildcardNameLookup::None && wi.target == firstTarget)
+                continue;
+
+            result.importLocs.push_back(wi.loc);
+            if (result.kind == WildcardNameLookup::None)
+            {
+                result.kind = WildcardNameLookup::Unique;
+                result.type = it->second;
+                firstTarget = wi.target;
+            }
+            else
+            {
+                result.kind = WildcardNameLookup::Ambiguous;
+            }
+        }
+    }
+
+    return result;
+}
+
+Scope::WildcardNameLookup Scope::lookupWildcardValue(const Name& name) const
+{
+    WildcardNameLookup result;
+    ModuleName firstTarget;
+
+    for (const Scope* scope = this; scope; scope = scope->parent.get())
+    {
+        for (const WildcardImport& wi : scope->wildcardImports)
+        {
+            if (!wi.returnType)
+                continue;
+
+            const TableType* tt = getTableType(wi.returnType);
+            if (!tt)
+                continue;
+
+            auto it = tt->props.find(name);
+            if (it == tt->props.end() || !it->second.readTy)
+                continue;
+
+            // Importing the same module twice is idempotent, not ambiguous.
+            if (result.kind != WildcardNameLookup::None && wi.target == firstTarget)
+                continue;
+
+            result.importLocs.push_back(wi.loc);
+            if (result.kind == WildcardNameLookup::None)
+            {
+                result.kind = WildcardNameLookup::Unique;
+                result.valueTy = *it->second.readTy;
+                firstTarget = wi.target;
+            }
+            else
+            {
+                result.kind = WildcardNameLookup::Ambiguous;
+            }
+        }
+    }
+
+    return result;
+}
+
 std::optional<TypePackId> Scope::lookupPack(const Name& name) const
 {
     const Scope* scope = this;

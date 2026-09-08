@@ -310,6 +310,7 @@ private:
     ControlFlow visit(const ScopePtr& scope, AstStatCompoundAssign* assign);
     ControlFlow visit(const ScopePtr& scope, AstStatIf* ifStatement);
     ControlFlow visit(const ScopePtr& scope, AstStatTypeAlias* alias);
+    ControlFlow visit(const ScopePtr& scope, AstStatImport* import);
     ControlFlow visit(const ScopePtr& scope, AstStatTypeFunction* function);
     ControlFlow visit(const ScopePtr& scope, AstStatDeclareGlobal* declareGlobal);
     ControlFlow visit(const ScopePtr& scope, AstStatDeclareExternType* declaredExternType);

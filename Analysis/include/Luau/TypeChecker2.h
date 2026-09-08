@@ -139,6 +139,7 @@ private:
     void visit(AstStatCompoundAssign* stat);
     void visit(AstStatFunction* stat);
     void visit(AstStatLocalFunction* stat);
+    void visit(AstStatImport* stat);
     void visit(const AstTypeList* typeList);
     void visit(AstStatTypeAlias* stat);
     void visit(AstStatTypeFunction* stat);

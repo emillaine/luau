@@ -678,6 +678,7 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
     // operation then unconditionally exit to the VM.
     case LOP_NEWCLASSMEMBER:
     case LOP_NEWCLASS:
+    case LOP_SETWILDCARDIMPORT:
         inst(IrCmd::JUMP, vmExit(i));
         break;
 

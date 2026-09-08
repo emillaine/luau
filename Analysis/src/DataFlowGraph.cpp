@@ -450,6 +450,8 @@ ControlFlow DataFlowGraphBuilder::visit(AstStat* s)
         return visit(f);
     else if (auto l = s->as<AstStatLocalFunction>())
         return visit(l);
+    else if (auto i = s->as<AstStatImport>())
+        return visit(i);
     else if (auto t = s->as<AstStatTypeAlias>())
         return visit(t);
     else if (auto f = s->as<AstStatTypeFunction>())
@@ -819,6 +821,12 @@ ControlFlow DataFlowGraphBuilder::visit(AstStatLocalFunction* l)
     captures[l->name].allVersions.push_back(def);
     visitExpr(l->func);
 
+    return ControlFlow::None;
+}
+
+ControlFlow DataFlowGraphBuilder::visit(AstStatImport* i)
+{
+    visitExpr(i->path);
     return ControlFlow::None;
 }
 

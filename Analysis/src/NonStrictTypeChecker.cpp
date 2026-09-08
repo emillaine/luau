@@ -306,6 +306,8 @@ struct NonStrictTypeChecker
             return visit(s);
         else if (auto s = stat->as<AstStatLocalFunction>())
             return visit(s);
+        else if (auto s = stat->as<AstStatImport>())
+            return visit(s);
         else if (auto s = stat->as<AstStatTypeAlias>())
             return visit(s);
         else if (auto f = stat->as<AstStatTypeFunction>())
@@ -473,6 +475,12 @@ struct NonStrictTypeChecker
     NonStrictContext visit(AstStatLocalFunction* localFn)
     {
         return visit(localFn->func, ValueContext::RValue);
+    }
+
+    NonStrictContext visit(AstStatImport* import)
+    {
+        visit(import->path, ValueContext::RValue);
+        return {};
     }
 
     NonStrictContext visit(AstStatTypeAlias* typeAlias)

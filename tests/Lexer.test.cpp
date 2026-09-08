@@ -186,6 +186,11 @@ TEST_CASE("elseif_is_not_reserved")
     CHECK_EQ(lexer.next().type, Lexeme::ReservedIf);
 }
 
+TEST_CASE("import_is_reserved")
+{
+    CHECK(Lexer::isReserved("import"));
+}
+
 TEST_CASE("string_interpolation_basic")
 {
     const std::string testInput = R"(`foo {"bar"}`)";

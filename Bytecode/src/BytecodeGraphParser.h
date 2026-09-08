@@ -1053,6 +1053,11 @@ struct BytecodeGraphParser
                 break;
 
 
+            case LOP_SETWILDCARDIMPORT:
+                addVmRegInput(node, LUAU_INSN_A(insn));
+                addImmInput(node, static_cast<int32_t>(LUAU_INSN_B(insn)));
+                break;
+
             case LOP__COUNT:
                 LUAU_UNREACHABLE();
             }

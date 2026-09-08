@@ -680,6 +680,10 @@ struct BytecodeGraphSerializer
             bcb.emitAux(getVmConstInputAux(insn, 2));
             break;
 
+        case LOP_SETWILDCARDIMPORT:
+            bcb.emitABC(LOP_SETWILDCARDIMPORT, getRegInput(insn, 0), getImmInt(insn, 1), 0);
+            break;
+
         case LOP__COUNT:
             LUAU_UNREACHABLE();
         }

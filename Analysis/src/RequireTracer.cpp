@@ -4,6 +4,9 @@
 #include "Luau/Ast.h"
 #include "Luau/Module.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace Luau
 {
 
@@ -21,6 +24,12 @@ struct RequireTracer : AstVisitor
     {
         // suppress `require() as any`
         return false;
+    }
+
+    bool visit(AstStatImport* stat) override
+    {
+        importPaths.push_back(stat);
+        return true;
     }
 
     bool visit(AstExprCall* expr) override
@@ -97,11 +106,14 @@ struct RequireTracer : AstVisitor
     {
         ModuleInfo moduleContext{currentModuleName};
 
-        // seed worklist with require arguments
-        work.reserve(requireCalls.size());
+        // seed worklist with require arguments and import paths
+        work.reserve(requireCalls.size() + importPaths.size());
 
         for (AstExprCall* require : requireCalls)
             work.push_back(require->args.data[0]);
+
+        for (AstStatImport* import : importPaths)
+            work.push_back(import->path);
 
         // push all dependent expressions to the work stack; note that the vector is modified during traversal
         for (size_t i = 0; i < work.size(); ++i)
@@ -143,23 +155,54 @@ struct RequireTracer : AstVisitor
                 result.exprs[expr] = std::move(*info);
         }
 
-        // resolve all requires according to their argument
-        result.requireList.reserve(requireCalls.size());
+        // resolve all requires according to their argument, preserving source order
+        // so that dependency edges (and cycle detection) see imports and requires
+        // interleaved as written.
+        result.requireList.reserve(requireCalls.size() + importPaths.size());
 
-        for (AstExprCall* require : requireCalls)
+        struct OrderedDep
         {
-            AstExpr* arg = require->args.data[0];
-
-            if (const ModuleInfo* info = result.exprs.find(arg))
+            Position pos;
+            AstStatImport* import = nullptr;
+            AstExprCall* require = nullptr;
+        };
+        std::vector<OrderedDep> ordered;
+        ordered.reserve(requireCalls.size() + importPaths.size());
+        for (AstStatImport* import : importPaths)
+            ordered.push_back({import->location.begin, import, nullptr});
+        for (AstExprCall* require : requireCalls)
+            ordered.push_back({require->location.begin, nullptr, require});
+        std::sort(
+            ordered.begin(),
+            ordered.end(),
+            [](const OrderedDep& a, const OrderedDep& b)
             {
-                result.requireList.push_back({info->name, require->location});
+                return a.pos < b.pos;
+            }
+        );
 
-                ModuleInfo infoCopy = *info; // copy *info out since next line invalidates info!
-                result.exprs[require] = std::move(infoCopy);
+        for (const OrderedDep& dep : ordered)
+        {
+            if (dep.import)
+            {
+                if (const ModuleInfo* info = result.exprs.find(dep.import->path))
+                    result.requireList.push_back({info->name, dep.import->location});
             }
             else
             {
-                result.exprs[require] = {}; // mark require as unresolved
+                AstExpr* arg = dep.require->args.data[0];
+
+                if (const ModuleInfo* info = result.exprs.find(arg))
+                {
+                    result.requireList.push_back({info->name, dep.require->location});
+
+                    ModuleInfo infoCopy = *info; // copy *info out since next line invalidates info!
+                    result.exprs[dep.require] = std::move(infoCopy);
+                }
+                else
+                {
+                    result.exprs[dep.require] = {}; // mark require as unresolved
+                }
             }
         }
     }
@@ -171,6 +214,7 @@ struct RequireTracer : AstVisitor
     DenseHashMap<AstLocal*, AstExpr*> locals;
     std::vector<AstNode*> work;
     std::vector<AstExprCall*> requireCalls;
+    std::vector<AstStatImport*> importPaths;
 };
 
 RequireTraceResult traceRequires(FileResolver* fileResolver, AstStatBlock* root, const ModuleName& currentModuleName, const TypeCheckLimits& limits)

@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <optional>
 #include <memory>
+#include <vector>
 
 namespace Luau
 {
@@ -54,6 +55,32 @@ struct Scope
     std::unordered_map<Name, ModuleName> importedModules; // Mapping from the name in the require statement to the internal moduleName.
     std::unordered_map<Name, std::unordered_map<Name, TypeFun>> importedTypeBindings;
 
+    struct WildcardImport
+    {
+        ModuleName target;
+        Location loc;
+        class AstStatImport* node = nullptr;
+        std::unordered_map<Name, TypeFun> exportedTypes;
+        TypeId returnType = nullptr;
+    };
+
+    struct WildcardNameLookup
+    {
+        enum Kind
+        {
+            None,
+            Unique,
+            Ambiguous
+        };
+
+        Kind kind = None;
+        std::vector<Location> importLocs;
+        TypeFun type;
+        TypeId valueTy = nullptr;
+    };
+
+    std::vector<WildcardImport> wildcardImports;
+
     DenseHashSet<Name> builtinTypeNames;
     void addBuiltinTypeBinding(const Name& name, const TypeFun& tyFun);
 
@@ -67,6 +94,8 @@ struct Scope
 
     std::optional<TypeFun> lookupType(const Name& name) const;
     std::optional<TypeFun> lookupImportedType(const Name& moduleAlias, const Name& name) const;
+    WildcardNameLookup lookupWildcardType(const Name& name) const;
+    WildcardNameLookup lookupWildcardValue(const Name& name) const;
 
     std::unordered_map<Name, TypePackId> privateTypePackBindings;
     std::optional<TypePackId> lookupPack(const Name& name) const;

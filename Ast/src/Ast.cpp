@@ -900,6 +900,18 @@ void AstStatLocalFunction::visit(AstVisitor* visitor)
         func->visit(visitor);
 }
 
+AstStatImport::AstStatImport(const Location& location, AstExpr* path)
+    : AstStat(ClassIndex(), location)
+    , path(path)
+{
+}
+
+void AstStatImport::visit(AstVisitor* visitor)
+{
+    if (visitor->visit(this) && path)
+        path->visit(visitor);
+}
+
 AstStatTypeAlias::AstStatTypeAlias(
     const Location& location,
     const AstName& name,

@@ -1341,6 +1341,12 @@ struct Printer
                 visualizeFunctionBody(*t->body);
             }
         }
+        else if (const auto& a = program.as<AstStatImport>())
+        {
+            writer.keyword("import");
+            writer.space();
+            visualize(*a->path);
+        }
         else if (const auto& a = program.as<AstStatError>())
         {
             writer.symbol("(error-stat");

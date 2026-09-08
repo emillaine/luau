@@ -1545,4 +1545,187 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "exported_module_annotation_mismatch_errors")
     CHECK(get<TypeMismatch>(result.errors[0]));
 }
 
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_types_and_values")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        export type Foo = { x: number }
+        function make(): Foo
+            return { x = 1 }
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        const x: Foo = make()
+    )";
+
+    CheckResult aResult = getFrontend().check("game/A");
+    LUAU_REQUIRE_NO_ERRORS(aResult);
+
+    CheckResult bResult = getFrontend().check("game/B");
+    LUAU_REQUIRE_NO_ERRORS(bResult);
+
+    ModulePtr b = getFrontend().moduleResolver.getModule("game/B");
+    REQUIRE(b != nullptr);
+    std::optional<TypeId> xType = requireType(b, "x");
+    REQUIRE(xType);
+    CHECK(toString(*xType) == "Foo");
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_clash_with_local")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        function make(): number
+            return 1
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        make = 5
+        import game.A
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(get<ClashWithLocal>(result.errors[0]));
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_ambiguous_use")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        export type Foo = { x: number }
+        return {}
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        export type Foo = { y: string }
+        return {}
+    )";
+
+    fileResolver.source["game/C"] = R"(
+        #!strict
+        import game.A
+        import game.B
+        type T = Foo
+    )";
+
+    CheckResult result = getFrontend().check("game/C");
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(get<AmbiguousImport>(result.errors[0]));
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_disambiguate_with_require")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        export type Foo = { x: number }
+        return {}
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        export type Foo = { y: string }
+        return {}
+    )";
+
+    fileResolver.source["game/C"] = R"(
+        #!strict
+        import game.A
+        import game.B
+        M = require(game.A)
+        type T = M.Foo
+    )";
+
+    CheckResult result = getFrontend().check("game/C");
+    LUAU_REQUIRE_NO_ERRORS(result);
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_assign_is_clash")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        function make(): number
+            return 1
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        make = 0
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(get<ClashWithLocal>(result.errors[0]));
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_duplicate_same_module")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        export type Foo = { x: number }
+        function make(): Foo
+            return { x = 1 }
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        import game.A
+        const x: Foo = make()
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_NO_ERRORS(result);
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_function_definition_is_clash")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        function make(): number
+            return 1
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        function make(): number
+            return 2
+        end
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(get<ClashWithLocal>(result.errors[0]));
+}
+
 TEST_SUITE_END();

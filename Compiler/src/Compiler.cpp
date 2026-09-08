@@ -4731,6 +4731,54 @@ struct Compiler
         compileAssign(var, reg, stat->name);
     }
 
+    void compileStatImport(AstStatImport* stat)
+    {
+        if (wildcardImportCount >= 256)
+            CompileError::raise(stat->location, "Exceeded import limit; simplify the code to compile");
+
+        setDebugLine(stat);
+
+        RegScope rs(this);
+        uint8_t regs = allocReg(stat, 2u);
+
+        // Respect a shadowing local `require = ...`; otherwise use the global.
+        // (Normal `require(...)` calls resolve to locals via the parser, but `import`
+        // synthesizes its own require call so it must resolve manually.)
+        int requireReg = -1;
+        for (size_t i = localStack.size(); i > 0; --i)
+        {
+            AstLocal* local = localStack[i - 1];
+            if (local->name == "require")
+            {
+                if (Local* l = locals.find(local); l && l->allocated)
+                    requireReg = l->reg;
+                break;
+            }
+        }
+
+        if (requireReg >= 0)
+        {
+            if (regs != uint8_t(requireReg))
+                bytecode.emitABC(LOP_MOVE, regs, uint8_t(requireReg), 0);
+        }
+        else
+        {
+            AstName requireName = names.getOrAdd("require");
+            BytecodeBuilder::StringRef gname = sref(requireName);
+            int32_t cid = bytecode.addConstantString(gname);
+            if (cid < 0)
+                CompileError::raise(stat->location, "Exceeded constant limit; simplify the code to compile");
+
+            bytecode.emitABC(LOP_GETGLOBAL, regs, 0, uint8_t(BytecodeBuilder::getStringHash(gname)));
+            bytecode.emitAux(cid);
+        }
+
+        compileExpr(stat->path, uint8_t(regs + 1));
+        bytecode.emitABC(LOP_CALL, regs, 2, 2);
+        bytecode.emitABC(LOP_SETWILDCARDIMPORT, regs, uint8_t(wildcardImportCount), 0);
+        wildcardImportCount++;
+    }
+
     void compileStat(AstStat* node)
     {
         setDebugLine(node);
@@ -4921,6 +4969,10 @@ struct Compiler
         {
             if (FFlag::LuauExportedTypesParticipateInScc && alias->exported && atTopLevel())
                 exports.hasTypeExports = true;
+        }
+        else if (AstStatImport* import = node->as<AstStatImport>())
+        {
+            compileStatImport(import);
         }
         else if (node->is<AstStatTypeFunction>())
         {
@@ -5546,6 +5598,7 @@ struct Compiler
     AstExprFunction* currentFunction = nullptr;
 
     size_t blockDepth = 0;
+    int wildcardImportCount = 0;
 
     bool getfenvUsed = false;
     bool setfenvUsed = false;
