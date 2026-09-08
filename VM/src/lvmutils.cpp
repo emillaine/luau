@@ -209,21 +209,12 @@ void luaV_gettable(lua_State* L, const TValue* t, TValue* key, StkId val)
 
 static LuaTable* luaV_wildcardtable(lua_State* L, Closure* cl)
 {
+    // Lexical scoping: only the running function's own imports are visible.
+    // Walking the call stack would leak a caller's imports into callees from
+    // other modules that happen to be on the stack.
+    (void)L;
     if (cl && !cl->isC && cl->wildcardimports)
         return cl->wildcardimports;
-
-    if (!L->ci)
-        return NULL;
-
-    for (CallInfo* ci = L->ci; ci >= L->base_ci; ci--)
-    {
-        if (!ttisfunction(ci->func))
-            continue;
-
-        Closure* c = clvalue(ci->func);
-        if (!c->isC && c->wildcardimports)
-            return c->wildcardimports;
-    }
 
     return NULL;
 }

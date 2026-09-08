@@ -505,8 +505,10 @@ reentry:
                 VM_CASE_STKID ra = VM_REG(LUAU_INSN_A(insn));
                 TValue* kv = VM_KV(LUAU_INSN_D(insn));
 
-                // fast-path: import resolution was successful and closure environment is "safe" for import
-                if (!ttisnil(kv) && cl->env->safeenv)
+                // fast-path: import resolution was successful and closure environment is "safe" for import.
+                // Modules with wildcard imports bypass the cache so that imported names win over _G,
+                // including builtins cached at load time; luaV_getimport checks wildcards first.
+                if (!ttisnil(kv) && cl->env->safeenv && !cl->wildcardimports)
                 {
                     setobj2s(L, ra, kv);
                     pc++; // skip over AUX
