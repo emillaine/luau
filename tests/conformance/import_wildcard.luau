@@ -14,7 +14,15 @@ _G.require = function(path)
                 bar = 7,
             }
         else
-            error("unknown module " .. tostring(path))
+            if path == "c" then
+                return {
+                    print = function()
+                        return "imported"
+                    end,
+                }
+            else
+                error("unknown module " .. tostring(path))
+            end
         end
     end
 end
@@ -38,5 +46,9 @@ function nested()
     return make() + bar
 end
 assert(nested() == 8)
+
+# imported names win over builtins cached at load time
+import "c"
+assert(print() == "imported")
 
 return "OK"

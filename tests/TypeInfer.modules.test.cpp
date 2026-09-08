@@ -1679,4 +1679,53 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_assign_is_clash")
     CHECK(get<ClashWithLocal>(result.errors[0]));
 }
 
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_duplicate_same_module")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        export type Foo = { x: number }
+        function make(): Foo
+            return { x = 1 }
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        import game.A
+        const x: Foo = make()
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_NO_ERRORS(result);
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "wildcard_import_function_definition_is_clash")
+{
+    ScopedFastFlag sff{FFlag::DebugLuauForceOldSolver, false};
+
+    fileResolver.source["game/A"] = R"(
+        #!strict
+        function make(): number
+            return 1
+        end
+        return { make = make }
+    )";
+
+    fileResolver.source["game/B"] = R"(
+        #!strict
+        import game.A
+        function make(): number
+            return 2
+        end
+    )";
+
+    CheckResult result = getFrontend().check("game/B");
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(get<ClashWithLocal>(result.errors[0]));
+}
+
 TEST_SUITE_END();

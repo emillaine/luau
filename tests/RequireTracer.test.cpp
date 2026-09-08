@@ -288,4 +288,18 @@ TEST_CASE_FIXTURE(RequireTracerFixture, "trace_import_and_require")
     CHECK_EQ("game/B", result.requireList[1].first);
 }
 
+TEST_CASE_FIXTURE(RequireTracerFixture, "trace_require_and_import_preserves_source_order")
+{
+    AstStatBlock* block = parse(R"(
+        require(game.B)
+        import game.A
+    )");
+    REQUIRE(block);
+
+    RequireTraceResult result = traceRequires(&fileResolver, block, "ModuleName", {});
+    REQUIRE_EQ(2, result.requireList.size());
+    CHECK_EQ("game/B", result.requireList[0].first);
+    CHECK_EQ("game/A", result.requireList[1].first);
+}
+
 TEST_SUITE_END();
