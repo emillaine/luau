@@ -10,6 +10,8 @@
 #include "Luau/UnwindBuilder.h"
 #include "Luau/UnwindBuilderDwarf2.h"
 #include "Luau/UnwindBuilderWin.h"
+#include "Luau/Bytecode.h"
+#include "Luau/BytecodeUtils.h"
 
 #include "lapi.h"
 
@@ -580,6 +582,20 @@ template<typename AssemblyBuilder>
 
     if (protos.empty())
         return CompilationResult{CodeGenCompilationResult::NothingToCompile};
+
+    // Wildcard `import` changes GETGLOBAL/GETIMPORT/SETGLOBAL semantics (imports win
+    // over _G) in ways the native fast paths don't model yet. Run such modules in
+    // the interpreter until native lowering learns to check per-closure import tables.
+    for (Proto* p : protos)
+    {
+        for (int i = 0; i < p->sizecode;)
+        {
+            LuauOpcode op = LuauOpcode(LUAU_INSN_OP(p->code[i]));
+            if (op == LOP_SETWILDCARDIMPORT)
+                return CompilationResult{CodeGenCompilationResult::Success};
+            i += getOpLength(op);
+        }
+    }
 
     if (stats != nullptr)
         stats->functionsTotal = uint32_t(protos.size());
