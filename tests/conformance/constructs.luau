@@ -57,7 +57,6 @@ f = function (i)
   if i < 10 then return 'a';
   else if i < 20 then return 'b';
   else if i < 30 then return 'c';
-  end;
 end
 
 assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == null)
@@ -81,7 +80,6 @@ function f(b)
     else if b==2 then x=20; break;
     else if b==3 then x=30;
     else a,b,c,d=math.sin(1); x=x+1;
-    end
   until x>=12;
   return x;
 end;
@@ -94,7 +92,6 @@ f = function (i)
   else if i < 20 then return 'b'
   else if i < 30 then return 'c'
   else return 8
-  end
 end
 
 assert(f(3) == 'a' and f(12) == 'b' and f(26) == 'c' and f(100) == 8)

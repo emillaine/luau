@@ -24,7 +24,6 @@ do
   const function fact (n)
     if n==0 then return res
     else return n*fact(n-1)
-    end
   end
   assert(fact(5) == 120)
 end
@@ -71,7 +70,6 @@ assert(t[1] == 1 and t[2] == 2 and t[3] == 3 and t[4] == 'a')
 function fat(x)
   if x <= 1 then return 1
   else return x*loadstring("return _G.fat(" .. x-1 .. ")")()
-  end
 end
 _G.fat = fat
 
@@ -84,7 +82,6 @@ print('+')
 function err_on_n (n)
   if n==0 then error(); exit(1);
   else err_on_n (n-1); exit(1);
-  end
 end
 
 function dummy (n)

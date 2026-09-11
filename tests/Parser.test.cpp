@@ -1345,9 +1345,8 @@ end
 
 TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_single_line")
 {
-    try
-    {
-        parse(R"(# i am line 1
+    // Single-line `if...else...` needs no `end`; the `end` closes the function.
+    AstStatBlock* block = parse(R"(# i am line 1
 function ItemCheck(tree)
   if tree[2] then return tree[1] + ItemCheck(tree[2]) - ItemCheck(tree[3]) else return tree[1]
 end
@@ -1363,14 +1362,8 @@ function BottomUpTree(item, depth)
   end
 end
         )");
-        FAIL("Expected ParseErrors to be thrown");
-    }
-    catch (const ParseErrors& e)
-    {
-        CHECK_EQ(
-            "Expected 'end' (to close 'function' at line 2), got <eof>; did you forget to close 'else' at line 3?", e.getErrors().front().getMessage()
-        );
-    }
+
+    REQUIRE_EQ(block->body.size, 2);
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_nesting_based_end_detection_local_repeat")
@@ -6370,6 +6363,120 @@ TEST_CASE_FIXTURE(Fixture, "then_and_do_are_still_required_on_same_line")
     matchParseError("if true print() end", "Expected 'then' when parsing if statement, got 'print'");
     matchParseError("while true break end", "Expected 'do' when parsing while loop, got 'break'");
     matchParseError("for i = 1, 2 print(i) end", "Expected 'do' when parsing for loop, got 'print'");
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_without_end")
+{
+    AstStatBlock* block = parse("if true then print(1)\nprint(2)\n");
+
+    REQUIRE_EQ(block->body.size, 2);
+    AstStatIf* ifStat = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(ifStat != nullptr);
+    CHECK(ifStat->thenLocation.has_value());
+    CHECK_FALSE(ifStat->hasEnd);
+    CHECK(ifStat->elsebody == nullptr);
+    REQUIRE_EQ(ifStat->thenbody->body.size, 1);
+    CHECK(ifStat->thenbody->body.data[0]->is<AstStatExpr>());
+
+    CHECK(block->body.data[1]->is<AstStatExpr>());
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_else_without_end")
+{
+    AstStatBlock* block = parse("if cond then foo() else bar()\n");
+
+    REQUIRE_EQ(block->body.size, 1);
+    AstStatIf* ifStat = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(ifStat != nullptr);
+    CHECK_FALSE(ifStat->hasEnd);
+    REQUIRE(ifStat->elsebody != nullptr);
+    AstStatBlock* elseBlock = ifStat->elsebody->as<AstStatBlock>();
+    REQUIRE(elseBlock != nullptr);
+    CHECK_EQ(elseBlock->body.size, 1);
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_else_if_chain_without_end")
+{
+    AstStatBlock* block = parse("if a then f() else if b then g() else h()\n");
+
+    REQUIRE_EQ(block->body.size, 1);
+    AstStatIf* outer = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(outer != nullptr);
+    CHECK_FALSE(outer->hasEnd);
+    AstStatIf* inner = outer->elsebody ? outer->elsebody->as<AstStatIf>() : nullptr;
+    REQUIRE(inner != nullptr);
+    CHECK_FALSE(inner->hasEnd);
+    REQUIRE(inner->elsebody != nullptr);
+    CHECK(inner->elsebody->is<AstStatBlock>());
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_allows_trailing_end")
+{
+    AstStatBlock* withThen = parse("if true then print(1) end\n");
+    REQUIRE_EQ(withThen->body.size, 1);
+    AstStatIf* a = withThen->body.data[0]->as<AstStatIf>();
+    REQUIRE(a != nullptr);
+    CHECK(a->hasEnd);
+
+    AstStatBlock* withElse = parse("if true then print(1) else print(2) end\n");
+    REQUIRE_EQ(withElse->body.size, 1);
+    AstStatIf* b = withElse->body.data[0]->as<AstStatIf>();
+    REQUIRE(b != nullptr);
+    CHECK(b->hasEnd);
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_rest_of_line_body")
+{
+    AstStatBlock* block = parse("if true then a = 1; b = 2\nc = 3\n");
+
+    REQUIRE_EQ(block->body.size, 2);
+    AstStatIf* ifStat = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(ifStat != nullptr);
+    CHECK_FALSE(ifStat->hasEnd);
+    CHECK_EQ(ifStat->thenbody->body.size, 2);
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_else_binds_to_innermost")
+{
+    AstStatBlock* block = parse("if a then if b then f() else g()\n");
+
+    REQUIRE_EQ(block->body.size, 1);
+    AstStatIf* outer = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(outer != nullptr);
+    CHECK(outer->elsebody == nullptr);
+    REQUIRE_EQ(outer->thenbody->body.size, 1);
+    AstStatIf* inner = outer->thenbody->body.data[0]->as<AstStatIf>();
+    REQUIRE(inner != nullptr);
+    CHECK(inner->elsebody != nullptr);
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_then_with_multiline_else_requires_end")
+{
+    AstStatBlock* block = parse("if a then f()\nelse\n g()\nend\n");
+
+    REQUIRE_EQ(block->body.size, 1);
+    AstStatIf* ifStat = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(ifStat != nullptr);
+    CHECK(ifStat->hasEnd);
+    REQUIRE(ifStat->elsebody != nullptr);
+}
+
+TEST_CASE_FIXTURE(Fixture, "multiline_if_still_requires_end")
+{
+    matchParseError("if true then\n print(1)\n", "Expected 'end' (to close 'then' at line 1), got <eof>");
+}
+
+TEST_CASE_FIXTURE(Fixture, "single_line_if_const_without_end")
+{
+    ScopedFastFlag sff = {FFlag::DebugLuauIfLocalSyntax, true};
+
+    AstStatBlock* block = parse("if const x = f() then print(x)\n");
+
+    REQUIRE_EQ(block->body.size, 1);
+    AstStatIf* ifStat = block->body.data[0]->as<AstStatIf>();
+    REQUIRE(ifStat != nullptr);
+    CHECK(ifStat->conditionLocal != nullptr);
+    CHECK_FALSE(ifStat->hasEnd);
 }
 
 TEST_CASE_FIXTURE(Fixture, "parse_if_const")

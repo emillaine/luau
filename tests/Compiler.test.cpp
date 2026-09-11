@@ -10949,7 +10949,6 @@ const foo, bar = ...
 repeat
     if foo then break
     else if bar then break
-    end
     print(1234)
 until foo == bar
 )"),
@@ -10974,7 +10973,6 @@ const foo, bar = ...
 repeat
     if foo then while true do break end
     else if bar then while true do break end
-    end
     print(1234)
 until foo == bar
 )"),

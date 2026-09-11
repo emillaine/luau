@@ -280,7 +280,6 @@ tt = {
     i = i+1
     if t.f then return t.f(...)
     else return {...}
-    end
   end
 }
 

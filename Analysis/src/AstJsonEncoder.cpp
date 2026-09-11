@@ -740,6 +740,7 @@ struct AstJsonEncoder : public AstVisitor
                 if (node->elsebody)
                     PROP(elsebody);
                 write("hasThen", node->thenLocation.has_value());
+                write("hasEnd", node->hasEnd);
                 if (FFlag::DebugLuauIfLocalAnalysis && node->conditionLocal)
                 {
                     write("conditionLocal", node->conditionLocal->name.value);

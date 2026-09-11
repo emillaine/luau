@@ -3255,6 +3255,11 @@ TEST_CASE("IfLocal")
     runConformance("iflocal.luau");
 }
 
+TEST_CASE("SingleLineIf")
+{
+    runConformance("singleline_if.luau");
+}
+
 // Optionally returns debug info for the first Luau stack frame that is encountered on the callstack.
 static std::optional<lua_Debug> getFirstLuauFrameDebugInfo(lua_State* L)
 {

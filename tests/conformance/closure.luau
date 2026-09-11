@@ -104,7 +104,6 @@ function f(x)
     if x == 1 then do break end
     else if x == 2 then return
     else do if x != 3 then error() end end
-    end
     first = null
   end
 end
@@ -284,7 +283,7 @@ function foo ()
   error("foo")
 end
 
-fooerr = "closure.luau:284: foo"
+fooerr = "closure.luau:283: foo"
 
 function goo() foo() end
 x = coroutine.wrap(goo)

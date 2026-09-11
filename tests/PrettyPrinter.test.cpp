@@ -113,6 +113,17 @@ end)";
     CHECK_EQ(printed.find(" do"), std::string::npos);
 }
 
+TEST_CASE("single_line_if_without_end")
+{
+    CHECK_EQ("if a then b()", prettyPrint("if a then b()").code);
+    CHECK_EQ("if a then b() else c()", prettyPrint("if a then b() else c()").code);
+    CHECK_EQ(
+        "if a then b() else if c then d() else e()", prettyPrint("if a then b() else if c then d() else e()").code
+    );
+    CHECK_EQ("if a then b() end", prettyPrint("if a then b() end").code);
+    CHECK_EQ("if a then b() else c() end", prettyPrint("if a then b() else c() end").code);
+}
+
 TEST_CASE("elseif_chains_indent_sensibly")
 {
     const std::string code = R"(

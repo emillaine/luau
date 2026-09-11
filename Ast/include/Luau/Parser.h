@@ -104,6 +104,9 @@ private:
 
     AstStatBlock* parseBlockNoScope();
 
+    // Rest-of-line block for single-line `if`: statements starting on `startLine` only.
+    AstStatBlock* parseSingleLineBlock(unsigned int startLine);
+
     // stat ::=
     // varlist `=' explist (`a = b` declares an implicit local when no in-scope local exists, else reuses it) |
     // functioncall |
@@ -118,10 +121,12 @@ private:
     // laststat ::= return [explist] | break
     AstStat* parseStat();
 
-    // if exp [then] block {else if exp [then] block} [else block] end
+    // if exp [then] block {else if exp [then] block} [else block] end |
+    // if exp then singleline {else if exp then singleline} [else singleline] (no `end`)
     AstStat* parseIf();
 
     // (`if' | `else if') (`local' | `const') binding `=' exp [then] block ... end -- parses an entire `if local`/`if const`
+    // Single-line form applies here as well.
     AstStat* parseIfLocalCondition(const Location& start);
 
     // Parse the trailing `{else if exp [then] block} [else block] end` shared by `parseIf` and `parseIfLocalCondition`

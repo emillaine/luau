@@ -764,6 +764,10 @@ public:
     // Active for an 'else if' clause as well
     std::optional<Location> elseLocation;
 
+    // Whether the statement ends with an 'end' keyword. Single-line form
+    // (`if c then s` / `if c then s1 else s2`) omits it.
+    bool hasEnd = true;
+
     // Active for 'if local' and 'if const' statements
     AstLocal* conditionLocal = nullptr;
     bool conditionIsConst = false;

@@ -1583,8 +1583,11 @@ struct Printer
 
         if (elseif.elsebody == nullptr)
         {
-            advance(elseif.thenbody->location.end);
-            writer.keyword("end");
+            if (elseif.hasEnd)
+            {
+                advance(elseif.thenbody->location.end);
+                writer.keyword("end");
+            }
         }
         else if (auto elseifelseif = elseif.elsebody->as<AstStatIf>())
         {
@@ -1602,8 +1605,11 @@ struct Printer
             writer.keyword("else");
 
             visualizeBlock(*elseif.elsebody);
-            advance(elseif.elsebody->location.end);
-            writer.keyword("end");
+            if (elseif.hasEnd)
+            {
+                advance(elseif.elsebody->location.end);
+                writer.keyword("end");
+            }
         }
     }
 

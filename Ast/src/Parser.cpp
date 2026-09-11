@@ -422,6 +422,49 @@ AstStatBlock* Parser::parseBlockNoScope()
     return allocator.alloc<AstStatBlock>(location, copy(body));
 }
 
+AstStatBlock* Parser::parseSingleLineBlock(unsigned int startLine)
+{
+    unsigned int localsBegin = saveLocals();
+
+    TempVector<AstStat*> body(scratchStat);
+
+    const Position prevPosition = lexer.previousLocation().end;
+
+    while (!blockFollow(lexer.current()))
+    {
+        if (lexer.current().location.begin.line != startLine)
+            break;
+
+        unsigned int oldRecursionCount = recursionCounter;
+
+        incrementRecursionCounter("block");
+
+        AstStat* stat = parseStat();
+
+        recursionCounter = oldRecursionCount;
+
+        if (lexer.current().type == ';')
+        {
+            nextLexeme();
+            stat->hasSemicolon = true;
+            stat->location.end = lexer.previousLocation().end;
+        }
+
+        body.push_back(stat);
+
+        if (isStatLast(stat))
+            break;
+    }
+
+    const Location location = Location(prevPosition, lexer.current().location.begin);
+
+    AstStatBlock* result = allocator.alloc<AstStatBlock>(location, copy(body));
+
+    restoreLocals(localsBegin);
+
+    return result;
+}
+
 // stat ::=
 // varlist `=' explist |
 // functioncall |
@@ -574,7 +617,8 @@ AstStat* Parser::parseStat()
     return reportStatError(expr->location, copy({expr}), {}, "Incomplete statement: expected assignment or a function call");
 }
 
-// if exp [then] block {else if exp [then] block} [else block] end
+// if exp [then] block {else if exp [then] block} [else block] end |
+// if exp then singleline {else if exp then singleline} [else singleline] (no `end`)
 AstStat* Parser::parseIf()
 {
     Location start = lexer.current().location;
@@ -601,13 +645,110 @@ AstStat* Parser::parseIf()
             thenLocation = matchThen.location;
     }
 
+    // Single-line form: body starts on the same line as `then`, `end` is optional.
+    // Multi-statement bodies (`if c then s1; s2`) and trailing `end` (`if c then s1 end`)
+    // keep working; `else` may be on the same or the following line.
+    if (thenLocation && !blockFollow(lexer.current()) &&
+        lexer.current().location.begin.line == thenLocation->begin.line)
+    {
+        AstStatBlock* thenbody = parseSingleLineBlock(thenLocation->begin.line);
+        thenbody->hasEnd = true;
+
+        std::optional<Location> elseLocation;
+        AstStat* elsebody = nullptr;
+        Location end = start;
+        bool hasEnd = false;
+
+        if (lexer.current().type == Lexeme::ReservedElse)
+        {
+            elseLocation = lexer.current().location;
+            Lexeme matchElse = lexer.current();
+            nextLexeme(); // else
+
+            if (lexer.current().type == Lexeme::ReservedIf &&
+                lexer.current().location.begin.line == matchElse.location.begin.line)
+            {
+                unsigned int oldRecursionCount = recursionCounter;
+                incrementRecursionCounter("else-if");
+                elsebody = parseIf();
+                end = elsebody->location;
+                recursionCounter = oldRecursionCount;
+
+                if (AstStatIf* inner = elsebody->as<AstStatIf>())
+                    hasEnd = inner->hasEnd;
+                else
+                    hasEnd = true;
+            }
+            else if (
+                !blockFollow(lexer.current()) && lexer.current().location.begin.line == matchElse.location.begin.line)
+            {
+                AstStatBlock* elseBlock = parseSingleLineBlock(matchElse.location.begin.line);
+                elseBlock->hasEnd = true;
+                elsebody = elseBlock;
+
+                // Optional `end` must stay on the same line; an `end` on a later line belongs to an outer block.
+                if (lexer.current().type == Lexeme::ReservedEnd &&
+                    lexer.current().location.begin.line == lexer.previousLocation().end.line)
+                {
+                    end = lexer.current().location;
+                    expectMatchEndAndConsume(Lexeme::ReservedEnd, matchElse);
+                    hasEnd = true;
+                }
+                else
+                {
+                    end = lexer.previousLocation();
+                    hasEnd = false;
+                }
+            }
+            else
+            {
+                elsebody = parseBlock();
+                elsebody->location.begin = matchElse.location.end;
+
+                end = lexer.current().location;
+
+                bool elseHasEnd = expectMatchEndAndConsume(Lexeme::ReservedEnd, matchElse);
+
+                if (AstStatBlock* elseBlock = elsebody->as<AstStatBlock>())
+                    elseBlock->hasEnd = elseHasEnd;
+                hasEnd = elseHasEnd;
+            }
+        }
+        else if (
+            lexer.current().type == Lexeme::ReservedEnd &&
+            lexer.current().location.begin.line == lexer.previousLocation().end.line)
+        {
+            end = lexer.current().location;
+            expectMatchEndAndConsume(Lexeme::ReservedEnd, matchThen);
+            hasEnd = true;
+        }
+        else
+        {
+            end = lexer.previousLocation();
+            hasEnd = false;
+        }
+
+        AstStatIf* result =
+            allocator.alloc<AstStatIf>(Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation);
+        result->hasEnd = hasEnd;
+        return result;
+    }
+
     AstStatBlock* thenbody = parseBlock();
 
     Location end = start;
     std::optional<Location> elseLocation;
     AstStat* elsebody = parseElseBody(start, matchThen, thenbody, end, elseLocation);
 
-    return allocator.alloc<AstStatIf>(Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation);
+    AstStatIf* result =
+        allocator.alloc<AstStatIf>(Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation);
+    if (AstStatIf* inner = elsebody ? elsebody->as<AstStatIf>() : nullptr)
+        result->hasEnd = inner->hasEnd;
+    else if (AstStatBlock* elseBlock = elsebody ? elsebody->as<AstStatBlock>() : nullptr)
+        result->hasEnd = elseBlock->hasEnd;
+    else
+        result->hasEnd = thenbody->hasEnd;
+    return result;
 }
 
 // (`if' | `else if') `const' binding `=' exp [then] block {else if exp [then] block} [else block] end
@@ -644,6 +785,97 @@ LUAU_NOINLINE AstStat* Parser::parseIfLocalCondition(const Location& start)
             thenLocation = matchThen.location;
     }
 
+    if (thenLocation && !blockFollow(lexer.current()) &&
+        lexer.current().location.begin.line == thenLocation->begin.line)
+    {
+        AstStatBlock* thenbody = parseSingleLineBlock(thenLocation->begin.line);
+        thenbody->hasEnd = true;
+
+        // Restore locals after then-block so condLocal is not visible in else/else-if
+        restoreLocals(localsBegin);
+
+        std::optional<Location> elseLocation;
+        AstStat* elsebody = nullptr;
+        Location end = start;
+        bool hasEnd = false;
+
+        if (lexer.current().type == Lexeme::ReservedElse)
+        {
+            elseLocation = lexer.current().location;
+            Lexeme matchElse = lexer.current();
+            nextLexeme(); // else
+
+            if (lexer.current().type == Lexeme::ReservedIf &&
+                lexer.current().location.begin.line == matchElse.location.begin.line)
+            {
+                unsigned int oldRecursionCount = recursionCounter;
+                incrementRecursionCounter("else-if");
+                elsebody = parseIf();
+                end = elsebody->location;
+                recursionCounter = oldRecursionCount;
+
+                if (AstStatIf* inner = elsebody->as<AstStatIf>())
+                    hasEnd = inner->hasEnd;
+                else
+                    hasEnd = true;
+            }
+            else if (
+                !blockFollow(lexer.current()) && lexer.current().location.begin.line == matchElse.location.begin.line)
+            {
+                AstStatBlock* elseBlock = parseSingleLineBlock(matchElse.location.begin.line);
+                elseBlock->hasEnd = true;
+                elsebody = elseBlock;
+
+                // Optional `end` must stay on the same line; an `end` on a later line belongs to an outer block.
+                if (lexer.current().type == Lexeme::ReservedEnd &&
+                    lexer.current().location.begin.line == lexer.previousLocation().end.line)
+                {
+                    end = lexer.current().location;
+                    expectMatchEndAndConsume(Lexeme::ReservedEnd, matchElse);
+                    hasEnd = true;
+                }
+                else
+                {
+                    end = lexer.previousLocation();
+                    hasEnd = false;
+                }
+            }
+            else
+            {
+                elsebody = parseBlock();
+                elsebody->location.begin = matchElse.location.end;
+
+                end = lexer.current().location;
+
+                bool elseHasEnd = expectMatchEndAndConsume(Lexeme::ReservedEnd, matchElse);
+
+                if (AstStatBlock* elseBlock = elsebody->as<AstStatBlock>())
+                    elseBlock->hasEnd = elseHasEnd;
+                hasEnd = elseHasEnd;
+            }
+        }
+        else if (
+            lexer.current().type == Lexeme::ReservedEnd &&
+            lexer.current().location.begin.line == lexer.previousLocation().end.line)
+        {
+            end = lexer.current().location;
+            expectMatchEndAndConsume(Lexeme::ReservedEnd, matchThen);
+            hasEnd = true;
+        }
+        else
+        {
+            end = lexer.previousLocation();
+            hasEnd = false;
+        }
+
+        AstStatIf* result = allocator.alloc<AstStatIf>(
+            Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation, condLocal, condIsConst,
+            condKeywordLocation
+        );
+        result->hasEnd = hasEnd;
+        return result;
+    }
+
     AstStatBlock* thenbody = parseBlock();
 
     // Restore locals after then-block so condLocal is not visible in else/else-if
@@ -653,9 +885,17 @@ LUAU_NOINLINE AstStat* Parser::parseIfLocalCondition(const Location& start)
     std::optional<Location> elseLocation;
     AstStat* elsebody = parseElseBody(start, matchThen, thenbody, end, elseLocation);
 
-    return allocator.alloc<AstStatIf>(
-        Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation, condLocal, condIsConst, condKeywordLocation
+    AstStatIf* result = allocator.alloc<AstStatIf>(
+        Location(start, end), cond, thenbody, elsebody, thenLocation, elseLocation, condLocal, condIsConst,
+        condKeywordLocation
     );
+    if (AstStatIf* inner = elsebody ? elsebody->as<AstStatIf>() : nullptr)
+        result->hasEnd = inner->hasEnd;
+    else if (AstStatBlock* elseBlock = elsebody ? elsebody->as<AstStatBlock>() : nullptr)
+        result->hasEnd = elseBlock->hasEnd;
+    else
+        result->hasEnd = thenbody->hasEnd;
+    return result;
 }
 
 AstStat* Parser::parseElseBody(const Location& start, const Lexeme& matchThen, AstStatBlock* thenbody, Location& end, std::optional<Location>& elseLocation)
